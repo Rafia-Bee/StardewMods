@@ -1,0 +1,22 @@
+{
+    "Name": "Loanable Tractor",
+    "Author": "Rafia-Bee",
+    "Version": "1.0.0",
+    "MinimumApiVersion": "4.1.0",
+    "UniqueID": "RafiaBee.LoanableTractor",
+    "Description": "Loan a tractor from Joja Corp. for a daily fee — no garage required!",
+    "EntryDll": "LoanableTractor.dll",
+    "Dependencies": [
+        {
+            "UniqueID": "Pathoschild.TractorMod",
+            "MinimumVersion": "4.15.0",
+            "IsRequired": true
+        },
+        {
+            "UniqueID": "spacechase0.GenericModConfigMenu",
+            "MinimumVersion": "1.6.0",
+            "IsRequired": false
+        }
+    ],
+    "UpdateKeys": []
+}

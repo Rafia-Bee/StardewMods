@@ -1,0 +1,53 @@
+{
+    "mail.joja.intro": "Dear @,^^Congratulations! As a valued member of the Joja community, you've been pre-approved for our Joja AgriLease™ Tractor Rental Program!^^Why break your back with a hoe when Joja's state-of-the-art farming machinery can do the heavy lifting? For just a small daily fee, a certified Joja tractor will be delivered straight to your farm — no garage required, no long-term commitment, no questions asked!*^^Simply visit your mailbox to access the loan service.^^Work smarter. Work Joja.™^^— Joja Corp. Customer Retention Division^^*Tractor must be returned by end of business day. Joja Corp. is not responsible for crop damage, fence destruction, or existential dread caused by corporate farming equipment. Daily fee is non-refundable. Terms subject to change without notice.",
+
+    "mail.pierre.intro": "Dear @,^^Pierre here! I noticed you've been working hard on your farm and thought I'd let you know about my new farm equipment rental service.^^For a small daily fee, I can arrange for a tractor to help out on your farm. Just visit your mailbox and select the rental option!^^— Pierre",
+
+    "dialogue.mailbox.title.joja": "Joja AgriLease™ Service",
+    "dialogue.mailbox.title.pierre": "Pierre's Tractor Rental",
+    "dialogue.mailbox.loan": "Loan Tractor ({{cost}}g)",
+    "dialogue.mailbox.cancel": "Cancel",
+
+    "hud.tractor.delivered": "A Joja tractor has been delivered! It will be collected at the end of the day.",
+    "hud.tractor.delivered.pierre": "Pierre's tractor has been delivered! It will be collected at the end of the day.",
+    "hud.tractor.collected": "The Joja tractor has been collected. Thank you for choosing Joja AgriLease™!",
+    "hud.tractor.collected.pierre": "Pierre's tractor has been collected. Thank you for renting from Pierre!",
+    "hud.tractor.repossessed": "Your Joja AgriLease™ tractor has been repossessed due to insufficient funds. Better luck next harvest!",
+    "hud.tractor.insufficient.funds": "You don't have enough gold to loan a tractor.",
+    "hud.tractor.already.loaned": "You've already loaned a tractor today.",
+
+    "hud.late.return": "Your leased tractor was not properly returned by close of business. A late return fee of {{penalty}}g has been applied to your account. Remember: Joja time is money!™",
+
+    "loyalty.bronze": "Congratulations! You've reached Joja Bronze Member status — 10% discount on future tractor loans!",
+    "loyalty.silver": "Congratulations! You've reached Joja Silver Member status — 20% discount on future tractor loans!",
+    "loyalty.gold": "Congratulations! You've reached Joja Gold Member status — 30% discount on future tractor loans!",
+
+    "config.loan_cost_per_day.name": "Loan Cost Per Day",
+    "config.loan_cost_per_day.tooltip": "Gold cost per day to loan the tractor.",
+    "config.max_loan_days.name": "Max Loan Days",
+    "config.max_loan_days.tooltip": "Maximum number of days the tractor can be loaned.",
+    "config.default_loan_days.name": "Default Loan Days",
+    "config.default_loan_days.tooltip": "Default number of days selected when loaning.",
+    "config.charge_upfront.name": "Charge Upfront",
+    "config.charge_upfront.tooltip": "If enabled, the full duration fee is charged when loaning. If disabled, charged daily.",
+    "config.allow_loan_with_garage.name": "Allow Loan With Garage",
+    "config.allow_loan_with_garage.tooltip": "If enabled, allow loaning even when the player already owns a tractor garage.",
+    "config.show_mail_daily.name": "Show Mail Daily",
+    "config.show_mail_daily.tooltip": "If enabled, the Joja mail reappears daily. If disabled, only sent once.",
+    "config.dismiss_service.name": "Dismiss Service Permanently",
+    "config.dismiss_service.tooltip": "If enabled, the player has opted out of the Joja tractor mail entirely.",
+    "config.require_minimum_gold.name": "Require Minimum Gold",
+    "config.require_minimum_gold.tooltip": "If enabled, the mail only appears if the player has enough gold to cover the fee.",
+    "config.enable_late_return_penalty.name": "Enable Late Return Penalty",
+    "config.enable_late_return_penalty.tooltip": "If enabled, a penalty is applied if the tractor is returned after 2:00 AM.",
+    "config.late_return_penalty.name": "Late Return Penalty",
+    "config.late_return_penalty.tooltip": "Bonus gold charged for late return (passing out with tractor).",
+    "config.enable_speed_reduction.name": "Enable Speed Reduction",
+    "config.enable_speed_reduction.tooltip": "If enabled, the loaned tractor moves slightly slower than an owned tractor (Joja cuts corners).",
+
+    "command.status.active": "Tractor loan active — {{days}} day(s) remaining. Total loans completed: {{total}}. Loyalty tier: {{tier}}.",
+    "command.status.inactive": "No active tractor loan. Total loans completed: {{total}}. Loyalty tier: {{tier}}.",
+    "command.loan.success": "Debug: Loaned tractor for {{days}} day(s).",
+    "command.return.success": "Debug: Returned loaned tractor.",
+    "command.reset.success": "Debug: Reset all loan data."
+}

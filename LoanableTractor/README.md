@@ -9,7 +9,7 @@ A [Stardew Valley](https://www.stardewvalley.net/) mod that lets you rent a trac
 
 Ever wished you could use the tractor early in your playthrough, but couldn't scrape together the gold and materials for Robin's garage? Joja Corp. has you covered with their new **AgriLease™ Tractor Rental Program**.
 
-After installing the mod, you'll receive a letter from Joja Corp. (or Pierre, if you've completed the Community Center) introducing their tractor loan service. Once you've read the letter, just walk up to your mailbox when it's empty and you'll see a new **"Loan Tractor"** option. Select it, pay the daily fee, and a tractor will appear right next to you, ready to use for the rest of the day. At the end of the day, Joja collects their tractor and you're free to rent again tomorrow.
+After installing the mod, you'll receive a letter from Joja Corp. introducing their tractor loan service. Once you've read the letter, just walk up to your mailbox when it's empty and you'll see a new **"Loan Tractor"** option. Select it, pay the daily fee, and a tractor will appear right next to you, ready to use for the rest of the day. At the end of the day, Joja collects their tractor and you're free to rent again tomorrow.
 
 The loaned tractor works exactly like the regular Tractor Mod tractor. You can till, water, harvest, clear rocks, chop trees, and everything else the tractor normally does.
 
@@ -21,21 +21,21 @@ You'll need these mods installed for Loanable Tractor to work:
 |---|---|
 | [SMAPI](https://smapi.io/) (4.1+) | The mod framework that makes everything tick |
 | [Tractor Mod](https://www.nexusmods.com/stardewvalley/mods/1401) (4.15+) | Provides the actual tractor and all its functionality |
-| [Mail Framework Mod](https://www.nexusmods.com/stardewvalley/mods/1536) (1.16+) | Handles the introductory letter delivery |
 
 Optional but recommended:
 
 | Mod | Why you'd want it |
 |---|---|
 | [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098) | Edit all the mod's settings from an in game menu instead of editing config files |
-| [Mail Services Mod](https://www.nexusmods.com/stardewvalley/mods/7842) | If you have this installed, the "Loan Tractor" option will show up alongside the gift shipping options in a combined mailbox menu |
+| [Mail Services Mod](https://www.nexusmods.com/stardewvalley/mods/7842) | If you have this installed, the "Loan Tractor" option coexists with gift-shipping options in the mailbox |
 
 ## Install
 
-1. Install all the required mods listed above.
-2. Download the latest release of Loanable Tractor.
-3. Unzip it into your `Stardew Valley/Mods` folder.
-4. Run the game through SMAPI.
+1. Install SMAPI and Tractor Mod (see requirements above).
+2. Optionally install Generic Mod Config Menu for in-game settings.
+3. Download the latest release of Loanable Tractor.
+4. Unzip it into your `Stardew Valley/Mods` folder.
+5. Run the game through SMAPI.
 
 That's it! You can install the mod at any point during a playthrough.
 
@@ -55,12 +55,15 @@ If you have [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mo
 |---|---|---|
 | Loan Cost Per Day | 500g | How much it costs to rent the tractor each day |
 | Max Loan Days | 1 | The longest you can rent the tractor in one go |
+| Default Loan Days | 1 | Default number of days selected when loaning |
 | Charge Upfront | Yes | When renting for multiple days, pay the full cost upfront instead of daily |
 | Allow Loan With Garage | No | Whether the rental option still shows up if you already own a tractor garage |
 | Show Mail Daily | Yes | Whether the Joja mail reappears each day or only shows up once |
 | Dismiss Service | No | Turn this on if you want to stop receiving the Joja mail entirely |
+| Require Minimum Gold | Yes | Only shows the loan option if you have enough gold to cover the fee |
 | Late Return Penalty | Yes | Charges a bonus fee if you pass out at 2am while the tractor is still out |
 | Penalty Amount | 250g | How much the late return penalty costs |
+| Enable Speed Reduction | No | Makes the loaned tractor slightly slower than an owned tractor |
 
 ## Compatibility
 
@@ -80,7 +83,7 @@ Yep. It's the same tractor with the same functionality. The only difference is t
 The "Loan Tractor" option won't appear in the mailbox menu unless you have enough gold to cover the fee.
 
 **I completed the Community Center. Does that change anything?**
-If you've completed the Community Center, the loan service letter comes from Pierre instead of Joja Corp. Same service, different branding.
+Not currently. In a future update, the loan service letter may come from Pierre instead of Joja Corp. For now, the service is always Joja-branded.
 
 **Does this work with custom tractor textures?**
 The loaned tractor uses whatever textures you have set up for Tractor Mod, so yes, custom skins work just fine.
