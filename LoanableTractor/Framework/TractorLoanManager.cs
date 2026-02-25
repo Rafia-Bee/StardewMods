@@ -65,9 +65,6 @@ namespace LoanableTractor.Framework
         /// <summary>Check if a tractor loan can be started right now.</summary>
         public bool CanLoan()
         {
-            if (this.Config.DismissServicePermanently)
-                return false;
-
             if (this.LoanActiveToday)
                 return false;
 
@@ -75,10 +72,6 @@ namespace LoanableTractor.Framework
                 return false;
 
             if (!Game1.player.mailReceived.Contains("RafiaBee.LoanableTractor_Intro"))
-                return false;
-
-            int cost = this.GetCurrentLoanCost();
-            if (this.Config.RequireMinimumGold && Game1.player.Money < cost)
                 return false;
 
             return true;
@@ -96,7 +89,7 @@ namespace LoanableTractor.Framework
         public bool ExecuteLoan(int days = -1)
         {
             if (days < 1)
-                days = Math.Min(this.Config.DefaultLoanDays, this.Config.MaxLoanDays);
+                days = this.Config.MaxLoanDays;
 
             days = Math.Clamp(days, 1, this.Config.MaxLoanDays);
 

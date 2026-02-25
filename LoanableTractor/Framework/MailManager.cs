@@ -47,19 +47,13 @@ namespace LoanableTractor.Framework
         {
             try
             {
-                if (this.Config.DismissServicePermanently)
-                    return;
-
-                if (!this.Config.ShowMailDaily && Game1.player.mailReceived.Contains(IntroMailId))
+                if (Game1.player.mailReceived.Contains(IntroMailId))
                     return;
 
                 if (Game1.player.mailbox.Contains(IntroMailId))
                     return;
 
                 if (!this.Config.AllowLoanWithGarage && this.LoanManager.PlayerHasGarage())
-                    return;
-
-                if (this.Config.RequireMinimumGold && Game1.player.Money < this.Config.LoanCostPerDay)
                     return;
 
                 Game1.player.mailbox.Add(IntroMailId);

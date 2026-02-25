@@ -43,12 +43,8 @@ namespace LoanableTractor.Framework
                         var fresh = new ModConfig();
                         config.LoanCostPerDay = fresh.LoanCostPerDay;
                         config.MaxLoanDays = fresh.MaxLoanDays;
-                        config.DefaultLoanDays = fresh.DefaultLoanDays;
                         config.ChargeUpfront = fresh.ChargeUpfront;
                         config.AllowLoanWithGarage = fresh.AllowLoanWithGarage;
-                        config.ShowMailDaily = fresh.ShowMailDaily;
-                        config.DismissServicePermanently = fresh.DismissServicePermanently;
-                        config.RequireMinimumGold = fresh.RequireMinimumGold;
                         config.EnableLateReturnPenalty = fresh.EnableLateReturnPenalty;
                         config.LateReturnPenalty = fresh.LateReturnPenalty;
                         config.EnableSpeedReduction = fresh.EnableSpeedReduction;
@@ -68,7 +64,7 @@ namespace LoanableTractor.Framework
                     setValue: value => config.LoanCostPerDay = value,
                     name: () => this.Helper.Translation.Get("config.loan_cost_per_day.name"),
                     tooltip: () => this.Helper.Translation.Get("config.loan_cost_per_day.tooltip"),
-                    min: 0,
+                    min: 100,
                     max: 50000,
                     interval: 50
                 );
@@ -79,16 +75,6 @@ namespace LoanableTractor.Framework
                     setValue: value => config.MaxLoanDays = value,
                     name: () => this.Helper.Translation.Get("config.max_loan_days.name"),
                     tooltip: () => this.Helper.Translation.Get("config.max_loan_days.tooltip"),
-                    min: 1,
-                    max: 28
-                );
-
-                gmcm.AddNumberOption(
-                    mod: this.Manifest,
-                    getValue: () => config.DefaultLoanDays,
-                    setValue: value => config.DefaultLoanDays = value,
-                    name: () => this.Helper.Translation.Get("config.default_loan_days.name"),
-                    tooltip: () => this.Helper.Translation.Get("config.default_loan_days.tooltip"),
                     min: 1,
                     max: 28
                 );
@@ -113,30 +99,6 @@ namespace LoanableTractor.Framework
                     setValue: value => config.AllowLoanWithGarage = value,
                     name: () => this.Helper.Translation.Get("config.allow_loan_with_garage.name"),
                     tooltip: () => this.Helper.Translation.Get("config.allow_loan_with_garage.tooltip")
-                );
-
-                gmcm.AddBoolOption(
-                    mod: this.Manifest,
-                    getValue: () => config.ShowMailDaily,
-                    setValue: value => config.ShowMailDaily = value,
-                    name: () => this.Helper.Translation.Get("config.show_mail_daily.name"),
-                    tooltip: () => this.Helper.Translation.Get("config.show_mail_daily.tooltip")
-                );
-
-                gmcm.AddBoolOption(
-                    mod: this.Manifest,
-                    getValue: () => config.DismissServicePermanently,
-                    setValue: value => config.DismissServicePermanently = value,
-                    name: () => this.Helper.Translation.Get("config.dismiss_service.name"),
-                    tooltip: () => this.Helper.Translation.Get("config.dismiss_service.tooltip")
-                );
-
-                gmcm.AddBoolOption(
-                    mod: this.Manifest,
-                    getValue: () => config.RequireMinimumGold,
-                    setValue: value => config.RequireMinimumGold = value,
-                    name: () => this.Helper.Translation.Get("config.require_minimum_gold.name"),
-                    tooltip: () => this.Helper.Translation.Get("config.require_minimum_gold.tooltip")
                 );
 
                 // --- Penalty Settings ---
