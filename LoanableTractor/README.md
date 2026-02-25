@@ -53,17 +53,13 @@ If you have [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mo
 
 | Setting | Default | What it does |
 |---|---|---|
-| Loan Cost Per Day | 500g | How much it costs to rent the tractor each day |
+| Loan Cost Per Day | 500g | How much it costs to rent the tractor each day (minimum 100g) |
 | Max Loan Days | 1 | The longest you can rent the tractor in one go |
-| Default Loan Days | 1 | Default number of days selected when loaning |
 | Charge Upfront | Yes | When renting for multiple days, pay the full cost upfront instead of daily |
 | Allow Loan With Garage | No | Whether the rental option still shows up if you already own a tractor garage |
-| Show Mail Daily | Yes | Whether the Joja mail reappears each day or only shows up once |
-| Dismiss Service | No | Turn this on if you want to stop receiving the Joja mail entirely |
-| Require Minimum Gold | Yes | Only shows the loan option if you have enough gold to cover the fee |
 | Late Return Penalty | Yes | Charges a bonus fee if you pass out at 2am while the tractor is still out |
 | Penalty Amount | 250g | How much the late return penalty costs |
-| Enable Speed Reduction | No | Makes the loaned tractor slightly slower than an owned tractor |
+| Enable Speed Reduction | No | 10% chance each day that the loaned tractor is slower than the usual tractor |
 
 ## Compatibility
 
@@ -80,7 +76,7 @@ Yes! Install it whenever you want. The introductory letter will show up in your 
 Yep. It's the same tractor with the same functionality. The only difference is that it disappears at the end of the day.
 
 **What happens if I don't have enough money?**
-The "Loan Tractor" option won't appear in the mailbox menu unless you have enough gold to cover the fee.
+You'll see the "Loan Tractor" option in the mailbox menu, but selecting it will show an error message and the loan won't go through. You keep your gold.
 
 **I completed the Community Center. Does that change anything?**
 Not currently. In a future update, the loan service letter may come from Pierre instead of Joja Corp. For now, the service is always Joja-branded.
