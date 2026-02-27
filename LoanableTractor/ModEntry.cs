@@ -139,7 +139,7 @@ namespace LoanableTractor
                 if (npc is StardewValley.Characters.Horse horse
                     && horse.modData.ContainsKey(TractorLoanManager.LoanedTractorModDataKey))
                 {
-                    this.Monitor.Log($"Loaned tractor removed from {e.Location.Name}: HorseId={horse.HorseId}", LogLevel.Trace);
+                    this.Monitor.Log($"Loaned tractor removed from {e.Location.Name}: HorseId={horse.HorseId}", LogLevel.Debug);
                 }
             }
         }
