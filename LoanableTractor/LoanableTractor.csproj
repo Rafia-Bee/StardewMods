@@ -9,6 +9,7 @@
     <EnableHarmony>true</EnableHarmony>
     <ModFolderName>LoanableTractor</ModFolderName>
     <EnableModZip>true</EnableModZip>
+    <IgnoreModFilePaths>config.json</IgnoreModFilePaths>
   </PropertyGroup>
 
   <ItemGroup>
