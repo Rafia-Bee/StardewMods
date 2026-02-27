@@ -27,6 +27,7 @@ release/
 # Internal docs
 PRD.md
 DECISION_LOG.md
+checklist.txt
 
 # Secret mods
 CapybaraPigReplacement/
