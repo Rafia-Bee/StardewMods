@@ -25,9 +25,8 @@ release/
 *.zip
 
 # Internal docs
-PRD.md
-DECISION_LOG.md
-checklist.txt
+docs/
+.github/copilot-instructions.md
 
 # Secret mods
 CapybaraPigReplacement/
