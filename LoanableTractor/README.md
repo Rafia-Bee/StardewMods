@@ -1,17 +1,25 @@
 # Loanable Tractor
 
-A [Stardew Valley](https://www.stardewvalley.net/) mod that lets you rent a tractor from Joja Corp. for a daily fee, so you can use heavy farming equipment in the early game before you can afford to build the tractor garage.
+A [Stardew Valley](https://www.stardewvalley.net/) mod that lets you rent a tractor for a daily fee, so you can use heavy farming equipment in the early game before you can afford to build the tractor garage.
+
+Before the Community Center is complete, the rental service is branded as **Joja AgriLease™** — complete with corporate fine print and trademark symbols. After you restore the Community Center, the service switches over to **Pierre's Farm Equipment Rental** with a friendlier, small-town tone.
 
 ![Stardew Valley](https://img.shields.io/badge/Stardew%20Valley-1.6%2B-green)
 ![SMAPI](https://img.shields.io/badge/SMAPI-4.1%2B-blue)
 
 ## What does this mod do?
 
-Ever wished you could use the tractor early in your playthrough, but couldn't scrape together the gold and materials for Robin's garage? Joja Corp. has you covered with their new **AgriLease™ Tractor Rental Program**.
+Ever wished you could use the tractor early in your playthrough, but couldn't scrape together the gold and materials for Robin's garage? Joja Corp. has you covered with their new **AgriLease™ Tractor Rental Program** (or Pierre's Farm Equipment Rental, if you've restored the Community Center).
 
-After installing the mod, you'll receive a letter from Joja Corp. introducing their tractor loan service. Once you've read the letter, just walk up to your mailbox when it's empty and you'll see a new **"Loan Tractor"** option. Select it, pay the daily fee, and a tractor will appear right next to you, ready to use for the rest of the day. At the end of the day, Joja collects their tractor and you're free to rent again tomorrow.
+After installing the mod, you'll receive a letter introducing the tractor loan service. Once you've read the letter, just walk up to your mailbox when it's empty and you'll see a new **"Loan Tractor"** option. Select it, pay the daily fee, and a tractor will appear right next to you, ready to use for the rest of the day. At the end of the day, the tractor is collected and you're free to rent again tomorrow.
 
 The loaned tractor works exactly like the regular Tractor Mod tractor. You can till, water, harvest, clear rocks, chop trees, and everything else the tractor normally does.
+
+### Pricing Flavor
+
+- **Weekend Surcharges** — Renting on Saturday or Sunday costs extra (configurable, default 25%). The mailbox dialogue tells you when the surcharge is active.
+- **Seasonal Promotions** — Spring (15% off) and Winter (20% off) discounts are applied automatically with themed notices in the dialogue.
+- **Tractor Condition** — When Speed Reduction is enabled, there's a 10% chance each day that the tractor arrives in rough shape. You'll get a flavor message about the tractor's condition, and it'll be a bit slower that day. The messages differ depending on whether you're renting from Joja or Pierre.
 
 ## Requirements
 
@@ -59,7 +67,9 @@ If you have [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mo
 | Allow Loan With Garage | No | Whether the rental option still shows up if you already own a tractor garage |
 | Late Return Penalty | Yes | Charges a bonus fee if you pass out at 2am while the tractor is still out |
 | Penalty Amount | 250g | How much the late return penalty costs |
-| Enable Speed Reduction | No | 10% chance each day that the loaned tractor is slower than the usual tractor |
+| Enable Speed Reduction | No | 10% chance each day that the loaned tractor is slower than usual. Also enables tractor condition flavor text |
+| Enable Weekend Surcharge | Yes | Renting on Saturday or Sunday costs extra |
+| Weekend Surcharge % | 25% | How much extra weekend rentals cost |
 
 ## Compatibility
 
@@ -79,7 +89,7 @@ Yep. It's the same tractor with the same functionality. The only difference is t
 You'll see the "Loan Tractor" option in the mailbox menu, but selecting it will show an error message and the loan won't go through. You keep your gold.
 
 **I completed the Community Center. Does that change anything?**
-Not currently. In a future update, the loan service letter may come from Pierre instead of Joja Corp. For now, the service is always Joja-branded.
+Yes! The rental service switches from Joja AgriLease™ to Pierre's Farm Equipment Rental. All the mail, dialogue, and HUD messages get a friendlier, small-town tone. The pricing mechanics (surcharges, promos, loyalty discounts) all still work the same way.
 
 **Does this work with custom tractor textures?**
 The loaned tractor uses whatever textures you have set up for Tractor Mod, so yes, custom skins work just fine.
