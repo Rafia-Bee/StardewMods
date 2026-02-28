@@ -48,6 +48,8 @@ namespace LoanableTractor.Framework
                         config.EnableLateReturnPenalty = fresh.EnableLateReturnPenalty;
                         config.LateReturnPenalty = fresh.LateReturnPenalty;
                         config.EnableSpeedReduction = fresh.EnableSpeedReduction;
+                        config.EnableWeekendSurcharge = fresh.EnableWeekendSurcharge;
+                        config.WeekendSurchargePercent = fresh.WeekendSurchargePercent;
                     },
                     save: () => this.Helper.WriteConfig(config)
                 );
@@ -132,6 +134,31 @@ namespace LoanableTractor.Framework
                     setValue: value => config.EnableSpeedReduction = value,
                     name: () => this.Helper.Translation.Get("config.enable_speed_reduction.name"),
                     tooltip: () => this.Helper.Translation.Get("config.enable_speed_reduction.tooltip")
+                );
+
+                // --- Pricing Settings ---
+                gmcm.AddSectionTitle(
+                    mod: this.Manifest,
+                    text: () => "Pricing Settings"
+                );
+
+                gmcm.AddBoolOption(
+                    mod: this.Manifest,
+                    getValue: () => config.EnableWeekendSurcharge,
+                    setValue: value => config.EnableWeekendSurcharge = value,
+                    name: () => this.Helper.Translation.Get("config.enable_weekend_surcharge.name"),
+                    tooltip: () => this.Helper.Translation.Get("config.enable_weekend_surcharge.tooltip")
+                );
+
+                gmcm.AddNumberOption(
+                    mod: this.Manifest,
+                    getValue: () => config.WeekendSurchargePercent,
+                    setValue: value => config.WeekendSurchargePercent = value,
+                    name: () => this.Helper.Translation.Get("config.weekend_surcharge_percent.name"),
+                    tooltip: () => this.Helper.Translation.Get("config.weekend_surcharge_percent.tooltip"),
+                    min: 0,
+                    max: 100,
+                    interval: 5
                 );
 
                 this.Monitor.Log("GMCM config registered.", LogLevel.Debug);

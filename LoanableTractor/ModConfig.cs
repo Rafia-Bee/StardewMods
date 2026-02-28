@@ -23,5 +23,11 @@ namespace LoanableTractor
 
         /// <summary>If true, the loaned tractor has a 10% chance each day to be slower than the usual tractor.</summary>
         public bool EnableSpeedReduction { get; set; } = false;
+
+        /// <summary>If true, weekend rentals (Saturday/Sunday) have a surcharge applied.</summary>
+        public bool EnableWeekendSurcharge { get; set; } = true;
+
+        /// <summary>Percentage surcharge applied on weekends.</summary>
+        public int WeekendSurchargePercent { get; set; } = 25;
     }
 }

@@ -23,6 +23,7 @@ Thumbs.db
 # Mod release
 release/
 *.zip
+rafia-stardew-mods.sln
 
 # Internal docs
 docs/

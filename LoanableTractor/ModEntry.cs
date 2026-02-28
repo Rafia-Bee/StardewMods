@@ -47,6 +47,7 @@ namespace LoanableTractor
             MailboxOverrides.LoanManager = this.LoanManager;
             MailboxOverrides.ModHelper = helper;
             MailboxOverrides.Monitor = this.Monitor;
+            MailboxOverrides.Config = this.Config;
             MailboxOverrides.MailServicesModInstalled = helper.ModRegistry.IsLoaded("Digus.MailServicesMod");
 
             this.Mail.RegisterAssetEditor();

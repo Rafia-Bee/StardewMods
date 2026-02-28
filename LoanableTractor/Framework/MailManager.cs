@@ -8,6 +8,7 @@ namespace LoanableTractor.Framework
     /// <summary>
     /// Handles mail delivery using SMAPI's native mail system.
     /// Injects custom mail content into Data/mail and delivers to the player's mailbox.
+    /// Switches to Pierre's flavor text after the Community Center is completed.
     /// </summary>
     internal class MailManager
     {
@@ -56,6 +57,7 @@ namespace LoanableTractor.Framework
                 if (!this.Config.AllowLoanWithGarage && this.LoanManager.PlayerHasGarage())
                     return;
 
+                this.Helper.GameContent.InvalidateCache("Data/mail");
                 Game1.player.mailbox.Add(IntroMailId);
             }
             catch (Exception ex)
@@ -77,7 +79,9 @@ namespace LoanableTractor.Framework
             e.Edit(asset =>
             {
                 var data = asset.AsDictionary<string, string>();
-                string mailText = this.Helper.Translation.Get("mail.joja.intro");
+                bool ccComplete = TractorLoanManager.IsCommunityCenterComplete();
+                string mailKey = ccComplete ? "mail.pierre.intro" : "mail.joja.intro";
+                string mailText = this.Helper.Translation.Get(mailKey);
                 data.Data[IntroMailId] = mailText;
             });
         }

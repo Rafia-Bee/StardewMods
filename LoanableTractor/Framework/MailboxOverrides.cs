@@ -23,6 +23,9 @@ namespace LoanableTractor.Framework
         /// <summary>The monitor for logging.</summary>
         internal static StardewModdingAPI.IMonitor Monitor;
 
+        /// <summary>The mod configuration.</summary>
+        internal static ModConfig Config;
+
         /// <summary>Whether Mail Services Mod is installed (for combined dialogue).</summary>
         internal static bool MailServicesModInstalled;
 
@@ -107,7 +110,28 @@ namespace LoanableTractor.Framework
             int cost = LoanManager.GetCurrentLoanCost();
             string loanText = ModHelper.Translation.Get("dialogue.mailbox.loan", new { cost });
             string cancelText = ModHelper.Translation.Get("dialogue.mailbox.cancel");
-            string title = ModHelper.Translation.Get("dialogue.mailbox.title.joja");
+
+            bool ccComplete = TractorLoanManager.IsCommunityCenterComplete();
+            string titleKey = ccComplete ? "dialogue.mailbox.title.pierre" : "dialogue.mailbox.title.joja";
+            string title = ModHelper.Translation.Get(titleKey);
+
+            if (Config != null && Config.EnableWeekendSurcharge && TractorLoanManager.IsWeekend())
+            {
+                string surchargeKey = ccComplete
+                    ? "dialogue.mailbox.weekend_surcharge.pierre"
+                    : "dialogue.mailbox.weekend_surcharge.joja";
+                title += "^^" + ModHelper.Translation.Get(surchargeKey, new { percent = Config.WeekendSurchargePercent });
+            }
+
+            float seasonalDiscount = TractorLoanManager.GetSeasonalDiscount();
+            if (seasonalDiscount > 0)
+            {
+                string season = Game1.currentSeason;
+                string promoKey = ccComplete
+                    ? $"dialogue.mailbox.seasonal_promo.pierre.{season}"
+                    : $"dialogue.mailbox.seasonal_promo.joja.{season}";
+                title += "^^" + ModHelper.Translation.Get(promoKey);
+            }
 
             var responses = new List<Response>
             {

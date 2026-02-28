@@ -51,6 +51,9 @@ namespace LoanableTractor.Framework
         /// <summary>GUIDs of all active loaned tractors.</summary>
         public List<Guid> ActiveTractorIds { get; set; } = new();
 
+        /// <summary>Whether today's tractor received a speed reduction (rolled on delivery).</summary>
+        public bool IsTractorSlowToday { get; set; }
+
         /*********
          ** Public Methods
          *********/
@@ -77,12 +80,47 @@ namespace LoanableTractor.Framework
             return true;
         }
 
-        /// <summary>Get the current loan cost per day, accounting for loyalty discounts.</summary>
+        /// <summary>Get the current loan cost per day, accounting for loyalty discounts, seasonal promos, and weekend surcharges.</summary>
         public int GetCurrentLoanCost()
         {
             int baseCost = this.Config.LoanCostPerDay;
             float discount = this.Loyalty?.GetCurrentDiscount() ?? 0f;
-            return Math.Max(0, (int)(baseCost * (1f - discount)));
+
+            discount += GetSeasonalDiscount();
+
+            int cost = Math.Max(0, (int)(baseCost * (1f - discount)));
+
+            if (this.Config.EnableWeekendSurcharge && IsWeekend())
+                cost = (int)(cost * (1f + this.Config.WeekendSurchargePercent / 100f));
+
+            return Math.Max(0, cost);
+        }
+
+        /// <summary>Check if the Community Center has been completed (switches to Pierre flavor).</summary>
+        public static bool IsCommunityCenterComplete()
+        {
+            return Context.IsWorldReady && Game1.MasterPlayer.mailReceived.Contains("ccIsComplete");
+        }
+
+        /// <summary>Check if today is a weekend (Saturday or Sunday).</summary>
+        public static bool IsWeekend()
+        {
+            int dayOfWeek = Game1.dayOfMonth % 7;
+            return dayOfWeek == 6 || dayOfWeek == 0;
+        }
+
+        /// <summary>Get the current seasonal discount multiplier (Spring and Winter have promos).</summary>
+        public static float GetSeasonalDiscount()
+        {
+            if (!Context.IsWorldReady)
+                return 0f;
+
+            return Game1.currentSeason switch
+            {
+                "spring" => 0.15f,
+                "winter" => 0.20f,
+                _ => 0f
+            };
         }
 
         /// <summary>Execute a tractor loan: deduct gold, spawn tractor, set tracking flags.</summary>
@@ -116,10 +154,24 @@ namespace LoanableTractor.Framework
             this.LoanActiveToday = true;
             this.RemainingLoanDays = days;
 
-            Game1.addHUDMessage(new HUDMessage(
-                this.Helper.Translation.Get("hud.tractor.delivered"), HUDMessage.achievement_type));
+            this.IsTractorSlowToday = this.Config.EnableSpeedReduction && Game1.random.NextDouble() < 0.10;
+            if (this.IsTractorSlowToday)
+                this.ApplySlowSpeed();
 
-            this.Monitor.Log($"Tractor loaned for {days} day(s) at {costPerDay}g/day (total: {totalCost}g).", LogLevel.Info);
+            bool ccComplete = IsCommunityCenterComplete();
+            string deliveryKey = ccComplete ? "hud.tractor.delivered.pierre" : "hud.tractor.delivered";
+            Game1.addHUDMessage(new HUDMessage(
+                this.Helper.Translation.Get(deliveryKey), HUDMessage.achievement_type));
+
+            if (this.IsTractorSlowToday)
+            {
+                string conditionPrefix = ccComplete ? "hud.tractor.condition.pierre" : "hud.tractor.condition.joja";
+                int variant = Game1.random.Next(1, 4);
+                Game1.addHUDMessage(new HUDMessage(
+                    this.Helper.Translation.Get($"{conditionPrefix}.{variant}"), HUDMessage.newQuest_type));
+            }
+
+            this.Monitor.Log($"Tractor loaned for {days} day(s) at {costPerDay}g/day (total: {totalCost}g). Slow today: {this.IsTractorSlowToday}", LogLevel.Info);
             return true;
         }
 
@@ -137,16 +189,30 @@ namespace LoanableTractor.Framework
                     this.DespawnAllLoanedTractors();
                     this.RemainingLoanDays = 0;
                     this.LoanActiveToday = false;
+                    bool ccRepo = IsCommunityCenterComplete();
+                    string repoKey = ccRepo ? "hud.tractor.repossessed.pierre" : "hud.tractor.repossessed";
                     Game1.addHUDMessage(new HUDMessage(
-                        this.Helper.Translation.Get("hud.tractor.repossessed"), HUDMessage.error_type));
+                        this.Helper.Translation.Get(repoKey), HUDMessage.error_type));
                     this.Monitor.Log("Tractor repossessed — insufficient funds.", LogLevel.Info);
                     return;
                 }
                 Game1.player.Money -= cost;
             }
 
+            this.IsTractorSlowToday = this.Config.EnableSpeedReduction && Game1.random.NextDouble() < 0.10;
+
             this.SpawnTractor();
             this.LoanActiveToday = true;
+
+            if (this.IsTractorSlowToday)
+            {
+                this.ApplySlowSpeed();
+                bool ccDay = IsCommunityCenterComplete();
+                string condPrefix = ccDay ? "hud.tractor.condition.pierre" : "hud.tractor.condition.joja";
+                int v = Game1.random.Next(1, 4);
+                Game1.addHUDMessage(new HUDMessage(
+                    this.Helper.Translation.Get($"{condPrefix}.{v}"), HUDMessage.newQuest_type));
+            }
         }
 
         /// <summary>Handle end-of-day cleanup: despawn tractors, decrement loan counter.</summary>
@@ -169,10 +235,13 @@ namespace LoanableTractor.Framework
             if (this.RemainingLoanDays <= 0)
             {
                 this.LoanActiveToday = false;
+                this.IsTractorSlowToday = false;
                 this.Loyalty?.RecordLoanCompleted();
 
+                bool ccEnd = IsCommunityCenterComplete();
+                string collectKey = ccEnd ? "hud.tractor.collected.pierre" : "hud.tractor.collected";
                 Game1.addHUDMessage(new HUDMessage(
-                    this.Helper.Translation.Get("hud.tractor.collected"), HUDMessage.achievement_type));
+                    this.Helper.Translation.Get(collectKey), HUDMessage.achievement_type));
             }
         }
 
@@ -181,6 +250,7 @@ namespace LoanableTractor.Framework
         {
             this.LoanActiveToday = false;
             this.RemainingLoanDays = 0;
+            this.IsTractorSlowToday = false;
             this.DespawnAllLoanedTractors();
             this.ActiveTractorIds.Clear();
         }
@@ -309,7 +379,7 @@ namespace LoanableTractor.Framework
             location.addCharacter(tractor);
             tractor.currentLocation = location;
             tractor.isCharging = false;
-            tractor.speed = 2;
+            tractor.speed = this.IsTractorSlowToday ? 1 : 2;
             tractor.blockedInterval = 0;
             tractor.position.X = tile.X * Game1.tileSize;
             tractor.position.Y = tile.Y * Game1.tileSize;
@@ -328,6 +398,14 @@ namespace LoanableTractor.Framework
             {
                 this.Monitor.Log($"Could not apply tractor texture: {ex.Message}", LogLevel.Trace);
             }
+        }
+
+        /// <summary>Apply slow speed to all active loaned tractors.</summary>
+        private void ApplySlowSpeed()
+        {
+            Horse tractor = this.FindLoanedTractor();
+            if (tractor != null)
+                tractor.speed = 1;
         }
 
         /// <summary>Check whether the player owns a tractor garage building.</summary>
