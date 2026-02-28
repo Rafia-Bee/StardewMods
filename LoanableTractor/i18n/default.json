@@ -1,22 +1,39 @@
 {
     "mail.joja.intro": "Dear @,^^Congratulations! As a valued member of the Joja community, you've been pre-approved for our Joja AgriLease™ Tractor Rental Program!^^Why break your back with a hoe when Joja's state-of-the-art farming machinery can do the heavy lifting? For just a small daily fee, a certified Joja tractor will be delivered straight to your farm — no garage required, no long-term commitment, no questions asked!*^^Simply visit your mailbox to access the loan service.^^Work smarter. Work Joja.™^^— Joja Corp. Customer Retention Division^^*Tractor must be returned by end of business day. Joja Corp. is not responsible for crop damage, fence destruction, or existential dread caused by corporate farming equipment. Daily fee is non-refundable. Terms subject to change without notice.",
 
-    "mail.pierre.intro": "Dear @,^^Pierre here! I noticed you've been working hard on your farm and thought I'd let you know about my new farm equipment rental service.^^For a small daily fee, I can arrange for a tractor to help out on your farm. Just visit your mailbox and select the rental option!^^— Pierre",
+    "mail.pierre.intro": "Dear @,^^Pierre here! Now that the Community Center is back up and running, I've been thinking about ways to help out local farmers like you.^^I've put together a farm equipment rental service — for a small daily fee, I can have a tractor delivered to your farm. No long-term contracts, no corporate fine print. Just honest, straightforward help from your friendly neighborhood grocer.^^Stop by your mailbox whenever you'd like to rent one!^^— Pierre^^P.S. Tell Caroline I said hi if you see her. She never believes me when I say I'm branching out.",
 
     "dialogue.mailbox.title.joja": "Joja AgriLease™ Service",
-    "dialogue.mailbox.title.pierre": "Pierre's Tractor Rental",
+    "dialogue.mailbox.title.pierre": "Pierre's Farm Equipment Rental",
     "dialogue.mailbox.loan": "Loan Tractor ({{cost}}g)",
     "dialogue.mailbox.cancel": "Cancel",
+
+    "dialogue.mailbox.weekend_surcharge.joja": "Weekend Premium™ in effect — {{percent}}% surcharge applied. Joja thanks you for your flexibility!",
+    "dialogue.mailbox.weekend_surcharge.pierre": "Weekend rates are a little higher today — {{percent}}% surcharge. Sorry about that!",
+
+    "dialogue.mailbox.seasonal_promo.joja.spring": "Spring Planting Special! 15% off all rentals this season. Joja grows with you.™",
+    "dialogue.mailbox.seasonal_promo.joja.winter": "Off-Season Clearance! 20% off rentals — our tractors need the exercise anyway.",
+    "dialogue.mailbox.seasonal_promo.pierre.spring": "Spring Planting Special! 15% off rentals this season — let's get those fields ready!",
+    "dialogue.mailbox.seasonal_promo.pierre.winter": "Off-Season Discount! 20% off rentals this winter. Not much else going on, figured I'd pass the savings along.",
 
     "hud.tractor.delivered": "A Joja tractor has been delivered! It will be collected at the end of the day.",
     "hud.tractor.delivered.pierre": "Pierre's tractor has been delivered! It will be collected at the end of the day.",
     "hud.tractor.collected": "The Joja tractor has been collected. Thank you for choosing Joja AgriLease™!",
-    "hud.tractor.collected.pierre": "Pierre's tractor has been collected. Thank you for renting from Pierre!",
+    "hud.tractor.collected.pierre": "Pierre's tractor has been collected. Thanks for renting from Pierre!",
     "hud.tractor.repossessed": "Your Joja AgriLease™ tractor has been repossessed due to insufficient funds. Better luck next harvest!",
+    "hud.tractor.repossessed.pierre": "Pierre had to take the tractor back — you didn't have enough gold to cover the rental. Come back when you're ready!",
     "hud.tractor.insufficient.funds": "You don't have enough gold to loan a tractor.",
     "hud.tractor.already.loaned": "You've already loaned a tractor today.",
 
+    "hud.tractor.condition.joja.1": "This unit's been through a few fields... the engine sputters, but Joja guarantees it meets minimum operational standards!™",
+    "hud.tractor.condition.joja.2": "Today's tractor comes with 'character' — a grinding noise and a steering wheel that pulls left. Joja quality!™",
+    "hud.tractor.condition.joja.3": "A slightly pre-loved tractor has been delivered! The previous renter may have used it for demolition derby practice.",
+    "hud.tractor.condition.pierre.1": "Pierre's loaner tractor is a bit older, but it should do the job. He mentioned the last renter was... enthusiastic.",
+    "hud.tractor.condition.pierre.2": "The tractor Pierre sent over has seen better days. He swears the rattling is 'totally normal.'",
+    "hud.tractor.condition.pierre.3": "Pierre's tractor arrived making some interesting sounds. He said it just needs to warm up — might be a little slower today.",
+
     "hud.late.return": "Your leased tractor was not properly returned by close of business. A late return fee of {{penalty}}g has been applied to your account. Remember: Joja time is money!™",
+    "hud.late.return.pierre": "Looks like the tractor wasn't returned on time. Pierre's adding a {{penalty}}g late fee to your tab. Nothing personal!",
 
     "loyalty.bronze": "Congratulations! You've reached Joja Bronze Member status — 10% discount on future tractor loans!",
     "loyalty.silver": "Congratulations! You've reached Joja Silver Member status — 20% discount on future tractor loans!",
@@ -35,7 +52,11 @@
     "config.late_return_penalty.name": "Late Return Penalty",
     "config.late_return_penalty.tooltip": "Bonus gold charged for late return (passing out with tractor).",
     "config.enable_speed_reduction.name": "Enable Speed Reduction",
-    "config.enable_speed_reduction.tooltip": "If enabled, the loaned tractor has a 10% chance each day to be slower than the usual tractor (Joja cuts corners).",
+    "config.enable_speed_reduction.tooltip": "If enabled, the loaned tractor has a 10% chance each day to be slower than the usual tractor.",
+    "config.enable_weekend_surcharge.name": "Enable Weekend Surcharge",
+    "config.enable_weekend_surcharge.tooltip": "If enabled, renting on Saturday or Sunday costs extra.",
+    "config.weekend_surcharge_percent.name": "Weekend Surcharge %",
+    "config.weekend_surcharge_percent.tooltip": "Percentage surcharge applied to weekend rentals.",
 
     "command.status.active": "Tractor loan active — {{days}} day(s) remaining. Total loans completed: {{total}}. Loyalty tier: {{tier}}.",
     "command.status.inactive": "No active tractor loan. Total loans completed: {{total}}. Loyalty tier: {{tier}}.",
