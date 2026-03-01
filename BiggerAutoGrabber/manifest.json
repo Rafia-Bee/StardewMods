@@ -1,0 +1,17 @@
+{
+    "Name": "Bigger Auto-Grabber",
+    "Author": "Rafia-Bee",
+    "Version": "1.0.0",
+    "MinimumApiVersion": "4.1.0",
+    "UniqueID": "RafiaBee.BiggerAutoGrabber",
+    "Description": "Expands the auto-grabber's internal chest beyond the vanilla 36-slot limit.",
+    "EntryDll": "BiggerAutoGrabber.dll",
+    "Dependencies": [
+        {
+            "UniqueID": "spacechase0.GenericModConfigMenu",
+            "MinimumVersion": "1.6.0",
+            "IsRequired": false
+        }
+    ],
+    "UpdateKeys": ["Nexus:MODID"]
+}
