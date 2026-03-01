@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>DeluxeGrabberFix</AssemblyName>
+    <RootNamespace>DeluxeGrabberFix</RootNamespace>
+    <Version>1.9.2</Version>
+    <LangVersion>latest</LangVersion>
+    <TargetFramework>net6.0</TargetFramework>
+    <EnableHarmony>false</EnableHarmony>
+    <ModFolderName>DeluxeGrabberFix</ModFolderName>
+    <EnableModDeploy>false</EnableModDeploy>
+    <EnableModZip>true</EnableModZip>
+    <IgnoreModFilePaths>config.json</IgnoreModFilePaths>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
+  </ItemGroup>
+</Project>

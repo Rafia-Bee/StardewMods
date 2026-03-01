@@ -28,10 +28,10 @@ rafia-stardew-mods.sln
 # Internal docs
 docs/
 .github/copilot-instructions.md
+temp_findings.md
 
 # Secret mods
 CapybaraPigReplacement/
 CarbonizerRafiaEdit/
 SMAPI-latest.txt
 DeluxeGrabberRedux*
-RafiaGrabber/

@@ -1,0 +1,10 @@
+{
+    "Name": "Deluxe Grabber Fix",
+    "Author": "Rafia (originally by ferdaber, updated by Nykal145)",
+    "Version": "1.9.2",
+    "Description": "Allows use of autograbber for harvesting crops, slime balls, fruit trees, bushes, forageable items, and artifact spots.",
+    "UniqueID": "Rafia.DeluxeGrabberFix",
+    "EntryDll": "DeluxeGrabberFix.dll",
+    "MinimumApiVersion": "4.0.0",
+    "UpdateKeys": ["Nexus:MODID"]
+}
