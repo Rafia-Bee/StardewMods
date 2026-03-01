@@ -1,11 +1,11 @@
 # Bigger Auto-Grabber
 
-A Stardew Valley mod that expands the auto-grabber's internal chest beyond the vanilla 36-slot limit.
+If you use the [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/stardewvalley/mods/20799?tab=description) mod, you probably faced the issue of the auto-grabber overflowing and having to press the global grabber button multiple times to gather all the items. This mod expands the auto-grabber's internal chest beyond the vanilla 36-slot limit, so the deluxe grabber can grab everything in one go.
 
 ## Features
 
 - Configurable auto-grabber capacity (default: 36, vanilla)
-- Works with any mod that uses auto-grabbers (e.g., Rafia Grabber, Deluxe Grabber Redux)
+- Works with any mod that uses auto-grabbers (e.g., Deluxe Grabber Redux)
 - Capacity changes are applied to all existing and newly placed auto-grabbers
 - Compatible with Generic Mod Config Menu for in-game configuration
 

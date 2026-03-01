@@ -5,6 +5,7 @@ using HarmonyLib;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Menus;
 using StardewValley.Objects;
 
 namespace BiggerAutoGrabber;
@@ -24,8 +25,8 @@ public class ModEntry : Mod
             Config = new ModConfig();
         }
 
-        if (Config.Capacity < 12)
-            Config.Capacity = 12;
+        if (Config.Capacity < 36)
+            Config.Capacity = 36;
 
         var harmony = new Harmony(ModManifest.UniqueID);
         ChestPatches.Apply(harmony);
@@ -34,6 +35,7 @@ public class ModEntry : Mod
         helper.Events.GameLoop.SaveLoaded += (_, _) => StampAllAutoGrabbers();
         helper.Events.GameLoop.DayStarted += (_, _) => StampAllAutoGrabbers();
         helper.Events.World.ObjectListChanged += OnObjectListChanged;
+        helper.Events.Display.MenuChanged += OnMenuChanged;
     }
 
     private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
@@ -57,6 +59,23 @@ public class ModEntry : Mod
             () => "Auto-Grabber Capacity",
             () => "Number of item slots in each auto-grabber. Vanilla default is 36.",
             36, 288, 12);
+    }
+
+    private void OnMenuChanged(object sender, MenuChangedEventArgs e)
+    {
+        if (e.NewMenu is not ItemGrabMenu menu)
+            return;
+
+        var chest = ChestPatches.FindAutoGrabberChest(menu);
+        if (chest == null)
+            return;
+
+        if (!chest.modData.TryGetValue(ChestPatches.CapacityKey, out string capStr)
+            || !int.TryParse(capStr, out int cap)
+            || cap <= 36)
+            return;
+
+        ChestPatches.ResizeMenu(menu, cap);
     }
 
     private void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
