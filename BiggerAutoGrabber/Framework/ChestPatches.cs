@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using StardewValley;
@@ -41,13 +40,32 @@ internal static class ChestPatches
                 finalizer: new HarmonyMethod(typeof(ChestPatches), nameof(ItemGrabMenuCtor_Finalizer))
             );
         }
+
+        // Prevent grabItemFromChest / grabItemFromInventory from
+        // rebuilding the entire ItemGrabMenu after every grab/deposit.
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Chest), nameof(Chest.grabItemFromChest)),
+            prefix: new HarmonyMethod(typeof(ChestPatches), nameof(GrabItemFromChest_Prefix))
+        );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Chest), nameof(Chest.grabItemFromInventory)),
+            prefix: new HarmonyMethod(typeof(ChestPatches), nameof(GrabItemFromInventory_Prefix))
+        );
+
+        // Prevent Object.grabItemFromAutoGrabber from rebuilding the
+        // entire ItemGrabMenu after every item withdrawal.
+        harmony.Patch(
+            original: AccessTools.Method(typeof(StardewValley.Object), "grabItemFromAutoGrabber"),
+            prefix: new HarmonyMethod(typeof(ChestPatches), nameof(GrabItemFromAutoGrabber_Prefix))
+        );
     }
 
     // ── ItemGrabMenu constructor prefix / finalizer ─────────────────
 
     private static void ItemGrabMenuCtor_Prefix(Item sourceItem)
     {
-        if (sourceItem is Chest c && c.modData.ContainsKey(CapacityKey))
+        bool isOurs = sourceItem is Chest c && c.modData.ContainsKey(CapacityKey);
+        if (isOurs)
             _suppressCapacity = true;
     }
 
@@ -80,6 +98,113 @@ internal static class ChestPatches
         }
 
         return null;
+    }
+
+    // ── grabItemFromChest / grabItemFromInventory prefixes ──────────
+
+    /// <summary>
+    /// Replaces <see cref="Chest.grabItemFromChest"/> for our enlarged
+    /// chests.  Does the same inventory work (remove item, clear nulls)
+    /// but skips the <c>ShowMenu()</c> call that would rebuild the entire
+    /// <see cref="ItemGrabMenu"/> and cause a visible blink.
+    /// </summary>
+    private static bool GrabItemFromChest_Prefix(Chest __instance, Item item, Farmer who)
+    {
+        if (Game1.activeClickableMenu is not ItemGrabMenu igm)
+            return true;
+
+        var foundChest = FindAutoGrabberChest(igm);
+        bool hasKey = __instance.modData.ContainsKey(CapacityKey);
+        bool refMatch = foundChest == __instance;
+
+        if (!refMatch && !hasKey)
+            return true;
+
+        if (who.couldInventoryAcceptThisItem(item))
+        {
+            __instance.GetItemsForPlayer().Remove(item);
+            __instance.clearNulls();
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Replaces <see cref="Chest.grabItemFromInventory"/> for our
+    /// enlarged chests.  Adds the item to the chest and handles the held-
+    /// item / snap state on the existing menu without calling
+    /// <c>ShowMenu()</c>.
+    /// </summary>
+    private static bool GrabItemFromInventory_Prefix(Chest __instance, Item item, Farmer who)
+    {
+        if (Game1.activeClickableMenu is not ItemGrabMenu igm)
+            return true;
+
+        var foundChest = FindAutoGrabberChest(igm);
+        bool hasKey = __instance.modData.ContainsKey(CapacityKey);
+        bool refMatch = foundChest == __instance;
+
+        if (!refMatch && !hasKey)
+            return true;
+
+        // Replicate vanilla logic without the ShowMenu() call.
+        if (item.Stack == 0)
+            item.Stack = 1;
+
+        Item remainder = __instance.addItem(item);
+        if (remainder == null)
+            who.removeItemFromInventory(item);
+        else
+            remainder = who.addItemToInventory(remainder);
+
+        __instance.clearNulls();
+
+        // Preserve snapped component across the (non-)rebuild.
+        int snappedId = igm.currentlySnappedComponent?.myID ?? -1;
+
+        // Update heldItem on the existing menu (vanilla sets this on
+        // the freshly-created menu returned by ShowMenu).
+        igm.heldItem = remainder;
+
+        if (snappedId != -1)
+        {
+            igm.currentlySnappedComponent = igm.getComponentWithID(snappedId);
+            igm.snapCursorToCurrentSnappedComponent();
+        }
+
+        return false;
+    }
+
+    // ── Object.grabItemFromAutoGrabber prefix ──────────────────────
+
+    /// <summary>
+    /// Replaces <see cref="StardewValley.Object.grabItemFromAutoGrabber"/>
+    /// for our enlarged auto-grabbers.  Does the same item-transfer work
+    /// (remove item, clear nulls, update showNextIndex) but skips the
+    /// <c>Game1.activeClickableMenu = new ItemGrabMenu(...)</c> call that
+    /// rebuilds the entire menu and causes a visible blink.
+    /// </summary>
+    private static bool GrabItemFromAutoGrabber_Prefix(
+        StardewValley.Object __instance, Item item, Farmer who)
+    {
+        if (__instance.heldObject.Value is not Chest chest
+            || !chest.modData.ContainsKey(CapacityKey))
+        {
+            return true;
+        }
+
+        if (who.couldInventoryAcceptThisItem(item))
+        {
+            chest.Items.Remove(item);
+            chest.clearNulls();
+        }
+
+        if (chest.isEmpty())
+        {
+            __instance.showNextIndex.Value = false;
+        }
+
+        return false;
     }
 
     // ── GetActualCapacity postfix ───────────────────────────────────
