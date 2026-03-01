@@ -1,0 +1,17 @@
+{
+    "Name": "Bulk Derby Rewards",
+    "Author": "Rafia-Bee",
+    "Version": "1.0.0",
+    "MinimumApiVersion": "4.1.0",
+    "UniqueID": "RafiaBee.BulkDerbyRewards",
+    "Description": "Exchange all Golden Tags at once during the Trout Derby and collect rewards in a chest-style menu.",
+    "EntryDll": "BulkDerbyRewards.dll",
+    "Dependencies": [
+        {
+            "UniqueID": "spacechase0.GenericModConfigMenu",
+            "MinimumVersion": "1.6.0",
+            "IsRequired": false
+        }
+    ],
+    "UpdateKeys": ["Nexus:MODID"]
+}
