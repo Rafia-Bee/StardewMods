@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using StardewValley;
 using StardewValley.Menus;
@@ -10,16 +12,87 @@ internal static class ChestPatches
 {
     internal const string CapacityKey = "BiggerAutoGrabber/Capacity";
 
+    /// <summary>
+    /// When true, <see cref="GetActualCapacity_Postfix"/> returns vanilla
+    /// values so the <see cref="ItemGrabMenu"/> constructor builds a
+    /// standard layout that <c>SetupBorderNeighbors()</c> can handle.
+    /// </summary>
+    [ThreadStatic]
+    private static bool _suppressCapacity;
+
     public static void Apply(Harmony harmony)
     {
         harmony.Patch(
             original: AccessTools.Method(typeof(Chest), nameof(Chest.GetActualCapacity)),
             postfix: new HarmonyMethod(typeof(ChestPatches), nameof(GetActualCapacity_Postfix))
         );
+
+        // Patch the full ItemGrabMenu constructor (18 parameters) so we
+        // can suppress GetActualCapacity during construction, then resize
+        // safely in the finalizer once the base layout is complete.
+        var ctor = AccessTools.GetDeclaredConstructors(typeof(ItemGrabMenu))
+            .FirstOrDefault(c => c.GetParameters().Length >= 18);
+
+        if (ctor != null)
+        {
+            harmony.Patch(
+                original: ctor,
+                prefix: new HarmonyMethod(typeof(ChestPatches), nameof(ItemGrabMenuCtor_Prefix)),
+                finalizer: new HarmonyMethod(typeof(ChestPatches), nameof(ItemGrabMenuCtor_Finalizer))
+            );
+        }
     }
+
+    // ── ItemGrabMenu constructor prefix / finalizer ─────────────────
+
+    private static void ItemGrabMenuCtor_Prefix(Item sourceItem)
+    {
+        if (sourceItem is Chest c && c.modData.ContainsKey(CapacityKey))
+            _suppressCapacity = true;
+    }
+
+    private static Exception ItemGrabMenuCtor_Finalizer(
+        ItemGrabMenu __instance, Exception __exception, Item sourceItem)
+    {
+        bool wasSuppressed = _suppressCapacity;
+        _suppressCapacity = false;
+
+        if (__exception != null)
+            return __exception;
+
+        if (!wasSuppressed)
+            return null;
+
+        // The constructor completed with a vanilla layout. Now resize.
+        var chest = FindAutoGrabberChest(__instance);
+        if (chest == null && sourceItem is Chest src
+            && src.modData.ContainsKey(CapacityKey))
+        {
+            chest = src;
+        }
+
+        if (chest != null
+            && chest.modData.TryGetValue(CapacityKey, out string capStr)
+            && int.TryParse(capStr, out int cap)
+            && cap > 36)
+        {
+            ResizeMenu(__instance, cap);
+        }
+
+        return null;
+    }
+
+    // ── GetActualCapacity postfix ───────────────────────────────────
 
     private static void GetActualCapacity_Postfix(Chest __instance, ref int __result)
     {
+        // During ItemGrabMenu construction, return the vanilla value so the
+        // constructor uses its standard 36-slot layout path.  This avoids
+        // the SetupBorderNeighbors crash for capacities whose column count
+        // exceeds the player inventory size.
+        if (_suppressCapacity)
+            return;
+
         if (__instance.modData.TryGetValue(CapacityKey, out string val)
             && int.TryParse(val, out int cap)
             && cap > 0)
@@ -28,9 +101,17 @@ internal static class ChestPatches
         }
     }
 
+    // ── Auto-grabber chest detection ────────────────────────────────
+
     /// <summary>Finds the auto-grabber chest backing the given menu, if any.</summary>
     public static Chest FindAutoGrabberChest(ItemGrabMenu menu)
     {
+        if (menu.sourceItem is Chest srcChest
+            && srcChest.modData.ContainsKey(CapacityKey))
+        {
+            return srcChest;
+        }
+
         if (menu.context is StardewValley.Object obj
             && obj.bigCraftable.Value
             && obj.ParentSheetIndex == 165
@@ -60,7 +141,15 @@ internal static class ChestPatches
         return null;
     }
 
-    /// <summary>Resizes the menu's upper inventory to fit the given capacity.</summary>
+    // ── Menu resize ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Replaces the menu's <see cref="ItemGrabMenu.ItemsToGrabMenu"/>
+    /// with one sized for the given capacity, adjusts the menu height and
+    /// player-inventory position, then lets the game reposition all
+    /// buttons via its own <c>RepositionSideButtons</c> and
+    /// <c>SetupBorderNeighbors</c> methods.
+    /// </summary>
     public static void ResizeMenu(ItemGrabMenu menu, int cap)
     {
         const int cols = 12;
@@ -76,6 +165,7 @@ internal static class ChestPatches
         int visibleCap = visibleRows * cols;
         var old = menu.ItemsToGrabMenu;
 
+        // Build the replacement InventoryMenu at the same position.
         menu.ItemsToGrabMenu = new InventoryMenu(
             old.xPositionOnScreen,
             old.yPositionOnScreen,
@@ -85,20 +175,39 @@ internal static class ChestPatches
             rows: visibleRows
         );
 
+        // Replicate the ID fixup the constructor normally does (region
+        // 53910 offset, fullyImmutable, downNeighborID sentinel).
+        menu.ItemsToGrabMenu.populateClickableComponentList();
+        for (int i = 0; i < menu.ItemsToGrabMenu.inventory.Count; i++)
+        {
+            var slot = menu.ItemsToGrabMenu.inventory[i];
+            if (slot != null)
+            {
+                slot.myID += 53910;
+                slot.upNeighborID += 53910;
+                slot.rightNeighborID += 53910;
+                slot.downNeighborID = -7777;
+                slot.leftNeighborID += 53910;
+                slot.fullyImmutable = true;
+            }
+        }
+
+        // Expand the menu frame and push the player inventory down.
         menu.height += shift;
         menu.inventory.movePosition(0, shift);
 
+        // Move okButton / trashCan down to match the taller menu.
         if (menu.okButton != null)
             menu.okButton.bounds.Y += shift;
         if (menu.trashCan != null)
             menu.trashCan.bounds.Y += shift;
-        if (menu.organizeButton != null)
-            menu.organizeButton.bounds.Y += shift;
-        if (menu.fillStacksButton != null)
-            menu.fillStacksButton.bounds.Y += shift;
-        if (menu.colorPickerToggleButton != null)
-            menu.colorPickerToggleButton.bounds.Y += shift;
-        if (menu.junimoNoteIcon != null)
-            menu.junimoNoteIcon.bounds.Y += shift;
+
+        // Let the game position the side buttons (organize, fill-stacks,
+        // color picker, etc.) relative to the new ItemsToGrabMenu.
+        menu.RepositionSideButtons();
+
+        // Rebuild keyboard / gamepad neighbour links so
+        // SetupBorderNeighbors doesn't crash and navigation works.
+        menu.SetupBorderNeighbors();
     }
 }
