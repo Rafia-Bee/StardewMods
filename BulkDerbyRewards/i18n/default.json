@@ -1,0 +1,13 @@
+{
+    "menu.title": "Derby Prizes",
+    "dialogue.bulk_exchange": "Exchange all {{count}} Golden Tags for prizes?",
+    "dialogue.single_exchange": "Exchange your Golden Tag for a prize?",
+    "dialogue.yes": "Yes",
+    "dialogue.no": "No",
+    "hud.prizes_dropped": "Some prizes were dropped on the ground — your inventory was full!",
+
+    "config.enabled.name": "Enabled",
+    "config.enabled.tooltip": "Enable bulk exchange for the Trout Derby booth.",
+    "config.always_bulk.name": "Always Bulk Exchange",
+    "config.always_bulk.tooltip": "When enabled, even a single Golden Tag is exchanged through the chest-style reward menu."
+}
