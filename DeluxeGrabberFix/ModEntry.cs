@@ -18,6 +18,7 @@ public class ModEntry : Mod
 {
     internal readonly ModApi Api;
     internal ModConfig Config { get; set; }
+    internal bool IsGlobalGrabActive { get; set; }
 
     public ModEntry()
     {
@@ -59,13 +60,21 @@ public class ModEntry : Mod
             return;
 
         LogDebug("Autograbbing on button pressed");
-        var allLocations = Game1.locations
-            .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
-            .Where(loc => loc != null);
-
-        foreach (var location in allLocations)
+        IsGlobalGrabActive = true;
+        try
         {
-            GrabAtLocation(location);
+            var allLocations = Game1.locations
+                .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
+                .Where(loc => loc != null);
+
+            foreach (var location in allLocations)
+            {
+                GrabAtLocation(location);
+            }
+        }
+        finally
+        {
+            IsGlobalGrabActive = false;
         }
     }
 
@@ -231,7 +240,7 @@ public class ModEntry : Mod
 
         foreach (var location in allLocations)
         {
-            GrabAtLocation(location, DayStarted: true);
+            GrabAtLocation(location);
         }
     }
 
@@ -272,9 +281,9 @@ public class ModEntry : Mod
         }
     }
 
-    private bool GrabAtLocation(GameLocation location, bool DayStarted = false)
+    private bool GrabAtLocation(GameLocation location)
     {
-        var aggregateGrabber = new AggregateDailyGrabber(this, location, DayStarted);
+        var aggregateGrabber = new AggregateDailyGrabber(this, location);
         var beforeInventory = Config.reportYield ? aggregateGrabber.GetInventory() : null;
         bool result = aggregateGrabber.GrabItems();
 
