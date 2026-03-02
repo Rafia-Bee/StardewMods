@@ -60,7 +60,8 @@ public class ModEntry : Mod
         if (!Context.IsPlayerFree)
             return;
 
-        if (e.Button == Config.designateGrabberButton)
+        if (e.Button == Config.designateGrabberButton
+            && Config.globalGrabber == ModConfig.GlobalGrabberMode.All)
         {
             HandleDesignateGrabber();
             return;
@@ -68,6 +69,12 @@ public class ModEntry : Mod
 
         if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Off || Config.globalFireButton != e.Button)
             return;
+
+        if (Config.globalGrabber == ModConfig.GlobalGrabberMode.All && !HasDesignatedGrabber())
+        {
+            Game1.addHUDMessage(new HUDMessage("Designate a global grabber first by hovering over an auto-grabber and pressing the designate key.", HUDMessage.error_type));
+            return;
+        }
 
         LogDebug("Autograbbing on button pressed");
         IsGlobalGrabActive = true;
@@ -126,6 +133,23 @@ public class ModEntry : Mod
                     pair.Value.modData.Remove(GlobalGrabberModDataKey);
             }
         }
+    }
+
+    private bool HasDesignatedGrabber()
+    {
+        var allLocations = Game1.locations
+            .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
+            .Where(loc => loc != null);
+
+        foreach (var location in allLocations)
+        {
+            foreach (var pair in location.Objects.Pairs)
+            {
+                if (pair.Value.modData.ContainsKey(GlobalGrabberModDataKey))
+                    return true;
+            }
+        }
+        return false;
     }
 
     private void OnLaunched(object sender, GameLaunchedEventArgs e)
@@ -251,20 +275,20 @@ public class ModEntry : Mod
             () => ModConfig.GlobalGrabberDict[Config.globalGrabber],
             v => Config.globalGrabber = ModConfig.GlobalGrabberReverseDict[v],
             () => "Global Grabber Mode",
-            () => "'When on Hover you have to hover over a grabber with your cursor and press the Fire Global Grabber button to attempt to collect everything. On All Grabbers grab globally on day start and on button press, it should fill one inventory then move to the next (Warning, may cause performance issues)'.",
+            () => "'Hover': hover over a grabber and press the fire key to make it collect from all locations. 'All': requires a designated grabber — press the designate key on an auto-grabber first, then the fire key makes it collect globally.",
             ModConfig.GlobalGrabberModeStrings);
 
         api.AddKeybind(ModManifest,
             () => Config.globalFireButton,
             v => Config.globalFireButton = v,
-            () => "Fire Global Grabber Event",
-            () => "Grabbers grab globally on button press, it should fill one inventory then move to the next, only works if you have the global grabber setting on (Warning, will cause lag when called that will be worst the bigger your map is)");
+            () => "Fire Global Grabber",
+            () => "Press to trigger the designated or hovered grabber to collect items from all locations. Only works when Global Grabber Mode is set to All or Hover.");
 
         api.AddKeybind(ModManifest,
             () => Config.designateGrabberButton,
             v => Config.designateGrabberButton = v,
             () => "Designate Global Grabber",
-            () => "Hover your cursor over an auto-grabber and press this key to designate it as the global grabber. Only the designated grabber will receive items when using All mode.");
+            () => "Hover over an auto-grabber and press this key to designate it as the global grabber. Only used in All mode.");
     }
 
     private void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
