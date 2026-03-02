@@ -39,6 +39,7 @@ internal class ModConfig
     public bool seedSpots;
     public bool harvestMoss;
     public SButton globalFireButton;
+    public SButton designateGrabberButton;
 
     internal static Dictionary<HarvestCropsRangeMode, string> HarvestCropsRangeDict = new()
     {
@@ -82,6 +83,7 @@ internal class ModConfig
         garbageCans = false;
         globalGrabber = GlobalGrabberMode.Off;
         globalFireButton = SButton.B;
+        designateGrabberButton = SButton.G;
         seedSpots = false;
         harvestMoss = false;
     }

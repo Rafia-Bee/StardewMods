@@ -19,6 +19,7 @@ public class ModEntry : Mod
     internal readonly ModApi Api;
     internal ModConfig Config { get; set; }
     internal bool IsGlobalGrabActive { get; set; }
+    internal const string GlobalGrabberModDataKey = "Rafia.DeluxeGrabberFix/IsGlobalGrabber";
 
     public ModEntry()
     {
@@ -56,6 +57,15 @@ public class ModEntry : Mod
 
     private void OnButtonPressed(object sender, ButtonPressedEventArgs e)
     {
+        if (!Context.IsPlayerFree)
+            return;
+
+        if (e.Button == Config.designateGrabberButton)
+        {
+            HandleDesignateGrabber();
+            return;
+        }
+
         if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Off || Config.globalFireButton != e.Button)
             return;
 
@@ -75,6 +85,46 @@ public class ModEntry : Mod
         finally
         {
             IsGlobalGrabActive = false;
+        }
+    }
+
+    private void HandleDesignateGrabber()
+    {
+        var cursorTile = Game1.lastCursorTile;
+        var obj = Game1.player.currentLocation.getObjectAtTile((int)cursorTile.X, (int)cursorTile.Y);
+
+        if (obj == null || obj.ParentSheetIndex != 165
+            || obj.heldObject.Value is not StardewValley.Objects.Chest)
+        {
+            Game1.addHUDMessage(new HUDMessage("You need to hover your cursor over an auto-grabber to designate it.", HUDMessage.error_type));
+            return;
+        }
+
+        if (obj.modData.ContainsKey(GlobalGrabberModDataKey))
+        {
+            obj.modData.Remove(GlobalGrabberModDataKey);
+            Game1.addHUDMessage(new HUDMessage("This auto-grabber is no longer the Global Grabber."));
+            return;
+        }
+
+        ClearAllDesignations();
+        obj.modData[GlobalGrabberModDataKey] = "true";
+        Game1.addHUDMessage(new HUDMessage("This auto-grabber is now the Global Grabber!"));
+    }
+
+    private void ClearAllDesignations()
+    {
+        var allLocations = Game1.locations
+            .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
+            .Where(loc => loc != null);
+
+        foreach (var location in allLocations)
+        {
+            foreach (var pair in location.Objects.Pairs)
+            {
+                if (pair.Value.modData.ContainsKey(GlobalGrabberModDataKey))
+                    pair.Value.modData.Remove(GlobalGrabberModDataKey);
+            }
         }
     }
 
@@ -209,6 +259,12 @@ public class ModEntry : Mod
             v => Config.globalFireButton = v,
             () => "Fire Global Grabber Event",
             () => "Grabbers grab globally on button press, it should fill one inventory then move to the next, only works if you have the global grabber setting on (Warning, will cause lag when called that will be worst the bigger your map is)");
+
+        api.AddKeybind(ModManifest,
+            () => Config.designateGrabberButton,
+            v => Config.designateGrabberButton = v,
+            () => "Designate Global Grabber",
+            () => "Hover your cursor over an auto-grabber and press this key to designate it as the global grabber. Only the designated grabber will receive items when using All mode.");
     }
 
     private void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
