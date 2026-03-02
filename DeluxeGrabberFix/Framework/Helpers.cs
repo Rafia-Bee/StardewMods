@@ -78,7 +78,7 @@ internal static class Helpers
 
         string harvestId = crop.indexOfHarvest.Value;
 
-        if (harvestId == 73.ToString())
+        if (string.IsNullOrEmpty(harvestId) || harvestId == 73.ToString())
             return list;
 
         if (excludeFlowers && ItemRegistry.Create<Object>(harvestId).Category == -80)
@@ -161,10 +161,14 @@ internal static class Helpers
         }
         extraItem.Stack = stackSize - 1;
 
-        int price = Game1.objectData[harvestId].Price;
+        if (!Game1.objectData.TryGetValue(harvestId, out var objData))
+            return list;
+
+        int price = objData.Price;
         exp = (int)Math.Round(16.0 * Math.Log(0.018 * price + 1.0, Math.E));
 
-        list.Add(extraItem);
+        if (extraItem.Stack > 0)
+            list.Add(extraItem);
 
         if (harvestId == 262.ToString() && random.NextDouble() < 0.4)
         {

@@ -78,7 +78,6 @@ internal abstract class MapGrabber
         bool isForage = item is Object fObj && fObj.isForage();
         Mod.LogDebug($"Big craftable? {isBigCraftable}, Is forage? {isForage}");
 
-        int originalStack = item.Stack;
         foreach (var grabber in grabbers)
         {
             if (IsValidGrabber(grabber.Value, grabber.Key))
@@ -88,7 +87,7 @@ internal abstract class MapGrabber
                     return true;
             }
         }
-        return item.Stack < originalStack;
+        return false;
     }
 
     protected bool TryAddItem(Item item)
@@ -98,12 +97,17 @@ internal abstract class MapGrabber
 
     protected bool TryAddItems(IEnumerable<Item> items, IEnumerable<KeyValuePair<Vector2, Object>> grabbers)
     {
-        bool anyAdded = false;
-        foreach (var item in items)
+        var itemList = items.Where(i => i != null && i.Stack > 0).ToList();
+        if (itemList.Count == 0)
+            return false;
+
+        bool allAdded = true;
+        foreach (var item in itemList)
         {
-            anyAdded = TryAddItem(item, grabbers) || anyAdded;
+            if (!TryAddItem(item, grabbers))
+                allAdded = false;
         }
-        return anyAdded;
+        return allAdded;
     }
 
     protected bool TryAddItems(IEnumerable<Item> items)
