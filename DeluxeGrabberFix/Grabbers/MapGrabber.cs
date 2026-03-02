@@ -35,8 +35,16 @@ internal abstract class MapGrabber
             {
                 GrabberPairs.AddRange(
                     loc.Objects.Pairs
-                        .Where(pair => IsValidGrabber(pair.Value, pair.Key))
+                        .Where(pair => IsValidGrabber(pair.Value, pair.Key)
+                            && pair.Value.modData.ContainsKey(ModEntry.GlobalGrabberModDataKey))
                         .ToList());
+            }
+
+            if (GrabberPairs.Count == 0)
+            {
+                GrabberPairs = location.Objects.Pairs
+                    .Where(pair => IsValidGrabber(pair.Value, pair.Key))
+                    .ToList();
             }
             return;
         }
