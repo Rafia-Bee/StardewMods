@@ -31,29 +31,35 @@ internal class BerryBushGrabber : TerrainFeaturesMapGrabber
         if (!Config.bushes || !IsForageableBush(feature, out var bush))
             return false;
 
-        var items = new List<Object>();
         string shakeOffItem = bush.GetShakeOffItem();
+        if (string.IsNullOrEmpty(shakeOffItem) || shakeOffItem == "-1" || shakeOffItem == "(O)73")
+            return false;
+
+        var items = new List<Object>();
         int exp = 0;
         Random random = new((int)tile.X + (int)tile.Y * 5000 + (int)Game1.uniqueIDForThisGame + (int)Game1.stats.DaysPlayed);
 
-        if (shakeOffItem != "-1" && shakeOffItem != "(O)73")
+        if (bush.size.Value == 3 || bush.size.Value == 4)
         {
-            if (bush.size.Value == 3 || bush.size.Value == 4)
+            var berry = ItemRegistry.Create<Object>(shakeOffItem);
+            if (berry == null)
+                return false;
+            var harvest = GetBerryBushHarvest(berry, tile, Location);
+            items.Add(harvest.Key);
+            exp = harvest.Value;
+        }
+        else
+        {
+            int count = random.Next(1, 2) + Player.ForagingLevel / 4;
+            for (int i = 0; i < count; i++)
             {
-                var harvest = GetBerryBushHarvest(ItemRegistry.Create<Object>(shakeOffItem), tile, Location);
+                var berry = ItemRegistry.Create<Object>(shakeOffItem);
+                if (berry == null)
+                    return false;
+                var harvest = GetBerryBushHarvest(berry, tile, Location);
                 items.Add(harvest.Key);
-                exp = harvest.Value;
-            }
-            else
-            {
-                int count = random.Next(1, 2) + Player.ForagingLevel / 4;
-                for (int i = 0; i < count; i++)
-                {
-                    var harvest = GetBerryBushHarvest(ItemRegistry.Create<Object>(shakeOffItem), tile, Location);
-                    items.Add(harvest.Key);
-                    if (i == 0)
-                        exp = harvest.Value;
-                }
+                if (i == 0)
+                    exp = harvest.Value;
             }
         }
 
