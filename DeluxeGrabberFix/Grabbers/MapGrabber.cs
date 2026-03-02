@@ -12,17 +12,19 @@ internal abstract class MapGrabber
 {
     protected ModEntry Mod { get; set; }
     protected GameLocation Location { get; set; }
+    protected bool UseGlobalMode { get; set; }
     protected List<KeyValuePair<Vector2, Object>> GrabberPairs { get; set; }
     protected IEnumerable<Object> Grabbers => GrabberPairs.Select(pair => pair.Value);
     protected Farmer Player => Game1.MasterPlayer;
     protected ModConfig Config => Mod.Config;
 
-    public MapGrabber(ModEntry mod, GameLocation location, bool DayStarted = false)
+    public MapGrabber(ModEntry mod, GameLocation location)
     {
         Mod = mod;
         Location = location;
+        UseGlobalMode = Mod.IsGlobalGrabActive;
 
-        if (Config.globalGrabber == ModConfig.GlobalGrabberMode.All)
+        if (UseGlobalMode && Config.globalGrabber == ModConfig.GlobalGrabberMode.All)
         {
             var allLocations = Game1.locations
                 .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
@@ -39,7 +41,7 @@ internal abstract class MapGrabber
             return;
         }
 
-        if (!DayStarted
+        if (UseGlobalMode
             && Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover
             && ObjectIsGrabber(Game1.player.currentLocation.getObjectAtTile((int)Game1.lastCursorTile.X, (int)Game1.lastCursorTile.Y)))
         {
@@ -151,7 +153,7 @@ internal abstract class MapGrabber
 
     private bool IsValidGrabber(Object obj, Vector2 tile)
     {
-        if (Config.globalGrabber != ModConfig.GlobalGrabberMode.Off || Location.Objects.ContainsKey(tile))
+        if (UseGlobalMode || Location.Objects.ContainsKey(tile))
         {
             return obj.ParentSheetIndex == 165
                 && obj.heldObject.Value != null
