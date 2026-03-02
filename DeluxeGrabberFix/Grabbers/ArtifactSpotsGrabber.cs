@@ -26,7 +26,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
             return false;
 
         var items = GetForagedArtifactsFromArtifactSpot(Location, tile);
-        if (items != null && TryAddItems((IEnumerable<Item>)items))
+        if (items != null && TryAddItems(items))
         {
             Location.Objects.Remove(tile);
             return true;
@@ -34,9 +34,9 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
         return false;
     }
 
-    private List<Object> GetForagedArtifactsFromArtifactSpot(GameLocation location, Vector2 tile)
+    private List<Item> GetForagedArtifactsFromArtifactSpot(GameLocation location, Vector2 tile)
     {
-        var list = new List<Object>();
+        var list = new List<Item>();
         Random random = Utility.CreateDaySaveRandom(
             tile.X * 2000f,
             tile.Y,
@@ -82,14 +82,14 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
 
             if (drop.OneDebrisPerDrop && item.Stack > 1)
             {
-                list.Add((Object)item);
+                list.Add(item);
             }
             else
             {
                 for (int i = 0; i < Game1.random.Next(1, 4); i++)
                 {
                     var copy = ItemRegistry.Create(item.itemId.Value, item.stack.Value);
-                    list.Add((Object)copy);
+                    list.Add(copy);
                 }
             }
 
@@ -97,7 +97,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
             {
                 var bonusItem = item.getOne();
                 bonusItem = (Item)ItemQueryResolver.ApplyItemFields(bonusItem, drop, context);
-                list.Add((Object)bonusItem);
+                list.Add(bonusItem);
             }
 
             if (!drop.ContinueOnDrop)
