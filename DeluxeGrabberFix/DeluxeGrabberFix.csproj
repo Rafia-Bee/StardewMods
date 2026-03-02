@@ -8,7 +8,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <EnableHarmony>false</EnableHarmony>
     <ModFolderName>DeluxeGrabberFix</ModFolderName>
-    <EnableModDeploy>false</EnableModDeploy>
+    <EnableModDeploy>true</EnableModDeploy>
     <EnableModZip>true</EnableModZip>
     <IgnoreModFilePaths>config.json</IgnoreModFilePaths>
   </PropertyGroup>
