@@ -307,6 +307,12 @@ public class ModEntry : Mod
             () => "Shake Seed Trees");
 
         api.AddBoolOption(ModManifest,
+            () => Config.animalProducts,
+            v => Config.animalProducts = v,
+            () => "Collect Animal Products",
+            () => "Collects eggs, milk, wool, and other animal products from barns and coops. Also picks up dropped items like eggs from the floor.");
+
+        api.AddBoolOption(ModManifest,
             () => Config.slimeHutch,
             v => Config.slimeHutch = v,
             () => "Grab Slime Balls");

@@ -13,6 +13,7 @@ internal class AggregateDailyGrabber : MapGrabber
     {
         grabbers = new List<MapGrabber>
         {
+            new AnimalProductGrabber(mod, location),
             new AggregateObjectsGrabber(mod, location),
             new AggregateFeaturesGrabber(mod, location),
             new WoodsHardwoodGrabber(mod, location),

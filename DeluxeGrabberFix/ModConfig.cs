@@ -22,6 +22,7 @@ internal class ModConfig
     public GlobalGrabberMode globalGrabber;
     public HarvestCropsRangeMode harvestCropsRangeMode;
     public int harvestCropsRange;
+    public bool animalProducts;
     public bool slimeHutch;
     public bool farmCaveMushrooms;
     public bool harvestCrops;
@@ -68,6 +69,7 @@ internal class ModConfig
 
     public ModConfig()
     {
+        animalProducts = true;
         slimeHutch = true;
         farmCaveMushrooms = true;
         harvestCrops = false;
