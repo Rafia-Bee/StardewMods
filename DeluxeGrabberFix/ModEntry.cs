@@ -23,6 +23,9 @@ public class ModEntry : Mod
     internal const string GlobalGrabberModDataKey = "Rafia.DeluxeGrabberFix/IsGlobalGrabber";
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private bool _isGrabbing;
+    private IGenericModConfigMenuApi _gmcmApi;
+    private List<(string Name, string DisplayName)> _discoveredLocations;
+    private bool? _pendingLocationBatchAction;
 
     public ModEntry()
     {
@@ -47,6 +50,8 @@ public class ModEntry : Mod
         helper.Events.Display.RenderedWorld += OnRenderedWorld;
         helper.Events.World.ObjectListChanged += OnObjectListChanged;
         helper.Events.Input.ButtonPressed += OnButtonPressed;
+        helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
+        helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
     }
 
     public void LogDebug(string message)
@@ -173,9 +178,68 @@ public class ModEntry : Mod
 
     private void OnLaunched(object sender, GameLaunchedEventArgs e)
     {
-        var api = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
-        if (api == null)
+        _gmcmApi = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        if (_gmcmApi == null)
             return;
+
+        RegisterConfigMenu();
+    }
+
+    private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
+    {
+        DiscoverLocations();
+        RebuildConfigMenu();
+    }
+
+    private void OnReturnedToTitle(object sender, ReturnedToTitleEventArgs e)
+    {
+        _discoveredLocations = null;
+        RebuildConfigMenu();
+    }
+
+    private void DiscoverLocations()
+    {
+        var allLocations = Game1.locations
+            .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
+            .Where(loc => loc != null && !string.IsNullOrEmpty(loc.Name));
+
+        _discoveredLocations = allLocations
+            .GroupBy(loc => loc.Name)
+            .Select(g => (Name: g.Key, DisplayName: GetLocationDisplayName(g.First())))
+            .OrderBy(x => x.DisplayName)
+            .ToList();
+    }
+
+    private static string GetLocationDisplayName(GameLocation location)
+    {
+        string display = location.DisplayName;
+
+        if (string.IsNullOrEmpty(display)
+            || display.StartsWith("(no translation", StringComparison.OrdinalIgnoreCase))
+        {
+            display = location.Name;
+
+            if (display.StartsWith("Custom_"))
+                display = display.Substring(7);
+
+            display = display.Replace('_', ' ');
+        }
+
+        return display;
+    }
+
+    private void RebuildConfigMenu()
+    {
+        if (_gmcmApi == null)
+            return;
+
+        _gmcmApi.Unregister(ModManifest);
+        RegisterConfigMenu();
+    }
+
+    private void RegisterConfigMenu()
+    {
+        var api = _gmcmApi;
 
         api.Register(ModManifest,
             () => Config = new ModConfig(),
@@ -296,6 +360,12 @@ public class ModEntry : Mod
             () => "Gain Experience",
             () => "Gain appropriate experience as if you foraged or harvested yourself");
 
+        api.AddBoolOption(ModManifest,
+            () => Config.skipFestivalLocations,
+            v => Config.skipFestivalLocations = v,
+            () => "Skip Festival Locations",
+            () => "Prevents auto-grabbers from collecting items in festival and temporary event locations, including during active festivals");
+
         api.AddTextOption(ModManifest,
             () => ModConfig.GlobalGrabberDict[Config.globalGrabber],
             v => Config.globalGrabber = ModConfig.GlobalGrabberReverseDict[v],
@@ -314,6 +384,57 @@ public class ModEntry : Mod
             v => Config.designateGrabberButton = v,
             () => "Designate Global Grabber",
             () => "Hover over an auto-grabber and press this key to designate it as the global grabber. Only used in All mode.");
+
+        // Skipped Locations page link
+        api.AddPageLink(ModManifest, "skipped-locations",
+            () => "Skipped Locations >",
+            () => "Choose which game locations to skip when auto-grabbing");
+
+        // Skipped Locations page
+        api.AddPage(ModManifest, "skipped-locations", () => "Skipped Locations");
+
+        if (_discoveredLocations != null && _discoveredLocations.Count > 0)
+        {
+            api.AddParagraph(ModManifest,
+                () => "Toggle locations on or off. Disabled locations will be skipped by all auto-grabbers.");
+
+            api.AddBoolOption(ModManifest,
+                getValue: () => _discoveredLocations.All(loc => Config.SkippedLocations?.Contains(loc.Name) != true),
+                setValue: v => { },
+                name: () => "Enable All",
+                tooltip: () => "Toggle all locations on or off at once",
+                fieldId: "enable-all");
+
+            api.OnFieldChanged(ModManifest, (fieldId, value) =>
+            {
+                if (fieldId == "enable-all")
+                    _pendingLocationBatchAction = (bool)value;
+            });
+
+            foreach (var (locName, displayName) in _discoveredLocations)
+            {
+                string capturedName = locName;
+                string capturedDisplay = displayName;
+
+                api.AddBoolOption(ModManifest,
+                    getValue: () => Config.SkippedLocations?.Contains(capturedName) != true,
+                    setValue: v =>
+                    {
+                        Config.SkippedLocations ??= new HashSet<string>();
+                        if (!v)
+                            Config.SkippedLocations.Add(capturedName);
+                        else
+                            Config.SkippedLocations.Remove(capturedName);
+                    },
+                    name: () => capturedDisplay,
+                    tooltip: () => capturedName != capturedDisplay ? capturedName : null);
+            }
+        }
+        else
+        {
+            api.AddParagraph(ModManifest,
+                () => "Load a save file to see available locations.");
+        }
     }
 
     private void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
@@ -326,6 +447,23 @@ public class ModEntry : Mod
 
     private void OnUpdateTicked(object sender, UpdateTickedEventArgs e)
     {
+        if (_pendingLocationBatchAction.HasValue)
+        {
+            bool enableAll = _pendingLocationBatchAction.Value;
+            _pendingLocationBatchAction = null;
+
+            Config.SkippedLocations ??= new HashSet<string>();
+            if (enableAll)
+                Config.SkippedLocations.Clear();
+            else if (_discoveredLocations != null)
+                foreach (var loc in _discoveredLocations)
+                    Config.SkippedLocations.Add(loc.Name);
+
+            Helper.WriteConfig(Config);
+            RebuildConfigMenu();
+            _gmcmApi.OpenModMenu(ModManifest);
+        }
+
         if (_dirtyLocations.Count == 0)
             return;
 
@@ -355,6 +493,9 @@ public class ModEntry : Mod
         LogDebug("Autograbbing on time change");
         foreach (var location in Game1.locations)
         {
+            if (!ShouldProcessLocation(location))
+                continue;
+
             var orePanGrabber = new OrePanGrabber(this, location);
             if (orePanGrabber.CanGrab())
                 orePanGrabber.GrabItems();
@@ -411,8 +552,47 @@ public class ModEntry : Mod
         }
     }
 
+    private bool ShouldProcessLocation(GameLocation location)
+    {
+        if (location == null)
+            return false;
+
+        string name = location.Name;
+        if (string.IsNullOrEmpty(name))
+            return false;
+
+        // User-configured location skip list
+        if (Config.SkippedLocations?.Contains(name) == true)
+        {
+            LogDebug($"Skipping {name}: disabled in config");
+            return false;
+        }
+
+        // Festival/event location filtering
+        if (Config.skipFestivalLocations)
+        {
+            if (name.Contains("Festival", StringComparison.OrdinalIgnoreCase)
+                || name.StartsWith("Temp", StringComparison.OrdinalIgnoreCase))
+            {
+                LogDebug($"Skipping {name}: festival/event location");
+                return false;
+            }
+
+            if (Game1.isFestival())
+            {
+                LogDebug($"Skipping {name}: festival currently active");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private bool GrabAtLocation(GameLocation location)
     {
+        if (!ShouldProcessLocation(location))
+            return false;
+
         var aggregateGrabber = new AggregateDailyGrabber(this, location);
         var beforeInventory = Config.reportYield ? aggregateGrabber.GetInventory() : null;
         bool result = aggregateGrabber.GrabItems();

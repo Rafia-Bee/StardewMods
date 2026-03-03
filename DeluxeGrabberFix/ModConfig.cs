@@ -39,6 +39,8 @@ internal class ModConfig
     public bool garbageCans;
     public bool seedSpots;
     public bool harvestMoss;
+    public bool skipFestivalLocations;
+    public HashSet<string> SkippedLocations;
     public SButton globalFireButton;
     public SButton designateGrabberButton;
 
@@ -88,5 +90,7 @@ internal class ModConfig
         designateGrabberButton = SButton.G;
         seedSpots = false;
         harvestMoss = false;
+        skipFestivalLocations = true;
+        SkippedLocations = new HashSet<string>();
     }
 }
