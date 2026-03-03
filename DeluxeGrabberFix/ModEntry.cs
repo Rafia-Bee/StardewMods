@@ -20,6 +20,8 @@ public class ModEntry : Mod
     internal ModConfig Config { get; set; }
     internal bool IsGlobalGrabActive { get; set; }
     internal const string GlobalGrabberModDataKey = "Rafia.DeluxeGrabberFix/IsGlobalGrabber";
+    private readonly HashSet<GameLocation> _dirtyLocations = new();
+    private bool _isGrabbing;
 
     public ModEntry()
     {
@@ -40,6 +42,7 @@ public class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += OnLaunched;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
         helper.Events.GameLoop.TimeChanged += OnTenMinuteUpdate;
+        helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
         helper.Events.Display.RenderedWorld += OnRenderedWorld;
         helper.Events.World.ObjectListChanged += OnObjectListChanged;
         helper.Events.Input.ButtonPressed += OnButtonPressed;
@@ -47,7 +50,8 @@ public class ModEntry : Mod
 
     public void LogDebug(string message)
     {
-        Monitor.Log(message, LogLevel.Trace);
+        if (Config.debugLogging)
+            Monitor.Log(message, LogLevel.Trace);
     }
 
     public override object GetApi()
@@ -266,6 +270,12 @@ public class ModEntry : Mod
             () => "Logs to the SMAPI console the yield of each auto grabber");
 
         api.AddBoolOption(ModManifest,
+            () => Config.debugLogging,
+            v => Config.debugLogging = v,
+            () => "Debug Logging",
+            () => "Logs detailed trace info to the SMAPI log file for troubleshooting");
+
+        api.AddBoolOption(ModManifest,
             () => Config.gainExperience,
             v => Config.gainExperience = v,
             () => "Gain Experience",
@@ -293,8 +303,33 @@ public class ModEntry : Mod
 
     private void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
     {
-        LogDebug("Object list changed at " + e.Location.Name);
-        GrabAtLocation(e.Location);
+        if (_isGrabbing)
+            return;
+
+        _dirtyLocations.Add(e.Location);
+    }
+
+    private void OnUpdateTicked(object sender, UpdateTickedEventArgs e)
+    {
+        if (_dirtyLocations.Count == 0)
+            return;
+
+        var locations = _dirtyLocations.ToList();
+        _dirtyLocations.Clear();
+
+        _isGrabbing = true;
+        try
+        {
+            foreach (var location in locations)
+            {
+                LogDebug("Object list changed at " + location.Name);
+                GrabAtLocation(location);
+            }
+        }
+        finally
+        {
+            _isGrabbing = false;
+        }
     }
 
     private void OnTenMinuteUpdate(object sender, TimeChangedEventArgs e)

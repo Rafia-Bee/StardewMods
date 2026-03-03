@@ -33,6 +33,7 @@ internal class ModConfig
     public bool seedTrees;
     public bool flowers;
     public bool reportYield;
+    public bool debugLogging;
     public bool gainExperience;
     public bool fellSecretWoodsStumps;
     public bool garbageCans;
@@ -78,6 +79,7 @@ internal class ModConfig
         seedTrees = false;
         flowers = false;
         reportYield = true;
+        debugLogging = false;
         gainExperience = true;
         fellSecretWoodsStumps = false;
         garbageCans = false;

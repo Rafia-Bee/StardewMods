@@ -72,12 +72,6 @@ internal abstract class MapGrabber
         if (item == null || item.Stack < 1)
             return false;
 
-        Mod.LogDebug($"Grabbing item {item.Name} [{item.ParentSheetIndex}] x{item.Stack}");
-
-        bool isBigCraftable = item is Object sObj && sObj.bigCraftable.Value;
-        bool isForage = item is Object fObj && fObj.isForage();
-        Mod.LogDebug($"Big craftable? {isBigCraftable}, Is forage? {isForage}");
-
         foreach (var grabber in grabbers)
         {
             if (IsValidGrabber(grabber.Value, grabber.Key))
