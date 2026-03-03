@@ -5,6 +5,7 @@ using System.Text;
 using DeluxeGrabberFix.Framework;
 using DeluxeGrabberFix.Grabbers;
 using DeluxeGrabberFix.Interfaces;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
@@ -182,6 +183,12 @@ public class ModEntry : Mod
 
     private void OnLaunched(object sender, GameLaunchedEventArgs e)
     {
+        var harmony = new Harmony(ModManifest.UniqueID);
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Game1), nameof(Game1.createItemDebris)),
+            prefix: new HarmonyMethod(typeof(HarvestInterceptor), nameof(HarvestInterceptor.CreateItemDebris_Prefix))
+        );
+
         _gmcmApi = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
         if (_gmcmApi == null)
             return;
