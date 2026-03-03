@@ -73,6 +73,8 @@ internal abstract class MapGrabber
                     return true;
             }
         }
+
+        Mod.LogDebug($"Failed to add {item.Name} x{item.Stack} — all grabber chests full at {Location.Name}");
         return false;
     }
 

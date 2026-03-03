@@ -23,6 +23,7 @@ public class ModEntry : Mod
     internal const string GlobalGrabberModDataKey = "Rafia.DeluxeGrabberFix/IsGlobalGrabber";
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private bool _isGrabbing;
+    private bool _pendingDayStartGrab;
     private IGenericModConfigMenuApi _gmcmApi;
     private List<(string Name, string DisplayName)> _discoveredLocations;
     private bool? _pendingLocationBatchAction;
@@ -65,6 +66,19 @@ public class ModEntry : Mod
         return Api;
     }
 
+    internal static IEnumerable<GameLocation> GetAllLocations()
+    {
+        foreach (var location in Game1.locations)
+        {
+            yield return location;
+            foreach (var building in location.buildings)
+            {
+                if (building.indoors.Value != null)
+                    yield return building.indoors.Value;
+            }
+        }
+    }
+
     private void OnButtonPressed(object sender, ButtonPressedEventArgs e)
     {
         if (!Context.IsPlayerFree)
@@ -90,9 +104,7 @@ public class ModEntry : Mod
         IsGlobalGrabActive = true;
         try
         {
-            var allLocations = Game1.locations
-                .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
-                .Where(loc => loc != null);
+            var allLocations = GetAllLocations().ToList();
 
             if (Config.globalGrabber == ModConfig.GlobalGrabberMode.All)
             {
@@ -145,11 +157,7 @@ public class ModEntry : Mod
 
     private void ClearAllDesignations()
     {
-        var allLocations = Game1.locations
-            .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
-            .Where(loc => loc != null);
-
-        foreach (var location in allLocations)
+        foreach (var location in GetAllLocations())
         {
             foreach (var pair in location.Objects.Pairs)
             {
@@ -161,11 +169,7 @@ public class ModEntry : Mod
 
     private bool HasDesignatedGrabber()
     {
-        var allLocations = Game1.locations
-            .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
-            .Where(loc => loc != null);
-
-        foreach (var location in allLocations)
+        foreach (var location in GetAllLocations())
         {
             foreach (var pair in location.Objects.Pairs)
             {
@@ -199,11 +203,8 @@ public class ModEntry : Mod
 
     private void DiscoverLocations()
     {
-        var allLocations = Game1.locations
-            .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
-            .Where(loc => loc != null && !string.IsNullOrEmpty(loc.Name));
-
-        _discoveredLocations = allLocations
+        _discoveredLocations = GetAllLocations()
+            .Where(loc => !string.IsNullOrEmpty(loc.Name))
             .GroupBy(loc => loc.Name)
             .Select(g => (Name: g.Key, DisplayName: GetLocationDisplayName(g.First())))
             .OrderBy(x => x.DisplayName)
@@ -464,6 +465,29 @@ public class ModEntry : Mod
             _gmcmApi.OpenModMenu(ModManifest);
         }
 
+        // Deferred day-start grab: runs 1 tick after DayStarted so other mods
+        // finish spawning forage, artifact spots, etc.
+        if (_pendingDayStartGrab)
+        {
+            _pendingDayStartGrab = false;
+            _dirtyLocations.Clear();
+
+            LogDebug("Executing deferred day-start grab");
+            _isGrabbing = true;
+            try
+            {
+                foreach (var location in GetAllLocations())
+                {
+                    GrabAtLocation(location);
+                }
+            }
+            finally
+            {
+                _isGrabbing = false;
+            }
+            return;
+        }
+
         if (_dirtyLocations.Count == 0)
             return;
 
@@ -504,15 +528,8 @@ public class ModEntry : Mod
 
     private void OnDayStarted(object sender, DayStartedEventArgs e)
     {
-        LogDebug("Autograbbing on day start");
-        var allLocations = Game1.locations
-            .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
-            .Where(loc => loc != null);
-
-        foreach (var location in allLocations)
-        {
-            GrabAtLocation(location);
-        }
+        LogDebug("Autograbbing on day start (deferred to next tick)");
+        _pendingDayStartGrab = true;
     }
 
     private void OnRenderedWorld(object sender, RenderedWorldEventArgs e)
@@ -594,8 +611,17 @@ public class ModEntry : Mod
             return false;
 
         var aggregateGrabber = new AggregateDailyGrabber(this, location);
+
+        if (!aggregateGrabber.CanGrab())
+        {
+            LogDebug($"No valid auto-grabbers at {location.Name}, skipping");
+            return false;
+        }
+
         var beforeInventory = Config.reportYield ? aggregateGrabber.GetInventory() : null;
         bool result = aggregateGrabber.GrabItems();
+
+        LogDebug($"Grab at {location.Name}: {(result ? "collected items" : "nothing to collect")}");
 
         if (beforeInventory != null)
         {
