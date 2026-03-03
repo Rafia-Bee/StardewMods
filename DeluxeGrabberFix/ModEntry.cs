@@ -19,6 +19,7 @@ public class ModEntry : Mod
     internal readonly ModApi Api;
     internal ModConfig Config { get; set; }
     internal bool IsGlobalGrabActive { get; set; }
+    internal List<KeyValuePair<Vector2, Object>> CachedDesignatedGrabbers { get; set; }
     internal const string GlobalGrabberModDataKey = "Rafia.DeluxeGrabberFix/IsGlobalGrabber";
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private bool _isGrabbing;
@@ -88,6 +89,19 @@ public class ModEntry : Mod
                 .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
                 .Where(loc => loc != null);
 
+            if (Config.globalGrabber == ModConfig.GlobalGrabberMode.All)
+            {
+                CachedDesignatedGrabbers = new List<KeyValuePair<Vector2, Object>>();
+                foreach (var loc in allLocations)
+                {
+                    CachedDesignatedGrabbers.AddRange(
+                        loc.Objects.Pairs
+                            .Where(pair => pair.Value != null
+                                && pair.Value.modData.ContainsKey(GlobalGrabberModDataKey))
+                            .ToList());
+                }
+            }
+
             foreach (var location in allLocations)
             {
                 GrabAtLocation(location);
@@ -96,6 +110,7 @@ public class ModEntry : Mod
         finally
         {
             IsGlobalGrabActive = false;
+            CachedDesignatedGrabbers = null;
         }
     }
 

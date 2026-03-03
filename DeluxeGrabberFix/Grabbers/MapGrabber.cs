@@ -26,21 +26,13 @@ internal abstract class MapGrabber
 
         if (UseGlobalMode && Config.globalGrabber == ModConfig.GlobalGrabberMode.All)
         {
-            var allLocations = Game1.locations
-                .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
-                .Where(loc => loc != null);
-
-            GrabberPairs = new List<KeyValuePair<Vector2, Object>>();
-            foreach (var loc in allLocations)
+            if (Mod.CachedDesignatedGrabbers != null && Mod.CachedDesignatedGrabbers.Count > 0)
             {
-                GrabberPairs.AddRange(
-                    loc.Objects.Pairs
-                        .Where(pair => IsValidGrabber(pair.Value, pair.Key)
-                            && pair.Value.modData.ContainsKey(ModEntry.GlobalGrabberModDataKey))
-                        .ToList());
+                GrabberPairs = Mod.CachedDesignatedGrabbers
+                    .Where(pair => IsValidGrabber(pair.Value, pair.Key))
+                    .ToList();
             }
-
-            if (GrabberPairs.Count == 0)
+            else
             {
                 GrabberPairs = location.Objects.Pairs
                     .Where(pair => IsValidGrabber(pair.Value, pair.Key))
