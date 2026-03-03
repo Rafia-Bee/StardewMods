@@ -353,6 +353,35 @@ public class ModEntry : Mod
             v => Config.harvestMoss = v,
             () => "Harvest Moss from Trees");
 
+        // Machine Collection section
+        api.AddSectionTitle(ModManifest,
+            () => "Machine Collection",
+            () => "Automatically collect finished outputs from supported machines");
+
+        api.AddBoolOption(ModManifest,
+            () => Config.collectMachines,
+            v => Config.collectMachines = v,
+            () => "Collect Machine Outputs",
+            () => "Automatically collects finished outputs from supported machines and deposits them into nearby auto-grabbers");
+
+        api.AddBoolOption(ModManifest,
+            () => Config.collectCrabPots,
+            v => Config.collectCrabPots = v,
+            () => "Collect from Crab Pots",
+            () => "This is ignored if 'Collect Machine Outputs' is disabled");
+
+        api.AddBoolOption(ModManifest,
+            () => Config.collectBeeHouses,
+            v => Config.collectBeeHouses = v,
+            () => "Collect from Bee Houses",
+            () => "This is ignored if 'Collect Machine Outputs' is disabled");
+
+        api.AddBoolOption(ModManifest,
+            () => Config.collectTappers,
+            v => Config.collectTappers = v,
+            () => "Collect from Tappers",
+            () => "Collects from both regular and heavy tappers. This is ignored if 'Collect Machine Outputs' is disabled");
+
         // Miscellaneous section
         api.AddSectionTitle(ModManifest, () => "Miscellaneous");
 

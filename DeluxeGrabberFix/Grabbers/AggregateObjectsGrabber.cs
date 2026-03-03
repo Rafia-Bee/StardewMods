@@ -19,6 +19,7 @@ internal class AggregateObjectsGrabber : ObjectsMapGrabber
             new IndoorPotGrabber(mod, location),
             new ArtifactSpotsGrabber(mod, location),
             new SeedSpotsGrabber(mod, location),
+            new MachineGrabber(mod, location),
             new GenericObjectGrabber(mod, location)
         };
     }
