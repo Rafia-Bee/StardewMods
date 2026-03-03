@@ -21,21 +21,30 @@ internal class HarvestableCropHoeDirtGrabber : TerrainFeaturesMapGrabber
         if (feature is not HoeDirt dirt || dirt.crop == null)
             return false;
 
-        List<Object> items = Helpers.HarvestCropFromHoeDirt(Player, dirt, tile, !Config.flowers, out int exp);
+        if (!Config.flowers)
+        {
+            string harvestId = dirt.crop.indexOfHarvest.Value;
+            if (!string.IsNullOrEmpty(harvestId) && ItemRegistry.Create<Object>(harvestId).Category == -80)
+                return false;
+        }
+
         var nearbyGrabbers = Helpers.GetNearbyObjectsToTile(tile, GrabberPairs, Config.harvestCropsRange, Config.harvestCropsRangeMode);
 
-        if (TryAddItems((IEnumerable<Item>)items, nearbyGrabbers))
+        HarvestInterceptor.BeginIntercept();
+        bool shouldDestroy = dirt.crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);
+        List<Item> items = HarvestInterceptor.EndIntercept();
+
+        if (items.Count > 0)
         {
-            if (!dirt.crop.RegrowsAfterHarvest())
+            foreach (var item in items)
             {
+                if (!TryAddItem(item, nearbyGrabbers))
+                    Game1.createItemDebris(item, new Vector2(tile.X * 64 + 32, tile.Y * 64 + 32), -1, Location);
+            }
+
+            if (shouldDestroy)
                 dirt.destroyCrop(false);
-            }
-            else
-            {
-                dirt.crop.fullyGrown.Value = true;
-                dirt.crop.dayOfCurrentPhase.Value = dirt.crop.GetData()?.RegrowDays ?? -1;
-            }
-            GainExperience(0, exp);
+
             return true;
         }
         return false;
