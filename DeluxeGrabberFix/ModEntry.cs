@@ -27,7 +27,11 @@ public class ModEntry : Mod
     private bool _pendingDayStartGrab;
     private IGenericModConfigMenuApi _gmcmApi;
     private List<(string Name, string DisplayName)> _discoveredLocations;
-    private bool? _pendingLocationBatchAction;
+    private LocationBatchAction? _pendingLocationBatchAction;
+    private SaveData _saveData;
+
+    private enum LocationBatchAction { EnableAll, DisableAll, SelectVisitedOnly }
+    private const string SaveDataKey = "visit-tracking";
 
     public ModEntry()
     {
@@ -54,6 +58,7 @@ public class ModEntry : Mod
         helper.Events.Input.ButtonPressed += OnButtonPressed;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
         helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
+        helper.Events.Player.Warped += OnPlayerWarped;
     }
 
     public void LogDebug(string message)
@@ -94,6 +99,11 @@ public class ModEntry : Mod
 
         if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Off || Config.globalFireButton != e.Button)
             return;
+
+        // Refresh location list on global grab
+        DiscoverLocations();
+        if (Config.selectVisitedOnly)
+            ApplyVisitAutoSkip();
 
         if (Config.globalGrabber == ModConfig.GlobalGrabberMode.All && !HasDesignatedGrabber())
         {
@@ -198,14 +208,86 @@ public class ModEntry : Mod
 
     private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
     {
+        _saveData = Helper.Data.ReadSaveData<SaveData>(SaveDataKey) ?? new SaveData();
         DiscoverLocations();
+        ApplyVisitAutoSkip();
         RebuildConfigMenu();
     }
 
     private void OnReturnedToTitle(object sender, ReturnedToTitleEventArgs e)
     {
         _discoveredLocations = null;
+        _saveData = null;
         RebuildConfigMenu();
+    }
+
+    private void OnPlayerWarped(object sender, WarpedEventArgs e)
+    {
+        if (!Config.selectVisitedOnly || _saveData == null)
+            return;
+
+        string name = e.NewLocation?.Name;
+        if (string.IsNullOrEmpty(name))
+            return;
+
+        if (_saveData.AutoSkippedLocations.Remove(name))
+        {
+            Config.SkippedLocations?.Remove(name);
+            Helper.WriteConfig(Config);
+            Helper.Data.WriteSaveData(SaveDataKey, _saveData);
+            LogDebug($"Auto-enabled location after visit: {name}");
+
+            if (_gmcmApi != null)
+                RebuildConfigMenu();
+        }
+    }
+
+    private void ApplyVisitAutoSkip()
+    {
+        if (!Config.selectVisitedOnly || _discoveredLocations == null)
+        {
+            Monitor.Log($"ApplyVisitAutoSkip skipped: selectVisitedOnly={Config.selectVisitedOnly}, discoveredLocations={_discoveredLocations?.Count ?? -1}", LogLevel.Info);
+            return;
+        }
+
+        if (_saveData == null)
+        {
+            Monitor.Log("ApplyVisitAutoSkip skipped: _saveData is null", LogLevel.Info);
+            return;
+        }
+
+        Config.SkippedLocations ??= new HashSet<string>();
+        int skipped = 0;
+        int enabled = 0;
+
+        foreach (var (locName, _) in _discoveredLocations)
+        {
+            bool visited = Game1.MasterPlayer.locationsVisited.Contains(locName);
+
+            if (!visited
+                && !Config.SkippedLocations.Contains(locName)
+                && !_saveData.AutoSkippedLocations.Contains(locName)
+                && !_saveData.ManuallyManagedLocations.Contains(locName))
+            {
+                Config.SkippedLocations.Add(locName);
+                _saveData.AutoSkippedLocations.Add(locName);
+                skipped++;
+            }
+            else if (visited && _saveData.AutoSkippedLocations.Contains(locName))
+            {
+                Config.SkippedLocations.Remove(locName);
+                _saveData.AutoSkippedLocations.Remove(locName);
+                enabled++;
+            }
+        }
+
+        Monitor.Log($"ApplyVisitAutoSkip: {_discoveredLocations.Count} locations checked, {skipped} auto-skipped, {enabled} auto-enabled", LogLevel.Info);
+
+        if (skipped > 0 || enabled > 0)
+        {
+            Helper.WriteConfig(Config);
+            Helper.Data.WriteSaveData(SaveDataKey, _saveData);
+        }
     }
 
     private void DiscoverLocations()
@@ -251,7 +333,16 @@ public class ModEntry : Mod
 
         api.Register(ModManifest,
             () => Config = new ModConfig(),
-            () => Helper.WriteConfig(Config));
+            () =>
+            {
+                Helper.WriteConfig(Config);
+                Monitor.Log($"GMCM saved. selectVisitedOnly={Config.selectVisitedOnly}, IsWorldReady={Context.IsWorldReady}, saveData={((_saveData != null) ? "loaded" : "null")}", LogLevel.Info);
+                if (Config.selectVisitedOnly && Context.IsWorldReady && _saveData != null)
+                {
+                    DiscoverLocations();
+                    ApplyVisitAutoSkip();
+                }
+            });
 
         // Crop Harvesting section
         api.AddSectionTitle(ModManifest,
@@ -448,29 +539,56 @@ public class ModEntry : Mod
                 tooltip: () => "Toggle all locations on or off at once",
                 fieldId: "enable-all");
 
+            api.AddBoolOption(ModManifest,
+                getValue: () => Context.IsWorldReady && _discoveredLocations != null &&
+                    _discoveredLocations.All(loc =>
+                    {
+                        bool visited = Game1.MasterPlayer.locationsVisited.Contains(loc.Name);
+                        bool enabled = Config.SkippedLocations?.Contains(loc.Name) != true;
+                        return visited == enabled;
+                    }),
+                setValue: v => { },
+                name: () => "Select Visited Only",
+                tooltip: () => "Enables only locations you've visited and skips the rest. If you discover new locations, toggle this again to update.",
+                fieldId: "select-visited-only");
+
             api.OnFieldChanged(ModManifest, (fieldId, value) =>
             {
                 if (fieldId == "enable-all")
-                    _pendingLocationBatchAction = (bool)value;
+                    _pendingLocationBatchAction = (bool)value
+                        ? LocationBatchAction.EnableAll
+                        : LocationBatchAction.DisableAll;
+                else if (fieldId == "select-visited-only" && (bool)value)
+                    _pendingLocationBatchAction = LocationBatchAction.SelectVisitedOnly;
             });
 
-            foreach (var (locName, displayName) in _discoveredLocations)
+            if (Context.IsWorldReady)
             {
-                string capturedName = locName;
-                string capturedDisplay = displayName;
+                var visitedLocs = _discoveredLocations
+                    .Where(loc => Game1.MasterPlayer.locationsVisited.Contains(loc.Name))
+                    .ToList();
+                var unvisitedLocs = _discoveredLocations
+                    .Where(loc => !Game1.MasterPlayer.locationsVisited.Contains(loc.Name))
+                    .ToList();
 
-                api.AddBoolOption(ModManifest,
-                    getValue: () => Config.SkippedLocations?.Contains(capturedName) != true,
-                    setValue: v =>
-                    {
-                        Config.SkippedLocations ??= new HashSet<string>();
-                        if (!v)
-                            Config.SkippedLocations.Add(capturedName);
-                        else
-                            Config.SkippedLocations.Remove(capturedName);
-                    },
-                    name: () => capturedDisplay,
-                    tooltip: () => capturedName != capturedDisplay ? capturedName : null);
+                if (visitedLocs.Count > 0)
+                {
+                    api.AddSectionTitle(ModManifest, () => "Visited Locations");
+                    foreach (var (locName, displayName) in visitedLocs)
+                        AddLocationToggle(api, locName, displayName);
+                }
+
+                if (unvisitedLocs.Count > 0)
+                {
+                    api.AddSectionTitle(ModManifest, () => "Not Yet Visited");
+                    foreach (var (locName, displayName) in unvisitedLocs)
+                        AddLocationToggle(api, locName, displayName);
+                }
+            }
+            else
+            {
+                foreach (var (locName, displayName) in _discoveredLocations)
+                    AddLocationToggle(api, locName, displayName);
             }
         }
         else
@@ -478,6 +596,32 @@ public class ModEntry : Mod
             api.AddParagraph(ModManifest,
                 () => "Load a save file to see available locations.");
         }
+    }
+
+    private void AddLocationToggle(IGenericModConfigMenuApi api, string locName, string displayName)
+    {
+        string capturedName = locName;
+        string capturedDisplay = displayName;
+
+        api.AddBoolOption(ModManifest,
+            getValue: () => Config.SkippedLocations?.Contains(capturedName) != true,
+            setValue: v =>
+            {
+                Config.SkippedLocations ??= new HashSet<string>();
+                if (!v)
+                    Config.SkippedLocations.Add(capturedName);
+                else
+                    Config.SkippedLocations.Remove(capturedName);
+
+                if (_saveData != null)
+                {
+                    _saveData.ManuallyManagedLocations.Add(capturedName);
+                    _saveData.AutoSkippedLocations.Remove(capturedName);
+                    Helper.Data.WriteSaveData(SaveDataKey, _saveData);
+                }
+            },
+            name: () => capturedDisplay,
+            tooltip: () => capturedName != capturedDisplay ? capturedName : null);
     }
 
     private void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
@@ -492,15 +636,47 @@ public class ModEntry : Mod
     {
         if (_pendingLocationBatchAction.HasValue)
         {
-            bool enableAll = _pendingLocationBatchAction.Value;
+            var action = _pendingLocationBatchAction.Value;
             _pendingLocationBatchAction = null;
 
             Config.SkippedLocations ??= new HashSet<string>();
-            if (enableAll)
-                Config.SkippedLocations.Clear();
-            else if (_discoveredLocations != null)
-                foreach (var loc in _discoveredLocations)
-                    Config.SkippedLocations.Add(loc.Name);
+
+            switch (action)
+            {
+                case LocationBatchAction.EnableAll:
+                    Config.SkippedLocations.Clear();
+                    break;
+
+                case LocationBatchAction.DisableAll:
+                    if (_discoveredLocations != null)
+                        foreach (var loc in _discoveredLocations)
+                            Config.SkippedLocations.Add(loc.Name);
+                    break;
+
+                case LocationBatchAction.SelectVisitedOnly:
+                    Config.selectVisitedOnly = true;
+                    if (_discoveredLocations != null)
+                    {
+                        foreach (var (locName, _) in _discoveredLocations)
+                        {
+                            bool visited = Game1.MasterPlayer.locationsVisited.Contains(locName);
+                            if (visited)
+                                Config.SkippedLocations.Remove(locName);
+                            else
+                                Config.SkippedLocations.Add(locName);
+                        }
+
+                        if (_saveData != null)
+                        {
+                            _saveData.AutoSkippedLocations.Clear();
+                            foreach (var name in Config.SkippedLocations)
+                                _saveData.AutoSkippedLocations.Add(name);
+                            _saveData.ManuallyManagedLocations.Clear();
+                            Helper.Data.WriteSaveData(SaveDataKey, _saveData);
+                        }
+                    }
+                    break;
+            }
 
             Helper.WriteConfig(Config);
             RebuildConfigMenu();
