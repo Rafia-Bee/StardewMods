@@ -107,7 +107,7 @@ public class ModEntry : Mod
 
         if (Config.globalGrabber == ModConfig.GlobalGrabberMode.All && !HasDesignatedGrabber())
         {
-            Game1.addHUDMessage(new HUDMessage("Designate a global grabber first by opening an auto-grabber and pressing the star button, or by hovering over it and pressing the designate key.", HUDMessage.error_type));
+            Game1.addHUDMessage(new HUDMessage(Helper.Translation.Get("hud.designate-first"), HUDMessage.error_type));
             return;
         }
 
@@ -184,20 +184,20 @@ public class ModEntry : Mod
         if (obj == null || obj.ParentSheetIndex != 165
             || obj.heldObject.Value is not StardewValley.Objects.Chest)
         {
-            Game1.addHUDMessage(new HUDMessage("You need to hover your cursor over an auto-grabber to designate it.", HUDMessage.error_type));
+            Game1.addHUDMessage(new HUDMessage(Helper.Translation.Get("hud.hover-over-grabber"), HUDMessage.error_type));
             return;
         }
 
         if (obj.modData.ContainsKey(GlobalGrabberModDataKey))
         {
             obj.modData.Remove(GlobalGrabberModDataKey);
-            Game1.addHUDMessage(new HUDMessage("This auto-grabber is no longer the Global Grabber."));
+            Game1.addHUDMessage(new HUDMessage(Helper.Translation.Get("hud.no-longer-global")));
             return;
         }
 
         ClearAllDesignations();
         obj.modData[GlobalGrabberModDataKey] = "true";
-        Game1.addHUDMessage(new HUDMessage("This auto-grabber is now the Global Grabber!"));
+        Game1.addHUDMessage(new HUDMessage(Helper.Translation.Get("hud.now-global")));
     }
 
     private void ClearAllDesignations()
@@ -389,217 +389,219 @@ public class ModEntry : Mod
 
         // Crop Harvesting section
         api.AddSectionTitle(ModManifest,
-            () => "Crop Harvesting",
-            () => "These options are only considered if 'Harvest Crops' is enabled");
+            () => Helper.Translation.Get("section.crop-harvesting"),
+            () => Helper.Translation.Get("section.crop-harvesting.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.harvestCrops,
             v => Config.harvestCrops = v,
-            () => "Harvest Crops");
+            () => Helper.Translation.Get("config.harvest-crops"));
 
         api.AddBoolOption(ModManifest,
             () => Config.harvestCropsIndoorPots,
             v => Config.harvestCropsIndoorPots = v,
-            () => "Harvest Crops Inside Pots",
-            () => "This is ignored if 'Harvest Crops' is disabled");
+            () => Helper.Translation.Get("config.harvest-crops-indoor-pots"),
+            () => Helper.Translation.Get("config.harvest-crops-indoor-pots.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.flowers,
             v => Config.flowers = v,
-            () => "Harvest Flowers",
-            () => "This is ignored if 'Harvest crops' is disabled");
+            () => Helper.Translation.Get("config.harvest-flowers"),
+            () => Helper.Translation.Get("config.harvest-flowers.tooltip"));
 
         api.AddNumberOption(ModManifest,
             () => Config.harvestCropsRange,
             v => Config.harvestCropsRange = Math.Max(-1, v),
-            () => "Harvest Range",
-            () => "This is ignored if 'Harvest Crops' is disabled. Set to -1 to use infinite range. This ONLY affects crop harvesting.");
+            () => Helper.Translation.Get("config.harvest-range"),
+            () => Helper.Translation.Get("config.harvest-range.tooltip"));
 
         api.AddTextOption(ModManifest,
             () => ModConfig.HarvestCropsRangeDict[Config.harvestCropsRangeMode],
             v => Config.harvestCropsRangeMode = ModConfig.HarvestCropsRangeReverseDict[v],
-            () => "Harvest Range Mode",
-            () => "'Walk': the distance is the walking distance (in four directions) from the grabber, becoming a diamond shape. 'Square': the distance is a square like a sprinkler. Covers more area than 'Walk'.",
-            ModConfig.HarvestCropsRangeModeStrings);
+            () => Helper.Translation.Get("config.harvest-range-mode"),
+            () => Helper.Translation.Get("config.harvest-range-mode.tooltip"),
+            ModConfig.HarvestCropsRangeModeStrings,
+            v => Helper.Translation.Get($"dropdown.{v.ToLower()}"));
 
         // Other Harvesting section
-        api.AddSectionTitle(ModManifest, () => "Other Harvesting", () => "");
+        api.AddSectionTitle(ModManifest, () => Helper.Translation.Get("section.other-harvesting"));
 
         api.AddBoolOption(ModManifest,
             () => Config.fruitTrees,
             v => Config.fruitTrees = v,
-            () => "Harvest Fruit Trees");
+            () => Helper.Translation.Get("config.harvest-fruit-trees"));
 
         api.AddBoolOption(ModManifest,
             () => Config.bushes,
             v => Config.bushes = v,
-            () => "Harvest Berry Bushes");
+            () => Helper.Translation.Get("config.harvest-berry-bushes"));
 
         api.AddBoolOption(ModManifest,
             () => Config.seedTrees,
             v => Config.seedTrees = v,
-            () => "Shake Seed Trees");
+            () => Helper.Translation.Get("config.shake-seed-trees"));
 
         api.AddBoolOption(ModManifest,
             () => Config.animalProducts,
             v => Config.animalProducts = v,
-            () => "Collect Animal Products",
-            () => "Collects eggs, milk, wool, and other animal products from barns and coops. Also picks up dropped items like eggs from the floor.");
+            () => Helper.Translation.Get("config.collect-animal-products"),
+            () => Helper.Translation.Get("config.collect-animal-products.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.slimeHutch,
             v => Config.slimeHutch = v,
-            () => "Grab Slime Balls");
+            () => Helper.Translation.Get("config.grab-slime-balls"));
 
         api.AddBoolOption(ModManifest,
             () => Config.farmCaveMushrooms,
             v => Config.farmCaveMushrooms = v,
-            () => "Grab Farm Cave Mushrooms",
-            () => "This will also work for mushroom boxes placed outside the farm cave");
+            () => Helper.Translation.Get("config.grab-farm-cave-mushrooms"),
+            () => Helper.Translation.Get("config.grab-farm-cave-mushrooms.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.artifactSpots,
             v => Config.artifactSpots = v,
-            () => "Dig Up Artifact Spots");
+            () => Helper.Translation.Get("config.dig-up-artifact-spots"));
 
         api.AddBoolOption(ModManifest,
             () => Config.orePan,
             v => Config.orePan = v,
-            () => "Collect Ore From Panning Sites");
+            () => Helper.Translation.Get("config.collect-ore-from-panning"));
 
         api.AddBoolOption(ModManifest,
             () => Config.fellSecretWoodsStumps,
             v => Config.fellSecretWoodsStumps = v,
-            () => "Fell Stumps in Secret Woods");
+            () => Helper.Translation.Get("config.fell-stumps-secret-woods"));
 
         api.AddBoolOption(ModManifest,
             () => Config.garbageCans,
             v => Config.garbageCans = v,
-            () => "Search Garbage Cans");
+            () => Helper.Translation.Get("config.search-garbage-cans"));
 
         api.AddBoolOption(ModManifest,
             () => Config.seedSpots,
             v => Config.seedSpots = v,
-            () => "Dig up Seed Spots");
+            () => Helper.Translation.Get("config.dig-up-seed-spots"));
 
         api.AddBoolOption(ModManifest,
             () => Config.harvestMoss,
             v => Config.harvestMoss = v,
-            () => "Harvest Moss from Trees");
+            () => Helper.Translation.Get("config.harvest-moss"));
 
         // Machine Collection section
         api.AddSectionTitle(ModManifest,
-            () => "Machine Collection",
-            () => "Automatically collect finished outputs from supported machines");
+            () => Helper.Translation.Get("section.machine-collection"),
+            () => Helper.Translation.Get("section.machine-collection.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.collectMachines,
             v => Config.collectMachines = v,
-            () => "Collect Machine Outputs",
-            () => "Automatically collects finished outputs from supported machines and deposits them into nearby auto-grabbers");
+            () => Helper.Translation.Get("config.collect-machine-outputs"),
+            () => Helper.Translation.Get("config.collect-machine-outputs.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.collectCrabPots,
             v => Config.collectCrabPots = v,
-            () => "Collect from Crab Pots",
-            () => "This is ignored if 'Collect Machine Outputs' is disabled");
+            () => Helper.Translation.Get("config.collect-crab-pots"),
+            () => Helper.Translation.Get("config.collect-crab-pots.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.collectBeeHouses,
             v => Config.collectBeeHouses = v,
-            () => "Collect from Bee Houses",
-            () => "This is ignored if 'Collect Machine Outputs' is disabled");
+            () => Helper.Translation.Get("config.collect-bee-houses"),
+            () => Helper.Translation.Get("config.collect-bee-houses.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.collectTappers,
             v => Config.collectTappers = v,
-            () => "Collect from Tappers",
-            () => "Collects from both regular and heavy tappers. This is ignored if 'Collect Machine Outputs' is disabled");
+            () => Helper.Translation.Get("config.collect-tappers"),
+            () => Helper.Translation.Get("config.collect-tappers.tooltip"));
 
         // Miscellaneous section
-        api.AddSectionTitle(ModManifest, () => "Miscellaneous");
+        api.AddSectionTitle(ModManifest, () => Helper.Translation.Get("section.miscellaneous"));
 
         api.AddBoolOption(ModManifest,
             () => Config.reportYield,
             v => Config.reportYield = v,
-            () => "Report Yield",
-            () => "Logs to the SMAPI console the yield of each auto grabber");
+            () => Helper.Translation.Get("config.report-yield"),
+            () => Helper.Translation.Get("config.report-yield.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.debugLogging,
             v => Config.debugLogging = v,
-            () => "Debug Logging",
-            () => "Logs detailed trace info to the SMAPI log file for troubleshooting");
+            () => Helper.Translation.Get("config.debug-logging"),
+            () => Helper.Translation.Get("config.debug-logging.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.gainExperience,
             v => Config.gainExperience = v,
-            () => "Gain Experience",
-            () => "Gain appropriate experience as if you foraged or harvested yourself");
+            () => Helper.Translation.Get("config.gain-experience"),
+            () => Helper.Translation.Get("config.gain-experience.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.skipFestivalLocations,
             v => Config.skipFestivalLocations = v,
-            () => "Skip Festival Locations",
-            () => "Prevents auto-grabbers from collecting items in festival and temporary event locations, including during active festivals");
+            () => Helper.Translation.Get("config.skip-festival-locations"),
+            () => Helper.Translation.Get("config.skip-festival-locations.tooltip"));
 
         api.AddTextOption(ModManifest,
             () => ModConfig.GlobalGrabberDict[Config.globalGrabber],
             v => Config.globalGrabber = ModConfig.GlobalGrabberReverseDict[v],
-            () => "Global Grabber Mode",
-            () => "'Hover': hover over a grabber and press the fire key to make it collect from all locations. 'All': designate a grabber (open it and tap the star button, or hover + press designate key), then fire it to collect globally.",
-            ModConfig.GlobalGrabberModeStrings);
+            () => Helper.Translation.Get("config.global-grabber-mode"),
+            () => Helper.Translation.Get("config.global-grabber-mode.tooltip"),
+            ModConfig.GlobalGrabberModeStrings,
+            v => Helper.Translation.Get($"dropdown.{v.ToLower()}"));
 
         api.AddBoolOption(ModManifest,
             () => Config.globalAutoFire,
             v => Config.globalAutoFire = v,
-            () => "Auto-Fire Global Grabber",
-            () => "When enabled, the designated global grabber automatically collects from all locations at the start of each day. Only used in All mode. Great for mobile users.");
+            () => Helper.Translation.Get("config.auto-fire-global-grabber"),
+            () => Helper.Translation.Get("config.auto-fire-global-grabber.tooltip"));
 
         api.AddKeybind(ModManifest,
             () => Config.globalFireButton,
             v => Config.globalFireButton = v,
-            () => "Fire Global Grabber",
-            () => "Press to trigger the designated or hovered grabber to collect items from all locations. Only works when Global Grabber Mode is set to All or Hover.");
+            () => Helper.Translation.Get("config.fire-global-grabber"),
+            () => Helper.Translation.Get("config.fire-global-grabber.tooltip"));
 
         api.AddKeybind(ModManifest,
             () => Config.designateGrabberButton,
             v => Config.designateGrabberButton = v,
-            () => "Designate Global Grabber",
-            () => "Hover over an auto-grabber and press this key to designate it as the global grabber. Only used in All mode. On mobile, use the star button in the auto-grabber menu instead.");
+            () => Helper.Translation.Get("config.designate-global-grabber"),
+            () => Helper.Translation.Get("config.designate-global-grabber.tooltip"));
 
         api.AddNumberOption(ModManifest,
             () => Config.globalButtonOffsetX,
             v => Config.globalButtonOffsetX = v,
-            () => "Global Button X Offset",
-            () => "Adjust the horizontal position of the Global Grabber star button in the auto-grabber menu. Use this if it overlaps with buttons from other mods.",
+            () => Helper.Translation.Get("config.global-button-x-offset"),
+            () => Helper.Translation.Get("config.global-button-x-offset.tooltip"),
             -500, 500);
 
         api.AddNumberOption(ModManifest,
             () => Config.globalButtonOffsetY,
             v => Config.globalButtonOffsetY = v,
-            () => "Global Button Y Offset",
-            () => "Adjust the vertical position of the Global Grabber star button in the auto-grabber menu. Use this if it overlaps with buttons from other mods.",
+            () => Helper.Translation.Get("config.global-button-y-offset"),
+            () => Helper.Translation.Get("config.global-button-y-offset.tooltip"),
             -500, 500);
 
         // Skipped Locations page link
         api.AddPageLink(ModManifest, "skipped-locations",
-            () => "Skipped Locations >",
-            () => "Choose which game locations to skip when auto-grabbing");
+            () => Helper.Translation.Get("config.skipped-locations-link"),
+            () => Helper.Translation.Get("config.skipped-locations-link.tooltip"));
 
         // Skipped Locations page
-        api.AddPage(ModManifest, "skipped-locations", () => "Skipped Locations");
+        api.AddPage(ModManifest, "skipped-locations", () => Helper.Translation.Get("config.skipped-locations-page"));
 
         if (_discoveredLocations != null && _discoveredLocations.Count > 0)
         {
             api.AddParagraph(ModManifest,
-                () => "Toggle locations on or off. Disabled locations will be skipped by all auto-grabbers.");
+                () => Helper.Translation.Get("config.skipped-locations-paragraph"));
 
             api.AddBoolOption(ModManifest,
                 getValue: () => _discoveredLocations.All(loc => Config.SkippedLocations?.Contains(loc.Name) != true),
                 setValue: v => { },
-                name: () => "Enable All",
-                tooltip: () => "Toggle all locations on or off at once",
+                name: () => Helper.Translation.Get("config.enable-all"),
+                tooltip: () => Helper.Translation.Get("config.enable-all.tooltip"),
                 fieldId: "enable-all");
 
             api.AddBoolOption(ModManifest,
@@ -611,8 +613,8 @@ public class ModEntry : Mod
                         return visited == enabled;
                     }),
                 setValue: v => { },
-                name: () => "Select Visited Only",
-                tooltip: () => "Enables only locations you've visited and skips the rest. If you discover new locations, toggle this again to update.",
+                name: () => Helper.Translation.Get("config.select-visited-only"),
+                tooltip: () => Helper.Translation.Get("config.select-visited-only.tooltip"),
                 fieldId: "select-visited-only");
 
             api.OnFieldChanged(ModManifest, (fieldId, value) =>
@@ -636,14 +638,14 @@ public class ModEntry : Mod
 
                 if (visitedLocs.Count > 0)
                 {
-                    api.AddSectionTitle(ModManifest, () => "Visited Locations");
+                    api.AddSectionTitle(ModManifest, () => Helper.Translation.Get("section.visited-locations"));
                     foreach (var (locName, displayName) in visitedLocs)
                         AddLocationToggle(api, locName, displayName);
                 }
 
                 if (unvisitedLocs.Count > 0)
                 {
-                    api.AddSectionTitle(ModManifest, () => "Not Yet Visited");
+                    api.AddSectionTitle(ModManifest, () => Helper.Translation.Get("section.not-yet-visited"));
                     foreach (var (locName, displayName) in unvisitedLocs)
                         AddLocationToggle(api, locName, displayName);
                 }
@@ -657,7 +659,7 @@ public class ModEntry : Mod
         else
         {
             api.AddParagraph(ModManifest,
-                () => "Load a save file to see available locations.");
+                () => Helper.Translation.Get("config.no-save-loaded"));
         }
     }
 
