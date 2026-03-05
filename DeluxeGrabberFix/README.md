@@ -19,7 +19,8 @@ Adopted the existing [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/starde
 - **Forage** — Picks up forageable items
 - **Yield reporting** — Logs what each auto-grabber collected to the SMAPI console
 - **Experience gain** — Optionally awards farming/foraging XP as if you did it yourself
-- **Global grabber mode** — Lets all auto-grabbers work across all locations, or fire on demand with a hotkey
+- **Global grabber mode** — Lets all auto-grabbers work across all locations, or fire on demand with a hotkey. Designate via in-menu star button (mobile-friendly) or hover + hotkey
+- **Auto-fire global grabber** — Optionally fires the designated global grabber automatically each morning — no hotkey needed, perfect for mobile
 
 ## Configuration
 
@@ -46,7 +47,10 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 | Report Yield | On | Log collected items to SMAPI console |
 | Gain Experience | On | Award XP for auto-grabbed items |
 | Global Grabber Mode | Off | Off / All (every location) / Hover (cursor + hotkey) |
+| Auto-Fire Global Grabber | Off | Fire designated global grabber automatically each morning |
 | Fire Global Grabber | B | Hotkey for Hover/All mode |
+| Global Button X Offset | 0 | Horizontal offset for the star button in the auto-grabber menu |
+| Global Button Y Offset | 0 | Vertical offset for the star button in the auto-grabber menu |
 
 ## Install
 

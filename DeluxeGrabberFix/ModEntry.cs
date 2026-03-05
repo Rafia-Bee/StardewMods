@@ -29,6 +29,9 @@ public class ModEntry : Mod
     private List<(string Name, string DisplayName)> _discoveredLocations;
     private LocationBatchAction? _pendingLocationBatchAction;
     private SaveData _saveData;
+    private GlobalGrabberButton _globalGrabberButton;
+    private static GlobalGrabberButton _staticGlobalGrabberButton;
+    private bool _pendingGlobalAutoFire;
 
     private enum LocationBatchAction { EnableAll, DisableAll, SelectVisitedOnly }
     private const string SaveDataKey = "visit-tracking";
@@ -54,6 +57,8 @@ public class ModEntry : Mod
         helper.Events.GameLoop.TimeChanged += OnTenMinuteUpdate;
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
         helper.Events.Display.RenderedWorld += OnRenderedWorld;
+        helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
+        helper.Events.Display.MenuChanged += OnMenuChanged;
         helper.Events.World.ObjectListChanged += OnObjectListChanged;
         helper.Events.Input.ButtonPressed += OnButtonPressed;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
@@ -100,18 +105,22 @@ public class ModEntry : Mod
         if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Off || Config.globalFireButton != e.Button)
             return;
 
-        // Refresh location list on global grab
+        if (Config.globalGrabber == ModConfig.GlobalGrabberMode.All && !HasDesignatedGrabber())
+        {
+            Game1.addHUDMessage(new HUDMessage("Designate a global grabber first by opening an auto-grabber and pressing the star button, or by hovering over it and pressing the designate key.", HUDMessage.error_type));
+            return;
+        }
+
+        FireGlobalGrab();
+    }
+
+    private void FireGlobalGrab()
+    {
         DiscoverLocations();
         if (Config.selectVisitedOnly)
             ApplyVisitAutoSkip();
 
-        if (Config.globalGrabber == ModConfig.GlobalGrabberMode.All && !HasDesignatedGrabber())
-        {
-            Game1.addHUDMessage(new HUDMessage("Designate a global grabber first by hovering over an auto-grabber and pressing the designate key.", HUDMessage.error_type));
-            return;
-        }
-
-        LogDebug("Autograbbing on button pressed");
+        LogDebug("Firing global grab");
         IsGlobalGrabActive = true;
         try
         {
@@ -140,6 +149,31 @@ public class ModEntry : Mod
             IsGlobalGrabActive = false;
             CachedDesignatedGrabbers = null;
         }
+    }
+
+    private void OnMenuChanged(object sender, MenuChangedEventArgs e)
+    {
+        _globalGrabberButton = null;
+        _staticGlobalGrabberButton = null;
+
+        if (e.NewMenu is not StardewValley.Menus.ItemGrabMenu grabMenu)
+            return;
+
+        // The auto-grabber passes itself as 'context', not 'sourceItem'
+        if (grabMenu.context is not Object obj || obj.ParentSheetIndex != 165
+            || obj.heldObject.Value is not StardewValley.Objects.Chest)
+            return;
+
+        _globalGrabberButton = new GlobalGrabberButton(this, obj, grabMenu);
+        _staticGlobalGrabberButton = _globalGrabberButton;
+    }
+
+    private void OnRenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
+    {
+        if (_globalGrabberButton == null || Game1.activeClickableMenu is not StardewValley.Menus.ItemGrabMenu)
+            return;
+
+        _globalGrabberButton.Draw(e.SpriteBatch);
     }
 
     private void HandleDesignateGrabber()
@@ -191,12 +225,21 @@ public class ModEntry : Mod
         return false;
     }
 
+    internal static void ItemGrabMenu_ReceiveLeftClick_Postfix(int x, int y)
+    {
+        _staticGlobalGrabberButton?.TryClick(x, y);
+    }
+
     private void OnLaunched(object sender, GameLaunchedEventArgs e)
     {
         var harmony = new Harmony(ModManifest.UniqueID);
         harmony.Patch(
             original: AccessTools.Method(typeof(Game1), nameof(Game1.createItemDebris)),
             prefix: new HarmonyMethod(typeof(HarvestInterceptor), nameof(HarvestInterceptor.CreateItemDebris_Prefix))
+        );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(StardewValley.Menus.ItemGrabMenu), nameof(StardewValley.Menus.ItemGrabMenu.receiveLeftClick)),
+            postfix: new HarmonyMethod(typeof(ModEntry), nameof(ItemGrabMenu_ReceiveLeftClick_Postfix))
         );
 
         _gmcmApi = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
@@ -504,8 +547,14 @@ public class ModEntry : Mod
             () => ModConfig.GlobalGrabberDict[Config.globalGrabber],
             v => Config.globalGrabber = ModConfig.GlobalGrabberReverseDict[v],
             () => "Global Grabber Mode",
-            () => "'Hover': hover over a grabber and press the fire key to make it collect from all locations. 'All': requires a designated grabber — press the designate key on an auto-grabber first, then the fire key makes it collect globally.",
+            () => "'Hover': hover over a grabber and press the fire key to make it collect from all locations. 'All': designate a grabber (open it and tap the star button, or hover + press designate key), then fire it to collect globally.",
             ModConfig.GlobalGrabberModeStrings);
+
+        api.AddBoolOption(ModManifest,
+            () => Config.globalAutoFire,
+            v => Config.globalAutoFire = v,
+            () => "Auto-Fire Global Grabber",
+            () => "When enabled, the designated global grabber automatically collects from all locations at the start of each day. Only used in All mode. Great for mobile users.");
 
         api.AddKeybind(ModManifest,
             () => Config.globalFireButton,
@@ -517,7 +566,21 @@ public class ModEntry : Mod
             () => Config.designateGrabberButton,
             v => Config.designateGrabberButton = v,
             () => "Designate Global Grabber",
-            () => "Hover over an auto-grabber and press this key to designate it as the global grabber. Only used in All mode.");
+            () => "Hover over an auto-grabber and press this key to designate it as the global grabber. Only used in All mode. On mobile, use the star button in the auto-grabber menu instead.");
+
+        api.AddNumberOption(ModManifest,
+            () => Config.globalButtonOffsetX,
+            v => Config.globalButtonOffsetX = v,
+            () => "Global Button X Offset",
+            () => "Adjust the horizontal position of the Global Grabber star button in the auto-grabber menu. Use this if it overlaps with buttons from other mods.",
+            -500, 500);
+
+        api.AddNumberOption(ModManifest,
+            () => Config.globalButtonOffsetY,
+            v => Config.globalButtonOffsetY = v,
+            () => "Global Button Y Offset",
+            () => "Adjust the vertical position of the Global Grabber star button in the auto-grabber menu. Use this if it overlaps with buttons from other mods.",
+            -500, 500);
 
         // Skipped Locations page link
         api.AddPageLink(ModManifest, "skipped-locations",
@@ -703,6 +766,14 @@ public class ModEntry : Mod
             {
                 _isGrabbing = false;
             }
+
+            // Process auto-fire global grab immediately after the local day-start grab
+            if (_pendingGlobalAutoFire)
+            {
+                _pendingGlobalAutoFire = false;
+                FireGlobalGrab();
+            }
+
             return;
         }
 
@@ -748,6 +819,12 @@ public class ModEntry : Mod
     {
         LogDebug("Autograbbing on day start (deferred to next tick)");
         _pendingDayStartGrab = true;
+
+        // Auto-fire global grab at day start if configured
+        if (Config.globalAutoFire && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && HasDesignatedGrabber())
+        {
+            _pendingGlobalAutoFire = true;
+        }
     }
 
     private void OnRenderedWorld(object sender, RenderedWorldEventArgs e)
