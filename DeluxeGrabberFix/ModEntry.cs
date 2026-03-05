@@ -387,10 +387,28 @@ public class ModEntry : Mod
                 }
             });
 
-        // Crop Harvesting section
-        api.AddSectionTitle(ModManifest,
-            () => Helper.Translation.Get("section.crop-harvesting"),
+        // Main page — category links
+        api.AddPageLink(ModManifest, "crop-harvesting",
+            () => Helper.Translation.Get("page.crop-harvesting.link"),
             () => Helper.Translation.Get("section.crop-harvesting.tooltip"));
+
+        api.AddPageLink(ModManifest, "other-harvesting",
+            () => Helper.Translation.Get("page.other-harvesting.link"));
+
+        api.AddPageLink(ModManifest, "machine-collection",
+            () => Helper.Translation.Get("page.machine-collection.link"),
+            () => Helper.Translation.Get("section.machine-collection.tooltip"));
+
+        api.AddPageLink(ModManifest, "miscellaneous",
+            () => Helper.Translation.Get("page.miscellaneous.link"));
+
+        // Skipped Locations page link
+        api.AddPageLink(ModManifest, "skipped-locations",
+            () => Helper.Translation.Get("config.skipped-locations-link"),
+            () => Helper.Translation.Get("config.skipped-locations-link.tooltip"));
+
+        // Crop Harvesting page
+        api.AddPage(ModManifest, "crop-harvesting", () => Helper.Translation.Get("section.crop-harvesting"));
 
         api.AddBoolOption(ModManifest,
             () => Config.harvestCrops,
@@ -423,8 +441,8 @@ public class ModEntry : Mod
             ModConfig.HarvestCropsRangeModeStrings,
             v => Helper.Translation.Get($"dropdown.{v.ToLower()}"));
 
-        // Other Harvesting section
-        api.AddSectionTitle(ModManifest, () => Helper.Translation.Get("section.other-harvesting"));
+        // Other Harvesting page
+        api.AddPage(ModManifest, "other-harvesting", () => Helper.Translation.Get("section.other-harvesting"));
 
         api.AddBoolOption(ModManifest,
             () => Config.fruitTrees,
@@ -488,10 +506,8 @@ public class ModEntry : Mod
             v => Config.harvestMoss = v,
             () => Helper.Translation.Get("config.harvest-moss"));
 
-        // Machine Collection section
-        api.AddSectionTitle(ModManifest,
-            () => Helper.Translation.Get("section.machine-collection"),
-            () => Helper.Translation.Get("section.machine-collection.tooltip"));
+        // Machine Collection page
+        api.AddPage(ModManifest, "machine-collection", () => Helper.Translation.Get("section.machine-collection"));
 
         api.AddBoolOption(ModManifest,
             () => Config.collectMachines,
@@ -517,8 +533,8 @@ public class ModEntry : Mod
             () => Helper.Translation.Get("config.collect-tappers"),
             () => Helper.Translation.Get("config.collect-tappers.tooltip"));
 
-        // Miscellaneous section
-        api.AddSectionTitle(ModManifest, () => Helper.Translation.Get("section.miscellaneous"));
+        // Miscellaneous page
+        api.AddPage(ModManifest, "miscellaneous", () => Helper.Translation.Get("section.miscellaneous"));
 
         api.AddBoolOption(ModManifest,
             () => Config.reportYield,
@@ -583,11 +599,6 @@ public class ModEntry : Mod
             () => Helper.Translation.Get("config.global-button-y-offset"),
             () => Helper.Translation.Get("config.global-button-y-offset.tooltip"),
             -500, 500);
-
-        // Skipped Locations page link
-        api.AddPageLink(ModManifest, "skipped-locations",
-            () => Helper.Translation.Get("config.skipped-locations-link"),
-            () => Helper.Translation.Get("config.skipped-locations-link.tooltip"));
 
         // Skipped Locations page
         api.AddPage(ModManifest, "skipped-locations", () => Helper.Translation.Get("config.skipped-locations-page"));
