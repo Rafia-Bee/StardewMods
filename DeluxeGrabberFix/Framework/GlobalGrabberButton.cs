@@ -40,8 +40,8 @@ internal class GlobalGrabberButton
             scale: 4f)
         {
             hoverText = _isDesignated
-                ? "Remove as Global Grabber"
-                : "Set as Global Grabber"
+                ? _mod.Helper.Translation.Get("button.remove-global-grabber")
+                : _mod.Helper.Translation.Get("button.set-global-grabber")
         };
     }
 
@@ -66,20 +66,20 @@ internal class GlobalGrabberButton
         {
             _grabberObject.modData.Remove(ModEntry.GlobalGrabberModDataKey);
             _isDesignated = false;
-            Game1.addHUDMessage(new HUDMessage("This auto-grabber is no longer the Global Grabber."));
+            Game1.addHUDMessage(new HUDMessage(_mod.Helper.Translation.Get("hud.no-longer-global")));
         }
         else
         {
             ClearAllDesignations();
             _grabberObject.modData[ModEntry.GlobalGrabberModDataKey] = "true";
             _isDesignated = true;
-            Game1.addHUDMessage(new HUDMessage("This auto-grabber is now the Global Grabber!"));
+            Game1.addHUDMessage(new HUDMessage(_mod.Helper.Translation.Get("hud.now-global")));
         }
 
         _button.sourceRect = _isDesignated ? GoldStarSource : SilverStarSource;
         _button.hoverText = _isDesignated
-            ? "Remove as Global Grabber"
-            : "Set as Global Grabber";
+            ? _mod.Helper.Translation.Get("button.remove-global-grabber")
+            : _mod.Helper.Translation.Get("button.set-global-grabber");
 
         return true;
     }
