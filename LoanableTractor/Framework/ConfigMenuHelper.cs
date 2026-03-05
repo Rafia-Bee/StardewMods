@@ -30,7 +30,7 @@ namespace LoanableTractor.Framework
             var gmcm = this.Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (gmcm == null)
             {
-                this.Monitor.Log("GMCM not found — config UI not registered.", LogLevel.Debug);
+                this.Monitor.Log("GMCM not found — config UI not registered.", LogLevel.Trace);
                 return;
             }
 
@@ -161,7 +161,7 @@ namespace LoanableTractor.Framework
                     interval: 5
                 );
 
-                this.Monitor.Log("GMCM config registered.", LogLevel.Debug);
+                this.Monitor.Log("GMCM config registered.", LogLevel.Trace);
             }
             catch (Exception ex)
             {
