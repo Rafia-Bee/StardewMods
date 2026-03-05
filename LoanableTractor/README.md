@@ -94,6 +94,9 @@ Yes! The rental service switches from Joja AgriLease™ to Pierre's Farm Equipme
 **Does this work with custom tractor textures?**
 The loaned tractor uses whatever textures you have set up for Tractor Mod, so yes, custom skins work just fine.
 
+**Can I use the loaned tractor in the mines or Volcano Dungeon?**
+Yes! You can ride the tractor into the mines, dismount, remount, and move between floors. If you leave the tractor behind in a mine, it'll follow you to your next location.
+
 ## Credits
 
 This mod wouldn't exist without the amazing work of:
