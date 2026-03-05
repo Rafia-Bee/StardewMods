@@ -15,7 +15,7 @@ namespace LoanableTractor.Framework
         /// </summary>
         public static void HideLoanedTractorsFromCleanup()
         {
-            foreach (var location in Game1.locations)
+            Utility.ForEachLocation(location =>
             {
                 foreach (var npc in location.characters)
                 {
@@ -27,7 +27,8 @@ namespace LoanableTractor.Framework
                         }
                     }
                 }
-            }
+                return true;
+            }, includeGenerated: true);
         }
 
         /// <summary>
@@ -36,7 +37,7 @@ namespace LoanableTractor.Framework
         /// </summary>
         public static void RestoreLoanedTractorsAfterCleanup()
         {
-            foreach (var location in Game1.locations)
+            Utility.ForEachLocation(location =>
             {
                 foreach (var npc in location.characters)
                 {
@@ -48,7 +49,8 @@ namespace LoanableTractor.Framework
                         }
                     }
                 }
-            }
+                return true;
+            }, includeGenerated: true);
         }
     }
 }

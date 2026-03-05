@@ -261,16 +261,22 @@ namespace LoanableTractor.Framework
             var mount = Game1.player?.mount;
             if (mount != null && mount.modData.ContainsKey(LoanedTractorModDataKey))
                 return mount;
-            foreach (var location in Game1.locations)
+
+            Horse found = null;
+            Utility.ForEachLocation(location =>
             {
                 foreach (var npc in location.characters)
                 {
                     if (npc is Horse horse && horse.modData.ContainsKey(LoanedTractorModDataKey))
-                        return horse;
+                    {
+                        found = horse;
+                        return false;
+                    }
                 }
-            }
+                return true;
+            }, includeGenerated: true);
 
-            return null;
+            return found;
         }
 
         /// <summary>
@@ -312,19 +318,18 @@ namespace LoanableTractor.Framework
                 return;
 
             Horse existingTractor = null;
-            foreach (var location in Game1.locations)
+            Utility.ForEachLocation(location =>
             {
                 foreach (var npc in location.characters)
                 {
                     if (npc is Horse horse && horse.modData.ContainsKey(LoanedTractorModDataKey))
                     {
                         existingTractor = horse;
-                        break;
+                        return false;
                     }
                 }
-                if (existingTractor != null)
-                    break;
-            }
+                return true;
+            }, includeGenerated: true);
 
             if (existingTractor != null)
                 return;
@@ -484,7 +489,7 @@ namespace LoanableTractor.Framework
         {
             try
             {
-                foreach (var location in Game1.locations)
+                Utility.ForEachLocation(location =>
                 {
                     var toRemove = location.characters
                         .Where(npc => npc is Horse horse && horse.modData.ContainsKey(LoanedTractorModDataKey))
@@ -494,7 +499,8 @@ namespace LoanableTractor.Framework
                     {
                         location.characters.Remove(character);
                     }
-                }
+                    return true;
+                }, includeGenerated: true);
 
                 this.ActiveTractorIds.Clear();
             }
