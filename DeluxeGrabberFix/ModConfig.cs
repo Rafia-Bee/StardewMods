@@ -49,6 +49,9 @@ internal class ModConfig
     public HashSet<string> SkippedLocations;
     public SButton globalFireButton;
     public SButton designateGrabberButton;
+    public bool globalAutoFire;
+    public int globalButtonOffsetX;
+    public int globalButtonOffsetY;
 
     internal static Dictionary<HarvestCropsRangeMode, string> HarvestCropsRangeDict = new()
     {
@@ -95,6 +98,9 @@ internal class ModConfig
         globalGrabber = GlobalGrabberMode.Off;
         globalFireButton = SButton.B;
         designateGrabberButton = SButton.G;
+        globalAutoFire = false;
+        globalButtonOffsetX = 0;
+        globalButtonOffsetY = 0;
         seedSpots = false;
         harvestMoss = false;
         skipFestivalLocations = true;
