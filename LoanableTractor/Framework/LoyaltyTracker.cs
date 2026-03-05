@@ -58,7 +58,7 @@ namespace LoanableTractor.Framework
         public void RecordLoanCompleted()
         {
             this.TotalLoansCompleted++;
-            this.Monitor.Log($"Loan completed. Total: {this.TotalLoansCompleted}", LogLevel.Debug);
+            this.Monitor.Log($"Loan completed. Total: {this.TotalLoansCompleted}", LogLevel.Trace);
             this.CheckMilestones();
         }
 
@@ -67,7 +67,7 @@ namespace LoanableTractor.Framework
         {
             this.TotalLoansCompleted = 0;
             this.CurrentLoyaltyTier = 0;
-            this.Monitor.Log("Loyalty data reset.", LogLevel.Debug);
+            this.Monitor.Log("Loyalty data reset.", LogLevel.Trace);
         }
 
         /*********

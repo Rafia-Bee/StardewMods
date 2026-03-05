@@ -300,7 +300,7 @@ namespace LoanableTractor.Framework
                 var tile = Game1.player.Tile;
                 this.PlaceTractorAtTile(tractor, e.NewLocation, tile);
 
-                this.Monitor.Log($"Warped loaned tractor to follow player to {e.NewLocation.Name} at ({tile.X}, {tile.Y}).", LogLevel.Debug);
+                this.Monitor.Log($"Warped loaned tractor to follow player to {e.NewLocation.Name} at ({tile.X}, {tile.Y}).", LogLevel.Trace);
             }
         }
 
@@ -350,7 +350,7 @@ namespace LoanableTractor.Framework
                 this.ActiveTractorIds.Add(tractorId);
             }
 
-            this.Monitor.Log($"Recovered lost loaned tractor — re-spawned at player's position in {player.currentLocation.Name}.", LogLevel.Debug);
+            this.Monitor.Log($"Recovered lost loaned tractor — re-spawned at player's position in {player.currentLocation.Name}.", LogLevel.Trace);
         }
 
         /// <summary>
