@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using DeluxeGrabberFix.Framework;
 using StardewValley;
@@ -17,23 +18,30 @@ internal class ForageHoeDirtGrabber : TerrainFeaturesMapGrabber
         if (!Config.forage || !Mod.IsForageGrabEnabled || feature is not HoeDirt dirt || !IsForageableHoeDirt(feature))
             return false;
 
-        Object forage = null;
+        // Try crop.harvest() first (handles spring onions and any modded forage crops)
+        HarvestInterceptor.BeginIntercept();
+        bool shouldDestroy = dirt.crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);
+        List<Item> items = HarvestInterceptor.EndIntercept();
 
-        if (dirt.crop.whichForageCrop.Value == "1")
+        // If harvest() didn't produce anything, try hitWithHoe() (handles ginger)
+        if (items.Count == 0)
         {
-            forage = Helpers.SetForageStatsBasedOnProfession(Player, ItemRegistry.Create<Object>(399.ToString()), tile, ignoreGatherer: true);
+            HarvestInterceptor.BeginIntercept();
+            shouldDestroy = dirt.crop.hitWithHoe((int)tile.X, (int)tile.Y, Location, dirt);
+            items = HarvestInterceptor.EndIntercept();
         }
-        else if (dirt.crop.whichForageCrop.Value == "2")
-        {
-            forage = ItemRegistry.Create<Object>(829.ToString());
-        }
 
-        if (forage != null && TryAddItem(forage))
+        if (items.Count > 0)
         {
-            if (dirt.crop.whichForageCrop.Value == "1")
-                GainExperience(2, 3);
+            foreach (var item in items)
+            {
+                if (!TryAddItem(item))
+                    Game1.createItemDebris(item, new Vector2(tile.X * 64 + 32, tile.Y * 64 + 32), -1, Location);
+            }
 
-            dirt.destroyCrop(false);
+            if (shouldDestroy)
+                dirt.destroyCrop(false);
+
             return true;
         }
         return false;
