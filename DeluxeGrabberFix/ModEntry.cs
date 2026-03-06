@@ -20,6 +20,7 @@ public class ModEntry : Mod
     internal readonly ModApi Api;
     internal ModConfig Config { get; set; }
     internal bool IsGlobalGrabActive { get; set; }
+    internal bool IsForageGrabEnabled { get; set; }
     internal List<KeyValuePair<Vector2, Object>> CachedDesignatedGrabbers { get; set; }
     internal const string GlobalGrabberModDataKey = "Rafia.DeluxeGrabberFix/IsGlobalGrabber";
     private readonly HashSet<GameLocation> _dirtyLocations = new();
@@ -62,6 +63,7 @@ public class ModEntry : Mod
         helper.Events.World.ObjectListChanged += OnObjectListChanged;
         helper.Events.Input.ButtonPressed += OnButtonPressed;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
+        helper.Events.GameLoop.DayEnding += OnDayEnding;
         helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
         helper.Events.Player.Warped += OnPlayerWarped;
     }
@@ -122,6 +124,7 @@ public class ModEntry : Mod
 
         LogDebug("Firing global grab");
         IsGlobalGrabActive = true;
+        IsForageGrabEnabled = true;
         try
         {
             var allLocations = GetAllLocations().ToList();
@@ -147,6 +150,7 @@ public class ModEntry : Mod
         finally
         {
             IsGlobalGrabActive = false;
+            IsForageGrabEnabled = false;
             CachedDesignatedGrabbers = null;
         }
     }
@@ -776,6 +780,7 @@ public class ModEntry : Mod
 
             LogDebug("Executing deferred day-start grab");
             _isGrabbing = true;
+            IsForageGrabEnabled = true;
             try
             {
                 foreach (var location in GetAllLocations())
@@ -785,6 +790,7 @@ public class ModEntry : Mod
             }
             finally
             {
+                IsForageGrabEnabled = false;
                 _isGrabbing = false;
             }
 
@@ -833,6 +839,28 @@ public class ModEntry : Mod
             var orePanGrabber = new OrePanGrabber(this, location);
             if (orePanGrabber.CanGrab())
                 orePanGrabber.GrabItems();
+        }
+    }
+
+    private void OnDayEnding(object sender, DayEndingEventArgs e)
+    {
+        if (!Config.forage)
+            return;
+
+        LogDebug("Autograbbing forage before sleep");
+        _isGrabbing = true;
+        IsForageGrabEnabled = true;
+        try
+        {
+            foreach (var location in GetAllLocations())
+            {
+                GrabAtLocation(location);
+            }
+        }
+        finally
+        {
+            IsForageGrabEnabled = false;
+            _isGrabbing = false;
         }
     }
 
