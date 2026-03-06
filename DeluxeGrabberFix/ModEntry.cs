@@ -518,6 +518,12 @@ public class ModEntry : Mod
             v => Config.harvestMoss = v,
             () => Helper.Translation.Get("config.harvest-moss"));
 
+        api.AddBoolOption(ModManifest,
+            () => Config.collectDebris,
+            v => Config.collectDebris = v,
+            () => Helper.Translation.Get("config.collect-debris"),
+            () => Helper.Translation.Get("config.collect-debris.tooltip"));
+
         // Machine Collection page
         api.AddPage(ModManifest, "machine-collection", () => Helper.Translation.Get("section.machine-collection"));
 
