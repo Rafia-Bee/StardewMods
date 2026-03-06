@@ -17,6 +17,7 @@ Adopted the existing [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/starde
 - **Secret Woods stumps** — Fells hardwood stumps in the Secret Woods
 - **Town garbage cans** — Searches garbage cans
 - **Forage** — Picks up forageable items
+- **Item debris** — Collects items dropped as ground debris (monster loot, fallen items, modded forage drops)
 - **Yield reporting** — Logs what each auto-grabber collected to the SMAPI console
 - **Experience gain** — Optionally awards farming/foraging XP as if you did it yourself
 - **Global grabber mode** — Lets all auto-grabbers work across all locations, or fire on demand with a hotkey. Designate via in-menu star button (mobile-friendly) or hover + hotkey
@@ -45,6 +46,7 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 | Fell Stumps in Secret Woods | Off | Chop stumps for hardwood |
 | Search Garbage Cans | Off | Search town garbage cans |
 | Harvest Moss from Trees | Off | Strip moss from trees |
+| Collect Item Debris | Off | Collect items dropped as ground debris (monster loot, modded forage drops) |
 | Report Yield | On | Log collected items to SMAPI console |
 | Gain Experience | On | Award XP for auto-grabbed items |
 | Global Grabber Mode | Off | Off / All (every location) / Hover (cursor + hotkey) |
