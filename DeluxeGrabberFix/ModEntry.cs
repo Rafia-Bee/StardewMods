@@ -252,6 +252,7 @@ public class ModEntry : Mod
     private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
     {
         _saveData = Helper.Data.ReadSaveData<SaveData>(SaveDataKey) ?? new SaveData();
+        TownGarbageCanGrabber.ClearCache();
         DiscoverLocations();
         ApplyVisitAutoSkip();
         RebuildConfigMenu();
@@ -261,6 +262,7 @@ public class ModEntry : Mod
     {
         _discoveredLocations = null;
         _saveData = null;
+        TownGarbageCanGrabber.ClearCache();
         RebuildConfigMenu();
     }
 

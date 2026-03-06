@@ -1,9 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using StardewValley;
-using StardewValley.GameData.GarbageCans;
-using xTile;
 using xTile.Layers;
 using xTile.ObjectModel;
 using xTile.Tiles;
@@ -12,40 +8,72 @@ namespace DeluxeGrabberFix.Grabbers;
 
 internal class TownGarbageCanGrabber : MapGrabber
 {
+    private static readonly Dictionary<string, List<string>> CachedCanIds = new();
+
     public TownGarbageCanGrabber(ModEntry mod, GameLocation location)
         : base(mod, location)
     {
     }
+
+    public static void ClearCache() => CachedCanIds.Clear();
 
     public override bool GrabItems()
     {
         if (!Config.garbageCans)
             return false;
 
-        bool anyGrabbed = false;
-        ReadOnlyCollection<Layer> layers = Location?.map?.Layers;
-        if (layers == null)
+        List<string> canIds = GetGarbageCanIds();
+        if (canIds.Count == 0)
             return false;
 
-        foreach (Layer layer in layers)
+        bool anyGrabbed = false;
+
+        foreach (string canId in canIds)
         {
-            Tile[,] tiles = layer.Tiles.Array;
-            foreach (Tile tile in tiles)
+            if (!Game1.netWorldState.Value.CheckedGarbage.Add(canId))
+                continue;
+
+            Location.TryGetGarbageItem(canId, Player.DailyLuck, out Item item, out _, out _, null);
+            anyGrabbed = TryAddItem(item) || anyGrabbed;
+        }
+
+        return anyGrabbed;
+    }
+
+    private List<string> GetGarbageCanIds()
+    {
+        string locationName = Location.NameOrUniqueName;
+        if (CachedCanIds.TryGetValue(locationName, out var cached))
+            return cached;
+
+        var canIds = new List<string>();
+        Layer buildingsLayer = Location.map?.GetLayer("Buildings");
+        if (buildingsLayer == null)
+        {
+            CachedCanIds[locationName] = canIds;
+            return canIds;
+        }
+
+        Tile[,] tiles = buildingsLayer.Tiles.Array;
+        for (int x = 0; x < tiles.GetLength(0); x++)
+        {
+            for (int y = 0; y < tiles.GetLength(1); y++)
             {
+                Tile tile = tiles[x, y];
                 if (tile == null)
                     continue;
 
                 if (!tile.Properties.TryGetValue("Action", out PropertyValue actionValue))
                     continue;
 
-                string action = actionValue.ToString();
-                if (!action.StartsWith("Garbage"))
-                    continue;
-
-                Item item = null;
                 string[] parts = ArgUtility.SplitBySpace(actionValue);
                 string actionType = ArgUtility.Get(parts, 0, null, true);
+                if (actionType != "Garbage")
+                    continue;
+
                 string canId = ArgUtility.Get(parts, 1, null, true);
+                if (canId == null)
+                    continue;
 
                 canId = canId switch
                 {
@@ -60,17 +88,11 @@ internal class TownGarbageCanGrabber : MapGrabber
                     _ => canId
                 };
 
-                if (actionType == "Garbage" && canId != null
-                    && Game1.netWorldState.Value.CheckedGarbage.Add(canId))
-                {
-                    GarbageCanItemData garbageData = new();
-                    Random random = new();
-                    Location.TryGetGarbageItem(canId, Player.DailyLuck, out item, out garbageData, out random, null);
-                }
-
-                anyGrabbed = TryAddItem(item) || anyGrabbed;
+                canIds.Add(canId);
             }
         }
-        return anyGrabbed;
+
+        CachedCanIds[locationName] = canIds;
+        return canIds;
     }
 }
