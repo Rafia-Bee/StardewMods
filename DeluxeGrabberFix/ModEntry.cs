@@ -600,17 +600,15 @@ public class ModEntry : Mod
 
         api.AddNumberOption(ModManifest,
             () => Config.globalButtonOffsetX,
-            v => Config.globalButtonOffsetX = v,
+            v => Config.globalButtonOffsetX = Math.Clamp(v, -500, 500),
             () => Helper.Translation.Get("config.global-button-x-offset"),
-            () => Helper.Translation.Get("config.global-button-x-offset.tooltip"),
-            -500, 500);
+            () => Helper.Translation.Get("config.global-button-x-offset.tooltip"));
 
         api.AddNumberOption(ModManifest,
             () => Config.globalButtonOffsetY,
-            v => Config.globalButtonOffsetY = v,
+            v => Config.globalButtonOffsetY = Math.Clamp(v, -500, 500),
             () => Helper.Translation.Get("config.global-button-y-offset"),
-            () => Helper.Translation.Get("config.global-button-y-offset.tooltip"),
-            -500, 500);
+            () => Helper.Translation.Get("config.global-button-y-offset.tooltip"));
 
         // Skipped Locations page
         api.AddPage(ModManifest, "skipped-locations", () => Helper.Translation.Get("config.skipped-locations-page"));
