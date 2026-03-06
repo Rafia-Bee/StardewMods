@@ -33,6 +33,7 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 | Harvest Flowers | Off | Include flowers when harvesting crops |
 | Harvest Range | -1 | Tile range for crop harvesting (-1 = unlimited) |
 | Harvest Range Mode | Walk | Shape of the range (Walk = diamond, Square = square) |
+| Collect Forage Items | On | Collect forageable items like leeks, daffodils, and spring onions |
 | Harvest Fruit Trees | Off | Pick fruit from fruit trees |
 | Harvest Berry Bushes | On | Collect berries from bushes |
 | Shake Seed Trees | Off | Shake trees for seeds |
