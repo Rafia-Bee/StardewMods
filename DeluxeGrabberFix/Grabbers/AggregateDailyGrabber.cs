@@ -17,7 +17,8 @@ internal class AggregateDailyGrabber : MapGrabber
             new AggregateObjectsGrabber(mod, location),
             new AggregateFeaturesGrabber(mod, location),
             new WoodsHardwoodGrabber(mod, location),
-            new TownGarbageCanGrabber(mod, location)
+            new TownGarbageCanGrabber(mod, location),
+            new DebrisGrabber(mod, location)
         };
     }
 

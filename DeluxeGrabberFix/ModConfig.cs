@@ -47,6 +47,7 @@ internal class ModConfig
     public bool collectCrabPots;
     public bool collectBeeHouses;
     public bool collectTappers;
+    public bool collectDebris;
     public HashSet<string> SkippedLocations;
     public SButton globalFireButton;
     public SButton designateGrabberButton;
@@ -105,6 +106,7 @@ internal class ModConfig
         globalButtonOffsetY = 0;
         seedSpots = false;
         harvestMoss = false;
+        collectDebris = false;
         skipFestivalLocations = true;
         selectVisitedOnly = false;
         collectMachines = false;
