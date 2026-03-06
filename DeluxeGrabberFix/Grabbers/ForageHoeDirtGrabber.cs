@@ -14,7 +14,7 @@ internal class ForageHoeDirtGrabber : TerrainFeaturesMapGrabber
 
     public override bool GrabFeature(Vector2 tile, TerrainFeature feature)
     {
-        if (feature is not HoeDirt dirt || !IsForageableHoeDirt(feature))
+        if (!Config.forage || feature is not HoeDirt dirt || !IsForageableHoeDirt(feature))
             return false;
 
         Object forage = null;

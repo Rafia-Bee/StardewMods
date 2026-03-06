@@ -27,6 +27,8 @@
     "config.fell-stumps-secret-woods": "Fell Stumps in Secret Woods",
     "config.search-garbage-cans": "Search Garbage Cans",
     "config.dig-up-seed-spots": "Dig up Seed Spots",
+    "config.collect-forage": "Collect Forage Items",
+    "config.collect-forage.tooltip": "Picks up forage items like leeks, daffodils, and spring onions from the ground",
     "config.harvest-moss": "Harvest Moss from Trees",
 
     "section.machine-collection": "Machine Collection",

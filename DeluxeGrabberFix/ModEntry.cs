@@ -447,6 +447,12 @@ public class ModEntry : Mod
         api.AddPage(ModManifest, "other-harvesting", () => Helper.Translation.Get("section.other-harvesting"));
 
         api.AddBoolOption(ModManifest,
+            () => Config.forage,
+            v => Config.forage = v,
+            () => Helper.Translation.Get("config.collect-forage"),
+            () => Helper.Translation.Get("config.collect-forage.tooltip"));
+
+        api.AddBoolOption(ModManifest,
             () => Config.fruitTrees,
             v => Config.fruitTrees = v,
             () => Helper.Translation.Get("config.harvest-fruit-trees"));

@@ -29,6 +29,7 @@ internal class ModConfig
     public bool harvestCropsIndoorPots;
     public bool artifactSpots;
     public bool orePan;
+    public bool forage;
     public bool bushes;
     public bool fruitTrees;
     public bool seedTrees;
@@ -86,6 +87,7 @@ internal class ModConfig
         harvestCropsRangeMode = HarvestCropsRangeMode.Walk;
         artifactSpots = false;
         orePan = false;
+        forage = true;
         bushes = true;
         fruitTrees = false;
         seedTrees = false;
