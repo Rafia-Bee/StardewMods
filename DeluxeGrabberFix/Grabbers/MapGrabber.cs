@@ -64,6 +64,12 @@ internal abstract class MapGrabber
         if (item == null || item.Stack < 1)
             return false;
 
+        if (Config.excludedItems != null && Config.excludedItems.Contains(item.QualifiedItemId))
+        {
+            Mod.LogDebug($"Skipping excluded item {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+            return false;
+        }
+
         foreach (var grabber in grabbers)
         {
             if (IsValidGrabber(grabber.Value, grabber.Key))

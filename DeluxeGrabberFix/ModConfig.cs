@@ -49,6 +49,7 @@ internal class ModConfig
     public bool collectTappers;
     public bool collectDebris;
     public HashSet<string> SkippedLocations;
+    public HashSet<string> excludedItems;
     public SButton globalFireButton;
     public SButton designateGrabberButton;
     public bool globalAutoFire;
@@ -114,5 +115,6 @@ internal class ModConfig
         collectBeeHouses = true;
         collectTappers = true;
         SkippedLocations = new HashSet<string>();
+        excludedItems = new HashSet<string>();
     }
 }
