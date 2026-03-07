@@ -1,4 +1,11 @@
 {
+    "page.compatibility.link": "Compatibility >",
+    "page.compatibility.tooltip": "Exclusions for specific mods that have unusual spawn rules",
+    "page.compatibility": "Compatibility",
+    "page.compatibility.paragraph": "Some mods spawn items in unusual ways that can make the grabber overpowered. Use these toggles to automatically exclude known problematic items from those mods.",
+    "config.sunberry-village-exclusions": "Sunberry Village Exclusions",
+    "config.sunberry-village-exclusions.tooltip": "Prevents the grabber from collecting ore nodes and supply crates that Sunberry Village spawns in a non-standard way. Disable this if you want the grabber to collect those items.",
+
     "section.crop-harvesting": "Crop Harvesting",
     "section.crop-harvesting.tooltip": "These options are only considered if 'Harvest Crops' is enabled",
     "page.crop-harvesting.link": "Crop Harvesting >",
