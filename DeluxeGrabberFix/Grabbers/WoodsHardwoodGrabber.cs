@@ -53,7 +53,7 @@ internal class WoodsHardwoodGrabber : MapGrabber
                     hardwoodCount += hitCount;
             }
 
-            if (Player.professions.Contains(12) && random.NextDouble() < 0.5)
+            if (Player.professions.Contains(Framework.ProfessionIds.Lumberjack) && random.NextDouble() < 0.5)
                 hardwoodCount++;
 
             items.Add(ItemRegistry.Create<Object>(709.ToString(), hardwoodCount));
