@@ -55,6 +55,8 @@
     "config.gain-experience.tooltip": "Gain appropriate experience as if you foraged or harvested yourself",
     "config.skip-festival-locations": "Skip Festival Locations",
     "config.skip-festival-locations.tooltip": "Prevents auto-grabbers from collecting items in festival and temporary event locations, including during active festivals",
+    "config.excluded-items": "Excluded Items",
+    "config.excluded-items.tooltip": "A comma-separated list of qualified item IDs that the grabber should never collect. For example, '(O)859' to exclude the Lucky Ring. You can find item IDs on the Stardew Valley wiki or with Lookup Anything.",
     "config.global-grabber-mode": "Global Grabber Mode",
     "config.global-grabber-mode.tooltip": "'Hover': hover over a grabber and press the fire key to make it collect from all locations. 'All': designate a grabber (open it and tap the star button, or hover + press designate key), then fire it to collect globally.",
     "config.auto-fire-global-grabber": "Auto-Fire Global Grabber",

@@ -579,6 +579,13 @@ public class ModEntry : Mod
             () => Helper.Translation.Get("config.skip-festival-locations.tooltip"));
 
         api.AddTextOption(ModManifest,
+            () => string.Join(", ", Config.excludedItems ?? new HashSet<string>()),
+            v => Config.excludedItems = new HashSet<string>(
+                v.Split(',', System.StringSplitOptions.RemoveEmptyEntries | System.StringSplitOptions.TrimEntries)),
+            () => Helper.Translation.Get("config.excluded-items"),
+            () => Helper.Translation.Get("config.excluded-items.tooltip"));
+
+        api.AddTextOption(ModManifest,
             () => ModConfig.GlobalGrabberDict[Config.globalGrabber],
             v => Config.globalGrabber = ModConfig.GlobalGrabberReverseDict[v],
             () => Helper.Translation.Get("config.global-grabber-mode"),
