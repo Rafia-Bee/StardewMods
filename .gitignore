@@ -27,7 +27,7 @@ rafia-stardew-mods.sln
 
 # Internal docs
 docs/
-.github/copilot-instructions.md
+.github
 temp_findings.md
 
 # Secret mods

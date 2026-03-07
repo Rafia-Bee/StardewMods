@@ -50,6 +50,7 @@ internal class ModConfig
     public bool collectDebris;
     public HashSet<string> SkippedLocations;
     public HashSet<string> excludedItems;
+    public bool sunberryVillageExclusions;
     public SButton globalFireButton;
     public SButton designateGrabberButton;
     public bool globalAutoFire;
@@ -77,6 +78,31 @@ internal class ModConfig
 
     internal static string[] HarvestCropsRangeModeStrings = { "Square", "Walk" };
     internal static string[] GlobalGrabberModeStrings = { "Off", "All", "Hover" };
+
+    internal static readonly HashSet<string> SunberryVillageExcludedItems = new()
+    {
+        "(O)skellady.SBVCP_AnnabergiteNode",
+        "(O)skellady.SBVCP_BlueAuraQuartzNode",
+        "(O)skellady.SBVCP_CitrineNode",
+        "(O)skellady.SBVCP_EclipseOrbNode",
+        "(O)skellady.SBVCP_MidnightOrbNode",
+        "(O)skellady.SBVCP_PurpuriteNode",
+        "(O)skellady.SBVCP_SerpentineNode",
+        "(O)skellady.SBVCP_SunberryGeodeNode",
+        "(O)skellady.SBVCP_SunriseOrbNode",
+        "(O)skellady.SBVCP_SunsetOrbNode",
+        "(O)skellady.SBVCP_SupplyCrate1",
+        "(O)skellady.SBVCP_SupplyCrate2"
+    };
+
+    public bool IsItemExcluded(string qualifiedItemId)
+    {
+        if (excludedItems != null && excludedItems.Contains(qualifiedItemId))
+            return true;
+        if (sunberryVillageExclusions && SunberryVillageExcludedItems.Contains(qualifiedItemId))
+            return true;
+        return false;
+    }
 
     public ModConfig()
     {
@@ -116,5 +142,6 @@ internal class ModConfig
         collectTappers = true;
         SkippedLocations = new HashSet<string>();
         excludedItems = new HashSet<string>();
+        sunberryVillageExclusions = false;
     }
 }

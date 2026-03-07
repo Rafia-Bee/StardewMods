@@ -408,6 +408,10 @@ public class ModEntry : Mod
         api.AddPageLink(ModManifest, "miscellaneous",
             () => Helper.Translation.Get("page.miscellaneous.link"));
 
+        api.AddPageLink(ModManifest, "compatibility",
+            () => Helper.Translation.Get("page.compatibility.link"),
+            () => Helper.Translation.Get("page.compatibility.tooltip"));
+
         // Skipped Locations page link
         api.AddPageLink(ModManifest, "skipped-locations",
             () => Helper.Translation.Get("config.skipped-locations-link"),
@@ -622,6 +626,18 @@ public class ModEntry : Mod
             v => Config.globalButtonOffsetY = Math.Clamp(v, -500, 500),
             () => Helper.Translation.Get("config.global-button-y-offset"),
             () => Helper.Translation.Get("config.global-button-y-offset.tooltip"));
+
+        // Compatibility page
+        api.AddPage(ModManifest, "compatibility", () => Helper.Translation.Get("page.compatibility"));
+
+        api.AddParagraph(ModManifest,
+            () => Helper.Translation.Get("page.compatibility.paragraph"));
+
+        api.AddBoolOption(ModManifest,
+            () => Config.sunberryVillageExclusions,
+            v => Config.sunberryVillageExclusions = v,
+            () => Helper.Translation.Get("config.sunberry-village-exclusions"),
+            () => Helper.Translation.Get("config.sunberry-village-exclusions.tooltip"));
 
         // Skipped Locations page
         api.AddPage(ModManifest, "skipped-locations", () => Helper.Translation.Get("config.skipped-locations-page"));
