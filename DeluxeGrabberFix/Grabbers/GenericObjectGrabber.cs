@@ -16,10 +16,13 @@ internal class GenericObjectGrabber : ObjectsMapGrabber
         if (!Config.forage || !Mod.IsForageGrabEnabled || !IsGrabbable(obj))
             return false;
 
-        if (TryAddItem(Helpers.SetForageStatsBasedOnProfession(Player, obj, tile)))
+        bool isForage = obj.isForage();
+
+        if (TryAddItem(isForage ? Helpers.SetForageStatsBasedOnProfession(Player, obj, tile) : obj))
         {
             Location.Objects.Remove(tile);
-            GainExperience(2, 7);
+            if (isForage)
+                GainExperience(2, 7);
             return true;
         }
         return false;
@@ -30,6 +33,20 @@ internal class GenericObjectGrabber : ObjectsMapGrabber
         if (obj.bigCraftable.Value)
             return false;
 
-        return obj.isForage() && obj.ParentSheetIndex != 73;
+        if (obj.ParentSheetIndex == 73)
+            return false;
+
+        if (obj.isForage())
+            return true;
+
+        // Collect modded spawned objects (e.g., FTM forage from Sunberry Village,
+        // Alchemistry) that don't have standard forage categories.
+        // The game uses isSpawnedObject — not isForage() — to determine if a
+        // ground item is player-collectible (see GameLocation.checkAction).
+        // Artifact spots and seed spots do NOT set this flag, so they're safe.
+        if (obj.IsSpawnedObject)
+            return true;
+
+        return false;
     }
 }
