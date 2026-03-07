@@ -27,6 +27,7 @@ public class ModEntry : Mod
     private bool _isGrabbing;
     private bool _pendingDayStartGrab;
     private IGenericModConfigMenuApi _gmcmApi;
+    private IVanillaPlusProfessionsApi _vppApi;
     private List<(string Name, string DisplayName)> _discoveredLocations;
     private LocationBatchAction? _pendingLocationBatchAction;
     private SaveData _saveData;
@@ -245,6 +246,10 @@ public class ModEntry : Mod
             original: AccessTools.Method(typeof(StardewValley.Menus.ItemGrabMenu), nameof(StardewValley.Menus.ItemGrabMenu.receiveLeftClick)),
             postfix: new HarmonyMethod(typeof(ModEntry), nameof(ItemGrabMenu_ReceiveLeftClick_Postfix))
         );
+
+        _vppApi = Helper.ModRegistry.GetApi<IVanillaPlusProfessionsApi>("KediDili.VanillaPlusProfessions");
+        if (_vppApi != null)
+            Monitor.Log("Vanilla Plus Professions detected — VPP compatibility enabled.", LogLevel.Info);
 
         _gmcmApi = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
         if (_gmcmApi == null)

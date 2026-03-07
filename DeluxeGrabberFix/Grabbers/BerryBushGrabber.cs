@@ -21,7 +21,7 @@ internal class BerryBushGrabber : TerrainFeaturesMapGrabber
         if (berry.ParentSheetIndex == 815)
             berry.Quality = 0;
         else
-            berry.Quality = Player.professions.Contains(16) ? 4 : 0;
+            berry.Quality = Player.professions.Contains(Framework.ProfessionIds.Botanist) ? 4 : 0;
 
         return new KeyValuePair<Object, int>(berry, 0);
     }

@@ -40,7 +40,7 @@ internal static class Helpers
     {
         Random random = new((int)Game1.uniqueIDForThisGame / 2 + (int)Game1.stats.DaysPlayed + (int)tileSpawned.X + (int)tileSpawned.Y * 777);
 
-        if (player.professions.Contains(16))
+        if (player.professions.Contains(ProfessionIds.Botanist))
         {
             forageable.Quality = 4;
         }
@@ -53,7 +53,7 @@ internal static class Helpers
             forageable.Quality = 1;
         }
 
-        if (!ignoreGatherer && player.professions.Contains(13) && random.NextDouble() < 0.2)
+        if (!ignoreGatherer && player.professions.Contains(ProfessionIds.Gatherer) && random.NextDouble() < 0.2)
         {
             forageable.Stack++;
         }
