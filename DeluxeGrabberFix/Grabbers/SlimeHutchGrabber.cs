@@ -27,7 +27,8 @@ internal class SlimeHutchGrabber : ObjectsMapGrabber
         while (random.NextDouble() < 0.33)
             petrifiedCount++;
 
-        items.Add(ItemRegistry.Create<Object>(557.ToString(), petrifiedCount));
+        if (petrifiedCount > 0)
+            items.Add(ItemRegistry.Create<Object>(557.ToString(), petrifiedCount));
 
         if (TryAddItems((IEnumerable<Item>)items))
         {

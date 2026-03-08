@@ -150,6 +150,17 @@ internal abstract class MapGrabber
         if (grabber.heldObject.Value is not Chest chest)
             return item;
 
+        // Remove any items with invalid (zero or negative) stack from the chest.
+        // These cause Automate to report "produced an item with no stack size".
+        for (int i = chest.Items.Count - 1; i >= 0; i--)
+        {
+            if (chest.Items[i] != null && chest.Items[i].Stack <= 0)
+            {
+                Mod.LogDebug($"Removed invalid item '{chest.Items[i].Name}' (Stack={chest.Items[i].Stack}) from grabber chest");
+                chest.Items.RemoveAt(i);
+            }
+        }
+
         Item remaining = chest.addItem(item);
         if (chest.Items.Any(i => i != null))
             grabber.showNextIndex.Value = true;
