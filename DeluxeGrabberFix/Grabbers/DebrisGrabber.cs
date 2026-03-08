@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
@@ -30,7 +31,8 @@ internal class DebrisGrabber : MapGrabber
             }
             else if (debris.item == null && !string.IsNullOrEmpty(debris.itemId?.Value))
             {
-                collectible = ItemRegistry.Create(debris.itemId.Value, debris.Chunks?.Count ?? 1);
+                int chunkCount = Math.Max(1, debris.Chunks?.Count ?? 1);
+                collectible = ItemRegistry.Create(debris.itemId.Value, chunkCount);
             }
 
             if (collectible == null)
