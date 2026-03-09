@@ -3,6 +3,8 @@
 
     "mail.pierre.intro": "Dear @,^^Pierre here! Now that the Community Center is back up and running, I've been thinking about ways to help out local farmers like you.^^I've put together a farm equipment rental service — for a small daily fee, I can have a tractor delivered to your farm. No long-term contracts, no corporate fine print. Just honest, straightforward help from your friendly neighborhood grocer.^^Stop by your mailbox whenever you'd like to rent one!^^— Pierre^^P.S. Tell Caroline I said hi if you see her. She never believes me when I say I'm branching out.",
 
+    "mail.pierre.transition": "Dear @,^^Big news! Now that the Community Center is restored, I've taken over the tractor rental service from Joja. No more corporate fees or fine print — just a fair deal from your local grocer.^^Same tractor, same mailbox rental — just friendlier service. Stop by whenever you need one!^^— Pierre",
+
     "dialogue.mailbox.title.joja": "Joja AgriLease™ Service",
     "dialogue.mailbox.title.pierre": "Pierre's Farm Equipment Rental",
     "dialogue.mailbox.loan": "Loan Tractor ({{cost}}g)",
@@ -32,8 +34,8 @@
     "hud.tractor.condition.pierre.2": "The tractor Pierre sent over has seen better days. He swears the rattling is 'totally normal.'",
     "hud.tractor.condition.pierre.3": "Pierre's tractor arrived making some interesting sounds. He said it just needs to warm up — might be a little slower today.",
 
-    "hud.late.return": "Your leased tractor was not properly returned by close of business. A late return fee of {{penalty}}g has been applied to your account. Remember: Joja time is money!™",
-    "hud.late.return.pierre": "Looks like the tractor wasn't returned on time. Pierre's adding a {{penalty}}g late fee to your tab. Nothing personal!",
+    "mail.late.return": "Dear @,^^It has come to our attention that your Joja AgriLease™ tractor was not returned by close of business yesterday. As outlined in Section 14(b) of your rental agreement, a late return fee of {{penalty}}g has been applied to your account.^^Remember: Joja time is money!™^^— Joja Corp. Equipment Recovery Division",
+    "mail.late.return.pierre": "Hey @,^^Looks like the tractor wasn't returned on time yesterday. I had to add a {{penalty}}g late fee to your tab — nothing personal, it's just how the rental works.^^No hard feelings! Swing by when you need another one.^^— Pierre",
 
     "loyalty.bronze": "Congratulations! You've reached Joja Bronze Member status — 10% discount on future tractor loans!",
     "loyalty.silver": "Congratulations! You've reached Joja Silver Member status — 20% discount on future tractor loans!",

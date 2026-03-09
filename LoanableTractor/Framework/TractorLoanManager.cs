@@ -39,6 +39,9 @@ namespace LoanableTractor.Framework
         private readonly IModHelper Helper;
         private readonly LoyaltyTracker Loyalty;
 
+        /// <summary>The mail manager, set after construction to avoid circular dependency.</summary>
+        internal MailManager MailManager { get; set; }
+
         /*********
          ** Properties
          *********/
@@ -99,7 +102,9 @@ namespace LoanableTractor.Framework
         /// <summary>Check if the Community Center has been completed (switches to Pierre flavor).</summary>
         public static bool IsCommunityCenterComplete()
         {
-            return Context.IsWorldReady && Game1.MasterPlayer.mailReceived.Contains("ccIsComplete");
+            return Context.IsWorldReady
+                && (Game1.MasterPlayer.mailReceived.Contains("ccIsComplete")
+                    || Game1.MasterPlayer.hasCompletedCommunityCenter());
         }
 
         /// <summary>Check if today is a weekend (Saturday or Sunday).</summary>
@@ -225,6 +230,7 @@ namespace LoanableTractor.Framework
             {
                 int penalty = this.Config.LateReturnPenalty;
                 Game1.player.Money = Math.Max(0, Game1.player.Money - penalty);
+                this.MailManager.QueueLateReturnMail(penalty);
             }
 
             this.DespawnAllLoanedTractors();
