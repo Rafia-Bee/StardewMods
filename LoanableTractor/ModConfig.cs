@@ -24,6 +24,15 @@ namespace LoanableTractor
         /// <summary>If true, the loaned tractor has a 10% chance each day to be slower than the usual tractor.</summary>
         public bool EnableSpeedReduction { get; set; } = false;
 
+        /// <summary>If true, loaned tractors have a chance each day of having a broken feature that costs stamina to fix.</summary>
+        public bool EnableBreakdownChance { get; set; } = true;
+
+        /// <summary>Percentage chance each loan that a tractor feature will be broken.</summary>
+        public int BreakdownChancePercent { get; set; } = 10;
+
+        /// <summary>Percentage of current stamina consumed when fixing a broken tractor feature.</summary>
+        public int BreakdownStaminaCostPercent { get; set; } = 50;
+
         /// <summary>If true, weekend rentals (Saturday/Sunday) have a surcharge applied.</summary>
         public bool EnableWeekendSurcharge { get; set; } = true;
 

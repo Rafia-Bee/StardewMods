@@ -1,7 +1,7 @@
 {
     "Name": "Loanable Tractor",
     "Author": "Rafia-Bee",
-    "Version": "1.1.3",
+    "Version": "1.2.0",
     "MinimumApiVersion": "4.1.0",
     "UniqueID": "RafiaBee.LoanableTractor",
     "Description": "Loan a tractor from Joja Corp. for a daily fee — no garage required!",

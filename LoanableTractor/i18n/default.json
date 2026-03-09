@@ -41,6 +41,10 @@
     "loyalty.silver": "Congratulations! You've reached Joja Silver Member status — 20% discount on future tractor loans!",
     "loyalty.gold": "Congratulations! You've reached Joja Gold Member status — 30% discount on future tractor loans!",
 
+    "loyalty.bronze.pierre": "Pierre says thanks for being a loyal customer! You've earned a 10% discount on future tractor rentals.",
+    "loyalty.silver.pierre": "Pierre's impressed — you've been renting so often he's giving you a 20% loyalty discount from now on!",
+    "loyalty.gold.pierre": "You're Pierre's top customer! He's giving you a 30% loyalty discount on all future tractor rentals.",
+
     "config.loan_cost_per_day.name": "Loan Cost Per Day",
     "config.loan_cost_per_day.tooltip": "Gold cost per day to loan the tractor.",
     "config.max_loan_days.name": "Max Loan Days",
@@ -59,6 +63,31 @@
     "config.enable_weekend_surcharge.tooltip": "If enabled, renting on Saturday or Sunday costs extra.",
     "config.weekend_surcharge_percent.name": "Weekend Surcharge %",
     "config.weekend_surcharge_percent.tooltip": "Percentage surcharge applied to weekend rentals.",
+
+    "config.enable_breakdown_chance.name": "Enable Breakdown Chance",
+    "config.enable_breakdown_chance.tooltip": "If enabled, loaned tractors have a chance of having a broken feature that costs stamina to fix.",
+    "config.breakdown_chance_percent.name": "Breakdown Chance %",
+    "config.breakdown_chance_percent.tooltip": "Percentage chance each loan that a tractor feature will be broken.",
+    "config.breakdown_stamina_cost_percent.name": "Fix Stamina Cost %",
+    "config.breakdown_stamina_cost_percent.tooltip": "Percentage of your current stamina consumed when fixing a broken tractor feature.",
+
+    "dialogue.breakdown.message.joja": "Heads up! Today's Joja AgriLease™ tractor has a busted {{feature}} feature. You could fix it yourself, but it'll cost about {{percent}}% of your current stamina. Otherwise, {{feature}} just won't work on the tractor today. Your call!",
+    "dialogue.breakdown.message.pierre": "Bad news — today's loaner tractor has a broken {{feature}} feature. Pierre says you could fix it yourself, but it'd burn about {{percent}}% of your current stamina. If you skip the fix, {{feature}} just won't work on the tractor today.",
+    "dialogue.breakdown.fix": "Fix it (-{{percent}}% stamina)",
+    "dialogue.breakdown.skip": "Leave it broken",
+
+    "breakdown.feature.hoeing": "hoeing",
+    "breakdown.feature.watering": "watering",
+    "breakdown.feature.harvesting": "harvesting",
+    "breakdown.feature.tree_chopping": "tree chopping",
+    "breakdown.feature.rock_breaking": "rock breaking",
+    "breakdown.feature.seed_planting": "seed planting",
+    "breakdown.feature.fertilizing": "fertilizing",
+
+    "hud.tractor.breakdown.fixed.joja": "You rolled up your sleeves and fixed the tractor's {{feature}} feature. Joja applauds your initiative!™",
+    "hud.tractor.breakdown.fixed.pierre": "You managed to fix the tractor's {{feature}} feature. Nice work!",
+    "hud.tractor.breakdown.active.joja": "Note: Today's {{feature}} feature is out of service. Joja apologizes for any inconvenience!™",
+    "hud.tractor.breakdown.active.pierre": "Heads up — the tractor's {{feature}} feature won't be working today. Pierre says sorry about that.",
 
     "command.status.active": "Tractor loan active — {{days}} day(s) remaining. Total loans completed: {{total}}. Loyalty tier: {{tier}}.",
     "command.status.inactive": "No active tractor loan. Total loans completed: {{total}}. Loyalty tier: {{tier}}.",
