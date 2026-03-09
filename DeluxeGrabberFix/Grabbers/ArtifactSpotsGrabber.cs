@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Constants;
@@ -22,11 +23,43 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
 
     public override bool GrabObject(Vector2 tile, Object obj)
     {
-        if (!Config.artifactSpots || obj.ParentSheetIndex != 590)
+        if (obj.ParentSheetIndex != 590)
+            return false;
+
+        // FTM BuriedItems: subclass of Object with a custom Items field containing the real contents.
+        // Without this check, these get mishandled as vanilla artifact spots — wrong drops, real items destroyed.
+        if (obj.GetType() != typeof(Object))
+            return TryGrabBuriedItems(tile, obj);
+
+        if (!Config.artifactSpots)
             return false;
 
         var items = GetForagedArtifactsFromArtifactSpot(Location, tile);
         if (items != null && TryAddItems(items))
+        {
+            Location.Objects.Remove(tile);
+            return true;
+        }
+        return false;
+    }
+
+    private bool TryGrabBuriedItems(Vector2 tile, Object obj)
+    {
+        if (!Config.buriedItems)
+            return false;
+
+        FieldInfo itemsField = obj.GetType().GetField("Items");
+        if (itemsField == null)
+            return false;
+
+        if (itemsField.GetValue(obj) is not IEnumerable<Item> contents)
+            return false;
+
+        var itemList = contents.Where(i => i != null).ToList();
+        if (itemList.Count == 0)
+            return false;
+
+        if (TryAddItems(itemList))
         {
             Location.Objects.Remove(tile);
             return true;

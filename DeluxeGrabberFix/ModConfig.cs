@@ -28,6 +28,7 @@ internal class ModConfig
     public bool harvestCrops;
     public bool harvestCropsIndoorPots;
     public bool artifactSpots;
+    public bool buriedItems = true;
     public bool orePan;
     public bool forage;
     public bool bushes;

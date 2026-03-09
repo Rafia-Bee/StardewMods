@@ -644,6 +644,12 @@ public class ModEntry : Mod
             () => Helper.Translation.Get("config.sunberry-village-exclusions"),
             () => Helper.Translation.Get("config.sunberry-village-exclusions.tooltip"));
 
+        api.AddBoolOption(ModManifest,
+            () => Config.buriedItems,
+            v => Config.buriedItems = v,
+            () => Helper.Translation.Get("config.collect-buried-items"),
+            () => Helper.Translation.Get("config.collect-buried-items.tooltip"));
+
         // Skipped Locations page
         api.AddPage(ModManifest, "skipped-locations", () => Helper.Translation.Get("config.skipped-locations-page"));
 
