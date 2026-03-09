@@ -36,6 +36,11 @@ internal class GenericObjectGrabber : ObjectsMapGrabber
         if (obj.ParentSheetIndex == 73)
             return false;
 
+        // Reject error items from broken mod spawns (e.g., ItemExtensions
+        // query IDs like RANDOM_CLUMPS that failed to resolve into real items).
+        if (ItemRegistry.GetData(obj.QualifiedItemId) == null)
+            return false;
+
         // Skip animal products in barns/coops — AnimalProductGrabber handles those.
         // Without this, eggs (Category -5, IsSpawnedObject=true) get collected twice:
         // once by AnimalProductGrabber and again here via the stale Objects snapshot.
