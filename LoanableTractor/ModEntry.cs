@@ -42,6 +42,7 @@ namespace LoanableTractor
             this.Loyalty = new LoyaltyTracker(this.Monitor, helper);
             this.LoanManager = new TractorLoanManager(this.Monitor, this.Config, helper, this.Loyalty);
             this.Mail = new MailManager(this.Monitor, helper, this.Config, this.LoanManager);
+            this.LoanManager.MailManager = this.Mail;
             this.ConfigMenu = new ConfigMenuHelper(this.Monitor, helper, this.ModManifest);
 
             MailboxOverrides.LoanManager = this.LoanManager;

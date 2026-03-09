@@ -18,6 +18,12 @@ namespace LoanableTractor.Framework
         /// <summary>The mail ID for the introductory Joja loan service letter.</summary>
         public const string IntroMailId = "RafiaBee.LoanableTractor_Intro";
 
+        /// <summary>The mail ID for Pierre's takeover letter after Community Center completion.</summary>
+        public const string PierreTransitionMailId = "RafiaBee.LoanableTractor_PierreTransition";
+
+        /// <summary>The mail ID for the late return penalty notice.</summary>
+        public const string LateReturnMailId = "RafiaBee.LoanableTractor_LateReturn";
+
         /*********
          ** Fields
          *********/
@@ -25,6 +31,9 @@ namespace LoanableTractor.Framework
         private readonly IModHelper Helper;
         private readonly ModConfig Config;
         private readonly TractorLoanManager LoanManager;
+
+        /// <summary>The penalty amount to embed in the late return mail, or 0 if none pending.</summary>
+        private int PendingLateReturnPenalty;
 
         /*********
          ** Public Methods
@@ -43,13 +52,24 @@ namespace LoanableTractor.Framework
             this.Helper.Events.Content.AssetRequested += this.OnAssetRequested;
         }
 
+        /// <summary>Queue a late return penalty mail for delivery the next morning.</summary>
+        public void QueueLateReturnMail(int penalty)
+        {
+            this.PendingLateReturnPenalty = penalty;
+            Game1.player.mailForTomorrow.Add(LateReturnMailId);
+            this.Helper.GameContent.InvalidateCache("Data/mail");
+        }
+
         /// <summary>Check conditions and deliver the introductory mail at the start of each day.</summary>
         public void TryDeliverIntroMail()
         {
             try
             {
                 if (Game1.player.mailReceived.Contains(IntroMailId))
+                {
+                    this.TryDeliverPierreTransitionMail();
                     return;
+                }
 
                 if (Game1.player.mailbox.Contains(IntroMailId))
                     return;
@@ -70,6 +90,22 @@ namespace LoanableTractor.Framework
          ** Private Methods
          *********/
 
+        /// <summary>Send Pierre's takeover letter if the Community Center was just completed.</summary>
+        private void TryDeliverPierreTransitionMail()
+        {
+            if (!TractorLoanManager.IsCommunityCenterComplete())
+                return;
+
+            if (Game1.player.mailReceived.Contains(PierreTransitionMailId))
+                return;
+
+            if (Game1.player.mailbox.Contains(PierreTransitionMailId))
+                return;
+
+            this.Helper.GameContent.InvalidateCache("Data/mail");
+            Game1.player.mailbox.Add(PierreTransitionMailId);
+        }
+
         /// <summary>Inject our custom mail content into the Data/mail asset.</summary>
         private void OnAssetRequested(object sender, AssetRequestedEventArgs e)
         {
@@ -83,6 +119,16 @@ namespace LoanableTractor.Framework
                 string mailKey = ccComplete ? "mail.pierre.intro" : "mail.joja.intro";
                 string mailText = this.Helper.Translation.Get(mailKey);
                 data.Data[IntroMailId] = mailText;
+
+                string transitionText = this.Helper.Translation.Get("mail.pierre.transition");
+                data.Data[PierreTransitionMailId] = transitionText;
+
+                if (this.PendingLateReturnPenalty > 0)
+                {
+                    string lateKey = ccComplete ? "mail.late.return.pierre" : "mail.late.return";
+                    string lateText = this.Helper.Translation.Get(lateKey, new { penalty = this.PendingLateReturnPenalty });
+                    data.Data[LateReturnMailId] = lateText;
+                }
             });
         }
     }
