@@ -48,6 +48,9 @@ namespace LoanableTractor.Framework
                         config.EnableLateReturnPenalty = fresh.EnableLateReturnPenalty;
                         config.LateReturnPenalty = fresh.LateReturnPenalty;
                         config.EnableSpeedReduction = fresh.EnableSpeedReduction;
+                        config.EnableBreakdownChance = fresh.EnableBreakdownChance;
+                        config.BreakdownChancePercent = fresh.BreakdownChancePercent;
+                        config.BreakdownStaminaCostPercent = fresh.BreakdownStaminaCostPercent;
                         config.EnableWeekendSurcharge = fresh.EnableWeekendSurcharge;
                         config.WeekendSurchargePercent = fresh.WeekendSurchargePercent;
                     },
@@ -134,6 +137,36 @@ namespace LoanableTractor.Framework
                     setValue: value => config.EnableSpeedReduction = value,
                     name: () => this.Helper.Translation.Get("config.enable_speed_reduction.name"),
                     tooltip: () => this.Helper.Translation.Get("config.enable_speed_reduction.tooltip")
+                );
+
+                gmcm.AddBoolOption(
+                    mod: this.Manifest,
+                    getValue: () => config.EnableBreakdownChance,
+                    setValue: value => config.EnableBreakdownChance = value,
+                    name: () => this.Helper.Translation.Get("config.enable_breakdown_chance.name"),
+                    tooltip: () => this.Helper.Translation.Get("config.enable_breakdown_chance.tooltip")
+                );
+
+                gmcm.AddNumberOption(
+                    mod: this.Manifest,
+                    getValue: () => config.BreakdownChancePercent,
+                    setValue: value => config.BreakdownChancePercent = value,
+                    name: () => this.Helper.Translation.Get("config.breakdown_chance_percent.name"),
+                    tooltip: () => this.Helper.Translation.Get("config.breakdown_chance_percent.tooltip"),
+                    min: 1,
+                    max: 100,
+                    interval: 1
+                );
+
+                gmcm.AddNumberOption(
+                    mod: this.Manifest,
+                    getValue: () => config.BreakdownStaminaCostPercent,
+                    setValue: value => config.BreakdownStaminaCostPercent = value,
+                    name: () => this.Helper.Translation.Get("config.breakdown_stamina_cost_percent.name"),
+                    tooltip: () => this.Helper.Translation.Get("config.breakdown_stamina_cost_percent.tooltip"),
+                    min: 1,
+                    max: 100,
+                    interval: 5
                 );
 
                 // --- Pricing Settings ---

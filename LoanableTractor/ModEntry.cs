@@ -84,6 +84,9 @@ namespace LoanableTractor
             }
 
             this.ConfigMenu.Register(this.Config);
+
+            var breakdownHarmony = new Harmony(this.ModManifest.UniqueID);
+            BreakdownManager.ApplyPatches(breakdownHarmony, this.Monitor);
         }
 
         /// <summary>Raised after a save is loaded. Restores loan state and registers mail.</summary>

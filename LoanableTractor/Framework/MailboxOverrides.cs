@@ -67,30 +67,44 @@ namespace LoanableTractor.Framework
 
         /// <summary>
         /// Prefix patch for GameLocation.answerDialogueAction().
-        /// Handles the player's response to the loan tractor dialogue.
+        /// Handles the player's response to the loan tractor and breakdown dialogues.
         /// </summary>
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.answerDialogueAction))]
         internal static class AnswerDialoguePatch
         {
-            /// <summary>Prefix: handle loan dialogue responses.</summary>
+            /// <summary>Prefix: handle loan and breakdown dialogue responses.</summary>
             internal static bool Prefix(GameLocation __instance, string questionAndAnswer, ref bool __result)
             {
                 try
                 {
-                    if (questionAndAnswer == null || !questionAndAnswer.StartsWith("LoanableTractor_MailboxMenu"))
+                    if (questionAndAnswer == null)
                         return true;
 
-                    string choice = questionAndAnswer.Replace("LoanableTractor_MailboxMenu_", "");
-
-                    if (choice == "LoanableTractor_Loan")
+                    if (questionAndAnswer.StartsWith("LoanableTractor_MailboxMenu"))
                     {
-                        LoanManager.ExecuteLoan();
+                        string choice = questionAndAnswer.Replace("LoanableTractor_MailboxMenu_", "");
+
+                        if (choice == "LoanableTractor_Loan")
+                            HandleLoanChoice(__instance);
+
                         __result = true;
                         return false;
                     }
 
-                    __result = true;
-                    return false;
+                    if (questionAndAnswer.StartsWith("LoanableTractor_BreakdownMenu"))
+                    {
+                        string choice = questionAndAnswer.Replace("LoanableTractor_BreakdownMenu_", "");
+
+                        if (choice == "LoanableTractor_Fix")
+                            HandleBreakdownFix();
+                        else if (choice == "LoanableTractor_Skip")
+                            HandleBreakdownSkip();
+
+                        __result = true;
+                        return false;
+                    }
+
+                    return true;
                 }
                 catch (Exception ex)
                 {
@@ -144,6 +158,96 @@ namespace LoanableTractor.Framework
                 responses.ToArray(),
                 "LoanableTractor_MailboxMenu"
             );
+        }
+
+        /// <summary>Handle the player choosing to loan a tractor. Checks for breakdown before executing.</summary>
+        private static void HandleLoanChoice(GameLocation location)
+        {
+            int cost = LoanManager.GetCurrentLoanCost();
+            if (Game1.player.Money < cost)
+            {
+                Game1.addHUDMessage(new HUDMessage(
+                    ModHelper.Translation.Get("hud.tractor.insufficient.funds"), HUDMessage.error_type));
+                return;
+            }
+
+            if (Config.EnableBreakdownChance && Game1.random.NextDouble() < Config.BreakdownChancePercent / 100.0)
+            {
+                var (featureKey, attachmentTypeName) = BreakdownManager.RollRandomFeature();
+                BreakdownManager.PendingFeatureKey = featureKey;
+                BreakdownManager.PendingAttachmentTypeName = attachmentTypeName;
+                ShowBreakdownDialogue(location, featureKey);
+            }
+            else
+            {
+                LoanManager.ExecuteLoan();
+            }
+        }
+
+        /// <summary>Handle the player choosing to fix the broken feature (stamina cost).</summary>
+        private static void HandleBreakdownFix()
+        {
+            string featureKey = BreakdownManager.PendingFeatureKey;
+            float currentStamina = Game1.player.Stamina;
+            float cost = currentStamina * (Config.BreakdownStaminaCostPercent / 100f);
+            Game1.player.Stamina = Math.Max(0, currentStamina - cost);
+
+            BreakdownManager.ClearPending();
+
+            if (LoanManager.ExecuteLoan())
+            {
+                string featureName = ModHelper.Translation.Get($"breakdown.feature.{featureKey}");
+                bool ccComplete = TractorLoanManager.IsCommunityCenterComplete();
+                string key = ccComplete ? "hud.tractor.breakdown.fixed.pierre" : "hud.tractor.breakdown.fixed.joja";
+                Game1.addHUDMessage(new HUDMessage(
+                    ModHelper.Translation.Get(key, new { feature = featureName }), HUDMessage.newQuest_type));
+            }
+            else
+            {
+                Game1.player.Stamina = currentStamina;
+            }
+        }
+
+        /// <summary>Handle the player choosing to skip fixing (feature stays broken).</summary>
+        private static void HandleBreakdownSkip()
+        {
+            string featureKey = BreakdownManager.PendingFeatureKey;
+            BreakdownManager.ApplyPendingBreakdown();
+
+            if (LoanManager.ExecuteLoan())
+            {
+                string featureName = ModHelper.Translation.Get($"breakdown.feature.{featureKey}");
+                bool ccComplete = TractorLoanManager.IsCommunityCenterComplete();
+                string key = ccComplete ? "hud.tractor.breakdown.active.pierre" : "hud.tractor.breakdown.active.joja";
+                Game1.addHUDMessage(new HUDMessage(
+                    ModHelper.Translation.Get(key, new { feature = featureName }), HUDMessage.newQuest_type));
+            }
+            else
+            {
+                BreakdownManager.Reset();
+            }
+        }
+
+        /// <summary>Show the breakdown fix/skip dialogue.</summary>
+        private static void ShowBreakdownDialogue(GameLocation location, string featureKey)
+        {
+            string featureName = ModHelper.Translation.Get($"breakdown.feature.{featureKey}");
+            int staminaPercent = Config.BreakdownStaminaCostPercent;
+
+            bool ccComplete = TractorLoanManager.IsCommunityCenterComplete();
+            string messageKey = ccComplete ? "dialogue.breakdown.message.pierre" : "dialogue.breakdown.message.joja";
+            string message = ModHelper.Translation.Get(messageKey, new { feature = featureName, percent = staminaPercent });
+
+            string fixText = ModHelper.Translation.Get("dialogue.breakdown.fix", new { percent = staminaPercent });
+            string skipText = ModHelper.Translation.Get("dialogue.breakdown.skip");
+
+            var responses = new List<Response>
+            {
+                new Response("LoanableTractor_Fix", fixText),
+                new Response("LoanableTractor_Skip", skipText)
+            };
+
+            location.createQuestionDialogue(message, responses.ToArray(), "LoanableTractor_BreakdownMenu");
         }
     }
 }

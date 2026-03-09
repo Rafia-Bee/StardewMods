@@ -78,21 +78,23 @@ namespace LoanableTractor.Framework
         private void CheckMilestones()
         {
             int previousTier = this.CurrentLoyaltyTier;
+            bool ccComplete = TractorLoanManager.IsCommunityCenterComplete();
+            string suffix = ccComplete ? ".pierre" : "";
 
             if (this.TotalLoansCompleted >= 50 && this.CurrentLoyaltyTier < 3)
             {
                 this.CurrentLoyaltyTier = 3;
-                this.ShowMilestoneMessage("loyalty.gold");
+                this.ShowMilestoneMessage($"loyalty.gold{suffix}");
             }
             else if (this.TotalLoansCompleted >= 25 && this.CurrentLoyaltyTier < 2)
             {
                 this.CurrentLoyaltyTier = 2;
-                this.ShowMilestoneMessage("loyalty.silver");
+                this.ShowMilestoneMessage($"loyalty.silver{suffix}");
             }
             else if (this.TotalLoansCompleted >= 10 && this.CurrentLoyaltyTier < 1)
             {
                 this.CurrentLoyaltyTier = 1;
-                this.ShowMilestoneMessage("loyalty.bronze");
+                this.ShowMilestoneMessage($"loyalty.bronze{suffix}");
             }
 
             if (this.CurrentLoyaltyTier != previousTier)

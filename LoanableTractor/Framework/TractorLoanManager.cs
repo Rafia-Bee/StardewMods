@@ -234,6 +234,7 @@ namespace LoanableTractor.Framework
             }
 
             this.DespawnAllLoanedTractors();
+            BreakdownManager.Reset();
 
             if (this.RemainingLoanDays > 0)
                 this.RemainingLoanDays--;
@@ -257,6 +258,7 @@ namespace LoanableTractor.Framework
             this.LoanActiveToday = false;
             this.RemainingLoanDays = 0;
             this.IsTractorSlowToday = false;
+            BreakdownManager.Reset();
             this.DespawnAllLoanedTractors();
             this.ActiveTractorIds.Clear();
         }
