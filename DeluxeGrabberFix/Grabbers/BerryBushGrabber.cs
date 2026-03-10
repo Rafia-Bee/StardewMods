@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using DeluxeGrabberFix.Framework;
 using StardewValley;
 using StardewValley.TerrainFeatures;
 
@@ -18,7 +19,7 @@ internal class BerryBushGrabber : TerrainFeaturesMapGrabber
 
     private KeyValuePair<Object, int> DefaultGetBerryBushHarvest(Object berry, Vector2 bushTile, GameLocation location)
     {
-        if (berry.ParentSheetIndex == 815)
+        if (berry.QualifiedItemId == ItemIds.TeaLeaves)
             berry.Quality = 0;
         else
             berry.Quality = Player.professions.Contains(Framework.ProfessionIds.Botanist) ? 4 : 0;
@@ -32,7 +33,7 @@ internal class BerryBushGrabber : TerrainFeaturesMapGrabber
             return false;
 
         string shakeOffItem = bush.GetShakeOffItem();
-        if (string.IsNullOrEmpty(shakeOffItem) || shakeOffItem == "-1" || shakeOffItem == "(O)73")
+        if (string.IsNullOrEmpty(shakeOffItem) || shakeOffItem == "-1" || shakeOffItem == ItemIds.GoldenWalnut)
             return false;
 
         var items = new List<Object>();

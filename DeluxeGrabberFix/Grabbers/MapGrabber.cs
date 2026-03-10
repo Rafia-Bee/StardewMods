@@ -175,7 +175,7 @@ internal abstract class MapGrabber
     {
         if (UseGlobalMode || Location.Objects.ContainsKey(tile))
         {
-            return obj.ParentSheetIndex == 165
+            return obj.QualifiedItemId == BigCraftableIds.AutoGrabber
                 && obj.heldObject.Value != null
                 && obj.heldObject.Value is Chest;
         }
@@ -187,7 +187,7 @@ internal abstract class MapGrabber
         if (obj == null)
             return false;
 
-        return obj.ParentSheetIndex == 165
+        return obj.QualifiedItemId == BigCraftableIds.AutoGrabber
             && obj.heldObject.Value != null
             && obj.heldObject.Value is Chest;
     }

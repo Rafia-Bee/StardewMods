@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using DeluxeGrabberFix.Framework;
 using StardewValley;
 
 namespace DeluxeGrabberFix.Grabbers;
@@ -12,7 +13,7 @@ internal class SeedSpotsGrabber : ObjectsMapGrabber
 
     public override bool GrabObject(Vector2 tile, Object obj)
     {
-        if (!Config.seedSpots || obj.itemId.Value != "SeedSpot")
+        if (!Config.seedSpots || obj.QualifiedItemId != ItemIds.SeedSpot)
             return false;
 
         Item seed = Utility.getRaccoonSeedForCurrentTimeOfYear(

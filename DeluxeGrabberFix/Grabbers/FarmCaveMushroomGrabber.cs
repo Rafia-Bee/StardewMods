@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using DeluxeGrabberFix.Framework;
 using StardewValley;
 
 namespace DeluxeGrabberFix.Grabbers;
@@ -23,7 +24,7 @@ internal class FarmCaveMushroomGrabber : ObjectsMapGrabber
 
     public override bool GrabObject(Vector2 tile, Object obj)
     {
-        if (!Config.farmCaveMushrooms || obj.ParentSheetIndex != 128 || obj.heldObject.Value == null)
+        if (!Config.farmCaveMushrooms || obj.QualifiedItemId != ItemIds.MushroomBox || obj.heldObject.Value == null)
             return false;
 
         var harvest = GetMushroomHarvest(obj.heldObject.Value, tile, Location);

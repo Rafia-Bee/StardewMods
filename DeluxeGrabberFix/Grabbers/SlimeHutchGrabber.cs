@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using DeluxeGrabberFix.Framework;
 using StardewValley;
 
 namespace DeluxeGrabberFix.Grabbers;
@@ -21,14 +22,14 @@ internal class SlimeHutchGrabber : ObjectsMapGrabber
         Random random = new((int)Game1.stats.DaysPlayed + (int)Game1.uniqueIDForThisGame + (int)tile.X * 77 + (int)tile.Y * 777 + 2);
 
         int slimeCount = random.Next(10, 21);
-        items.Add(ItemRegistry.Create<Object>(766.ToString(), slimeCount));
+        items.Add(ItemRegistry.Create<Object>(ItemIds.Slime, slimeCount));
 
         int petrifiedCount = 0;
         while (random.NextDouble() < 0.33)
             petrifiedCount++;
 
         if (petrifiedCount > 0)
-            items.Add(ItemRegistry.Create<Object>(557.ToString(), petrifiedCount));
+            items.Add(ItemRegistry.Create<Object>(ItemIds.PetrifiedSlime, petrifiedCount));
 
         if (TryAddItems((IEnumerable<Item>)items))
         {
