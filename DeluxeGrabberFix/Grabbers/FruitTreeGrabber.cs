@@ -36,7 +36,7 @@ internal class FruitTreeGrabber : TerrainFeaturesMapGrabber
 
         if (struckByLightning)
         {
-            var coal = ItemRegistry.Create<Object>(382.ToString(), tree.fruit.Count(), quality);
+            var coal = ItemRegistry.Create<Object>(Object.coalQID, tree.fruit.Count(), quality);
             if (TryAddItem(coal))
             {
                 tree.fruit.Clear();

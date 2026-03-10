@@ -170,7 +170,7 @@ public class ModEntry : Mod
             return;
 
         // The auto-grabber passes itself as 'context', not 'sourceItem'
-        if (grabMenu.context is not Object obj || obj.ParentSheetIndex != 165
+        if (grabMenu.context is not Object obj || obj.QualifiedItemId != BigCraftableIds.AutoGrabber
             || obj.heldObject.Value is not StardewValley.Objects.Chest)
             return;
 
@@ -191,7 +191,7 @@ public class ModEntry : Mod
         var cursorTile = Game1.lastCursorTile;
         var obj = Game1.player.currentLocation.getObjectAtTile((int)cursorTile.X, (int)cursorTile.Y);
 
-        if (obj == null || obj.ParentSheetIndex != 165
+        if (obj == null || obj.QualifiedItemId != BigCraftableIds.AutoGrabber
             || obj.heldObject.Value is not StardewValley.Objects.Chest)
         {
             Game1.addHUDMessage(new HUDMessage(Helper.Translation.Get("hud.hover-over-grabber"), HUDMessage.error_type));
@@ -931,7 +931,7 @@ public class ModEntry : Mod
             || Config.harvestCropsRange <= 0 || !Config.harvestCrops
             || Game1.player.ActiveObject == null
             || !Game1.player.ActiveObject.bigCraftable.Value
-            || Game1.player.ActiveObject.ParentSheetIndex != 165)
+            || Game1.player.ActiveObject.QualifiedItemId != BigCraftableIds.AutoGrabber)
         {
             return;
         }

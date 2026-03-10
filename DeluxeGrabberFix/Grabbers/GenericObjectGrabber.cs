@@ -33,7 +33,7 @@ internal class GenericObjectGrabber : ObjectsMapGrabber
         if (obj.bigCraftable.Value)
             return false;
 
-        if (obj.ParentSheetIndex == 73)
+        if (obj.QualifiedItemId == ItemIds.GoldenWalnut)
             return false;
 
         // Reject error items from broken mod spawns (e.g., ItemExtensions

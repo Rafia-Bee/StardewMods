@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using DeluxeGrabberFix.Framework;
 using StardewValley;
 using StardewValley.Objects;
 
@@ -91,8 +92,8 @@ internal class MachineGrabber : ObjectsMapGrabber
         => obj is CrabPot;
 
     private static bool IsBeeHouse(Object obj)
-        => obj.bigCraftable.Value && obj.ItemId == "10";
+        => obj.QualifiedItemId == BigCraftableIds.BeeHouse;
 
     private static bool IsTapper(Object obj)
-        => obj.bigCraftable.Value && (obj.ItemId == "105" || obj.ItemId == "264");
+        => obj.QualifiedItemId == BigCraftableIds.Tapper || obj.QualifiedItemId == BigCraftableIds.HeavyTapper;
 }

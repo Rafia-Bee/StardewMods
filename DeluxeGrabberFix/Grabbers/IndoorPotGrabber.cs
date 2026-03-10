@@ -27,7 +27,7 @@ internal class IndoorPotGrabber : ObjectsMapGrabber
         if (!Config.flowers)
         {
             string harvestId = dirt.crop.indexOfHarvest.Value;
-            if (!string.IsNullOrEmpty(harvestId) && ItemRegistry.Create<Object>(harvestId).Category == -80)
+            if (!string.IsNullOrEmpty(harvestId) && ItemRegistry.Create<Object>(harvestId).Category == Object.flowersCategory)
                 return false;
         }
 

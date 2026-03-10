@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using DeluxeGrabberFix.Framework;
 using StardewValley;
 using StardewValley.Enchantments;
 using StardewValley.Locations;
@@ -56,13 +57,13 @@ internal class WoodsHardwoodGrabber : MapGrabber
             if (Player.professions.Contains(Framework.ProfessionIds.Lumberjack) && random.NextDouble() < 0.5)
                 hardwoodCount++;
 
-            items.Add(ItemRegistry.Create<Object>(709.ToString(), hardwoodCount));
+            items.Add(ItemRegistry.Create<Object>(ItemIds.Hardwood, hardwoodCount));
 
             if (random.NextDouble() < 0.1)
-                items.Add(ItemRegistry.Create<Object>(292.ToString()));
+                items.Add(ItemRegistry.Create<Object>(ItemIds.MahogonySeed));
 
             if (Game1.random.NextDouble() <= 0.25 && Player.team.SpecialOrderRuleActive("DROP_QI_BEANS"))
-                items.Add(ItemRegistry.Create<Object>(890.ToString()));
+                items.Add(ItemRegistry.Create<Object>(ItemIds.QiBean));
 
             if (TryAddItems((IEnumerable<Item>)items))
             {

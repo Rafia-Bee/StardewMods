@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Xna.Framework;
+using DeluxeGrabberFix.Framework;
 using StardewValley;
 using StardewValley.Constants;
 using StardewValley.Enchantments;
@@ -23,7 +24,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
 
     public override bool GrabObject(Vector2 tile, Object obj)
     {
-        if (obj.ParentSheetIndex != 590)
+        if (obj.QualifiedItemId != ItemIds.ArtifactSpot)
             return false;
 
         // FTM BuriedItems: subclass of Object with a custom Items field containing the real contents.
@@ -92,7 +93,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
         if (Game1.player.mailReceived.Contains("sawQiPlane")
             && random.NextDouble() < 0.05 + Game1.player.team.AverageDailyLuck() / 2.0)
         {
-            list.Add(ItemRegistry.Create<Object>("(O)MysteryBox", random.Next(1, 3)));
+            list.Add(ItemRegistry.Create<Object>(ItemIds.MysteryBox, random.Next(1, 3)));
         }
 
         list.AddRange(TrySpawnRareObject(player, tile, location, 9.0));
@@ -151,7 +152,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
 
         if (who != null && who.stats.Get(StatKeys.Mastery(0)) != 0 && random.NextDouble() < 0.001 * chanceModifier * luckMod)
         {
-            list.Add(ItemRegistry.Create<Object>("(O)GoldenAnimalCracker"));
+            list.Add(ItemRegistry.Create<Object>(ItemIds.GoldenAnimalCracker));
         }
 
         if (Game1.stats.DaysPlayed > 2 && random.NextDouble() < 0.002 * chanceModifier)
@@ -163,7 +164,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
 
         if (Game1.stats.DaysPlayed > 2 && random.NextDouble() < 0.0006 * chanceModifier)
         {
-            list.Add(ItemRegistry.Create<Object>("(O)SkillBook_" + Game1.random.Next(5)));
+            list.Add(ItemRegistry.Create<Object>(ItemIds.SkillBookPrefix + Game1.random.Next(5)));
         }
 
         return list;
@@ -174,7 +175,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
         if (r.NextDouble() < 0.2)
         {
             if (r.NextDouble() < 0.05)
-                return ItemRegistry.Create<Object>("(F)1369");
+                return ItemRegistry.Create<Object>(ItemIds.CatalogueWall);
 
             Object item = null;
             switch (r.Next(3))
@@ -183,15 +184,15 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
                     item = ItemRegistry.Create<Object>(Utility.getRandomSingleTileFurniture(r));
                     break;
                 case 1:
-                    item = ItemRegistry.Create<Object>("(F)" + r.Next(1362, 1370));
+                    item = ItemRegistry.Create<Object>("(F)" + r.Next(ItemIds.WallDecorSmallRangeStart, ItemIds.WallDecorSmallRangeEnd));
                     break;
                 case 2:
-                    item = ItemRegistry.Create<Object>("(F)" + r.Next(1376, 1391));
+                    item = ItemRegistry.Create<Object>("(F)" + r.Next(ItemIds.WallDecorLargeRangeStart, ItemIds.WallDecorLargeRangeEnd));
                     break;
             }
 
             if (item == null || item.Name.Contains("Error"))
-                item = ItemRegistry.Create<Object>("(F)1369");
+                item = ItemRegistry.Create<Object>(ItemIds.CatalogueWall);
 
             return item;
         }
