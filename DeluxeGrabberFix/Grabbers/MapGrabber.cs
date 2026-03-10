@@ -66,7 +66,10 @@ internal abstract class MapGrabber
 
         if (Config.IsItemExcluded(item.QualifiedItemId))
         {
-            Mod.LogDebug($"Skipping excluded item {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+            if (Config.visitMtVapiusExclusions && item.QualifiedItemId.Contains("_Node_"))
+                Mod.LogInfo($"VMV exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+            else
+                Mod.LogDebug($"Skipping excluded item {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             return false;
         }
 

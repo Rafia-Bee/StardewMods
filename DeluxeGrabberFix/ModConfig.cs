@@ -52,6 +52,7 @@ internal class ModConfig
     public HashSet<string> SkippedLocations;
     public HashSet<string> excludedItems;
     public bool sunberryVillageExclusions;
+    public bool visitMtVapiusExclusions;
     public SButton globalFireButton;
     public SButton designateGrabberButton;
     public bool globalAutoFire;
@@ -102,6 +103,8 @@ internal class ModConfig
             return true;
         if (sunberryVillageExclusions && SunberryVillageExcludedItems.Contains(qualifiedItemId))
             return true;
+        if (visitMtVapiusExclusions && qualifiedItemId.Contains("_Node_"))
+            return true;
         return false;
     }
 
@@ -143,6 +146,7 @@ internal class ModConfig
         collectTappers = true;
         SkippedLocations = new HashSet<string>();
         excludedItems = new HashSet<string>();
-        sunberryVillageExclusions = false;
+        sunberryVillageExclusions = true;
+        visitMtVapiusExclusions = true;
     }
 }
