@@ -75,6 +75,11 @@ public class ModEntry : Mod
             Monitor.Log(message, LogLevel.Trace);
     }
 
+    public void LogInfo(string message)
+    {
+        Monitor.Log(message, LogLevel.Info);
+    }
+
     public override object GetApi()
     {
         return Api;
@@ -643,6 +648,12 @@ public class ModEntry : Mod
             v => Config.sunberryVillageExclusions = v,
             () => Helper.Translation.Get("config.sunberry-village-exclusions"),
             () => Helper.Translation.Get("config.sunberry-village-exclusions.tooltip"));
+
+        api.AddBoolOption(ModManifest,
+            () => Config.visitMtVapiusExclusions,
+            v => Config.visitMtVapiusExclusions = v,
+            () => Helper.Translation.Get("config.visit-mt-vapius-exclusions"),
+            () => Helper.Translation.Get("config.visit-mt-vapius-exclusions.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.buriedItems,
