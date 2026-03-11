@@ -56,7 +56,7 @@ public class ModEntry : Mod
 
         helper.Events.GameLoop.GameLaunched += OnLaunched;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
-        helper.Events.GameLoop.TimeChanged += OnTenMinuteUpdate;
+        helper.Events.GameLoop.TimeChanged += OnHourlyUpdate;
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
         helper.Events.Display.RenderedWorld += OnRenderedWorld;
         helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
@@ -874,20 +874,75 @@ public class ModEntry : Mod
         }
     }
 
-    private void OnTenMinuteUpdate(object sender, TimeChangedEventArgs e)
+    private void OnHourlyUpdate(object sender, TimeChangedEventArgs e)
     {
         if (e.NewTime % 100 != 0)
             return;
 
         LogDebug("Autograbbing on time change");
-        foreach (var location in Game1.locations)
-        {
-            if (!ShouldProcessLocation(location))
-                continue;
 
-            var orePanGrabber = new OrePanGrabber(this, location);
-            if (orePanGrabber.CanGrab())
-                orePanGrabber.GrabItems();
+        bool useGlobal = Config.globalGrabber == ModConfig.GlobalGrabberMode.All && HasDesignatedGrabber();
+        if (useGlobal)
+        {
+            IsGlobalGrabActive = true;
+            CachedDesignatedGrabbers = new List<KeyValuePair<Vector2, Object>>();
+            foreach (var loc in GetAllLocations())
+            {
+                CachedDesignatedGrabbers.AddRange(
+                    loc.Objects.Pairs
+                        .Where(pair => pair.Value != null
+                            && pair.Value.modData.ContainsKey(GlobalGrabberModDataKey))
+                        .ToList());
+            }
+        }
+
+        try
+        {
+            foreach (var location in Game1.locations)
+            {
+                if (!ShouldProcessLocation(location))
+                    continue;
+
+                var orePanGrabber = new OrePanGrabber(this, location);
+                if (!orePanGrabber.CanGrab())
+                    continue;
+
+                var beforeInventory = Config.reportYield ? orePanGrabber.GetInventory() : null;
+                bool result = orePanGrabber.GrabItems();
+
+                LogDebug($"Ore pan at {location.Name}: {(result ? "collected items" : "nothing to collect")}");
+
+                if (beforeInventory != null && result)
+                {
+                    var afterInventory = orePanGrabber.GetInventory();
+                    var sb = new StringBuilder($"Ore panning yield at {location.Name}:\n");
+                    bool anyYield = false;
+
+                    foreach (var entry in afterInventory)
+                    {
+                        int newCount = entry.Value;
+                        if (beforeInventory.ContainsKey(entry.Key))
+                            newCount -= beforeInventory[entry.Key];
+
+                        if (newCount > 0)
+                        {
+                            sb.AppendLine($"    {entry.Key.Name} ({entry.Key.QualityName}) x{newCount}");
+                            anyYield = true;
+                        }
+                    }
+
+                    if (anyYield)
+                        Monitor.Log(sb.ToString(), LogLevel.Info);
+                }
+            }
+        }
+        finally
+        {
+            if (useGlobal)
+            {
+                IsGlobalGrabActive = false;
+                CachedDesignatedGrabbers = null;
+            }
         }
     }
 
