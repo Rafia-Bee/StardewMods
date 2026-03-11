@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using DeluxeGrabberFix.Framework;
 using StardewValley;
 using StardewValley.Enchantments;
-using StardewValley.Locations;
 using StardewValley.SpecialOrders;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
@@ -18,20 +17,29 @@ internal class WoodsHardwoodGrabber : MapGrabber
     {
     }
 
+    private static bool IsHardwoodClump(ResourceClump clump)
+    {
+        return clump.parentSheetIndex.Value == ResourceClump.stumpIndex
+            || clump.parentSheetIndex.Value == ResourceClump.hollowLogIndex;
+    }
+
     public override bool GrabItems()
     {
         if (!Config.fellSecretWoodsStumps)
             return false;
 
-        if (Location is not Woods woods || woods.resourceClumps.Count == 0)
+        if (Location.resourceClumps.Count == 0)
             return false;
 
         Tool axe = Player.getToolFromName("Axe");
         bool result = false;
 
-        for (int i = woods.resourceClumps.Count - 1; i >= 0; i--)
+        for (int i = Location.resourceClumps.Count - 1; i >= 0; i--)
         {
-            ResourceClump clump = woods.resourceClumps[i];
+            ResourceClump clump = Location.resourceClumps[i];
+
+            if (!IsHardwoodClump(clump))
+                continue;
             Vector2 tile = clump.Tile;
             var items = new List<Object>();
 
@@ -67,7 +75,7 @@ internal class WoodsHardwoodGrabber : MapGrabber
 
             if (TryAddItems((IEnumerable<Item>)items))
             {
-                woods.resourceClumps.RemoveAt(i);
+                Location.resourceClumps.RemoveAt(i);
                 result = true;
             }
         }
