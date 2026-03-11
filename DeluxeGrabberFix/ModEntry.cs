@@ -515,7 +515,8 @@ public class ModEntry : Mod
         api.AddBoolOption(ModManifest,
             () => Config.fellSecretWoodsStumps,
             v => Config.fellSecretWoodsStumps = v,
-            () => Helper.Translation.Get("config.fell-stumps-secret-woods"));
+            () => Helper.Translation.Get("config.fell-stumps"),
+            () => Helper.Translation.Get("config.fell-stumps.tooltip"));
 
         api.AddBoolOption(ModManifest,
             () => Config.garbageCans,
