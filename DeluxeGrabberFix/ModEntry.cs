@@ -270,6 +270,30 @@ public class ModEntry : Mod
         DiscoverLocations();
         ApplyVisitAutoSkip();
         RebuildConfigMenu();
+        LogConfig();
+    }
+
+    private void LogConfig()
+    {
+        Monitor.Log(
+            $"Config: forage={Config.forage}, animalProducts={Config.animalProducts}, " +
+            $"slimeHutch={Config.slimeHutch}, farmCaveMushrooms={Config.farmCaveMushrooms}, " +
+            $"harvestCrops={Config.harvestCrops}, indoorPots={Config.harvestCropsIndoorPots}, " +
+            $"flowers={Config.flowers}, cropRange={Config.harvestCropsRange}, " +
+            $"fruitTrees={Config.fruitTrees}, bushes={Config.bushes}, seedTrees={Config.seedTrees}, " +
+            $"artifactSpots={Config.artifactSpots}, buriedItems={Config.buriedItems}, " +
+            $"seedSpots={Config.seedSpots}, orePan={Config.orePan}, " +
+            $"garbageCans={Config.garbageCans}, fellStumps={Config.fellSecretWoodsStumps}, " +
+            $"moss={Config.harvestMoss}, debris={Config.collectDebris}, " +
+            $"machines={Config.collectMachines}, crabPots={Config.collectCrabPots}, " +
+            $"beeHouses={Config.collectBeeHouses}, tappers={Config.collectTappers}, " +
+            $"globalMode={Config.globalGrabber}, globalAutoFire={Config.globalAutoFire}, " +
+            $"reportYield={Config.reportYield}, gainXP={Config.gainExperience}, " +
+            $"skipFestivals={Config.skipFestivalLocations}",
+            LogLevel.Debug);
+
+        if (Config.excludedItems?.Count > 0)
+            Monitor.Log($"Excluded items: {string.Join(", ", Config.excludedItems)}", LogLevel.Debug);
     }
 
     private void OnReturnedToTitle(object sender, ReturnedToTitleEventArgs e)
