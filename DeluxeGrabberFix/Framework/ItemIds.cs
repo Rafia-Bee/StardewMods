@@ -5,7 +5,6 @@ internal static class ItemIds
     // Object qualified IDs
     public const string GoldenWalnut = "(O)73";
     public const string ArtifactSpot = "(O)590";
-    public const string MushroomBox = "(O)128";
     public const string TeaLeaves = "(O)815";
     public const string MysteryBox = "(O)MysteryBox";
     public const string GoldenAnimalCracker = "(O)GoldenAnimalCracker";
