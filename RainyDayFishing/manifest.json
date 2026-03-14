@@ -4,14 +4,7 @@
     "Version": "1.0.0",
     "MinimumApiVersion": "4.1.0",
     "UniqueID": "RafiaBee.RainyDayFishing",
-    "Description": "Shows catchable fish in the To-Dew overlay when it's raining. Only lists fish from visited locations that actually spawn in the current season on rainy days.",
+    "Description": "Shows rain-exclusive fish icons on the HUD when it's raining. Hover for spawn locations and times.",
     "EntryDll": "RainyDayFishing.dll",
-    "Dependencies": [
-        {
-            "UniqueID": "jltaylor-us.ToDew",
-            "MinimumVersion": "2.0.0",
-            "IsRequired": true
-        }
-    ],
     "UpdateKeys": ["Nexus:YOUR_MOD_ID"]
 }

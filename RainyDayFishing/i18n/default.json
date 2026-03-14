@@ -1,4 +1,12 @@
 {
-    "overlay.section-title": "Rainy Day Fish",
-    "overlay.no-rain": "No rain today!"
+    "config.enabled.name": "Enable HUD",
+    "config.enabled.tooltip": "Show rain-exclusive fish icons on the HUD. Disable to hide the overlay entirely.",
+    "config.hud-x.name": "HUD X Position",
+    "config.hud-x.tooltip": "Horizontal position of the fish icons. Negative values offset from the right edge of the screen.",
+    "config.hud-y.name": "HUD Y Position",
+    "config.hud-y.tooltip": "Vertical position of the fish icons (pixels from the top of the screen).",
+    "config.horizontal-layout.name": "Horizontal Layout",
+    "config.horizontal-layout.tooltip": "If enabled, fish icons are arranged in a horizontal row instead of a vertical column.",
+    "config.max-locations.name": "Max Locations Shown",
+    "config.max-locations.tooltip": "Maximum number of spawn locations shown in each tooltip. Set to 0 to show all."
 }
