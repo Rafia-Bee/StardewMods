@@ -32,11 +32,30 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
         if (obj.GetType() != typeof(Object))
             return TryGrabBuriedItems(tile, obj);
 
+        // SpaceCore till spots: Object("590") with modData override containing the real drop item.
+        // Must be checked before vanilla artifact spot handling to avoid simulating wrong drops.
+        if (obj.modData.TryGetValue("spacechase0.SpaceCore/TillDropOverride", out string tillDropId))
+            return TryGrabSpaceCoreTillSpot(tile, tillDropId);
+
         if (!Config.artifactSpots)
             return false;
 
         var items = GetForagedArtifactsFromArtifactSpot(Location, tile);
         if (items != null && TryAddItems(items))
+        {
+            Location.Objects.Remove(tile);
+            return true;
+        }
+        return false;
+    }
+
+    private bool TryGrabSpaceCoreTillSpot(Vector2 tile, string qualifiedItemId)
+    {
+        if (!Config.artifactSpots)
+            return false;
+
+        var item = ItemRegistry.Create(qualifiedItemId);
+        if (TryAddItem(item))
         {
             Location.Objects.Remove(tile);
             return true;
