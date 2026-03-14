@@ -19,6 +19,9 @@ internal class WoodsHardwoodGrabber : MapGrabber
 
     private static bool IsHardwoodClump(ResourceClump clump)
     {
+        if (clump.modData.ContainsKey("spacechase0.SpaceCore/LargeMinable"))
+            return false;
+
         return clump.parentSheetIndex.Value == ResourceClump.stumpIndex
             || clump.parentSheetIndex.Value == ResourceClump.hollowLogIndex;
     }
