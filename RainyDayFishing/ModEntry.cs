@@ -36,7 +36,7 @@ public class ModEntry : Mod
         api.Register(
             ModManifest,
             () => _config = new ModConfig(),
-            () => Helper.WriteConfig(_config)
+            () => { Helper.WriteConfig(_config); _hud.Refresh(); }
         );
 
         api.AddBoolOption(
@@ -80,6 +80,60 @@ public class ModEntry : Mod
             () => Helper.Translation.Get("config.max-locations.name"),
             () => Helper.Translation.Get("config.max-locations.tooltip"),
             min: 0, max: 20
+        );
+
+        api.AddSectionTitle(
+            ModManifest,
+            () => Helper.Translation.Get("config.weather-section.name"),
+            () => Helper.Translation.Get("config.weather-section.tooltip")
+        );
+
+        api.AddBoolOption(
+            ModManifest,
+            () => _config.TrackRain,
+            v => _config.TrackRain = v,
+            () => Helper.Translation.Get("config.track-rain.name"),
+            () => Helper.Translation.Get("config.track-rain.tooltip")
+        );
+
+        api.AddBoolOption(
+            ModManifest,
+            () => _config.TrackStorm,
+            v => _config.TrackStorm = v,
+            () => Helper.Translation.Get("config.track-storm.name"),
+            () => Helper.Translation.Get("config.track-storm.tooltip")
+        );
+
+        api.AddBoolOption(
+            ModManifest,
+            () => _config.TrackSun,
+            v => _config.TrackSun = v,
+            () => Helper.Translation.Get("config.track-sun.name"),
+            () => Helper.Translation.Get("config.track-sun.tooltip")
+        );
+
+        api.AddBoolOption(
+            ModManifest,
+            () => _config.TrackSnow,
+            v => _config.TrackSnow = v,
+            () => Helper.Translation.Get("config.track-snow.name"),
+            () => Helper.Translation.Get("config.track-snow.tooltip")
+        );
+
+        api.AddBoolOption(
+            ModManifest,
+            () => _config.TrackWind,
+            v => _config.TrackWind = v,
+            () => Helper.Translation.Get("config.track-wind.name"),
+            () => Helper.Translation.Get("config.track-wind.tooltip")
+        );
+
+        api.AddBoolOption(
+            ModManifest,
+            () => _config.TrackGreenRain,
+            v => _config.TrackGreenRain = v,
+            () => Helper.Translation.Get("config.track-green-rain.name"),
+            () => Helper.Translation.Get("config.track-green-rain.tooltip")
         );
     }
 }

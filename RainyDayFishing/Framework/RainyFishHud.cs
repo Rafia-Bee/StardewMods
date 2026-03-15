@@ -13,7 +13,7 @@ using StardewValley.Menus;
 namespace RainyDayFishing.Framework;
 
 /// <summary>
-/// Renders rain-exclusive fish icons on the right side of the HUD.
+/// Renders weather-exclusive fish icons on the right side of the HUD.
 /// Hovering over an icon shows spawn locations and catchable time windows.
 /// </summary>
 public sealed class RainyFishHud
@@ -23,7 +23,6 @@ public sealed class RainyFishHud
     private readonly Func<ModConfig> _getConfig;
 
     private List<FishEntry> _entries = new();
-    private bool _isRainy;
 
     private static readonly HashSet<string> IgnoreTimeKeys =
         new(StringComparer.OrdinalIgnoreCase) { "TIME" };
@@ -41,28 +40,27 @@ public sealed class RainyFishHud
     public void Clear()
     {
         _entries.Clear();
-        _isRainy = false;
     }
 
     public void Refresh()
     {
         _entries.Clear();
-        _isRainy = false;
 
         if (!Context.IsWorldReady)
             return;
 
+        var config = _getConfig();
         var fishMap = new Dictionary<string, FishEntry>();
         var rawFishData = DataLoader.Fish(Game1.content);
 
         foreach (string locName in Game1.player.locationsVisited)
         {
             var location = Game1.getLocationFromName(locName);
-            if (location == null || !location.IsRainingHere())
+            if (location == null)
                 continue;
 
-            _isRainy = true;
-            CollectFish(location, locName, rawFishData, fishMap);
+            string currentWeather = GetLocationWeather(location);
+            CollectFish(location, locName, rawFishData, fishMap, currentWeather, config);
         }
 
         _entries = fishMap.Values.OrderBy(f => f.DisplayName).ToList();
@@ -70,7 +68,7 @@ public sealed class RainyFishHud
 
     public void Draw(SpriteBatch b)
     {
-        if (!_isRainy || _entries.Count == 0 || !Context.IsWorldReady)
+        if (_entries.Count == 0 || !Context.IsWorldReady)
             return;
         if (Game1.eventUp || Game1.currentMinigame != null || Game1.activeClickableMenu != null)
             return;
@@ -150,7 +148,9 @@ public sealed class RainyFishHud
         GameLocation location,
         string locName,
         Dictionary<string, string> rawFishData,
-        Dictionary<string, FishEntry> fishMap)
+        Dictionary<string, FishEntry> fishMap,
+        string currentWeather,
+        ModConfig config)
     {
         Season season = Game1.GetSeasonForLocation(location);
 
@@ -166,7 +166,13 @@ public sealed class RainyFishHud
         {
             if (!IsCatchableToday(spawn, location, season, rawFishData))
                 continue;
-            if (!IsRainExclusive(spawn, rawFishData))
+
+            string? weatherReq = GetWeatherRequirement(spawn, rawFishData);
+            if (weatherReq == null)
+                continue;
+            if (!WeatherMatchesCurrent(currentWeather, weatherReq))
+                continue;
+            if (!IsWeatherTracked(weatherReq, config))
                 continue;
 
             var itemData = ItemRegistry.GetData(spawn.ItemId);
@@ -230,27 +236,89 @@ public sealed class RainyFishHud
             : $"{displayHours}:{minutes:D2}{period}";
     }
 
-    private static bool IsRainExclusive(SpawnFishData spawn, Dictionary<string, string> rawFishData)
+    private static string GetLocationWeather(GameLocation location)
+    {
+        if (location.IsGreenRainingHere()) return "GreenRain";
+        if (location.IsLightningHere()) return "Storm";
+        if (location.IsRainingHere()) return "Rain";
+        if (location.IsSnowingHere()) return "Snow";
+        if (location.IsDebrisWeatherHere()) return "Wind";
+        return "Sun";
+    }
+
+    private static string? GetWeatherRequirement(SpawnFishData spawn, Dictionary<string, string> rawFishData)
     {
         if (!string.IsNullOrEmpty(spawn.Condition))
         {
-            if (spawn.Condition.Contains("Rain", StringComparison.OrdinalIgnoreCase)
-                && spawn.Condition.Contains("WEATHER", StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (spawn.Condition.Contains("!WEATHER", StringComparison.OrdinalIgnoreCase)
-                && spawn.Condition.Contains("Sun", StringComparison.OrdinalIgnoreCase))
-                return true;
+            foreach (var cond in spawn.Condition.Split(',', StringSplitOptions.TrimEntries))
+            {
+                if (!cond.Contains("WEATHER", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                bool negated = cond.TrimStart().StartsWith('!');
+
+                if (negated)
+                {
+                    if (cond.Contains("Sun", StringComparison.OrdinalIgnoreCase))
+                        return "NotSun";
+                    continue;
+                }
+
+                if (cond.Contains("GreenRain", StringComparison.OrdinalIgnoreCase))
+                    return "GreenRain";
+                if (cond.Contains("Snow", StringComparison.OrdinalIgnoreCase))
+                    return "Snow";
+                if (cond.Contains("Wind", StringComparison.OrdinalIgnoreCase))
+                    return "Wind";
+                if (cond.Contains("Rain", StringComparison.OrdinalIgnoreCase))
+                    return "Rain";
+                if (cond.Contains("Storm", StringComparison.OrdinalIgnoreCase))
+                    return "Storm";
+                if (cond.Contains("Sun", StringComparison.OrdinalIgnoreCase))
+                    return "Sun";
+            }
         }
 
         var itemData = ItemRegistry.GetData(spawn.ItemId);
         if (itemData != null && rawFishData.TryGetValue(itemData.ItemId, out string? fishStr))
         {
             var fields = fishStr.Split('/');
-            if (fields.Length > 7 && fields[7] == "rainy")
-                return true;
+            if (fields.Length > 7)
+            {
+                if (fields[7] == "rainy") return "Rain";
+                if (fields[7] == "sunny") return "Sun";
+            }
         }
 
+        return null;
+    }
+
+    private static bool WeatherMatchesCurrent(string currentWeather, string requirement)
+    {
+        if (requirement == "NotSun")
+            return !currentWeather.Equals("Sun", StringComparison.OrdinalIgnoreCase);
+        if (string.Equals(currentWeather, requirement, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (requirement.Equals("Rain", StringComparison.OrdinalIgnoreCase)
+            && currentWeather.Equals("Storm", StringComparison.OrdinalIgnoreCase))
+            return true;
         return false;
+    }
+
+    private static bool IsWeatherTracked(string requirement, ModConfig config)
+    {
+        return requirement switch
+        {
+            "Rain" => config.TrackRain,
+            "Storm" => config.TrackStorm,
+            "Sun" => config.TrackSun,
+            "Snow" => config.TrackSnow,
+            "Wind" => config.TrackWind,
+            "GreenRain" => config.TrackGreenRain,
+            "NotSun" => config.TrackRain || config.TrackStorm || config.TrackSnow
+                        || config.TrackWind || config.TrackGreenRain,
+            _ => true
+        };
     }
 
     private static bool IsCatchableToday(

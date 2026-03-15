@@ -1,6 +1,6 @@
 {
     "config.enabled.name": "Enable HUD",
-    "config.enabled.tooltip": "Show rain-exclusive fish icons on the HUD. Disable to hide the overlay entirely.",
+    "config.enabled.tooltip": "Show weather-exclusive fish icons on the HUD. Disable to hide the overlay entirely.",
     "config.hud-x.name": "HUD X Position",
     "config.hud-x.tooltip": "Horizontal position of the fish icons. Negative values offset from the right edge of the screen.",
     "config.hud-y.name": "HUD Y Position",
@@ -8,5 +8,20 @@
     "config.horizontal-layout.name": "Horizontal Layout",
     "config.horizontal-layout.tooltip": "If enabled, fish icons are arranged in a horizontal row instead of a vertical column.",
     "config.max-locations.name": "Max Locations Shown",
-    "config.max-locations.tooltip": "Maximum number of spawn locations shown in each tooltip. Set to 0 to show all."
+    "config.max-locations.tooltip": "Maximum number of spawn locations shown in each tooltip. Set to 0 to show all.",
+
+    "config.weather-section.name": "Weather Types",
+    "config.weather-section.tooltip": "Choose which weather conditions to track. Fish exclusive to enabled weather types will appear on the HUD.",
+    "config.track-rain.name": "Track Rain",
+    "config.track-rain.tooltip": "Show fish that can only be caught when it's raining.",
+    "config.track-storm.name": "Track Storms",
+    "config.track-storm.tooltip": "Show fish that can only be caught during thunderstorms.",
+    "config.track-sun.name": "Track Sunny",
+    "config.track-sun.tooltip": "Show fish that can only be caught on sunny days (like Sunfish).",
+    "config.track-snow.name": "Track Snow",
+    "config.track-snow.tooltip": "Show fish that can only be caught when it's snowing.",
+    "config.track-wind.name": "Track Wind",
+    "config.track-wind.tooltip": "Show fish that can only be caught during windy/debris weather.",
+    "config.track-green-rain.name": "Track Green Rain",
+    "config.track-green-rain.tooltip": "Show fish that can only be caught during green rain."
 }
