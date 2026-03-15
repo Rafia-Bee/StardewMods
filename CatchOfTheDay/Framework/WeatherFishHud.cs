@@ -10,13 +10,13 @@ using StardewValley;
 using StardewValley.GameData.Locations;
 using StardewValley.Menus;
 
-namespace RainyDayFishing.Framework;
+namespace CatchOfTheDay.Framework;
 
 /// <summary>
 /// Renders weather-exclusive fish icons on the right side of the HUD.
 /// Hovering over an icon shows spawn locations and catchable time windows.
 /// </summary>
-public sealed class RainyFishHud
+public sealed class WeatherFishHud
 {
     private readonly IModHelper _helper;
     private readonly IMonitor _monitor;
@@ -30,7 +30,7 @@ public sealed class RainyFishHud
     private const int IconSize = 40;
     private const int IconPadding = 5;
 
-    public RainyFishHud(IModHelper helper, IMonitor monitor, Func<ModConfig> getConfig)
+    public WeatherFishHud(IModHelper helper, IMonitor monitor, Func<ModConfig> getConfig)
     {
         _helper = helper;
         _monitor = monitor;

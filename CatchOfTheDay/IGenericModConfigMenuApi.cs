@@ -1,7 +1,7 @@
 using System;
 using StardewModdingAPI;
 
-namespace RainyDayFishing;
+namespace CatchOfTheDay;
 
 public interface IGenericModConfigMenuApi
 {

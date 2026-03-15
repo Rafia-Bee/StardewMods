@@ -1,18 +1,18 @@
-using RainyDayFishing.Framework;
+using CatchOfTheDay.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 
-namespace RainyDayFishing;
+namespace CatchOfTheDay;
 
 public class ModEntry : Mod
 {
-    private RainyFishHud _hud = null!;
+    private WeatherFishHud _hud = null!;
     private ModConfig _config = null!;
 
     public override void Entry(IModHelper helper)
     {
         _config = helper.ReadConfig<ModConfig>();
-        _hud = new RainyFishHud(helper, Monitor, () => _config);
+        _hud = new WeatherFishHud(helper, Monitor, () => _config);
 
         helper.Events.GameLoop.DayStarted += (_, _) => _hud.Refresh();
         helper.Events.Player.Warped += OnPlayerWarped;
