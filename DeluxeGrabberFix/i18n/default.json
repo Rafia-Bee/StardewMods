@@ -67,6 +67,8 @@
     "config.gain-experience.tooltip": "Gain appropriate experience as if you foraged or harvested yourself",
     "config.skip-festival-locations": "Skip Festival Locations",
     "config.skip-festival-locations.tooltip": "Prevents auto-grabbers from collecting items in festival and temporary event locations, including during active festivals",
+    "config.hourly-collection": "Hourly Collection",
+    "config.hourly-collection.tooltip": "When enabled, grabbers sweep all locations every in-game hour to collect items. When disabled, items are only collected at the start and end of each day. Ore panning still runs hourly regardless of this setting.",
     "config.excluded-items": "Excluded Items",
     "config.excluded-items.tooltip": "A comma-separated list of qualified item IDs that the grabber should never collect. For example, '(O)859' to exclude the Lucky Ring. You can find item IDs on the Stardew Valley wiki or with Lookup Anything.",
     "config.global-grabber-mode": "Global Grabber Mode",
