@@ -94,6 +94,23 @@ public class ModEntry : Mod
             () => Helper.Translation.Get("config.show-bundle-needs.tooltip")
         );
 
+        api.AddBoolOption(
+            ModManifest,
+            () => _config.HideAlreadyCaught,
+            v => _config.HideAlreadyCaught = v,
+            () => Helper.Translation.Get("config.hide-already-caught.name"),
+            () => Helper.Translation.Get("config.hide-already-caught.tooltip")
+        );
+
+        api.AddNumberOption(
+            ModManifest,
+            () => _config.MinSellPrice,
+            v => _config.MinSellPrice = v,
+            () => Helper.Translation.Get("config.min-sell-price.name"),
+            () => Helper.Translation.Get("config.min-sell-price.tooltip"),
+            min: 0, max: 5000, interval: 25
+        );
+
         api.AddSectionTitle(
             ModManifest,
             () => Helper.Translation.Get("config.weather-section.name"),

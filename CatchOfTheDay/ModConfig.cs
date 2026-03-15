@@ -8,6 +8,8 @@ public sealed class ModConfig
     public bool HorizontalLayout { get; set; } = false;
     public int MaxLocations { get; set; } = 4;
     public bool ShowBundleNeeds { get; set; } = true;
+    public bool HideAlreadyCaught { get; set; } = false;
+    public int MinSellPrice { get; set; } = 0;
 
     // Weather types to track
     public bool TrackRain { get; set; } = true;

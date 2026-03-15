@@ -26,6 +26,7 @@ internal sealed class WeatherFishHud
 
     private List<FishEntry> _entries = new();
     private Dictionary<string, List<string>> _bundleNeeds = new();
+    private int _lastFishCaughtCount = -1;
 
     private static readonly HashSet<string> IgnoreTimeKeys =
         new(StringComparer.OrdinalIgnoreCase) { "TIME" };
@@ -126,7 +127,20 @@ internal sealed class WeatherFishHud
 
     public void Draw(SpriteBatch b)
     {
-        if (_entries.Count == 0 || !Context.IsWorldReady)
+        if (!Context.IsWorldReady)
+            return;
+
+        if (_getConfig().HideAlreadyCaught)
+        {
+            int count = Game1.player.fishCaught.Length;
+            if (count != _lastFishCaughtCount)
+            {
+                _lastFishCaughtCount = count;
+                Refresh();
+            }
+        }
+
+        if (_entries.Count == 0)
             return;
         if (Game1.eventUp || Game1.currentMinigame != null || Game1.activeClickableMenu != null)
             return;
@@ -176,6 +190,13 @@ internal sealed class WeatherFishHud
         var sb = new StringBuilder();
         if (!Game1.player.fishCaught.ContainsKey(fish.QualifiedItemId))
             sb.AppendLine("(Uncaught)");
+
+        if (fish.SellPrice > 0)
+        {
+            if (sb.Length > 0)
+                sb.AppendLine();
+            sb.Append($"Sells for {fish.SellPrice}g");
+        }
 
         if (_getConfig().ShowBundleNeeds && _bundleNeeds.TryGetValue(fish.QualifiedItemId, out var bundles))
         {
@@ -251,6 +272,17 @@ internal sealed class WeatherFishHud
             if (itemData == null)
                 continue;
 
+            if (config.HideAlreadyCaught && Game1.player.fishCaught.ContainsKey(itemData.QualifiedItemId))
+                continue;
+
+            int sellPrice = 0;
+            var tempItem = ItemRegistry.Create(itemData.QualifiedItemId);
+            if (tempItem is StardewValley.Object obj)
+                sellPrice = obj.sellToStorePrice();
+
+            if (config.MinSellPrice > 0 && sellPrice < config.MinSellPrice)
+                continue;
+
             string displayName = itemData.DisplayName;
             string locDisplayName = location.DisplayName ?? locName;
             string timeRange = GetTimeRange(itemData.ItemId, rawFishData);
@@ -262,7 +294,8 @@ internal sealed class WeatherFishHud
                     itemData.QualifiedItemId,
                     displayName,
                     itemData.GetTexture(),
-                    itemData.GetSourceRect()
+                    itemData.GetSourceRect(),
+                    sellPrice
                 );
                 fishMap[spawn.ItemId] = entry;
             }
@@ -425,15 +458,17 @@ internal sealed class WeatherFishHud
         public string DisplayName { get; }
         public Texture2D Texture { get; }
         public Rectangle SourceRect { get; }
+        public int SellPrice { get; }
         public List<LocationTime> LocationTimes { get; } = new();
 
-        public FishEntry(string itemId, string qualifiedItemId, string displayName, Texture2D texture, Rectangle sourceRect)
+        public FishEntry(string itemId, string qualifiedItemId, string displayName, Texture2D texture, Rectangle sourceRect, int sellPrice)
         {
             ItemId = itemId;
             QualifiedItemId = qualifiedItemId;
             DisplayName = displayName;
             Texture = texture;
             SourceRect = sourceRect;
+            SellPrice = sellPrice;
         }
     }
 
