@@ -13,6 +13,7 @@ public sealed class ModConfig
     public bool ShowBundleNeeds { get; set; } = true;
     public bool HideAlreadyCaught { get; set; } = false;
     public int MinSellPrice { get; set; } = 0;
+    public bool ShowNightFish { get; set; } = false;
 
     // Weather types to track
     public bool TrackRain { get; set; } = true;
