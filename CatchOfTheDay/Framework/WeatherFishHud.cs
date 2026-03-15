@@ -33,6 +33,7 @@ internal sealed class WeatherFishHud
 
     private const int BaseIconSize = 40;
     private const int IconPadding = 5;
+    private const int NightStartTime = 1800;
 
     public WeatherFishHud(IModHelper helper, IMonitor monitor, Func<ModConfig> getConfig, FishHudOverlay overlay)
     {
@@ -172,6 +173,10 @@ internal sealed class WeatherFishHud
 
             b.Draw(Game1.staminaRect, dest, Color.Black * 0.25f);
 
+            Color bgTint = GetIconBackground(fish, config);
+            if (bgTint.A > 0)
+                b.Draw(Game1.staminaRect, dest, bgTint);
+
             if (isHover)
                 dest.Inflate(3, 3);
 
@@ -296,7 +301,8 @@ internal sealed class WeatherFishHud
                     displayName,
                     itemData.GetTexture(),
                     itemData.GetSourceRect(),
-                    sellPrice
+                    sellPrice,
+                    GetTimeWindows(itemData.ItemId, rawFishData)
                 );
                 fishMap[spawn.ItemId] = entry;
             }
@@ -327,6 +333,80 @@ internal sealed class WeatherFishHud
         }
 
         return string.Join(", ", ranges);
+    }
+
+    private static List<(int Start, int End)> GetTimeWindows(string itemId, Dictionary<string, string> rawFishData)
+    {
+        var windows = new List<(int, int)>();
+        if (!rawFishData.TryGetValue(itemId, out string? fishStr))
+            return windows;
+
+        var fields = fishStr.Split('/');
+        if (fields.Length <= 5)
+            return windows;
+
+        var parts = fields[5].Split(' ');
+        if (parts.Length < 2 || parts.Length % 2 != 0)
+            return windows;
+
+        for (int i = 0; i < parts.Length; i += 2)
+        {
+            if (int.TryParse(parts[i], out int start) && int.TryParse(parts[i + 1], out int end))
+                windows.Add((start, end));
+        }
+
+        return windows;
+    }
+
+    private static Color GetIconBackground(FishEntry fish, ModConfig config)
+    {
+        int currentTime = Game1.timeOfDay;
+
+        bool catchableNow = fish.TimeWindows.Count == 0
+            || fish.TimeWindows.Any(w => IsTimeInWindow(currentTime, w.Start, w.End));
+
+        if (catchableNow)
+            return ParseHexColor(config.CatchableNowColor);
+
+        bool isNightFish = fish.TimeWindows.Count > 0
+            && fish.TimeWindows.All(w => w.Start >= NightStartTime);
+
+        if (isNightFish)
+            return ParseHexColor(config.NightFishColor);
+
+        return Color.Transparent;
+    }
+
+    private static bool IsTimeInWindow(int time, int start, int end)
+    {
+        if (end > start)
+            return time >= start && time < end;
+        return time >= start || time < end;
+    }
+
+    private static Color ParseHexColor(string hex)
+    {
+        if (string.IsNullOrEmpty(hex) || hex[0] != '#')
+            return Color.Transparent;
+
+        hex = hex.Substring(1);
+        if (hex.Length == 6)
+            hex += "FF";
+        if (hex.Length != 8)
+            return Color.Transparent;
+
+        try
+        {
+            int r = Convert.ToInt32(hex.Substring(0, 2), 16);
+            int g = Convert.ToInt32(hex.Substring(2, 2), 16);
+            int b = Convert.ToInt32(hex.Substring(4, 2), 16);
+            int a = Convert.ToInt32(hex.Substring(6, 2), 16);
+            return new Color(r, g, b, a);
+        }
+        catch
+        {
+            return Color.Transparent;
+        }
     }
 
     private static string FormatTime(int time)
@@ -460,9 +540,10 @@ internal sealed class WeatherFishHud
         public Texture2D Texture { get; }
         public Rectangle SourceRect { get; }
         public int SellPrice { get; }
+        public List<(int Start, int End)> TimeWindows { get; }
         public List<LocationTime> LocationTimes { get; } = new();
 
-        public FishEntry(string itemId, string qualifiedItemId, string displayName, Texture2D texture, Rectangle sourceRect, int sellPrice)
+        public FishEntry(string itemId, string qualifiedItemId, string displayName, Texture2D texture, Rectangle sourceRect, int sellPrice, List<(int Start, int End)> timeWindows)
         {
             ItemId = itemId;
             QualifiedItemId = qualifiedItemId;
@@ -470,6 +551,7 @@ internal sealed class WeatherFishHud
             Texture = texture;
             SourceRect = sourceRect;
             SellPrice = sellPrice;
+            TimeWindows = timeWindows;
         }
     }
 

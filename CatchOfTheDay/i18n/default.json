@@ -19,6 +19,10 @@
     "config.page-position.tooltip": "Configure where the fish icons appear and how big they are.",
     "config.icon-scale.name": "Icon Scale",
     "config.icon-scale.tooltip": "Size multiplier for fish icons. 1.0 is the default size, 2.0 is double.",
+    "config.catchable-now-color.name": "Catchable Now Background",
+    "config.catchable-now-color.tooltip": "Background color for fish you can catch right now. Use hex format like #00FF0080 (RRGGBBAA). Set to #00000000 for transparent.",
+    "config.night-fish-color.name": "Night Fish Background",
+    "config.night-fish-color.tooltip": "Background color for fish that can only be caught at night (after 6pm). Use hex format like #0000FF80 (RRGGBBAA). Set to #00000000 for transparent.",
 
     "config.weather-section.name": "Weather Types",
     "config.weather-section.tooltip": "Choose which weather conditions to track. Fish exclusive to enabled weather types will appear on the HUD.",

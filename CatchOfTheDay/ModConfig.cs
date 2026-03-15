@@ -7,6 +7,8 @@ public sealed class ModConfig
     public int HudY { get; set; } = 300;
     public bool HorizontalLayout { get; set; } = false;
     public float IconScale { get; set; } = 1.0f;
+    public string CatchableNowColor { get; set; } = "#00000000";
+    public string NightFishColor { get; set; } = "#00000000";
     public int MaxLocations { get; set; } = 4;
     public bool ShowBundleNeeds { get; set; } = true;
     public bool HideAlreadyCaught { get; set; } = false;
