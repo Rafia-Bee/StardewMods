@@ -289,7 +289,7 @@ public class ModEntry : Mod
             $"beeHouses={Config.collectBeeHouses}, tappers={Config.collectTappers}, " +
             $"globalMode={Config.globalGrabber}, globalAutoFire={Config.globalAutoFire}, " +
             $"reportYield={Config.reportYield}, gainXP={Config.gainExperience}, " +
-            $"skipFestivals={Config.skipFestivalLocations}",
+            $"hourlyCollection={Config.hourlyCollection}, skipFestivals={Config.skipFestivalLocations}",
             LogLevel.Debug);
 
         if (Config.excludedItems?.Count > 0)
@@ -612,6 +612,12 @@ public class ModEntry : Mod
             () => Helper.Translation.Get("config.gain-experience.tooltip"));
 
         api.AddBoolOption(ModManifest,
+            () => Config.hourlyCollection,
+            v => Config.hourlyCollection = v,
+            () => Helper.Translation.Get("config.hourly-collection"),
+            () => Helper.Translation.Get("config.hourly-collection.tooltip"));
+
+        api.AddBoolOption(ModManifest,
             () => Config.skipFestivalLocations,
             v => Config.skipFestivalLocations = v,
             () => Helper.Translation.Get("config.skip-festival-locations"),
@@ -922,7 +928,7 @@ public class ModEntry : Mod
         }
 
         _isGrabbing = true;
-        IsForageGrabEnabled = true;
+        IsForageGrabEnabled = Config.hourlyCollection;
         try
         {
             foreach (var location in GetAllLocations())
@@ -962,7 +968,8 @@ public class ModEntry : Mod
                     }
                 }
 
-                GrabAtLocation(location);
+                if (Config.hourlyCollection)
+                    GrabAtLocation(location);
             }
         }
         finally

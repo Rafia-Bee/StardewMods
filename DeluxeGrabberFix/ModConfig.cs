@@ -42,6 +42,7 @@ internal class ModConfig
     public bool garbageCans;
     public bool seedSpots;
     public bool harvestMoss;
+    public bool hourlyCollection;
     public bool skipFestivalLocations;
     public bool selectVisitedOnly;
     public bool collectMachines;
@@ -138,6 +139,7 @@ internal class ModConfig
         seedSpots = false;
         harvestMoss = false;
         collectDebris = false;
+        hourlyCollection = true;
         skipFestivalLocations = true;
         selectVisitedOnly = false;
         collectMachines = false;
