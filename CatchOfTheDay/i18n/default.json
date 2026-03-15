@@ -11,6 +11,10 @@
     "config.max-locations.tooltip": "Maximum number of spawn locations shown in each tooltip. Set to 0 to show all.",
     "config.show-bundle-needs.name": "Show Bundle Needs",
     "config.show-bundle-needs.tooltip": "Show which Community Center bundles still need each fish in the tooltip.",
+    "config.hide-already-caught.name": "Hide Already Caught",
+    "config.hide-already-caught.tooltip": "Hide fish you've already caught at least once. Useful for tracking what you still need.",
+    "config.min-sell-price.name": "Minimum Sell Price",
+    "config.min-sell-price.tooltip": "Only show fish worth at least this much gold. Accounts for fishing professions like Fisher and Angler. Set to 0 to show all fish.",
 
     "config.weather-section.name": "Weather Types",
     "config.weather-section.tooltip": "Choose which weather conditions to track. Fish exclusive to enabled weather types will appear on the HUD.",
