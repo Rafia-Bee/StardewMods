@@ -31,7 +31,7 @@ internal sealed class WeatherFishHud
     private static readonly HashSet<string> IgnoreTimeKeys =
         new(StringComparer.OrdinalIgnoreCase) { "TIME" };
 
-    private const int IconSize = 40;
+    private const int BaseIconSize = 40;
     private const int IconPadding = 5;
 
     public WeatherFishHud(IModHelper helper, IMonitor monitor, Func<ModConfig> getConfig, FishHudOverlay overlay)
@@ -153,6 +153,7 @@ internal sealed class WeatherFishHud
             : config.HudX;
         int baseY = config.HudY;
         bool horizontal = config.HorizontalLayout;
+        int iconSize = (int)(BaseIconSize * config.IconScale);
 
         int mouseX = Game1.getMouseX(true);
         int mouseY = Game1.getMouseY(true);
@@ -161,9 +162,9 @@ internal sealed class WeatherFishHud
         for (int i = 0; i < _entries.Count; i++)
         {
             var fish = _entries[i];
-            int x = horizontal ? baseX + i * (IconSize + IconPadding) : baseX;
-            int y = horizontal ? baseY : baseY + i * (IconSize + IconPadding);
-            var dest = new Rectangle(x, y, IconSize, IconSize);
+            int x = horizontal ? baseX + i * (iconSize + IconPadding) : baseX;
+            int y = horizontal ? baseY : baseY + i * (iconSize + IconPadding);
+            var dest = new Rectangle(x, y, iconSize, iconSize);
 
             bool isHover = dest.Contains(mouseX, mouseY);
             if (isHover)

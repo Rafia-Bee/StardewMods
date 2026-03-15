@@ -15,6 +15,10 @@
     "config.hide-already-caught.tooltip": "Hide fish you've already caught at least once. Useful for tracking what you still need.",
     "config.min-sell-price.name": "Minimum Sell Price",
     "config.min-sell-price.tooltip": "Only show fish worth at least this much gold. Accounts for fishing professions like Fisher and Angler. Set to 0 to show all fish.",
+    "config.page-position.name": "Position & Layout",
+    "config.page-position.tooltip": "Configure where the fish icons appear and how big they are.",
+    "config.icon-scale.name": "Icon Scale",
+    "config.icon-scale.tooltip": "Size multiplier for fish icons. 1.0 is the default size, 2.0 is double.",
 
     "config.weather-section.name": "Weather Types",
     "config.weather-section.tooltip": "Choose which weather conditions to track. Fish exclusive to enabled weather types will appear on the HUD.",

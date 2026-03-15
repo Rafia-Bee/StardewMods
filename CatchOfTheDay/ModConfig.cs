@@ -6,6 +6,7 @@ public sealed class ModConfig
     public int HudX { get; set; } = -51;
     public int HudY { get; set; } = 300;
     public bool HorizontalLayout { get; set; } = false;
+    public float IconScale { get; set; } = 1.0f;
     public int MaxLocations { get; set; } = 4;
     public bool ShowBundleNeeds { get; set; } = true;
     public bool HideAlreadyCaught { get; set; } = false;
