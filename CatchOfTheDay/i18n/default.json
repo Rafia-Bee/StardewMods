@@ -15,6 +15,8 @@
     "config.hide-already-caught.tooltip": "Hide fish you've already caught at least once. Useful for tracking what you still need.",
     "config.min-sell-price.name": "Minimum Sell Price",
     "config.min-sell-price.tooltip": "Only show fish worth at least this much gold. Accounts for fishing professions like Fisher and Angler. Set to 0 to show all fish.",
+    "config.show-night-fish.name": "Show Night Fish",
+    "config.show-night-fish.tooltip": "Show fish that can only be caught at night (6pm onwards), even if they have no specific weather requirement.",
     "config.page-position.name": "Position & Layout",
     "config.page-position.tooltip": "Configure where the fish icons appear and how big they are.",
     "config.icon-scale.name": "Icon Scale",

@@ -266,17 +266,29 @@ internal sealed class WeatherFishHud
             if (!IsCatchableToday(spawn, location, season, rawFishData))
                 continue;
 
-            string? weatherReq = GetWeatherRequirement(spawn, rawFishData);
-            if (weatherReq == null)
-                continue;
-            if (!WeatherMatchesCurrent(currentWeather, weatherReq))
-                continue;
-            if (!IsWeatherTracked(weatherReq, config))
-                continue;
-
             var itemData = ItemRegistry.GetData(spawn.ItemId);
             if (itemData == null)
                 continue;
+
+            string? weatherReq = GetWeatherRequirement(spawn, rawFishData);
+
+            if (weatherReq != null)
+            {
+                if (!WeatherMatchesCurrent(currentWeather, weatherReq))
+                    continue;
+                if (!IsWeatherTracked(weatherReq, config))
+                    continue;
+            }
+            else if (config.ShowNightFish)
+            {
+                var windows = GetTimeWindows(itemData.ItemId, rawFishData);
+                if (windows.Count == 0 || !windows.All(w => w.Start >= NightStartTime))
+                    continue;
+            }
+            else
+            {
+                continue;
+            }
 
             if (config.HideAlreadyCaught && Game1.player.fishCaught.ContainsKey(itemData.QualifiedItemId))
                 continue;

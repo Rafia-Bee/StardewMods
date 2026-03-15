@@ -78,6 +78,14 @@ public class ModEntry : Mod
             min: 0, max: 5000, interval: 25
         );
 
+        api.AddBoolOption(
+            ModManifest,
+            () => _config.ShowNightFish,
+            v => _config.ShowNightFish = v,
+            () => Helper.Translation.Get("config.show-night-fish.name"),
+            () => Helper.Translation.Get("config.show-night-fish.tooltip")
+        );
+
         api.AddPageLink(
             ModManifest,
             "position",
