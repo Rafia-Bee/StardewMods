@@ -1,5 +1,7 @@
 #nullable enable
+using System;
 using CatchOfTheDay.Framework;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -187,6 +189,71 @@ public class ModEntry : Mod
             () => Helper.Translation.Get("config.max-locations.tooltip"),
             min: 0, max: 20
         );
+
+        var colorApi = Helper.ModRegistry.GetApi<IGMCMOptionsAPI>("jltaylor-us.GMCMOptions");
+        if (colorApi != null)
+        {
+            colorApi.AddColorOption(
+                ModManifest,
+                () => ParseHexColor(_config.CatchableNowColor),
+                v => _config.CatchableNowColor = ColorToHex(v),
+                () => Helper.Translation.Get("config.catchable-now-color.name"),
+                () => Helper.Translation.Get("config.catchable-now-color.tooltip"),
+                showAlpha: true,
+                colorPickerStyle: 1
+            );
+
+            colorApi.AddColorOption(
+                ModManifest,
+                () => ParseHexColor(_config.NightFishColor),
+                v => _config.NightFishColor = ColorToHex(v),
+                () => Helper.Translation.Get("config.night-fish-color.name"),
+                () => Helper.Translation.Get("config.night-fish-color.tooltip"),
+                showAlpha: true,
+                colorPickerStyle: 1
+            );
+        }
+        else
+        {
+            api.AddTextOption(
+                ModManifest,
+                () => _config.CatchableNowColor,
+                v => _config.CatchableNowColor = v,
+                () => Helper.Translation.Get("config.catchable-now-color.name"),
+                () => Helper.Translation.Get("config.catchable-now-color.tooltip")
+            );
+
+            api.AddTextOption(
+                ModManifest,
+                () => _config.NightFishColor,
+                v => _config.NightFishColor = v,
+                () => Helper.Translation.Get("config.night-fish-color.name"),
+                () => Helper.Translation.Get("config.night-fish-color.tooltip")
+            );
+        }
+    }
+
+    private static Color ParseHexColor(string hex)
+    {
+        if (string.IsNullOrEmpty(hex) || hex[0] != '#')
+            return Color.Transparent;
+        hex = hex.Substring(1);
+        if (hex.Length == 6) hex += "FF";
+        if (hex.Length != 8) return Color.Transparent;
+        try
+        {
+            int r = Convert.ToInt32(hex.Substring(0, 2), 16);
+            int g = Convert.ToInt32(hex.Substring(2, 2), 16);
+            int b = Convert.ToInt32(hex.Substring(4, 2), 16);
+            int a = Convert.ToInt32(hex.Substring(6, 2), 16);
+            return new Color(r, g, b, a);
+        }
+        catch { return Color.Transparent; }
+    }
+
+    private static string ColorToHex(Color c)
+    {
+        return $"#{c.R:X2}{c.G:X2}{c.B:X2}{c.A:X2}";
     }
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
