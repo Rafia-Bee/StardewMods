@@ -51,41 +51,6 @@ public class ModEntry : Mod
             () => Helper.Translation.Get("config.enabled.tooltip")
         );
 
-        api.AddNumberOption(
-            ModManifest,
-            () => _config.HudX,
-            v => _config.HudX = v,
-            () => Helper.Translation.Get("config.hud-x.name"),
-            () => Helper.Translation.Get("config.hud-x.tooltip"),
-            min: -4000, max: 4000
-        );
-
-        api.AddNumberOption(
-            ModManifest,
-            () => _config.HudY,
-            v => _config.HudY = v,
-            () => Helper.Translation.Get("config.hud-y.name"),
-            () => Helper.Translation.Get("config.hud-y.tooltip"),
-            min: 0, max: 4000
-        );
-
-        api.AddBoolOption(
-            ModManifest,
-            () => _config.HorizontalLayout,
-            v => _config.HorizontalLayout = v,
-            () => Helper.Translation.Get("config.horizontal-layout.name"),
-            () => Helper.Translation.Get("config.horizontal-layout.tooltip")
-        );
-
-        api.AddNumberOption(
-            ModManifest,
-            () => _config.MaxLocations,
-            v => _config.MaxLocations = v,
-            () => Helper.Translation.Get("config.max-locations.name"),
-            () => Helper.Translation.Get("config.max-locations.tooltip"),
-            min: 0, max: 20
-        );
-
         api.AddBoolOption(
             ModManifest,
             () => _config.ShowBundleNeeds,
@@ -109,6 +74,13 @@ public class ModEntry : Mod
             () => Helper.Translation.Get("config.min-sell-price.name"),
             () => Helper.Translation.Get("config.min-sell-price.tooltip"),
             min: 0, max: 5000, interval: 25
+        );
+
+        api.AddPageLink(
+            ModManifest,
+            "position",
+            () => Helper.Translation.Get("config.page-position.name"),
+            () => Helper.Translation.Get("config.page-position.tooltip")
         );
 
         api.AddSectionTitle(
@@ -163,6 +135,57 @@ public class ModEntry : Mod
             v => _config.TrackGreenRain = v,
             () => Helper.Translation.Get("config.track-green-rain.name"),
             () => Helper.Translation.Get("config.track-green-rain.tooltip")
+        );
+
+        // Position & Layout subpage
+        api.AddPage(
+            ModManifest,
+            "position",
+            () => Helper.Translation.Get("config.page-position.name")
+        );
+
+        api.AddNumberOption(
+            ModManifest,
+            () => _config.HudX,
+            v => _config.HudX = v,
+            () => Helper.Translation.Get("config.hud-x.name"),
+            () => Helper.Translation.Get("config.hud-x.tooltip"),
+            min: -4000, max: 4000
+        );
+
+        api.AddNumberOption(
+            ModManifest,
+            () => _config.HudY,
+            v => _config.HudY = v,
+            () => Helper.Translation.Get("config.hud-y.name"),
+            () => Helper.Translation.Get("config.hud-y.tooltip"),
+            min: 0, max: 4000
+        );
+
+        api.AddBoolOption(
+            ModManifest,
+            () => _config.HorizontalLayout,
+            v => _config.HorizontalLayout = v,
+            () => Helper.Translation.Get("config.horizontal-layout.name"),
+            () => Helper.Translation.Get("config.horizontal-layout.tooltip")
+        );
+
+        api.AddNumberOption(
+            ModManifest,
+            () => _config.IconScale,
+            v => _config.IconScale = v,
+            () => Helper.Translation.Get("config.icon-scale.name"),
+            () => Helper.Translation.Get("config.icon-scale.tooltip"),
+            min: 0.5f, max: 3.0f, interval: 0.25f
+        );
+
+        api.AddNumberOption(
+            ModManifest,
+            () => _config.MaxLocations,
+            v => _config.MaxLocations = v,
+            () => Helper.Translation.Get("config.max-locations.name"),
+            () => Helper.Translation.Get("config.max-locations.tooltip"),
+            min: 0, max: 20
         );
     }
 
