@@ -921,48 +921,54 @@ public class ModEntry : Mod
             }
         }
 
+        _isGrabbing = true;
+        IsForageGrabEnabled = true;
         try
         {
-            foreach (var location in Game1.locations)
+            foreach (var location in GetAllLocations())
             {
                 if (!ShouldProcessLocation(location))
                     continue;
 
                 var orePanGrabber = new OrePanGrabber(this, location);
-                if (!orePanGrabber.CanGrab())
-                    continue;
-
-                var beforeInventory = Config.reportYield ? orePanGrabber.GetInventory() : null;
-                bool result = orePanGrabber.GrabItems();
-
-                LogDebug($"Ore pan at {location.Name}: {(result ? "collected items" : "nothing to collect")}");
-
-                if (beforeInventory != null && result)
+                if (orePanGrabber.CanGrab())
                 {
-                    var afterInventory = orePanGrabber.GetInventory();
-                    var sb = new StringBuilder($"Ore panning yield at {location.Name}:\n");
-                    bool anyYield = false;
+                    var beforeInventory = Config.reportYield ? orePanGrabber.GetInventory() : null;
+                    bool result = orePanGrabber.GrabItems();
 
-                    foreach (var entry in afterInventory)
+                    LogDebug($"Ore pan at {location.Name}: {(result ? "collected items" : "nothing to collect")}");
+
+                    if (beforeInventory != null && result)
                     {
-                        int newCount = entry.Value;
-                        if (beforeInventory.ContainsKey(entry.Key))
-                            newCount -= beforeInventory[entry.Key];
+                        var afterInventory = orePanGrabber.GetInventory();
+                        var sb = new StringBuilder($"Ore panning yield at {location.Name}:\n");
+                        bool anyYield = false;
 
-                        if (newCount > 0)
+                        foreach (var entry in afterInventory)
                         {
-                            sb.AppendLine($"    {entry.Key.Name} ({entry.Key.QualityName}) x{newCount}");
-                            anyYield = true;
-                        }
-                    }
+                            int newCount = entry.Value;
+                            if (beforeInventory.ContainsKey(entry.Key))
+                                newCount -= beforeInventory[entry.Key];
 
-                    if (anyYield)
-                        Monitor.Log(sb.ToString(), LogLevel.Info);
+                            if (newCount > 0)
+                            {
+                                sb.AppendLine($"    {entry.Key.Name} ({entry.Key.QualityName}) x{newCount}");
+                                anyYield = true;
+                            }
+                        }
+
+                        if (anyYield)
+                            Monitor.Log(sb.ToString(), LogLevel.Info);
+                    }
                 }
+
+                GrabAtLocation(location);
             }
         }
         finally
         {
+            IsForageGrabEnabled = false;
+            _isGrabbing = false;
             if (useGlobal)
             {
                 IsGlobalGrabActive = false;
