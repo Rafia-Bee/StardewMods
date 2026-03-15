@@ -1,4 +1,4 @@
-# Rainy Day Fishing
+# Catch of the Day
 
 A Stardew Valley mod that shows weather-exclusive fish icons on the HUD. Supports rain, storms, sun, snow, wind, and green rain.
 
@@ -41,7 +41,7 @@ All settings can be changed in-game via Generic Mod Config Menu, or by editing `
 ## Installation
 
 1. Install SMAPI
-2. Drop the `RainyDayFishing` folder into your `Stardew Valley/Mods` directory
+2. Drop the `CatchOfTheDay` folder into your `Stardew Valley/Mods` directory
 3. Launch the game — fish icons appear automatically when weather-exclusive fish are available
 
 ## How It Works

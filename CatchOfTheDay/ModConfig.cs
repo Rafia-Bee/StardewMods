@@ -1,4 +1,4 @@
-namespace RainyDayFishing;
+namespace CatchOfTheDay;
 
 public sealed class ModConfig
 {
