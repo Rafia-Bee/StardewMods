@@ -7,8 +7,9 @@ A Stardew Valley mod that shows weather-exclusive fish icons on the HUD. Support
 - Displays **fish sprite icons** on the right side of the screen when weather-exclusive fish are available
 - Supports **all weather types**: rain, thunderstorms, sunny, snow, wind/debris, and green rain
 - **Hover over any icon** to see the fish name, spawn locations (only places you've visited), and catchable time windows
-- **Uncaught fish** are marked with "(Uncaught)" in the tooltip — updates in real time when you catch one
-- Only shows fish that **require specific weather** to spawn — not every fish that happens to be available
+- **Uncaught fish** are marked with "(Uncaught)" in the tooltip -- updates in real time when you catch one
+- **Bundle tracking** -- shows which Community Center bundles still need each fish (works with modded bundles too)
+- Only shows fish that **require specific weather** to spawn -- not every fish that happens to be available
 - Shows all weather-exclusive fish available **at any point during the day**, not just the current time
 - Automatically includes fish from **modded locations** (Stardew Valley Expanded, Visit Mount Vapius, East Scarp, etc.)
 - Updates dynamically when the day starts or you visit a new location
@@ -31,6 +32,7 @@ All settings can be changed in-game via Generic Mod Config Menu, or by editing `
 | `HudY` | `300` | Vertical position (pixels from top of screen) |
 | `HorizontalLayout` | `false` | Arrange icons in a horizontal row instead of a vertical column |
 | `MaxLocations` | `4` | Max spawn locations shown per tooltip (0 = show all) |
+| `ShowBundleNeeds` | `true` | Show which Community Center bundles still need each fish |
 | `TrackRain` | `true` | Show rain-exclusive fish on rainy days |
 | `TrackStorm` | `true` | Show storm-exclusive fish during thunderstorms |
 | `TrackSun` | `true` | Show sun-exclusive fish on sunny days |

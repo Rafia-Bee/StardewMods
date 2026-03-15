@@ -82,6 +82,14 @@ public class ModEntry : Mod
             min: 0, max: 20
         );
 
+        api.AddBoolOption(
+            ModManifest,
+            () => _config.ShowBundleNeeds,
+            v => _config.ShowBundleNeeds = v,
+            () => Helper.Translation.Get("config.show-bundle-needs.name"),
+            () => Helper.Translation.Get("config.show-bundle-needs.tooltip")
+        );
+
         api.AddSectionTitle(
             ModManifest,
             () => Helper.Translation.Get("config.weather-section.name"),

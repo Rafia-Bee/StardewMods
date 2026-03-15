@@ -9,6 +9,8 @@
     "config.horizontal-layout.tooltip": "If enabled, fish icons are arranged in a horizontal row instead of a vertical column.",
     "config.max-locations.name": "Max Locations Shown",
     "config.max-locations.tooltip": "Maximum number of spawn locations shown in each tooltip. Set to 0 to show all.",
+    "config.show-bundle-needs.name": "Show Bundle Needs",
+    "config.show-bundle-needs.tooltip": "Show which Community Center bundles still need each fish in the tooltip.",
 
     "config.weather-section.name": "Weather Types",
     "config.weather-section.tooltip": "Choose which weather conditions to track. Fish exclusive to enabled weather types will appear on the HUD.",

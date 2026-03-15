@@ -7,6 +7,7 @@ public sealed class ModConfig
     public int HudY { get; set; } = 300;
     public bool HorizontalLayout { get; set; } = false;
     public int MaxLocations { get; set; } = 4;
+    public bool ShowBundleNeeds { get; set; } = true;
 
     // Weather types to track
     public bool TrackRain { get; set; } = true;
