@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.GameData.Locations;
+using StardewValley.Internal;
 using StardewValley.Menus;
 
 namespace CatchOfTheDay.Framework;
@@ -23,6 +24,7 @@ public sealed class WeatherFishHud
     private readonly Func<ModConfig> _getConfig;
 
     private List<FishEntry> _entries = new();
+    private Dictionary<string, List<string>> _bundleNeeds = new();
 
     private static readonly HashSet<string> IgnoreTimeKeys =
         new(StringComparer.OrdinalIgnoreCase) { "TIME" };
@@ -40,14 +42,18 @@ public sealed class WeatherFishHud
     public void Clear()
     {
         _entries.Clear();
+        _bundleNeeds.Clear();
     }
 
     public void Refresh()
     {
         _entries.Clear();
+        _bundleNeeds.Clear();
 
         if (!Context.IsWorldReady)
             return;
+
+        RefreshBundleNeeds();
 
         var config = _getConfig();
         var fishMap = new Dictionary<string, FishEntry>();
@@ -64,6 +70,56 @@ public sealed class WeatherFishHud
         }
 
         _entries = fishMap.Values.OrderBy(f => f.DisplayName).ToList();
+    }
+
+    private void RefreshBundleNeeds()
+    {
+        var bundleData = Game1.netWorldState.Value.BundleData;
+        var bundles = Game1.netWorldState.Value.Bundles;
+
+        foreach (var kvp in bundleData)
+        {
+            string[] keyParts = kvp.Key.Split('/');
+            if (keyParts.Length < 2 || !int.TryParse(keyParts[1], out int bundleIndex))
+                continue;
+
+            string[] fields = kvp.Value.Split('/');
+            if (fields.Length < 7)
+                continue;
+
+            string bundleDisplayName = fields[6];
+            string[] ingredients = ArgUtility.SplitBySpace(fields[2]);
+
+            if (!bundles.TryGetValue(bundleIndex, out bool[] slots))
+                continue;
+
+            bool allSlotsDone = slots.Length > 0 && slots.All(s => s);
+            if (allSlotsDone)
+                continue;
+
+            for (int i = 0; i < ingredients.Length - 2; i += 3)
+            {
+                int slotIndex = i / 3;
+                if (slotIndex < slots.Length && slots[slotIndex])
+                    continue;
+
+                string rawId = ingredients[i];
+                if (int.TryParse(rawId, out int num) && num < 0)
+                    continue;
+
+                var parsed = ItemRegistry.GetData(rawId);
+                string qualifiedId = parsed?.QualifiedItemId ?? ("(O)" + rawId);
+
+                if (!_bundleNeeds.TryGetValue(qualifiedId, out var list))
+                {
+                    list = new List<string>();
+                    _bundleNeeds[qualifiedId] = list;
+                }
+
+                if (!list.Contains(bundleDisplayName))
+                    list.Add(bundleDisplayName);
+            }
+        }
     }
 
     public void Draw(SpriteBatch b)
@@ -114,6 +170,16 @@ public sealed class WeatherFishHud
         var sb = new StringBuilder();
         if (!Game1.player.fishCaught.ContainsKey(fish.QualifiedItemId))
             sb.AppendLine("(Uncaught)");
+
+        if (_getConfig().ShowBundleNeeds && _bundleNeeds.TryGetValue(fish.QualifiedItemId, out var bundles))
+        {
+            foreach (string bundleName in bundles)
+            {
+                if (sb.Length > 0)
+                    sb.AppendLine();
+                sb.Append($"Needed: {bundleName} Bundle");
+            }
+        }
 
         int maxLocs = _getConfig().MaxLocations;
         var locations = fish.LocationTimes;
