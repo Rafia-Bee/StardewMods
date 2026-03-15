@@ -6,6 +6,7 @@ A Stardew Valley mod that shows weather-exclusive fish icons on the HUD. Support
 
 - Displays **fish sprite icons** on the right side of the screen when weather-exclusive fish are available
 - Supports **all weather types**: rain, thunderstorms, sunny, snow, wind/debris, and green rain
+- **Nighttime fish** — optionally show fish that only spawn at night (6pm onwards), even if they have no weather requirement
 - **Hover over any icon** to see the fish name, spawn locations (only places you've visited), and catchable time windows
 - **Uncaught fish** are marked with "(Uncaught)" in the tooltip -- updates in real time when you catch one
 - **Bundle tracking** -- shows which Community Center bundles still need each fish (works with modded bundles too)
@@ -15,12 +16,14 @@ A Stardew Valley mod that shows weather-exclusive fish icons on the HUD. Support
 - Automatically includes fish from **modded locations** (Stardew Valley Expanded, Visit Mount Vapius, East Scarp, etc.)
 - Updates dynamically when the day starts or you visit a new location
 - **Per-weather toggles** — choose exactly which weather types to track
+- **Configurable background colors** — highlight fish catchable right now or only at night with custom tint colors
 - Fully configurable via [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098) (optional)
 
 ## Requirements
 
 - [SMAPI](https://smapi.io) 4.1.0+
 - [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098) *(optional, for in-game settings)*
+- [GMCM Options](https://www.nexusmods.com/stardewvalley/mods/10505) *(optional, for color picker sliders)*
 
 ## Configuration
 
@@ -29,17 +32,23 @@ All settings can be changed in-game via Generic Mod Config Menu, or by editing `
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `Enabled` | `true` | Show/hide the fish icon overlay entirely |
-| `HudX` | `-51` | Horizontal position. Negative values offset from the right edge |
-| `HudY` | `300` | Vertical position (pixels from top of screen) |
-| `HorizontalLayout` | `false` | Arrange icons in a horizontal row instead of a vertical column |
-| `MaxLocations` | `4` | Max spawn locations shown per tooltip (0 = show all) |
 | `ShowBundleNeeds` | `true` | Show which Community Center bundles still need each fish |
+| `HideAlreadyCaught` | `false` | Hide fish you've already caught at least once |
+| `MinSellPrice` | `0` | Only show fish worth at least this much gold (0 = show all) |
+| `ShowNightFish` | `false` | Show fish that only spawn at night (6pm onwards), even without a weather requirement |
 | `TrackRain` | `true` | Show rain-exclusive fish on rainy days |
 | `TrackStorm` | `true` | Show storm-exclusive fish during thunderstorms |
 | `TrackSun` | `true` | Show sun-exclusive fish on sunny days |
 | `TrackSnow` | `true` | Show snow-exclusive fish when snowing |
 | `TrackWind` | `true` | Show wind-exclusive fish during debris weather |
 | `TrackGreenRain` | `true` | Show green-rain-exclusive fish during green rain |
+| `HudX` | `-51` | Horizontal position. Negative values offset from the right edge |
+| `HudY` | `300` | Vertical position (pixels from top of screen) |
+| `HorizontalLayout` | `false` | Arrange icons in a horizontal row instead of a vertical column |
+| `IconScale` | `1.0` | Size multiplier for fish icons |
+| `MaxLocations` | `4` | Max spawn locations shown per tooltip (0 = show all) |
+| `CatchableNowColor` | `#00000000` | Background tint for fish catchable at the current time |
+| `NightFishColor` | `#00000000` | Background tint for night-only fish (6pm onwards) |
 
 ## Installation
 
@@ -54,6 +63,6 @@ The mod reads fish spawn data from `Data/Locations` at runtime, so it works with
 - Its `Data/Fish` entry has a weather restriction (e.g., `"rainy"` or `"sunny"`), or
 - Its spawn condition requires specific weather (e.g., `LOCATION_WEATHER Here Rain`, `LOCATION_WEATHER Here Storm`, `LOCATION_WEATHER Here Snow`)
 
-Fish that can be caught in any weather are excluded.
+Fish that can be caught in any weather are excluded (unless they are nighttime-only and that option is enabled).
 
-Hovering over a fish icon shows the fish name, which visited locations it spawns in, and the time window(s) it can be caught (e.g., "6pm – 2am").
+Hovering over a fish icon shows the fish name, which visited locations it spawns in, and the time window(s) it can be caught (e.g., "6pm - 2am").
