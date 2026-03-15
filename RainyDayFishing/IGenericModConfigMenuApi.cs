@@ -26,4 +26,9 @@ public interface IGenericModConfigMenuApi
         int? interval = null,
         Func<int, string> formatValue = null,
         string fieldId = null);
+
+    void AddSectionTitle(
+        IManifest mod,
+        Func<string> text,
+        Func<string> tooltip = null);
 }
