@@ -17,11 +17,12 @@ namespace CatchOfTheDay.Framework;
 /// Renders weather-exclusive fish icons on the right side of the HUD.
 /// Hovering over an icon shows spawn locations and catchable time windows.
 /// </summary>
-public sealed class WeatherFishHud
+internal sealed class WeatherFishHud
 {
     private readonly IModHelper _helper;
     private readonly IMonitor _monitor;
     private readonly Func<ModConfig> _getConfig;
+    private readonly FishHudOverlay _overlay;
 
     private List<FishEntry> _entries = new();
     private Dictionary<string, List<string>> _bundleNeeds = new();
@@ -32,11 +33,12 @@ public sealed class WeatherFishHud
     private const int IconSize = 40;
     private const int IconPadding = 5;
 
-    public WeatherFishHud(IModHelper helper, IMonitor monitor, Func<ModConfig> getConfig)
+    public WeatherFishHud(IModHelper helper, IMonitor monitor, Func<ModConfig> getConfig, FishHudOverlay overlay)
     {
         _helper = helper;
         _monitor = monitor;
         _getConfig = getConfig;
+        _overlay = overlay;
     }
 
     public void Clear()
@@ -160,6 +162,10 @@ public sealed class WeatherFishHud
 
             b.Draw(fish.Texture, dest, fish.SourceRect, Color.White);
         }
+
+        _overlay.HoveredItem = hovered != null
+            ? ItemRegistry.Create(hovered.QualifiedItemId)
+            : null;
 
         if (hovered != null)
             DrawTooltip(b, hovered);
