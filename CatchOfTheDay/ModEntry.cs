@@ -1,6 +1,8 @@
+#nullable enable
 using CatchOfTheDay.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewValley;
 
 namespace CatchOfTheDay;
 
@@ -8,26 +10,28 @@ public class ModEntry : Mod
 {
     private WeatherFishHud _hud = null!;
     private ModConfig _config = null!;
+    private readonly FishHudOverlay _overlay = new();
 
     public override void Entry(IModHelper helper)
     {
         _config = helper.ReadConfig<ModConfig>();
-        _hud = new WeatherFishHud(helper, Monitor, () => _config);
+        _hud = new WeatherFishHud(helper, Monitor, () => _config, _overlay);
 
         helper.Events.GameLoop.DayStarted += (_, _) => _hud.Refresh();
         helper.Events.Player.Warped += OnPlayerWarped;
-        helper.Events.GameLoop.ReturnedToTitle += (_, _) => _hud.Clear();
+        helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
+        helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
         helper.Events.Display.RenderedHud += (_, e) => _hud.Draw(e.SpriteBatch);
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
     }
 
-    private void OnPlayerWarped(object sender, WarpedEventArgs e)
+    private void OnPlayerWarped(object? sender, WarpedEventArgs e)
     {
         if (e.IsLocalPlayer)
             _hud.Refresh();
     }
 
-    private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
+    private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
         var api = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
         if (api == null)
@@ -143,5 +147,18 @@ public class ModEntry : Mod
             () => Helper.Translation.Get("config.track-green-rain.name"),
             () => Helper.Translation.Get("config.track-green-rain.tooltip")
         );
+    }
+
+    private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
+    {
+        if (!Game1.onScreenMenus.Contains(_overlay))
+            Game1.onScreenMenus.Add(_overlay);
+    }
+
+    private void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
+    {
+        _hud.Clear();
+        Game1.onScreenMenus.Remove(_overlay);
+        _overlay.HoveredItem = null;
     }
 }

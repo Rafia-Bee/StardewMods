@@ -9,6 +9,7 @@ A Stardew Valley mod that shows weather-exclusive fish icons on the HUD. Support
 - **Hover over any icon** to see the fish name, spawn locations (only places you've visited), and catchable time windows
 - **Uncaught fish** are marked with "(Uncaught)" in the tooltip -- updates in real time when you catch one
 - **Bundle tracking** -- shows which Community Center bundles still need each fish (works with modded bundles too)
+- **Lookup Anything integration** -- hover over any fish icon and press F1 to open its Lookup Anything page (requires [Lookup Anything](https://www.nexusmods.com/stardewvalley/mods/541))
 - Only shows fish that **require specific weather** to spawn -- not every fish that happens to be available
 - Shows all weather-exclusive fish available **at any point during the day**, not just the current time
 - Automatically includes fish from **modded locations** (Stardew Valley Expanded, Visit Mount Vapius, East Scarp, etc.)
