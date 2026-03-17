@@ -28,7 +28,7 @@ internal class WoodsHardwoodGrabber : MapGrabber
 
     public override bool GrabItems()
     {
-        if (!Config.fellSecretWoodsStumps)
+        if (!Config.fellHardwoodStumps)
             return false;
 
         if (Location.resourceClumps.Count == 0)
