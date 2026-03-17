@@ -1018,6 +1018,7 @@ public class ModEntry : Mod
         _dirtyLocations.Clear();
 
         _isGrabbing = true;
+        IsForageGrabEnabled = true;
         try
         {
             foreach (var location in locations)
@@ -1028,6 +1029,7 @@ public class ModEntry : Mod
         }
         finally
         {
+            IsForageGrabEnabled = false;
             _isGrabbing = false;
             ShowGrabCycleResults(showSummary: false);
         }
