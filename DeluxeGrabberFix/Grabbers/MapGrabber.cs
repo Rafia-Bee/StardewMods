@@ -84,6 +84,19 @@ internal abstract class MapGrabber
         }
 
         Mod.LogDebug($"Failed to add {item.Name} x{item.Stack} — all grabber chests full at {Location.Name}");
+        if (UseGlobalMode)
+        {
+            foreach (var grabber in grabbers)
+            {
+                var grabberLoc = grabber.Value.Location;
+                if (grabberLoc != null)
+                    Mod.ReportChestFull(grabberLoc);
+            }
+        }
+        else
+        {
+            Mod.ReportChestFull(Location);
+        }
         return false;
     }
 

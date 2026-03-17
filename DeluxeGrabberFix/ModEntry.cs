@@ -24,6 +24,8 @@ public class ModEntry : Mod
     internal List<KeyValuePair<Vector2, Object>> CachedDesignatedGrabbers { get; set; }
     internal const string GlobalGrabberModDataKey = "Rafia.DeluxeGrabberFix/IsGlobalGrabber";
     private readonly HashSet<GameLocation> _dirtyLocations = new();
+    private readonly HashSet<string> _chestFullLocations = new();
+    private int _totalItemsGrabbed;
     private bool _isGrabbing;
     private bool _pendingDayStartGrab;
     private IGenericModConfigMenuApi _gmcmApi;
@@ -75,6 +77,44 @@ public class ModEntry : Mod
             Monitor.Log(message, LogLevel.Trace);
     }
 
+    internal void ReportChestFull(GameLocation location)
+    {
+        string display = location.DisplayName;
+        if (string.IsNullOrEmpty(display))
+            display = location.Name;
+        _chestFullLocations.Add(display);
+    }
+
+    private void ResetGrabCycleTracking()
+    {
+        _chestFullLocations.Clear();
+        _totalItemsGrabbed = 0;
+    }
+
+    private void ShowGrabCycleResults(bool showSummary)
+    {
+        if (_chestFullLocations.Count > 0)
+        {
+            const int maxShown = 3;
+            var locationList = _chestFullLocations.ToList();
+            string locations = locationList.Count <= maxShown
+                ? string.Join(", ", locationList)
+                : string.Join(", ", locationList.Take(maxShown))
+                  + Helper.Translation.Get("hud.grabber-full-overflow", new { count = locationList.Count - maxShown });
+            Game1.addHUDMessage(new HUDMessage(
+                Helper.Translation.Get("hud.grabber-full", new { locations }),
+                HUDMessage.error_type));
+            _chestFullLocations.Clear();
+        }
+
+        if (showSummary && _totalItemsGrabbed > 0 && Config.reportYield)
+        {
+            Game1.addHUDMessage(new HUDMessage(
+                Helper.Translation.Get("hud.grab-summary", new { count = _totalItemsGrabbed })));
+        }
+        _totalItemsGrabbed = 0;
+    }
+
     public void LogInfo(string message)
     {
         Monitor.Log(message, LogLevel.Info);
@@ -119,7 +159,9 @@ public class ModEntry : Mod
             return;
         }
 
+        ResetGrabCycleTracking();
         FireGlobalGrab();
+        ShowGrabCycleResults(showSummary: true);
     }
 
     private void FireGlobalGrab()
@@ -859,6 +901,7 @@ public class ModEntry : Mod
             _dirtyLocations.Clear();
 
             LogDebug("Executing deferred day-start grab");
+            ResetGrabCycleTracking();
             _isGrabbing = true;
             IsForageGrabEnabled = true;
             try
@@ -881,6 +924,7 @@ public class ModEntry : Mod
                 FireGlobalGrab();
             }
 
+            ShowGrabCycleResults(showSummary: true);
             return;
         }
 
@@ -902,6 +946,7 @@ public class ModEntry : Mod
         finally
         {
             _isGrabbing = false;
+            ShowGrabCycleResults(showSummary: false);
         }
     }
 
@@ -911,6 +956,7 @@ public class ModEntry : Mod
             return;
 
         LogDebug("Autograbbing on time change");
+        ResetGrabCycleTracking();
 
         bool useGlobal = Config.globalGrabber == ModConfig.GlobalGrabberMode.All && HasDesignatedGrabber();
         if (useGlobal)
@@ -981,6 +1027,7 @@ public class ModEntry : Mod
                 IsGlobalGrabActive = false;
                 CachedDesignatedGrabbers = null;
             }
+            ShowGrabCycleResults(showSummary: false);
         }
     }
 
@@ -990,6 +1037,7 @@ public class ModEntry : Mod
             return;
 
         LogDebug("Autograbbing forage before sleep");
+        ResetGrabCycleTracking();
         _isGrabbing = true;
         IsForageGrabEnabled = true;
         try
@@ -1003,6 +1051,7 @@ public class ModEntry : Mod
         {
             IsForageGrabEnabled = false;
             _isGrabbing = false;
+            ShowGrabCycleResults(showSummary: false);
         }
     }
 
@@ -1125,6 +1174,7 @@ public class ModEntry : Mod
                 {
                     sb.AppendLine($"    {entry.Key.Name} ({entry.Key.QualityName}) x{newCount}");
                     anyYield = true;
+                    _totalItemsGrabbed += newCount;
                 }
             }
 
