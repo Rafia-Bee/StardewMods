@@ -25,6 +25,12 @@ internal abstract class MapGrabber
         Location = location;
         UseGlobalMode = Mod.IsGlobalGrabActive;
 
+        if (Mod.UseLocationCache && Mod.CachedGrabberPairs != null)
+        {
+            GrabberPairs = Mod.CachedGrabberPairs;
+            return;
+        }
+
         if (UseGlobalMode && Config.globalGrabber == ModConfig.GlobalGrabberMode.All)
         {
             if (Mod.CachedDesignatedGrabbers != null && Mod.CachedDesignatedGrabbers.Count > 0)
@@ -39,10 +45,8 @@ internal abstract class MapGrabber
                     .Where(pair => IsValidGrabber(pair.Value, pair.Key))
                     .ToList();
             }
-            return;
         }
-
-        if (UseGlobalMode
+        else if (UseGlobalMode
             && Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover
             && ObjectIsGrabber(Game1.player.currentLocation.getObjectAtTile((int)Game1.lastCursorTile.X, (int)Game1.lastCursorTile.Y)))
         {
@@ -58,6 +62,9 @@ internal abstract class MapGrabber
                 .Where(pair => IsValidGrabber(pair.Value, pair.Key))
                 .ToList();
         }
+
+        if (Mod.UseLocationCache)
+            Mod.CachedGrabberPairs = GrabberPairs;
     }
 
     protected bool TryAddItem(Item item, IEnumerable<KeyValuePair<Vector2, Object>> grabbers)
@@ -151,21 +158,28 @@ internal abstract class MapGrabber
 
     public abstract bool GrabItems();
 
+    public void CleanupGrabberChests()
+    {
+        foreach (var pair in GrabberPairs)
+        {
+            if (pair.Value.heldObject.Value is not Chest chest)
+                continue;
+
+            for (int i = chest.Items.Count - 1; i >= 0; i--)
+            {
+                if (chest.Items[i] != null && chest.Items[i].Stack <= 0)
+                {
+                    Mod.LogDebug($"Removed invalid item '{chest.Items[i].Name}' (Stack={chest.Items[i].Stack}) from grabber chest");
+                    chest.Items.RemoveAt(i);
+                }
+            }
+        }
+    }
+
     private Item AddItemToGrabberChest(Object grabber, Item item)
     {
         if (grabber.heldObject.Value is not Chest chest)
             return item;
-
-        // Remove any items with invalid (zero or negative) stack from the chest.
-        // These cause Automate to report "produced an item with no stack size".
-        for (int i = chest.Items.Count - 1; i >= 0; i--)
-        {
-            if (chest.Items[i] != null && chest.Items[i].Stack <= 0)
-            {
-                Mod.LogDebug($"Removed invalid item '{chest.Items[i].Name}' (Stack={chest.Items[i].Stack}) from grabber chest");
-                chest.Items.RemoveAt(i);
-            }
-        }
 
         Item remaining = chest.addItem(item);
         if (chest.Items.Any(i => i != null))
