@@ -8,9 +8,17 @@ namespace DeluxeGrabberFix.Grabbers;
 
 internal class SlimeHutchGrabber : ObjectsMapGrabber
 {
+    private readonly Func<Object, Vector2, GameLocation, KeyValuePair<Object, int>> GetSlimeHarvest;
+
     public SlimeHutchGrabber(ModEntry mod, GameLocation location)
         : base(mod, location)
     {
+        GetSlimeHarvest = Mod.Api.GetSlimeHarvest ?? DefaultGetSlimeHarvest;
+    }
+
+    private KeyValuePair<Object, int> DefaultGetSlimeHarvest(Object slimeBall, Vector2 tile, GameLocation location)
+    {
+        return new KeyValuePair<Object, int>(slimeBall, 0);
     }
 
     public override bool GrabObject(Vector2 tile, Object obj)
@@ -18,6 +26,21 @@ internal class SlimeHutchGrabber : ObjectsMapGrabber
         if (!Config.slimeHutch || obj.Name != "Slime Ball")
             return false;
 
+        var harvest = GetSlimeHarvest(obj, tile, Location);
+        if (harvest.Key != obj)
+        {
+            // API override returned a custom item
+            if (TryAddItem(harvest.Key))
+            {
+                GainExperience(0, harvest.Value);
+                Location.Objects.Remove(tile);
+                Mod.GrabbedTiles?.Add(tile);
+                return true;
+            }
+            return false;
+        }
+
+        // Default slime ball drop logic
         var items = new List<Object>();
         Random random = new((int)Game1.stats.DaysPlayed + (int)Game1.uniqueIDForThisGame + (int)tile.X * 77 + (int)tile.Y * 777 + 2);
 
