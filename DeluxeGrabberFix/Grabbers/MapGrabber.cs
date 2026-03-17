@@ -14,6 +14,7 @@ internal abstract class MapGrabber
     protected GameLocation Location { get; set; }
     protected bool UseGlobalMode { get; set; }
     protected List<KeyValuePair<Vector2, Object>> GrabberPairs { get; set; }
+    internal IEnumerable<Object> GrabberObjects => GrabberPairs.Select(pair => pair.Value);
     protected IEnumerable<Object> Grabbers => GrabberPairs.Select(pair => pair.Value);
     protected Farmer Player => Game1.MasterPlayer;
     protected ModConfig Config => Mod.Config;
@@ -84,19 +85,8 @@ internal abstract class MapGrabber
         }
 
         Mod.LogDebug($"Failed to add {item.Name} x{item.Stack} — all grabber chests full at {Location.Name}");
-        if (UseGlobalMode)
-        {
-            foreach (var grabber in grabbers)
-            {
-                var grabberLoc = grabber.Value.Location;
-                if (grabberLoc != null)
-                    Mod.ReportChestFull(grabberLoc);
-            }
-        }
-        else
-        {
-            Mod.ReportChestFull(Location);
-        }
+        foreach (var grabber in grabbers)
+            Mod.ReportChestFull(grabber.Value);
         return false;
     }
 

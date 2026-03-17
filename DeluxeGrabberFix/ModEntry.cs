@@ -23,8 +23,12 @@ public class ModEntry : Mod
     internal bool IsForageGrabEnabled { get; set; }
     internal List<KeyValuePair<Vector2, Object>> CachedDesignatedGrabbers { get; set; }
     internal const string GlobalGrabberModDataKey = "Rafia.DeluxeGrabberFix/IsGlobalGrabber";
+    internal const string GrabberNameModDataKey = "Rafia.DeluxeGrabberFix/CustomName";
+    private const string ChestsAnywhereNameKey = "Pathoschild.ChestsAnywhere/Name";
     private readonly HashSet<GameLocation> _dirtyLocations = new();
-    private readonly HashSet<string> _chestFullLocations = new();
+    private readonly HashSet<string> _namedGrabbersFull = new();
+    private readonly HashSet<string> _unnamedGrabbersFull = new();
+    private readonly HashSet<string> _activeGrabberNames = new();
     private int _totalItemsGrabbed;
     private bool _isGrabbing;
     private bool _pendingDayStartGrab;
@@ -35,6 +39,8 @@ public class ModEntry : Mod
     private SaveData _saveData;
     private GlobalGrabberButton _globalGrabberButton;
     private static GlobalGrabberButton _staticGlobalGrabberButton;
+    private RenameGrabberButton _renameGrabberButton;
+    private static RenameGrabberButton _staticRenameGrabberButton;
     private bool _pendingGlobalAutoFire;
 
     private enum LocationBatchAction { EnableAll, DisableAll, SelectVisitedOnly }
@@ -77,42 +83,101 @@ public class ModEntry : Mod
             Monitor.Log(message, LogLevel.Trace);
     }
 
-    internal void ReportChestFull(GameLocation location)
+    internal void ReportChestFull(Object grabber)
     {
-        string display = location.DisplayName;
-        if (string.IsNullOrEmpty(display))
-            display = location.Name;
-        _chestFullLocations.Add(display);
+        string customName = GetGrabberCustomName(grabber);
+        if (customName != null)
+            _namedGrabbersFull.Add(customName);
+        else
+        {
+            var loc = grabber.Location;
+            string display = loc != null
+                ? (!string.IsNullOrEmpty(loc.DisplayName) ? loc.DisplayName : loc.Name)
+                : "Auto-Grabber";
+            _unnamedGrabbersFull.Add(display);
+        }
+    }
+
+    internal static string GetGrabberCustomName(Object grabber)
+    {
+        if (grabber.modData.TryGetValue(GrabberNameModDataKey, out string name) && !string.IsNullOrWhiteSpace(name))
+            return name;
+
+        if (grabber.heldObject.Value is StardewValley.Objects.Chest chest
+            && chest.modData.TryGetValue(ChestsAnywhereNameKey, out string caName)
+            && !string.IsNullOrWhiteSpace(caName))
+            return caName;
+
+        return null;
+    }
+
+    internal static string GetGrabberDisplayName(Object grabber)
+    {
+        string custom = GetGrabberCustomName(grabber);
+        if (custom != null)
+            return custom;
+
+        var loc = grabber.Location;
+        if (loc != null)
+            return !string.IsNullOrEmpty(loc.DisplayName) ? loc.DisplayName : loc.Name;
+
+        return "Auto-Grabber";
     }
 
     private void ResetGrabCycleTracking()
     {
-        _chestFullLocations.Clear();
+        _namedGrabbersFull.Clear();
+        _unnamedGrabbersFull.Clear();
+        _activeGrabberNames.Clear();
         _totalItemsGrabbed = 0;
     }
 
     private void ShowGrabCycleResults(bool showSummary)
     {
-        if (_chestFullLocations.Count > 0)
+        if (_namedGrabbersFull.Count > 0)
         {
-            const int maxShown = 3;
-            var locationList = _chestFullLocations.ToList();
-            string locations = locationList.Count <= maxShown
-                ? string.Join(", ", locationList)
-                : string.Join(", ", locationList.Take(maxShown))
-                  + Helper.Translation.Get("hud.grabber-full-overflow", new { count = locationList.Count - maxShown });
+            string names = FormatList(_namedGrabbersFull);
+            Game1.addHUDMessage(new HUDMessage(
+                Helper.Translation.Get("hud.named-grabber-full", new { names }),
+                HUDMessage.error_type));
+            _namedGrabbersFull.Clear();
+        }
+
+        if (_unnamedGrabbersFull.Count > 0)
+        {
+            string locations = FormatList(_unnamedGrabbersFull);
             Game1.addHUDMessage(new HUDMessage(
                 Helper.Translation.Get("hud.grabber-full", new { locations }),
                 HUDMessage.error_type));
-            _chestFullLocations.Clear();
+            _unnamedGrabbersFull.Clear();
         }
 
         if (showSummary && _totalItemsGrabbed > 0 && Config.reportYield)
         {
-            Game1.addHUDMessage(new HUDMessage(
-                Helper.Translation.Get("hud.grab-summary", new { count = _totalItemsGrabbed })));
+            if (_activeGrabberNames.Count > 0)
+            {
+                string names = FormatList(_activeGrabberNames);
+                Game1.addHUDMessage(new HUDMessage(
+                    Helper.Translation.Get("hud.named-grab-summary", new { names, count = _totalItemsGrabbed })));
+            }
+            else
+            {
+                Game1.addHUDMessage(new HUDMessage(
+                    Helper.Translation.Get("hud.grab-summary", new { count = _totalItemsGrabbed })));
+            }
         }
+        _activeGrabberNames.Clear();
         _totalItemsGrabbed = 0;
+    }
+
+    private string FormatList(HashSet<string> items)
+    {
+        const int maxShown = 3;
+        var list = items.ToList();
+        if (list.Count <= maxShown)
+            return string.Join(", ", list);
+        return string.Join(", ", list.Take(maxShown))
+               + Helper.Translation.Get("hud.grabber-full-overflow", new { count = list.Count - maxShown });
     }
 
     public void LogInfo(string message)
@@ -207,6 +272,8 @@ public class ModEntry : Mod
     {
         _globalGrabberButton = null;
         _staticGlobalGrabberButton = null;
+        _renameGrabberButton = null;
+        _staticRenameGrabberButton = null;
 
         if (e.NewMenu is not StardewValley.Menus.ItemGrabMenu grabMenu)
             return;
@@ -218,14 +285,17 @@ public class ModEntry : Mod
 
         _globalGrabberButton = new GlobalGrabberButton(this, obj, grabMenu);
         _staticGlobalGrabberButton = _globalGrabberButton;
+        _renameGrabberButton = new RenameGrabberButton(this, obj, grabMenu);
+        _staticRenameGrabberButton = _renameGrabberButton;
     }
 
     private void OnRenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
     {
-        if (_globalGrabberButton == null || Game1.activeClickableMenu is not StardewValley.Menus.ItemGrabMenu)
+        if (Game1.activeClickableMenu is not StardewValley.Menus.ItemGrabMenu)
             return;
 
-        _globalGrabberButton.Draw(e.SpriteBatch);
+        _globalGrabberButton?.Draw(e.SpriteBatch);
+        _renameGrabberButton?.Draw(e.SpriteBatch);
     }
 
     private void HandleDesignateGrabber()
@@ -280,6 +350,7 @@ public class ModEntry : Mod
     internal static void ItemGrabMenu_ReceiveLeftClick_Postfix(int x, int y)
     {
         _staticGlobalGrabberButton?.TryClick(x, y);
+        _staticRenameGrabberButton?.TryClick(x, y);
     }
 
     private void OnLaunched(object sender, GameLaunchedEventArgs e)
@@ -709,6 +780,18 @@ public class ModEntry : Mod
             v => Config.globalButtonOffsetY = Math.Clamp(v, -500, 500),
             () => Helper.Translation.Get("config.global-button-y-offset"),
             () => Helper.Translation.Get("config.global-button-y-offset.tooltip"));
+
+        api.AddNumberOption(ModManifest,
+            () => Config.renameButtonOffsetX,
+            v => Config.renameButtonOffsetX = Math.Clamp(v, -500, 500),
+            () => Helper.Translation.Get("config.rename-button-x-offset"),
+            () => Helper.Translation.Get("config.rename-button-x-offset.tooltip"));
+
+        api.AddNumberOption(ModManifest,
+            () => Config.renameButtonOffsetY,
+            v => Config.renameButtonOffsetY = Math.Clamp(v, -500, 500),
+            () => Helper.Translation.Get("config.rename-button-y-offset"),
+            () => Helper.Translation.Get("config.rename-button-y-offset.tooltip"));
 
         // Compatibility page
         api.AddPage(ModManifest, "compatibility", () => Helper.Translation.Get("page.compatibility"));
@@ -1161,7 +1244,15 @@ public class ModEntry : Mod
         if (beforeInventory != null)
         {
             var afterInventory = aggregateGrabber.GetInventory();
-            var sb = new StringBuilder($"Yield of autograbber(s) at {location.Name}:\n");
+            var grabberNames = aggregateGrabber.GrabberObjects
+                .Select(g => GetGrabberDisplayName(g))
+                .Distinct()
+                .ToList();
+            string header = grabberNames.Any(n => GetGrabberCustomName(
+                    aggregateGrabber.GrabberObjects.First(g => GetGrabberDisplayName(g) == n)) != null)
+                ? $"Yield of {string.Join(", ", grabberNames)}:"
+                : $"Yield of autograbber(s) at {location.Name}:";
+            var sb = new StringBuilder(header + "\n");
             bool anyYield = false;
 
             foreach (var entry in afterInventory)
@@ -1179,7 +1270,15 @@ public class ModEntry : Mod
             }
 
             if (anyYield)
+            {
+                foreach (var g in aggregateGrabber.GrabberObjects)
+                {
+                    var customName = GetGrabberCustomName(g);
+                    if (customName != null)
+                        _activeGrabberNames.Add(customName);
+                }
                 Monitor.Log(sb.ToString(), LogLevel.Info);
+            }
         }
 
         return result;
