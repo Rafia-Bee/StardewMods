@@ -18,7 +18,8 @@ Adopted the existing [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/starde
 - **Town garbage cans** — Searches garbage cans
 - **Forage** — Picks up forageable items
 - **Item debris** — Collects items dropped as ground debris (monster loot, fallen items, modded forage drops)
-- **Yield reporting** — Logs what each auto-grabber collected to the SMAPI console
+- **Yield reporting** -- Logs what each auto-grabber collected to the SMAPI console, with an optional in-game toast showing the total
+- **Chest-full warnings** -- Shows a HUD warning when auto-grabber chests are full, so you never silently lose items
 - **Experience gain** — Optionally awards farming/foraging XP as if you did it yourself
 - **Global grabber mode** — Lets all auto-grabbers work across all locations, or fire on demand with a hotkey. Designate via in-menu star button (mobile-friendly) or hover + hotkey
 - **Auto-fire global grabber** — Optionally fires the designated global grabber automatically each morning — no hotkey needed, perfect for mobile
@@ -48,7 +49,7 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 | Harvest Moss from Trees | Off | Strip moss from trees |
 | Collect Item Debris | Off | Collect items dropped as ground debris (monster loot, modded forage drops) |
 | Excluded Items | (empty) | Comma-separated qualified item IDs the grabber should never collect (e.g. `(O)859` for Lucky Ring) |
-| Report Yield | On | Log collected items to SMAPI console |
+| Report Yield | On | Log collected items to SMAPI console and show in-game grab summary |
 | Gain Experience | On | Award XP for auto-grabbed items |
 | Global Grabber Mode | Off | Off / All (every location) / Hover (cursor + hotkey) |
 | Auto-Fire Global Grabber | Off | Fire designated global grabber automatically each morning |
