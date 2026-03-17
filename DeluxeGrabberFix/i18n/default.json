@@ -99,6 +99,9 @@
     "hud.hover-over-grabber": "You need to hover your cursor over an auto-grabber to designate it.",
     "hud.no-longer-global": "This auto-grabber is no longer the Global Grabber.",
     "hud.now-global": "This auto-grabber is now the Global Grabber!",
+    "hud.grabber-full": "Auto-grabber is full at {{locations}}!",
+    "hud.grabber-full-overflow": " and {{count}} more",
+    "hud.grab-summary": "Auto-grabbed {{count}} items",
 
     "button.remove-global-grabber": "Remove as Global Grabber",
     "button.set-global-grabber": "Set as Global Grabber",
