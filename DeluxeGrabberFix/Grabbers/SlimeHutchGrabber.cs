@@ -34,6 +34,7 @@ internal class SlimeHutchGrabber : ObjectsMapGrabber
         if (TryAddItems((IEnumerable<Item>)items))
         {
             Location.Objects.Remove(tile);
+            Mod.GrabbedTiles?.Add(tile);
             return true;
         }
         return false;

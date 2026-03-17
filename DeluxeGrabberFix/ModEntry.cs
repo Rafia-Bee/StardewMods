@@ -27,6 +27,7 @@ public class ModEntry : Mod
     internal List<KeyValuePair<Vector2, Object>> CachedGrabberPairs { get; set; }
     internal List<KeyValuePair<Vector2, Object>> CachedObjectPairs { get; set; }
     internal List<KeyValuePair<Vector2, TerrainFeature>> CachedFeaturePairs { get; set; }
+    internal HashSet<Vector2> GrabbedTiles { get; set; }
     internal const string GlobalGrabberModDataKey = "Rafia.DeluxeGrabberFix/IsGlobalGrabber";
     internal const string GrabberNameModDataKey = "Rafia.DeluxeGrabberFix/CustomName";
     private const string ChestsAnywhereNameKey = "Pathoschild.ChestsAnywhere/Name";

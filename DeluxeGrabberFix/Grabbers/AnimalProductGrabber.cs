@@ -69,7 +69,10 @@ internal class AnimalProductGrabber : MapGrabber
             }
 
             foreach (var tile in tilesToRemove)
+            {
                 Location.Objects.Remove(tile);
+                Mod.GrabbedTiles?.Add(tile);
+            }
         }
 
         return grabbed;
