@@ -59,6 +59,8 @@ internal class ModConfig
     public bool globalAutoFire;
     public int globalButtonOffsetX;
     public int globalButtonOffsetY;
+    public int renameButtonOffsetX;
+    public int renameButtonOffsetY;
 
     internal static Dictionary<HarvestCropsRangeMode, string> HarvestCropsRangeDict = new()
     {
@@ -136,6 +138,8 @@ internal class ModConfig
         globalAutoFire = false;
         globalButtonOffsetX = 0;
         globalButtonOffsetY = 0;
+        renameButtonOffsetX = 0;
+        renameButtonOffsetY = 0;
         seedSpots = false;
         harvestMoss = false;
         collectDebris = false;

@@ -20,6 +20,7 @@ Adopted the existing [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/starde
 - **Item debris** — Collects items dropped as ground debris (monster loot, fallen items, modded forage drops)
 - **Yield reporting** -- Logs what each auto-grabber collected to the SMAPI console, with an optional in-game toast showing the total
 - **Chest-full warnings** -- Shows a HUD warning when auto-grabber chests are full, so you never silently lose items
+- **Auto-grabber naming** -- Name individual auto-grabbers via the in-menu Name button. Named grabbers show their name in HUD warnings and grab summaries. Also reads names from Chests Anywhere as a fallback
 - **Experience gain** — Optionally awards farming/foraging XP as if you did it yourself
 - **Global grabber mode** — Lets all auto-grabbers work across all locations, or fire on demand with a hotkey. Designate via in-menu star button (mobile-friendly) or hover + hotkey
 - **Auto-fire global grabber** — Optionally fires the designated global grabber automatically each morning — no hotkey needed, perfect for mobile
@@ -56,6 +57,8 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 | Fire Global Grabber | B | Hotkey for Hover/All mode |
 | Global Button X Offset | 0 | Horizontal offset for the star button in the auto-grabber menu |
 | Global Button Y Offset | 0 | Vertical offset for the star button in the auto-grabber menu |
+| Name Button X Offset | 0 | Horizontal offset for the Name button in the auto-grabber menu |
+| Name Button Y Offset | 0 | Vertical offset for the Name button in the auto-grabber menu |
 
 ## Install
 
