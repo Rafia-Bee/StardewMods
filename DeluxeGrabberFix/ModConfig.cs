@@ -38,6 +38,7 @@ internal class ModConfig
     public bool reportYield;
     public bool debugLogging;
     public bool gainExperience;
+    public bool fellHardwoodStumps;
     public bool fellSecretWoodsStumps;
     public bool garbageCans;
     public bool seedSpots;
@@ -130,7 +131,7 @@ internal class ModConfig
         reportYield = true;
         debugLogging = false;
         gainExperience = true;
-        fellSecretWoodsStumps = false;
+        fellHardwoodStumps = false;
         garbageCans = false;
         globalGrabber = GlobalGrabberMode.Off;
         globalFireButton = SButton.B;
