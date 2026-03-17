@@ -21,6 +21,7 @@ internal class GenericObjectGrabber : ObjectsMapGrabber
         if (TryAddItem(isForage ? Helpers.SetForageStatsBasedOnProfession(Player, obj, tile) : obj))
         {
             Location.Objects.Remove(tile);
+            Mod.GrabbedTiles?.Add(tile);
             if (isForage)
                 GainExperience(2, 7);
             return true;
@@ -39,12 +40,6 @@ internal class GenericObjectGrabber : ObjectsMapGrabber
         // Reject error items from broken mod spawns (e.g., ItemExtensions
         // query IDs like RANDOM_CLUMPS that failed to resolve into real items).
         if (ItemRegistry.GetData(obj.QualifiedItemId) == null)
-            return false;
-
-        // Skip animal products in barns/coops — AnimalProductGrabber handles those.
-        // Without this, eggs (Category -5, IsSpawnedObject=true) get collected twice:
-        // once by AnimalProductGrabber and again here via the stale Objects snapshot.
-        if (Location is AnimalHouse && obj.Category == Object.EggCategory)
             return false;
 
         if (obj.isForage())

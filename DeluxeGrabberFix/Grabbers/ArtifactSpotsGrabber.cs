@@ -44,6 +44,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
         if (items != null && TryAddItems(items))
         {
             Location.Objects.Remove(tile);
+            Mod.GrabbedTiles?.Add(tile);
             return true;
         }
         return false;
@@ -58,6 +59,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
         if (TryAddItem(item))
         {
             Location.Objects.Remove(tile);
+            Mod.GrabbedTiles?.Add(tile);
             return true;
         }
         return false;
@@ -82,6 +84,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
         if (TryAddItems(itemList))
         {
             Location.Objects.Remove(tile);
+            Mod.GrabbedTiles?.Add(tile);
             return true;
         }
         return false;

@@ -193,6 +193,7 @@ internal class GrabberManager
         _mod.CachedGrabberPairs = null;
         _mod.CachedObjectPairs = null;
         _mod.CachedFeaturePairs = null;
+        _mod.GrabbedTiles = new HashSet<Vector2>();
 
         try
         {
@@ -259,6 +260,7 @@ internal class GrabberManager
             _mod.CachedGrabberPairs = null;
             _mod.CachedObjectPairs = null;
             _mod.CachedFeaturePairs = null;
+            _mod.GrabbedTiles = null;
         }
     }
 }

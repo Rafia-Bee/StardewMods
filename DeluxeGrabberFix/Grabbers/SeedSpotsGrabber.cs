@@ -24,6 +24,7 @@ internal class SeedSpotsGrabber : ObjectsMapGrabber
         if (seed != null && TryAddItem(seed))
         {
             Location.Objects.Remove(tile);
+            Mod.GrabbedTiles?.Add(tile);
             return true;
         }
         return false;

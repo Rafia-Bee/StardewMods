@@ -29,6 +29,7 @@ internal abstract class ObjectsMapGrabber : MapGrabber
     public override bool GrabItems()
     {
         return Objects
+            .Where(pair => Mod.GrabbedTiles?.Contains(pair.Key) != true)
             .Select(pair => GrabObject(pair.Key, pair.Value))
             .Aggregate(false, (grabbed, next) => grabbed || next);
     }
