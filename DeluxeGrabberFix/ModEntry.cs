@@ -12,6 +12,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Buildings;
+using StardewValley.TerrainFeatures;
 
 namespace DeluxeGrabberFix;
 
@@ -22,6 +23,10 @@ public class ModEntry : Mod
     internal bool IsGlobalGrabActive { get; set; }
     internal bool IsForageGrabEnabled { get; set; }
     internal List<KeyValuePair<Vector2, Object>> CachedDesignatedGrabbers { get; set; }
+    internal bool UseLocationCache { get; set; }
+    internal List<KeyValuePair<Vector2, Object>> CachedGrabberPairs { get; set; }
+    internal List<KeyValuePair<Vector2, Object>> CachedObjectPairs { get; set; }
+    internal List<KeyValuePair<Vector2, TerrainFeature>> CachedFeaturePairs { get; set; }
     internal const string GlobalGrabberModDataKey = "Rafia.DeluxeGrabberFix/IsGlobalGrabber";
     internal const string GrabberNameModDataKey = "Rafia.DeluxeGrabberFix/CustomName";
     private const string ChestsAnywhereNameKey = "Pathoschild.ChestsAnywhere/Name";
@@ -1230,59 +1235,76 @@ public class ModEntry : Mod
         if (!ShouldProcessLocation(location))
             return false;
 
-        var aggregateGrabber = new AggregateDailyGrabber(this, location);
+        UseLocationCache = true;
+        CachedGrabberPairs = null;
+        CachedObjectPairs = null;
+        CachedFeaturePairs = null;
 
-        if (!aggregateGrabber.CanGrab())
+        try
         {
-            LogDebug($"No valid auto-grabbers at {location.Name}, skipping");
-            return false;
-        }
+            var aggregateGrabber = new AggregateDailyGrabber(this, location);
 
-        var beforeInventory = Config.reportYield ? aggregateGrabber.GetInventory() : null;
-        bool result = aggregateGrabber.GrabItems();
-
-        LogDebug($"Grab at {location.Name}: {(result ? "collected items" : "nothing to collect")}");
-
-        if (beforeInventory != null)
-        {
-            var afterInventory = aggregateGrabber.GetInventory();
-            var grabberNames = aggregateGrabber.GrabberObjects
-                .Select(g => GetGrabberDisplayName(g))
-                .Distinct()
-                .ToList();
-            string header = grabberNames.Any(n => GetGrabberCustomName(
-                    aggregateGrabber.GrabberObjects.First(g => GetGrabberDisplayName(g) == n)) != null)
-                ? $"Yield of {string.Join(", ", grabberNames)}:"
-                : $"Yield of autograbber(s) at {location.Name}:";
-            var sb = new StringBuilder(header + "\n");
-            bool anyYield = false;
-
-            foreach (var entry in afterInventory)
+            if (!aggregateGrabber.CanGrab())
             {
-                int newCount = entry.Value;
-                if (beforeInventory.ContainsKey(entry.Key))
-                    newCount -= beforeInventory[entry.Key];
+                LogDebug($"No valid auto-grabbers at {location.Name}, skipping");
+                return false;
+            }
 
-                if (newCount > 0)
+            aggregateGrabber.CleanupGrabberChests();
+
+            var beforeInventory = Config.reportYield ? aggregateGrabber.GetInventory() : null;
+            bool result = aggregateGrabber.GrabItems();
+
+            LogDebug($"Grab at {location.Name}: {(result ? "collected items" : "nothing to collect")}");
+
+            if (beforeInventory != null)
+            {
+                var afterInventory = aggregateGrabber.GetInventory();
+                var grabberNames = aggregateGrabber.GrabberObjects
+                    .Select(g => GetGrabberDisplayName(g))
+                    .Distinct()
+                    .ToList();
+                string header = grabberNames.Any(n => GetGrabberCustomName(
+                        aggregateGrabber.GrabberObjects.First(g => GetGrabberDisplayName(g) == n)) != null)
+                    ? $"Yield of {string.Join(", ", grabberNames)}:"
+                    : $"Yield of autograbber(s) at {location.Name}:";
+                var sb = new StringBuilder(header + "\n");
+                bool anyYield = false;
+
+                foreach (var entry in afterInventory)
                 {
-                    sb.AppendLine($"    {entry.Key.Name} ({entry.Key.QualityName}) x{newCount}");
-                    anyYield = true;
-                    _totalItemsGrabbed += newCount;
+                    int newCount = entry.Value;
+                    if (beforeInventory.ContainsKey(entry.Key))
+                        newCount -= beforeInventory[entry.Key];
+
+                    if (newCount > 0)
+                    {
+                        sb.AppendLine($"    {entry.Key.Name} ({entry.Key.QualityName}) x{newCount}");
+                        anyYield = true;
+                        _totalItemsGrabbed += newCount;
+                    }
+                }
+
+                if (anyYield)
+                {
+                    foreach (var g in aggregateGrabber.GrabberObjects)
+                    {
+                        var customName = GetGrabberCustomName(g);
+                        if (customName != null)
+                            _activeGrabberNames.Add(customName);
+                    }
+                    Monitor.Log(sb.ToString(), LogLevel.Info);
                 }
             }
 
-            if (anyYield)
-            {
-                foreach (var g in aggregateGrabber.GrabberObjects)
-                {
-                    var customName = GetGrabberCustomName(g);
-                    if (customName != null)
-                        _activeGrabberNames.Add(customName);
-                }
-                Monitor.Log(sb.ToString(), LogLevel.Info);
-            }
+            return result;
         }
-
-        return result;
+        finally
+        {
+            UseLocationCache = false;
+            CachedGrabberPairs = null;
+            CachedObjectPairs = null;
+            CachedFeaturePairs = null;
+        }
     }
 }
