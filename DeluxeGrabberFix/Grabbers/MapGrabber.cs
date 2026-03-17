@@ -81,13 +81,17 @@ internal abstract class MapGrabber
             return false;
         }
 
+        var originalItem = item;
         foreach (var grabber in grabbers)
         {
             if (IsValidGrabber(grabber.Value, grabber.Key))
             {
                 item = AddItemToGrabberChest(grabber.Value, item);
                 if (item == null)
+                {
+                    Mod.Api.RaiseOnItemGrabbed(originalItem, Location);
                     return true;
+                }
             }
         }
 

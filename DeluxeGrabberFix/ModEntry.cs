@@ -40,14 +40,13 @@ public class ModEntry : Mod
     private bool _isGrabbing;
     private bool _pendingDayStartGrab;
     private bool _pendingGlobalAutoFire;
-    private IVanillaPlusProfessionsApi _vppApi;
     private GlobalGrabberButton _globalGrabberButton;
-    private static GlobalGrabberButton _staticGlobalGrabberButton;
     private RenameGrabberButton _renameGrabberButton;
-    private static RenameGrabberButton _staticRenameGrabberButton;
+    private static ModEntry _instance;
 
     public ModEntry()
     {
+        _instance = this;
         Api = new ModApi(this);
         _locations = new LocationManager(this);
         _grabbers = new GrabberManager(this, _locations);
@@ -172,9 +171,7 @@ public class ModEntry : Mod
     private void OnMenuChanged(object sender, MenuChangedEventArgs e)
     {
         _globalGrabberButton = null;
-        _staticGlobalGrabberButton = null;
         _renameGrabberButton = null;
-        _staticRenameGrabberButton = null;
 
         if (e.NewMenu is not StardewValley.Menus.ItemGrabMenu grabMenu)
             return;
@@ -185,9 +182,7 @@ public class ModEntry : Mod
             return;
 
         _globalGrabberButton = new GlobalGrabberButton(this, obj, grabMenu);
-        _staticGlobalGrabberButton = _globalGrabberButton;
         _renameGrabberButton = new RenameGrabberButton(this, obj, grabMenu);
-        _staticRenameGrabberButton = _renameGrabberButton;
     }
 
     private void OnRenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
@@ -201,8 +196,8 @@ public class ModEntry : Mod
 
     internal static void ItemGrabMenu_ReceiveLeftClick_Postfix(int x, int y)
     {
-        _staticGlobalGrabberButton?.TryClick(x, y);
-        _staticRenameGrabberButton?.TryClick(x, y);
+        _instance?._globalGrabberButton?.TryClick(x, y);
+        _instance?._renameGrabberButton?.TryClick(x, y);
     }
 
     private void OnLaunched(object sender, GameLaunchedEventArgs e)
@@ -217,9 +212,8 @@ public class ModEntry : Mod
             postfix: new HarmonyMethod(typeof(ModEntry), nameof(ItemGrabMenu_ReceiveLeftClick_Postfix))
         );
 
-        _vppApi = Helper.ModRegistry.GetApi<IVanillaPlusProfessionsApi>("KediDili.VanillaPlusProfessions");
-        if (_vppApi != null)
-            Monitor.Log("Vanilla Plus Professions detected — VPP compatibility enabled.", LogLevel.Info);
+        if (Helper.ModRegistry.GetApi<IVanillaPlusProfessionsApi>("KediDili.VanillaPlusProfessions") != null)
+            Monitor.Log("Vanilla Plus Professions detected -- VPP compatibility enabled.", LogLevel.Info);
 
         _gmcm = new GmcmRegistration(this, _locations);
         _gmcm.Initialize();
