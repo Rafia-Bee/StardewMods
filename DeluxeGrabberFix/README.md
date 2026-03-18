@@ -73,7 +73,7 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 - Works alongside other grabber mods
 - Compatible with [Vanilla Plus Professions](https://www.nexusmods.com/stardewvalley/mods/22992) — VPP's Combat-Farm slime drops, Shaker tree drops, and Gleaner/Wayfarer forage are all auto-collected
 - Compatible with [Sunberry Village](https://www.nexusmods.com/stardewvalley/mods/22702) — optional config toggle to exclude FTM-spawned ore nodes and supply crates
-- Provides a mod API (`IDeluxeGrabberFixApi`) for other mods to override mushroom/berry bush harvest behavior
+- Provides a mod API (`IDeluxeGrabberFixApi`) for other mods to override mushroom, berry bush, fruit tree, and slime harvest behavior, plus an `OnItemGrabbed` event and `IsGrabberActive` query
 
 ## Notes
 
