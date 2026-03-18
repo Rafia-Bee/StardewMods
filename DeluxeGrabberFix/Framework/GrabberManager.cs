@@ -263,4 +263,68 @@ internal class GrabberManager
             _mod.GrabbedTiles = null;
         }
     }
+
+    internal bool GrabForageAtLocation(GameLocation location)
+    {
+        if (!_locations.ShouldProcessLocation(location))
+            return false;
+
+        _mod.UseLocationCache = true;
+        _mod.CachedGrabberPairs = null;
+        _mod.CachedObjectPairs = null;
+        _mod.CachedFeaturePairs = null;
+        _mod.GrabbedTiles = new HashSet<Vector2>();
+
+        try
+        {
+            var objectGrabber = new GenericObjectGrabber(_mod, location);
+            if (!objectGrabber.CanGrab())
+                return false;
+
+            objectGrabber.CleanupGrabberChests();
+
+            var beforeInventory = _mod.Config.reportYield ? objectGrabber.GetInventory() : null;
+
+            bool result = objectGrabber.GrabItems();
+
+            var featureGrabber = new ForageHoeDirtGrabber(_mod, location);
+            result |= featureGrabber.GrabItems();
+
+            _mod.LogDebug($"Forage grab at {location.Name}: {(result ? "collected items" : "nothing to collect")}");
+
+            if (beforeInventory != null && result)
+            {
+                var afterInventory = objectGrabber.GetInventory();
+                var sb = new StringBuilder($"Hourly forage yield at {location.Name}:\n");
+                bool anyYield = false;
+
+                foreach (var entry in afterInventory)
+                {
+                    int newCount = entry.Value;
+                    if (beforeInventory.ContainsKey(entry.Key))
+                        newCount -= beforeInventory[entry.Key];
+
+                    if (newCount > 0)
+                    {
+                        sb.AppendLine($"    {entry.Key.Name} ({entry.Key.QualityName}) x{newCount}");
+                        anyYield = true;
+                        _totalItemsGrabbed += newCount;
+                    }
+                }
+
+                if (anyYield)
+                    _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
+            }
+
+            return result;
+        }
+        finally
+        {
+            _mod.UseLocationCache = false;
+            _mod.CachedGrabberPairs = null;
+            _mod.CachedObjectPairs = null;
+            _mod.CachedFeaturePairs = null;
+            _mod.GrabbedTiles = null;
+        }
+    }
 }

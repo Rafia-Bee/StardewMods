@@ -402,7 +402,7 @@ public class ModEntry : Mod
                 }
 
                 if (Config.hourlyCollection)
-                    _grabbers.GrabAtLocation(location);
+                    _grabbers.GrabForageAtLocation(location);
             }
         }
         finally
