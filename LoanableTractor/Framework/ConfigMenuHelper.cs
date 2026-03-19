@@ -42,6 +42,7 @@ namespace LoanableTractor.Framework
                     {
                         var fresh = new ModConfig();
                         config.LoanTractorKeybind = fresh.LoanTractorKeybind;
+                        config.EnableMailboxLoan = fresh.EnableMailboxLoan;
                         config.LoanCostPerDay = fresh.LoanCostPerDay;
                         config.MaxLoanDays = fresh.MaxLoanDays;
                         config.ChargeUpfront = fresh.ChargeUpfront;
@@ -70,6 +71,14 @@ namespace LoanableTractor.Framework
                     setValue: value => config.LoanTractorKeybind = value,
                     name: () => this.Helper.Translation.Get("config.loan_tractor_keybind.name"),
                     tooltip: () => this.Helper.Translation.Get("config.loan_tractor_keybind.tooltip")
+                );
+
+                gmcm.AddBoolOption(
+                    mod: this.Manifest,
+                    getValue: () => config.EnableMailboxLoan,
+                    setValue: value => config.EnableMailboxLoan = value,
+                    name: () => this.Helper.Translation.Get("config.enable_mailbox_loan.name"),
+                    tooltip: () => this.Helper.Translation.Get("config.enable_mailbox_loan.tooltip")
                 );
 
                 // --- Loan Settings ---

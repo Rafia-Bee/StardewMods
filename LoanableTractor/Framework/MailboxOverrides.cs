@@ -45,6 +45,9 @@ namespace LoanableTractor.Framework
             {
                 try
                 {
+                    if (Config != null && !Config.EnableMailboxLoan)
+                        return true;
+
                     if (Game1.player.mailbox.Count > 0)
                         return true;
 

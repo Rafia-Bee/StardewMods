@@ -62,6 +62,7 @@ If you have [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mo
 | Setting | Default | What it does |
 |---|---|---|
 | Loan Tractor Keybind | None | Press this key to open the loan menu from anywhere instead of going to the mailbox |
+| Enable Mailbox Loan | Yes | Whether the loan option appears when you check an empty mailbox. Turn this off if you use another mod that changes mailbox behavior |
 | Loan Cost Per Day | 500g | How much it costs to rent the tractor each day (minimum 100g) |
 | Max Loan Days | 1 | The longest you can rent the tractor in one go |
 | Charge Upfront | Yes | When renting for multiple days, pay the full cost upfront instead of daily |
