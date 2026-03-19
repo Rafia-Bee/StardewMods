@@ -65,6 +65,9 @@ namespace LoanableTractor.Framework
         {
             try
             {
+                if (!this.Config.EnableMailboxLoan)
+                    return;
+
                 if (Game1.player.mailReceived.Contains(IntroMailId))
                 {
                     this.TryDeliverPierreTransitionMail();

@@ -9,6 +9,9 @@ namespace LoanableTractor
         /// <summary>Keybind to open the tractor loan menu from anywhere.</summary>
         public KeybindList LoanTractorKeybind { get; set; } = new KeybindList();
 
+        /// <summary>If true, the tractor loan option appears when interacting with an empty mailbox.</summary>
+        public bool EnableMailboxLoan { get; set; } = true;
+
         /// <summary>Gold cost per day to loan the tractor.</summary>
         public int LoanCostPerDay { get; set; } = 500;
 

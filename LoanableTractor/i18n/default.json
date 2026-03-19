@@ -74,6 +74,9 @@
     "config.loan_tractor_keybind.name": "Loan Tractor Keybind",
     "config.loan_tractor_keybind.tooltip": "Press this key to open the tractor loan menu from anywhere, instead of going to the mailbox.",
 
+    "config.enable_mailbox_loan.name": "Enable Mailbox Loan",
+    "config.enable_mailbox_loan.tooltip": "If enabled, the tractor loan option shows up when you check an empty mailbox. Disable this if you use another mod that changes mailbox behavior.",
+
     "dialogue.breakdown.message.joja": "Heads up! Today's Joja AgriLease™ tractor has a busted {{feature}} feature. You could fix it yourself, but it'll cost about {{percent}}% of your current stamina. Otherwise, {{feature}} just won't work on the tractor today. Your call!",
     "dialogue.breakdown.message.pierre": "Bad news — today's loaner tractor has a broken {{feature}} feature. Pierre says you could fix it yourself, but it'd burn about {{percent}}% of your current stamina. If you skip the fix, {{feature}} just won't work on the tractor today.",
     "dialogue.breakdown.fix": "Fix it (-{{percent}}% stamina)",
