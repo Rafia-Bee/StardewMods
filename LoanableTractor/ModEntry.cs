@@ -26,6 +26,9 @@ namespace LoanableTractor
         /// <summary>Tracks loan history and loyalty tier.</summary>
         private LoyaltyTracker Loyalty;
 
+        /// <summary>Shows NPC speech bubbles when riding the tractor near Morris or Pierre.</summary>
+        private NpcReactionManager NpcReaction;
+
         /// <summary>Registers GMCM config options.</summary>
         private ConfigMenuHelper ConfigMenu;
 
@@ -42,6 +45,7 @@ namespace LoanableTractor
 
             this.Loyalty = new LoyaltyTracker(this.Monitor, helper);
             this.LoanManager = new TractorLoanManager(this.Monitor, this.Config, helper, this.Loyalty);
+            this.NpcReaction = new NpcReactionManager(helper);
             this.Mail = new MailManager(this.Monitor, helper, this.Config, this.LoanManager);
             this.LoanManager.MailManager = this.Mail;
             this.ConfigMenu = new ConfigMenuHelper(this.Monitor, helper, this.ModManifest);
@@ -133,6 +137,7 @@ namespace LoanableTractor
         private void OnReturnedToTitle(object sender, ReturnedToTitleEventArgs e)
         {
             this.LoanManager.Reset();
+            this.NpcReaction.Reset();
         }
 
         /// <summary>Track NPC additions/removals to detect loaned tractor disappearance.</summary>
@@ -172,6 +177,9 @@ namespace LoanableTractor
             {
                 _tickCounter = 0;
                 this.LoanManager.EnsureTractorSurvival();
+
+                if (isRidingLoaned)
+                    this.NpcReaction.Update();
             }
         }
 
