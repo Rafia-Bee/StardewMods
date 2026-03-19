@@ -1,0 +1,19 @@
+{
+    "Name": "UI Info Suite Addon",
+    "Author": "Rafia-Bee",
+    "Version": "1.0.0",
+    "MinimumApiVersion": "4.1.0",
+    "UniqueID": "RafiaBee.UIInfoSuiteAddon",
+    "Description": "Adds Lookup Anything support to UI Info Suite birthday icons. Hover over a birthday icon and press F1 to look up that NPC.",
+    "EntryDll": "UIInfoSuiteAddon.dll",
+    "Dependencies": [
+        {
+            "UniqueID": "DazUki.UIInfoSuite2Alt",
+            "IsRequired": true
+        },
+        {
+            "UniqueID": "Pathoschild.LookupAnything",
+            "IsRequired": false
+        }
+    ]
+}
