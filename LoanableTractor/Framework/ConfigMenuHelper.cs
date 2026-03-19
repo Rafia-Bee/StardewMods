@@ -41,6 +41,7 @@ namespace LoanableTractor.Framework
                     reset: () =>
                     {
                         var fresh = new ModConfig();
+                        config.LoanTractorKeybind = fresh.LoanTractorKeybind;
                         config.LoanCostPerDay = fresh.LoanCostPerDay;
                         config.MaxLoanDays = fresh.MaxLoanDays;
                         config.ChargeUpfront = fresh.ChargeUpfront;
@@ -55,6 +56,20 @@ namespace LoanableTractor.Framework
                         config.WeekendSurchargePercent = fresh.WeekendSurchargePercent;
                     },
                     save: () => this.Helper.WriteConfig(config)
+                );
+
+                // --- General Settings ---
+                gmcm.AddSectionTitle(
+                    mod: this.Manifest,
+                    text: () => "General Settings"
+                );
+
+                gmcm.AddKeybindList(
+                    mod: this.Manifest,
+                    getValue: () => config.LoanTractorKeybind,
+                    setValue: value => config.LoanTractorKeybind = value,
+                    name: () => this.Helper.Translation.Get("config.loan_tractor_keybind.name"),
+                    tooltip: () => this.Helper.Translation.Get("config.loan_tractor_keybind.tooltip")
                 );
 
                 // --- Loan Settings ---

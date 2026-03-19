@@ -3,6 +3,7 @@ using HarmonyLib;
 using LoanableTractor.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 
 namespace LoanableTractor
@@ -63,6 +64,7 @@ namespace LoanableTractor
             helper.Events.World.NpcListChanged += this.OnNpcListChanged;
             helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
             helper.Events.Player.Warped += this.OnPlayerWarped;
+            helper.Events.Input.ButtonsChanged += this.OnButtonsChanged;
 
             this.ApplyHarmonyPatches();
             this.RegisterConsoleCommands(helper);
@@ -171,6 +173,25 @@ namespace LoanableTractor
                 _tickCounter = 0;
                 this.LoanManager.EnsureTractorSurvival();
             }
+        }
+
+        /// <summary>Handle keybind press to open the tractor loan menu.</summary>
+        private void OnButtonsChanged(object sender, ButtonsChangedEventArgs e)
+        {
+            if (!Context.IsWorldReady || !Context.IsPlayerFree)
+                return;
+
+            if (!this.Config.LoanTractorKeybind.JustPressed())
+                return;
+
+            if (!this.LoanManager.CanLoan())
+            {
+                if (this.LoanManager.LoanActiveToday)
+                    Game1.addHUDMessage(new HUDMessage(this.Helper.Translation.Get("hud.tractor.already.loaned"), HUDMessage.error_type));
+                return;
+            }
+
+            MailboxOverrides.ShowLoanDialogue(Game1.player.currentLocation);
         }
 
         /// <summary>Track warps: make loaned tractor follow if the player was mounted at warp time.</summary>

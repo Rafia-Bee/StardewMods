@@ -118,6 +118,12 @@ namespace LoanableTractor.Framework
          ** Private Methods
          *********/
 
+        /// <summary>Show the loan dialogue from any context (keybind or mailbox).</summary>
+        internal static void ShowLoanDialogue(GameLocation location)
+        {
+            ShowStandaloneLoanDialogue(location);
+        }
+
         /// <summary>Show the standalone loan dialogue (no Mail Services Mod integration).</summary>
         private static void ShowStandaloneLoanDialogue(GameLocation location)
         {
