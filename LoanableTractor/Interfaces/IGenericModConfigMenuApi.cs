@@ -2,6 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
 
 namespace LoanableTractor.Interfaces
 {
@@ -27,6 +28,9 @@ namespace LoanableTractor.Interfaces
         /// <summary>Add a float option at the current position in the form.</summary>
         void AddNumberOption(IManifest mod, Func<float> getValue, Action<float> setValue, Func<string> name, Func<string> tooltip = null, float? min = null, float? max = null,
             float? interval = null, Func<float, string> formatValue = null, string fieldId = null);
+
+        /// <summary>Add a keybind list option at the current position in the form.</summary>
+        void AddKeybindList(IManifest mod, Func<KeybindList> getValue, Action<KeybindList> setValue, Func<string> name, Func<string> tooltip = null, string fieldId = null);
 
         /// <summary>Remove a mod from the config UI.</summary>
         void Unregister(IManifest mod);

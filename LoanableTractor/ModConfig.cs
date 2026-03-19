@@ -1,8 +1,14 @@
+using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
+
 namespace LoanableTractor
 {
     /// <summary>Mod configuration options, editable via config.json or Generic Mod Config Menu.</summary>
     internal class ModConfig
     {
+        /// <summary>Keybind to open the tractor loan menu from anywhere.</summary>
+        public KeybindList LoanTractorKeybind { get; set; } = new KeybindList();
+
         /// <summary>Gold cost per day to loan the tractor.</summary>
         public int LoanCostPerDay { get; set; } = 500;
 

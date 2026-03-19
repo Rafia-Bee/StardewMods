@@ -50,7 +50,7 @@ That's it! You can install the mod at any point during a playthrough.
 ## How to use
 
 1. **Check your mail.** After installing, you'll get a letter from Joja Corp. explaining their tractor rental service. Give it a read.
-2. **Visit your mailbox.** Once you've read the letter, click on your mailbox when there are no unread letters. You'll see a "Loan Tractor" option with the rental cost displayed.
+2. **Visit your mailbox** (or press the loan keybind). Once you've read the letter, click on your mailbox when there are no unread letters. You'll see a "Loan Tractor" option with the rental cost displayed. Alternatively, press the configurable keybind (unbound by default) to open the loan menu from anywhere.
 3. **Select "Loan Tractor."** The fee gets deducted from your wallet and a tractor appears next to you, ready to ride.
 4. **Farm away!** Use the tractor just like you normally would. It works with all the tools and attachments from Tractor Mod.
 5. **Go to sleep.** At the end of the day, Joja collects their tractor automatically. You can rent again the next day.
@@ -61,6 +61,7 @@ If you have [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mo
 
 | Setting | Default | What it does |
 |---|---|---|
+| Loan Tractor Keybind | None | Press this key to open the loan menu from anywhere instead of going to the mailbox |
 | Loan Cost Per Day | 500g | How much it costs to rent the tractor each day (minimum 100g) |
 | Max Loan Days | 1 | The longest you can rent the tractor in one go |
 | Charge Upfront | Yes | When renting for multiple days, pay the full cost upfront instead of daily |

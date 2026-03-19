@@ -71,6 +71,9 @@
     "config.breakdown_stamina_cost_percent.name": "Fix Stamina Cost %",
     "config.breakdown_stamina_cost_percent.tooltip": "Percentage of your current stamina consumed when fixing a broken tractor feature.",
 
+    "config.loan_tractor_keybind.name": "Loan Tractor Keybind",
+    "config.loan_tractor_keybind.tooltip": "Press this key to open the tractor loan menu from anywhere, instead of going to the mailbox.",
+
     "dialogue.breakdown.message.joja": "Heads up! Today's Joja AgriLease™ tractor has a busted {{feature}} feature. You could fix it yourself, but it'll cost about {{percent}}% of your current stamina. Otherwise, {{feature}} just won't work on the tractor today. Your call!",
     "dialogue.breakdown.message.pierre": "Bad news — today's loaner tractor has a broken {{feature}} feature. Pierre says you could fix it yourself, but it'd burn about {{percent}}% of your current stamina. If you skip the fix, {{feature}} just won't work on the tractor today.",
     "dialogue.breakdown.fix": "Fix it (-{{percent}}% stamina)",
