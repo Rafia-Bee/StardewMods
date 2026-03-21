@@ -27,6 +27,10 @@ internal sealed class WeatherFishHud
     private List<FishEntry> _entries = new();
     private Dictionary<string, List<string>> _bundleNeeds = new();
     private int _lastFishCaughtCount = -1;
+    private string? _hoveredFishId;
+
+    public string? HoveredFishId => _hoveredFishId;
+    public string? HoveredFishName { get; private set; }
 
     private static readonly HashSet<string> IgnoreTimeKeys =
         new(StringComparer.OrdinalIgnoreCase) { "TIME" };
@@ -34,6 +38,7 @@ internal sealed class WeatherFishHud
     private const int BaseIconSize = 40;
     private const int IconPadding = 5;
     private const int NightStartTime = 1800;
+    private const int MorningEndTime = 1200;
 
     public WeatherFishHud(IModHelper helper, IMonitor monitor, Func<ModConfig> getConfig, FishHudOverlay overlay)
     {
@@ -187,6 +192,9 @@ internal sealed class WeatherFishHud
             ? ItemRegistry.Create(hovered.QualifiedItemId)
             : null;
 
+        _hoveredFishId = hovered?.QualifiedItemId;
+        HoveredFishName = hovered?.DisplayName;
+
         if (hovered != null)
             DrawTooltip(b, hovered);
     }
@@ -279,18 +287,22 @@ internal sealed class WeatherFishHud
                 if (!IsWeatherTracked(weatherReq, config))
                     continue;
             }
-            else if (config.ShowNightFish)
-            {
-                var windows = GetTimeWindows(itemData.ItemId, rawFishData);
-                if (windows.Count == 0 || !windows.All(w => w.Start >= NightStartTime))
-                    continue;
-            }
             else
             {
-                continue;
+                var windows = GetTimeWindows(itemData.ItemId, rawFishData);
+                bool isNightOnly = config.ShowNightFish
+                    && windows.Count > 0 && windows.All(w => w.Start >= NightStartTime);
+                bool isMorningOnly = config.ShowMorningFish
+                    && windows.Count > 0 && windows.All(w => w.End <= MorningEndTime);
+
+                if (!isNightOnly && !isMorningOnly)
+                    continue;
             }
 
             if (config.HideAlreadyCaught && Game1.player.fishCaught.ContainsKey(itemData.QualifiedItemId))
+                continue;
+
+            if (config.HiddenFishIds.Contains(itemData.QualifiedItemId))
                 continue;
 
             int sellPrice = 0;
@@ -385,6 +397,12 @@ internal sealed class WeatherFishHud
 
         if (isNightFish)
             return ParseHexColor(config.NightFishColor);
+
+        bool isMorningFish = fish.TimeWindows.Count > 0
+            && fish.TimeWindows.All(w => w.End <= MorningEndTime);
+
+        if (isMorningFish)
+            return ParseHexColor(config.MorningFishColor);
 
         return Color.Transparent;
     }

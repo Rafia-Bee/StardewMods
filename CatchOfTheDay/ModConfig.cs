@@ -1,3 +1,7 @@
+using System.Collections.Generic;
+using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
+
 namespace CatchOfTheDay;
 
 public sealed class ModConfig
@@ -9,11 +13,15 @@ public sealed class ModConfig
     public float IconScale { get; set; } = 1.0f;
     public string CatchableNowColor { get; set; } = "#00000000";
     public string NightFishColor { get; set; } = "#00000000";
+    public string MorningFishColor { get; set; } = "#00000000";
     public int MaxLocations { get; set; } = 4;
     public bool ShowBundleNeeds { get; set; } = true;
     public bool HideAlreadyCaught { get; set; } = false;
     public int MinSellPrice { get; set; } = 0;
     public bool ShowNightFish { get; set; } = false;
+    public bool ShowMorningFish { get; set; } = false;
+    public KeybindList HideFishKey { get; set; } = KeybindList.Parse("Delete");
+    public List<string> HiddenFishIds { get; set; } = new();
 
     // Weather types to track
     public bool TrackRain { get; set; } = true;

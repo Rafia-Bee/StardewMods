@@ -17,6 +17,15 @@
     "config.min-sell-price.tooltip": "Only show fish worth at least this much gold. Accounts for fishing professions like Fisher and Angler. Set to 0 to show all fish.",
     "config.show-night-fish.name": "Show Night Fish",
     "config.show-night-fish.tooltip": "Show fish that can only be caught at night (6pm onwards), even if they have no specific weather requirement.",
+    "config.show-morning-fish.name": "Show Morning Fish",
+    "config.show-morning-fish.tooltip": "Show fish that can only be caught in the morning (before noon), even if they have no specific weather requirement.",
+
+    "config.hide-fish-key.name": "Hide Fish Key",
+    "config.hide-fish-key.tooltip": "Press this key while hovering over a fish icon to hide it from the HUD. Press again on a hidden fish to bring it back.",
+    "config.page-hidden-fish.name": "Hidden Fish",
+    "config.page-hidden-fish.tooltip": "Manage which fish are hidden from the HUD. Currently hiding {{count}} fish.",
+    "config.hidden-fish-entry.tooltip": "Disable to show {{fish}} on the HUD again.",
+
     "config.page-position.name": "Position & Layout",
     "config.page-position.tooltip": "Configure where the fish icons appear and how big they are.",
     "config.icon-scale.name": "Icon Scale",
@@ -25,6 +34,8 @@
     "config.catchable-now-color.tooltip": "Background color for fish you can catch right now. Use hex format like #00FF0080 (RRGGBBAA). Set to #00000000 for transparent.",
     "config.night-fish-color.name": "Night Fish Background",
     "config.night-fish-color.tooltip": "Background color for fish that can only be caught at night (after 6pm). Use hex format like #0000FF80 (RRGGBBAA). Set to #00000000 for transparent.",
+    "config.morning-fish-color.name": "Morning Fish Background",
+    "config.morning-fish-color.tooltip": "Background color for fish that can only be caught in the morning (before noon). Use hex format like #FFFF0080 (RRGGBBAA). Set to #00000000 for transparent.",
 
     "config.weather-section.name": "Weather Types",
     "config.weather-section.tooltip": "Choose which weather conditions to track. Fish exclusive to enabled weather types will appear on the HUD.",

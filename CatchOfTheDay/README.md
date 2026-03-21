@@ -7,6 +7,7 @@ A Stardew Valley mod that shows weather-exclusive fish icons on the HUD. Support
 - Displays **fish sprite icons** on the right side of the screen when weather-exclusive fish are available
 - Supports **all weather types**: rain, thunderstorms, sunny, snow, wind/debris, and green rain
 - **Nighttime fish** — optionally show fish that only spawn at night (6pm onwards), even if they have no weather requirement
+- **Morning fish** — optionally show fish that can only be caught in the morning (before noon), with a separate background color
 - **Hover over any icon** to see the fish name, spawn locations (only places you've visited), and catchable time windows
 - **Uncaught fish** are marked with "(Uncaught)" in the tooltip -- updates in real time when you catch one
 - **Bundle tracking** -- shows which Community Center bundles still need each fish (works with modded bundles too)
@@ -16,6 +17,7 @@ A Stardew Valley mod that shows weather-exclusive fish icons on the HUD. Support
 - Automatically includes fish from **modded locations** (Stardew Valley Expanded, Visit Mount Vapius, East Scarp, etc.)
 - Updates dynamically when the day starts or you visit a new location
 - **Per-weather toggles** — choose exactly which weather types to track
+- **Hide individual fish** — press a keybind (default: Delete) while hovering a fish icon to permanently hide it from the HUD
 - **Configurable background colors** — highlight fish catchable right now or only at night with custom tint colors
 - Fully configurable via [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098) (optional)
 
@@ -36,6 +38,8 @@ All settings can be changed in-game via Generic Mod Config Menu, or by editing `
 | `HideAlreadyCaught` | `false` | Hide fish you've already caught at least once |
 | `MinSellPrice` | `0` | Only show fish worth at least this much gold (0 = show all) |
 | `ShowNightFish` | `false` | Show fish that only spawn at night (6pm onwards), even without a weather requirement |
+| `ShowMorningFish` | `false` | Show fish that can only be caught in the morning (before noon), even without a weather requirement |
+| `HideFishKey` | `Delete` | Keybind to hide/unhide the currently hovered fish icon |
 | `TrackRain` | `true` | Show rain-exclusive fish on rainy days |
 | `TrackStorm` | `true` | Show storm-exclusive fish during thunderstorms |
 | `TrackSun` | `true` | Show sun-exclusive fish on sunny days |
@@ -49,6 +53,7 @@ All settings can be changed in-game via Generic Mod Config Menu, or by editing `
 | `MaxLocations` | `4` | Max spawn locations shown per tooltip (0 = show all) |
 | `CatchableNowColor` | `#00000000` | Background tint for fish catchable at the current time |
 | `NightFishColor` | `#00000000` | Background tint for night-only fish (6pm onwards) |
+| `MorningFishColor` | `#00000000` | Background tint for morning-only fish (before noon) |
 
 ## Installation
 
