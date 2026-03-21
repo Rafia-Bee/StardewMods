@@ -245,7 +245,7 @@ public class ModEntry : Mod
             $"beeHouses={Config.collectBeeHouses}, tappers={Config.collectTappers}, " +
             $"globalMode={Config.globalGrabber}, globalAutoFire={Config.globalAutoFire}, " +
             $"reportYield={Config.reportYield}, gainXP={Config.gainExperience}, " +
-            $"hourlyCollection={Config.hourlyCollection}, skipFestivals={Config.skipFestivalLocations}",
+            $"grabFrequency={Config.grabFrequency}, skipFestivals={Config.skipFestivalLocations}",
             LogLevel.Debug);
 
         if (Config.excludedItems?.Count > 0)
@@ -313,7 +313,7 @@ public class ModEntry : Mod
             return;
         }
 
-        if (_dirtyLocations.Count == 0)
+        if (_dirtyLocations.Count == 0 || Config.grabFrequency != ModConfig.GrabFrequency.Instant)
             return;
 
         var locations = _dirtyLocations.ToList();
@@ -361,7 +361,7 @@ public class ModEntry : Mod
         }
 
         _isGrabbing = true;
-        IsForageGrabEnabled = Config.hourlyCollection;
+        IsForageGrabEnabled = Config.grabFrequency != ModConfig.GrabFrequency.Daily;
         try
         {
             foreach (var location in GetAllLocations())
@@ -401,9 +401,19 @@ public class ModEntry : Mod
                     }
                 }
 
-                if (Config.hourlyCollection)
+                if (Config.grabFrequency != ModConfig.GrabFrequency.Daily)
                     _grabbers.GrabForageAtLocation(location);
+
+                if (Config.grabFrequency == ModConfig.GrabFrequency.Hourly && _dirtyLocations.Contains(location))
+                {
+                    IsForageGrabEnabled = true;
+                    _grabbers.GrabAtLocation(location);
+                    IsForageGrabEnabled = Config.grabFrequency != ModConfig.GrabFrequency.Daily;
+                }
             }
+
+            if (Config.grabFrequency == ModConfig.GrabFrequency.Hourly)
+                _dirtyLocations.Clear();
         }
         finally
         {

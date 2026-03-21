@@ -49,6 +49,7 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 | Search Garbage Cans | Off | Search town garbage cans |
 | Harvest Moss from Trees | Off | Strip moss from trees |
 | Collect Item Debris | Off | Collect items dropped as ground debris (monster loot, modded forage drops) |
+| Grab Frequency | Instant | How often the grabber scans: Instant (every tick), Hourly (batched), or Daily (start/end of day only) |
 | Excluded Items | (empty) | Comma-separated qualified item IDs the grabber should never collect (e.g. `(O)859` for Lucky Ring) |
 | Report Yield | On | Log collected items to SMAPI console and show in-game grab summary |
 | Gain Experience | On | Award XP for auto-grabbed items |

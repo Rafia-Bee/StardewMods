@@ -19,7 +19,15 @@ internal class ModConfig
         Hover
     }
 
+    public enum GrabFrequency
+    {
+        Instant,
+        Hourly,
+        Daily
+    }
+
     public GlobalGrabberMode globalGrabber;
+    public GrabFrequency grabFrequency;
     public HarvestCropsRangeMode harvestCropsRangeMode;
     public int harvestCropsRange;
     public bool animalProducts;
@@ -43,7 +51,6 @@ internal class ModConfig
     public bool garbageCans;
     public bool seedSpots;
     public bool harvestMoss;
-    public bool hourlyCollection;
     public bool skipFestivalLocations;
     public bool selectVisitedOnly;
     public bool collectMachines;
@@ -76,14 +83,25 @@ internal class ModConfig
         { GlobalGrabberMode.Hover, "Hover" }
     };
 
+    internal static Dictionary<GrabFrequency, string> GrabFrequencyDict = new()
+    {
+        { GrabFrequency.Instant, "Instant" },
+        { GrabFrequency.Hourly, "Hourly" },
+        { GrabFrequency.Daily, "Daily" }
+    };
+
     internal static Dictionary<string, HarvestCropsRangeMode> HarvestCropsRangeReverseDict =
         HarvestCropsRangeDict.ToDictionary(p => p.Value, p => p.Key);
 
     internal static Dictionary<string, GlobalGrabberMode> GlobalGrabberReverseDict =
         GlobalGrabberDict.ToDictionary(p => p.Value, p => p.Key);
 
+    internal static Dictionary<string, GrabFrequency> GrabFrequencyReverseDict =
+        GrabFrequencyDict.ToDictionary(p => p.Value, p => p.Key);
+
     internal static string[] HarvestCropsRangeModeStrings = { "Square", "Walk" };
     internal static string[] GlobalGrabberModeStrings = { "Off", "All", "Hover" };
+    internal static string[] GrabFrequencyStrings = { "Instant", "Hourly", "Daily" };
 
     internal static readonly HashSet<string> SunberryVillageExcludedItems = new()
     {
@@ -144,7 +162,7 @@ internal class ModConfig
         seedSpots = false;
         harvestMoss = false;
         collectDebris = false;
-        hourlyCollection = true;
+        grabFrequency = GrabFrequency.Instant;
         skipFestivalLocations = true;
         selectVisitedOnly = false;
         collectMachines = false;
