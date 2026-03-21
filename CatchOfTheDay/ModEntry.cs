@@ -120,22 +120,6 @@ public class ModEntry : Mod
             min: 0, max: 5000, interval: 25
         );
 
-        api.AddBoolOption(
-            ModManifest,
-            () => _config.ShowNightFish,
-            v => _config.ShowNightFish = v,
-            () => Helper.Translation.Get("config.show-night-fish.name"),
-            () => Helper.Translation.Get("config.show-night-fish.tooltip")
-        );
-
-        api.AddBoolOption(
-            ModManifest,
-            () => _config.ShowMorningFish,
-            v => _config.ShowMorningFish = v,
-            () => Helper.Translation.Get("config.show-morning-fish.name"),
-            () => Helper.Translation.Get("config.show-morning-fish.tooltip")
-        );
-
         api.AddKeybindList(
             ModManifest,
             () => _config.HideFishKey,
@@ -154,6 +138,13 @@ public class ModEntry : Mod
                     new { count = _config.HiddenFishIds.Count })
             );
         }
+
+        api.AddPageLink(
+            ModManifest,
+            "time-slots",
+            () => Helper.Translation.Get("config.page-time-slots.name"),
+            () => Helper.Translation.Get("config.page-time-slots.tooltip")
+        );
 
         api.AddPageLink(
             ModManifest,
@@ -279,26 +270,6 @@ public class ModEntry : Mod
                 showAlpha: true,
                 colorPickerStyle: 1
             );
-
-            colorApi.AddColorOption(
-                ModManifest,
-                () => ParseHexColor(_config.NightFishColor),
-                v => _config.NightFishColor = ColorToHex(v),
-                () => Helper.Translation.Get("config.night-fish-color.name"),
-                () => Helper.Translation.Get("config.night-fish-color.tooltip"),
-                showAlpha: true,
-                colorPickerStyle: 1
-            );
-
-            colorApi.AddColorOption(
-                ModManifest,
-                () => ParseHexColor(_config.MorningFishColor),
-                v => _config.MorningFishColor = ColorToHex(v),
-                () => Helper.Translation.Get("config.morning-fish-color.name"),
-                () => Helper.Translation.Get("config.morning-fish-color.tooltip"),
-                showAlpha: true,
-                colorPickerStyle: 1
-            );
         }
         else
         {
@@ -309,22 +280,50 @@ public class ModEntry : Mod
                 () => Helper.Translation.Get("config.catchable-now-color.name"),
                 () => Helper.Translation.Get("config.catchable-now-color.tooltip")
             );
+        }
+
+        // Time Slots subpage
+        api.AddPage(
+            ModManifest,
+            "time-slots",
+            () => Helper.Translation.Get("config.page-time-slots.name")
+        );
+
+        for (int i = 0; i < _config.TimeSlots.Count; i++)
+        {
+            int idx = i;
+            int num = i + 1;
 
             api.AddTextOption(
                 ModManifest,
-                () => _config.NightFishColor,
-                v => _config.NightFishColor = v,
-                () => Helper.Translation.Get("config.night-fish-color.name"),
-                () => Helper.Translation.Get("config.night-fish-color.tooltip")
+                () => _config.TimeSlots[idx].TimeRanges,
+                v => _config.TimeSlots[idx].TimeRanges = v,
+                () => Helper.Translation.Get("config.time-slot-ranges.name", new { num }),
+                () => Helper.Translation.Get("config.time-slot-ranges.tooltip")
             );
 
-            api.AddTextOption(
-                ModManifest,
-                () => _config.MorningFishColor,
-                v => _config.MorningFishColor = v,
-                () => Helper.Translation.Get("config.morning-fish-color.name"),
-                () => Helper.Translation.Get("config.morning-fish-color.tooltip")
-            );
+            if (colorApi != null)
+            {
+                colorApi.AddColorOption(
+                    ModManifest,
+                    () => ParseHexColor(_config.TimeSlots[idx].Color),
+                    v => _config.TimeSlots[idx].Color = ColorToHex(v),
+                    () => Helper.Translation.Get("config.time-slot-color.name", new { num }),
+                    () => Helper.Translation.Get("config.time-slot-color.tooltip"),
+                    showAlpha: true,
+                    colorPickerStyle: 1
+                );
+            }
+            else
+            {
+                api.AddTextOption(
+                    ModManifest,
+                    () => _config.TimeSlots[idx].Color,
+                    v => _config.TimeSlots[idx].Color = v,
+                    () => Helper.Translation.Get("config.time-slot-color.name", new { num }),
+                    () => Helper.Translation.Get("config.time-slot-color.tooltip")
+                );
+            }
         }
 
         // Hidden Fish subpage
