@@ -296,11 +296,13 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.gain-experience"),
             () => _mod.Helper.Translation.Get("config.gain-experience.tooltip"));
 
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.hourlyCollection,
-            v => _mod.Config.hourlyCollection = v,
-            () => _mod.Helper.Translation.Get("config.hourly-collection"),
-            () => _mod.Helper.Translation.Get("config.hourly-collection.tooltip"));
+        api.AddTextOption(_mod.ModManifest,
+            () => ModConfig.GrabFrequencyDict[_mod.Config.grabFrequency],
+            v => _mod.Config.grabFrequency = ModConfig.GrabFrequencyReverseDict[v],
+            () => _mod.Helper.Translation.Get("config.grab-frequency"),
+            () => _mod.Helper.Translation.Get("config.grab-frequency.tooltip"),
+            ModConfig.GrabFrequencyStrings,
+            v => _mod.Helper.Translation.Get($"dropdown.{v.ToLower()}"));
 
         api.AddBoolOption(_mod.ModManifest,
             () => _mod.Config.skipFestivalLocations,
