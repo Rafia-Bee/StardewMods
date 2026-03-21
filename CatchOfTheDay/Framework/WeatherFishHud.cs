@@ -37,8 +37,6 @@ internal sealed class WeatherFishHud
 
     private const int BaseIconSize = 40;
     private const int IconPadding = 5;
-    private const int NightStartTime = 1800;
-    private const int MorningEndTime = 1200;
 
     public WeatherFishHud(IModHelper helper, IMonitor monitor, Func<ModConfig> getConfig, FishHudOverlay overlay)
     {
@@ -280,24 +278,15 @@ internal sealed class WeatherFishHud
 
             string? weatherReq = GetWeatherRequirement(spawn, rawFishData);
 
-            if (weatherReq != null)
-            {
-                if (!WeatherMatchesCurrent(currentWeather, weatherReq))
-                    continue;
-                if (!IsWeatherTracked(weatherReq, config))
-                    continue;
-            }
-            else
-            {
-                var windows = GetTimeWindows(itemData.ItemId, rawFishData);
-                bool isNightOnly = config.ShowNightFish
-                    && windows.Count > 0 && windows.All(w => w.Start >= NightStartTime);
-                bool isMorningOnly = config.ShowMorningFish
-                    && windows.Count > 0 && windows.All(w => w.End <= MorningEndTime);
+            if (weatherReq != null && !WeatherMatchesCurrent(currentWeather, weatherReq))
+                continue;
 
-                if (!isNightOnly && !isMorningOnly)
-                    continue;
-            }
+            var windows = GetTimeWindows(itemData.ItemId, rawFishData);
+            bool matchesWeatherToggle = weatherReq != null && IsWeatherTracked(weatherReq, config);
+            bool matchesTimeSlot = MatchesAnyTimeSlot(windows, config.TimeSlots) != null;
+
+            if (!matchesWeatherToggle && !matchesTimeSlot)
+                continue;
 
             if (config.HideAlreadyCaught && Game1.player.fishCaught.ContainsKey(itemData.QualifiedItemId))
                 continue;
@@ -353,7 +342,7 @@ internal sealed class WeatherFishHud
         for (int i = 0; i < parts.Length; i += 2)
         {
             if (int.TryParse(parts[i], out int start) && int.TryParse(parts[i + 1], out int end))
-                ranges.Add($"{FormatTime(start)} – {FormatTime(end)}");
+                ranges.Add($"{FormatTime(start)} - {FormatTime(end)}");
         }
 
         return string.Join(", ", ranges);
@@ -392,17 +381,9 @@ internal sealed class WeatherFishHud
         if (catchableNow)
             return ParseHexColor(config.CatchableNowColor);
 
-        bool isNightFish = fish.TimeWindows.Count > 0
-            && fish.TimeWindows.All(w => w.Start >= NightStartTime);
-
-        if (isNightFish)
-            return ParseHexColor(config.NightFishColor);
-
-        bool isMorningFish = fish.TimeWindows.Count > 0
-            && fish.TimeWindows.All(w => w.End <= MorningEndTime);
-
-        if (isMorningFish)
-            return ParseHexColor(config.MorningFishColor);
+        var matchedSlot = MatchesAnyTimeSlot(fish.TimeWindows, config.TimeSlots);
+        if (matchedSlot != null)
+            return ParseHexColor(matchedSlot.Color);
 
         return Color.Transparent;
     }
@@ -412,6 +393,60 @@ internal sealed class WeatherFishHud
         if (end > start)
             return time >= start && time < end;
         return time >= start || time < end;
+    }
+
+    private static TimeSlotConfig? MatchesAnyTimeSlot(
+        List<(int Start, int End)> fishWindows,
+        List<TimeSlotConfig> slots)
+    {
+        if (fishWindows.Count == 0)
+            return null;
+
+        foreach (var slot in slots)
+        {
+            var ranges = ParseTimeRanges(slot.TimeRanges);
+            if (ranges.Count == 0)
+                continue;
+
+            if (fishWindows.All(w => ranges.Any(r => IsWindowContainedInRange(w.Start, w.End, r.Start, r.End))))
+                return slot;
+        }
+
+        return null;
+    }
+
+    internal static List<(int Start, int End)> ParseTimeRanges(string input)
+    {
+        var ranges = new List<(int, int)>();
+        if (string.IsNullOrWhiteSpace(input))
+            return ranges;
+
+        foreach (var part in input.Split(',', StringSplitOptions.TrimEntries))
+        {
+            var pair = part.Split('-', StringSplitOptions.TrimEntries);
+            if (pair.Length == 2
+                && int.TryParse(pair[0], out int start)
+                && int.TryParse(pair[1], out int end))
+            {
+                ranges.Add((start * 100, end * 100));
+            }
+        }
+
+        return ranges;
+    }
+
+    private static bool IsWindowContainedInRange(int wStart, int wEnd, int rStart, int rEnd)
+    {
+        if (rStart < rEnd && wStart < wEnd)
+            return wStart >= rStart && wEnd <= rEnd;
+
+        if (rStart > rEnd && wStart < wEnd)
+            return wStart >= rStart || wEnd <= rEnd;
+
+        if (rStart > rEnd && wStart > wEnd)
+            return wStart >= rStart && wEnd <= rEnd;
+
+        return false;
     }
 
     private static Color ParseHexColor(string hex)
