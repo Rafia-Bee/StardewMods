@@ -1,7 +1,7 @@
 {
     "Name": "Catch of the Day",
     "Author": "Rafia-Bee",
-    "Version": "1.0.0",
+    "Version": "1.1.0",
     "MinimumApiVersion": "4.1.0",
     "UniqueID": "RafiaBee.CatchOfTheDay",
     "Description": "Shows weather-exclusive fish icons on the HUD - rain, storm, sun, snow, wind, and green rain. Hover for spawn locations and times.",

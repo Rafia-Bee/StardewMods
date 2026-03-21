@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Linq;
 using CatchOfTheDay.Framework;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
@@ -13,6 +14,8 @@ public class ModEntry : Mod
     private WeatherFishHud _hud = null!;
     private ModConfig _config = null!;
     private readonly FishHudOverlay _overlay = new();
+    private IGenericModConfigMenuApi? _gmcmApi;
+    private IGMCMOptionsAPI? _colorApi;
 
     public override void Entry(IModHelper helper)
     {
@@ -25,6 +28,7 @@ public class ModEntry : Mod
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
         helper.Events.Display.RenderedHud += (_, e) => _hud.Draw(e.SpriteBatch);
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
+        helper.Events.Input.ButtonsChanged += OnButtonsChanged;
     }
 
     private void OnPlayerWarped(object? sender, WarpedEventArgs e)
@@ -33,11 +37,49 @@ public class ModEntry : Mod
             _hud.Refresh();
     }
 
+    private void OnButtonsChanged(object? sender, ButtonsChangedEventArgs e)
+    {
+        if (!Context.IsWorldReady || !_config.Enabled)
+            return;
+
+        if (!_config.HideFishKey.JustPressed())
+            return;
+
+        string? fishId = _hud.HoveredFishId;
+        string? fishName = _hud.HoveredFishName;
+        if (fishId == null || fishName == null)
+            return;
+
+        if (_config.HiddenFishIds.Contains(fishId))
+        {
+            _config.HiddenFishIds.Remove(fishId);
+            Game1.addHUDMessage(new HUDMessage($"{fishName} is no longer hidden from the fishing HUD."));
+        }
+        else
+        {
+            _config.HiddenFishIds.Add(fishId);
+            Game1.addHUDMessage(new HUDMessage($"{fishName} hidden from the fishing HUD."));
+        }
+
+        Helper.WriteConfig(_config);
+        _hud.Refresh();
+        RegisterGmcm();
+    }
+
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
-        var api = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        _gmcmApi = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        _colorApi = Helper.ModRegistry.GetApi<IGMCMOptionsAPI>("jltaylor-us.GMCMOptions");
+        RegisterGmcm();
+    }
+
+    private void RegisterGmcm()
+    {
+        var api = _gmcmApi;
         if (api == null)
             return;
+
+        api.Unregister(ModManifest);
 
         api.Register(
             ModManifest,
@@ -85,6 +127,33 @@ public class ModEntry : Mod
             () => Helper.Translation.Get("config.show-night-fish.name"),
             () => Helper.Translation.Get("config.show-night-fish.tooltip")
         );
+
+        api.AddBoolOption(
+            ModManifest,
+            () => _config.ShowMorningFish,
+            v => _config.ShowMorningFish = v,
+            () => Helper.Translation.Get("config.show-morning-fish.name"),
+            () => Helper.Translation.Get("config.show-morning-fish.tooltip")
+        );
+
+        api.AddKeybindList(
+            ModManifest,
+            () => _config.HideFishKey,
+            v => _config.HideFishKey = v,
+            () => Helper.Translation.Get("config.hide-fish-key.name"),
+            () => Helper.Translation.Get("config.hide-fish-key.tooltip")
+        );
+
+        if (_config.HiddenFishIds.Count > 0)
+        {
+            api.AddPageLink(
+                ModManifest,
+                "hidden-fish",
+                () => Helper.Translation.Get("config.page-hidden-fish.name"),
+                () => Helper.Translation.Get("config.page-hidden-fish.tooltip",
+                    new { count = _config.HiddenFishIds.Count })
+            );
+        }
 
         api.AddPageLink(
             ModManifest,
@@ -198,7 +267,7 @@ public class ModEntry : Mod
             min: 0, max: 20
         );
 
-        var colorApi = Helper.ModRegistry.GetApi<IGMCMOptionsAPI>("jltaylor-us.GMCMOptions");
+        var colorApi = _colorApi;
         if (colorApi != null)
         {
             colorApi.AddColorOption(
@@ -220,6 +289,16 @@ public class ModEntry : Mod
                 showAlpha: true,
                 colorPickerStyle: 1
             );
+
+            colorApi.AddColorOption(
+                ModManifest,
+                () => ParseHexColor(_config.MorningFishColor),
+                v => _config.MorningFishColor = ColorToHex(v),
+                () => Helper.Translation.Get("config.morning-fish-color.name"),
+                () => Helper.Translation.Get("config.morning-fish-color.tooltip"),
+                showAlpha: true,
+                colorPickerStyle: 1
+            );
         }
         else
         {
@@ -238,6 +317,45 @@ public class ModEntry : Mod
                 () => Helper.Translation.Get("config.night-fish-color.name"),
                 () => Helper.Translation.Get("config.night-fish-color.tooltip")
             );
+
+            api.AddTextOption(
+                ModManifest,
+                () => _config.MorningFishColor,
+                v => _config.MorningFishColor = v,
+                () => Helper.Translation.Get("config.morning-fish-color.name"),
+                () => Helper.Translation.Get("config.morning-fish-color.tooltip")
+            );
+        }
+
+        // Hidden Fish subpage
+        if (_config.HiddenFishIds.Count > 0)
+        {
+            api.AddPage(
+                ModManifest,
+                "hidden-fish",
+                () => Helper.Translation.Get("config.page-hidden-fish.name")
+            );
+
+            foreach (string fishId in _config.HiddenFishIds.ToList())
+            {
+                string displayName = ItemRegistry.GetData(fishId)?.DisplayName ?? fishId;
+                string capturedId = fishId;
+
+                api.AddBoolOption(
+                    ModManifest,
+                    () => _config.HiddenFishIds.Contains(capturedId),
+                    v =>
+                    {
+                        if (!v)
+                            _config.HiddenFishIds.Remove(capturedId);
+                        else if (!_config.HiddenFishIds.Contains(capturedId))
+                            _config.HiddenFishIds.Add(capturedId);
+                    },
+                    () => displayName,
+                    () => Helper.Translation.Get("config.hidden-fish-entry.tooltip",
+                        new { fish = displayName })
+                );
+            }
         }
     }
 
