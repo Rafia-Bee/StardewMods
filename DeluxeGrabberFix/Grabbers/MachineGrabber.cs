@@ -89,11 +89,18 @@ internal class MachineGrabber : ObjectsMapGrabber
     }
 
     private static bool IsCrabPot(Object obj)
-        => obj is CrabPot;
+        => obj is CrabPot
+           || (obj.QualifiedItemId?.StartsWith(BigCraftableIds.MpsPrefix) == true
+               && obj.QualifiedItemId.Contains("CrabPot"));
 
     private static bool IsBeeHouse(Object obj)
-        => obj.QualifiedItemId == BigCraftableIds.BeeHouse;
+        => obj.QualifiedItemId == BigCraftableIds.BeeHouse
+           || (obj.QualifiedItemId?.StartsWith(BigCraftableIds.MpsPrefix) == true
+               && obj.QualifiedItemId.Contains("BeeHouse"));
 
     private static bool IsTapper(Object obj)
-        => obj.QualifiedItemId == BigCraftableIds.Tapper || obj.QualifiedItemId == BigCraftableIds.HeavyTapper;
+        => obj.QualifiedItemId == BigCraftableIds.Tapper
+           || obj.QualifiedItemId == BigCraftableIds.HeavyTapper
+           || (obj.QualifiedItemId?.StartsWith(BigCraftableIds.MpsPrefix) == true
+               && obj.QualifiedItemId.Contains("Tapper"));
 }
