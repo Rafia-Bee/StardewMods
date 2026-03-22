@@ -243,6 +243,12 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.harvest-moss"));
 
         api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.harvestGreenRainWeeds,
+            v => _mod.Config.harvestGreenRainWeeds = v,
+            () => _mod.Helper.Translation.Get("config.harvest-green-rain-weeds"),
+            () => _mod.Helper.Translation.Get("config.harvest-green-rain-weeds.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
             () => _mod.Config.collectDebris,
             v => _mod.Config.collectDebris = v,
             () => _mod.Helper.Translation.Get("config.collect-debris"),

@@ -42,6 +42,8 @@
     "config.collect-forage": "Collect Forage Items",
     "config.collect-forage.tooltip": "Picks up forage items like leeks, daffodils, and spring onions from the ground",
     "config.harvest-moss": "Harvest Moss from Trees",
+    "config.harvest-green-rain-weeds": "Harvest Green Rain Weeds",
+    "config.harvest-green-rain-weeds.tooltip": "Breaks apart the large green rain bushes for moss, fiber, and mossy seeds.",
     "config.collect-debris": "Collect Item Debris",
     "config.collect-debris.tooltip": "Picks up items dropped as debris on the ground, such as monster loot, fallen items, and other drops that bounce around before settling.",
 

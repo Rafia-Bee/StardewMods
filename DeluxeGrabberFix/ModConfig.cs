@@ -51,6 +51,7 @@ internal class ModConfig
     public bool garbageCans;
     public bool seedSpots;
     public bool harvestMoss;
+    public bool harvestGreenRainWeeds;
     public bool skipFestivalLocations;
     public bool selectVisitedOnly;
     public bool collectMachines;
@@ -161,6 +162,7 @@ internal class ModConfig
         renameButtonOffsetY = 0;
         seedSpots = false;
         harvestMoss = false;
+        harvestGreenRainWeeds = false;
         collectDebris = false;
         grabFrequency = GrabFrequency.Instant;
         skipFestivalLocations = true;
