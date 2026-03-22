@@ -392,6 +392,12 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.visit-mt-vapius-exclusions.tooltip"));
 
         api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.baublesExclusions,
+            v => _mod.Config.baublesExclusions = v,
+            () => _mod.Helper.Translation.Get("config.baubles-exclusions"),
+            () => _mod.Helper.Translation.Get("config.baubles-exclusions.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
             () => _mod.Config.buriedItems,
             v => _mod.Config.buriedItems = v,
             () => _mod.Helper.Translation.Get("config.collect-buried-items"),
