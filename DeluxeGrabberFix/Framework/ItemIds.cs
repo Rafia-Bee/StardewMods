@@ -22,6 +22,9 @@ internal static class ItemIds
     public const string DragonTooth = "(O)822";
     public const string TaroTuber = "(O)831";
     public const string SeedSpot = "(O)SeedSpot";
+    public const string Moss = "(O)Moss";
+    public const string Fiber = "(O)771";
+    public const string MossySeed = "(O)MossySeed";
 
     // Furniture qualified IDs — cosmetic wall decorations from artifact spot rare drops
     public const string CatalogueWall = "(F)1369";

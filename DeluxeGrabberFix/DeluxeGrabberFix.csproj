@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>DeluxeGrabberFix</AssemblyName>
     <RootNamespace>DeluxeGrabberFix</RootNamespace>
-    <Version>1.10.0</Version>
+    <Version>1.11.0</Version>
     <LangVersion>latest</LangVersion>
     <TargetFramework>net6.0</TargetFramework>
     <EnableHarmony>true</EnableHarmony>

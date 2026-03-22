@@ -9,6 +9,7 @@ Adopted the existing [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/starde
 - **Berry bushes** — Collects berries from salmonberry and blackberry bushes
 - **Seed trees** — Shakes regular trees for seeds
 - **Tree moss** — Strips moss from trees
+- **Green rain weeds** — Breaks apart large green rain bushes for moss, fiber, and mossy seeds
 - **Slime balls** — Collects slime balls in slime hutches
 - **Farm cave mushrooms** — Grabs mushrooms from farm cave boxes (works anywhere)
 - **Artifact spots** — Digs up artifact spots
@@ -48,6 +49,7 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 | Fell Stumps in Secret Woods | Off | Chop stumps for hardwood |
 | Search Garbage Cans | Off | Search town garbage cans |
 | Harvest Moss from Trees | Off | Strip moss from trees |
+| Harvest Green Rain Weeds | Off | Break apart large green rain bushes for moss, fiber, and mossy seeds |
 | Collect Item Debris | Off | Collect items dropped as ground debris (monster loot, modded forage drops) |
 | Grab Frequency | Instant | How often the grabber scans: Instant (every tick), Hourly (batched), or Daily (start/end of day only) |
 | Excluded Items | (empty) | Comma-separated qualified item IDs the grabber should never collect (e.g. `(O)859` for Lucky Ring) |
