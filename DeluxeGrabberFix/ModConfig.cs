@@ -63,6 +63,7 @@ internal class ModConfig
     public HashSet<string> excludedItems;
     public bool sunberryVillageExclusions;
     public bool visitMtVapiusExclusions;
+    public bool baublesExclusions;
     public SButton globalFireButton;
     public SButton designateGrabberButton;
     public bool globalAutoFire;
@@ -120,6 +121,13 @@ internal class ModConfig
         "(O)skellady.SBVCP_SupplyCrate2"
     };
 
+    internal static readonly HashSet<string> BaublesExcludedItems = new()
+    {
+        "(O)appleseed.BCP.CattailNodeOne",
+        "(O)appleseed.BCP.CattailNodeTwo",
+        "(O)appleseed.BCP.PetuntseNode"
+    };
+
     public bool IsItemExcluded(string qualifiedItemId)
     {
         if (excludedItems != null && excludedItems.Contains(qualifiedItemId))
@@ -127,6 +135,8 @@ internal class ModConfig
         if (sunberryVillageExclusions && SunberryVillageExcludedItems.Contains(qualifiedItemId))
             return true;
         if (visitMtVapiusExclusions && qualifiedItemId.Contains("_Node_"))
+            return true;
+        if (baublesExclusions && BaublesExcludedItems.Contains(qualifiedItemId))
             return true;
         return false;
     }
@@ -175,5 +185,6 @@ internal class ModConfig
         excludedItems = new HashSet<string>();
         sunberryVillageExclusions = true;
         visitMtVapiusExclusions = true;
+        baublesExclusions = true;
     }
 }

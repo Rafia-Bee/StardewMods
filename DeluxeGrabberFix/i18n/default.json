@@ -7,6 +7,8 @@
     "config.sunberry-village-exclusions.tooltip": "Prevents the grabber from collecting ore nodes and supply crates that Sunberry Village spawns in a non-standard way. Disable this if you want the grabber to collect those items.",
     "config.visit-mt-vapius-exclusions": "Visit Mount Vapius Exclusions",
     "config.visit-mt-vapius-exclusions.tooltip": "Prevents the grabber from collecting resource nodes (ores, stumps, weeds) from the Visit Mount Vapius mod. These are breakable objects, not forage.",
+    "config.baubles-exclusions": "Baubles Exclusions",
+    "config.baubles-exclusions.tooltip": "Prevents the grabber from collecting cattail nodes and petuntse nodes from the Baubles mod. These are breakable resource nodes, not forage.",
 
     "section.crop-harvesting": "Crop Harvesting",
     "section.crop-harvesting.tooltip": "These options are only considered if 'Harvest Crops' is enabled",
