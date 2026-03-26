@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using DeluxeGrabberFix.Framework;
 using StardewValley;
 
 namespace DeluxeGrabberFix.Framework;
@@ -59,5 +60,22 @@ internal static class Helpers
         }
 
         return forageable;
+    }
+
+    public static bool IsFlowerNearBeeHouse(GameLocation location, Vector2 flowerTile, int range)
+    {
+        foreach (var pair in location.Objects.Pairs)
+        {
+            var obj = pair.Value;
+            if (obj.QualifiedItemId == BigCraftableIds.BeeHouse
+                || (obj.QualifiedItemId?.StartsWith(BigCraftableIds.MpsPrefix) == true
+                    && obj.QualifiedItemId.Contains("BeeHouse")))
+            {
+                float dist = Math.Abs(flowerTile.X - pair.Key.X) + Math.Abs(flowerTile.Y - pair.Key.Y);
+                if (dist <= range)
+                    return true;
+            }
+        }
+        return false;
     }
 }

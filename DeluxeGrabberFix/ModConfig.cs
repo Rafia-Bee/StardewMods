@@ -26,6 +26,13 @@ internal class ModConfig
         Daily
     }
 
+    public enum FlowerHarvestMode
+    {
+        Off,
+        All,
+        Smart
+    }
+
     public GlobalGrabberMode globalGrabber;
     public GrabFrequency grabFrequency;
     public HarvestCropsRangeMode harvestCropsRangeMode;
@@ -42,7 +49,8 @@ internal class ModConfig
     public bool bushes;
     public bool fruitTrees;
     public bool seedTrees;
-    public bool flowers;
+    public FlowerHarvestMode flowers;
+    public int beeHouseRange;
     public bool reportYield;
     public bool debugLogging;
     public bool gainExperience;
@@ -64,6 +72,8 @@ internal class ModConfig
     public bool sunberryVillageExclusions;
     public bool visitMtVapiusExclusions;
     public bool baublesExclusions;
+    public bool resourceChickensExclusions;
+    public bool capeStardewExclusions;
     public SButton globalFireButton;
     public SButton designateGrabberButton;
     public bool globalAutoFire;
@@ -92,6 +102,13 @@ internal class ModConfig
         { GrabFrequency.Daily, "Daily" }
     };
 
+    internal static Dictionary<FlowerHarvestMode, string> FlowerHarvestDict = new()
+    {
+        { FlowerHarvestMode.Off, "Off" },
+        { FlowerHarvestMode.All, "All" },
+        { FlowerHarvestMode.Smart, "Smart" }
+    };
+
     internal static Dictionary<string, HarvestCropsRangeMode> HarvestCropsRangeReverseDict =
         HarvestCropsRangeDict.ToDictionary(p => p.Value, p => p.Key);
 
@@ -101,9 +118,13 @@ internal class ModConfig
     internal static Dictionary<string, GrabFrequency> GrabFrequencyReverseDict =
         GrabFrequencyDict.ToDictionary(p => p.Value, p => p.Key);
 
+    internal static Dictionary<string, FlowerHarvestMode> FlowerHarvestReverseDict =
+        FlowerHarvestDict.ToDictionary(p => p.Value, p => p.Key);
+
     internal static string[] HarvestCropsRangeModeStrings = { "Square", "Walk" };
     internal static string[] GlobalGrabberModeStrings = { "Off", "All", "Hover" };
     internal static string[] GrabFrequencyStrings = { "Instant", "Hourly", "Daily" };
+    internal static string[] FlowerHarvestStrings = { "Off", "All", "Smart" };
 
     internal static readonly HashSet<string> SunberryVillageExcludedItems = new()
     {
@@ -128,6 +149,27 @@ internal class ModConfig
         "(O)appleseed.BCP.PetuntseNode"
     };
 
+    internal static readonly HashSet<string> ResourceChickensExcludedItems = new()
+    {
+        "(O)UncleArya.ResourceChickens.WeedFiberEgg",
+        "(O)UncleArya.ResourceChickens.WeedMossEgg",
+        "(O)UncleArya.ResourceChickens.GeodeStoneEgg",
+        "(O)UncleArya.ResourceChickens.FossilStoneBoneEgg",
+        "(O)UncleArya.ResourceChickens.MineBarrelBoneEgg",
+        "(O)UncleArya.ResourceChickens.QuarryMineMonsterEgg",
+        "(O)UncleArya.ResourceChickens.SkullCavernBarrelBombEgg",
+        "(O)UncleArya.ResourceChickens.VolcanoMineVolcanoEgg",
+        "(O)UncleArya.ResourceChickens.DangerousMineRadioactiveEgg"
+    };
+
+    internal static readonly HashSet<string> CapeStardewExcludedItems = new()
+    {
+        "(O)Cape.kimberliteheart",
+        "(O)Cape.kimberlitefire",
+        "(O)Cape.kimberliteblue",
+        "(O)Cape.kimberlitecelestial"
+    };
+
     public bool IsItemExcluded(string qualifiedItemId)
     {
         if (excludedItems != null && excludedItems.Contains(qualifiedItemId))
@@ -137,6 +179,10 @@ internal class ModConfig
         if (visitMtVapiusExclusions && qualifiedItemId.Contains("_Node_"))
             return true;
         if (baublesExclusions && BaublesExcludedItems.Contains(qualifiedItemId))
+            return true;
+        if (resourceChickensExclusions && ResourceChickensExcludedItems.Contains(qualifiedItemId))
+            return true;
+        if (capeStardewExclusions && CapeStardewExcludedItems.Contains(qualifiedItemId))
             return true;
         return false;
     }
@@ -156,7 +202,8 @@ internal class ModConfig
         bushes = true;
         fruitTrees = false;
         seedTrees = false;
-        flowers = false;
+        flowers = FlowerHarvestMode.Smart;
+        beeHouseRange = 5;
         reportYield = true;
         debugLogging = false;
         gainExperience = true;
@@ -186,5 +233,7 @@ internal class ModConfig
         sunberryVillageExclusions = true;
         visitMtVapiusExclusions = true;
         baublesExclusions = true;
+        resourceChickensExclusions = true;
+        capeStardewExclusions = true;
     }
 }
