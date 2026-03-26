@@ -24,11 +24,16 @@ internal class IndoorPotGrabber : ObjectsMapGrabber
 
         HoeDirt dirt = pot.hoeDirt.Value;
 
-        if (!Config.flowers)
+        if (Config.flowers != ModConfig.FlowerHarvestMode.All)
         {
             string harvestId = dirt.crop.indexOfHarvest.Value;
             if (!string.IsNullOrEmpty(harvestId) && ItemRegistry.Create<Object>(harvestId).Category == Object.flowersCategory)
-                return false;
+            {
+                if (Config.flowers == ModConfig.FlowerHarvestMode.Off)
+                    return false;
+                if (Config.flowers == ModConfig.FlowerHarvestMode.Smart && Helpers.IsFlowerNearBeeHouse(Location, tile, Config.beeHouseRange))
+                    return false;
+            }
         }
 
         var nearbyGrabbers = Helpers.GetNearbyObjectsToTile(tile, GrabberPairs, Config.harvestCropsRange, Config.harvestCropsRangeMode);

@@ -150,11 +150,19 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.harvest-crops-indoor-pots"),
             () => _mod.Helper.Translation.Get("config.harvest-crops-indoor-pots.tooltip"));
 
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.flowers,
-            v => _mod.Config.flowers = v,
+        api.AddTextOption(_mod.ModManifest,
+            () => ModConfig.FlowerHarvestDict[_mod.Config.flowers],
+            v => _mod.Config.flowers = ModConfig.FlowerHarvestReverseDict[v],
             () => _mod.Helper.Translation.Get("config.harvest-flowers"),
-            () => _mod.Helper.Translation.Get("config.harvest-flowers.tooltip"));
+            () => _mod.Helper.Translation.Get("config.harvest-flowers.tooltip"),
+            ModConfig.FlowerHarvestStrings,
+            v => _mod.Helper.Translation.Get($"dropdown.flower-{v.ToLower()}"));
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.beeHouseRange,
+            v => _mod.Config.beeHouseRange = Math.Max(1, v),
+            () => _mod.Helper.Translation.Get("config.bee-house-range"),
+            () => _mod.Helper.Translation.Get("config.bee-house-range.tooltip"));
 
         api.AddNumberOption(_mod.ModManifest,
             () => _mod.Config.harvestCropsRange,
@@ -396,6 +404,18 @@ internal class GmcmRegistration
             v => _mod.Config.baublesExclusions = v,
             () => _mod.Helper.Translation.Get("config.baubles-exclusions"),
             () => _mod.Helper.Translation.Get("config.baubles-exclusions.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.resourceChickensExclusions,
+            v => _mod.Config.resourceChickensExclusions = v,
+            () => _mod.Helper.Translation.Get("config.resource-chickens-exclusions"),
+            () => _mod.Helper.Translation.Get("config.resource-chickens-exclusions.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.capeStardewExclusions,
+            v => _mod.Config.capeStardewExclusions = v,
+            () => _mod.Helper.Translation.Get("config.cape-stardew-exclusions"),
+            () => _mod.Helper.Translation.Get("config.cape-stardew-exclusions.tooltip"));
 
         api.AddBoolOption(_mod.ModManifest,
             () => _mod.Config.buriedItems,
