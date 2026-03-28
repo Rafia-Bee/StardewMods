@@ -5,6 +5,7 @@ When you buy an animal, it follows you around instead of teleporting straight to
 ## Features
 
 - **Follow the leader**: Purchased animals trail behind you as you walk, forming a chain if you buy more than one.
+- **NPC reactions**: Villagers you pass will comment on your animals with speech bubbles -- 55 unique lines ranging from sweet to snarky.
 - **Outdoor stall support**: Works with outdoor animal vendors too (e.g. Moira's Glimsap Fair stall from Visit Mount Vapius). Animals appear right away.
 - **Livestock Bazaar compatible**: Hooks into `AnimalHouse.adoptAnimal`, so any mod that routes through the standard adoption path is supported.
 - **Farm arrival**: When you reach the farm, animals spread out in front of their barn/coop and wait for you to enter the building.
@@ -25,6 +26,7 @@ All options are available through [Generic Mod Config Menu](https://www.nexusmod
 | Animal Sounds | true | Whether animals make sounds while following. |
 | Sound Interval | 15s | Seconds between animal sounds. |
 | Show Notifications | true | HUD messages for follow/delivery events. |
+| NPC Reactions | true | Nearby villagers react with speech bubbles when you escort animals. |
 | Debug Logging | true | Log debug messages to the SMAPI console. |
 
 ## Requirements

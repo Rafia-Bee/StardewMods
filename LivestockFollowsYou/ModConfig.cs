@@ -24,6 +24,9 @@ internal class ModConfig
     /// <summary>Whether to show HUD notifications for follow and delivery events.</summary>
     public bool ShowNotifications { get; set; } = true;
 
+    /// <summary>Whether nearby NPCs react with speech bubbles when you escort animals.</summary>
+    public bool NpcReactionsEnabled { get; set; } = true;
+
     /// <summary>Whether to log debug messages to the SMAPI console.</summary>
     public bool DebugLogging { get; set; } = true;
 }
