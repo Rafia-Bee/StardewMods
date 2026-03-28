@@ -1,6 +1,6 @@
 # Livestock Follows You
 
-Animals you buy follow you home instead of teleporting to the barn. Walk them back to the farm yourself and watch them line up at the barn door.
+When you buy an animal, it follows you around instead of teleporting straight to its building. Once you reach the farm and enter the barn or coop, the animal is registered inside and goes back to normal. This only happens on the walk home after purchase -- your existing animals won't start following you around.
 
 ## Features
 
