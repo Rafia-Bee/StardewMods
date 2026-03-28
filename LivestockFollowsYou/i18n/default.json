@@ -1,0 +1,30 @@
+{
+    "config.enabled.name": "Enabled",
+    "config.enabled.tooltip": "Whether animals follow you home after purchase. When disabled, animals teleport to the barn as normal.",
+
+    "config.follow_speed.name": "Follow Speed",
+    "config.follow_speed.tooltip": "Speed multiplier for how fast animals catch up when they fall behind. Higher values make them keep up better.",
+
+    "config.rubber_band_distance.name": "Catch-up Distance",
+    "config.rubber_band_distance.tooltip": "If the animal falls this many tiles behind, it teleports closer to you.",
+
+    "config.auto_deliver_time.name": "Auto-deliver Time",
+    "config.auto_deliver_time.tooltip": "Game time when animals are automatically sent home if you haven't delivered them yet. (2000 = 8:00 PM)",
+
+    "config.animal_sounds.name": "Animal Sounds",
+    "config.animal_sounds.tooltip": "Whether following animals make sounds while walking with you.",
+
+    "config.sound_interval.name": "Sound Interval (Seconds)",
+    "config.sound_interval.tooltip": "How many seconds between animal sounds while following.",
+
+    "config.show_notifications.name": "Show Notifications",
+    "config.show_notifications.tooltip": "Show HUD messages when animals start following and when they arrive home.",
+
+    "config.debug_logging.name": "Debug Logging",
+    "config.debug_logging.tooltip": "Log detailed debug messages to the SMAPI console. Useful for troubleshooting.",
+
+    "hud.following": "{{name}} is following you home!",
+    "hud.delivered": "{{name}} made it home safely!",
+    "hud.auto_delivered": "{{name}} got tired of waiting and found their own way home.",
+    "hud.waiting_at_door": "{{name}} is waiting at the {{building}}. Open the animal door to let them in!"
+}

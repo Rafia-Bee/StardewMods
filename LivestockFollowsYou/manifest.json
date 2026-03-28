@@ -1,0 +1,17 @@
+{
+    "Name": "Livestock Follows You",
+    "Author": "Rafia-Bee",
+    "Version": "1.0.0",
+    "MinimumApiVersion": "4.1.0",
+    "UniqueID": "RafiaBee.LivestockFollowsYou",
+    "Description": "Animals you buy from Marnie follow you home instead of teleporting to the barn.",
+    "EntryDll": "LivestockFollowsYou.dll",
+    "Dependencies": [
+        {
+            "UniqueID": "spacechase0.GenericModConfigMenu",
+            "MinimumVersion": "1.6.0",
+            "IsRequired": false
+        }
+    ],
+    "UpdateKeys": ["Nexus:MODID"]
+}
