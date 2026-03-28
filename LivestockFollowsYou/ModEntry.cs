@@ -12,11 +12,13 @@ public class ModEntry : Mod
 {
     private ModConfig Config;
     private AnimalFollowManager FollowManager;
+    private NpcReactionManager NpcReactions;
 
     public override void Entry(IModHelper helper)
     {
         Config = helper.ReadConfig<ModConfig>();
         FollowManager = new AnimalFollowManager(Monitor, helper, () => Config);
+        NpcReactions = new NpcReactionManager(Monitor, helper, () => Config);
 
         // Wire up Harmony patches
         PurchasePatches.Manager = FollowManager;
@@ -127,6 +129,14 @@ public class ModEntry : Mod
 
         gmcm.AddBoolOption(
             mod: ModManifest,
+            getValue: () => Config.NpcReactionsEnabled,
+            setValue: v => Config.NpcReactionsEnabled = v,
+            name: () => Helper.Translation.Get("config.npc_reactions.name"),
+            tooltip: () => Helper.Translation.Get("config.npc_reactions.tooltip")
+        );
+
+        gmcm.AddBoolOption(
+            mod: ModManifest,
             getValue: () => Config.DebugLogging,
             setValue: v => Config.DebugLogging = v,
             name: () => Helper.Translation.Get("config.debug_logging.name"),
@@ -140,6 +150,7 @@ public class ModEntry : Mod
             return;
 
         FollowManager.UpdateMovement(Game1.currentGameTime);
+        NpcReactions.Update(FollowManager.Followers);
     }
 
     private void OnTimeChanged(object sender, TimeChangedEventArgs e)
@@ -163,6 +174,7 @@ public class ModEntry : Mod
     private void OnDayEnding(object sender, DayEndingEventArgs e)
     {
         FollowManager.DeliverAll();
+        NpcReactions.Reset();
     }
 
     private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
@@ -174,6 +186,7 @@ public class ModEntry : Mod
     private void OnReturnedToTitle(object sender, ReturnedToTitleEventArgs e)
     {
         FollowManager.Reset();
+        NpcReactions.Reset();
     }
 
     private static string FormatGameTime(int time)

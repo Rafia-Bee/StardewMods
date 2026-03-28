@@ -62,6 +62,9 @@ internal class AnimalFollowManager
     /// <summary>Whether there are any animals currently following/pending.</summary>
     public bool HasFollowers => following.Count > 0;
 
+    /// <summary>Current list of following animals (read-only view for other managers).</summary>
+    internal IReadOnlyList<FollowingAnimal> Followers => following;
+
     /// <summary>Queue an animal for follow after purchase.</summary>
     public void StartFollowing(FarmAnimal animal)
     {
