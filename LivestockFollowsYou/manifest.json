@@ -4,7 +4,7 @@
     "Version": "1.0.0",
     "MinimumApiVersion": "4.1.0",
     "UniqueID": "RafiaBee.LivestockFollowsYou",
-    "Description": "Animals you buy from Marnie follow you home instead of teleporting to the barn.",
+    "Description": "Newly purchased animals follow you home instead of teleporting to the barn. Once registered, they go back to normal.",
     "EntryDll": "LivestockFollowsYou.dll",
     "Dependencies": [
         {
