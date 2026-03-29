@@ -119,11 +119,6 @@ public class ModEntry : Mod
         return "Auto-Grabber";
     }
 
-    public void LogInfo(string message)
-    {
-        Monitor.Log(message, LogLevel.Info);
-    }
-
     public override object GetApi()
     {
         return Api;
@@ -213,7 +208,7 @@ public class ModEntry : Mod
         );
 
         if (Helper.ModRegistry.GetApi<IVanillaPlusProfessionsApi>("KediDili.VanillaPlusProfessions") != null)
-            Monitor.Log("Vanilla Plus Professions detected -- VPP compatibility enabled.", LogLevel.Info);
+            LogDebug("Vanilla Plus Professions detected -- VPP compatibility enabled.");
 
         _gmcm = new GmcmRegistration(this, _locations);
         _gmcm.Initialize();
@@ -231,7 +226,7 @@ public class ModEntry : Mod
 
     private void LogConfig()
     {
-        Monitor.Log(
+        LogDebug(
             $"Config: forage={Config.forage}, animalProducts={Config.animalProducts}, " +
             $"slimeHutch={Config.slimeHutch}, farmCaveMushrooms={Config.farmCaveMushrooms}, " +
             $"harvestCrops={Config.harvestCrops}, indoorPots={Config.harvestCropsIndoorPots}, " +
@@ -245,11 +240,10 @@ public class ModEntry : Mod
             $"beeHouses={Config.collectBeeHouses}, tappers={Config.collectTappers}, " +
             $"globalMode={Config.globalGrabber}, globalAutoFire={Config.globalAutoFire}, " +
             $"reportYield={Config.reportYield}, gainXP={Config.gainExperience}, " +
-            $"grabFrequency={Config.grabFrequency}, skipFestivals={Config.skipFestivalLocations}",
-            LogLevel.Debug);
+            $"grabFrequency={Config.grabFrequency}, skipFestivals={Config.skipFestivalLocations}");
 
         if (Config.excludedItems?.Count > 0)
-            Monitor.Log($"Excluded items: {string.Join(", ", Config.excludedItems)}", LogLevel.Debug);
+            LogDebug($"Excluded items: {string.Join(", ", Config.excludedItems)}");
     }
 
     private void OnReturnedToTitle(object sender, ReturnedToTitleEventArgs e)

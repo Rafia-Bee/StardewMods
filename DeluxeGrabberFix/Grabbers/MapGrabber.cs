@@ -75,13 +75,13 @@ internal abstract class MapGrabber
         if (Config.IsItemExcluded(item.QualifiedItemId))
         {
             if (Config.visitMtVapiusExclusions && item.QualifiedItemId.Contains("_Node_"))
-                Mod.LogInfo($"VMV exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+                Mod.LogDebug($"VMV exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             else if (Config.baublesExclusions && ModConfig.BaublesExcludedItems.Contains(item.QualifiedItemId))
-                Mod.LogInfo($"Baubles exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+                Mod.LogDebug($"Baubles exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             else if (Config.resourceChickensExclusions && ModConfig.ResourceChickensExcludedItems.Contains(item.QualifiedItemId))
-                Mod.LogInfo($"Resource Chickens exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+                Mod.LogDebug($"Resource Chickens exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             else if (Config.capeStardewExclusions && ModConfig.CapeStardewExcludedItems.Contains(item.QualifiedItemId))
-                Mod.LogInfo($"Cape Stardew exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+                Mod.LogDebug($"Cape Stardew exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             else
                 Mod.LogDebug($"Skipping excluded item {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             return false;

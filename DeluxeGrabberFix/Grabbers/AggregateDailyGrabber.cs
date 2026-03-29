@@ -16,6 +16,7 @@ internal class AggregateDailyGrabber : MapGrabber
             new AnimalProductGrabber(mod, location),
             new AggregateObjectsGrabber(mod, location),
             new AggregateFeaturesGrabber(mod, location),
+            new FishPondGrabber(mod, location),
             new WoodsHardwoodGrabber(mod, location),
             new GreenRainWeedGrabber(mod, location),
             new TownGarbageCanGrabber(mod, location),

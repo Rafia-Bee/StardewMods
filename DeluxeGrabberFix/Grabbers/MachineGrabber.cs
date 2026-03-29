@@ -29,6 +29,12 @@ internal class MachineGrabber : ObjectsMapGrabber
         if (IsTapper(obj))
             return GrabTapper(tile, obj);
 
+        if (IsMushroomLog(obj))
+            return GrabMushroomLog(tile, obj);
+
+        if (IsLeafBasket(obj))
+            return GrabLeafBasket(tile, obj);
+
         return false;
     }
 
@@ -98,9 +104,51 @@ internal class MachineGrabber : ObjectsMapGrabber
            || (obj.QualifiedItemId?.StartsWith(BigCraftableIds.MpsPrefix) == true
                && obj.QualifiedItemId.Contains("BeeHouse"));
 
+    private bool GrabLeafBasket(Vector2 tile, Object obj)
+    {
+        if (!Config.collectLeafBaskets)
+            return false;
+
+        var output = obj.heldObject.Value;
+        if (TryAddItem(output))
+        {
+            Mod.LogDebug($"Collected {output.Name} x{output.Stack} from leaf basket at {Location.Name} [{tile}]");
+            obj.heldObject.Value = null;
+            obj.readyForHarvest.Value = false;
+            obj.showNextIndex.Value = false;
+            return true;
+        }
+        return false;
+    }
+
+    private bool GrabMushroomLog(Vector2 tile, Object obj)
+    {
+        if (!Config.collectMushroomLogs)
+            return false;
+
+        var output = obj.heldObject.Value;
+        if (TryAddItem(output))
+        {
+            Mod.LogDebug($"Collected {output.Name} x{output.Stack} from mushroom log at {Location.Name} [{tile}]");
+            obj.heldObject.Value = null;
+            obj.readyForHarvest.Value = false;
+            obj.showNextIndex.Value = false;
+            return true;
+        }
+        return false;
+    }
+
     private static bool IsTapper(Object obj)
         => obj.QualifiedItemId == BigCraftableIds.Tapper
            || obj.QualifiedItemId == BigCraftableIds.HeavyTapper
            || (obj.QualifiedItemId?.StartsWith(BigCraftableIds.MpsPrefix) == true
                && obj.QualifiedItemId.Contains("Tapper"));
+
+    private static bool IsLeafBasket(Object obj)
+        => obj.QualifiedItemId == BigCraftableIds.LeafBasket;
+
+    private static bool IsMushroomLog(Object obj)
+        => obj.QualifiedItemId == BigCraftableIds.MushroomLog
+           || (obj.QualifiedItemId?.StartsWith(BigCraftableIds.MpsPrefix) == true
+               && obj.QualifiedItemId.Contains("MushroomLog"));
 }

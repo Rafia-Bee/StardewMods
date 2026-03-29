@@ -50,13 +50,13 @@ internal class LocationManager
     {
         if (!_mod.Config.selectVisitedOnly || DiscoveredLocations == null)
         {
-            _mod.Monitor.Log($"ApplyVisitAutoSkip skipped: selectVisitedOnly={_mod.Config.selectVisitedOnly}, discoveredLocations={DiscoveredLocations?.Count ?? -1}", LogLevel.Info);
+            _mod.LogDebug($"ApplyVisitAutoSkip skipped: selectVisitedOnly={_mod.Config.selectVisitedOnly}, discoveredLocations={DiscoveredLocations?.Count ?? -1}");
             return;
         }
 
         if (SaveData == null)
         {
-            _mod.Monitor.Log("ApplyVisitAutoSkip skipped: SaveData is null", LogLevel.Info);
+            _mod.LogDebug("ApplyVisitAutoSkip skipped: SaveData is null");
             return;
         }
 
@@ -85,7 +85,7 @@ internal class LocationManager
             }
         }
 
-        _mod.Monitor.Log($"ApplyVisitAutoSkip: {DiscoveredLocations.Count} locations checked, {skipped} auto-skipped, {enabled} auto-enabled", LogLevel.Info);
+        _mod.LogDebug($"ApplyVisitAutoSkip: {DiscoveredLocations.Count} locations checked, {skipped} auto-skipped, {enabled} auto-enabled");
 
         if (skipped > 0 || enabled > 0)
         {
