@@ -66,6 +66,9 @@ internal class ModConfig
     public bool collectCrabPots;
     public bool collectBeeHouses;
     public bool collectTappers;
+    public bool collectLeafBaskets;
+    public bool collectMushroomLogs;
+    public bool collectFishPonds;
     public bool collectDebris;
     public HashSet<string> SkippedLocations;
     public HashSet<string> excludedItems;
@@ -228,6 +231,9 @@ internal class ModConfig
         collectCrabPots = true;
         collectBeeHouses = true;
         collectTappers = true;
+        collectLeafBaskets = true;
+        collectMushroomLogs = true;
+        collectFishPonds = true;
         SkippedLocations = new HashSet<string>();
         excludedItems = new HashSet<string>();
         sunberryVillageExclusions = true;

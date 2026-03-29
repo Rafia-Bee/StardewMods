@@ -69,6 +69,12 @@
     "config.collect-bee-houses.tooltip": "Also works with Machine Progression System (MPS) upgraded bee houses. Ignored if 'Collect Machine Outputs' is disabled",
     "config.collect-tappers": "Collect from Tappers",
     "config.collect-tappers.tooltip": "Collects from both regular and heavy tappers, including Machine Progression System (MPS) upgraded variants. Ignored if 'Collect Machine Outputs' is disabled",
+    "config.collect-leaf-baskets": "Collect from Leaf Baskets",
+    "config.collect-leaf-baskets.tooltip": "Collects leaves and fiber from Leaf Baskets added by the Cloths and Colors (Textile Expansion) mod. Ignored if 'Collect Machine Outputs' is disabled",
+    "config.collect-mushroom-logs": "Collect from Mushroom Logs",
+    "config.collect-mushroom-logs.tooltip": "Collects mushrooms from Mushroom Logs, including Machine Progression System (MPS) upgraded variants. Ignored if 'Collect Machine Outputs' is disabled",
+    "config.collect-fish-ponds": "Collect from Fish Ponds",
+    "config.collect-fish-ponds.tooltip": "Collects roe and other produce from Fish Ponds. Grants fishing experience just like collecting by hand. Ignored if 'Collect Machine Outputs' is disabled",
 
     "section.miscellaneous": "Global Grabber & Misc",
     "page.miscellaneous.link": "Global Grabber & Misc >",

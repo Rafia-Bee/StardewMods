@@ -289,6 +289,24 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.collect-tappers"),
             () => _mod.Helper.Translation.Get("config.collect-tappers.tooltip"));
 
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectLeafBaskets,
+            v => _mod.Config.collectLeafBaskets = v,
+            () => _mod.Helper.Translation.Get("config.collect-leaf-baskets"),
+            () => _mod.Helper.Translation.Get("config.collect-leaf-baskets.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectMushroomLogs,
+            v => _mod.Config.collectMushroomLogs = v,
+            () => _mod.Helper.Translation.Get("config.collect-mushroom-logs"),
+            () => _mod.Helper.Translation.Get("config.collect-mushroom-logs.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectFishPonds,
+            v => _mod.Config.collectFishPonds = v,
+            () => _mod.Helper.Translation.Get("config.collect-fish-ponds"),
+            () => _mod.Helper.Translation.Get("config.collect-fish-ponds.tooltip"));
+
         // Miscellaneous page
         api.AddPage(_mod.ModManifest, "miscellaneous", () => _mod.Helper.Translation.Get("section.miscellaneous"));
 

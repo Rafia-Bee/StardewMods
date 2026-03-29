@@ -76,7 +76,9 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 - Works alongside other grabber mods
 - Compatible with [Vanilla Plus Professions](https://www.nexusmods.com/stardewvalley/mods/22992) — VPP's Combat-Farm slime drops, Shaker tree drops, and Gleaner/Wayfarer forage are all auto-collected
 - Compatible with [Sunberry Village](https://www.nexusmods.com/stardewvalley/mods/22702) — optional config toggle to exclude FTM-spawned ore nodes and supply crates
-- Compatible with [Machine Progression System](https://www.nexusmods.com/stardewvalley/mods/15530) — upgraded crab pots, bee houses, and tappers are collected alongside vanilla machines
+- Compatible with [Machine Progression System](https://www.nexusmods.com/stardewvalley/mods/15530) — upgraded crab pots, bee houses, tappers, and mushroom logs are collected alongside vanilla machines
+- Compatible with [Cloths and Colors (Textile Expansion)](https://www.nexusmods.com/stardewvalley/mods/39216) — Leaf Baskets are collected as part of machine collection
+- Collects roe and other produce from Fish Ponds automatically
 - Provides a mod API (`IDeluxeGrabberFixApi`) for other mods to override mushroom, berry bush, fruit tree, and slime harvest behavior, plus an `OnItemGrabbed` event and `IsGrabberActive` query
 
 ## Notes
