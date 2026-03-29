@@ -35,6 +35,7 @@ public class ModEntry : Mod
     private readonly LocationManager _locations;
     private readonly GrabberManager _grabbers;
     private GmcmRegistration _gmcm;
+    private IAutomateAPI _automateApi;
 
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private bool _isGrabbing;
@@ -92,6 +93,19 @@ public class ModEntry : Mod
     }
 
     internal void ReportChestFull(Object grabber) => _grabbers.ReportChestFull(grabber);
+
+    internal IDictionary<Vector2, int> GetAutomatedMachineStates(GameLocation location)
+    {
+        if (_automateApi == null)
+            return null;
+
+        var map = location.Map;
+        if (map == null)
+            return null;
+
+        var area = new Rectangle(0, 0, map.Layers[0].LayerWidth, map.Layers[0].LayerHeight);
+        return _automateApi.GetMachineStates(location, area);
+    }
 
     internal static string GetGrabberCustomName(Object grabber)
     {
@@ -210,6 +224,10 @@ public class ModEntry : Mod
         if (Helper.ModRegistry.GetApi<IVanillaPlusProfessionsApi>("KediDili.VanillaPlusProfessions") != null)
             LogDebug("Vanilla Plus Professions detected -- VPP compatibility enabled.");
 
+        _automateApi = Helper.ModRegistry.GetApi<IAutomateAPI>("Pathoschild.Automate");
+        if (_automateApi != null)
+            LogDebug("Automate detected -- compatibility mode available.");
+
         _gmcm = new GmcmRegistration(this, _locations);
         _gmcm.Initialize();
     }
@@ -270,6 +288,8 @@ public class ModEntry : Mod
     private void OnUpdateTicked(object sender, UpdateTickedEventArgs e)
     {
         if (_gmcm.ProcessPendingBatchAction())
+            return;
+        if (_gmcm.ProcessPendingMachineToggle())
             return;
 
         // Deferred day-start grab: runs 1 tick after DayStarted so other mods

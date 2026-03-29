@@ -14,6 +14,7 @@ internal class GmcmRegistration
 
     private IGenericModConfigMenuApi _api;
     private LocationBatchAction? _pendingBatchAction;
+    private bool? _pendingMachineToggleAll;
 
     internal enum LocationBatchAction { EnableAll, DisableAll, SelectVisitedOnly }
 
@@ -90,6 +91,56 @@ internal class GmcmRegistration
         }
 
         _mod.Helper.WriteConfig(_mod.Config);
+        RebuildConfigMenu();
+        _api.OpenModMenu(_mod.ModManifest);
+        return true;
+    }
+
+    internal bool ProcessPendingMachineToggle()
+    {
+        if (!_pendingMachineToggleAll.HasValue)
+            return false;
+
+        bool enable = _pendingMachineToggleAll.Value;
+        _pendingMachineToggleAll = null;
+
+        var c = _mod.Config;
+        c.collectMachines = enable;
+        c.collectAllMachines = enable;
+        c.collectCrabPots = enable;
+        c.collectBeeHouses = enable;
+        c.collectTappers = enable;
+        c.collectLeafBaskets = enable;
+        c.collectMushroomLogs = enable;
+        c.collectFishPonds = enable;
+        c.collectKegs = enable;
+        c.collectPreservesJars = enable;
+        c.collectCheesePresses = enable;
+        c.collectMayonnaiseMachines = enable;
+        c.collectLooms = enable;
+        c.collectOilMakers = enable;
+        c.collectFurnaces = enable;
+        c.collectCharcoalKilns = enable;
+        c.collectRecyclingMachines = enable;
+        c.collectSeedMakers = enable;
+        c.collectBoneMills = enable;
+        c.collectGeodeCrushers = enable;
+        c.collectWoodChippers = enable;
+        c.collectDeconstructors = enable;
+        c.collectFishSmokers = enable;
+        c.collectBaitMakers = enable;
+        c.collectDehydrators = enable;
+        c.collectCrystalariums = enable;
+        c.collectLightningRods = enable;
+        c.collectWormBins = enable;
+        c.collectSolarPanels = enable;
+        c.collectSlimeEggPresses = enable;
+        c.collectCoffeeMakers = enable;
+        c.collectSodaMachines = enable;
+        c.collectStatues = enable;
+        c.collectOtherMachines = enable;
+
+        _mod.Helper.WriteConfig(c);
         RebuildConfigMenu();
         _api.OpenModMenu(_mod.ModManifest);
         return true;
@@ -272,6 +323,19 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.collect-machine-outputs.tooltip"));
 
         api.AddBoolOption(_mod.ModManifest,
+            getValue: () => _mod.Config.collectAllMachines,
+            setValue: v => { },
+            name: () => _mod.Helper.Translation.Get("config.collect-all-machines"),
+            tooltip: () => _mod.Helper.Translation.Get("config.collect-all-machines.tooltip"),
+            fieldId: "collect-all-machines");
+
+        api.OnFieldChanged(_mod.ModManifest, (fieldId, value) =>
+        {
+            if (fieldId == "collect-all-machines")
+                _pendingMachineToggleAll = (bool)value;
+        });
+
+        api.AddBoolOption(_mod.ModManifest,
             () => _mod.Config.collectCrabPots,
             v => _mod.Config.collectCrabPots = v,
             () => _mod.Helper.Translation.Get("config.collect-crab-pots"),
@@ -306,6 +370,180 @@ internal class GmcmRegistration
             v => _mod.Config.collectFishPonds = v,
             () => _mod.Helper.Translation.Get("config.collect-fish-ponds"),
             () => _mod.Helper.Translation.Get("config.collect-fish-ponds.tooltip"));
+
+        // Artisan Equipment
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.artisan-machines"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectKegs,
+            v => _mod.Config.collectKegs = v,
+            () => _mod.Helper.Translation.Get("config.collect-kegs"),
+            () => _mod.Helper.Translation.Get("config.collect-kegs.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectPreservesJars,
+            v => _mod.Config.collectPreservesJars = v,
+            () => _mod.Helper.Translation.Get("config.collect-preserves-jars"),
+            () => _mod.Helper.Translation.Get("config.collect-preserves-jars.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectCheesePresses,
+            v => _mod.Config.collectCheesePresses = v,
+            () => _mod.Helper.Translation.Get("config.collect-cheese-presses"),
+            () => _mod.Helper.Translation.Get("config.collect-cheese-presses.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectMayonnaiseMachines,
+            v => _mod.Config.collectMayonnaiseMachines = v,
+            () => _mod.Helper.Translation.Get("config.collect-mayonnaise-machines"),
+            () => _mod.Helper.Translation.Get("config.collect-mayonnaise-machines.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectLooms,
+            v => _mod.Config.collectLooms = v,
+            () => _mod.Helper.Translation.Get("config.collect-looms"),
+            () => _mod.Helper.Translation.Get("config.collect-looms.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectOilMakers,
+            v => _mod.Config.collectOilMakers = v,
+            () => _mod.Helper.Translation.Get("config.collect-oil-makers"),
+            () => _mod.Helper.Translation.Get("config.collect-oil-makers.tooltip"));
+
+        // Processing Machines
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.processing-machines"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectFurnaces,
+            v => _mod.Config.collectFurnaces = v,
+            () => _mod.Helper.Translation.Get("config.collect-furnaces"),
+            () => _mod.Helper.Translation.Get("config.collect-furnaces.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectCharcoalKilns,
+            v => _mod.Config.collectCharcoalKilns = v,
+            () => _mod.Helper.Translation.Get("config.collect-charcoal-kilns"),
+            () => _mod.Helper.Translation.Get("config.collect-charcoal-kilns.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectRecyclingMachines,
+            v => _mod.Config.collectRecyclingMachines = v,
+            () => _mod.Helper.Translation.Get("config.collect-recycling-machines"),
+            () => _mod.Helper.Translation.Get("config.collect-recycling-machines.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectSeedMakers,
+            v => _mod.Config.collectSeedMakers = v,
+            () => _mod.Helper.Translation.Get("config.collect-seed-makers"),
+            () => _mod.Helper.Translation.Get("config.collect-seed-makers.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectBoneMills,
+            v => _mod.Config.collectBoneMills = v,
+            () => _mod.Helper.Translation.Get("config.collect-bone-mills"),
+            () => _mod.Helper.Translation.Get("config.collect-bone-mills.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectGeodeCrushers,
+            v => _mod.Config.collectGeodeCrushers = v,
+            () => _mod.Helper.Translation.Get("config.collect-geode-crushers"),
+            () => _mod.Helper.Translation.Get("config.collect-geode-crushers.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectWoodChippers,
+            v => _mod.Config.collectWoodChippers = v,
+            () => _mod.Helper.Translation.Get("config.collect-wood-chippers"),
+            () => _mod.Helper.Translation.Get("config.collect-wood-chippers.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectDeconstructors,
+            v => _mod.Config.collectDeconstructors = v,
+            () => _mod.Helper.Translation.Get("config.collect-deconstructors"),
+            () => _mod.Helper.Translation.Get("config.collect-deconstructors.tooltip"));
+
+        // 1.6 Machines
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.16-machines"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectFishSmokers,
+            v => _mod.Config.collectFishSmokers = v,
+            () => _mod.Helper.Translation.Get("config.collect-fish-smokers"),
+            () => _mod.Helper.Translation.Get("config.collect-fish-smokers.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectBaitMakers,
+            v => _mod.Config.collectBaitMakers = v,
+            () => _mod.Helper.Translation.Get("config.collect-bait-makers"),
+            () => _mod.Helper.Translation.Get("config.collect-bait-makers.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectDehydrators,
+            v => _mod.Config.collectDehydrators = v,
+            () => _mod.Helper.Translation.Get("config.collect-dehydrators"),
+            () => _mod.Helper.Translation.Get("config.collect-dehydrators.tooltip"));
+
+        // Passive Producers
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.passive-producers"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectCrystalariums,
+            v => _mod.Config.collectCrystalariums = v,
+            () => _mod.Helper.Translation.Get("config.collect-crystalariums"),
+            () => _mod.Helper.Translation.Get("config.collect-crystalariums.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectLightningRods,
+            v => _mod.Config.collectLightningRods = v,
+            () => _mod.Helper.Translation.Get("config.collect-lightning-rods"),
+            () => _mod.Helper.Translation.Get("config.collect-lightning-rods.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectWormBins,
+            v => _mod.Config.collectWormBins = v,
+            () => _mod.Helper.Translation.Get("config.collect-worm-bins"),
+            () => _mod.Helper.Translation.Get("config.collect-worm-bins.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectSolarPanels,
+            v => _mod.Config.collectSolarPanels = v,
+            () => _mod.Helper.Translation.Get("config.collect-solar-panels"),
+            () => _mod.Helper.Translation.Get("config.collect-solar-panels.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectSlimeEggPresses,
+            v => _mod.Config.collectSlimeEggPresses = v,
+            () => _mod.Helper.Translation.Get("config.collect-slime-egg-presses"),
+            () => _mod.Helper.Translation.Get("config.collect-slime-egg-presses.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectCoffeeMakers,
+            v => _mod.Config.collectCoffeeMakers = v,
+            () => _mod.Helper.Translation.Get("config.collect-coffee-makers"),
+            () => _mod.Helper.Translation.Get("config.collect-coffee-makers.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectSodaMachines,
+            v => _mod.Config.collectSodaMachines = v,
+            () => _mod.Helper.Translation.Get("config.collect-soda-machines"),
+            () => _mod.Helper.Translation.Get("config.collect-soda-machines.tooltip"));
+
+        // Statues
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.statues"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectStatues,
+            v => _mod.Config.collectStatues = v,
+            () => _mod.Helper.Translation.Get("config.collect-statues"),
+            () => _mod.Helper.Translation.Get("config.collect-statues.tooltip"));
+
+        // Other / Modded Machines
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.other-machines"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectOtherMachines,
+            v => _mod.Config.collectOtherMachines = v,
+            () => _mod.Helper.Translation.Get("config.collect-other-machines"),
+            () => _mod.Helper.Translation.Get("config.collect-other-machines.tooltip"));
 
         // Miscellaneous page
         api.AddPage(_mod.ModManifest, "miscellaneous", () => _mod.Helper.Translation.Get("section.miscellaneous"));
@@ -440,6 +678,12 @@ internal class GmcmRegistration
             v => _mod.Config.buriedItems = v,
             () => _mod.Helper.Translation.Get("config.collect-buried-items"),
             () => _mod.Helper.Translation.Get("config.collect-buried-items.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.automateCompatibility,
+            v => _mod.Config.automateCompatibility = v,
+            () => _mod.Helper.Translation.Get("config.automate-compatibility"),
+            () => _mod.Helper.Translation.Get("config.automate-compatibility.tooltip"));
 
         // Skipped Locations page
         api.AddPage(_mod.ModManifest, "skipped-locations", () => _mod.Helper.Translation.Get("config.skipped-locations-page"));
