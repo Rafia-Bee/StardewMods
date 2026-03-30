@@ -3,19 +3,97 @@ using Microsoft.Xna.Framework;
 using DeluxeGrabberFix.Framework;
 using StardewValley;
 using StardewValley.Objects;
+using StardewValley.TerrainFeatures;
 
 namespace DeluxeGrabberFix.Grabbers;
 
 internal class MachineGrabber : ObjectsMapGrabber
 {
-    private readonly IDictionary<Vector2, int> _automatedTiles;
+    private readonly HashSet<Vector2> _automateSkipTiles;
 
     public MachineGrabber(ModEntry mod, GameLocation location)
         : base(mod, location)
     {
-        _automatedTiles = Config.automateCompatibility
-            ? mod.GetAutomatedMachineStates(location)
+        _automateSkipTiles = Config.automateCompatibility
+            ? BuildAutomateSkipTiles(mod, location)
             : null;
+    }
+
+    /// <summary>
+    /// Determines which automated machines should be skipped by checking whether
+    /// they belong to an Automate group that actually has a connected chest that accepts output.
+    /// Machines in groups without output-capable chests are NOT skipped so DGF can collect from them.
+    /// </summary>
+    private static HashSet<Vector2> BuildAutomateSkipTiles(ModEntry mod, GameLocation location)
+    {
+        const string storeItemsKey = "Pathoschild.Automate/StoreItems";
+
+        var allMachineTiles = mod.GetAutomatedMachineStates(location);
+        if (allMachineTiles == null || allMachineTiles.Count == 0)
+            return null;
+
+        var skipTiles = new HashSet<Vector2>();
+        var visited = new HashSet<Vector2>();
+
+        foreach (var startTile in allMachineTiles.Keys)
+        {
+            if (visited.Contains(startTile))
+                continue;
+
+            // BFS to find the connected component (machines + connectors + chests)
+            var component = new List<Vector2>();
+            var hasOutputChest = false;
+            var queue = new Queue<Vector2>();
+            queue.Enqueue(startTile);
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                if (!visited.Add(current))
+                    continue;
+
+                if (allMachineTiles.ContainsKey(current))
+                    component.Add(current);
+
+                if (!hasOutputChest && location.Objects.TryGetValue(current, out var currentObj) && currentObj is Chest chest)
+                {
+                    // Only count this chest if Automate can store items in it
+                    // "Disable" means "Never put items in this chest"
+                    if (!chest.modData.TryGetValue(storeItemsKey, out var storeValue) || storeValue != "Disable")
+                        hasOutputChest = true;
+                }
+
+                // Check cardinal neighbors for machines, chests, or connectors (flooring/paths)
+                Vector2[] neighbors =
+                {
+                    new(current.X, current.Y - 1),
+                    new(current.X, current.Y + 1),
+                    new(current.X - 1, current.Y),
+                    new(current.X + 1, current.Y)
+                };
+
+                foreach (var neighbor in neighbors)
+                {
+                    if (visited.Contains(neighbor))
+                        continue;
+
+                    if (allMachineTiles.ContainsKey(neighbor))
+                        queue.Enqueue(neighbor);
+                    else if (location.Objects.TryGetValue(neighbor, out var nObj) && nObj is Chest)
+                        queue.Enqueue(neighbor);
+                    else if (location.terrainFeatures.TryGetValue(neighbor, out var feature) && feature is Flooring)
+                        queue.Enqueue(neighbor);
+                }
+            }
+
+            if (hasOutputChest)
+            {
+                foreach (var tile in component)
+                    skipTiles.Add(tile);
+            }
+        }
+
+        return skipTiles.Count > 0 ? skipTiles : null;
     }
 
     public override bool GrabObject(Vector2 tile, Object obj)
@@ -26,7 +104,7 @@ internal class MachineGrabber : ObjectsMapGrabber
         if (!obj.readyForHarvest.Value || obj.heldObject.Value == null)
             return false;
 
-        if (_automatedTiles != null && _automatedTiles.ContainsKey(tile))
+        if (_automateSkipTiles != null && _automateSkipTiles.Contains(tile))
             return false;
 
         if (IsCrabPot(obj))

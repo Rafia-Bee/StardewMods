@@ -14,7 +14,7 @@
     "config.cape-stardew-exclusions": "Cape Stardew Exclusions",
     "config.cape-stardew-exclusions.tooltip": "Prevents the grabber from collecting Kimberlite ore nodes from the Cape Stardew mod. These are mineable ore nodes that drop special diamonds, not forage.",
     "config.automate-compatibility": "Automate Compatibility",
-    "config.automate-compatibility.tooltip": "When Automate by Pathoschild is installed, skips machines that are part of an Automate group so both mods can coexist. DGF will only collect from machines that aren't connected to Automate chests.",
+    "config.automate-compatibility.tooltip": "When Automate by Pathoschild is installed, skips machines that are part of an Automate group so both mods can coexist. DGF will only collect from machines that aren't connected to an Automate chest that can accept output. Chests set to 'Never put items in this chest' are treated as input-only and won't prevent DGF from collecting.",
 
     "section.crop-harvesting": "Crop Harvesting",
     "section.crop-harvesting.tooltip": "These options are only considered if 'Harvest Crops' is enabled",
