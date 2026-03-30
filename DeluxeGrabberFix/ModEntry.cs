@@ -40,6 +40,7 @@ public class ModEntry : Mod
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private bool _isGrabbing;
     private bool _pendingDayStartGrab;
+    private int _dayStartGrabDelay;
     private bool _pendingGlobalAutoFire;
     private GlobalGrabberButton _globalGrabberButton;
     private RenameGrabberButton _renameGrabberButton;
@@ -292,10 +293,13 @@ public class ModEntry : Mod
         if (_gmcm.ProcessPendingMachineToggle())
             return;
 
-        // Deferred day-start grab: runs 1 tick after DayStarted so other mods
-        // finish spawning forage, artifact spots, etc.
+        // Deferred day-start grab: waits a few ticks after DayStarted so other mods
+        // finish spawning forage, artifact spots, etc. Extra ticks when Automate is
+        // installed so it can rebuild its machine groups before we query them.
         if (_pendingDayStartGrab)
         {
+            if (--_dayStartGrabDelay > 0)
+                return;
             _pendingDayStartGrab = false;
             _dirtyLocations.Clear();
 
@@ -468,7 +472,8 @@ public class ModEntry : Mod
 
     private void OnDayStarted(object sender, DayStartedEventArgs e)
     {
-        LogDebug("Autograbbing on day start (deferred to next tick)");
+        _dayStartGrabDelay = _automateApi != null ? 5 : 1;
+        LogDebug($"Autograbbing on day start (deferred {_dayStartGrabDelay} ticks)");
         _pendingDayStartGrab = true;
 
         // Auto-fire global grab at day start if configured
