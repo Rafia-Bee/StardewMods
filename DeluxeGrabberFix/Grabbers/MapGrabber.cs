@@ -72,6 +72,12 @@ internal abstract class MapGrabber
         if (item == null || item.Stack < 1)
             return false;
 
+        if (Config.excludeQuestItems && item is Object obj && (obj.questItem.Value || obj.Type == "Quest"))
+        {
+            Mod.LogDebug($"Quest item excluded: {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+            return false;
+        }
+
         if (Config.IsItemExcluded(item.QualifiedItemId))
         {
             if (Config.visitMtVapiusExclusions && item.QualifiedItemId.Contains("_Node_"))
