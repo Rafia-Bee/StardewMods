@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using HarmonyLib;
 using StardewValley;
 using StardewValley.Menus;
@@ -329,10 +330,15 @@ internal static class ChestPatches
 
         // Let the game position the side buttons (organize, fill-stacks,
         // color picker, etc.) relative to the new ItemsToGrabMenu.
-        menu.RepositionSideButtons();
+        // Use reflection so the mod doesn't hard-reference methods that
+        // may not exist on Android/mobile builds.
+        typeof(ItemGrabMenu)
+            .GetMethod("RepositionSideButtons", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            ?.Invoke(menu, null);
 
-        // Rebuild keyboard / gamepad neighbour links so
-        // SetupBorderNeighbors doesn't crash and navigation works.
-        menu.SetupBorderNeighbors();
+        // Rebuild keyboard / gamepad neighbour links so navigation works.
+        typeof(ItemGrabMenu)
+            .GetMethod("SetupBorderNeighbors", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            ?.Invoke(menu, null);
     }
 }
