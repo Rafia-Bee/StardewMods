@@ -52,6 +52,8 @@ internal class ModConfig
     public FlowerHarvestMode flowers;
     public int beeHouseRange;
     public bool reportYield;
+    public bool replantReminder;
+    public int replantReminderTime;
     public bool debugLogging;
     public bool gainExperience;
     public bool fellHardwoodStumps;
@@ -237,6 +239,8 @@ internal class ModConfig
         flowers = FlowerHarvestMode.Smart;
         beeHouseRange = 5;
         reportYield = true;
+        replantReminder = true;
+        replantReminderTime = 2000;
         debugLogging = false;
         gainExperience = true;
         fellHardwoodStumps = false;

@@ -142,6 +142,10 @@
     "page.miscellaneous.link": "Global Grabber & Misc >",
     "config.report-yield": "Report Yield",
     "config.report-yield.tooltip": "Logs to the SMAPI console the yield of each auto grabber",
+    "config.replant-reminder": "Replant Reminder",
+    "config.replant-reminder.tooltip": "Shows a HUD reminder when crops were harvested and destroyed, so you don't forget to replant.",
+    "config.replant-reminder-time": "Replant Reminder Time",
+    "config.replant-reminder-time.tooltip": "The in-game time to repeat the replant reminder (e.g. 2000 = 8:00 PM). The first reminder always shows when crops are harvested. Set to 600 to disable the repeat reminder.",
     "config.debug-logging": "Debug Logging",
     "config.debug-logging.tooltip": "Logs detailed trace info to the SMAPI log file for troubleshooting",
     "config.gain-experience": "Gain Experience",
@@ -194,6 +198,7 @@
     "hud.grabber-full-overflow": " and {{count}} more",
     "hud.grab-summary": "Auto-grabbed {{count}} items",
     "hud.named-grab-summary": "{{names}} grabbed {{count}} items",
+    "hud.replant-reminder": "Collected crops from {{locations}}, don't forget to replant!",
 
     "button.remove-global-grabber": "Remove as Global Grabber",
     "button.set-global-grabber": "Set as Global Grabber",

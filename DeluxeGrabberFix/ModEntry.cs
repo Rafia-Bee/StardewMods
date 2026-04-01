@@ -94,6 +94,9 @@ public class ModEntry : Mod
     }
 
     internal void ReportChestFull(Object grabber) => _grabbers.ReportChestFull(grabber);
+    internal void ReportCropsHarvested(GameLocation location) => _grabbers.ReportCropsHarvested(location);
+    internal void ResetDayTracking() => _grabbers.ResetDayTracking();
+    internal void ShowEveningReplantReminder() => _grabbers.ShowEveningReplantReminder();
 
     internal IDictionary<Vector2, int> GetAutomatedMachineStates(GameLocation location)
     {
@@ -360,6 +363,9 @@ public class ModEntry : Mod
         if (e.NewTime % 100 != 0)
             return;
 
+        if (e.NewTime == Config.replantReminderTime)
+            ShowEveningReplantReminder();
+
         LogDebug("Autograbbing on time change");
         _grabbers.ResetGrabCycleTracking();
 
@@ -475,6 +481,7 @@ public class ModEntry : Mod
         _dayStartGrabDelay = _automateApi != null ? 5 : 1;
         LogDebug($"Autograbbing on day start (deferred {_dayStartGrabDelay} ticks)");
         _pendingDayStartGrab = true;
+        ResetDayTracking();
 
         // Auto-fire global grab at day start if configured
         if (Config.globalAutoFire && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber())

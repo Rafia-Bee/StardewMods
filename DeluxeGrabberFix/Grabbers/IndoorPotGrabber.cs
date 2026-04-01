@@ -51,7 +51,10 @@ internal class IndoorPotGrabber : ObjectsMapGrabber
             }
 
             if (shouldDestroy)
+            {
                 dirt.destroyCrop(false);
+                Mod.ReportCropsHarvested(Location);
+            }
 
             return true;
         }
