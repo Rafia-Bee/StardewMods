@@ -555,6 +555,21 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.report-yield.tooltip"));
 
         api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.replantReminder,
+            v => _mod.Config.replantReminder = v,
+            () => _mod.Helper.Translation.Get("config.replant-reminder"),
+            () => _mod.Helper.Translation.Get("config.replant-reminder.tooltip"));
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.replantReminderTime,
+            v => _mod.Config.replantReminderTime = v,
+            () => _mod.Helper.Translation.Get("config.replant-reminder-time"),
+            () => _mod.Helper.Translation.Get("config.replant-reminder-time.tooltip"),
+            min: 600,
+            max: 2500,
+            interval: 100);
+
+        api.AddBoolOption(_mod.ModManifest,
             () => _mod.Config.debugLogging,
             v => _mod.Config.debugLogging = v,
             () => _mod.Helper.Translation.Get("config.debug-logging"),

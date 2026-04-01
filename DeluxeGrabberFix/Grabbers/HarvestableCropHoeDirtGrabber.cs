@@ -48,7 +48,10 @@ internal class HarvestableCropHoeDirtGrabber : TerrainFeaturesMapGrabber
             }
 
             if (shouldDestroy)
+            {
                 dirt.destroyCrop(false);
+                Mod.ReportCropsHarvested(Location);
+            }
 
             return true;
         }

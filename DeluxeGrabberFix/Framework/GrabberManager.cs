@@ -17,6 +17,8 @@ internal class GrabberManager
     private readonly HashSet<string> _namedGrabbersFull = new();
     private readonly HashSet<string> _unnamedGrabbersFull = new();
     private readonly HashSet<string> _activeGrabberNames = new();
+    private readonly HashSet<string> _cropsHarvestedLocations = new();
+    private readonly HashSet<string> _dayCropsHarvestedLocations = new();
     private int _totalItemsGrabbed;
 
     public GrabberManager(ModEntry mod, LocationManager locations)
@@ -40,11 +42,34 @@ internal class GrabberManager
         }
     }
 
+    internal void ReportCropsHarvested(GameLocation location)
+    {
+        string display = !string.IsNullOrEmpty(location.DisplayName) ? location.DisplayName : location.Name;
+        _cropsHarvestedLocations.Add(display);
+        _dayCropsHarvestedLocations.Add(display);
+    }
+
+    internal void ResetDayTracking()
+    {
+        _dayCropsHarvestedLocations.Clear();
+    }
+
+    internal void ShowEveningReplantReminder()
+    {
+        if (_dayCropsHarvestedLocations.Count > 0 && _mod.Config.replantReminder)
+        {
+            string locations = FormatList(_dayCropsHarvestedLocations);
+            Game1.addHUDMessage(new HUDMessage(
+                _mod.Helper.Translation.Get("hud.replant-reminder", new { locations })));
+        }
+    }
+
     internal void ResetGrabCycleTracking()
     {
         _namedGrabbersFull.Clear();
         _unnamedGrabbersFull.Clear();
         _activeGrabberNames.Clear();
+        _cropsHarvestedLocations.Clear();
         _totalItemsGrabbed = 0;
     }
 
@@ -82,6 +107,14 @@ internal class GrabberManager
                     _mod.Helper.Translation.Get("hud.grab-summary", new { count = _totalItemsGrabbed })));
             }
         }
+        if (_cropsHarvestedLocations.Count > 0 && _mod.Config.replantReminder)
+        {
+            string locations = FormatList(_cropsHarvestedLocations);
+            Game1.addHUDMessage(new HUDMessage(
+                _mod.Helper.Translation.Get("hud.replant-reminder", new { locations })));
+            _cropsHarvestedLocations.Clear();
+        }
+
         _activeGrabberNames.Clear();
         _totalItemsGrabbed = 0;
     }
