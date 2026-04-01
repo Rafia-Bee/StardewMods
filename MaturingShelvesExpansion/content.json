@@ -1,0 +1,184 @@
+{
+    "Format": "2.9.0",
+    "Changes": [
+        {
+            "LogName": "Add new Maturing Shelves recipes",
+            "Action": "EditData",
+            "Target": "Data/Machines",
+            "TargetField": [
+                "(BC)Lumisteria.MtVapius_MaturingShelves",
+                "OutputRules"
+            ],
+            "Entries": {
+                "Rafia.MSE_Hardwood_WoodgoatMushroom": {
+                    "Id": "Rafia.MSE_Hardwood_WoodgoatMushroom",
+                    "Triggers": [
+                        {
+                            "Trigger": "ItemPlacedInMachine",
+                            "RequiredItemId": "(O)709",
+                            "RequiredCount": 1
+                        }
+                    ],
+                    "UseFirstValidOutput": false,
+                    "OutputItem": [
+                        {
+                            "Id": "Rafia.MSE_WoodgoatMushroom",
+                            "ItemId": "(O)Lumisteria.MtVapius_WoodgoatMushroom",
+                            "MinStack": 1,
+                            "MaxStack": 3
+                        }
+                    ],
+                    "MinutesUntilReady": 2880,
+                    "DaysUntilReady": -1,
+                    "RecalculateOnCollect": false
+                },
+                "Rafia.MSE_SpringOnion_SpringOnion": {
+                    "Id": "Rafia.MSE_SpringOnion_SpringOnion",
+                    "Triggers": [
+                        {
+                            "Trigger": "ItemPlacedInMachine",
+                            "RequiredItemId": "(O)399",
+                            "RequiredCount": 1
+                        }
+                    ],
+                    "UseFirstValidOutput": false,
+                    "OutputItem": [
+                        {
+                            "Id": "Rafia.MSE_SpringOnion",
+                            "ItemId": "(O)399",
+                            "MinStack": 2,
+                            "MaxStack": 4
+                        }
+                    ],
+                    "MinutesUntilReady": 4320,
+                    "DaysUntilReady": -1,
+                    "RecalculateOnCollect": false
+                },
+                "Rafia.MSE_CoffeeBean_Morel": {
+                    "Id": "Rafia.MSE_CoffeeBean_Morel",
+                    "Triggers": [
+                        {
+                            "Trigger": "ItemPlacedInMachine",
+                            "RequiredItemId": "(O)433",
+                            "RequiredCount": 3
+                        }
+                    ],
+                    "UseFirstValidOutput": false,
+                    "OutputItem": [
+                        {
+                            "Id": "Rafia.MSE_Morel",
+                            "ItemId": "(O)257",
+                            "MinStack": 1,
+                            "MaxStack": 1
+                        }
+                    ],
+                    "MinutesUntilReady": 2880,
+                    "DaysUntilReady": -1,
+                    "RecalculateOnCollect": false
+                },
+                "Rafia.MSE_Wood_Porchini": {
+                    "Id": "Rafia.MSE_Wood_Porchini",
+                    "Triggers": [
+                        {
+                            "Trigger": "ItemPlacedInMachine",
+                            "RequiredItemId": "(O)388",
+                            "RequiredCount": 10
+                        }
+                    ],
+                    "UseFirstValidOutput": false,
+                    "OutputItem": [
+                        {
+                            "Id": "Rafia.MSE_Porchini",
+                            "ItemId": "(O)Lumisteria.MtVapius_Porchini",
+                            "MinStack": 1,
+                            "MaxStack": 3
+                        }
+                    ],
+                    "MinutesUntilReady": 2880,
+                    "DaysUntilReady": -1,
+                    "RecalculateOnCollect": false
+                },
+                "Rafia.MSE_Wheat_CommonMushroom": {
+                    "Id": "Rafia.MSE_Wheat_CommonMushroom",
+                    "Triggers": [
+                        {
+                            "Trigger": "ItemPlacedInMachine",
+                            "RequiredItemId": "(O)262",
+                            "RequiredCount": 5
+                        }
+                    ],
+                    "UseFirstValidOutput": false,
+                    "OutputItem": [
+                        {
+                            "Id": "Rafia.MSE_CommonMushroom",
+                            "ItemId": "(O)281",
+                            "MinStack": 1,
+                            "MaxStack": 3
+                        }
+                    ],
+                    "MinutesUntilReady": 1440,
+                    "DaysUntilReady": -1,
+                    "RecalculateOnCollect": false
+                },
+                "Rafia.MSE_Basil_TeaLeaves": {
+                    "Id": "Rafia.MSE_Basil_TeaLeaves",
+                    "Triggers": [
+                        {
+                            "Trigger": "ItemPlacedInMachine",
+                            "RequiredItemId": "(O)Lumisteria.MtVapius_Basil",
+                            "RequiredCount": 5
+                        }
+                    ],
+                    "UseFirstValidOutput": false,
+                    "OutputItem": [
+                        {
+                            "Id": "Rafia.MSE_TeaLeaves",
+                            "ItemId": "(O)815",
+                            "MinStack": 5,
+                            "MaxStack": 5
+                        }
+                    ],
+                    "MinutesUntilReady": 1440,
+                    "DaysUntilReady": -1,
+                    "RecalculateOnCollect": false
+                }
+            }
+        },
+        {
+            "LogName": "Add Mountain Arugula recipe (Ridgeside Village)",
+            "Action": "EditData",
+            "Target": "Data/Machines",
+            "TargetField": [
+                "(BC)Lumisteria.MtVapius_MaturingShelves",
+                "OutputRules"
+            ],
+            "When": {
+                "HasMod": "Rafseazz.RSVCP"
+            },
+            "Entries": {
+                "Rafia.MSE_MountainArugula_MountainArugula": {
+                    "Id": "Rafia.MSE_MountainArugula_MountainArugula",
+                    "Triggers": [
+                        {
+                            "Trigger": "ItemPlacedInMachine",
+                            "RequiredItemId": "(O)Rafseazz.RSVCP_Mountain_Arugula",
+                            "RequiredCount": 1
+                        }
+                    ],
+                    "UseFirstValidOutput": false,
+                    "OutputItem": [
+                        {
+                            "Id": "Rafia.MSE_MountainArugula",
+                            "ItemId": "(O)Rafseazz.RSVCP_Mountain_Arugula",
+                            "MinStack": 2,
+                            "MaxStack": 4
+                        }
+                    ],
+                    "MinutesUntilReady": 4320,
+                    "DaysUntilReady": -1,
+                    "RecalculateOnCollect": false
+                }
+            }
+        }
+    ]
+}
