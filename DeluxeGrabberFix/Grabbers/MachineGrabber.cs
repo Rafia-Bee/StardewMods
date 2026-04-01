@@ -110,6 +110,9 @@ internal class MachineGrabber : ObjectsMapGrabber
         if (IsCrabPot(obj))
             return GrabCrabPot(tile, obj);
 
+        if (IsFishNet(obj))
+            return GrabFishNet(tile, obj);
+
         if (IsBeeHouse(obj))
             return GrabStandardMachine(tile, obj, Config.collectBeeHouses, "bee house");
 
@@ -215,6 +218,28 @@ internal class MachineGrabber : ObjectsMapGrabber
         return false;
     }
 
+    private bool GrabFishNet(Vector2 tile, Object obj)
+    {
+        if (!Config.collectCrabPots)
+            return false;
+
+        var output = obj.heldObject.Value;
+        if (TryAddItem(output))
+        {
+            Mod.LogDebug($"Collected {output.Name} x{output.Stack} from fish net at {Location.Name} [{tile}]");
+            obj.heldObject.Value = null;
+            obj.readyForHarvest.Value = false;
+            obj.showNextIndex.Value = false;
+
+            obj.modData.Remove(ItemIds.FishNetBaitModDataKey);
+            obj.modData.Remove(ItemIds.FishNetTileIndexModDataKey);
+
+            GainExperience(1, 5);
+            return true;
+        }
+        return false;
+    }
+
     private bool GrabStandardMachine(Vector2 tile, Object obj, bool configEnabled, string machineName)
     {
         if (!configEnabled)
@@ -234,6 +259,9 @@ internal class MachineGrabber : ObjectsMapGrabber
 
     private static bool IsCrabPot(Object obj)
         => obj is CrabPot || IsMps(obj, "CrabPot");
+
+    private static bool IsFishNet(Object obj)
+        => obj.QualifiedItemId == ItemIds.FishNet;
 
     private static bool IsBeeHouse(Object obj)
         => obj.QualifiedItemId == BigCraftableIds.BeeHouse || IsMps(obj, "BeeHouse");
