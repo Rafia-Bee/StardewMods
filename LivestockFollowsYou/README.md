@@ -37,7 +37,7 @@ All options are available through [Generic Mod Config Menu](https://www.nexusmod
 ## Compatibility
 
 - Works with Livestock Bazaar, Visit Mount Vapius, and other mods that use `AnimalHouse.adoptAnimal`.
-- Multiplayer: host only (animals follow the main farmer).
+- Multiplayer: works for both host and farmhands.
 
 ## Install
 

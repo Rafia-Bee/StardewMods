@@ -101,7 +101,7 @@ internal class AnimalFollowManager
     /// <summary>Called each tick before the game updates. Sets movement directions for following animals.</summary>
     public void UpdateMovement(GameTime time)
     {
-        if (!Game1.IsMasterGame || !Game1.shouldTimePass())
+        if (!Game1.shouldTimePass())
             return;
 
         var config = GetConfig();
@@ -163,9 +163,6 @@ internal class AnimalFollowManager
     /// <summary>Called when the player warps between locations. Transfers following animals.</summary>
     public void OnPlayerWarped(GameLocation oldLocation, GameLocation newLocation)
     {
-        if (!Game1.IsMasterGame)
-            return;
-
         var config = GetConfig();
 
         // If player enters a building interior, auto-deliver any animals destined for it
