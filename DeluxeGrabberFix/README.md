@@ -77,6 +77,7 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 - Compatible with [Vanilla Plus Professions](https://www.nexusmods.com/stardewvalley/mods/22992) — VPP's Combat-Farm slime drops, Shaker tree drops, and Gleaner/Wayfarer forage are all auto-collected
 - Compatible with [Sunberry Village](https://www.nexusmods.com/stardewvalley/mods/22702) — optional config toggle to exclude FTM-spawned ore nodes and supply crates
 - Compatible with [Machine Progression System](https://www.nexusmods.com/stardewvalley/mods/15530) — upgraded crab pots, bee houses, tappers, and mushroom logs are collected alongside vanilla machines
+- Compatible with [Fishnets](https://www.nexusmods.com/stardewvalley/mods/13819) — fish nets are collected alongside crab pots, with bait consumed on collection
 - Compatible with [Cloths and Colors (Textile Expansion)](https://www.nexusmods.com/stardewvalley/mods/39216) — Leaf Baskets are collected as part of machine collection
 - Compatible with [Automate](https://www.nexusmods.com/stardewvalley/mods/1063) — DGF skips machines Automate is already managing, preventing duplicate collection. Respects per-chest settings so input-only chests won't block DGF from collecting
 - Collects roe and other produce from Fish Ponds automatically

@@ -26,6 +26,11 @@ internal static class ItemIds
     public const string Fiber = "(O)771";
     public const string MossySeed = "(O)MossySeed";
 
+    // Modded object IDs
+    public const string FishNet = "(O)MindMeltMax.FishNet";
+    public const string FishNetBaitModDataKey = "MindMeltMax.Fishnets.FishNets";
+    public const string FishNetTileIndexModDataKey = "MindMeltMax.Fishnets.TileIndex";
+
     // Furniture qualified IDs — cosmetic wall decorations from artifact spot rare drops
     public const string CatalogueWall = "(F)1369";
     public const int WallDecorSmallRangeStart = 1362;
