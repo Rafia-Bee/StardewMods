@@ -1,0 +1,19 @@
+{
+    "Name": "Maturing Shelves Expansion",
+    "Author": "Rafia",
+    "Version": "1.0.0",
+    "Description": "Adds new recipes to the Maturing Shelves machine from Visit Mount Vapius.",
+    "UniqueID": "Rafia.MaturingShelvesExpansion",
+    "MinimumApiVersion": "4.0.0",
+    "UpdateKeys": [],
+    "ContentPackFor": {
+        "UniqueID": "Pathoschild.ContentPatcher",
+        "MinimumVersion": "2.0.0"
+    },
+    "Dependencies": [
+        {
+            "UniqueID": "Lumisteria.MtVapius",
+            "IsRequired": true
+        }
+    ]
+}
