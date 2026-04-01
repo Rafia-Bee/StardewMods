@@ -60,6 +60,7 @@ internal class ModConfig
     public bool seedSpots;
     public bool harvestMoss;
     public bool harvestGreenRainWeeds;
+    public bool excludeQuestItems;
     public bool skipFestivalLocations;
     public bool selectVisitedOnly;
     public bool collectMachines;
@@ -253,6 +254,7 @@ internal class ModConfig
         harvestGreenRainWeeds = false;
         collectDebris = false;
         grabFrequency = GrabFrequency.Instant;
+        excludeQuestItems = true;
         skipFestivalLocations = true;
         selectVisitedOnly = false;
         collectMachines = false;

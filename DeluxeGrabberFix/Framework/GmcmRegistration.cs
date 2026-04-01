@@ -575,6 +575,12 @@ internal class GmcmRegistration
             v => _mod.Helper.Translation.Get($"dropdown.{v.ToLower()}"));
 
         api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.excludeQuestItems,
+            v => _mod.Config.excludeQuestItems = v,
+            () => _mod.Helper.Translation.Get("config.exclude-quest-items"),
+            () => _mod.Helper.Translation.Get("config.exclude-quest-items.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
             () => _mod.Config.skipFestivalLocations,
             v => _mod.Config.skipFestivalLocations = v,
             () => _mod.Helper.Translation.Get("config.skip-festival-locations"),
