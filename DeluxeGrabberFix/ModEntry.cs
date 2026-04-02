@@ -399,7 +399,8 @@ public class ModEntry : Mod
                     var beforeInventory = Config.reportYield ? orePanGrabber.GetInventory() : null;
                     bool result = orePanGrabber.GrabItems();
 
-                    LogDebug($"Ore pan at {location.Name}: {(result ? "collected items" : "nothing to collect")}");
+                    if (result)
+                        LogDebug($"Ore pan at {location.Name}: collected items");
 
                     if (beforeInventory != null && result)
                     {
@@ -427,6 +428,11 @@ public class ModEntry : Mod
 
                 if (Config.grabFrequency != ModConfig.GrabFrequency.Daily)
                     _grabbers.GrabForageAtLocation(location);
+
+                // Machine outputs don't fire ObjectListChanged when they finish processing,
+                // so poll machines every hour regardless of dirty state for non-Daily modes
+                if (Config.grabFrequency != ModConfig.GrabFrequency.Daily)
+                    _grabbers.GrabMachinesAtLocation(location);
 
                 if (Config.grabFrequency == ModConfig.GrabFrequency.Hourly && _dirtyLocations.Contains(location))
                 {
