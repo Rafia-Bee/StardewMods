@@ -243,7 +243,8 @@ internal class GrabberManager
             var beforeInventory = _mod.Config.reportYield ? aggregateGrabber.GetInventory() : null;
             bool result = aggregateGrabber.GrabItems();
 
-            _mod.LogDebug($"Grab at {location.Name}: {(result ? "collected items" : "nothing to collect")}");
+            if (result)
+                _mod.LogDebug($"Grab at {location.Name}: collected items");
 
             if (beforeInventory != null)
             {
@@ -297,6 +298,68 @@ internal class GrabberManager
         }
     }
 
+    internal bool GrabMachinesAtLocation(GameLocation location)
+    {
+        if (!_locations.ShouldProcessLocation(location))
+            return false;
+
+        _mod.UseLocationCache = true;
+        _mod.CachedGrabberPairs = null;
+        _mod.CachedObjectPairs = null;
+        _mod.CachedFeaturePairs = null;
+        _mod.GrabbedTiles = new HashSet<Vector2>();
+
+        try
+        {
+            var machineGrabber = new MachineGrabber(_mod, location);
+            if (!machineGrabber.CanGrab())
+                return false;
+
+            machineGrabber.CleanupGrabberChests();
+
+            var beforeInventory = _mod.Config.reportYield ? machineGrabber.GetInventory() : null;
+
+            bool result = machineGrabber.GrabItems();
+
+            if (result)
+                _mod.LogDebug($"Machine grab at {location.Name}: collected items");
+
+            if (beforeInventory != null && result)
+            {
+                var afterInventory = machineGrabber.GetInventory();
+                var sb = new StringBuilder($"Hourly machine yield at {location.Name}:\n");
+                bool anyYield = false;
+
+                foreach (var entry in afterInventory)
+                {
+                    int newCount = entry.Value;
+                    if (beforeInventory.ContainsKey(entry.Key))
+                        newCount -= beforeInventory[entry.Key];
+
+                    if (newCount > 0)
+                    {
+                        sb.AppendLine($"    {entry.Key.Name} ({entry.Key.QualityName}) x{newCount}");
+                        anyYield = true;
+                        _totalItemsGrabbed += newCount;
+                    }
+                }
+
+                if (anyYield)
+                    _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
+            }
+
+            return result;
+        }
+        finally
+        {
+            _mod.UseLocationCache = false;
+            _mod.CachedGrabberPairs = null;
+            _mod.CachedObjectPairs = null;
+            _mod.CachedFeaturePairs = null;
+            _mod.GrabbedTiles = null;
+        }
+    }
+
     internal bool GrabForageAtLocation(GameLocation location)
     {
         if (!_locations.ShouldProcessLocation(location))
@@ -323,7 +386,8 @@ internal class GrabberManager
             var featureGrabber = new ForageHoeDirtGrabber(_mod, location);
             result |= featureGrabber.GrabItems();
 
-            _mod.LogDebug($"Forage grab at {location.Name}: {(result ? "collected items" : "nothing to collect")}");
+            if (result)
+                _mod.LogDebug($"Forage grab at {location.Name}: collected items");
 
             if (beforeInventory != null && result)
             {
