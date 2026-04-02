@@ -38,6 +38,7 @@ public class ModEntry : Mod
     private IAutomateAPI _automateApi;
 
     private readonly HashSet<GameLocation> _dirtyLocations = new();
+    private readonly HashSet<GameLocation> _machineReadyLocations = new();
     private bool _isGrabbing;
     private bool _pendingDayStartGrab;
     private int _dayStartGrabDelay;
@@ -97,6 +98,18 @@ public class ModEntry : Mod
     internal void ReportCropsHarvested(GameLocation location) => _grabbers.ReportCropsHarvested(location);
     internal void ResetDayTracking() => _grabbers.ResetDayTracking();
     internal void ShowEveningReplantReminder() => _grabbers.ShowEveningReplantReminder();
+
+    internal static void FlagMachineReadyLocation(GameLocation location)
+    {
+        if (_instance == null || location == null)
+            return;
+        if (_instance._isGrabbing)
+            return;
+        if (_instance.Config.grabFrequency != ModConfig.GrabFrequency.Instant || !_instance.Config.collectMachines)
+            return;
+
+        _instance._machineReadyLocations.Add(location);
+    }
 
     internal IDictionary<Vector2, int> GetAutomatedMachineStates(GameLocation location)
     {
@@ -224,6 +237,11 @@ public class ModEntry : Mod
             original: AccessTools.Method(typeof(StardewValley.Menus.ItemGrabMenu), nameof(StardewValley.Menus.ItemGrabMenu.receiveLeftClick)),
             postfix: new HarmonyMethod(typeof(ModEntry), nameof(ItemGrabMenu_ReceiveLeftClick_Postfix))
         );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Object), nameof(Object.minutesElapsed)),
+            prefix: new HarmonyMethod(typeof(MachineOutputPatch), nameof(MachineOutputPatch.MinutesElapsed_Prefix)),
+            postfix: new HarmonyMethod(typeof(MachineOutputPatch), nameof(MachineOutputPatch.MinutesElapsed_Postfix))
+        );
 
         if (Helper.ModRegistry.GetApi<IVanillaPlusProfessionsApi>("KediDili.VanillaPlusProfessions") != null)
             LogDebug("Vanilla Plus Professions detected -- VPP compatibility enabled.");
@@ -334,7 +352,53 @@ public class ModEntry : Mod
             return;
         }
 
-        if (_dirtyLocations.Count == 0 || Config.grabFrequency != ModConfig.GrabFrequency.Instant)
+        if (Config.grabFrequency != ModConfig.GrabFrequency.Instant)
+            return;
+
+        // Process machine-ready locations (flagged by Harmony patch on Object.minutesElapsed)
+        if (_machineReadyLocations.Count > 0)
+        {
+            var machineLocations = _machineReadyLocations.ToList();
+            _machineReadyLocations.Clear();
+
+            bool useGlobal = Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber();
+            if (useGlobal)
+            {
+                IsGlobalGrabActive = true;
+                CachedDesignatedGrabbers = new List<KeyValuePair<Vector2, Object>>();
+                foreach (var loc in GetAllLocations())
+                {
+                    CachedDesignatedGrabbers.AddRange(
+                        loc.Objects.Pairs
+                            .Where(pair => pair.Value != null
+                                && pair.Value.modData.ContainsKey(GlobalGrabberModDataKey))
+                            .ToList());
+                }
+            }
+
+            _isGrabbing = true;
+            try
+            {
+                foreach (var location in machineLocations)
+                {
+                    LogDebug("Machine output ready at " + location.Name);
+                    _grabbers.GrabMachinesAtLocation(location);
+                }
+            }
+            finally
+            {
+                _isGrabbing = false;
+                if (useGlobal)
+                {
+                    IsGlobalGrabActive = false;
+                    CachedDesignatedGrabbers = null;
+                }
+                _grabbers.ShowGrabCycleResults(showSummary: false);
+            }
+        }
+
+        // Process dirty locations (forage, debris, artifacts)
+        if (_dirtyLocations.Count == 0)
             return;
 
         var locations = _dirtyLocations.ToList();
