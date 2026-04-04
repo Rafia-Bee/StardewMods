@@ -28,6 +28,9 @@ rafia-stardew-mods.sln
 # Internal docs
 docs/
 .github
+
+# External/temporary mods
+FishingAssistant2Fast/
 temp_findings.md
 
 # Secret mods

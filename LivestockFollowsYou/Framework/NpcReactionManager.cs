@@ -25,6 +25,22 @@ internal class NpcReactionManager
     private const int SingleLineCount = 35;
     private const int MultiLineCount = 20;
 
+    // Character-specific line counts
+    private static readonly Dictionary<string, (int Single, int Multi)> CharacterLineCounts = new()
+    {
+        ["Marnie"] = (5, 3),
+        ["Shane"] = (5, 3),
+        ["Jas"] = (5, 3)
+    };
+
+    // Weather line counts
+    private const int RainSingleCount = 10;
+    private const int RainMultiCount = 6;
+    private const int StormSingleCount = 8;
+    private const int StormMultiCount = 5;
+    private const int SnowSingleCount = 8;
+    private const int SnowMultiCount = 5;
+
     public NpcReactionManager(IMonitor monitor, IModHelper helper, Func<ModConfig> getConfig)
     {
         Monitor = monitor;
@@ -53,7 +69,7 @@ internal class NpcReactionManager
 
         foreach (NPC npc in location.characters)
         {
-            if (npc.IsInvisible || npc is Child)
+            if (npc.IsInvisible || npc is Child or Horse or Pet)
                 continue;
 
             if (reactedNpcs.Contains(npc.Name))
@@ -70,7 +86,7 @@ internal class NpcReactionManager
                 continue;
             }
 
-            string line = GetReactionLine(activeFollowers);
+            string line = GetReactionLine(activeFollowers, npc, location);
             int preTimer = random.Next(500, 1500);
             npc.showTextAboveHead(line, duration: 3500, preTimer: preTimer);
             reactedNpcs.Add(npc.Name);
@@ -88,14 +104,44 @@ internal class NpcReactionManager
         tickCounter = 0;
     }
 
-    private string GetReactionLine(List<FollowingAnimal> activeFollowers)
+    private string GetReactionLine(List<FollowingAnimal> activeFollowers, NPC npc, GameLocation location)
     {
         bool multi = activeFollowers.Count > 1;
         var animal = activeFollowers[random.Next(activeFollowers.Count)].Animal;
 
-        string key = multi
-            ? $"npc.reaction.multi.{random.Next(MultiLineCount)}"
-            : $"npc.reaction.single.{random.Next(SingleLineCount)}";
+        string key;
+
+        if (CharacterLineCounts.TryGetValue(npc.Name, out var counts))
+        {
+            string charKey = npc.Name.ToLower();
+            key = multi
+                ? $"npc.reaction.{charKey}.multi.{random.Next(counts.Multi)}"
+                : $"npc.reaction.{charKey}.single.{random.Next(counts.Single)}";
+        }
+        else if (location.IsLightningHere())
+        {
+            key = multi
+                ? $"npc.reaction.storm.multi.{random.Next(StormMultiCount)}"
+                : $"npc.reaction.storm.single.{random.Next(StormSingleCount)}";
+        }
+        else if (location.IsRainingHere())
+        {
+            key = multi
+                ? $"npc.reaction.rain.multi.{random.Next(RainMultiCount)}"
+                : $"npc.reaction.rain.single.{random.Next(RainSingleCount)}";
+        }
+        else if (location.IsSnowingHere())
+        {
+            key = multi
+                ? $"npc.reaction.snow.multi.{random.Next(SnowMultiCount)}"
+                : $"npc.reaction.snow.single.{random.Next(SnowSingleCount)}";
+        }
+        else
+        {
+            key = multi
+                ? $"npc.reaction.multi.{random.Next(MultiLineCount)}"
+                : $"npc.reaction.single.{random.Next(SingleLineCount)}";
+        }
 
         return Helper.Translation.Get(key, new
         {
