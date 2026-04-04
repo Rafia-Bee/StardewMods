@@ -10,7 +10,7 @@ internal class ModConfig
     public float FollowSpeedMultiplier { get; set; } = 1.0f;
 
     /// <summary>If the animal falls this many tiles behind, it teleports closer to the player.</summary>
-    public int RubberBandDistance { get; set; } = 12;
+    public int RubberBandDistance { get; set; } = 10;
 
     /// <summary>Game time at which undelivered animals are automatically sent to their barn/coop (e.g. 2000 = 8:00 PM).</summary>
     public int AutoDeliverTime { get; set; } = 2000;
@@ -28,5 +28,14 @@ internal class ModConfig
     public bool NpcReactionsEnabled { get; set; } = true;
 
     /// <summary>Whether to log debug messages to the SMAPI console.</summary>
-    public bool DebugLogging { get; set; } = true;
+    public bool DebugLogging { get; set; } = false;
+
+    /// <summary>Happiness gained per grass eaten during a walk (0-255 scale).</summary>
+    public int GrazingHappinessBoost { get; set; } = 15;
+
+    /// <summary>Friendship points needed to send an animal home alone via the Grazing Bell (750 = 3 hearts).</summary>
+    public int MinFriendshipToSendHome { get; set; } = 750;
+
+    /// <summary>Seconds the player must stand still before walking animals start grazing nearby grass.</summary>
+    public int GrazingIdleSeconds { get; set; } = 2;
 }
