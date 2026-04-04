@@ -15,13 +15,13 @@ internal static class PurchasePatches
     /// <summary>Register all Harmony patches.</summary>
     public static void Apply(Harmony harmony)
     {
-        // Intercept animal adoption — fires for vanilla PurchaseAnimalsMenu, Livestock Bazaar, and any other mod
+        // Intercept animal adoption
         harmony.Patch(
             original: AccessTools.Method(typeof(AnimalHouse), nameof(AnimalHouse.adoptAnimal)),
             postfix: new HarmonyMethod(typeof(PurchasePatches), nameof(AdoptAnimal_Postfix))
         );
 
-        // Skip vanilla behaviors (grass-seeking, return-to-barn pathfinding) for following animals
+        // Skip vanilla behaviors for following animals
         harmony.Patch(
             original: AccessTools.Method(typeof(FarmAnimal), nameof(FarmAnimal.behaviors)),
             prefix: new HarmonyMethod(typeof(PurchasePatches), nameof(Behaviors_Prefix))
@@ -38,6 +38,12 @@ internal static class PurchasePatches
             original: AccessTools.Method(typeof(FarmAnimal), nameof(FarmAnimal.UpdateRandomMovements)),
             prefix: new HarmonyMethod(typeof(PurchasePatches), nameof(UpdateRandomMovements_Prefix))
         );
+
+        // Suppress vanilla interaction when holding the Grazing Bell
+        harmony.Patch(
+            original: AccessTools.Method(typeof(FarmAnimal), nameof(FarmAnimal.pet)),
+            prefix: new HarmonyMethod(typeof(PurchasePatches), nameof(Pet_Prefix))
+        );
     }
 
     private static void AdoptAnimal_Postfix(AnimalHouse __instance, FarmAnimal animal)
@@ -45,7 +51,6 @@ internal static class PurchasePatches
         if (!GetConfig().Enabled)
             return;
 
-        // Only intercept newly purchased animals, not animals being moved between buildings
         if (animal.daysOwned.Value > 0)
             return;
 
@@ -76,6 +81,17 @@ internal static class PurchasePatches
     private static bool UpdateRandomMovements_Prefix(FarmAnimal __instance)
     {
         if (Manager?.IsFollowing(__instance) != true)
+            return true;
+
+        return false;
+    }
+
+    private static bool Pet_Prefix(FarmAnimal __instance, Farmer who)
+    {
+        if (who?.CurrentItem == null)
+            return true;
+
+        if (who.CurrentItem.QualifiedItemId != GrazingBellItem.QualifiedItemId)
             return true;
 
         return false;

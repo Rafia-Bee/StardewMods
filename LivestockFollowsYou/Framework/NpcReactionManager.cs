@@ -24,6 +24,8 @@ internal class NpcReactionManager
     private const double ReactionChance = 0.85;
     private const int SingleLineCount = 35;
     private const int MultiLineCount = 20;
+    private const int WalkSingleLineCount = 10;
+    private const int WalkMultiLineCount = 6;
 
     // Character-specific line counts
     private static readonly Dictionary<string, (int Single, int Multi)> CharacterLineCounts = new()
@@ -79,7 +81,6 @@ internal class NpcReactionManager
             if (distance > ReactionRadiusTiles)
                 continue;
 
-            // Not every NPC reacts - skip some for variety
             if (random.NextDouble() > ReactionChance)
             {
                 reactedNpcs.Add(npc.Name);
@@ -90,9 +91,6 @@ internal class NpcReactionManager
             int preTimer = random.Next(500, 1500);
             npc.showTextAboveHead(line, duration: 3500, preTimer: preTimer);
             reactedNpcs.Add(npc.Name);
-
-            if (GetConfig().DebugLogging)
-                Monitor.Log($"{npc.Name} reacted: \"{line}\"", LogLevel.Debug);
 
             break;
         }
@@ -108,10 +106,17 @@ internal class NpcReactionManager
     {
         bool multi = activeFollowers.Count > 1;
         var animal = activeFollowers[random.Next(activeFollowers.Count)].Animal;
+        bool isWalk = activeFollowers.Any(f => f.IsWalk);
 
         string key;
 
-        if (CharacterLineCounts.TryGetValue(npc.Name, out var counts))
+        if (isWalk && !CharacterLineCounts.ContainsKey(npc.Name))
+        {
+            key = multi
+                ? $"npc.reaction.walk.multi.{random.Next(WalkMultiLineCount)}"
+                : $"npc.reaction.walk.single.{random.Next(WalkSingleLineCount)}";
+        }
+        else if (CharacterLineCounts.TryGetValue(npc.Name, out var counts))
         {
             string charKey = npc.Name.ToLower();
             key = multi

@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using LivestockFollowsYou.Framework;
 using HarmonyLib;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -13,14 +15,18 @@ public class ModEntry : Mod
     private ModConfig Config;
     private AnimalFollowManager FollowManager;
     private NpcReactionManager NpcReactions;
+    private GrazingManager GrazingMgr;
+    private GrazingBellItem GrazingBell;
 
     public override void Entry(IModHelper helper)
     {
         Config = helper.ReadConfig<ModConfig>();
         FollowManager = new AnimalFollowManager(Monitor, helper, () => Config);
         NpcReactions = new NpcReactionManager(Monitor, helper, () => Config);
+        GrazingMgr = new GrazingManager(Monitor, helper, () => Config);
+        GrazingBell = new GrazingBellItem(helper);
+        GrazingBell.Register();
 
-        // Wire up Harmony patches
         PurchasePatches.Manager = FollowManager;
         PurchasePatches.GetConfig = () => Config;
         PurchasePatches.Monitor = Monitor;
@@ -28,7 +34,6 @@ public class ModEntry : Mod
         var harmony = new Harmony(ModManifest.UniqueID);
         PurchasePatches.Apply(harmony);
 
-        // SMAPI events
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.UpdateTicking += OnUpdateTicking;
         helper.Events.GameLoop.TimeChanged += OnTimeChanged;
@@ -36,6 +41,7 @@ public class ModEntry : Mod
         helper.Events.GameLoop.DayEnding += OnDayEnding;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
         helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
+        helper.Events.Input.ButtonPressed += OnButtonPressed;
     }
 
     private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
@@ -142,6 +148,42 @@ public class ModEntry : Mod
             name: () => Helper.Translation.Get("config.debug_logging.name"),
             tooltip: () => Helper.Translation.Get("config.debug_logging.tooltip")
         );
+
+        gmcm.AddSectionTitle(
+            mod: ModManifest,
+            text: () => "Grazing Bell"
+        );
+
+        gmcm.AddNumberOption(
+            mod: ModManifest,
+            getValue: () => Config.GrazingHappinessBoost,
+            setValue: v => Config.GrazingHappinessBoost = v,
+            name: () => Helper.Translation.Get("config.grazing_happiness.name"),
+            tooltip: () => Helper.Translation.Get("config.grazing_happiness.tooltip"),
+            min: 5,
+            max: 50
+        );
+
+        gmcm.AddNumberOption(
+            mod: ModManifest,
+            getValue: () => Config.MinFriendshipToSendHome,
+            setValue: v => Config.MinFriendshipToSendHome = v,
+            name: () => Helper.Translation.Get("config.min_friendship_send_home.name"),
+            tooltip: () => Helper.Translation.Get("config.min_friendship_send_home.tooltip"),
+            min: 0,
+            max: 1000,
+            interval: 50
+        );
+
+        gmcm.AddNumberOption(
+            mod: ModManifest,
+            getValue: () => Config.GrazingIdleSeconds,
+            setValue: v => Config.GrazingIdleSeconds = v,
+            name: () => Helper.Translation.Get("config.grazing_idle_seconds.name"),
+            tooltip: () => Helper.Translation.Get("config.grazing_idle_seconds.tooltip"),
+            min: 1,
+            max: 5
+        );
     }
 
     private void OnUpdateTicking(object sender, UpdateTickingEventArgs e)
@@ -151,6 +193,9 @@ public class ModEntry : Mod
 
         FollowManager.UpdateMovement(Game1.currentGameTime);
         NpcReactions.Update(FollowManager.Followers);
+
+        if (FollowManager.HasWalkAnimals)
+            GrazingMgr.Update(FollowManager.Followers);
     }
 
     private void OnTimeChanged(object sender, TimeChangedEventArgs e)
@@ -158,7 +203,6 @@ public class ModEntry : Mod
         if (!Context.IsWorldReady || !FollowManager.HasFollowers)
             return;
 
-        // Check auto-delivery on time change as a secondary trigger
         if (e.NewTime >= Config.AutoDeliverTime)
             FollowManager.DeliverAll();
     }
@@ -175,6 +219,7 @@ public class ModEntry : Mod
     {
         FollowManager.DeliverAll();
         NpcReactions.Reset();
+        GrazingMgr.Reset();
     }
 
     private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
@@ -187,6 +232,83 @@ public class ModEntry : Mod
     {
         FollowManager.Reset();
         NpcReactions.Reset();
+        GrazingMgr.Reset();
+    }
+
+    private void OnButtonPressed(object sender, ButtonPressedEventArgs e)
+    {
+        if (!Context.IsWorldReady || !Config.Enabled)
+            return;
+
+        if (!e.Button.IsActionButton())
+            return;
+
+        var heldItem = Game1.player.CurrentItem;
+        if (heldItem == null || heldItem.QualifiedItemId != GrazingBellItem.QualifiedItemId)
+            return;
+
+        var cursorTile = e.Cursor.GrabTile;
+        var location = Game1.player.currentLocation;
+        if (location == null)
+            return;
+
+        FarmAnimal clickedAnimal = null;
+        var cursorWorldPos = e.Cursor.AbsolutePixels;
+        foreach (var animal in location.animals.Values)
+        {
+            if (animal.GetBoundingBox().Contains((int)cursorWorldPos.X, (int)cursorWorldPos.Y))
+            {
+                clickedAnimal = animal;
+                break;
+            }
+        }
+
+        if (clickedAnimal == null)
+            return;
+
+        Helper.Input.Suppress(e.Button);
+
+        if (FollowManager.IsFollowing(clickedAnimal))
+        {
+            var result = FollowManager.TrySendHome(clickedAnimal);
+            switch (result)
+            {
+                case SendHomeResult.Success:
+                    if (Config.ShowNotifications)
+                        Game1.addHUDMessage(new HUDMessage(
+                            Helper.Translation.Get("hud.walk_sent_home", new { name = clickedAnimal.displayName })));
+                    break;
+                case SendHomeResult.InsufficientFriendship:
+                    if (Config.ShowNotifications)
+                        Game1.addHUDMessage(new HUDMessage(
+                            Helper.Translation.Get("hud.walk_cant_send_home", new { name = clickedAnimal.displayName })));
+                    break;
+            }
+            return;
+        }
+
+        if (clickedAnimal.isBaby())
+        {
+            if (Config.ShowNotifications)
+                Game1.addHUDMessage(new HUDMessage(
+                    Helper.Translation.Get("hud.walk_too_young", new { name = clickedAnimal.displayName })));
+            return;
+        }
+
+        if (Game1.timeOfDay >= Config.AutoDeliverTime)
+        {
+            if (Config.ShowNotifications)
+                Game1.addHUDMessage(new HUDMessage(
+                    Helper.Translation.Get("hud.walk_too_late")));
+            return;
+        }
+
+        if (FollowManager.StartWalk(clickedAnimal))
+        {
+            if (Config.ShowNotifications)
+                Game1.addHUDMessage(new HUDMessage(
+                    Helper.Translation.Get("hud.walk_started", new { name = clickedAnimal.displayName })));
+        }
     }
 
     private static string FormatGameTime(int time)

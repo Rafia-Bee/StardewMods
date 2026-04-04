@@ -4,8 +4,10 @@ When you buy an animal, it follows you around instead of teleporting straight to
 
 ## Features
 
-- **Follow the leader**: Purchased animals trail behind you as you walk, forming a chain if you buy more than one.
-- **NPC reactions**: Villagers you pass will comment on your animals with speech bubbles -- 115 unique lines ranging from sweet to snarky. Marnie, Shane, and Jas have their own personality-specific dialog, and reactions change based on weather.
+- **Follow the leader**: Purchased animals trail behind you as you walk.
+- **Grazing Bell**: Buy the Grazing Bell from Marnie's shop (500g) to take your registered farm animals on walks around town. Walking animals graze nearby grass for a happiness boost when you stand still. Send them home by clicking with the bell (requires 3+ hearts).
+- **Idle roaming**: Walking animals don't just stand around -- they wander short distances, pause, sit, and eat naturally when you stop moving.
+- **NPC reactions**: Villagers you pass will comment on your animals with speech bubbles -- 131 unique lines ranging from sweet to snarky. Marnie, Shane, and Jas have their own personality-specific dialog, and reactions change based on weather and whether you're on a walk.
 - **Outdoor stall support**: Works with outdoor animal vendors too (e.g. Moira's Glimsap Fair stall from Visit Mount Vapius). Animals appear right away.
 - **Livestock Bazaar compatible**: Hooks into `AnimalHouse.adoptAnimal`, so any mod that routes through the standard adoption path is supported.
 - **Farm arrival**: When you reach the farm, animals spread out in front of their barn/coop and wait for you to enter the building.
@@ -21,13 +23,16 @@ All options are available through [Generic Mod Config Menu](https://www.nexusmod
 |---|---|---|
 | Enabled | true | Toggle the mod on/off. When off, animals teleport to barns as usual. |
 | Follow Speed | 1.0 | Speed multiplier for catch-up when animals fall behind. |
-| Catch-up Distance | 12 | Tile distance before an animal rubber-bands to the player. |
+| Catch-up Distance | 10 | Tile distance before an animal rubber-bands to the player. |
 | Auto-deliver Time | 2000 (8 PM) | Game time when undelivered animals are sent home automatically. |
 | Animal Sounds | true | Whether animals make sounds while following. |
 | Sound Interval | 15s | Seconds between animal sounds. |
 | Show Notifications | true | HUD messages for follow/delivery events. |
 | NPC Reactions | true | Nearby villagers react with speech bubbles when you escort animals. |
 | Debug Logging | true | Log debug messages to the SMAPI console. |
+| Grazing Happiness | 15 | Happiness gained per grass eaten during a walk (0-255 scale). |
+| Send Home Friendship | 750 (3 hearts) | Friendship points needed to send an animal home alone via the bell. |
+| Grazing Idle Time | 2s | Seconds you must stand still before walking animals start grazing. |
 
 ## Requirements
 

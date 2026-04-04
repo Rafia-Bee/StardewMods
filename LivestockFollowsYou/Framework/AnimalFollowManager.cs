@@ -18,11 +18,34 @@ internal class FollowingAnimal
     public int StuckTicks { get; set; }
     public int DirectionCooldown { get; set; }
 
+    /// <summary>True if this animal is on a voluntary walk (Grazing Bell), false if purchase escort.</summary>
+    public bool IsWalk { get; set; }
+
+    /// <summary>Whether this animal has already eaten grass during the current idle stop.</summary>
+    public bool HasGrazedThisStop { get; set; }
+
+    /// <summary>Target grass tile the animal is walking toward (null when not grazing).</summary>
+    public Vector2? GrazeTarget { get; set; }
+
+    /// <summary>Current idle roaming activity when the player is standing still.</summary>
+    public IdleActivity CurrentIdleActivity { get; set; }
+
+    /// <summary>Ticks remaining for the current idle activity.</summary>
+    public int IdleActivityTicksLeft { get; set; }
+
     public FollowingAnimal(FarmAnimal animal)
     {
         Animal = animal;
         State = FollowState.PendingSpawn;
     }
+}
+
+internal enum IdleActivity
+{
+    Walking,
+    Pausing,
+    Sitting,
+    Eating
 }
 
 internal enum FollowState
@@ -34,7 +57,10 @@ internal enum FollowState
     FollowingPlayer,
 
     /// <summary>On the farm, heading to the barn/coop door.</summary>
-    HeadingToBarn
+    HeadingToBarn,
+
+    /// <summary>Animal is walking toward or eating a grass tile.</summary>
+    Grazing
 }
 
 /// <summary>Core logic for animals following the player after purchase.</summary>
@@ -45,6 +71,9 @@ internal class AnimalFollowManager
     private readonly Func<ModConfig> GetConfig;
 
     private readonly List<FollowingAnimal> following = new();
+
+    private Vector2 lastPlayerPos;
+    private int playerIdleTicks;
 
     public AnimalFollowManager(IMonitor monitor, IModHelper helper, Func<ModConfig> getConfig)
     {
@@ -68,7 +97,6 @@ internal class AnimalFollowManager
     /// <summary>Queue an animal for follow after purchase.</summary>
     public void StartFollowing(FarmAnimal animal)
     {
-        // Remove from the building interior so it doesn't exist in two places
         var interior = animal.homeInterior;
         if (interior != null)
             interior.animals.Remove(animal.myID.Value);
@@ -78,8 +106,6 @@ internal class AnimalFollowManager
         if (GetConfig().DebugLogging)
             Monitor.Log($"Queued {animal.displayName} ({animal.type.Value}) for follow.", LogLevel.Debug);
 
-        // If the player is already outdoors (e.g. buying at an outdoor stall),
-        // spawn the animal immediately instead of waiting for a location change
         var player = Game1.player;
         if (player.currentLocation is { IsOutdoors: true } location)
         {
@@ -98,6 +124,72 @@ internal class AnimalFollowManager
         }
     }
 
+    /// <summary>Start a voluntary walk with an animal using the Grazing Bell.</summary>
+    public bool StartWalk(FarmAnimal animal)
+    {
+        if (IsFollowing(animal))
+            return false;
+
+        if (animal.isBaby())
+            return false;
+
+        if (animal.ownerID.Value != Game1.player.UniqueMultiplayerID
+            && animal.ownerID.Value != Game1.MasterPlayer.UniqueMultiplayerID)
+            return false;
+
+        if (Game1.timeOfDay >= GetConfig().AutoDeliverTime)
+            return false;
+
+        var interior = animal.homeInterior;
+        if (interior != null)
+            interior.animals.Remove(animal.myID.Value);
+        animal.currentLocation?.animals.Remove(animal.myID.Value);
+
+        var follow = new FollowingAnimal(animal) { IsWalk = true };
+        var player = Game1.player;
+        var location = player.currentLocation;
+
+        if (location is { IsOutdoors: true })
+        {
+            int idx = following.Count;
+            float xOffset = (idx % 2 == 0 ? -1 : 1) * ((idx / 2) + 1) * 64f;
+            var spawnPos = player.Position + new Vector2(xOffset, 128);
+            SpawnAnimalInLocation(animal, location, spawnPos);
+            follow.State = FollowState.FollowingPlayer;
+            follow.SoundTimer = GetConfig().SoundIntervalSeconds;
+        }
+        else
+        {
+            follow.State = FollowState.PendingSpawn;
+        }
+
+        following.Add(follow);
+
+        if (GetConfig().DebugLogging)
+            Monitor.Log($"Started walk with {animal.displayName}.", LogLevel.Debug);
+
+        return true;
+    }
+
+    /// <summary>Attempt to send a walking animal home alone (requires friendship threshold).</summary>
+    public SendHomeResult TrySendHome(FarmAnimal animal)
+    {
+        var follow = following.FirstOrDefault(f => f.Animal == animal);
+        if (follow == null || !follow.IsWalk)
+            return SendHomeResult.NotOnWalk;
+
+        var config = GetConfig();
+        if (animal.friendshipTowardFarmer.Value < config.MinFriendshipToSendHome)
+            return SendHomeResult.InsufficientFriendship;
+
+        ForceDeliver(follow, isWalkEnd: true);
+        following.Remove(follow);
+        return SendHomeResult.Success;
+    }
+
+    /// <summary>Whether any walk animals are currently following.</summary>
+    public bool HasWalkAnimals => following.Any(f => f.IsWalk);
+
     /// <summary>Called each tick before the game updates. Sets movement directions for following animals.</summary>
     public void UpdateMovement(GameTime time)
     {
@@ -107,20 +199,29 @@ internal class AnimalFollowManager
         var config = GetConfig();
         var player = Game1.player;
 
+        bool playerMoved = Vector2.Distance(player.Position, lastPlayerPos) > 2f;
+        lastPlayerPos = player.Position;
+
+        if (playerMoved)
+            playerIdleTicks = 0;
+        else
+            playerIdleTicks++;
+
+        // ~1 second (60 ticks)
+        bool playerIdle = playerIdleTicks > 60;
+
         for (int i = following.Count - 1; i >= 0; i--)
         {
             var follow = following[i];
             var animal = follow.Animal;
 
-            // Check if the animal was delivered by vanilla barn-door code
-            if (animal.IsHome)
+            if (!follow.IsWalk && animal.IsHome)
             {
                 OnDelivered(follow, wasAutoDelivered: false);
                 following.RemoveAt(i);
                 continue;
             }
 
-            // Auto-deliver at configured time
             if (Game1.timeOfDay >= config.AutoDeliverTime && follow.State != FollowState.PendingSpawn)
             {
                 ForceDeliver(follow);
@@ -128,26 +229,30 @@ internal class AnimalFollowManager
                 continue;
             }
 
-            // Only move animals that are spawned
             if (follow.State == FollowState.PendingSpawn)
                 continue;
 
-            // HeadingToBarn animals idle in front of their building
-            // until the player enters the building (auto-delivered on building entry)
             if (follow.State == FollowState.HeadingToBarn)
                 continue;
 
-            // Chain following: animal 0 follows the player,
-            // each subsequent animal follows the one ahead of it
-            Vector2 target;
-            if (i == 0)
-                target = player.Position;
-            else
-                target = following[i - 1].Animal.Position;
+            if (follow.State == FollowState.Grazing)
+                continue;
+
+            // Clear external PathFindControllers (e.g. Autonomals) that override movement
+            if (animal.controller != null)
+                animal.controller = null;
+
+            if (follow.IsWalk && playerIdle)
+            {
+                animal.speed = DefaultAnimalSpeed;
+                UpdateIdleRoaming(follow, config, Game1.player);
+                continue;
+            }
+
+            Vector2 target = player.Position;
 
             SteerAnimal(follow, target, config, time);
 
-            // Sound
             if (config.AnimalSoundsWhileFollowing)
             {
                 follow.SoundTimer -= (float)time.ElapsedGameTime.TotalSeconds;
@@ -165,7 +270,6 @@ internal class AnimalFollowManager
     {
         var config = GetConfig();
 
-        // If player enters a building interior, auto-deliver any animals destined for it
         if (newLocation is AnimalHouse enteredHouse)
         {
             for (int i = following.Count - 1; i >= 0; i--)
@@ -185,12 +289,9 @@ internal class AnimalFollowManager
 
             if (follow.State == FollowState.PendingSpawn)
             {
-                // Spawn in the first outdoor location after purchase
                 if (!newLocation.IsOutdoors)
                     continue;
 
-                // Spawn south of the player, offset each animal horizontally
-                // so multiple purchases don't stack on top of each other
                 int pendingIndex = following.IndexOf(follow);
                 float xOffset = (pendingIndex % 2 == 0 ? -1 : 1) * ((pendingIndex / 2) + 1) * 64f;
                 var spawnPos = Game1.player.Position + new Vector2(xOffset, 320);
@@ -206,19 +307,27 @@ internal class AnimalFollowManager
                 continue;
             }
 
-            // Animals already parked at their building stay put when the player leaves
             if (follow.State == FollowState.HeadingToBarn)
                 continue;
 
-            // Transfer from old location to new
+            if (follow.State == FollowState.Grazing)
+            {
+                follow.State = FollowState.FollowingPlayer;
+                follow.GrazeTarget = null;
+            }
+
             oldLocation.animals.Remove(animal.myID.Value);
 
-            // Switch to heading-to-barn if we arrived at the building's parent location
+            if (follow.IsWalk)
+            {
+                SpawnAnimalInLocation(animal, newLocation, Game1.player.Position);
+                continue;
+            }
+
             if (animal.home != null && newLocation == animal.home.GetParentLocation())
             {
                 follow.State = FollowState.HeadingToBarn;
 
-                // Spawn spread out in front of the building door instead of at the player
                 Building home = animal.home;
                 Vector2 doorPos = new Vector2(
                     (home.tileX.Value + home.animalDoor.X) * 64f,
@@ -263,7 +372,6 @@ internal class AnimalFollowManager
             if (location is Farm)
                 continue;
 
-            // Don't touch building interiors (AnimalHouse)
             if (location.GetParentLocation() != null)
                 continue;
 
@@ -295,22 +403,18 @@ internal class AnimalFollowManager
             location.animals.Add(animal.myID.Value, animal);
     }
 
+    private const int DefaultAnimalSpeed = 2;
+
     private void SteerAnimal(FollowingAnimal follow, Vector2 target, ModConfig config, GameTime time)
     {
         var animal = follow.Animal;
+        var player = Game1.player;
         Vector2 diff = target - animal.Position;
         float tileDistance = diff.Length() / 64f;
+        float tileDistanceToPlayer = Vector2.Distance(animal.Position, player.Position) / 64f;
 
-        // Rubber-band: teleport closer if too far behind
-        if (tileDistance > config.RubberBandDistance)
-        {
-            Vector2 direction = Vector2.Normalize(diff);
-            animal.Position = target - direction * 3 * 64f;
-            follow.StuckTicks = 0;
-            return;
-        }
+        animal.speed = DefaultAnimalSpeed;
 
-        // Close enough: idle
         if (tileDistance < 1.5f)
         {
             animal.Halt();
@@ -318,17 +422,18 @@ internal class AnimalFollowManager
             return;
         }
 
-        // Stuck detection: if position hasn't changed, teleport past the obstacle
+        if (tileDistanceToPlayer > config.RubberBandDistance)
+        {
+            TeleportNearPlayer(follow);
+            return;
+        }
+
         if (Vector2.Distance(animal.Position, follow.LastPosition) < 1f)
         {
             follow.StuckTicks++;
             if (follow.StuckTicks > 30)
             {
-                // Teleport 2 tiles toward the target to skip the obstacle
-                Vector2 direction = Vector2.Normalize(diff);
-                animal.Position += direction * 128f;
-                follow.StuckTicks = 0;
-                follow.DirectionCooldown = 0;
+                TeleportNearPlayer(follow);
                 return;
             }
         }
@@ -338,26 +443,18 @@ internal class AnimalFollowManager
         }
         follow.LastPosition = animal.Position;
 
-        // Tick down direction change cooldown
         if (follow.DirectionCooldown > 0)
             follow.DirectionCooldown--;
 
-        // Determine desired facing direction
         int desiredDir;
         if (Math.Abs(diff.X) > Math.Abs(diff.Y))
             desiredDir = diff.X > 0 ? 1 : 3;
         else
             desiredDir = diff.Y > 0 ? 2 : 0;
 
-        // When stuck, freeze facing direction to prevent rapid left-right flipping
-        if (follow.StuckTicks > 0 && animal.isMoving())
-            desiredDir = animal.FacingDirection;
-
-        // Direction debounce: hold current direction during cooldown
         if (follow.DirectionCooldown > 0 && desiredDir != animal.FacingDirection)
             desiredDir = animal.FacingDirection;
 
-        // Only call Halt() + SetMoving when direction changes to preserve walk animation
         if (animal.FacingDirection != desiredDir || !animal.isMoving())
         {
             animal.Halt();
@@ -370,20 +467,187 @@ internal class AnimalFollowManager
             }
             follow.DirectionCooldown = 15;
         }
-
-        // Gentle speed boost when falling behind
-        float speedBoost = Math.Max(0, (tileDistance - 3f) * 0.3f * config.FollowSpeedMultiplier);
-        animal.addedSpeed = Math.Min(speedBoost, 2f);
     }
 
-    private void ForceDeliver(FollowingAnimal follow, bool isDayEnd = false)
+    /// <summary>Teleport an animal to a position near the player with horizontal spread for multiple animals.</summary>
+    private void TeleportNearPlayer(FollowingAnimal follow)
+    {
+        var animal = follow.Animal;
+        var player = Game1.player;
+
+        int idx = following.IndexOf(follow);
+        float xOffset = (idx % 2 == 0 ? -1 : 1) * ((idx / 2) + 1) * 64f;
+        Vector2 teleportPos = player.Position + new Vector2(xOffset, 192f);
+
+        animal.Position = teleportPos;
+        animal.Halt();
+        follow.StuckTicks = 0;
+        follow.DirectionCooldown = 0;
+        follow.LastPosition = teleportPos;
+
+        if (GetConfig().DebugLogging)
+            Monitor.Log($"{animal.displayName} teleported near player.", LogLevel.Trace);
+    }
+
+    /// <summary>Custom idle roaming: animals walk short distances, pause, sit, and do eating animations
+    /// within the rubber band radius while the player stands still.</summary>
+    private void UpdateIdleRoaming(FollowingAnimal follow, ModConfig config, Farmer player)
+    {
+        var animal = follow.Animal;
+        float distToPlayer = Vector2.Distance(animal.Position, player.Position) / 64f;
+
+        follow.LastPosition = animal.Position;
+        follow.StuckTicks = 0;
+
+        if (distToPlayer > config.RubberBandDistance + 2)
+        {
+            TeleportNearPlayer(follow);
+            follow.IdleActivityTicksLeft = 0;
+            return;
+        }
+
+        if (follow.CurrentIdleActivity != IdleActivity.Walking)
+        {
+            animal.Halt();
+            animal.controller = null;
+        }
+        else
+        {
+            animal.controller = null;
+        }
+
+        if (follow.CurrentIdleActivity == IdleActivity.Walking && distToPlayer > config.RubberBandDistance - 2)
+        {
+            Vector2 diff = player.Position - animal.Position;
+            int dir = Math.Abs(diff.X) > Math.Abs(diff.Y)
+                ? (diff.X > 0 ? 1 : 3)
+                : (diff.Y > 0 ? 2 : 0);
+
+            animal.Halt();
+            SetMovingDirection(animal, dir);
+            follow.IdleActivityTicksLeft = 0;
+        }
+
+        if (follow.CurrentIdleActivity == IdleActivity.Sitting)
+        {
+            var animalData = animal.GetAnimalData();
+            bool useDouble = animalData?.UseDoubleUniqueAnimationFrames ?? false;
+            bool flipRight = animalData?.UseFlippedRightForLeft ?? false;
+
+            int sitFrame;
+            if (useDouble)
+            {
+                sitFrame = animal.FacingDirection switch
+                {
+                    0 => 20, 1 => 18, 2 => 16, 3 => 22, _ => 16
+                };
+            }
+            else
+            {
+                sitFrame = animal.FacingDirection switch
+                {
+                    0 => 15, 1 => 14, 2 => 13, 3 => (flipRight ? 14 : 12), _ => 13
+                };
+            }
+
+            animal.Sprite.currentFrame = sitFrame;
+            animal.Sprite.UpdateSourceRect();
+        }
+
+        if (follow.CurrentIdleActivity == IdleActivity.Eating)
+        {
+            var animalData = animal.GetAnimalData();
+            int baseFrame = 16;
+            if (!animal.Sprite.textureUsesFlippedRightForLeft)
+                baseFrame += 4;
+            if (animalData?.UseDoubleUniqueAnimationFrames ?? false)
+                baseFrame += 4;
+
+            int cycleFrame = (follow.IdleActivityTicksLeft / 40) % 2 == 0 ? baseFrame : baseFrame + 1;
+            animal.Sprite.currentFrame = cycleFrame;
+            animal.Sprite.UpdateSourceRect();
+        }
+
+        follow.IdleActivityTicksLeft--;
+        if (follow.IdleActivityTicksLeft <= 0)
+        {
+            PickNextIdleActivity(follow, config, player);
+        }
+    }
+
+    private void PickNextIdleActivity(FollowingAnimal follow, ModConfig config, Farmer player)
+    {
+        var animal = follow.Animal;
+        var random = Game1.random;
+        float distToPlayer = Vector2.Distance(animal.Position, player.Position) / 64f;
+
+        animal.isEating.Value = false;
+
+        int roll = random.Next(8);
+
+        if (roll < 2)
+        {
+            follow.CurrentIdleActivity = IdleActivity.Walking;
+            follow.IdleActivityTicksLeft = random.Next(60, 150);
+
+            int dir;
+            if (distToPlayer > config.RubberBandDistance - 3)
+            {
+                Vector2 diff = player.Position - animal.Position;
+                dir = Math.Abs(diff.X) > Math.Abs(diff.Y)
+                    ? (diff.X > 0 ? 1 : 3)
+                    : (diff.Y > 0 ? 2 : 0);
+            }
+            else
+            {
+                dir = random.Next(4);
+            }
+
+            animal.Halt();
+            SetMovingDirection(animal, dir);
+        }
+        else if (roll < 4)
+        {
+            follow.CurrentIdleActivity = IdleActivity.Pausing;
+            follow.IdleActivityTicksLeft = random.Next(180, 360); // 3s - 6s
+            animal.Halt();
+            animal.FacingDirection = random.Next(4);
+        }
+        else if (roll < 6)
+        {
+            follow.CurrentIdleActivity = IdleActivity.Sitting;
+            follow.IdleActivityTicksLeft = random.Next(240, 420); // 4s - 7s
+            animal.Halt();
+            animal.FacingDirection = random.Next(4);
+        }
+        else
+        {
+            follow.CurrentIdleActivity = IdleActivity.Eating;
+            follow.IdleActivityTicksLeft = random.Next(150, 270); // 2.5s - 4.5s
+            animal.Halt();
+            animal.FacingDirection = 2; // face down
+        }
+    }
+
+    private static void SetMovingDirection(FarmAnimal animal, int dir)
+    {
+        switch (dir)
+        {
+            case 0: animal.SetMovingUp(true); break;
+            case 1: animal.SetMovingRight(true); break;
+            case 2: animal.SetMovingDown(true); break;
+            case 3: animal.SetMovingLeft(true); break;
+        }
+    }
+
+    private void ForceDeliver(FollowingAnimal follow, bool isDayEnd = false, bool isWalkEnd = false)
     {
         var animal = follow.Animal;
 
-        // Remove from whichever location it's in
+        animal.speed = DefaultAnimalSpeed;
+
         animal.currentLocation?.animals.Remove(animal.myID.Value);
 
-        // Place in home building
         var interior = animal.homeInterior;
         if (interior != null && !interior.animals.ContainsKey(animal.myID.Value))
         {
@@ -394,7 +658,16 @@ internal class AnimalFollowManager
 
         if (GetConfig().ShowNotifications)
         {
-            string key = isDayEnd ? "hud.auto_delivered" : "hud.delivered";
+            string key;
+            if (isWalkEnd)
+                key = "hud.walk_sent_home";
+            else if (isDayEnd)
+                key = "hud.auto_delivered";
+            else if (follow.IsWalk)
+                key = "hud.walk_delivered";
+            else
+                key = "hud.delivered";
+
             Game1.addHUDMessage(new HUDMessage(
                 Helper.Translation.Get(key, new { name = animal.displayName })));
         }
@@ -407,8 +680,8 @@ internal class AnimalFollowManager
     {
         var animal = follow.Animal;
 
-        // Reposition to a valid tile inside the building so the animal
-        // doesn't end up in the black zone near the door warp
+        animal.speed = DefaultAnimalSpeed;
+
         var interior = animal.homeInterior;
         if (interior != null)
             animal.setRandomPosition(interior);
@@ -418,8 +691,12 @@ internal class AnimalFollowManager
             Game1.addHUDMessage(new HUDMessage(
                 Helper.Translation.Get("hud.delivered", new { name = animal.displayName })));
         }
-
-        if (GetConfig().DebugLogging)
-            Monitor.Log($"{animal.displayName} entered barn via door.", LogLevel.Debug);
     }
+}
+
+internal enum SendHomeResult
+{
+    Success,
+    NotOnWalk,
+    InsufficientFriendship
 }

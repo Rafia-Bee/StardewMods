@@ -158,5 +158,40 @@
     "npc.reaction.snow.multi.1": "The farm's going to need a LOT of heating tonight with that bunch.",
     "npc.reaction.snow.multi.2": "Bundle up, all of you! It's freezing out here.",
     "npc.reaction.snow.multi.3": "Look at all those little footprints in the snow!",
-    "npc.reaction.snow.multi.4": "A winter parade! You're only missing the sleigh bells."
+    "npc.reaction.snow.multi.4": "A winter parade! You're only missing the sleigh bells.",
+
+    "item.grazing_bell.name": "Grazing Bell",
+    "item.grazing_bell.description": "A small brass bell for calling your animals to your side. Ring it near a farm animal to take them for a walk.",
+
+    "config.grazing_happiness.name": "Grazing Happiness Boost",
+    "config.grazing_happiness.tooltip": "How much happiness an animal gains each time it eats grass during a walk (0-255 scale). Default 15.",
+    "config.min_friendship_send_home.name": "Send Home Friendship",
+    "config.min_friendship_send_home.tooltip": "Minimum friendship points needed to send a walking animal home alone with the Grazing Bell. 750 = 3 hearts.",
+    "config.grazing_idle_seconds.name": "Grazing Idle Time",
+    "config.grazing_idle_seconds.tooltip": "How many seconds you need to stand still before walking animals start looking for grass to eat.",
+
+    "hud.walk_started": "{{name}} wants to go for a walk!",
+    "hud.walk_delivered": "{{name}} made it home. Thank you for the walk!",
+    "hud.walk_sent_home": "{{name}} knows the way home. See you later!",
+    "hud.walk_cant_send_home": "{{name}} doesn't know the way back home just yet.",
+    "hud.walk_too_young": "{{name}} is too young for a walk.",
+    "hud.walk_too_late": "It's too late in the day to start a walk.",
+
+    "npc.reaction.walk.single.0": "Taking {{name}} for a walk? That's sweet.",
+    "npc.reaction.walk.single.1": "I didn't know you could walk a {{type}} like a dog!",
+    "npc.reaction.walk.single.2": "{{name}} looks like they're enjoying the fresh air.",
+    "npc.reaction.walk.single.3": "Out for a stroll with {{name}}? Living the dream.",
+    "npc.reaction.walk.single.4": "{{name}} looks so happy to be outside with you.",
+    "npc.reaction.walk.single.5": "You two are really bonding, huh? That's nice to see.",
+    "npc.reaction.walk.single.6": "I should try taking my cat for a walk... actually, never mind.",
+    "npc.reaction.walk.single.7": "Look at {{name}} just trotting along. Too cute.",
+    "npc.reaction.walk.single.8": "Is {{name}} looking for a snack? There's grass everywhere!",
+    "npc.reaction.walk.single.9": "A farmer and their {{type}}, out for a stroll. Classic.",
+
+    "npc.reaction.walk.multi.0": "A whole group outing? Those animals are spoiled!",
+    "npc.reaction.walk.multi.1": "Where are you all headed? The beach?",
+    "npc.reaction.walk.multi.2": "That's quite the walking party you've got there.",
+    "npc.reaction.walk.multi.3": "All of them at once? You've got your hands full!",
+    "npc.reaction.walk.multi.4": "I bet they love getting out of the barn for a while.",
+    "npc.reaction.walk.multi.5": "You look like a shepherd leading your flock through town!"
 }
