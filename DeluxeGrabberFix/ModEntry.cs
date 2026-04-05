@@ -12,6 +12,8 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Buildings;
+using StardewValley.GameData.Machines;
+using StardewValley.Internal;
 using StardewValley.TerrainFeatures;
 
 namespace DeluxeGrabberFix;
@@ -262,6 +264,7 @@ public class ModEntry : Mod
         _locations.ApplyVisitAutoSkip();
         _gmcm.RebuildConfigMenu();
         LogConfig();
+        RepairStuckMachines();
     }
 
     private void LogConfig()
@@ -285,6 +288,70 @@ public class ModEntry : Mod
 
         if (Config.excludedItems?.Count > 0)
             Monitor.Log($"Excluded items: {string.Join(", ", Config.excludedItems)}", LogLevel.Trace);
+    }
+
+    private void RepairStuckMachines()
+    {
+        int repaired = 0;
+
+        foreach (var location in GetAllLocations())
+        {
+            if (location?.Objects == null)
+                continue;
+
+            foreach (var pair in location.Objects.Pairs.ToList())
+            {
+                try
+                {
+                    var obj = pair.Value;
+                    if (obj == null || !obj.bigCraftable.Value)
+                        continue;
+                    if (obj.heldObject.Value != null)
+                        continue;
+                    if (obj.MinutesUntilReady > 0)
+                        continue;
+
+                    var machineData = obj.GetMachineData();
+                    if (machineData?.OutputRules == null)
+                        continue;
+
+                    bool hasOutputCollectedRule = machineData.OutputRules.Any(r =>
+                        r.Triggers?.Any(t => t.Trigger.HasFlag(MachineOutputTrigger.OutputCollected)) == true);
+                    if (!hasOutputCollectedRule)
+                        continue;
+
+                    // Stale readyForHarvest: heldObject is null but readyForHarvest still true
+                    // Clear the flags and let the game's normal cycle restart the machine
+                    if (obj.readyForHarvest.Value)
+                    {
+                        obj.readyForHarvest.Value = false;
+                        obj.showNextIndex.Value = false;
+                        repaired++;
+                        Monitor.Log($"Repaired stuck {obj.Name} at {location.Name} [{pair.Key}] (cleared stale readyForHarvest)", LogLevel.Trace);
+                        continue;
+                    }
+
+                    // Machine is idle (no output, no readyForHarvest, no timer) — try to restart it
+                    var lastInput = obj.lastInputItem?.Value;
+                    if (MachineDataUtility.TryGetMachineOutputRule(obj, machineData, MachineOutputTrigger.OutputCollected, lastInput?.getOne(), Game1.MasterPlayer, location, out var rule, out _, out _, out _))
+                    {
+                        obj.OutputMachine(machineData, rule, lastInput, Game1.MasterPlayer, location, probe: false);
+                        if (obj.heldObject.Value != null || obj.MinutesUntilReady > 0)
+                        {
+                            repaired++;
+                            Monitor.Log($"Repaired stuck {obj.Name} at {location.Name} [{pair.Key}] (restarted idle machine)", LogLevel.Trace);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Error repairing {pair.Value?.Name ?? "unknown"} at {location.Name} [{pair.Key}]: {ex.Message}", LogLevel.Trace);
+                }
+            }
+        }
+
+        if (repaired > 0)
+            Monitor.Log($"Repaired {repaired} stuck machine(s) from a previous bug.", LogLevel.Info);
     }
 
     private void OnReturnedToTitle(object sender, ReturnedToTitleEventArgs e)
