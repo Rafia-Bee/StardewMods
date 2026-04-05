@@ -173,7 +173,7 @@ internal class GrabberManager
         var cursorTile = Game1.lastCursorTile;
         var obj = Game1.player.currentLocation.getObjectAtTile((int)cursorTile.X, (int)cursorTile.Y);
 
-        if (obj == null || obj.QualifiedItemId != BigCraftableIds.AutoGrabber
+        if (obj == null || !GrabberTypeHelper.IsGrabber(obj.QualifiedItemId)
             || obj.heldObject.Value is not StardewValley.Objects.Chest)
         {
             Game1.addHUDMessage(new HUDMessage(_mod.Helper.Translation.Get("hud.hover-over-grabber"), HUDMessage.error_type));
@@ -316,7 +316,7 @@ internal class GrabberManager
 
         try
         {
-            var machineGrabber = new MachineGrabber(_mod, location);
+            var machineGrabber = new MachineGrabber(_mod, location) { BelongsToType = GrabberType.Machine };
             if (!machineGrabber.CanGrab())
                 return false;
 
@@ -383,7 +383,7 @@ internal class GrabberManager
 
         try
         {
-            var objectGrabber = new GenericObjectGrabber(_mod, location);
+            var objectGrabber = new GenericObjectGrabber(_mod, location) { BelongsToType = GrabberType.Forage };
             if (!objectGrabber.CanGrab())
                 return false;
 
@@ -393,7 +393,7 @@ internal class GrabberManager
 
             bool result = objectGrabber.GrabItems();
 
-            var featureGrabber = new ForageHoeDirtGrabber(_mod, location);
+            var featureGrabber = new ForageHoeDirtGrabber(_mod, location) { BelongsToType = GrabberType.Forage };
             result |= featureGrabber.GrabItems();
 
             if (result)

@@ -187,6 +187,13 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.enabled-locations-link"),
             () => _mod.Helper.Translation.Get("config.enabled-locations-link.tooltip"));
 
+        api.AddTextOption(_mod.ModManifest,
+            () => ModConfig.GrabberModeDict[_mod.Config.grabberMode],
+            v => _mod.Config.grabberMode = ModConfig.GrabberModeReverseDict[v],
+            () => _mod.Helper.Translation.Get("config.grabber-mode"),
+            () => _mod.Helper.Translation.Get("config.grabber-mode.tooltip"),
+            ModConfig.GrabberModeStrings);
+
         // Crop Harvesting page
         api.AddPage(_mod.ModManifest, "crop-harvesting", () => _mod.Helper.Translation.Get("section.crop-harvesting"));
 

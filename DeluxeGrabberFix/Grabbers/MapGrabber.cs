@@ -19,6 +19,8 @@ internal abstract class MapGrabber
     protected Farmer Player => Game1.MasterPlayer;
     protected ModConfig Config => Mod.Config;
 
+    internal GrabberType BelongsToType { get; set; } = GrabberType.All;
+
     public MapGrabber(ModEntry mod, GameLocation location)
     {
         Mod = mod;
@@ -115,7 +117,7 @@ internal abstract class MapGrabber
 
     protected bool TryAddItem(Item item)
     {
-        return TryAddItem(item, GrabberPairs);
+        return TryAddItem(item, GetFilteredGrabberPairs());
     }
 
     protected bool TryAddItems(IEnumerable<Item> items, IEnumerable<KeyValuePair<Vector2, Object>> grabbers)
@@ -135,7 +137,7 @@ internal abstract class MapGrabber
 
     protected bool TryAddItems(IEnumerable<Item> items)
     {
-        return TryAddItems(items, GrabberPairs);
+        return TryAddItems(items, GetFilteredGrabberPairs());
     }
 
     protected void GainExperience(int skill, int exp)
@@ -146,7 +148,17 @@ internal abstract class MapGrabber
 
     public bool CanGrab()
     {
-        return GrabberPairs.Any(pair => IsValidGrabber(pair.Value, pair.Key));
+        return GetFilteredGrabberPairs().Any(pair => IsValidGrabber(pair.Value, pair.Key));
+    }
+
+    protected IEnumerable<KeyValuePair<Vector2, Object>> GetFilteredGrabberPairs()
+    {
+        if (Config.grabberMode == ModConfig.GrabberMode.Specialized && BelongsToType != GrabberType.All)
+        {
+            return GrabberPairs.Where(pair =>
+                GrabberTypeHelper.GetGrabberType(pair.Value.QualifiedItemId) == BelongsToType);
+        }
+        return GrabberPairs;
     }
 
     public Dictionary<InventoryEntry, int> GetInventory()
@@ -208,7 +220,7 @@ internal abstract class MapGrabber
     {
         if (UseGlobalMode || Location.Objects.ContainsKey(tile))
         {
-            return obj.QualifiedItemId == BigCraftableIds.AutoGrabber
+            return GrabberTypeHelper.IsGrabber(obj.QualifiedItemId)
                 && obj.heldObject.Value != null
                 && obj.heldObject.Value is Chest;
         }
@@ -220,7 +232,7 @@ internal abstract class MapGrabber
         if (obj == null)
             return false;
 
-        return obj.QualifiedItemId == BigCraftableIds.AutoGrabber
+        return GrabberTypeHelper.IsGrabber(obj.QualifiedItemId)
             && obj.heldObject.Value != null
             && obj.heldObject.Value is Chest;
     }

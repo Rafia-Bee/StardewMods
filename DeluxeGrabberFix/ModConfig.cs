@@ -33,6 +33,13 @@ internal class ModConfig
         Smart
     }
 
+    public enum GrabberMode
+    {
+        Classic,
+        Specialized
+    }
+
+    public GrabberMode grabberMode;
     public GlobalGrabberMode globalGrabber;
     public GrabFrequency grabFrequency;
     public HarvestCropsRangeMode harvestCropsRangeMode;
@@ -143,6 +150,12 @@ internal class ModConfig
         { FlowerHarvestMode.Smart, "Smart" }
     };
 
+    internal static Dictionary<GrabberMode, string> GrabberModeDict = new()
+    {
+        { GrabberMode.Classic, "Classic" },
+        { GrabberMode.Specialized, "Specialized" }
+    };
+
     internal static Dictionary<string, HarvestCropsRangeMode> HarvestCropsRangeReverseDict =
         HarvestCropsRangeDict.ToDictionary(p => p.Value, p => p.Key);
 
@@ -155,10 +168,14 @@ internal class ModConfig
     internal static Dictionary<string, FlowerHarvestMode> FlowerHarvestReverseDict =
         FlowerHarvestDict.ToDictionary(p => p.Value, p => p.Key);
 
+    internal static Dictionary<string, GrabberMode> GrabberModeReverseDict =
+        GrabberModeDict.ToDictionary(p => p.Value, p => p.Key);
+
     internal static string[] HarvestCropsRangeModeStrings = { "Square", "Walk" };
     internal static string[] GlobalGrabberModeStrings = { "Off", "All", "Hover" };
     internal static string[] GrabFrequencyStrings = { "Instant", "Hourly", "Daily" };
     internal static string[] FlowerHarvestStrings = { "Off", "All", "Smart" };
+    internal static string[] GrabberModeStrings = { "Classic", "Specialized" };
 
     internal static readonly HashSet<string> SunberryVillageExcludedItems = new()
     {
@@ -223,6 +240,7 @@ internal class ModConfig
 
     public ModConfig()
     {
+        grabberMode = GrabberMode.Classic;
         animalProducts = true;
         slimeHutch = true;
         farmCaveMushrooms = true;

@@ -125,6 +125,10 @@ internal class MachineGrabber : ObjectsMapGrabber
         if (!obj.readyForHarvest.Value || obj.heldObject.Value == null)
             return false;
 
+        // Specialized grabbers use heldObject for storage, not as machine output
+        if (GrabberTypeHelper.IsGrabber(obj.QualifiedItemId))
+            return false;
+
         if (_automateSkipTiles != null && _automateSkipTiles.Contains(tile))
         {
             Mod.LogDebug($"Skipping {obj.Name} at {Location.Name} [{tile}] (managed by Automate)");

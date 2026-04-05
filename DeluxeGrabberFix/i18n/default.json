@@ -220,5 +220,19 @@
     "log.quality-normal": "Normal",
     "log.quality-silver": "Silver",
     "log.quality-gold": "Gold",
-    "log.quality-iridium": "Iridium"
+    "log.quality-iridium": "Iridium",
+
+    "specialized.crop-grabber.name": "Crop Grabber",
+    "specialized.crop-grabber.description": "Automatically harvests nearby crops, indoor pots and seed spots.",
+    "specialized.forage-grabber.name": "Forage Grabber",
+    "specialized.forage-grabber.description": "Automatically collects forage, berries, moss and cave mushrooms.",
+    "specialized.tree-grabber.name": "Tree Grabber",
+    "specialized.tree-grabber.description": "Automatically harvests fruit trees, seed trees and hardwood stumps.",
+    "specialized.scavenger-grabber.name": "Scavenger Grabber",
+    "specialized.scavenger-grabber.description": "Automatically digs artifact spots, collects debris, garbage and ore panning results.",
+    "specialized.machine-grabber.name": "Machine Grabber",
+    "specialized.machine-grabber.description": "Automatically collects outputs from machines, crab pots and fish ponds.",
+
+    "config.grabber-mode": "Grabber Mode",
+    "config.grabber-mode.tooltip": "Classic: one grabber collects everything. Specialized: six different grabbers each collect a specific category of items."
 }
