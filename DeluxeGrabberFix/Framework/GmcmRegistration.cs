@@ -183,9 +183,9 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("page.compatibility.link"),
             () => _mod.Helper.Translation.Get("page.compatibility.tooltip"));
 
-        api.AddPageLink(_mod.ModManifest, "skipped-locations",
-            () => _mod.Helper.Translation.Get("config.skipped-locations-link"),
-            () => _mod.Helper.Translation.Get("config.skipped-locations-link.tooltip"));
+        api.AddPageLink(_mod.ModManifest, "enabled-locations",
+            () => _mod.Helper.Translation.Get("config.enabled-locations-link"),
+            () => _mod.Helper.Translation.Get("config.enabled-locations-link.tooltip"));
 
         // Crop Harvesting page
         api.AddPage(_mod.ModManifest, "crop-harvesting", () => _mod.Helper.Translation.Get("section.crop-harvesting"));
@@ -707,13 +707,13 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.automate-compatibility"),
             () => _mod.Helper.Translation.Get("config.automate-compatibility.tooltip"));
 
-        // Skipped Locations page
-        api.AddPage(_mod.ModManifest, "skipped-locations", () => _mod.Helper.Translation.Get("config.skipped-locations-page"));
+        // Enabled Locations page
+        api.AddPage(_mod.ModManifest, "enabled-locations", () => _mod.Helper.Translation.Get("config.enabled-locations-page"));
 
         if (_locations.DiscoveredLocations != null && _locations.DiscoveredLocations.Count > 0)
         {
             api.AddParagraph(_mod.ModManifest,
-                () => _mod.Helper.Translation.Get("config.skipped-locations-paragraph"));
+                () => _mod.Helper.Translation.Get("config.enabled-locations-paragraph"));
 
             api.AddBoolOption(_mod.ModManifest,
                 getValue: () => _locations.DiscoveredLocations.All(loc => _mod.Config.SkippedLocations?.Contains(loc.Name) != true),
