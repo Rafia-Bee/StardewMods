@@ -68,7 +68,7 @@ public class ModApi : IDeluxeGrabberFixApi
             return false;
 
         return location.Objects.Pairs.Any(pair =>
-            pair.Value.QualifiedItemId == BigCraftableIds.AutoGrabber
+            GrabberTypeHelper.IsGrabber(pair.Value.QualifiedItemId)
             && pair.Value.heldObject.Value is StardewValley.Objects.Chest);
     }
 
