@@ -1,7 +1,10 @@
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using DeluxeGrabberFix.Framework;
 using StardewValley;
+using StardewValley.GameData.Machines;
+using StardewValley.Internal;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 
@@ -105,6 +108,9 @@ internal class MachineGrabber : ObjectsMapGrabber
             return false;
 
         if (_automateSkipTiles != null && _automateSkipTiles.Contains(tile))
+            return false;
+
+        if (obj.GetMachineData()?.IsIncubator == true)
             return false;
 
         if (IsCrabPot(obj))
@@ -252,9 +258,32 @@ internal class MachineGrabber : ObjectsMapGrabber
             obj.heldObject.Value = null;
             obj.readyForHarvest.Value = false;
             obj.showNextIndex.Value = false;
+            obj.ResetParentSheetIndex();
+
+            RestartMachineIfNeeded(tile, obj, output);
+
             return true;
         }
         return false;
+    }
+
+    private void RestartMachineIfNeeded(Vector2 tile, Object obj, Object collectedOutput)
+    {
+        var machineData = obj.GetMachineData();
+        if (machineData == null)
+            return;
+
+        // Restart self-repeating machines (Crystalarium, Worm Bin, Bee House, etc.)
+        if (MachineDataUtility.TryGetMachineOutputRule(obj, machineData, MachineOutputTrigger.OutputCollected, collectedOutput.getOne(), Player, Location, out var rule, out _, out _, out _))
+        {
+            obj.OutputMachine(machineData, rule, obj.lastInputItem.Value, Player, Location, probe: false);
+        }
+
+        // Tappers have a special case: update the tree's tapper product
+        if (obj.IsTapper() && Location.terrainFeatures.TryGetValue(tile, out var feature) && feature is Tree tree)
+        {
+            tree.UpdateTapperProduct(obj, collectedOutput);
+        }
     }
 
     private static bool IsCrabPot(Object obj)
