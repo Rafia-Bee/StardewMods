@@ -255,8 +255,8 @@ internal class GrabberManager
                     .ToList();
                 string header = grabberNames.Any(n => ModEntry.GetGrabberCustomName(
                         aggregateGrabber.GrabberObjects.First(g => ModEntry.GetGrabberDisplayName(g) == n)) != null)
-                    ? $"Yield of {string.Join(", ", grabberNames)}:"
-                    : $"Yield of autograbber(s) at {location.Name}:";
+                    ? _mod.Helper.Translation.Get("log.yield-header-named", new { names = string.Join(", ", grabberNames) })
+                    : _mod.Helper.Translation.Get("log.yield-header", new { location = location.Name });
                 var sb = new StringBuilder(header + "\n");
                 bool anyYield = false;
 
@@ -268,7 +268,12 @@ internal class GrabberManager
 
                     if (newCount > 0)
                     {
-                        sb.AppendLine($"    {entry.Key.Name} ({entry.Key.QualityName}) x{newCount}");
+                        sb.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
+                        {
+                            name = entry.Key.DisplayName,
+                            quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
+                            count = newCount
+                        }));
                         anyYield = true;
                         _totalItemsGrabbed += newCount;
                     }
@@ -327,7 +332,7 @@ internal class GrabberManager
             if (beforeInventory != null && result)
             {
                 var afterInventory = machineGrabber.GetInventory();
-                var sb = new StringBuilder($"Hourly machine yield at {location.Name}:\n");
+                var sb = new StringBuilder(_mod.Helper.Translation.Get("log.machine-yield-header", new { location = location.Name }) + "\n");
                 bool anyYield = false;
 
                 foreach (var entry in afterInventory)
@@ -338,7 +343,12 @@ internal class GrabberManager
 
                     if (newCount > 0)
                     {
-                        sb.AppendLine($"    {entry.Key.Name} ({entry.Key.QualityName}) x{newCount}");
+                        sb.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
+                        {
+                            name = entry.Key.DisplayName,
+                            quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
+                            count = newCount
+                        }));
                         anyYield = true;
                         _totalItemsGrabbed += newCount;
                     }
@@ -392,7 +402,7 @@ internal class GrabberManager
             if (beforeInventory != null && result)
             {
                 var afterInventory = objectGrabber.GetInventory();
-                var sb = new StringBuilder($"Hourly forage yield at {location.Name}:\n");
+                var sb = new StringBuilder(_mod.Helper.Translation.Get("log.forage-yield-header", new { location = location.Name }) + "\n");
                 bool anyYield = false;
 
                 foreach (var entry in afterInventory)
@@ -403,7 +413,12 @@ internal class GrabberManager
 
                     if (newCount > 0)
                     {
-                        sb.AppendLine($"    {entry.Key.Name} ({entry.Key.QualityName}) x{newCount}");
+                        sb.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
+                        {
+                            name = entry.Key.DisplayName,
+                            quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
+                            count = newCount
+                        }));
                         anyYield = true;
                         _totalItemsGrabbed += newCount;
                     }

@@ -266,7 +266,7 @@ public class ModEntry : Mod
 
     private void LogConfig()
     {
-        LogDebug(
+        Monitor.Log(
             $"Config: forage={Config.forage}, animalProducts={Config.animalProducts}, " +
             $"slimeHutch={Config.slimeHutch}, farmCaveMushrooms={Config.farmCaveMushrooms}, " +
             $"harvestCrops={Config.harvestCrops}, indoorPots={Config.harvestCropsIndoorPots}, " +
@@ -280,10 +280,11 @@ public class ModEntry : Mod
             $"beeHouses={Config.collectBeeHouses}, tappers={Config.collectTappers}, " +
             $"globalMode={Config.globalGrabber}, globalAutoFire={Config.globalAutoFire}, " +
             $"reportYield={Config.reportYield}, gainXP={Config.gainExperience}, " +
-            $"grabFrequency={Config.grabFrequency}, skipFestivals={Config.skipFestivalLocations}");
+            $"grabFrequency={Config.grabFrequency}, skipFestivals={Config.skipFestivalLocations}",
+            LogLevel.Trace);
 
         if (Config.excludedItems?.Count > 0)
-            LogDebug($"Excluded items: {string.Join(", ", Config.excludedItems)}");
+            Monitor.Log($"Excluded items: {string.Join(", ", Config.excludedItems)}", LogLevel.Trace);
     }
 
     private void OnReturnedToTitle(object sender, ReturnedToTitleEventArgs e)
@@ -469,7 +470,7 @@ public class ModEntry : Mod
                     if (beforeInventory != null && result)
                     {
                         var afterInventory = orePanGrabber.GetInventory();
-                        var sb = new StringBuilder($"Ore panning yield at {location.Name}:\n");
+                        var sb = new StringBuilder(Helper.Translation.Get("log.ore-panning-yield-header", new { location = location.Name }) + "\n");
                         bool anyYield = false;
 
                         foreach (var entry in afterInventory)
@@ -480,7 +481,12 @@ public class ModEntry : Mod
 
                             if (newCount > 0)
                             {
-                                sb.AppendLine($"    {entry.Key.Name} ({entry.Key.QualityName}) x{newCount}");
+                                sb.AppendLine(Helper.Translation.Get("log.yield-item", new
+                                {
+                                    name = entry.Key.DisplayName,
+                                    quality = Helper.Translation.Get(entry.Key.QualityKey),
+                                    count = newCount
+                                }));
                                 anyYield = true;
                             }
                         }

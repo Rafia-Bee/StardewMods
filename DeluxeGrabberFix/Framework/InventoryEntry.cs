@@ -16,7 +16,17 @@ internal class InventoryEntry
         _ => "Normal"
     };
 
+    public string QualityKey => Quality switch
+    {
+        1 => "log.quality-silver",
+        2 => "log.quality-gold",
+        4 => "log.quality-iridium",
+        _ => "log.quality-normal"
+    };
+
     public string Name => Item.Name;
+
+    public string DisplayName => Item.DisplayName;
 
     public InventoryEntry(Item item)
     {
