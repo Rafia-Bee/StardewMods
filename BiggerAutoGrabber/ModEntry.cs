@@ -63,6 +63,8 @@ public class ModEntry : Mod
 
     private void OnMenuChanged(object sender, MenuChangedEventArgs e)
     {
+        ChestPatches.ClearScrollState();
+
         if (e.NewMenu is not ItemGrabMenu menu)
             return;
 

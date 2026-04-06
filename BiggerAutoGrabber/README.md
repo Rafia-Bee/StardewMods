@@ -5,6 +5,7 @@ If you use the [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/stardewvalle
 ## Features
 
 - Configurable auto-grabber capacity (default: 36, vanilla)
+- Scrollable inventory when capacity exceeds 72 slots (mouse wheel or arrow buttons)
 - Works with any mod that uses auto-grabbers (e.g., Deluxe Grabber Redux)
 - Capacity changes are applied to all existing and newly placed auto-grabbers
 - Compatible with Generic Mod Config Menu for in-game configuration

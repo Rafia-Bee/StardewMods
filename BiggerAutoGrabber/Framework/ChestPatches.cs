@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Objects;
@@ -19,6 +22,12 @@ internal static class ChestPatches
     /// </summary>
     [ThreadStatic]
     private static bool _suppressCapacity;
+
+    // ── Scroll state (only one menu active at a time) ───────────────
+    private static ItemGrabMenu _scrollMenu;
+    private static InventorySlice _activeSlice;
+    private static ClickableTextureComponent _upArrow;
+    private static ClickableTextureComponent _downArrow;
 
     public static void Apply(Harmony harmony)
     {
@@ -58,6 +67,24 @@ internal static class ChestPatches
         harmony.Patch(
             original: AccessTools.Method(typeof(StardewValley.Object), "grabItemFromAutoGrabber"),
             prefix: new HarmonyMethod(typeof(ChestPatches), nameof(GrabItemFromAutoGrabber_Prefix))
+        );
+
+        // Scroll wheel handling for scrollable auto-grabber menus.
+        harmony.Patch(
+            original: AccessTools.Method(typeof(IClickableMenu), nameof(IClickableMenu.receiveScrollWheelAction)),
+            postfix: new HarmonyMethod(typeof(ChestPatches), nameof(ReceiveScrollWheelAction_Postfix))
+        );
+
+        // Draw scroll arrows on top of the menu.
+        harmony.Patch(
+            original: AccessTools.Method(typeof(ItemGrabMenu), nameof(ItemGrabMenu.draw), new[] { typeof(SpriteBatch) }),
+            postfix: new HarmonyMethod(typeof(ChestPatches), nameof(Draw_Postfix))
+        );
+
+        // Handle clicks on scroll arrows.
+        harmony.Patch(
+            original: AccessTools.Method(typeof(ItemGrabMenu), nameof(ItemGrabMenu.receiveLeftClick)),
+            prefix: new HarmonyMethod(typeof(ChestPatches), nameof(ReceiveLeftClick_Prefix))
         );
     }
 
@@ -253,6 +280,10 @@ internal static class ChestPatches
         if (sourceItems == null)
             return null;
 
+        // Unwrap InventorySlice to get the real chest items for matching.
+        if (sourceItems is InventorySlice slice)
+            sourceItems = slice.Source;
+
         foreach (var locObj in Game1.currentLocation.Objects.Values)
         {
             if (locObj.bigCraftable.Value
@@ -285,18 +316,33 @@ internal static class ChestPatches
         int extraRows = visibleRows - defaultRows;
 
         if (extraRows <= 0)
+        {
+            ClearScrollState();
             return;
+        }
 
         int shift = extraRows * 64;
         int visibleCap = visibleRows * cols;
         var old = menu.ItemsToGrabMenu;
+        bool needsScrolling = desiredRows > visibleRows;
+
+        IList<Item> inventorySource = old.actualInventory;
+        InventorySlice slice = null;
+        if (needsScrolling)
+        {
+            // Unwrap if already wrapped (e.g. ResizeMenu called twice).
+            if (inventorySource is InventorySlice existing)
+                inventorySource = existing.Source;
+
+            slice = new InventorySlice(inventorySource, visibleCap);
+        }
 
         // Build the replacement InventoryMenu at the same position.
         menu.ItemsToGrabMenu = new InventoryMenu(
             old.xPositionOnScreen,
             old.yPositionOnScreen,
             playerInventory: false,
-            old.actualInventory,
+            needsScrolling ? slice : inventorySource,
             capacity: visibleCap,
             rows: visibleRows
         );
@@ -340,5 +386,101 @@ internal static class ChestPatches
         typeof(ItemGrabMenu)
             .GetMethod("SetupBorderNeighbors", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             ?.Invoke(menu, null);
+
+        // Set up scroll state if the inventory needs scrolling.
+        if (needsScrolling && slice != null)
+        {
+            _scrollMenu = menu;
+            _activeSlice = slice;
+
+            var grid = menu.ItemsToGrabMenu;
+            int arrowX = grid.xPositionOnScreen + grid.width + 16;
+
+            _upArrow = new ClickableTextureComponent(
+                new Rectangle(arrowX, grid.yPositionOnScreen - 12, 44, 48),
+                Game1.mouseCursors, new Rectangle(421, 459, 11, 12), 4f);
+
+            _downArrow = new ClickableTextureComponent(
+                new Rectangle(arrowX, grid.yPositionOnScreen + grid.height - 48, 44, 48),
+                Game1.mouseCursors, new Rectangle(421, 472, 11, 12), 4f);
+        }
+        else
+        {
+            ClearScrollState();
+        }
+    }
+
+    // ── Scroll state management ─────────────────────────────────────
+
+    internal static void ClearScrollState()
+    {
+        _scrollMenu = null;
+        _activeSlice = null;
+        _upArrow = null;
+        _downArrow = null;
+    }
+
+    // ── Scroll patches ──────────────────────────────────────────────
+
+    private static void ReceiveScrollWheelAction_Postfix(IClickableMenu __instance, int direction)
+    {
+        if (_activeSlice == null || __instance != _scrollMenu)
+            return;
+
+        if (__instance is not ItemGrabMenu igm)
+            return;
+
+        var grid = igm.ItemsToGrabMenu;
+        if (grid == null)
+            return;
+
+        int mx = Game1.getMouseX(true);
+        int my = Game1.getMouseY(true);
+        if (!grid.isWithinBounds(mx, my)
+            && (_upArrow == null || !_upArrow.containsPoint(mx, my))
+            && (_downArrow == null || !_downArrow.containsPoint(mx, my)))
+            return;
+
+        int oldRow = _activeSlice.ScrollRow;
+        _activeSlice.ScrollRow += direction > 0 ? -1 : 1;
+
+        if (_activeSlice.ScrollRow != oldRow)
+            Game1.playSound("shiny4");
+    }
+
+    private static void Draw_Postfix(ItemGrabMenu __instance, SpriteBatch b)
+    {
+        if (_activeSlice == null || __instance != _scrollMenu)
+            return;
+
+        if (_activeSlice.CanScrollUp && _upArrow != null)
+            _upArrow.draw(b);
+        if (_activeSlice.CanScrollDown && _downArrow != null)
+            _downArrow.draw(b);
+
+        // Redraw mouse on top of arrows.
+        __instance.drawMouse(b);
+    }
+
+    private static bool ReceiveLeftClick_Prefix(ItemGrabMenu __instance, int x, int y)
+    {
+        if (_activeSlice == null || __instance != _scrollMenu)
+            return true;
+
+        if (_upArrow != null && _upArrow.containsPoint(x, y) && _activeSlice.CanScrollUp)
+        {
+            _activeSlice.ScrollRow--;
+            Game1.playSound("shiny4");
+            return false;
+        }
+
+        if (_downArrow != null && _downArrow.containsPoint(x, y) && _activeSlice.CanScrollDown)
+        {
+            _activeSlice.ScrollRow++;
+            Game1.playSound("shiny4");
+            return false;
+        }
+
+        return true;
     }
 }
