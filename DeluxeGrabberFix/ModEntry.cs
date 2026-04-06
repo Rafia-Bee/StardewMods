@@ -328,19 +328,6 @@ public class ModEntry : Mod
                         obj.showNextIndex.Value = false;
                         repaired++;
                         Monitor.Log($"Repaired stuck {obj.Name} at {location.Name} [{pair.Key}] (cleared stale readyForHarvest)", LogLevel.Trace);
-                        continue;
-                    }
-
-                    // Machine is idle (no output, no readyForHarvest, no timer) — try to restart it
-                    var lastInput = obj.lastInputItem?.Value;
-                    if (MachineDataUtility.TryGetMachineOutputRule(obj, machineData, MachineOutputTrigger.OutputCollected, lastInput?.getOne(), Game1.MasterPlayer, location, out var rule, out _, out _, out _))
-                    {
-                        obj.OutputMachine(machineData, rule, lastInput, Game1.MasterPlayer, location, probe: false);
-                        if (obj.heldObject.Value != null || obj.MinutesUntilReady > 0)
-                        {
-                            repaired++;
-                            Monitor.Log($"Repaired stuck {obj.Name} at {location.Name} [{pair.Key}] (restarted idle machine)", LogLevel.Trace);
-                        }
                     }
                 }
                 catch (Exception ex)
@@ -571,7 +558,16 @@ public class ModEntry : Mod
                 if (Config.grabFrequency != ModConfig.GrabFrequency.Daily)
                     _grabbers.GrabMachinesAtLocation(location);
 
-                if (Config.grabFrequency == ModConfig.GrabFrequency.Hourly && _dirtyLocations.Contains(location))
+                // In Hourly mode, run the full grab for all locations every tick so crops,
+                // fruit trees, bushes, etc. (terrain features that don't trigger ObjectListChanged)
+                // are collected. In Instant mode, only run full grab for dirty locations.
+                if (Config.grabFrequency == ModConfig.GrabFrequency.Hourly)
+                {
+                    IsForageGrabEnabled = true;
+                    _grabbers.GrabAtLocation(location);
+                    IsForageGrabEnabled = Config.grabFrequency != ModConfig.GrabFrequency.Daily;
+                }
+                else if (Config.grabFrequency == ModConfig.GrabFrequency.Instant && _dirtyLocations.Contains(location))
                 {
                     IsForageGrabEnabled = true;
                     _grabbers.GrabAtLocation(location);
@@ -608,7 +604,7 @@ public class ModEntry : Mod
         {
             foreach (var location in GetAllLocations())
             {
-                _grabbers.GrabAtLocation(location);
+                _grabbers.GrabForageAtLocation(location);
             }
         }
         finally
@@ -621,10 +617,15 @@ public class ModEntry : Mod
 
     private void OnDayStarted(object sender, DayStartedEventArgs e)
     {
+        ResetDayTracking();
+
+        // Only run the day-start sweep in Daily mode; Hourly/Instant handle collection on their own schedule
+        if (Config.grabFrequency != ModConfig.GrabFrequency.Daily)
+            return;
+
         _dayStartGrabDelay = _automateApi != null ? 5 : 1;
         LogDebug($"Autograbbing on day start (deferred {_dayStartGrabDelay} ticks)");
         _pendingDayStartGrab = true;
-        ResetDayTracking();
 
         // Auto-fire global grab at day start if configured
         if (Config.globalAutoFire && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber())
