@@ -73,8 +73,7 @@ public class ModEntry : Mod
             return;
 
         if (!chest.modData.TryGetValue(ChestPatches.CapacityKey, out string capStr)
-            || !int.TryParse(capStr, out int cap)
-            || cap <= 36)
+            || !int.TryParse(capStr, out int cap))
             return;
 
         ChestPatches.ResizeMenu(menu, cap);

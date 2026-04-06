@@ -119,8 +119,7 @@ internal static class ChestPatches
 
         if (chest != null
             && chest.modData.TryGetValue(CapacityKey, out string capStr)
-            && int.TryParse(capStr, out int cap)
-            && cap > 36)
+            && int.TryParse(capStr, out int cap))
         {
             ResizeMenu(__instance, cap);
         }
@@ -310,31 +309,37 @@ internal static class ChestPatches
     public static void ResizeMenu(ItemGrabMenu menu, int cap)
     {
         const int cols = 12;
-        int desiredRows = (int)Math.Ceiling(cap / (double)cols);
-        int visibleRows = Math.Min(desiredRows, 6);
-        int defaultRows = menu.ItemsToGrabMenu.rows;
-        int extraRows = visibleRows - defaultRows;
+        var old = menu.ItemsToGrabMenu;
 
-        if (extraRows <= 0)
+        // Unwrap any existing InventorySlice to get the real item list.
+        IList<Item> rawInventory = old.actualInventory;
+        if (rawInventory is InventorySlice existingSlice)
+            rawInventory = existingSlice.Source;
+
+        // Use the larger of configured cap or actual item count so items
+        // that exceed a reduced capacity are still reachable via scroll.
+        int effectiveCap = Math.Max(cap, rawInventory.Count);
+        int desiredRows = (int)Math.Ceiling(effectiveCap / (double)cols);
+        int visibleRows = Math.Min(desiredRows, 6);
+        int defaultRows = old.rows;
+        int extraRows = visibleRows - defaultRows;
+        int visibleCap = visibleRows * cols;
+        bool needsScrolling = rawInventory.Count > visibleCap;
+
+        if (extraRows <= 0 && !needsScrolling)
         {
             ClearScrollState();
             return;
         }
 
-        int shift = extraRows * 64;
-        int visibleCap = visibleRows * cols;
-        var old = menu.ItemsToGrabMenu;
-        bool needsScrolling = desiredRows > visibleRows;
+        int shift = extraRows > 0 ? extraRows * 64 : 0;
 
-        IList<Item> inventorySource = old.actualInventory;
         InventorySlice slice = null;
+        IList<Item> inventorySource = rawInventory;
         if (needsScrolling)
         {
-            // Unwrap if already wrapped (e.g. ResizeMenu called twice).
-            if (inventorySource is InventorySlice existing)
-                inventorySource = existing.Source;
-
-            slice = new InventorySlice(inventorySource, visibleCap);
+            slice = new InventorySlice(rawInventory, visibleCap);
+            inventorySource = slice;
         }
 
         // Build the replacement InventoryMenu at the same position.
@@ -365,14 +370,17 @@ internal static class ChestPatches
         }
 
         // Expand the menu frame and push the player inventory down.
-        menu.height += shift;
-        menu.inventory.movePosition(0, shift);
+        if (shift > 0)
+        {
+            menu.height += shift;
+            menu.inventory.movePosition(0, shift);
 
-        // Move okButton / trashCan down to match the taller menu.
-        if (menu.okButton != null)
-            menu.okButton.bounds.Y += shift;
-        if (menu.trashCan != null)
-            menu.trashCan.bounds.Y += shift;
+            // Move okButton / trashCan down to match the taller menu.
+            if (menu.okButton != null)
+                menu.okButton.bounds.Y += shift;
+            if (menu.trashCan != null)
+                menu.trashCan.bounds.Y += shift;
+        }
 
         // Let the game position the side buttons (organize, fill-stacks,
         // color picker, etc.) relative to the new ItemsToGrabMenu.
