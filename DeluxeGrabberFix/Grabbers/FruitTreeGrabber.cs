@@ -30,18 +30,8 @@ internal class FruitTreeGrabber : TerrainFeaturesMapGrabber
         if (feature is not FruitTree tree || !IsHarvestableFruitTree(tree))
             return false;
 
-        int daysUntilMature = tree.daysUntilMature.Value;
         bool struckByLightning = tree.struckByLightningCountdown.Value > 0;
-
-        int quality = 0;
-        if (struckByLightning)
-            quality = 0;
-        else if (daysUntilMature <= -336)
-            quality = 4;
-        else if (daysUntilMature <= -224)
-            quality = 2;
-        else if (daysUntilMature <= -112)
-            quality = 1;
+        int quality = tree.GetQuality();
 
         if (struckByLightning)
         {
