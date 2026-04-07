@@ -80,6 +80,7 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 - Compatible with [Fishnets](https://www.nexusmods.com/stardewvalley/mods/13819) — fish nets are collected alongside crab pots, with bait consumed on collection
 - Compatible with [Cloths and Colors (Textile Expansion)](https://www.nexusmods.com/stardewvalley/mods/39216) — Leaf Baskets are collected as part of machine collection
 - Compatible with [Automate](https://www.nexusmods.com/stardewvalley/mods/1063) — DGF skips machines Automate is already managing, preventing duplicate collection. Respects per-chest settings so input-only chests won't block DGF from collecting
+- Compatible with [Smart Filtered Hopper](https://github.com/yxlimo/StardewValleyMods) — hoppers are no longer treated as chest connectors during Automate chain scanning, so split chains work correctly
 - Collects roe and other produce from Fish Ponds automatically
 - Provides a mod API (`IDeluxeGrabberFixApi`) for other mods to override mushroom, berry bush, fruit tree, and slime harvest behavior, plus an `OnItemGrabbed` event and `IsGrabberActive` query
 

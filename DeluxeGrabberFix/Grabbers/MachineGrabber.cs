@@ -58,7 +58,8 @@ internal class MachineGrabber : ObjectsMapGrabber
                 if (allMachineTiles.ContainsKey(current))
                     component.Add(current);
 
-                if (!hasOutputChest && location.Objects.TryGetValue(current, out var currentObj) && currentObj is Chest chest)
+                if (!hasOutputChest && location.Objects.TryGetValue(current, out var currentObj) && currentObj is Chest chest
+                    && !chest.modData.ContainsKey("spacechase0.SuperHopper"))
                 {
                     // Only count this chest if Automate can store items in it
                     // "Disable" means "Never put items in this chest"
@@ -82,7 +83,8 @@ internal class MachineGrabber : ObjectsMapGrabber
 
                     if (allMachineTiles.ContainsKey(neighbor))
                         queue.Enqueue(neighbor);
-                    else if (location.Objects.TryGetValue(neighbor, out var nObj) && nObj is Chest)
+                    else if (location.Objects.TryGetValue(neighbor, out var nObj) && nObj is Chest nChest
+                             && !nChest.modData.ContainsKey("spacechase0.SuperHopper"))
                         queue.Enqueue(neighbor);
                     else if (location.terrainFeatures.TryGetValue(neighbor, out var feature) && feature is Flooring)
                         queue.Enqueue(neighbor);

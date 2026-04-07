@@ -45,6 +45,7 @@ public class ModEntry : Mod
     private bool _pendingDayStartGrab;
     private int _dayStartGrabDelay;
     private bool _pendingGlobalAutoFire;
+    private int _globalAutoFireDelay;
     private GlobalGrabberButton _globalGrabberButton;
     private RenameGrabberButton _renameGrabberButton;
     private static ModEntry _instance;
@@ -396,13 +397,20 @@ public class ModEntry : Mod
                 _isGrabbing = false;
             }
 
-            // Process auto-fire global grab immediately after the local day-start grab
-            if (_pendingGlobalAutoFire)
-            {
-                _pendingGlobalAutoFire = false;
-                _grabbers.FireGlobalGrab();
-            }
+            _grabbers.ShowGrabCycleResults(showSummary: true);
+            return;
+        }
 
+        // Deferred auto-fire global grab (independent of grab frequency)
+        if (_pendingGlobalAutoFire)
+        {
+            if (--_globalAutoFireDelay > 0)
+                return;
+            _pendingGlobalAutoFire = false;
+
+            LogDebug("Executing deferred auto-fire global grab");
+            _grabbers.ResetGrabCycleTracking();
+            _grabbers.FireGlobalGrab();
             _grabbers.ShowGrabCycleResults(showSummary: true);
             return;
         }
@@ -619,6 +627,13 @@ public class ModEntry : Mod
     {
         ResetDayTracking();
 
+        // Auto-fire global grab at day start if configured (works in all frequency modes)
+        if (Config.globalAutoFire && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber())
+        {
+            _pendingGlobalAutoFire = true;
+            _globalAutoFireDelay = _automateApi != null ? 5 : 1;
+        }
+
         // Only run the day-start sweep in Daily mode; Hourly/Instant handle collection on their own schedule
         if (Config.grabFrequency != ModConfig.GrabFrequency.Daily)
             return;
@@ -626,12 +641,6 @@ public class ModEntry : Mod
         _dayStartGrabDelay = _automateApi != null ? 5 : 1;
         LogDebug($"Autograbbing on day start (deferred {_dayStartGrabDelay} ticks)");
         _pendingDayStartGrab = true;
-
-        // Auto-fire global grab at day start if configured
-        if (Config.globalAutoFire && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber())
-        {
-            _pendingGlobalAutoFire = true;
-        }
     }
 
     private void OnRenderedWorld(object sender, RenderedWorldEventArgs e)
