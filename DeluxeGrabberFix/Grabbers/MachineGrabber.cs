@@ -110,7 +110,10 @@ internal class MachineGrabber : ObjectsMapGrabber
             return false;
 
         if (_automateSkipTiles != null && _automateSkipTiles.Contains(tile))
+        {
+            Mod.LogDebug($"Skipping {obj.Name} at {Location.Name} [{tile}] (managed by Automate)");
             return false;
+        }
 
         if (obj.GetMachineData()?.IsIncubator == true)
             return false;
@@ -298,9 +301,7 @@ internal class MachineGrabber : ObjectsMapGrabber
         => obj.QualifiedItemId == BigCraftableIds.BeeHouse || IsMps(obj, "BeeHouse");
 
     private static bool IsTapper(Object obj)
-        => obj.QualifiedItemId == BigCraftableIds.Tapper
-           || obj.QualifiedItemId == BigCraftableIds.HeavyTapper
-           || IsMps(obj, "Tapper");
+        => obj.IsTapper();
 
     private static bool IsLeafBasket(Object obj)
         => obj.QualifiedItemId == BigCraftableIds.LeafBasket;
