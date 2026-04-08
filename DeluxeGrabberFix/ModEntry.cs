@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using DeluxeGrabberFix.Framework;
 using DeluxeGrabberFix.Grabbers;
 using DeluxeGrabberFix.Interfaces;
@@ -125,6 +127,78 @@ public class ModEntry : Mod
 
         var area = new Rectangle(0, 0, map.Layers[0].LayerWidth, map.Layers[0].LayerHeight);
         return _automateApi.GetMachineStates(location, area);
+    }
+
+    private string _automateConfigPath;
+    private bool _automateConfigSearched;
+
+    internal HashSet<string> GetAutomateDisabledMachineTypes()
+    {
+        if (_automateApi == null)
+            return null;
+
+        try
+        {
+            if (!_automateConfigSearched)
+            {
+                _automateConfigSearched = true;
+                _automateConfigPath = FindAutomateConfigPath();
+            }
+
+            if (_automateConfigPath == null || !File.Exists(_automateConfigPath))
+                return null;
+
+            using var doc = JsonDocument.Parse(File.ReadAllText(_automateConfigPath));
+            if (!doc.RootElement.TryGetProperty("MachineOverrides", out var overrides))
+                return null;
+
+            var disabled = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var prop in overrides.EnumerateObject())
+            {
+                if (prop.Value.TryGetProperty("Enabled", out var enabled) && !enabled.GetBoolean())
+                    disabled.Add(prop.Name);
+            }
+
+            return disabled.Count > 0 ? disabled : null;
+        }
+        catch (Exception ex)
+        {
+            LogDebug($"Failed to read Automate config: {ex.Message}");
+            return null;
+        }
+    }
+
+    private string FindAutomateConfigPath()
+    {
+        var modsDir = new DirectoryInfo(Helper.DirectoryPath).Parent;
+        if (modsDir == null)
+            return null;
+
+        // Try common folder name first
+        var direct = Path.Combine(modsDir.FullName, "Automate", "config.json");
+        if (File.Exists(direct))
+            return direct;
+
+        // Scan mod folders for Automate's manifest
+        foreach (var dir in modsDir.GetDirectories())
+        {
+            var manifest = Path.Combine(dir.FullName, "manifest.json");
+            if (!File.Exists(manifest))
+                continue;
+
+            try
+            {
+                using var manifestDoc = JsonDocument.Parse(File.ReadAllText(manifest));
+                if (manifestDoc.RootElement.TryGetProperty("UniqueID", out var uid)
+                    && string.Equals(uid.GetString(), "Pathoschild.Automate", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Path.Combine(dir.FullName, "config.json");
+                }
+            }
+            catch { }
+        }
+
+        return null;
     }
 
     internal static string GetGrabberCustomName(Object grabber)
