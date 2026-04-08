@@ -26,6 +26,7 @@ internal class MachineGrabber : ObjectsMapGrabber
     /// Determines which automated machines should be skipped by checking whether
     /// they belong to an Automate group that actually has a connected chest that accepts output.
     /// Machines in groups without output-capable chests are NOT skipped so DGF can collect from them.
+    /// Machines whose type is disabled in Automate's config are also NOT skipped.
     /// </summary>
     private static HashSet<Vector2> BuildAutomateSkipTiles(ModEntry mod, GameLocation location)
     {
@@ -34,6 +35,8 @@ internal class MachineGrabber : ObjectsMapGrabber
         var allMachineTiles = mod.GetAutomatedMachineStates(location);
         if (allMachineTiles == null || allMachineTiles.Count == 0)
             return null;
+
+        var automateDisabledTypes = mod.GetAutomateDisabledMachineTypes();
 
         var skipTiles = new HashSet<Vector2>();
         var visited = new HashSet<Vector2>();
@@ -56,7 +59,20 @@ internal class MachineGrabber : ObjectsMapGrabber
                     continue;
 
                 if (allMachineTiles.ContainsKey(current))
-                    component.Add(current);
+                {
+                    // Skip machines whose type is disabled in Automate's config --
+                    // Automate won't process them even though its API reports them
+                    bool isDisabledType = false;
+                    if (automateDisabledTypes != null
+                        && location.Objects.TryGetValue(current, out var machineObj))
+                    {
+                        var typeId = new string(machineObj.Name.Where(char.IsLetterOrDigit).ToArray());
+                        isDisabledType = automateDisabledTypes.Contains(typeId);
+                    }
+
+                    if (!isDisabledType)
+                        component.Add(current);
+                }
 
                 if (!hasOutputChest && location.Objects.TryGetValue(current, out var currentObj) && currentObj is Chest chest
                     && !chest.modData.ContainsKey("spacechase0.SuperHopper"))

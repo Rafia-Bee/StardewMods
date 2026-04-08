@@ -6,7 +6,7 @@ internal class InventoryEntry
 {
     public readonly Item Item;
     public readonly int Quality;
-    public readonly int Id;
+    public readonly string QualifiedItemId;
 
     public string QualityName => Quality switch
     {
@@ -32,16 +32,16 @@ internal class InventoryEntry
     {
         Item = item;
         Quality = item is Object obj ? obj.Quality : 0;
-        Id = item.ParentSheetIndex;
+        QualifiedItemId = item.QualifiedItemId;
     }
 
     public override bool Equals(object obj)
     {
-        return obj is InventoryEntry other && other.Id == Id && other.Quality == Quality;
+        return obj is InventoryEntry other && other.QualifiedItemId == QualifiedItemId && other.Quality == Quality;
     }
 
     public override int GetHashCode()
     {
-        return (Quality << 4) ^ Id;
+        return (Quality << 4) ^ (QualifiedItemId?.GetHashCode() ?? 0);
     }
 }
