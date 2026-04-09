@@ -354,6 +354,11 @@ public class ModEntry : Mod
                 { priority = HarmonyLib.Priority.First }
         );
         harmony.Patch(
+            original: AccessTools.Method(typeof(Object), nameof(Object.DayUpdate)),
+            prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.DayUpdate_Prefix))
+                { priority = HarmonyLib.Priority.First }
+        );
+        harmony.Patch(
             original: AccessTools.Method(typeof(Object), nameof(Object.draw),
                 new[] { typeof(Microsoft.Xna.Framework.Graphics.SpriteBatch), typeof(int), typeof(int), typeof(float) }),
             prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.Draw_Prefix))

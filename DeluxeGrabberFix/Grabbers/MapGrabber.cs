@@ -184,6 +184,36 @@ internal abstract class MapGrabber
         return dictionary;
     }
 
+    public Dictionary<string, Dictionary<InventoryEntry, int>> GetPerGrabberInventory()
+    {
+        var result = new Dictionary<string, Dictionary<InventoryEntry, int>>();
+        foreach (var grabberPair in GrabberPairs)
+        {
+            if (!IsValidGrabber(grabberPair.Value, grabberPair.Key))
+                continue;
+
+            string name = ModEntry.GetGrabberDisplayName(grabberPair.Value);
+            if (!result.TryGetValue(name, out var inventory))
+            {
+                inventory = new Dictionary<InventoryEntry, int>();
+                result[name] = inventory;
+            }
+
+            if (grabberPair.Value.heldObject.Value is Chest chest)
+            {
+                foreach (var item in chest.Items.Where(i => i != null))
+                {
+                    var key = new InventoryEntry(item);
+                    if (inventory.ContainsKey(key))
+                        inventory[key] += item.Stack;
+                    else
+                        inventory.Add(key, item.Stack);
+                }
+            }
+        }
+        return result;
+    }
+
     public abstract bool GrabItems();
 
     public void CleanupGrabberChests()
