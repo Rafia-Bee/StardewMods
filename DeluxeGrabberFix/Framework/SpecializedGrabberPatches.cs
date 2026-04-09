@@ -85,9 +85,9 @@ internal static class SpecializedGrabberPatches
     }
 
     // Block external mods (e.g. EAC) from adding items to the wrong specialized grabber.
-    // When DGF is not actively grabbing, only Animal Grabbers accept external addItem calls
-    // (matching vanilla auto-grabber behavior). Other specialized types reject so the caller
-    // falls through to the next (BC)165 or drops the item on the ground.
+    // When DGF is not actively grabbing and no player menu is open, only Animal Grabbers
+    // accept external addItem calls (matching vanilla auto-grabber behavior). Other specialized
+    // types reject so the caller falls through to the next (BC)165 or drops the item on the ground.
     internal static bool Chest_addItem_Prefix(Chest __instance, Item item, ref Item __result)
     {
         if (!__instance.modData.TryGetValue(ModDataGrabberType, out string grabberType))
@@ -97,6 +97,10 @@ internal static class SpecializedGrabberPatches
             return true;
 
         if (grabberType == GrabberType.Animal.ToString())
+            return true;
+
+        // Allow player UI interaction (opening the grabber menu and putting items in)
+        if (Game1.activeClickableMenu is StardewValley.Menus.ItemGrabMenu)
             return true;
 
         __result = item;
