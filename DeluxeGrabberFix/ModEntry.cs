@@ -456,6 +456,20 @@ public class ModEntry : Mod
                         pair.Value.showNextIndex.Value = false;
                         initialized++;
                     }
+                    // Migrate: replace playerChest:true chests with default Chest()
+                    // to match vanilla auto-grabber behavior and prevent Automate IO
+                    else if (pair.Value.heldObject.Value is StardewValley.Objects.Chest oldChest && oldChest.playerChest.Value)
+                    {
+                        var replacement = new StardewValley.Objects.Chest();
+                        foreach (var item in oldChest.Items)
+                        {
+                            if (item != null)
+                                replacement.Items.Add(item);
+                        }
+                        pair.Value.heldObject.Value = replacement;
+                        pair.Value.showNextIndex.Value = replacement.Items.Count > 0;
+                        initialized++;
+                    }
                     if (pair.Value.heldObject.Value is StardewValley.Objects.Chest existingHeldChest)
                         existingHeldChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = existingType;
                 }
@@ -474,7 +488,7 @@ public class ModEntry : Mod
                 location.Objects.Remove(tile);
 
                 var autoGrabber = new Object(tile, "165");
-                autoGrabber.heldObject.Value = existingChest ?? new StardewValley.Objects.Chest(playerChest: true, tileLocation: tile);
+                autoGrabber.heldObject.Value = existingChest ?? new StardewValley.Objects.Chest();
                 autoGrabber.showNextIndex.Value = false;
                 autoGrabber.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
                 autoGrabber.modData[SpecializedGrabberPatches.ModDataOriginalId] = originalId;
@@ -630,7 +644,7 @@ public class ModEntry : Mod
                 e.Location.Objects.Remove(tile);
 
                 var autoGrabber = new Object(tile, "165");
-                var newChest = new StardewValley.Objects.Chest(playerChest: true, tileLocation: tile);
+                var newChest = new StardewValley.Objects.Chest();
                 newChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
                 autoGrabber.heldObject.Value = newChest;
                 autoGrabber.showNextIndex.Value = false;
