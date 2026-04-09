@@ -42,6 +42,12 @@ internal class GenericObjectGrabber : ObjectsMapGrabber
         if (ItemRegistry.GetData(obj.QualifiedItemId) == null)
             return false;
 
+        // In Specialized mode, skip ground items in barns/coops --
+        // animal products are handled by AnimalProductGrabber instead.
+        if (Config.grabberMode == ModConfig.GrabberMode.Specialized
+            && Location is StardewValley.AnimalHouse)
+            return false;
+
         if (obj.isForage())
             return true;
 
