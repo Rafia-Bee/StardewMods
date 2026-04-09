@@ -26,20 +26,6 @@ internal static class SpecializedGrabberPatches
         return true;
     }
 
-    internal static bool DayUpdate_Prefix(Object __instance)
-    {
-        if (__instance.QualifiedItemId != BigCraftableIds.AutoGrabber)
-            return true;
-
-        // Vanilla DayUpdate for (BC)165 collects tool-harvest animal products
-        // into any auto-grabber inside an AnimalHouse. Skip this for specialized
-        // grabbers since DGF's own AnimalProductGrabber handles collection.
-        if (__instance.modData.ContainsKey(ModDataGrabberType))
-            return false;
-
-        return true;
-    }
-
     internal static bool Draw_Prefix(Object __instance, SpriteBatch spriteBatch, int x, int y, float alpha)
     {
         if (!__instance.bigCraftable.Value) return true;
