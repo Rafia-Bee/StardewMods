@@ -156,6 +156,7 @@ internal class GmcmRegistration
             () =>
             {
                 _mod.Helper.WriteConfig(_mod.Config);
+                _mod.Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
                 _mod.Monitor.Log($"GMCM saved. selectVisitedOnly={_mod.Config.selectVisitedOnly}, IsWorldReady={Context.IsWorldReady}, saveData={((_locations.SaveData != null) ? "loaded" : "null")}", LogLevel.Info);
                 if (_mod.Config.selectVisitedOnly && Context.IsWorldReady && _locations.SaveData != null)
                 {
@@ -187,12 +188,182 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.enabled-locations-link"),
             () => _mod.Helper.Translation.Get("config.enabled-locations-link.tooltip"));
 
+        api.AddPageLink(_mod.ModManifest, "specialized-grabbers",
+            () => _mod.Helper.Translation.Get("page.specialized-grabbers.link"),
+            () => _mod.Helper.Translation.Get("page.specialized-grabbers.tooltip"));
+
         api.AddTextOption(_mod.ModManifest,
             () => ModConfig.GrabberModeDict[_mod.Config.grabberMode],
             v => _mod.Config.grabberMode = ModConfig.GrabberModeReverseDict[v],
             () => _mod.Helper.Translation.Get("config.grabber-mode"),
             () => _mod.Helper.Translation.Get("config.grabber-mode.tooltip"),
             ModConfig.GrabberModeStrings);
+
+        // Specialized Grabbers page
+        api.AddPage(_mod.ModManifest, "specialized-grabbers", () => _mod.Helper.Translation.Get("page.specialized-grabbers"));
+
+        api.AddParagraph(_mod.ModManifest,
+            () => _mod.Helper.Translation.Get("page.specialized-grabbers.paragraph"));
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.cropsShippedThreshold,
+            v => _mod.Config.cropsShippedThreshold = v,
+            () => _mod.Helper.Translation.Get("config.crops-shipped-threshold"),
+            () => _mod.Helper.Translation.Get("config.crops-shipped-threshold.tooltip"),
+            min: 1, max: 10000, interval: 10);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.itemsForagedThreshold,
+            v => _mod.Config.itemsForagedThreshold = v,
+            () => _mod.Helper.Translation.Get("config.items-foraged-threshold"),
+            () => _mod.Helper.Translation.Get("config.items-foraged-threshold.tooltip"),
+            min: 1, max: 10000, interval: 10);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.stumpsChoppedThreshold,
+            v => _mod.Config.stumpsChoppedThreshold = v,
+            () => _mod.Helper.Translation.Get("config.stumps-chopped-threshold"),
+            () => _mod.Helper.Translation.Get("config.stumps-chopped-threshold.tooltip"),
+            min: 1, max: 1000, interval: 5);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.museumDonationsThreshold,
+            v => _mod.Config.museumDonationsThreshold = v,
+            () => _mod.Helper.Translation.Get("config.museum-donations-threshold"),
+            () => _mod.Helper.Translation.Get("config.museum-donations-threshold.tooltip"),
+            min: 1, max: 100, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.totalMoneyEarnedThreshold,
+            v => _mod.Config.totalMoneyEarnedThreshold = v,
+            () => _mod.Helper.Translation.Get("config.total-money-earned-threshold"),
+            () => _mod.Helper.Translation.Get("config.total-money-earned-threshold.tooltip"),
+            min: 10000, max: 10000000, interval: 10000);
+
+        // Recipe costs
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.recipe-costs.crop"));
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeCropWood,
+            v => _mod.Config.recipeCropWood = v,
+            () => _mod.Helper.Translation.Get("config.recipe-crop-wood"),
+            min: 1, max: 9999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeCropGoldBar,
+            v => _mod.Config.recipeCropGoldBar = v,
+            () => _mod.Helper.Translation.Get("config.recipe-crop-gold-bar"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeCropQualitySprinkler,
+            v => _mod.Config.recipeCropQualitySprinkler = v,
+            () => _mod.Helper.Translation.Get("config.recipe-crop-quality-sprinkler"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.recipe-costs.forage"));
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeForageWood,
+            v => _mod.Config.recipeForageWood = v,
+            () => _mod.Helper.Translation.Get("config.recipe-forage-wood"),
+            min: 1, max: 9999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeForageGoldBar,
+            v => _mod.Config.recipeForageGoldBar = v,
+            () => _mod.Helper.Translation.Get("config.recipe-forage-gold-bar"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeForageMixedSeeds,
+            v => _mod.Config.recipeForageMixedSeeds = v,
+            () => _mod.Helper.Translation.Get("config.recipe-forage-mixed-seeds"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeForageFiber,
+            v => _mod.Config.recipeForageFiber = v,
+            () => _mod.Helper.Translation.Get("config.recipe-forage-fiber"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.recipe-costs.tree"));
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeTreeHardwood,
+            v => _mod.Config.recipeTreeHardwood = v,
+            () => _mod.Helper.Translation.Get("config.recipe-tree-hardwood"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeTreeIridiumBar,
+            v => _mod.Config.recipeTreeIridiumBar = v,
+            () => _mod.Helper.Translation.Get("config.recipe-tree-iridium-bar"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeTreeMapleSyrup,
+            v => _mod.Config.recipeTreeMapleSyrup = v,
+            () => _mod.Helper.Translation.Get("config.recipe-tree-maple-syrup"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeTreeOakResin,
+            v => _mod.Config.recipeTreeOakResin = v,
+            () => _mod.Helper.Translation.Get("config.recipe-tree-oak-resin"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeTreePineTar,
+            v => _mod.Config.recipeTreePineTar = v,
+            () => _mod.Helper.Translation.Get("config.recipe-tree-pine-tar"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.recipe-costs.scavenger"));
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeScavengerHardwood,
+            v => _mod.Config.recipeScavengerHardwood = v,
+            () => _mod.Helper.Translation.Get("config.recipe-scavenger-hardwood"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeScavengerIridiumBar,
+            v => _mod.Config.recipeScavengerIridiumBar = v,
+            () => _mod.Helper.Translation.Get("config.recipe-scavenger-iridium-bar"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeScavengerBoneFragment,
+            v => _mod.Config.recipeScavengerBoneFragment = v,
+            () => _mod.Helper.Translation.Get("config.recipe-scavenger-bone-fragment"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeScavengerArtifactTrove,
+            v => _mod.Config.recipeScavengerArtifactTrove = v,
+            () => _mod.Helper.Translation.Get("config.recipe-scavenger-artifact-trove"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.recipe-costs.machine"));
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeMachineIridiumBar,
+            v => _mod.Config.recipeMachineIridiumBar = v,
+            () => _mod.Helper.Translation.Get("config.recipe-machine-iridium-bar"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeMachineBatteryPack,
+            v => _mod.Config.recipeMachineBatteryPack = v,
+            () => _mod.Helper.Translation.Get("config.recipe-machine-battery-pack"),
+            min: 1, max: 999, interval: 1);
+
+        api.AddNumberOption(_mod.ModManifest,
+            () => _mod.Config.recipeMachineDiamond,
+            v => _mod.Config.recipeMachineDiamond = v,
+            () => _mod.Helper.Translation.Get("config.recipe-machine-diamond"),
+            min: 1, max: 999, interval: 1);
 
         // Crop Harvesting page
         api.AddPage(_mod.ModManifest, "crop-harvesting", () => _mod.Helper.Translation.Get("section.crop-harvesting"));
