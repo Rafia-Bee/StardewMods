@@ -41,6 +41,7 @@ public class ModEntry : Mod
     private GmcmRegistration _gmcm;
     private IAutomateAPI _automateApi;
     private SpecializedGrabberAssets _specializedAssets;
+    private ProgressionTracker _progression;
 
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private readonly HashSet<GameLocation> _machineReadyLocations = new();
@@ -88,8 +89,9 @@ public class ModEntry : Mod
             Helper.WriteConfig(Config);
         }
 
-        _specializedAssets = new SpecializedGrabberAssets(helper);
+        _specializedAssets = new SpecializedGrabberAssets(helper, () => Config);
         _specializedAssets.Register();
+        _progression = new ProgressionTracker(this);
 
         helper.Events.GameLoop.GameLaunched += OnLaunched;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
@@ -422,6 +424,7 @@ public class ModEntry : Mod
         _locations.ApplyVisitAutoSkip();
         _gmcm.RebuildConfigMenu();
         InitializeSpecializedGrabbers();
+        _progression.RetroactiveCheck();
         LogConfig();
         RepairStuckMachines();
     }
@@ -917,6 +920,7 @@ public class ModEntry : Mod
     private void OnDayStarted(object sender, DayStartedEventArgs e)
     {
         ResetDayTracking();
+        _progression.CheckProgression();
 
         // Auto-fire global grab at day start if configured (disabled in Specialized mode)
         if (Config.grabberMode != ModConfig.GrabberMode.Specialized

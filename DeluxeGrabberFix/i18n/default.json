@@ -234,5 +234,62 @@
     "specialized.machine-grabber.description": "Automatically collects outputs from machines, crab pots and fish ponds.",
 
     "config.grabber-mode": "Grabber Mode",
-    "config.grabber-mode.tooltip": "Classic: one grabber collects everything. Specialized: six different grabbers each collect a specific category of items."
+    "config.grabber-mode.tooltip": "Classic: one grabber collects everything. Specialized: six different grabbers each collect a specific category of items.",
+
+    "page.specialized-grabbers.link": "Specialized Grabbers >",
+    "page.specialized-grabbers.tooltip": "Configure unlock thresholds for specialized grabber progression",
+    "page.specialized-grabbers": "Specialized Grabbers",
+    "page.specialized-grabbers.paragraph": "These thresholds control how many of each stat you need before the next specialized grabber recipe is unlocked. Only applies when Grabber Mode is set to Specialized.",
+
+    "config.crops-shipped-threshold": "Crops Shipped to Unlock Crop Grabber",
+    "config.crops-shipped-threshold.tooltip": "How many crops the player needs to ship before the Crop Grabber recipe becomes available.",
+    "config.items-foraged-threshold": "Items Foraged to Unlock Forage Grabber",
+    "config.items-foraged-threshold.tooltip": "How many forage items the player needs to gather before the Forage Grabber recipe becomes available.",
+    "config.stumps-chopped-threshold": "Stumps Chopped to Unlock Tree Grabber",
+    "config.stumps-chopped-threshold.tooltip": "How many stumps the player needs to chop before the Tree Grabber recipe becomes available.",
+    "config.museum-donations-threshold": "Museum Donations to Unlock Scavenger Grabber",
+    "config.museum-donations-threshold.tooltip": "How many items the player needs to donate to the museum before the Scavenger Grabber recipe becomes available.",
+    "config.total-money-earned-threshold": "Total Money Earned to Unlock Machine Grabber",
+    "config.total-money-earned-threshold.tooltip": "How much total gold the player needs to have earned before the Machine Grabber recipe becomes available.",
+
+    "section.recipe-costs.crop": "Crop Grabber Recipe",
+    "config.recipe-crop-wood": "Wood",
+    "config.recipe-crop-gold-bar": "Gold Bar",
+    "config.recipe-crop-quality-sprinkler": "Quality Sprinkler",
+
+    "section.recipe-costs.forage": "Forage Grabber Recipe",
+    "config.recipe-forage-wood": "Wood",
+    "config.recipe-forage-gold-bar": "Gold Bar",
+    "config.recipe-forage-mixed-seeds": "Mixed Seeds",
+    "config.recipe-forage-fiber": "Fiber",
+
+    "section.recipe-costs.tree": "Tree Grabber Recipe",
+    "config.recipe-tree-hardwood": "Hardwood",
+    "config.recipe-tree-iridium-bar": "Iridium Bar",
+    "config.recipe-tree-maple-syrup": "Maple Syrup",
+    "config.recipe-tree-oak-resin": "Oak Resin",
+    "config.recipe-tree-pine-tar": "Pine Tar",
+
+    "section.recipe-costs.scavenger": "Scavenger Grabber Recipe",
+    "config.recipe-scavenger-hardwood": "Hardwood",
+    "config.recipe-scavenger-iridium-bar": "Iridium Bar",
+    "config.recipe-scavenger-bone-fragment": "Bone Fragment",
+    "config.recipe-scavenger-artifact-trove": "Artifact Trove",
+
+    "section.recipe-costs.machine": "Machine Grabber Recipe",
+    "config.recipe-machine-iridium-bar": "Iridium Bar",
+    "config.recipe-machine-battery-pack": "Battery Pack",
+    "config.recipe-machine-diamond": "Diamond",
+
+    "mail.hint-crop": "Now that you've got the animals sorted, you might want to think about your crops. They say farmers who've shipped a good number of harvests catch the eye of Pierre's supplier...",
+    "mail.hint-forage": "With your farm running so smoothly, maybe it's time to explore the valley more. Seasoned foragers tend to attract attention from the Adventurer's Guild...",
+    "mail.hint-tree": "Robin mentioned she's been looking for someone who really knows their way around timber. Put in the work and she might have something special for you.",
+    "mail.hint-scavenger": "Gunther at the museum was asking about you. He says dedicated collectors sometimes discover tools that help with their excavations...",
+    "mail.hint-machine": "Word around town is that Clint has been working on something big. He says only the most successful farmers earn the privilege of seeing it.",
+
+    "mail.unlock-crop": "Your dedication to farming has paid off! Here's a blueprint for a specialized Crop Grabber that can automatically harvest your crops.",
+    "mail.unlock-forage": "Your foraging skills have impressed the valley. Here's a blueprint for a Forage Grabber that can gather wild items for you.",
+    "mail.unlock-tree": "Robin was right about you! Here's a blueprint for a Tree Grabber to help you manage your orchards and woodland.",
+    "mail.unlock-scavenger": "Gunther is thrilled with your contributions. He found this old blueprint in the museum archives for a Scavenger Grabber.",
+    "mail.unlock-machine": "Clint's masterwork is finally ready. Here's the blueprint for his Machine Grabber, the ultimate in automated collection."
 }
