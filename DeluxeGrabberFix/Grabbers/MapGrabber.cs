@@ -49,6 +49,15 @@ internal abstract class MapGrabber
             }
         }
         else if (UseGlobalMode
+            && Mod.CachedDesignatedGrabbers != null && Mod.CachedDesignatedGrabbers.Count > 0)
+        {
+            // Specialized mode with Hover/All during automatic grabs:
+            // CachedDesignatedGrabbers is populated, use the global cache
+            GrabberPairs = Mod.CachedDesignatedGrabbers
+                .Where(pair => IsValidGrabber(pair.Value, pair.Key))
+                .ToList();
+        }
+        else if (UseGlobalMode
             && Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover
             && ObjectIsGrabber(Game1.player.currentLocation.getObjectAtTile((int)Game1.lastCursorTile.X, (int)Game1.lastCursorTile.Y)))
         {
