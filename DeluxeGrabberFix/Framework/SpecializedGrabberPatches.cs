@@ -12,6 +12,7 @@ internal static class SpecializedGrabberPatches
 {
     internal const string ModDataGrabberType = "Rafia.DGF/GrabberType";
     internal const string ModDataOriginalId = "Rafia.DGF/OriginalId";
+    internal static bool IsGrabbingActive { get; set; }
 
     internal static bool MinutesElapsed_Prefix(Object __instance)
     {
@@ -81,5 +82,24 @@ internal static class SpecializedGrabberPatches
         __instance.heldObject.Value = null;
         __instance.ItemId = originalId.Replace("(BC)", "");
         return true;
+    }
+
+    // Block external mods (e.g. EAC) from adding items to the wrong specialized grabber.
+    // When DGF is not actively grabbing, only Animal Grabbers accept external addItem calls
+    // (matching vanilla auto-grabber behavior). Other specialized types reject so the caller
+    // falls through to the next (BC)165 or drops the item on the ground.
+    internal static bool Chest_addItem_Prefix(Chest __instance, Item item, ref Item __result)
+    {
+        if (!__instance.modData.TryGetValue(ModDataGrabberType, out string grabberType))
+            return true;
+
+        if (IsGrabbingActive)
+            return true;
+
+        if (grabberType == GrabberType.Animal.ToString())
+            return true;
+
+        __result = item;
+        return false;
     }
 }

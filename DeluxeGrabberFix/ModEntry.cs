@@ -44,7 +44,16 @@ public class ModEntry : Mod
 
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private readonly HashSet<GameLocation> _machineReadyLocations = new();
-    private bool _isGrabbing;
+    private bool _isGrabbingField;
+    private bool _isGrabbing
+    {
+        get => _isGrabbingField;
+        set
+        {
+            _isGrabbingField = value;
+            SpecializedGrabberPatches.IsGrabbingActive = value;
+        }
+    }
     private bool _pendingDayStartGrab;
     private int _dayStartGrabDelay;
     private bool _pendingGlobalAutoFire;
@@ -388,6 +397,12 @@ public class ModEntry : Mod
             prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.PerformToolAction_Prefix))
         );
 
+        // Block external mods from adding items to wrong specialized grabber type
+        harmony.Patch(
+            original: AccessTools.Method(typeof(StardewValley.Objects.Chest), nameof(StardewValley.Objects.Chest.addItem)),
+            prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.Chest_addItem_Prefix))
+        );
+
         if (Helper.ModRegistry.GetApi<IVanillaPlusProfessionsApi>("KediDili.VanillaPlusProfessions") != null)
             LogDebug("Vanilla Plus Professions detected -- VPP compatibility enabled.");
 
@@ -428,14 +443,18 @@ public class ModEntry : Mod
                     continue;
                 }
 
-                // Ensure (BC)165 with DGF modData has a Chest
+                // Ensure (BC)165 with DGF modData has a Chest and propagate type to it
                 if (pair.Value.QualifiedItemId == BigCraftableIds.AutoGrabber
-                    && pair.Value.modData.ContainsKey(SpecializedGrabberPatches.ModDataGrabberType)
-                    && pair.Value.heldObject.Value is not StardewValley.Objects.Chest)
+                    && pair.Value.modData.TryGetValue(SpecializedGrabberPatches.ModDataGrabberType, out string existingType))
                 {
-                    pair.Value.heldObject.Value = new StardewValley.Objects.Chest();
-                    pair.Value.showNextIndex.Value = false;
-                    initialized++;
+                    if (pair.Value.heldObject.Value is not StardewValley.Objects.Chest)
+                    {
+                        pair.Value.heldObject.Value = new StardewValley.Objects.Chest();
+                        pair.Value.showNextIndex.Value = false;
+                        initialized++;
+                    }
+                    if (pair.Value.heldObject.Value is StardewValley.Objects.Chest existingHeldChest)
+                        existingHeldChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = existingType;
                 }
             }
 
@@ -456,6 +475,8 @@ public class ModEntry : Mod
                 autoGrabber.showNextIndex.Value = false;
                 autoGrabber.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
                 autoGrabber.modData[SpecializedGrabberPatches.ModDataOriginalId] = originalId;
+                if (autoGrabber.heldObject.Value is StardewValley.Objects.Chest migChest)
+                    migChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
                 location.Objects.Add(tile, autoGrabber);
                 converted++;
             }
@@ -606,7 +627,9 @@ public class ModEntry : Mod
                 e.Location.Objects.Remove(tile);
 
                 var autoGrabber = new Object(tile, "165");
-                autoGrabber.heldObject.Value = new StardewValley.Objects.Chest(playerChest: true, tileLocation: tile);
+                var newChest = new StardewValley.Objects.Chest(playerChest: true, tileLocation: tile);
+                newChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
+                autoGrabber.heldObject.Value = newChest;
                 autoGrabber.showNextIndex.Value = false;
                 autoGrabber.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
                 autoGrabber.modData[SpecializedGrabberPatches.ModDataOriginalId] = originalId;
