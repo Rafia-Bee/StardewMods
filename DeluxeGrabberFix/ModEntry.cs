@@ -254,14 +254,38 @@ public class ModEntry : Mod
         if (!Context.IsPlayerFree)
             return;
 
-        // In Specialized mode, only the fire keybind works (triggers all grabbers)
+        // In Specialized mode, the fire keybind respects the global grabber setting
         if (Config.grabberMode == ModConfig.GrabberMode.Specialized)
         {
             if (Config.globalFireButton == SButton.None || e.Button != Config.globalFireButton)
                 return;
 
+            // Off mode: fire keybind disabled (grabbers work locally via automatic grabs)
+            if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Off)
+                return;
+
+            // Hover mode: verify cursor is over a grabber before firing
+            if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover)
+            {
+                var hoveredObj = Game1.player.currentLocation?.getObjectAtTile(
+                    (int)Game1.lastCursorTile.X, (int)Game1.lastCursorTile.Y);
+                if (hoveredObj == null || !GrabberTypeHelper.IsGrabber(hoveredObj.QualifiedItemId))
+                {
+                    Game1.addHUDMessage(new HUDMessage(Helper.Translation.Get("hud.hover-over-grabber"), HUDMessage.error_type));
+                    return;
+                }
+            }
+
             _grabbers.ResetGrabCycleTracking();
-            bool wasSpecialized = SetupSpecializedGlobalCache();
+
+            // Hover keybind: set IsGlobalGrabActive but leave CachedDesignatedGrabbers null
+            // so MapGrabber's Hover branch picks only the cursor-targeted grabber.
+            // All mode: full global cache via SetupSpecializedGlobalCache.
+            if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover)
+                IsGlobalGrabActive = true;
+            else
+                SetupSpecializedGlobalCache();
+
             _isGrabbing = true;
             IsForageGrabEnabled = true;
             try
@@ -273,7 +297,8 @@ public class ModEntry : Mod
             {
                 IsForageGrabEnabled = false;
                 _isGrabbing = false;
-                CleanupSpecializedGlobalCache(wasSpecialized);
+                IsGlobalGrabActive = false;
+                CachedDesignatedGrabbers = null;
             }
             _grabbers.ShowGrabCycleResults(showSummary: true);
             return;
@@ -537,6 +562,10 @@ public class ModEntry : Mod
     {
         if (Config.grabberMode != ModConfig.GrabberMode.Specialized)
             return false;
+
+        // Off mode: grabbers work locally only, no global cache
+        if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Off)
+            return true;
 
         IsGlobalGrabActive = true;
         CachedDesignatedGrabbers = new List<KeyValuePair<Vector2, Object>>();
