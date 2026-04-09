@@ -156,7 +156,7 @@ internal abstract class MapGrabber
         if (Config.grabberMode == ModConfig.GrabberMode.Specialized && BelongsToType != GrabberType.All)
         {
             return GrabberPairs.Where(pair =>
-                GrabberTypeHelper.GetGrabberType(pair.Value.QualifiedItemId) == BelongsToType);
+                GrabberTypeHelper.GetGrabberType(pair.Value) == BelongsToType);
         }
         return GrabberPairs;
     }

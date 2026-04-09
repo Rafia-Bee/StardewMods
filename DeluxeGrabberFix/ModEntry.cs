@@ -254,8 +254,30 @@ public class ModEntry : Mod
         if (!Context.IsPlayerFree)
             return;
 
+        // In Specialized mode, only the fire keybind works (triggers all grabbers)
         if (Config.grabberMode == ModConfig.GrabberMode.Specialized)
+        {
+            if (Config.globalFireButton == SButton.None || e.Button != Config.globalFireButton)
+                return;
+
+            _grabbers.ResetGrabCycleTracking();
+            bool wasSpecialized = SetupSpecializedGlobalCache();
+            _isGrabbing = true;
+            IsForageGrabEnabled = true;
+            try
+            {
+                foreach (var location in GetAllLocations())
+                    _grabbers.GrabAtLocation(location);
+            }
+            finally
+            {
+                IsForageGrabEnabled = false;
+                _isGrabbing = false;
+                CleanupSpecializedGlobalCache(wasSpecialized);
+            }
+            _grabbers.ShowGrabCycleResults(showSummary: true);
             return;
+        }
 
         if (e.Button == Config.designateGrabberButton
             && Config.globalGrabber == ModConfig.GlobalGrabberMode.All)
@@ -332,8 +354,13 @@ public class ModEntry : Mod
                 { priority = HarmonyLib.Priority.First }
         );
         harmony.Patch(
-            original: AccessTools.Method(typeof(Object), nameof(Object.checkForAction)),
-            prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.CheckForAction_Prefix))
+            original: AccessTools.Method(typeof(Object), nameof(Object.draw),
+                new[] { typeof(Microsoft.Xna.Framework.Graphics.SpriteBatch), typeof(int), typeof(int), typeof(float) }),
+            prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.Draw_Prefix))
+        );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Object), nameof(Object.performToolAction)),
+            prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.PerformToolAction_Prefix))
         );
 
         if (Helper.ModRegistry.GetApi<IVanillaPlusProfessionsApi>("KediDili.VanillaPlusProfessions") != null)
@@ -361,23 +388,57 @@ public class ModEntry : Mod
 
     private void InitializeSpecializedGrabbers()
     {
-        int count = 0;
+        int converted = 0;
+        int initialized = 0;
         foreach (var location in GetAllLocations())
         {
+            var toConvert = new List<KeyValuePair<Vector2, Object>>();
+
             foreach (var pair in location.Objects.Pairs)
             {
-                if (GrabberTypeHelper.IsGrabber(pair.Value.QualifiedItemId)
-                    && pair.Value.QualifiedItemId != BigCraftableIds.AutoGrabber
+                // Migration: convert old-format custom grabbers to (BC)165 + modData
+                if (GrabberTypeHelper.IsSpecializedGrabberItem(pair.Value.QualifiedItemId))
+                {
+                    toConvert.Add(pair);
+                    continue;
+                }
+
+                // Ensure (BC)165 with DGF modData has a Chest
+                if (pair.Value.QualifiedItemId == BigCraftableIds.AutoGrabber
+                    && pair.Value.modData.ContainsKey(SpecializedGrabberPatches.ModDataGrabberType)
                     && pair.Value.heldObject.Value is not StardewValley.Objects.Chest)
                 {
                     pair.Value.heldObject.Value = new StardewValley.Objects.Chest();
                     pair.Value.showNextIndex.Value = false;
-                    count++;
+                    initialized++;
                 }
             }
+
+            foreach (var pair in toConvert)
+            {
+                var tile = pair.Key;
+                var obj = pair.Value;
+                var grabberType = GrabberTypeHelper.GetGrabberType(obj.QualifiedItemId);
+                string originalId = obj.QualifiedItemId;
+
+                // Preserve existing chest contents if any
+                StardewValley.Objects.Chest existingChest = obj.heldObject.Value as StardewValley.Objects.Chest;
+
+                location.Objects.Remove(tile);
+
+                var autoGrabber = new Object(tile, "165");
+                autoGrabber.heldObject.Value = existingChest ?? new StardewValley.Objects.Chest(playerChest: true, tileLocation: tile);
+                autoGrabber.showNextIndex.Value = false;
+                autoGrabber.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
+                autoGrabber.modData[SpecializedGrabberPatches.ModDataOriginalId] = originalId;
+                location.Objects.Add(tile, autoGrabber);
+                converted++;
+            }
         }
-        if (count > 0)
-            LogDebug($"Initialized Chests for {count} specialized grabber(s)");
+        if (converted > 0)
+            LogDebug($"Migrated {converted} old-format specialized grabber(s) to (BC)165 format");
+        if (initialized > 0)
+            LogDebug($"Initialized Chests for {initialized} specialized grabber(s)");
     }
 
     private void LogConfig()
@@ -496,17 +557,32 @@ public class ModEntry : Mod
 
     private void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
     {
-        // Initialize Chest for newly placed specialized grabbers
+        // Convert newly placed custom grabbers to (BC)165 + modData
         foreach (var pair in e.Added)
         {
-            if (pair.Value != null
-                && GrabberTypeHelper.IsGrabber(pair.Value.QualifiedItemId)
-                && pair.Value.QualifiedItemId != BigCraftableIds.AutoGrabber
-                && pair.Value.heldObject.Value is not StardewValley.Objects.Chest)
+            if (pair.Value == null)
+                continue;
+
+            // Skip (BC)165 objects (vanilla or already-converted specialized)
+            if (pair.Value.QualifiedItemId == BigCraftableIds.AutoGrabber)
+                continue;
+
+            // Convert custom specialized grabber → (BC)165 + modData + Chest
+            if (GrabberTypeHelper.IsSpecializedGrabberItem(pair.Value.QualifiedItemId))
             {
-                    pair.Value.heldObject.Value = new StardewValley.Objects.Chest();
-                pair.Value.showNextIndex.Value = false;
-                LogDebug($"Initialized Chest for {pair.Value.Name} at {e.Location.Name} ({pair.Key})");
+                var tile = pair.Key;
+                var grabberType = GrabberTypeHelper.GetGrabberType(pair.Value.QualifiedItemId);
+                string originalId = pair.Value.QualifiedItemId;
+
+                e.Location.Objects.Remove(tile);
+
+                var autoGrabber = new Object(tile, "165");
+                autoGrabber.heldObject.Value = new StardewValley.Objects.Chest(playerChest: true, tileLocation: tile);
+                autoGrabber.showNextIndex.Value = false;
+                autoGrabber.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
+                autoGrabber.modData[SpecializedGrabberPatches.ModDataOriginalId] = originalId;
+                e.Location.Objects.Add(tile, autoGrabber);
+                LogDebug($"Placed {grabberType} grabber at {e.Location.Name} ({tile})");
             }
         }
 

@@ -1,3 +1,5 @@
+using System;
+
 namespace DeluxeGrabberFix.Framework;
 
 internal enum GrabberType
@@ -13,6 +15,17 @@ internal enum GrabberType
 
 internal static class GrabberTypeHelper
 {
+    public static GrabberType GetGrabberType(StardewValley.Object obj)
+    {
+        if (obj.QualifiedItemId == BigCraftableIds.AutoGrabber
+            && obj.modData.TryGetValue(SpecializedGrabberPatches.ModDataGrabberType, out string typeStr)
+            && Enum.TryParse(typeStr, out GrabberType type))
+        {
+            return type;
+        }
+        return GetGrabberType(obj.QualifiedItemId);
+    }
+
     public static GrabberType GetGrabberType(string qualifiedItemId)
     {
         return qualifiedItemId switch
@@ -30,7 +43,12 @@ internal static class GrabberTypeHelper
     public static bool IsGrabber(string qualifiedItemId)
     {
         return qualifiedItemId == BigCraftableIds.AutoGrabber
-            || qualifiedItemId == BigCraftableIds.CropGrabber
+            || IsSpecializedGrabberItem(qualifiedItemId);
+    }
+
+    public static bool IsSpecializedGrabberItem(string qualifiedItemId)
+    {
+        return qualifiedItemId == BigCraftableIds.CropGrabber
             || qualifiedItemId == BigCraftableIds.ForageGrabber
             || qualifiedItemId == BigCraftableIds.TreeGrabber
             || qualifiedItemId == BigCraftableIds.ScavengerGrabber

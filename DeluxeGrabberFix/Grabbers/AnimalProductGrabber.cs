@@ -50,13 +50,15 @@ internal class AnimalProductGrabber : MapGrabber
         // Collect dropped products (eggs, feathers, etc.) from the ground.
         // Animals with HarvestType.DropOvernight place their produce inside
         // the AnimalHouse floor, so only collect from barn/coop interiors.
+        // Collects all spawned ground items (not just EggCategory) to catch
+        // duck feathers, wool, rabbit's foot, and modded animal products.
         if (Location is AnimalHouse)
         {
             var tilesToRemove = new List<Vector2>();
             foreach (var pair in Location.Objects.Pairs)
             {
                 var obj = pair.Value;
-                if (obj.bigCraftable.Value || obj.Category != Object.EggCategory)
+                if (obj.bigCraftable.Value || !obj.IsSpawnedObject)
                     continue;
 
                 if (TryAddItem(obj))
