@@ -303,6 +303,9 @@ namespace LoanableTractor
         /// <summary>Load persisted loan data from the save file.</summary>
         private void LoadSaveData()
         {
+            if (!Context.IsMainPlayer)
+                return;
+
             try
             {
                 var data = this.Helper.Data.ReadSaveData<LoanSaveData>(SaveDataKey);
@@ -323,6 +326,9 @@ namespace LoanableTractor
         /// <summary>Persist loan data to the save file.</summary>
         private void WriteSaveData()
         {
+            if (!Context.IsMainPlayer)
+                return;
+
             try
             {
                 var data = new LoanSaveData
