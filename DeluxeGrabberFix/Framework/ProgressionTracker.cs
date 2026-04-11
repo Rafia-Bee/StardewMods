@@ -25,11 +25,11 @@ internal class ProgressionTracker
     private const string UnlockMachineMail = "Rafia.DGF_UnlockMachine";
 
     // Recipe keys (must match Data/CraftingRecipes keys)
-    internal const string CropRecipe = "Rafia.DGF_CropGrabber";
-    internal const string ForageRecipe = "Rafia.DGF_ForageGrabber";
-    internal const string TreeRecipe = "Rafia.DGF_TreeGrabber";
-    internal const string ScavengerRecipe = "Rafia.DGF_ScavengerGrabber";
-    internal const string MachineRecipe = "Rafia.DGF_MachineGrabber";
+    internal const string CropRecipe = BigCraftableIds.CropGrabberBase;
+    internal const string ForageRecipe = BigCraftableIds.ForageGrabberBase;
+    internal const string TreeRecipe = BigCraftableIds.TreeGrabberBase;
+    internal const string ScavengerRecipe = BigCraftableIds.ScavengerGrabberBase;
+    internal const string MachineRecipe = BigCraftableIds.MachineGrabberBase;
 
     internal static readonly string[] AllMailIds =
     {
@@ -57,9 +57,10 @@ internal class ProgressionTracker
             return;
 
         var farmer = Game1.player;
+        var ownedTypes = CollectOwnedGrabberTypes(farmer);
 
-        CheckHintMails(farmer);
-        CheckUnlockMails(farmer);
+        CheckHintMails(farmer, ownedTypes);
+        CheckUnlockMails(farmer, ownedTypes);
     }
 
     /// <summary>
@@ -72,12 +73,13 @@ internal class ProgressionTracker
 
         var farmer = Game1.player;
         var config = _mod.Config;
+        var ownedTypes = CollectOwnedGrabberTypes(farmer);
         int unlocked = 0;
 
         // Animal Grabber is always available (bought from Marnie), so skip it.
         // Check each tier in order.
 
-        if (PlayerOwnsGrabberType(GrabberType.Animal))
+        if (ownedTypes.Contains(GrabberType.Animal))
         {
             // Crop Grabber
             if (!farmer.mailReceived.Contains(UnlockCropMail)
@@ -91,7 +93,7 @@ internal class ProgressionTracker
                 farmer.mailForTomorrow.Add(HintCropMail);
         }
 
-        if (PlayerOwnsGrabberType(GrabberType.Crop))
+        if (ownedTypes.Contains(GrabberType.Crop))
         {
             // Forage Grabber
             if (!farmer.mailReceived.Contains(UnlockForageMail)
@@ -105,7 +107,7 @@ internal class ProgressionTracker
                 farmer.mailForTomorrow.Add(HintForageMail);
         }
 
-        if (PlayerOwnsGrabberType(GrabberType.Forage))
+        if (ownedTypes.Contains(GrabberType.Forage))
         {
             // Tree Grabber
             if (!farmer.mailReceived.Contains(UnlockTreeMail)
@@ -119,7 +121,7 @@ internal class ProgressionTracker
                 farmer.mailForTomorrow.Add(HintTreeMail);
         }
 
-        if (PlayerOwnsGrabberType(GrabberType.Tree))
+        if (ownedTypes.Contains(GrabberType.Tree))
         {
             // Scavenger Grabber
             if (!farmer.mailReceived.Contains(UnlockScavengerMail)
@@ -133,7 +135,7 @@ internal class ProgressionTracker
                 farmer.mailForTomorrow.Add(HintScavengerMail);
         }
 
-        if (PlayerOwnsGrabberType(GrabberType.Scavenger))
+        if (ownedTypes.Contains(GrabberType.Scavenger))
         {
             // Machine Grabber
             if (!farmer.mailReceived.Contains(UnlockMachineMail)
@@ -151,33 +153,33 @@ internal class ProgressionTracker
             _mod.LogDebug($"Retroactive progression: granted {unlocked} grabber recipe(s)");
     }
 
-    private void CheckHintMails(Farmer farmer)
+    private void CheckHintMails(Farmer farmer, HashSet<GrabberType> ownedTypes)
     {
         // Hint mails are sent the day after the previous grabber is obtained.
         // We check daily: if player owns the previous grabber and hasn't received the hint, queue it.
 
-        if (PlayerOwnsGrabberType(GrabberType.Animal) && !farmer.mailReceived.Contains(HintCropMail))
+        if (ownedTypes.Contains(GrabberType.Animal) && !farmer.mailReceived.Contains(HintCropMail))
             AddMailIfNotQueued(farmer, HintCropMail);
 
-        if (PlayerOwnsGrabberType(GrabberType.Crop) && !farmer.mailReceived.Contains(HintForageMail))
+        if (ownedTypes.Contains(GrabberType.Crop) && !farmer.mailReceived.Contains(HintForageMail))
             AddMailIfNotQueued(farmer, HintForageMail);
 
-        if (PlayerOwnsGrabberType(GrabberType.Forage) && !farmer.mailReceived.Contains(HintTreeMail))
+        if (ownedTypes.Contains(GrabberType.Forage) && !farmer.mailReceived.Contains(HintTreeMail))
             AddMailIfNotQueued(farmer, HintTreeMail);
 
-        if (PlayerOwnsGrabberType(GrabberType.Tree) && !farmer.mailReceived.Contains(HintScavengerMail))
+        if (ownedTypes.Contains(GrabberType.Tree) && !farmer.mailReceived.Contains(HintScavengerMail))
             AddMailIfNotQueued(farmer, HintScavengerMail);
 
-        if (PlayerOwnsGrabberType(GrabberType.Scavenger) && !farmer.mailReceived.Contains(HintMachineMail))
+        if (ownedTypes.Contains(GrabberType.Scavenger) && !farmer.mailReceived.Contains(HintMachineMail))
             AddMailIfNotQueued(farmer, HintMachineMail);
     }
 
-    private void CheckUnlockMails(Farmer farmer)
+    private void CheckUnlockMails(Farmer farmer, HashSet<GrabberType> ownedTypes)
     {
         var config = _mod.Config;
 
         // Crop Grabber: owns Animal + shipped enough crops
-        if (PlayerOwnsGrabberType(GrabberType.Animal)
+        if (ownedTypes.Contains(GrabberType.Animal)
             && !farmer.mailReceived.Contains(UnlockCropMail)
             && Game1.stats.CropsShipped >= (uint)config.cropsShippedThreshold)
         {
@@ -186,7 +188,7 @@ internal class ProgressionTracker
         }
 
         // Forage Grabber: owns Animal + Crop + foraged enough
-        if (PlayerOwnsGrabberType(GrabberType.Crop)
+        if (ownedTypes.Contains(GrabberType.Crop)
             && !farmer.mailReceived.Contains(UnlockForageMail)
             && Game1.stats.ItemsForaged >= (uint)config.itemsForagedThreshold)
         {
@@ -195,7 +197,7 @@ internal class ProgressionTracker
         }
 
         // Tree Grabber: owns previous + chopped enough stumps
-        if (PlayerOwnsGrabberType(GrabberType.Forage)
+        if (ownedTypes.Contains(GrabberType.Forage)
             && !farmer.mailReceived.Contains(UnlockTreeMail)
             && Game1.stats.StumpsChopped >= (uint)config.stumpsChoppedThreshold)
         {
@@ -204,7 +206,7 @@ internal class ProgressionTracker
         }
 
         // Scavenger Grabber: owns previous + enough museum donations
-        if (PlayerOwnsGrabberType(GrabberType.Tree)
+        if (ownedTypes.Contains(GrabberType.Tree)
             && !farmer.mailReceived.Contains(UnlockScavengerMail)
             && GetMuseumDonationCount() >= config.museumDonationsThreshold)
         {
@@ -213,7 +215,7 @@ internal class ProgressionTracker
         }
 
         // Machine Grabber: owns previous + earned enough gold
-        if (PlayerOwnsGrabberType(GrabberType.Scavenger)
+        if (ownedTypes.Contains(GrabberType.Scavenger)
             && !farmer.mailReceived.Contains(UnlockMachineMail)
             && farmer.totalMoneyEarned >= (uint)config.totalMoneyEarnedThreshold)
         {
@@ -225,62 +227,48 @@ internal class ProgressionTracker
     /// <summary>
     /// Check if the player owns (placed in world or in inventory) a grabber of the given type.
     /// </summary>
-    private bool PlayerOwnsGrabberType(GrabberType type)
+    private HashSet<GrabberType> CollectOwnedGrabberTypes(Farmer farmer)
     {
-        // Animal type: any (BC)165 counts (vanilla auto-grabber)
-        if (type == GrabberType.Animal)
+        var owned = new HashSet<GrabberType>();
+
+        // Fast check: recipes already known implies ownership
+        foreach (string key in AllRecipeKeys)
         {
-            // Check inventory
-            foreach (var item in Game1.player.Items)
-            {
-                if (item?.QualifiedItemId == BigCraftableIds.AutoGrabber)
-                    return true;
-            }
-
-            // Check placed in world
-            foreach (var location in ModEntry.GetAllLocations())
-            {
-                foreach (var pair in location.Objects.Pairs)
-                {
-                    if (pair.Value.QualifiedItemId == BigCraftableIds.AutoGrabber)
-                        return true;
-                }
-            }
-
-            return false;
+            if (farmer.craftingRecipes.ContainsKey(key))
+                owned.Add(GrabberTypeHelper.GetGrabberType("(BC)" + key));
         }
 
-        // For specialized types: check if recipe is known (they've crafted or could craft one)
-        // OR if they have one placed/in inventory
-        string recipeKey = GetRecipeKey(type);
-        if (recipeKey != null && Game1.player.craftingRecipes.ContainsKey(recipeKey))
-            return true;
-
-        string itemId = GetItemId(type);
-        if (itemId == null)
-            return false;
-
-        // Check inventory for the specialized grabber item
-        foreach (var item in Game1.player.Items)
+        // Check inventory
+        foreach (var item in farmer.Items)
         {
-            if (item?.QualifiedItemId == itemId)
-                return true;
+            if (item == null) continue;
+
+            if (item.QualifiedItemId == BigCraftableIds.AutoGrabber)
+                owned.Add(GrabberType.Animal);
+            else if (GrabberTypeHelper.IsSpecializedGrabberItem(item.QualifiedItemId))
+                owned.Add(GrabberTypeHelper.GetGrabberType(item.QualifiedItemId));
         }
 
-        // Check placed in world: (BC)165 with matching modData
-        string typeStr = type.ToString();
+        // Check placed in world (single pass through all locations)
         foreach (var location in ModEntry.GetAllLocations())
         {
             foreach (var pair in location.Objects.Pairs)
             {
-                if (pair.Value.QualifiedItemId == BigCraftableIds.AutoGrabber
-                    && pair.Value.modData.TryGetValue(SpecializedGrabberPatches.ModDataGrabberType, out string t)
-                    && t == typeStr)
-                    return true;
+                var obj = pair.Value;
+                if (obj.QualifiedItemId == BigCraftableIds.AutoGrabber)
+                {
+                    owned.Add(GrabberType.Animal);
+
+                    if (obj.modData.TryGetValue(SpecializedGrabberPatches.ModDataGrabberType, out string typeStr)
+                        && System.Enum.TryParse(typeStr, out GrabberType specialType))
+                    {
+                        owned.Add(specialType);
+                    }
+                }
             }
         }
 
-        return false;
+        return owned;
     }
 
     private static int GetMuseumDonationCount()
@@ -306,31 +294,5 @@ internal class ProgressionTracker
         // Teach the recipe directly for retroactive unlocks
         if (!farmer.craftingRecipes.ContainsKey(recipeKey))
             farmer.craftingRecipes.Add(recipeKey, 0);
-    }
-
-    private static string GetRecipeKey(GrabberType type)
-    {
-        return type switch
-        {
-            GrabberType.Crop => CropRecipe,
-            GrabberType.Forage => ForageRecipe,
-            GrabberType.Tree => TreeRecipe,
-            GrabberType.Scavenger => ScavengerRecipe,
-            GrabberType.Machine => MachineRecipe,
-            _ => null
-        };
-    }
-
-    private static string GetItemId(GrabberType type)
-    {
-        return type switch
-        {
-            GrabberType.Crop => BigCraftableIds.CropGrabber,
-            GrabberType.Forage => BigCraftableIds.ForageGrabber,
-            GrabberType.Tree => BigCraftableIds.TreeGrabber,
-            GrabberType.Scavenger => BigCraftableIds.ScavengerGrabber,
-            GrabberType.Machine => BigCraftableIds.MachineGrabber,
-            _ => null
-        };
     }
 }

@@ -62,8 +62,28 @@ internal static class Helpers
         return forageable;
     }
 
+    private static GameLocation _cachedBeeHouseLocation;
+    private static int _cachedBeeHouseTick;
+    private static List<Vector2> _cachedBeeHousePositions;
+
     public static bool IsFlowerNearBeeHouse(GameLocation location, Vector2 flowerTile, int range)
     {
+        var positions = GetBeeHousePositions(location);
+        foreach (var pos in positions)
+        {
+            float dist = Math.Abs(flowerTile.X - pos.X) + Math.Abs(flowerTile.Y - pos.Y);
+            if (dist <= range)
+                return true;
+        }
+        return false;
+    }
+
+    private static List<Vector2> GetBeeHousePositions(GameLocation location)
+    {
+        if (_cachedBeeHouseLocation == location && _cachedBeeHouseTick == Game1.ticks)
+            return _cachedBeeHousePositions;
+
+        var positions = new List<Vector2>();
         foreach (var pair in location.Objects.Pairs)
         {
             var obj = pair.Value;
@@ -71,11 +91,14 @@ internal static class Helpers
                 || (obj.QualifiedItemId?.StartsWith(BigCraftableIds.MpsPrefix) == true
                     && obj.QualifiedItemId.Contains("BeeHouse")))
             {
-                float dist = Math.Abs(flowerTile.X - pair.Key.X) + Math.Abs(flowerTile.Y - pair.Key.Y);
-                if (dist <= range)
-                    return true;
+                positions.Add(pair.Key);
             }
         }
-        return false;
+
+        _cachedBeeHouseLocation = location;
+        _cachedBeeHouseTick = Game1.ticks;
+        _cachedBeeHousePositions = positions;
+
+        return positions;
     }
 }

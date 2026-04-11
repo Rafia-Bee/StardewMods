@@ -19,7 +19,7 @@ internal class IndoorPotGrabber : ObjectsMapGrabber
         if (!Config.harvestCrops || !Config.harvestCropsIndoorPots)
             return false;
 
-        if (obj is not IndoorPot pot || pot.hoeDirt.Value.crop == null)
+        if (obj is not IndoorPot pot || pot.hoeDirt.Value?.crop == null)
             return false;
 
         HoeDirt dirt = pot.hoeDirt.Value;

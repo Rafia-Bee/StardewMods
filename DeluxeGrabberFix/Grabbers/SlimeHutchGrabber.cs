@@ -23,7 +23,7 @@ internal class SlimeHutchGrabber : ObjectsMapGrabber
 
     public override bool GrabObject(Vector2 tile, Object obj)
     {
-        if (!Config.slimeHutch || obj.Name != "Slime Ball")
+        if (!Config.slimeHutch || obj.Name is not "Slime Ball")
             return false;
 
         var harvest = GetSlimeHarvest(obj, tile, Location);

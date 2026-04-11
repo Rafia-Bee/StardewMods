@@ -54,10 +54,17 @@ internal static class BigCraftableIds
     // Textile Expansion (Cloths and Colors)
     public const string LeafBasket = "(BC)selph.TextileExpansion_LeafBasket";
 
-    // Specialized grabbers
-    public const string CropGrabber = "(BC)Rafia.DGF_CropGrabber";
-    public const string ForageGrabber = "(BC)Rafia.DGF_ForageGrabber";
-    public const string TreeGrabber = "(BC)Rafia.DGF_TreeGrabber";
-    public const string ScavengerGrabber = "(BC)Rafia.DGF_ScavengerGrabber";
-    public const string MachineGrabber = "(BC)Rafia.DGF_MachineGrabber";
+    // Specialized grabber base IDs (used as data keys, recipe keys, and mail attachment IDs)
+    public const string CropGrabberBase = "Rafia.DGF_CropGrabber";
+    public const string ForageGrabberBase = "Rafia.DGF_ForageGrabber";
+    public const string TreeGrabberBase = "Rafia.DGF_TreeGrabber";
+    public const string ScavengerGrabberBase = "Rafia.DGF_ScavengerGrabber";
+    public const string MachineGrabberBase = "Rafia.DGF_MachineGrabber";
+
+    // Specialized grabber qualified item IDs
+    public const string CropGrabber = "(BC)" + CropGrabberBase;
+    public const string ForageGrabber = "(BC)" + ForageGrabberBase;
+    public const string TreeGrabber = "(BC)" + TreeGrabberBase;
+    public const string ScavengerGrabber = "(BC)" + ScavengerGrabberBase;
+    public const string MachineGrabber = "(BC)" + MachineGrabberBase;
 }
