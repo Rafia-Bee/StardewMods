@@ -58,14 +58,20 @@ internal abstract class MapGrabber
                 .ToList();
         }
         else if (UseGlobalMode
-            && Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover
-            && ObjectIsGrabber(Game1.player.currentLocation.getObjectAtTile((int)Game1.lastCursorTile.X, (int)Game1.lastCursorTile.Y)))
+            && Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover)
         {
-            var obj = Game1.player.currentLocation.getObjectAtTile((int)Game1.lastCursorTile.X, (int)Game1.lastCursorTile.Y);
-            GrabberPairs = new List<KeyValuePair<Vector2, Object>>
+            var hoverObj = Game1.player.currentLocation?.getObjectAtTile((int)Game1.lastCursorTile.X, (int)Game1.lastCursorTile.Y);
+            if (hoverObj != null && ObjectIsGrabber(hoverObj))
             {
-                new(Game1.lastCursorTile, obj)
-            };
+                GrabberPairs = new List<KeyValuePair<Vector2, Object>>
+                {
+                    new(Game1.lastCursorTile, hoverObj)
+                };
+            }
+            else
+            {
+                GrabberPairs = new List<KeyValuePair<Vector2, Object>>();
+            }
         }
         else
         {

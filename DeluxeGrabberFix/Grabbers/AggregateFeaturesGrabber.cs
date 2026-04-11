@@ -27,6 +27,6 @@ internal class AggregateFeaturesGrabber : TerrainFeaturesMapGrabber
 
     public override bool GrabFeature(Vector2 tile, TerrainFeature feature)
     {
-        return grabbers.Select(g => g.GrabFeature(tile, feature)).Any(x => x);
+        return grabbers.Any(g => g.GrabFeature(tile, feature));
     }
 }

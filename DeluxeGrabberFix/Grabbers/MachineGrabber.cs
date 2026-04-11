@@ -64,7 +64,8 @@ internal class MachineGrabber : ObjectsMapGrabber
                     // Automate won't process them even though its API reports them
                     bool isDisabledType = false;
                     if (automateDisabledTypes != null
-                        && location.Objects.TryGetValue(current, out var machineObj))
+                        && location.Objects.TryGetValue(current, out var machineObj)
+                        && machineObj.Name != null)
                     {
                         var typeId = new string(machineObj.Name.Where(char.IsLetterOrDigit).ToArray());
                         isDisabledType = automateDisabledTypes.Contains(typeId);

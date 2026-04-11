@@ -27,6 +27,6 @@ internal class AggregateObjectsGrabber : ObjectsMapGrabber
 
     public override bool GrabObject(Vector2 tile, Object obj)
     {
-        return grabbers.Select(g => g.GrabObject(tile, obj)).Any(x => x);
+        return grabbers.Any(g => g.GrabObject(tile, obj));
     }
 }

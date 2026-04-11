@@ -78,8 +78,9 @@ public class ModEntry : Mod
         {
             Config = Helper.ReadConfig<ModConfig>();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Monitor.Log($"Failed to load config.json, using defaults: {ex.Message}", LogLevel.Warn);
             Config = new ModConfig();
         }
 

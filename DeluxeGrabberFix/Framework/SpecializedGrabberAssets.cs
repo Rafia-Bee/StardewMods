@@ -32,31 +32,31 @@ internal class SpecializedGrabberAssets
             {
                 var data = asset.AsDictionary<string, BigCraftableData>().Data;
 
-                data["Rafia.DGF_CropGrabber"] = CreateGrabberData(
+                data[BigCraftableIds.CropGrabberBase] = CreateGrabberData(
                     "Crop Grabber",
                     _helper.Translation.Get("specialized.crop-grabber.name"),
                     _helper.Translation.Get("specialized.crop-grabber.description"),
                     spriteIndex: 0);
 
-                data["Rafia.DGF_ForageGrabber"] = CreateGrabberData(
+                data[BigCraftableIds.ForageGrabberBase] = CreateGrabberData(
                     "Forage Grabber",
                     _helper.Translation.Get("specialized.forage-grabber.name"),
                     _helper.Translation.Get("specialized.forage-grabber.description"),
                     spriteIndex: 2);
 
-                data["Rafia.DGF_TreeGrabber"] = CreateGrabberData(
+                data[BigCraftableIds.TreeGrabberBase] = CreateGrabberData(
                     "Tree Grabber",
                     _helper.Translation.Get("specialized.tree-grabber.name"),
                     _helper.Translation.Get("specialized.tree-grabber.description"),
                     spriteIndex: 4);
 
-                data["Rafia.DGF_ScavengerGrabber"] = CreateGrabberData(
+                data[BigCraftableIds.ScavengerGrabberBase] = CreateGrabberData(
                     "Scavenger Grabber",
                     _helper.Translation.Get("specialized.scavenger-grabber.name"),
                     _helper.Translation.Get("specialized.scavenger-grabber.description"),
                     spriteIndex: 6);
 
-                data["Rafia.DGF_MachineGrabber"] = CreateGrabberData(
+                data[BigCraftableIds.MachineGrabberBase] = CreateGrabberData(
                     "Machine Grabber",
                     _helper.Translation.Get("specialized.machine-grabber.name"),
                     _helper.Translation.Get("specialized.machine-grabber.description"),
@@ -73,23 +73,23 @@ internal class SpecializedGrabberAssets
                 // Format: ingredients/context/output id/isBigCraftable/conditions/display name
                 // Condition "none" prevents auto-learning; recipes are taught via mail
                 data[ProgressionTracker.CropRecipe] =
-                    $"388 {c.recipeCropWood} 336 {c.recipeCropGoldBar} 621 {c.recipeCropQualitySprinkler}/Field/Rafia.DGF_CropGrabber/true/none/"
+                    $"388 {c.recipeCropWood} 336 {c.recipeCropGoldBar} 621 {c.recipeCropQualitySprinkler}/Field/{BigCraftableIds.CropGrabberBase}/true/none/"
                     + _helper.Translation.Get("specialized.crop-grabber.name");
 
                 data[ProgressionTracker.ForageRecipe] =
-                    $"388 {c.recipeForageWood} 336 {c.recipeForageGoldBar} 770 {c.recipeForageMixedSeeds} 771 {c.recipeForageFiber}/Field/Rafia.DGF_ForageGrabber/true/none/"
+                    $"388 {c.recipeForageWood} 336 {c.recipeForageGoldBar} 770 {c.recipeForageMixedSeeds} 771 {c.recipeForageFiber}/Field/{BigCraftableIds.ForageGrabberBase}/true/none/"
                     + _helper.Translation.Get("specialized.forage-grabber.name");
 
                 data[ProgressionTracker.TreeRecipe] =
-                    $"709 {c.recipeTreeHardwood} 337 {c.recipeTreeIridiumBar} 724 {c.recipeTreeMapleSyrup} 725 {c.recipeTreeOakResin} 726 {c.recipeTreePineTar}/Field/Rafia.DGF_TreeGrabber/true/none/"
+                    $"709 {c.recipeTreeHardwood} 337 {c.recipeTreeIridiumBar} 724 {c.recipeTreeMapleSyrup} 725 {c.recipeTreeOakResin} 726 {c.recipeTreePineTar}/Field/{BigCraftableIds.TreeGrabberBase}/true/none/"
                     + _helper.Translation.Get("specialized.tree-grabber.name");
 
                 data[ProgressionTracker.ScavengerRecipe] =
-                    $"709 {c.recipeScavengerHardwood} 337 {c.recipeScavengerIridiumBar} 881 {c.recipeScavengerBoneFragment} 275 {c.recipeScavengerArtifactTrove}/Field/Rafia.DGF_ScavengerGrabber/true/none/"
+                    $"709 {c.recipeScavengerHardwood} 337 {c.recipeScavengerIridiumBar} 881 {c.recipeScavengerBoneFragment} 275 {c.recipeScavengerArtifactTrove}/Field/{BigCraftableIds.ScavengerGrabberBase}/true/none/"
                     + _helper.Translation.Get("specialized.scavenger-grabber.name");
 
                 data[ProgressionTracker.MachineRecipe] =
-                    $"337 {c.recipeMachineIridiumBar} 787 {c.recipeMachineBatteryPack} 72 {c.recipeMachineDiamond}/Field/Rafia.DGF_MachineGrabber/true/none/"
+                    $"337 {c.recipeMachineIridiumBar} 787 {c.recipeMachineBatteryPack} 72 {c.recipeMachineDiamond}/Field/{BigCraftableIds.MachineGrabberBase}/true/none/"
                     + _helper.Translation.Get("specialized.machine-grabber.name");
             });
         }
@@ -108,15 +108,15 @@ internal class SpecializedGrabberAssets
 
                 // Unlock mails (teach crafting recipe)
                 data["Rafia.DGF_UnlockCrop"] = _helper.Translation.Get("mail.unlock-crop")
-                    + "%item craftingRecipe Rafia.DGF_CropGrabber %%";
+                    + $"%item craftingRecipe {BigCraftableIds.CropGrabberBase} %%";
                 data["Rafia.DGF_UnlockForage"] = _helper.Translation.Get("mail.unlock-forage")
-                    + "%item craftingRecipe Rafia.DGF_ForageGrabber %%";
+                    + $"%item craftingRecipe {BigCraftableIds.ForageGrabberBase} %%";
                 data["Rafia.DGF_UnlockTree"] = _helper.Translation.Get("mail.unlock-tree")
-                    + "%item craftingRecipe Rafia.DGF_TreeGrabber %%";
+                    + $"%item craftingRecipe {BigCraftableIds.TreeGrabberBase} %%";
                 data["Rafia.DGF_UnlockScavenger"] = _helper.Translation.Get("mail.unlock-scavenger")
-                    + "%item craftingRecipe Rafia.DGF_ScavengerGrabber %%";
+                    + $"%item craftingRecipe {BigCraftableIds.ScavengerGrabberBase} %%";
                 data["Rafia.DGF_UnlockMachine"] = _helper.Translation.Get("mail.unlock-machine")
-                    + "%item craftingRecipe Rafia.DGF_MachineGrabber %%";
+                    + $"%item craftingRecipe {BigCraftableIds.MachineGrabberBase} %%";
             });
         }
         else if (e.NameWithoutLocale.IsEquivalentTo(TexturePath))

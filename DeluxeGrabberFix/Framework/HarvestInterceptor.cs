@@ -25,7 +25,7 @@ internal static class HarvestInterceptor
         _intercepting = false;
         var items = _interceptedItems;
         _interceptedItems = null;
-        return items;
+        return items ?? new List<Item>();
     }
 
     /// <summary>
@@ -34,10 +34,10 @@ internal static class HarvestInterceptor
     /// </summary>
     internal static bool CreateItemDebris_Prefix(Item item)
     {
-        if (!_intercepting)
+        if (!_intercepting || _interceptedItems == null)
             return true;
 
-        _interceptedItems?.Add(item);
+        _interceptedItems.Add(item);
         return false;
     }
 }

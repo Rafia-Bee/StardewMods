@@ -34,30 +34,37 @@ internal static class SpecializedGrabberPatches
         if (!__instance.modData.TryGetValue(ModDataOriginalId, out string originalId)) return true;
         if (__instance.isTemporarilyInvisible) return false;
 
-        if (__instance.hovering)
-            __instance.hovering = false;
+        try
+        {
+            if (__instance.hovering)
+                __instance.hovering = false;
 
-        ParsedItemData customData = ItemRegistry.GetDataOrErrorItem(originalId);
+            ParsedItemData customData = ItemRegistry.GetDataOrErrorItem(originalId);
 
-        Vector2 scaleV = __instance.getScale() * 4f;
-        Vector2 pos = Game1.GlobalToLocal(Game1.viewport, new Vector2(x * 64, y * 64 - 64));
-        Rectangle dest = new Rectangle(
-            (int)(pos.X - scaleV.X / 2f) + (__instance.shakeTimer > 0 ? Game1.random.Next(-1, 2) : 0),
-            (int)(pos.Y - scaleV.Y / 2f) + (__instance.shakeTimer > 0 ? Game1.random.Next(-1, 2) : 0),
-            (int)(64f + scaleV.X),
-            (int)(128f + scaleV.Y / 2f));
-        float layerDepth = Math.Max(0f, (float)((y + 1) * 64 - 24) / 10000f) + x * 1E-05f;
+            Vector2 scaleV = __instance.getScale() * 4f;
+            Vector2 pos = Game1.GlobalToLocal(Game1.viewport, new Vector2(x * 64, y * 64 - 64));
+            Rectangle dest = new Rectangle(
+                (int)(pos.X - scaleV.X / 2f) + (__instance.shakeTimer > 0 ? Game1.random.Next(-1, 2) : 0),
+                (int)(pos.Y - scaleV.Y / 2f) + (__instance.shakeTimer > 0 ? Game1.random.Next(-1, 2) : 0),
+                (int)(64f + scaleV.X),
+                (int)(128f + scaleV.Y / 2f));
+            float layerDepth = Math.Max(0f, (float)((y + 1) * 64 - 24) / 10000f) + x * 1E-05f;
 
-        int offset = __instance.showNextIndex.Value ? 1 : 0;
+            int offset = __instance.showNextIndex.Value ? 1 : 0;
 
-        spriteBatch.Draw(
-            customData.GetTexture(),
-            dest,
-            customData.GetSourceRect(offset),
-            Color.White * alpha,
-            0f, Vector2.Zero, SpriteEffects.None, layerDepth);
+            spriteBatch.Draw(
+                customData.GetTexture(),
+                dest,
+                customData.GetSourceRect(offset),
+                Color.White * alpha,
+                0f, Vector2.Zero, SpriteEffects.None, layerDepth);
 
-        return false;
+            return false;
+        }
+        catch
+        {
+            return true; // fall back to vanilla draw
+        }
     }
 
     internal static bool PerformToolAction_Prefix(Object __instance, Tool t, ref bool __result)

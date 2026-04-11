@@ -144,7 +144,8 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
             {
                 for (int i = 0; i < random.Next(1, 4); i++)
                 {
-                    var copy = ItemRegistry.Create(item.itemId.Value, item.stack.Value);
+                    var copy = item.getOne();
+                    copy.Stack = item.Stack;
                     list.Add(copy);
                 }
             }
