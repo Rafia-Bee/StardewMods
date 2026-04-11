@@ -19,6 +19,8 @@ internal abstract class MapGrabber
     protected Farmer Player => Game1.MasterPlayer;
     protected ModConfig Config => Mod.Config;
 
+    internal GrabberType BelongsToType { get; set; } = GrabberType.All;
+
     public MapGrabber(ModEntry mod, GameLocation location)
     {
         Mod = mod;
@@ -45,6 +47,15 @@ internal abstract class MapGrabber
                     .Where(pair => IsValidGrabber(pair.Value, pair.Key))
                     .ToList();
             }
+        }
+        else if (UseGlobalMode
+            && Mod.CachedDesignatedGrabbers != null && Mod.CachedDesignatedGrabbers.Count > 0)
+        {
+            // Specialized mode with Hover/All during automatic grabs:
+            // CachedDesignatedGrabbers is populated, use the global cache
+            GrabberPairs = Mod.CachedDesignatedGrabbers
+                .Where(pair => IsValidGrabber(pair.Value, pair.Key))
+                .ToList();
         }
         else if (UseGlobalMode
             && Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover
@@ -115,7 +126,7 @@ internal abstract class MapGrabber
 
     protected bool TryAddItem(Item item)
     {
-        return TryAddItem(item, GrabberPairs);
+        return TryAddItem(item, GetFilteredGrabberPairs());
     }
 
     protected bool TryAddItems(IEnumerable<Item> items, IEnumerable<KeyValuePair<Vector2, Object>> grabbers)
@@ -135,7 +146,7 @@ internal abstract class MapGrabber
 
     protected bool TryAddItems(IEnumerable<Item> items)
     {
-        return TryAddItems(items, GrabberPairs);
+        return TryAddItems(items, GetFilteredGrabberPairs());
     }
 
     protected void GainExperience(int skill, int exp)
@@ -146,7 +157,17 @@ internal abstract class MapGrabber
 
     public bool CanGrab()
     {
-        return GrabberPairs.Any(pair => IsValidGrabber(pair.Value, pair.Key));
+        return GetFilteredGrabberPairs().Any(pair => IsValidGrabber(pair.Value, pair.Key));
+    }
+
+    protected IEnumerable<KeyValuePair<Vector2, Object>> GetFilteredGrabberPairs()
+    {
+        if (Config.grabberMode == ModConfig.GrabberMode.Specialized && BelongsToType != GrabberType.All)
+        {
+            return GrabberPairs.Where(pair =>
+                GrabberTypeHelper.GetGrabberType(pair.Value) == BelongsToType);
+        }
+        return GrabberPairs;
     }
 
     public Dictionary<InventoryEntry, int> GetInventory()
@@ -170,6 +191,36 @@ internal abstract class MapGrabber
             }
         }
         return dictionary;
+    }
+
+    public Dictionary<string, Dictionary<InventoryEntry, int>> GetPerGrabberInventory()
+    {
+        var result = new Dictionary<string, Dictionary<InventoryEntry, int>>();
+        foreach (var grabberPair in GrabberPairs)
+        {
+            if (!IsValidGrabber(grabberPair.Value, grabberPair.Key))
+                continue;
+
+            string name = ModEntry.GetGrabberDisplayName(grabberPair.Value);
+            if (!result.TryGetValue(name, out var inventory))
+            {
+                inventory = new Dictionary<InventoryEntry, int>();
+                result[name] = inventory;
+            }
+
+            if (grabberPair.Value.heldObject.Value is Chest chest)
+            {
+                foreach (var item in chest.Items.Where(i => i != null))
+                {
+                    var key = new InventoryEntry(item);
+                    if (inventory.ContainsKey(key))
+                        inventory[key] += item.Stack;
+                    else
+                        inventory.Add(key, item.Stack);
+                }
+            }
+        }
+        return result;
     }
 
     public abstract bool GrabItems();
@@ -208,7 +259,7 @@ internal abstract class MapGrabber
     {
         if (UseGlobalMode || Location.Objects.ContainsKey(tile))
         {
-            return obj.QualifiedItemId == BigCraftableIds.AutoGrabber
+            return GrabberTypeHelper.IsGrabber(obj.QualifiedItemId)
                 && obj.heldObject.Value != null
                 && obj.heldObject.Value is Chest;
         }
@@ -220,7 +271,7 @@ internal abstract class MapGrabber
         if (obj == null)
             return false;
 
-        return obj.QualifiedItemId == BigCraftableIds.AutoGrabber
+        return GrabberTypeHelper.IsGrabber(obj.QualifiedItemId)
             && obj.heldObject.Value != null
             && obj.heldObject.Value is Chest;
     }

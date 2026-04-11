@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using DeluxeGrabberFix.Framework;
 using Microsoft.Xna.Framework;
 using StardewValley;
 
@@ -14,13 +15,13 @@ internal class AggregateObjectsGrabber : ObjectsMapGrabber
     {
         grabbers = new List<ObjectsMapGrabber>
         {
-            new SlimeHutchGrabber(mod, location),
-            new FarmCaveMushroomGrabber(mod, location),
-            new IndoorPotGrabber(mod, location),
-            new ArtifactSpotsGrabber(mod, location),
-            new SeedSpotsGrabber(mod, location),
-            new MachineGrabber(mod, location),
-            new GenericObjectGrabber(mod, location)
+            new SlimeHutchGrabber(mod, location) { BelongsToType = GrabberType.Animal },
+            new FarmCaveMushroomGrabber(mod, location) { BelongsToType = GrabberType.Forage },
+            new IndoorPotGrabber(mod, location) { BelongsToType = GrabberType.Crop },
+            new ArtifactSpotsGrabber(mod, location) { BelongsToType = GrabberType.Scavenger },
+            new SeedSpotsGrabber(mod, location) { BelongsToType = GrabberType.Crop },
+            new MachineGrabber(mod, location) { BelongsToType = GrabberType.Machine },
+            new GenericObjectGrabber(mod, location) { BelongsToType = GrabberType.Forage }
         };
     }
 

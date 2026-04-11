@@ -33,7 +33,7 @@ internal class HarvestableCropHoeDirtGrabber : TerrainFeaturesMapGrabber
             }
         }
 
-        var nearbyGrabbers = Helpers.GetNearbyObjectsToTile(tile, GrabberPairs, Config.harvestCropsRange, Config.harvestCropsRangeMode);
+        var nearbyGrabbers = Helpers.GetNearbyObjectsToTile(tile, GetFilteredGrabberPairs(), Config.harvestCropsRange, Config.harvestCropsRangeMode);
 
         HarvestInterceptor.BeginIntercept();
         bool shouldDestroy = dirt.crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);

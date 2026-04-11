@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using DeluxeGrabberFix.Framework;
 using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.TerrainFeatures;
@@ -15,12 +16,12 @@ internal class AggregateFeaturesGrabber : TerrainFeaturesMapGrabber
     {
         grabbers = new List<TerrainFeaturesMapGrabber>
         {
-            new ForageHoeDirtGrabber(mod, location),
-            new HarvestableCropHoeDirtGrabber(mod, location),
-            new FruitTreeGrabber(mod, location),
-            new SeedTreeGrabber(mod, location),
-            new BerryBushGrabber(mod, location),
-            new TreeMossGrabber(mod, location)
+            new ForageHoeDirtGrabber(mod, location) { BelongsToType = GrabberType.Forage },
+            new HarvestableCropHoeDirtGrabber(mod, location) { BelongsToType = GrabberType.Crop },
+            new FruitTreeGrabber(mod, location) { BelongsToType = GrabberType.Tree },
+            new SeedTreeGrabber(mod, location) { BelongsToType = GrabberType.Tree },
+            new BerryBushGrabber(mod, location) { BelongsToType = GrabberType.Forage },
+            new TreeMossGrabber(mod, location) { BelongsToType = GrabberType.Forage }
         };
     }
 

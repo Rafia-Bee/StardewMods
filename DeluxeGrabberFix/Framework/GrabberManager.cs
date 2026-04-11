@@ -173,7 +173,7 @@ internal class GrabberManager
         var cursorTile = Game1.lastCursorTile;
         var obj = Game1.player.currentLocation.getObjectAtTile((int)cursorTile.X, (int)cursorTile.Y);
 
-        if (obj == null || obj.QualifiedItemId != BigCraftableIds.AutoGrabber
+        if (obj == null || !GrabberTypeHelper.IsGrabber(obj.QualifiedItemId)
             || obj.heldObject.Value is not StardewValley.Objects.Chest)
         {
             Game1.addHUDMessage(new HUDMessage(_mod.Helper.Translation.Get("hud.hover-over-grabber"), HUDMessage.error_type));
@@ -240,7 +240,10 @@ internal class GrabberManager
 
             aggregateGrabber.CleanupGrabberChests();
 
+            var isSpecialized = _mod.Config.grabberMode == ModConfig.GrabberMode.Specialized;
             var beforeInventory = _mod.Config.reportYield ? aggregateGrabber.GetInventory() : null;
+            var beforePerGrabber = _mod.Config.reportYield && isSpecialized
+                ? aggregateGrabber.GetPerGrabberInventory() : null;
             bool result = aggregateGrabber.GrabItems();
 
             if (result)
@@ -249,45 +252,102 @@ internal class GrabberManager
             if (beforeInventory != null)
             {
                 var afterInventory = aggregateGrabber.GetInventory();
-                var grabberNames = aggregateGrabber.GrabberObjects
-                    .Select(g => ModEntry.GetGrabberDisplayName(g))
-                    .Distinct()
-                    .ToList();
-                string header = grabberNames.Any(n => ModEntry.GetGrabberCustomName(
-                        aggregateGrabber.GrabberObjects.First(g => ModEntry.GetGrabberDisplayName(g) == n)) != null)
-                    ? _mod.Helper.Translation.Get("log.yield-header-named", new { names = string.Join(", ", grabberNames) })
-                    : _mod.Helper.Translation.Get("log.yield-header", new { location = location.Name });
-                var sb = new StringBuilder(header + "\n");
                 bool anyYield = false;
 
-                foreach (var entry in afterInventory)
+                if (isSpecialized && beforePerGrabber != null)
                 {
-                    int newCount = entry.Value;
-                    if (beforeInventory.ContainsKey(entry.Key))
-                        newCount -= beforeInventory[entry.Key];
+                    var afterPerGrabber = aggregateGrabber.GetPerGrabberInventory();
+                    var sb = new StringBuilder(_mod.Helper.Translation.Get("log.yield-header", new { location = location.Name }) + "\n");
 
-                    if (newCount > 0)
+                    foreach (var kvp in afterPerGrabber)
                     {
-                        sb.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
+                        string grabberName = kvp.Key;
+                        var afterItems = kvp.Value;
+                        beforePerGrabber.TryGetValue(grabberName, out var beforeItems);
+                        beforeItems ??= new Dictionary<InventoryEntry, int>();
+
+                        bool grabberHasYield = false;
+                        var itemLines = new StringBuilder();
+
+                        foreach (var entry in afterItems)
                         {
-                            name = entry.Key.DisplayName,
-                            quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
-                            count = newCount
-                        }));
-                        anyYield = true;
-                        _totalItemsGrabbed += newCount;
+                            int newCount = entry.Value;
+                            if (beforeItems.ContainsKey(entry.Key))
+                                newCount -= beforeItems[entry.Key];
+
+                            if (newCount > 0)
+                            {
+                                itemLines.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
+                                {
+                                    name = entry.Key.DisplayName,
+                                    quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
+                                    count = newCount
+                                }));
+                                grabberHasYield = true;
+                                _totalItemsGrabbed += newCount;
+                            }
+                        }
+
+                        if (grabberHasYield)
+                        {
+                            sb.AppendLine($"  [{grabberName}]");
+                            sb.Append(itemLines);
+                            anyYield = true;
+                        }
+                    }
+
+                    if (anyYield)
+                    {
+                        foreach (var g in aggregateGrabber.GrabberObjects)
+                        {
+                            var customName = ModEntry.GetGrabberCustomName(g);
+                            if (customName != null)
+                                _activeGrabberNames.Add(customName);
+                        }
+                        _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
                     }
                 }
-
-                if (anyYield)
+                else
                 {
-                    foreach (var g in aggregateGrabber.GrabberObjects)
+                    var grabberNames = aggregateGrabber.GrabberObjects
+                        .Select(g => ModEntry.GetGrabberDisplayName(g))
+                        .Distinct()
+                        .ToList();
+                    string header = grabberNames.Any(n => ModEntry.GetGrabberCustomName(
+                            aggregateGrabber.GrabberObjects.First(g => ModEntry.GetGrabberDisplayName(g) == n)) != null)
+                        ? _mod.Helper.Translation.Get("log.yield-header-named", new { names = string.Join(", ", grabberNames) })
+                        : _mod.Helper.Translation.Get("log.yield-header", new { location = location.Name });
+                    var sb = new StringBuilder(header + "\n");
+
+                    foreach (var entry in afterInventory)
                     {
-                        var customName = ModEntry.GetGrabberCustomName(g);
-                        if (customName != null)
-                            _activeGrabberNames.Add(customName);
+                        int newCount = entry.Value;
+                        if (beforeInventory.ContainsKey(entry.Key))
+                            newCount -= beforeInventory[entry.Key];
+
+                        if (newCount > 0)
+                        {
+                            sb.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
+                            {
+                                name = entry.Key.DisplayName,
+                                quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
+                                count = newCount
+                            }));
+                            anyYield = true;
+                            _totalItemsGrabbed += newCount;
+                        }
                     }
-                    _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
+
+                    if (anyYield)
+                    {
+                        foreach (var g in aggregateGrabber.GrabberObjects)
+                        {
+                            var customName = ModEntry.GetGrabberCustomName(g);
+                            if (customName != null)
+                                _activeGrabberNames.Add(customName);
+                        }
+                        _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
+                    }
                 }
             }
 
@@ -316,7 +376,7 @@ internal class GrabberManager
 
         try
         {
-            var machineGrabber = new MachineGrabber(_mod, location);
+            var machineGrabber = new MachineGrabber(_mod, location) { BelongsToType = GrabberType.Machine };
             if (!machineGrabber.CanGrab())
                 return false;
 
@@ -383,7 +443,7 @@ internal class GrabberManager
 
         try
         {
-            var objectGrabber = new GenericObjectGrabber(_mod, location);
+            var objectGrabber = new GenericObjectGrabber(_mod, location) { BelongsToType = GrabberType.Forage };
             if (!objectGrabber.CanGrab())
                 return false;
 
@@ -393,7 +453,7 @@ internal class GrabberManager
 
             bool result = objectGrabber.GrabItems();
 
-            var featureGrabber = new ForageHoeDirtGrabber(_mod, location);
+            var featureGrabber = new ForageHoeDirtGrabber(_mod, location) { BelongsToType = GrabberType.Forage };
             result |= featureGrabber.GrabItems();
 
             if (result)
