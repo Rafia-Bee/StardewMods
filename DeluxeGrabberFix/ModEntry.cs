@@ -251,17 +251,28 @@ public class ModEntry : Mod
         return Api;
     }
 
-    internal static IEnumerable<GameLocation> GetAllLocations()
+    private static List<GameLocation> _cachedAllLocations;
+    private static int _cachedAllLocationsTick = -1;
+
+    internal static IReadOnlyList<GameLocation> GetAllLocations()
     {
+        if (_cachedAllLocationsTick == Game1.ticks && _cachedAllLocations != null)
+            return _cachedAllLocations;
+
+        var locations = new List<GameLocation>();
         foreach (var location in Game1.locations)
         {
-            yield return location;
+            locations.Add(location);
             foreach (var building in location.buildings)
             {
                 if (building.indoors.Value != null)
-                    yield return building.indoors.Value;
+                    locations.Add(building.indoors.Value);
             }
         }
+
+        _cachedAllLocations = locations;
+        _cachedAllLocationsTick = Game1.ticks;
+        return locations;
     }
 
     private void OnButtonPressed(object sender, ButtonPressedEventArgs e)
