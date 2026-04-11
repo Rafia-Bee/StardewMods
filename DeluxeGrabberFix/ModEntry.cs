@@ -40,6 +40,7 @@ public class ModEntry : Mod
     private readonly GrabberManager _grabbers;
     private GmcmRegistration _gmcm;
     private IAutomateAPI _automateApi;
+    private ICustomBushApi _customBushApi;
 
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private readonly HashSet<GameLocation> _machineReadyLocations = new();
@@ -115,6 +116,8 @@ public class ModEntry : Mod
 
         _instance._machineReadyLocations.Add(location);
     }
+
+    internal ICustomBushApi CustomBushApi => _customBushApi;
 
     internal IDictionary<Vector2, int> GetAutomatedMachineStates(GameLocation location)
     {
@@ -326,6 +329,10 @@ public class ModEntry : Mod
         _automateApi = Helper.ModRegistry.GetApi<IAutomateAPI>("Pathoschild.Automate");
         if (_automateApi != null)
             LogDebug("Automate detected -- compatibility mode available.");
+
+        _customBushApi = Helper.ModRegistry.GetApi<ICustomBushApi>("furyx639.CustomBush");
+        if (_customBushApi != null)
+            LogDebug("Custom Bush detected -- compatibility mode enabled.");
 
         _gmcm = new GmcmRegistration(this, _locations);
         _gmcm.Initialize();

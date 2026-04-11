@@ -32,6 +32,21 @@ internal class BerryBushGrabber : TerrainFeaturesMapGrabber
         if (!Config.bushes || !IsForageableBush(feature, out var bush))
             return false;
 
+        // Custom Bush: use its API for correct quality/quantity
+        if (Mod.CustomBushApi != null && Mod.CustomBushApi.IsCustomBush(bush))
+        {
+            if (!Mod.CustomBushApi.TryGetShakeOffItem(bush, out var customItem) || customItem == null)
+                return false;
+
+            if (TryAddItem(customItem))
+            {
+                bush.tileSheetOffset.Value = 0;
+                bush.setUpSourceRect();
+                return true;
+            }
+            return false;
+        }
+
         string shakeOffItem = bush.GetShakeOffItem();
         if (string.IsNullOrEmpty(shakeOffItem) || shakeOffItem == "-1" || shakeOffItem == ItemIds.GoldenWalnut)
             return false;
