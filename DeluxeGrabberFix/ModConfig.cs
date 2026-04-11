@@ -33,10 +33,51 @@ internal class ModConfig
         Smart
     }
 
+    public enum GrabberMode
+    {
+        Classic,
+        Specialized
+    }
+
+    public GrabberMode grabberMode;
     public GlobalGrabberMode globalGrabber;
     public GrabFrequency grabFrequency;
     public HarvestCropsRangeMode harvestCropsRangeMode;
     public int harvestCropsRange;
+
+    // Specialized grabber milestone thresholds
+    public int cropsShippedThreshold = 200;
+    public int itemsForagedThreshold = 200;
+    public int stumpsChoppedThreshold = 50;
+    public int museumDonationsThreshold = 15;
+    public int totalMoneyEarnedThreshold = 250000;
+
+    // Specialized grabber crafting costs
+    // Crop Grabber: Wood, Gold Bar, Quality Sprinkler
+    public int recipeCropWood = 1000;
+    public int recipeCropGoldBar = 5;
+    public int recipeCropQualitySprinkler = 4;
+    // Forage Grabber: Wood, Gold Bar, Mixed Seeds, Fiber
+    public int recipeForageWood = 2000;
+    public int recipeForageGoldBar = 20;
+    public int recipeForageMixedSeeds = 100;
+    public int recipeForageFiber = 100;
+    // Tree Grabber: Hardwood, Iridium Bar, Maple Syrup, Oak Resin, Pine Tar
+    public int recipeTreeHardwood = 50;
+    public int recipeTreeIridiumBar = 2;
+    public int recipeTreeMapleSyrup = 10;
+    public int recipeTreeOakResin = 10;
+    public int recipeTreePineTar = 10;
+    // Scavenger Grabber: Hardwood, Iridium Bar, Bone Fragment, Artifact Trove
+    public int recipeScavengerHardwood = 200;
+    public int recipeScavengerIridiumBar = 5;
+    public int recipeScavengerBoneFragment = 50;
+    public int recipeScavengerArtifactTrove = 5;
+    // Machine Grabber: Iridium Bar, Battery Pack, Diamond
+    public int recipeMachineIridiumBar = 20;
+    public int recipeMachineBatteryPack = 10;
+    public int recipeMachineDiamond = 10;
+
     public bool animalProducts;
     public bool slimeHutch;
     public bool farmCaveMushrooms;
@@ -143,6 +184,12 @@ internal class ModConfig
         { FlowerHarvestMode.Smart, "Smart" }
     };
 
+    internal static Dictionary<GrabberMode, string> GrabberModeDict = new()
+    {
+        { GrabberMode.Classic, "Classic" },
+        { GrabberMode.Specialized, "Specialized" }
+    };
+
     internal static Dictionary<string, HarvestCropsRangeMode> HarvestCropsRangeReverseDict =
         HarvestCropsRangeDict.ToDictionary(p => p.Value, p => p.Key);
 
@@ -155,10 +202,14 @@ internal class ModConfig
     internal static Dictionary<string, FlowerHarvestMode> FlowerHarvestReverseDict =
         FlowerHarvestDict.ToDictionary(p => p.Value, p => p.Key);
 
+    internal static Dictionary<string, GrabberMode> GrabberModeReverseDict =
+        GrabberModeDict.ToDictionary(p => p.Value, p => p.Key);
+
     internal static string[] HarvestCropsRangeModeStrings = { "Square", "Walk" };
     internal static string[] GlobalGrabberModeStrings = { "Off", "All", "Hover" };
     internal static string[] GrabFrequencyStrings = { "Instant", "Hourly", "Daily" };
     internal static string[] FlowerHarvestStrings = { "Off", "All", "Smart" };
+    internal static string[] GrabberModeStrings = { "Classic", "Specialized" };
 
     internal static readonly HashSet<string> SunberryVillageExcludedItems = new()
     {
@@ -223,6 +274,7 @@ internal class ModConfig
 
     public ModConfig()
     {
+        grabberMode = GrabberMode.Classic;
         animalProducts = true;
         slimeHutch = true;
         farmCaveMushrooms = true;

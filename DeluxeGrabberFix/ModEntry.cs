@@ -41,10 +41,21 @@ public class ModEntry : Mod
     private GmcmRegistration _gmcm;
     private IAutomateAPI _automateApi;
     private ICustomBushApi _customBushApi;
+    private SpecializedGrabberAssets _specializedAssets;
+    private ProgressionTracker _progression;
 
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private readonly HashSet<GameLocation> _machineReadyLocations = new();
-    private bool _isGrabbing;
+    private bool _isGrabbingField;
+    private bool _isGrabbing
+    {
+        get => _isGrabbingField;
+        set
+        {
+            _isGrabbingField = value;
+            SpecializedGrabberPatches.IsGrabbingActive = value;
+        }
+    }
     private bool _pendingDayStartGrab;
     private int _dayStartGrabDelay;
     private bool _pendingGlobalAutoFire;
@@ -78,6 +89,10 @@ public class ModEntry : Mod
             Config.fellSecretWoodsStumps = false;
             Helper.WriteConfig(Config);
         }
+
+        _specializedAssets = new SpecializedGrabberAssets(helper, () => Config);
+        _specializedAssets.Register();
+        _progression = new ProgressionTracker(this);
 
         helper.Events.GameLoop.GameLaunched += OnLaunched;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
@@ -253,6 +268,56 @@ public class ModEntry : Mod
         if (!Context.IsPlayerFree)
             return;
 
+        // In Specialized mode, the fire keybind respects the global grabber setting
+        if (Config.grabberMode == ModConfig.GrabberMode.Specialized)
+        {
+            if (Config.globalFireButton == SButton.None || e.Button != Config.globalFireButton)
+                return;
+
+            // Off mode: fire keybind disabled (grabbers work locally via automatic grabs)
+            if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Off)
+                return;
+
+            // Hover mode: verify cursor is over a grabber before firing
+            if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover)
+            {
+                var hoveredObj = Game1.player.currentLocation?.getObjectAtTile(
+                    (int)Game1.lastCursorTile.X, (int)Game1.lastCursorTile.Y);
+                if (hoveredObj == null || !GrabberTypeHelper.IsGrabber(hoveredObj.QualifiedItemId))
+                {
+                    Game1.addHUDMessage(new HUDMessage(Helper.Translation.Get("hud.hover-over-grabber"), HUDMessage.error_type));
+                    return;
+                }
+            }
+
+            _grabbers.ResetGrabCycleTracking();
+
+            // Hover keybind: set IsGlobalGrabActive but leave CachedDesignatedGrabbers null
+            // so MapGrabber's Hover branch picks only the cursor-targeted grabber.
+            // All mode: full global cache via SetupSpecializedGlobalCache.
+            if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover)
+                IsGlobalGrabActive = true;
+            else
+                SetupSpecializedGlobalCache();
+
+            _isGrabbing = true;
+            IsForageGrabEnabled = true;
+            try
+            {
+                foreach (var location in GetAllLocations())
+                    _grabbers.GrabAtLocation(location);
+            }
+            finally
+            {
+                IsForageGrabEnabled = false;
+                _isGrabbing = false;
+                IsGlobalGrabActive = false;
+                CachedDesignatedGrabbers = null;
+            }
+            _grabbers.ShowGrabCycleResults(showSummary: true);
+            return;
+        }
+
         if (e.Button == Config.designateGrabberButton
             && Config.globalGrabber == ModConfig.GlobalGrabberMode.All)
         {
@@ -283,7 +348,7 @@ public class ModEntry : Mod
             return;
 
         // The auto-grabber passes itself as 'context', not 'sourceItem'
-        if (grabMenu.context is not Object obj || obj.QualifiedItemId != BigCraftableIds.AutoGrabber
+        if (grabMenu.context is not Object obj || !GrabberTypeHelper.IsGrabber(obj.QualifiedItemId)
             || obj.heldObject.Value is not StardewValley.Objects.Chest)
             return;
 
@@ -322,6 +387,26 @@ public class ModEntry : Mod
             prefix: new HarmonyMethod(typeof(MachineOutputPatch), nameof(MachineOutputPatch.MinutesElapsed_Prefix)),
             postfix: new HarmonyMethod(typeof(MachineOutputPatch), nameof(MachineOutputPatch.MinutesElapsed_Postfix))
         );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Object), nameof(Object.minutesElapsed)),
+            prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.MinutesElapsed_Prefix))
+                { priority = HarmonyLib.Priority.First }
+        );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Object), nameof(Object.draw),
+                new[] { typeof(Microsoft.Xna.Framework.Graphics.SpriteBatch), typeof(int), typeof(int), typeof(float) }),
+            prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.Draw_Prefix))
+        );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Object), nameof(Object.performToolAction)),
+            prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.PerformToolAction_Prefix))
+        );
+
+        // Block external mods from adding items to wrong specialized grabber type
+        harmony.Patch(
+            original: AccessTools.Method(typeof(StardewValley.Objects.Chest), nameof(StardewValley.Objects.Chest.addItem)),
+            prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.Chest_addItem_Prefix))
+        );
 
         if (Helper.ModRegistry.GetApi<IVanillaPlusProfessionsApi>("KediDili.VanillaPlusProfessions") != null)
             LogDebug("Vanilla Plus Professions detected -- VPP compatibility enabled.");
@@ -345,14 +430,91 @@ public class ModEntry : Mod
         _locations.DiscoverLocations();
         _locations.ApplyVisitAutoSkip();
         _gmcm.RebuildConfigMenu();
+        InitializeSpecializedGrabbers();
+        _progression.RetroactiveCheck();
         LogConfig();
         RepairStuckMachines();
+    }
+
+    private void InitializeSpecializedGrabbers()
+    {
+        int converted = 0;
+        int initialized = 0;
+        foreach (var location in GetAllLocations())
+        {
+            var toConvert = new List<KeyValuePair<Vector2, Object>>();
+
+            foreach (var pair in location.Objects.Pairs)
+            {
+                // Migration: convert old-format custom grabbers to (BC)165 + modData
+                if (GrabberTypeHelper.IsSpecializedGrabberItem(pair.Value.QualifiedItemId))
+                {
+                    toConvert.Add(pair);
+                    continue;
+                }
+
+                // Ensure (BC)165 with DGF modData has a Chest and propagate type to it
+                if (pair.Value.QualifiedItemId == BigCraftableIds.AutoGrabber
+                    && pair.Value.modData.TryGetValue(SpecializedGrabberPatches.ModDataGrabberType, out string existingType))
+                {
+                    if (pair.Value.heldObject.Value is not StardewValley.Objects.Chest)
+                    {
+                        pair.Value.heldObject.Value = new StardewValley.Objects.Chest();
+                        pair.Value.showNextIndex.Value = false;
+                        initialized++;
+                    }
+                    // Migrate: replace playerChest:true chests with default Chest()
+                    // to match vanilla auto-grabber behavior and prevent Automate IO
+                    else if (pair.Value.heldObject.Value is StardewValley.Objects.Chest oldChest && oldChest.playerChest.Value)
+                    {
+                        var replacement = new StardewValley.Objects.Chest();
+                        foreach (var item in oldChest.Items)
+                        {
+                            if (item != null)
+                                replacement.Items.Add(item);
+                        }
+                        pair.Value.heldObject.Value = replacement;
+                        pair.Value.showNextIndex.Value = replacement.Items.Count > 0;
+                        initialized++;
+                    }
+                    if (pair.Value.heldObject.Value is StardewValley.Objects.Chest existingHeldChest)
+                        existingHeldChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = existingType;
+                }
+            }
+
+            foreach (var pair in toConvert)
+            {
+                var tile = pair.Key;
+                var obj = pair.Value;
+                var grabberType = GrabberTypeHelper.GetGrabberType(obj.QualifiedItemId);
+                string originalId = obj.QualifiedItemId;
+
+                // Preserve existing chest contents if any
+                StardewValley.Objects.Chest existingChest = obj.heldObject.Value as StardewValley.Objects.Chest;
+
+                location.Objects.Remove(tile);
+
+                var autoGrabber = new Object(tile, "165");
+                autoGrabber.heldObject.Value = existingChest ?? new StardewValley.Objects.Chest();
+                autoGrabber.showNextIndex.Value = false;
+                autoGrabber.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
+                autoGrabber.modData[SpecializedGrabberPatches.ModDataOriginalId] = originalId;
+                if (autoGrabber.heldObject.Value is StardewValley.Objects.Chest migChest)
+                    migChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
+                location.Objects.Add(tile, autoGrabber);
+                converted++;
+            }
+        }
+        if (converted > 0)
+            LogDebug($"Migrated {converted} old-format specialized grabber(s) to (BC)165 format");
+        if (initialized > 0)
+            LogDebug($"Initialized Chests for {initialized} specialized grabber(s)");
     }
 
     private void LogConfig()
     {
         Monitor.Log(
-            $"Config: forage={Config.forage}, animalProducts={Config.animalProducts}, " +
+            $"Config: grabberMode={Config.grabberMode}, forage={Config.forage}, animalProducts={Config.animalProducts}, " +
             $"slimeHutch={Config.slimeHutch}, farmCaveMushrooms={Config.farmCaveMushrooms}, " +
             $"harvestCrops={Config.harvestCrops}, indoorPots={Config.harvestCropsIndoorPots}, " +
             $"flowers={Config.flowers}, cropRange={Config.harvestCropsRange}, " +
@@ -436,8 +598,70 @@ public class ModEntry : Mod
             _gmcm.RebuildConfigMenu();
     }
 
+    private bool SetupSpecializedGlobalCache()
+    {
+        if (Config.grabberMode != ModConfig.GrabberMode.Specialized)
+            return false;
+
+        // Off mode: grabbers work locally only, no global cache
+        if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Off)
+            return true;
+
+        IsGlobalGrabActive = true;
+        CachedDesignatedGrabbers = new List<KeyValuePair<Vector2, Object>>();
+        foreach (var loc in GetAllLocations())
+        {
+            CachedDesignatedGrabbers.AddRange(
+                loc.Objects.Pairs
+                    .Where(pair => pair.Value != null
+                        && GrabberTypeHelper.IsGrabber(pair.Value.QualifiedItemId)
+                        && pair.Value.heldObject.Value is StardewValley.Objects.Chest)
+                    .ToList());
+        }
+        return true;
+    }
+
+    private void CleanupSpecializedGlobalCache(bool wasSpecialized)
+    {
+        if (!wasSpecialized)
+            return;
+        IsGlobalGrabActive = false;
+        CachedDesignatedGrabbers = null;
+    }
+
     private void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
     {
+        // Convert newly placed custom grabbers to (BC)165 + modData
+        foreach (var pair in e.Added)
+        {
+            if (pair.Value == null)
+                continue;
+
+            // Skip (BC)165 objects (vanilla or already-converted specialized)
+            if (pair.Value.QualifiedItemId == BigCraftableIds.AutoGrabber)
+                continue;
+
+            // Convert custom specialized grabber → (BC)165 + modData + Chest
+            if (GrabberTypeHelper.IsSpecializedGrabberItem(pair.Value.QualifiedItemId))
+            {
+                var tile = pair.Key;
+                var grabberType = GrabberTypeHelper.GetGrabberType(pair.Value.QualifiedItemId);
+                string originalId = pair.Value.QualifiedItemId;
+
+                e.Location.Objects.Remove(tile);
+
+                var autoGrabber = new Object(tile, "165");
+                var newChest = new StardewValley.Objects.Chest();
+                newChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
+                autoGrabber.heldObject.Value = newChest;
+                autoGrabber.showNextIndex.Value = false;
+                autoGrabber.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
+                autoGrabber.modData[SpecializedGrabberPatches.ModDataOriginalId] = originalId;
+                e.Location.Objects.Add(tile, autoGrabber);
+                LogDebug($"Placed {grabberType} grabber at {e.Location.Name} ({tile})");
+            }
+        }
+
         if (_isGrabbing)
             return;
 
@@ -463,6 +687,7 @@ public class ModEntry : Mod
 
             LogDebug("Executing deferred day-start grab");
             _grabbers.ResetGrabCycleTracking();
+            bool wasSpecialized = SetupSpecializedGlobalCache();
             _isGrabbing = true;
             IsForageGrabEnabled = true;
             try
@@ -476,6 +701,7 @@ public class ModEntry : Mod
             {
                 IsForageGrabEnabled = false;
                 _isGrabbing = false;
+                CleanupSpecializedGlobalCache(wasSpecialized);
             }
 
             _grabbers.ShowGrabCycleResults(showSummary: true);
@@ -505,7 +731,8 @@ public class ModEntry : Mod
             var machineLocations = _machineReadyLocations.ToList();
             _machineReadyLocations.Clear();
 
-            bool useGlobal = Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber();
+            bool wasSpecializedM = SetupSpecializedGlobalCache();
+            bool useGlobal = !wasSpecializedM && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber();
             if (useGlobal)
             {
                 IsGlobalGrabActive = true;
@@ -537,6 +764,7 @@ public class ModEntry : Mod
                     IsGlobalGrabActive = false;
                     CachedDesignatedGrabbers = null;
                 }
+                CleanupSpecializedGlobalCache(wasSpecializedM);
                 _grabbers.ShowGrabCycleResults(showSummary: false);
             }
         }
@@ -548,6 +776,7 @@ public class ModEntry : Mod
         var locations = _dirtyLocations.ToList();
         _dirtyLocations.Clear();
 
+        bool wasSpecialized2 = SetupSpecializedGlobalCache();
         _isGrabbing = true;
         IsForageGrabEnabled = true;
         try
@@ -562,6 +791,7 @@ public class ModEntry : Mod
         {
             IsForageGrabEnabled = false;
             _isGrabbing = false;
+            CleanupSpecializedGlobalCache(wasSpecialized2);
             _grabbers.ShowGrabCycleResults(showSummary: false);
         }
     }
@@ -577,7 +807,8 @@ public class ModEntry : Mod
         LogDebug("Autograbbing on time change");
         _grabbers.ResetGrabCycleTracking();
 
-        bool useGlobal = Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber();
+        bool wasSpecialized = SetupSpecializedGlobalCache();
+        bool useGlobal = !wasSpecialized && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber();
         if (useGlobal)
         {
             IsGlobalGrabActive = true;
@@ -601,7 +832,7 @@ public class ModEntry : Mod
                 if (!_locations.ShouldProcessLocation(location))
                     continue;
 
-                var orePanGrabber = new OrePanGrabber(this, location);
+                var orePanGrabber = new OrePanGrabber(this, location) { BelongsToType = GrabberType.Scavenger };
                 if (orePanGrabber.CanGrab())
                 {
                     var beforeInventory = Config.reportYield ? orePanGrabber.GetInventory() : null;
@@ -676,6 +907,7 @@ public class ModEntry : Mod
                 IsGlobalGrabActive = false;
                 CachedDesignatedGrabbers = null;
             }
+            CleanupSpecializedGlobalCache(wasSpecialized);
             _grabbers.ShowGrabCycleResults(showSummary: false);
         }
     }
@@ -687,6 +919,7 @@ public class ModEntry : Mod
 
         LogDebug("Autograbbing forage before sleep");
         _grabbers.ResetGrabCycleTracking();
+        bool wasSpecialized = SetupSpecializedGlobalCache();
         _isGrabbing = true;
         IsForageGrabEnabled = true;
         try
@@ -700,6 +933,7 @@ public class ModEntry : Mod
         {
             IsForageGrabEnabled = false;
             _isGrabbing = false;
+            CleanupSpecializedGlobalCache(wasSpecialized);
             _grabbers.ShowGrabCycleResults(showSummary: false);
         }
     }
@@ -707,9 +941,11 @@ public class ModEntry : Mod
     private void OnDayStarted(object sender, DayStartedEventArgs e)
     {
         ResetDayTracking();
+        _progression.CheckProgression();
 
-        // Auto-fire global grab at day start if configured (works in all frequency modes)
-        if (Config.globalAutoFire && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber())
+        // Auto-fire global grab at day start if configured (disabled in Specialized mode)
+        if (Config.grabberMode != ModConfig.GrabberMode.Specialized
+            && Config.globalAutoFire && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber())
         {
             _pendingGlobalAutoFire = true;
             _globalAutoFireDelay = _automateApi != null ? 5 : 1;
@@ -730,7 +966,7 @@ public class ModEntry : Mod
             || Config.harvestCropsRange <= 0 || !Config.harvestCrops
             || Game1.player.ActiveObject == null
             || !Game1.player.ActiveObject.bigCraftable.Value
-            || Game1.player.ActiveObject.QualifiedItemId != BigCraftableIds.AutoGrabber)
+            || !GrabberTypeHelper.IsGrabber(Game1.player.ActiveObject.QualifiedItemId))
         {
             return;
         }

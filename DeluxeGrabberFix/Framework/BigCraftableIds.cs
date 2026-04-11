@@ -53,4 +53,11 @@ internal static class BigCraftableIds
 
     // Textile Expansion (Cloths and Colors)
     public const string LeafBasket = "(BC)selph.TextileExpansion_LeafBasket";
+
+    // Specialized grabbers
+    public const string CropGrabber = "(BC)Rafia.DGF_CropGrabber";
+    public const string ForageGrabber = "(BC)Rafia.DGF_ForageGrabber";
+    public const string TreeGrabber = "(BC)Rafia.DGF_TreeGrabber";
+    public const string ScavengerGrabber = "(BC)Rafia.DGF_ScavengerGrabber";
+    public const string MachineGrabber = "(BC)Rafia.DGF_MachineGrabber";
 }
