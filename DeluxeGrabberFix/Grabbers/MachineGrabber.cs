@@ -14,12 +14,28 @@ internal class MachineGrabber : ObjectsMapGrabber
 {
     private readonly HashSet<Vector2> _automateSkipTiles;
 
+    private static GameLocation _cachedLocation;
+    private static int _cachedTick;
+    private static HashSet<Vector2> _cachedSkipTiles;
+
     public MachineGrabber(ModEntry mod, GameLocation location)
         : base(mod, location)
     {
-        _automateSkipTiles = Config.automateCompatibility
-            ? BuildAutomateSkipTiles(mod, location)
-            : null;
+        if (!Config.automateCompatibility)
+        {
+            _automateSkipTiles = null;
+        }
+        else if (_cachedLocation == location && _cachedTick == Game1.ticks)
+        {
+            _automateSkipTiles = _cachedSkipTiles;
+        }
+        else
+        {
+            _automateSkipTiles = BuildAutomateSkipTiles(mod, location);
+            _cachedLocation = location;
+            _cachedTick = Game1.ticks;
+            _cachedSkipTiles = _automateSkipTiles;
+        }
     }
 
     /// <summary>
