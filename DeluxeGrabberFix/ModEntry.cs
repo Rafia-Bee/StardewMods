@@ -892,7 +892,8 @@ public class ModEntry : Mod
 
                 // In Hourly mode, run the full grab for all locations every tick so crops,
                 // fruit trees, bushes, etc. (terrain features that don't trigger ObjectListChanged)
-                // are collected. In Instant mode, only run full grab for dirty locations.
+                // are collected. In Instant mode, only run full grab for dirty locations;
+                // terrain features are handled by the day-start sweep instead.
                 if (Config.grabFrequency == ModConfig.GrabFrequency.Hourly)
                 {
                     IsForageGrabEnabled = true;
@@ -963,8 +964,11 @@ public class ModEntry : Mod
             _globalAutoFireDelay = _automateApi != null ? 5 : 1;
         }
 
-        // Only run the day-start sweep in Daily mode; Hourly/Instant handle collection on their own schedule
-        if (Config.grabFrequency != ModConfig.GrabFrequency.Daily)
+        // Run day-start sweep for Daily and Instant modes.
+        // Instant mode needs this because terrain feature changes (fruit trees, bushes, etc.)
+        // don't trigger ObjectListChanged, so fruit added overnight would never be collected.
+        // Hourly mode already polls all locations every hour, so it doesn't need a day-start sweep.
+        if (Config.grabFrequency == ModConfig.GrabFrequency.Hourly)
             return;
 
         _dayStartGrabDelay = _automateApi != null ? 5 : 1;
