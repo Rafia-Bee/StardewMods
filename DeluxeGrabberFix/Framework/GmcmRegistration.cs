@@ -874,6 +874,12 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.cape-stardew-exclusions.tooltip"));
 
         api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectWildflowers,
+            v => _mod.Config.collectWildflowers = v,
+            () => _mod.Helper.Translation.Get("config.collect-wildflowers"),
+            () => _mod.Helper.Translation.Get("config.collect-wildflowers.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
             () => _mod.Config.buriedItems,
             v => _mod.Config.buriedItems = v,
             () => _mod.Helper.Translation.Get("config.collect-buried-items"),

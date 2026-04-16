@@ -21,7 +21,8 @@ internal class AggregateFeaturesGrabber : TerrainFeaturesMapGrabber
             new FruitTreeGrabber(mod, location) { BelongsToType = GrabberType.Tree },
             new SeedTreeGrabber(mod, location) { BelongsToType = GrabberType.Tree },
             new BerryBushGrabber(mod, location) { BelongsToType = GrabberType.Forage },
-            new TreeMossGrabber(mod, location) { BelongsToType = GrabberType.Forage }
+            new TreeMossGrabber(mod, location) { BelongsToType = GrabberType.Forage },
+            new WildflowersGrabber(mod, location) { BelongsToType = GrabberType.Forage }
         };
     }
 
