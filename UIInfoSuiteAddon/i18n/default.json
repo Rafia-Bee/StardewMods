@@ -1,0 +1,9 @@
+{
+    "tooltip.loved-gifts": "Loved Gifts",
+    "config.max-loved-gifts.name": "Max loved gifts to show",
+    "config.max-loved-gifts.tooltip": "The maximum number of loved gifts shown when hovering over a birthday icon.",
+    "config.exclude-universal-loves.name": "Exclude universal loves",
+    "config.exclude-universal-loves.tooltip": "If enabled, only NPC-specific loved gifts are shown (universal loves like Prismatic Shard are hidden).",
+    "config.only-show-owned-gifts.name": "Only show owned gifts",
+    "config.only-show-owned-gifts.tooltip": "If enabled, only loved gifts you currently own (inventory, chests, fridge, dressers) are shown."
+}
