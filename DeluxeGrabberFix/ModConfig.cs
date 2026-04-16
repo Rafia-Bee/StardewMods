@@ -149,6 +149,7 @@ internal class ModConfig
     public bool baublesExclusions;
     public bool resourceChickensExclusions;
     public bool capeStardewExclusions;
+    public bool collectWildflowers;
     public SButton globalFireButton;
     public SButton designateGrabberButton;
     public bool globalAutoFire;
@@ -355,5 +356,6 @@ internal class ModConfig
         baublesExclusions = true;
         resourceChickensExclusions = true;
         capeStardewExclusions = true;
+        collectWildflowers = true;
     }
 }

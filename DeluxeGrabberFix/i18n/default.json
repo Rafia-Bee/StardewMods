@@ -13,6 +13,8 @@
     "config.resource-chickens-exclusions.tooltip": "Prevents the grabber from collecting geode stones, fossil stones, egg weeds, egg barrels, and other breakable nodes from the Resource Chickens mod. These are resource nodes that drop special eggs when broken, not forage.",
     "config.cape-stardew-exclusions": "Cape Stardew Exclusions",
     "config.cape-stardew-exclusions.tooltip": "Prevents the grabber from collecting Kimberlite ore nodes from the Cape Stardew mod. These are mineable ore nodes that drop special diamonds, not forage.",
+    "config.collect-wildflowers": "Collect Wild Flowers",
+    "config.collect-wildflowers.tooltip": "When the Wild Flowers mod by aedenthorn is installed, the grabber will harvest fully grown wildflowers from grass tiles. Respects the Harvest Flowers setting.",
     "config.automate-compatibility": "Automate Compatibility",
     "config.automate-compatibility.tooltip": "When Automate by Pathoschild is installed, skips machines that are part of an Automate group so both mods can coexist. DGF will only collect from machines that aren't connected to an Automate chest that can accept output. Chests set to 'Never put items in this chest' are treated as input-only and won't prevent DGF from collecting.",
 
