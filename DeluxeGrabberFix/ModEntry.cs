@@ -526,20 +526,55 @@ public class ModEntry : Mod
     private void LogConfig()
     {
         Monitor.Log(
-            $"Config: grabberMode={Config.grabberMode}, forage={Config.forage}, animalProducts={Config.animalProducts}, " +
+            $"Config: grabberMode={Config.grabberMode}, " +
+            $"forage={Config.forage}, animalProducts={Config.animalProducts}, " +
             $"slimeHutch={Config.slimeHutch}, farmCaveMushrooms={Config.farmCaveMushrooms}, " +
             $"harvestCrops={Config.harvestCrops}, indoorPots={Config.harvestCropsIndoorPots}, " +
-            $"flowers={Config.flowers}, cropRange={Config.harvestCropsRange}, " +
+            $"flowers={Config.flowers}, beeHouseRange={Config.beeHouseRange}, " +
+            $"cropRange={Config.harvestCropsRange}, rangeMode={Config.harvestCropsRangeMode}, " +
             $"fruitTrees={Config.fruitTrees}, bushes={Config.bushes}, seedTrees={Config.seedTrees}, " +
             $"artifactSpots={Config.artifactSpots}, buriedItems={Config.buriedItems}, " +
             $"seedSpots={Config.seedSpots}, orePan={Config.orePan}, " +
             $"garbageCans={Config.garbageCans}, fellStumps={Config.fellHardwoodStumps}, " +
-            $"moss={Config.harvestMoss}, debris={Config.collectDebris}, " +
-            $"machines={Config.collectMachines}, crabPots={Config.collectCrabPots}, " +
-            $"beeHouses={Config.collectBeeHouses}, tappers={Config.collectTappers}, " +
-            $"globalMode={Config.globalGrabber}, globalAutoFire={Config.globalAutoFire}, " +
-            $"reportYield={Config.reportYield}, gainXP={Config.gainExperience}, " +
-            $"grabFrequency={Config.grabFrequency}, skipFestivals={Config.skipFestivalLocations}",
+            $"fellSecretWoodsStumps={Config.fellSecretWoodsStumps}, " +
+            $"moss={Config.harvestMoss}, greenRainWeeds={Config.harvestGreenRainWeeds}, " +
+            $"debris={Config.collectDebris}, excludeQuestItems={Config.excludeQuestItems}",
+            LogLevel.Trace);
+
+        Monitor.Log(
+            $"Config (machines): machines={Config.collectMachines}, allMachines={Config.collectAllMachines}, " +
+            $"crabPots={Config.collectCrabPots}, beeHouses={Config.collectBeeHouses}, " +
+            $"tappers={Config.collectTappers}, leafBaskets={Config.collectLeafBaskets}, " +
+            $"mushroomLogs={Config.collectMushroomLogs}, fishPonds={Config.collectFishPonds}, " +
+            $"kegs={Config.collectKegs}, preservesJars={Config.collectPreservesJars}, " +
+            $"cheesePresses={Config.collectCheesePresses}, mayo={Config.collectMayonnaiseMachines}, " +
+            $"looms={Config.collectLooms}, oilMakers={Config.collectOilMakers}, " +
+            $"furnaces={Config.collectFurnaces}, charcoalKilns={Config.collectCharcoalKilns}, " +
+            $"recycling={Config.collectRecyclingMachines}, seedMakers={Config.collectSeedMakers}, " +
+            $"boneMills={Config.collectBoneMills}, geodeCrushers={Config.collectGeodeCrushers}, " +
+            $"woodChippers={Config.collectWoodChippers}, deconstructors={Config.collectDeconstructors}, " +
+            $"fishSmokers={Config.collectFishSmokers}, baitMakers={Config.collectBaitMakers}, " +
+            $"dehydrators={Config.collectDehydrators}, crystalariums={Config.collectCrystalariums}, " +
+            $"lightningRods={Config.collectLightningRods}, wormBins={Config.collectWormBins}, " +
+            $"solarPanels={Config.collectSolarPanels}, slimeEggPresses={Config.collectSlimeEggPresses}, " +
+            $"coffeeMakers={Config.collectCoffeeMakers}, sodaMachines={Config.collectSodaMachines}, " +
+            $"statues={Config.collectStatues}, otherMachines={Config.collectOtherMachines}",
+            LogLevel.Trace);
+
+        Monitor.Log(
+            $"Config (global/misc): globalMode={Config.globalGrabber}, globalAutoFire={Config.globalAutoFire}, " +
+            $"fireButton={Config.globalFireButton}, designateButton={Config.designateGrabberButton}, " +
+            $"reportYield={Config.reportYield}, debugLogging={Config.debugLogging}, " +
+            $"gainXP={Config.gainExperience}, grabFrequency={Config.grabFrequency}, " +
+            $"skipFestivals={Config.skipFestivalLocations}, selectVisitedOnly={Config.selectVisitedOnly}, " +
+            $"replantReminder={Config.replantReminder}, replantReminderTime={Config.replantReminderTime}",
+            LogLevel.Trace);
+
+        Monitor.Log(
+            $"Config (compat): automateCompat={Config.automateCompatibility}, " +
+            $"sunberryExcl={Config.sunberryVillageExclusions}, mtVapiusExcl={Config.visitMtVapiusExclusions}, " +
+            $"baublesExcl={Config.baublesExclusions}, resourceChickensExcl={Config.resourceChickensExclusions}, " +
+            $"capeStardewExcl={Config.capeStardewExclusions}, wildflowers={Config.collectWildflowers}",
             LogLevel.Trace);
 
         if (Config.excludedItems?.Count > 0)
