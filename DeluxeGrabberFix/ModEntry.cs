@@ -43,6 +43,7 @@ public class ModEntry : Mod
     private ICustomBushApi _customBushApi;
     private SpecializedGrabberAssets _specializedAssets;
     private ProgressionTracker _progression;
+    internal PerSaveConfigManager ConfigManager { get; private set; }
 
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private readonly HashSet<GameLocation> _machineReadyLocations = new();
@@ -70,6 +71,7 @@ public class ModEntry : Mod
         Api = new ModApi(this);
         _locations = new LocationManager(this);
         _grabbers = new GrabberManager(this, _locations);
+        ConfigManager = new PerSaveConfigManager(this);
     }
 
     public override void Entry(IModHelper helper)
@@ -83,6 +85,8 @@ public class ModEntry : Mod
             Monitor.Log($"Failed to load config.json, using defaults: {ex.Message}", LogLevel.Warn);
             Config = new ModConfig();
         }
+
+        ConfigManager.SetGlobalConfig(Config);
 
         if (Config.fellSecretWoodsStumps)
         {
@@ -437,6 +441,7 @@ public class ModEntry : Mod
 
     private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
     {
+        ConfigManager.OnSaveLoaded();
         _locations.LoadSaveData();
         TownGarbageCanGrabber.ClearCache();
         _locations.DiscoverLocations();
@@ -636,6 +641,7 @@ public class ModEntry : Mod
     {
         _locations.ClearState();
         TownGarbageCanGrabber.ClearCache();
+        ConfigManager.OnReturnedToTitle();
         _gmcm.RebuildConfigMenu();
     }
 

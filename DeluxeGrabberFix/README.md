@@ -28,7 +28,7 @@ Adopted the existing [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/starde
 
 ## Configuration
 
-All options are configurable through [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098) or by editing `config.json`.
+All options are configurable through [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098) or by editing `config.json`. Each save file gets its own config stored in `configs/` inside the mod folder, so settings changed in one save won't affect another. The global `config.json` is used as the default template for new saves and for title screen edits.
 
 | Setting | Default | Description |
 |---|---|---|

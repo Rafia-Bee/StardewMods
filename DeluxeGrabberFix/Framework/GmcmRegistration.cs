@@ -98,7 +98,7 @@ internal class GmcmRegistration
                 break;
         }
 
-        _mod.Helper.WriteConfig(_mod.Config);
+        _mod.ConfigManager.SaveActiveConfig();
         RebuildConfigMenu();
         _api.OpenModMenu(_mod.ModManifest);
         return true;
@@ -149,7 +149,7 @@ internal class GmcmRegistration
         c.collectStatues = enable;
         c.collectOtherMachines = enable;
 
-        _mod.Helper.WriteConfig(c);
+        _mod.ConfigManager.SaveActiveConfig();
         RebuildConfigMenu();
         _api.OpenModMenu(_mod.ModManifest);
         return true;
@@ -177,7 +177,7 @@ internal class GmcmRegistration
                 if (!_mod.Config.collectMachines && _mod.Config.HasAnyMachineSubToggleEnabled())
                     _mod.Config.collectMachines = true;
 
-                _mod.Helper.WriteConfig(_mod.Config);
+                _mod.ConfigManager.SaveActiveConfig();
                 _mod.Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
                 _mod.Monitor.Log($"GMCM saved. selectVisitedOnly={_mod.Config.selectVisitedOnly}, IsWorldReady={Context.IsWorldReady}, saveData={((_locations.SaveData != null) ? "loaded" : "null")}", LogLevel.Info);
                 if (_mod.Config.selectVisitedOnly && Context.IsWorldReady && _locations.SaveData != null)
