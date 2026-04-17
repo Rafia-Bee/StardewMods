@@ -57,6 +57,13 @@ internal class GmcmRegistration
         {
             case LocationBatchAction.EnableAll:
                 _mod.Config.SkippedLocations.Clear();
+                if (_locations.SaveData != null)
+                {
+                    _locations.SaveData.ManuallyManagedLocations.Clear();
+                    _locations.SaveData.AutoSkippedLocations.Clear();
+                    _locations.SaveData.BlacklistedLocations.Clear();
+                    _locations.WriteSaveData();
+                }
                 break;
 
             case LocationBatchAction.DisableAll:
@@ -84,6 +91,7 @@ internal class GmcmRegistration
                         foreach (var name in _mod.Config.SkippedLocations)
                             _locations.SaveData.AutoSkippedLocations.Add(name);
                         _locations.SaveData.ManuallyManagedLocations.Clear();
+                        _locations.SaveData.BlacklistedLocations.Clear();
                         _locations.WriteSaveData();
                     }
                 }
@@ -152,7 +160,17 @@ internal class GmcmRegistration
         var config = _mod.Config;
 
         api.Register(_mod.ModManifest,
-            () => _mod.Config = new ModConfig(),
+            () =>
+            {
+                _mod.Config = new ModConfig();
+                if (_locations.SaveData != null)
+                {
+                    _locations.SaveData.ManuallyManagedLocations.Clear();
+                    _locations.SaveData.AutoSkippedLocations.Clear();
+                    _locations.SaveData.BlacklistedLocations.Clear();
+                    _locations.WriteSaveData();
+                }
+            },
             () =>
             {
                 _mod.Helper.WriteConfig(_mod.Config);
@@ -907,13 +925,7 @@ internal class GmcmRegistration
                 fieldId: "enable-all");
 
             api.AddBoolOption(_mod.ModManifest,
-                getValue: () => Context.IsWorldReady && _locations.DiscoveredLocations != null &&
-                    _locations.DiscoveredLocations.All(loc =>
-                    {
-                        bool visited = Game1.MasterPlayer.locationsVisited.Contains(loc.Name);
-                        bool enabled = _mod.Config.SkippedLocations?.Contains(loc.Name) != true;
-                        return visited == enabled;
-                    }),
+                getValue: () => _mod.Config.selectVisitedOnly,
                 setValue: v => { },
                 name: () => _mod.Helper.Translation.Get("config.select-visited-only"),
                 tooltip: () => _mod.Helper.Translation.Get("config.select-visited-only.tooltip"),
@@ -925,8 +937,13 @@ internal class GmcmRegistration
                     _pendingBatchAction = (bool)value
                         ? LocationBatchAction.EnableAll
                         : LocationBatchAction.DisableAll;
-                else if (fieldId == "select-visited-only" && (bool)value)
-                    _pendingBatchAction = LocationBatchAction.SelectVisitedOnly;
+                else if (fieldId == "select-visited-only")
+                {
+                    if ((bool)value)
+                        _pendingBatchAction = LocationBatchAction.SelectVisitedOnly;
+                    else
+                        _mod.Config.selectVisitedOnly = false;
+                }
             });
 
             if (Context.IsWorldReady)
@@ -975,16 +992,30 @@ internal class GmcmRegistration
             setValue: v =>
             {
                 _mod.Config.SkippedLocations ??= new HashSet<string>();
-                if (!v)
-                    _mod.Config.SkippedLocations.Add(capturedName);
-                else
-                    _mod.Config.SkippedLocations.Remove(capturedName);
+                bool currentlyEnabled = !_mod.Config.SkippedLocations.Contains(capturedName);
 
-                if (_locations.SaveData != null)
+                if (v == currentlyEnabled)
+                    return;
+
+                if (!v)
                 {
-                    _locations.SaveData.ManuallyManagedLocations.Add(capturedName);
-                    _locations.SaveData.AutoSkippedLocations.Remove(capturedName);
-                    _locations.WriteSaveData();
+                    _mod.Config.SkippedLocations.Add(capturedName);
+                    if (_locations.SaveData != null)
+                    {
+                        _locations.SaveData.BlacklistedLocations.Add(capturedName);
+                        _locations.SaveData.AutoSkippedLocations.Remove(capturedName);
+                        _locations.WriteSaveData();
+                    }
+                }
+                else
+                {
+                    _mod.Config.SkippedLocations.Remove(capturedName);
+                    if (_locations.SaveData != null)
+                    {
+                        _locations.SaveData.BlacklistedLocations.Remove(capturedName);
+                        _locations.SaveData.AutoSkippedLocations.Remove(capturedName);
+                        _locations.WriteSaveData();
+                    }
                 }
             },
             name: () => capturedDisplay,
