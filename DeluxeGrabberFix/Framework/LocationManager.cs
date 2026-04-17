@@ -136,12 +136,14 @@ internal class LocationManager
         if (string.IsNullOrEmpty(locationName))
             return false;
 
+        if (SaveData.BlacklistedLocations.Contains(locationName))
+            return false;
+
         bool wasSkipped = _mod.Config.SkippedLocations?.Remove(locationName) == true;
         SaveData.AutoSkippedLocations.Remove(locationName);
 
         if (wasSkipped)
         {
-            SaveData.ManuallyManagedLocations.Add(locationName);
             _mod.Helper.WriteConfig(_mod.Config);
             WriteSaveData();
             _mod.LogDebug($"Auto-enabled location after visit: {locationName}");
