@@ -27,7 +27,7 @@ internal class FarmCaveMushroomGrabber : ObjectsMapGrabber
 
     public override bool GrabObject(Vector2 tile, Object obj)
     {
-        if (!Config.farmCaveMushrooms || obj.QualifiedItemId != BigCraftableIds.MushroomBox)
+        if (!Config.collectMachines || !Config.farmCaveMushrooms || obj.QualifiedItemId != BigCraftableIds.MushroomBox)
             return false;
 
         if (!obj.readyForHarvest.Value || obj.heldObject.Value == null)

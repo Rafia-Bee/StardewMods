@@ -115,6 +115,7 @@ internal class GmcmRegistration
         var c = _mod.Config;
         c.collectMachines = enable;
         c.collectAllMachines = enable;
+        c.farmCaveMushrooms = enable;
         c.collectCrabPots = enable;
         c.collectBeeHouses = enable;
         c.collectTappers = enable;
@@ -173,6 +174,9 @@ internal class GmcmRegistration
             },
             () =>
             {
+                if (!_mod.Config.collectMachines && _mod.Config.HasAnyMachineSubToggleEnabled())
+                    _mod.Config.collectMachines = true;
+
                 _mod.Helper.WriteConfig(_mod.Config);
                 _mod.Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
                 _mod.Monitor.Log($"GMCM saved. selectVisitedOnly={_mod.Config.selectVisitedOnly}, IsWorldReady={Context.IsWorldReady}, saveData={((_locations.SaveData != null) ? "loaded" : "null")}", LogLevel.Info);
@@ -476,12 +480,6 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.grab-slime-balls"));
 
         api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.farmCaveMushrooms,
-            v => _mod.Config.farmCaveMushrooms = v,
-            () => _mod.Helper.Translation.Get("config.grab-farm-cave-mushrooms"),
-            () => _mod.Helper.Translation.Get("config.grab-farm-cave-mushrooms.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
             () => _mod.Config.artifactSpots,
             v => _mod.Config.artifactSpots = v,
             () => _mod.Helper.Translation.Get("config.dig-up-artifact-spots"));
@@ -546,11 +544,23 @@ internal class GmcmRegistration
                 _pendingMachineToggleAll = (bool)value;
         });
 
+        // Fishing
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.fishing-machines"));
+
         api.AddBoolOption(_mod.ModManifest,
             () => _mod.Config.collectCrabPots,
             v => _mod.Config.collectCrabPots = v,
             () => _mod.Helper.Translation.Get("config.collect-crab-pots"),
             () => _mod.Helper.Translation.Get("config.collect-crab-pots.tooltip"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectFishPonds,
+            v => _mod.Config.collectFishPonds = v,
+            () => _mod.Helper.Translation.Get("config.collect-fish-ponds"),
+            () => _mod.Helper.Translation.Get("config.collect-fish-ponds.tooltip"));
+
+        // Outdoor Producers
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.outdoor-producers"));
 
         api.AddBoolOption(_mod.ModManifest,
             () => _mod.Config.collectBeeHouses,
@@ -570,17 +580,14 @@ internal class GmcmRegistration
             () => _mod.Helper.Translation.Get("config.collect-leaf-baskets"),
             () => _mod.Helper.Translation.Get("config.collect-leaf-baskets.tooltip"));
 
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.collectMushroomLogs,
-            v => _mod.Config.collectMushroomLogs = v,
-            () => _mod.Helper.Translation.Get("config.collect-mushroom-logs"),
-            () => _mod.Helper.Translation.Get("config.collect-mushroom-logs.tooltip"));
+        // Farm Cave
+        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.farm-cave"));
 
         api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.collectFishPonds,
-            v => _mod.Config.collectFishPonds = v,
-            () => _mod.Helper.Translation.Get("config.collect-fish-ponds"),
-            () => _mod.Helper.Translation.Get("config.collect-fish-ponds.tooltip"));
+            () => _mod.Config.farmCaveMushrooms,
+            v => _mod.Config.farmCaveMushrooms = v,
+            () => _mod.Helper.Translation.Get("config.collect-mushroom-boxes"),
+            () => _mod.Helper.Translation.Get("config.collect-mushroom-boxes.tooltip"));
 
         // Artisan Equipment
         api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.artisan-machines"));
@@ -674,6 +681,12 @@ internal class GmcmRegistration
 
         // 1.6 Machines
         api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.16-machines"));
+
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.collectMushroomLogs,
+            v => _mod.Config.collectMushroomLogs = v,
+            () => _mod.Helper.Translation.Get("config.collect-mushroom-logs"),
+            () => _mod.Helper.Translation.Get("config.collect-mushroom-logs.tooltip"));
 
         api.AddBoolOption(_mod.ModManifest,
             () => _mod.Config.collectFishSmokers,
