@@ -58,7 +58,7 @@ public class ModEntry : Mod
             v => Config.Capacity = v,
             () => "Auto-Grabber Capacity",
             () => "Number of item slots in each auto-grabber. Vanilla default is 36.",
-            36, 288, 12);
+            36, 516, 12);
     }
 
     private void OnMenuChanged(object sender, MenuChangedEventArgs e)
