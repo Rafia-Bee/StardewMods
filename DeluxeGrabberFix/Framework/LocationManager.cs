@@ -89,7 +89,7 @@ internal class LocationManager
 
         if (skipped > 0 || enabled > 0)
         {
-            _mod.Helper.WriteConfig(_mod.Config);
+            _mod.ConfigManager.SaveActiveConfig();
             WriteSaveData();
         }
     }
@@ -144,7 +144,7 @@ internal class LocationManager
 
         if (wasSkipped)
         {
-            _mod.Helper.WriteConfig(_mod.Config);
+            _mod.ConfigManager.SaveActiveConfig();
             WriteSaveData();
             _mod.LogDebug($"Auto-enabled location after visit: {locationName}");
             return true;

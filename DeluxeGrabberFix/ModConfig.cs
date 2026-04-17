@@ -371,4 +371,12 @@ internal class ModConfig
         capeStardewExclusions = true;
         collectWildflowers = true;
     }
+
+    internal ModConfig Clone()
+    {
+        var clone = (ModConfig)MemberwiseClone();
+        clone.SkippedLocations = SkippedLocations != null ? new HashSet<string>(SkippedLocations) : new HashSet<string>();
+        clone.excludedItems = excludedItems != null ? new HashSet<string>(excludedItems) : new HashSet<string>();
+        return clone;
+    }
 }
