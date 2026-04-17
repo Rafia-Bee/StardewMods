@@ -273,6 +273,19 @@ internal class ModConfig
         return false;
     }
 
+    internal bool HasAnyMachineSubToggleEnabled()
+    {
+        return farmCaveMushrooms || collectCrabPots || collectBeeHouses || collectTappers
+            || collectLeafBaskets || collectMushroomLogs || collectFishPonds || collectKegs
+            || collectPreservesJars || collectCheesePresses || collectMayonnaiseMachines
+            || collectLooms || collectOilMakers || collectFurnaces || collectCharcoalKilns
+            || collectRecyclingMachines || collectSeedMakers || collectBoneMills
+            || collectGeodeCrushers || collectWoodChippers || collectDeconstructors
+            || collectFishSmokers || collectBaitMakers || collectDehydrators || collectCrystalariums
+            || collectLightningRods || collectWormBins || collectSolarPanels || collectSlimeEggPresses
+            || collectCoffeeMakers || collectSodaMachines || collectStatues || collectOtherMachines;
+    }
+
     public ModConfig()
     {
         grabberMode = GrabberMode.Classic;
