@@ -21,10 +21,16 @@ internal class HarvestableCropHoeDirtGrabber : TerrainFeaturesMapGrabber
         if (feature is not HoeDirt dirt || dirt.crop == null)
             return false;
 
-        if (Config.flowers != ModConfig.FlowerHarvestMode.All)
+        string harvestId = dirt.crop.indexOfHarvest.Value;
+
+        if (!string.IsNullOrEmpty(harvestId))
         {
-            string harvestId = dirt.crop.indexOfHarvest.Value;
-            if (!string.IsNullOrEmpty(harvestId) && ItemRegistry.Create<Object>(harvestId).Category == Object.flowersCategory)
+            string qualifiedId = ItemRegistry.QualifyItemId(harvestId);
+            if (qualifiedId != null && Config.IsItemExcluded(qualifiedId))
+                return false;
+
+            if (Config.flowers != ModConfig.FlowerHarvestMode.All
+                && ItemRegistry.Create<Object>(harvestId).Category == Object.flowersCategory)
             {
                 if (Config.flowers == ModConfig.FlowerHarvestMode.Off)
                     return false;
