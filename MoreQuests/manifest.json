@@ -1,0 +1,16 @@
+{
+    "Name": "More Quests",
+    "Author": "Rafia-Bee",
+    "Version": "1.0.0",
+    "MinimumApiVersion": "4.1.0",
+    "UniqueID": "RafiaBee.MoreQuests",
+    "Description": "Overhauls daily Help Wanted quests with progressive difficulty, multiple board quests, varied rewards, consequence mechanics, pre-festival chains, animal quests, and full modded item/NPC support.",
+    "EntryDll": "MoreQuests.dll",
+    "UpdateKeys": [],
+    "Dependencies": [
+        {
+            "UniqueID": "spacechase0.GenericModConfigMenu",
+            "IsRequired": false
+        }
+    ]
+}

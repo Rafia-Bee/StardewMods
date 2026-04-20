@@ -1,0 +1,43 @@
+{
+    "config.section.questBoard": "Quest Board",
+    "config.questsPerDay": "Quests Per Day",
+    "config.questsPerDay.tooltip": "How many quests appear on the board each day.",
+    "config.questDeadline": "Quest Deadline (Days)",
+    "config.questDeadline.tooltip": "Number of days to complete each quest before it expires.",
+
+    "config.section.difficulty": "Difficulty",
+    "config.difficultyScaling": "Difficulty Scaling",
+    "config.difficultyScaling.tooltip": "When enabled, quests scale in difficulty based on your skill levels and years played.",
+
+    "config.section.consequences": "Consequences",
+    "config.consequences": "Enable Consequences",
+    "config.consequences.tooltip": "When enabled, some quests can affect NPC friendships positively or negatively depending on the quest and the NPC's personality.",
+
+    "config.section.modded": "Modded Content",
+    "config.moddedItems": "Include Modded Items",
+    "config.moddedItems.tooltip": "When enabled, quest objectives can include items added by other mods.",
+    "config.moddedNPCs": "Include Modded NPCs",
+    "config.moddedNPCs.tooltip": "When enabled, modded NPCs can appear as quest givers or be affected by consequences.",
+
+    "config.section.festivals": "Festival Quests",
+    "config.festivalQuests": "Enable Festival Quests",
+    "config.festivalQuests.tooltip": "When enabled, special quest chains appear in the days leading up to festivals.",
+    "config.festivalLeadDays": "Lead Days Before Festival",
+    "config.festivalLeadDays.tooltip": "How many days before a festival the pre-festival quests start appearing.",
+
+    "config.section.animals": "Animal Quests",
+    "config.animalQuests": "Enable Animal Quests",
+    "config.animalQuests.tooltip": "When enabled, building a coop or barn triggers special animal-related quest chains from Marnie.",
+
+    "consequence.fishing.moderate": "{{npc}} doesn't seem happy about all the fish being pulled from the water lately.",
+    "consequence.fishing.significant": "{{npc}} is upset. \"Don't you think the fish population needs time to recover?\"",
+    "consequence.cooking.hate": "{{npc}} wrinkles their nose. \"I can't stand {{item}}, honestly.\"",
+    "consequence.cooking.dislike": "{{npc}} shrugs. \"{{item}} isn't really my thing.\"",
+    "consequence.cooking.love": "{{npc}} lights up. \"Oh, I love {{item}}! That's wonderful.\"",
+    "consequence.cooking.like": "{{npc}} smiles. \"Nice, I do enjoy {{item}}.\"",
+
+    "mail.marnie.coopBuilt": "Dear @,^Congratulations on building your first coop! I have some advice on raising chickens if you're interested. Stop by the ranch when you get a chance.^  -Marnie",
+    "mail.marnie.barnBuilt": "Dear @,^I see you've got a barn now! That's exciting. I've got a little task for you if you're up for it -- come see me at the ranch.^  -Marnie",
+    "mail.robin.bigCoopUpgrade": "Hey @,^Nice upgrade on the coop! I've been thinking about a project that could use your help. Swing by the shop when you have time.^  -Robin",
+    "mail.marnie.deluxeBarnUpgrade": "Dear @,^A deluxe barn -- look at you, becoming a real rancher! I have something special in mind. Visit me at the ranch soon.^  -Marnie"
+}
