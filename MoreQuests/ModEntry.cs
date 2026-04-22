@@ -15,6 +15,7 @@ public sealed class ModEntry : Mod
     private ConsequenceManager? _consequences;
     private AnimalQuestTracker? _animalTracker;
     private FestivalQuestManager? _festivalQuests;
+    private HelpWantedBridge? _helpWantedBridge;
 
     public override void Entry(IModHelper helper)
     {
@@ -23,6 +24,9 @@ public sealed class ModEntry : Mod
 
         var harmony = new Harmony(ModManifest.UniqueID);
         QuestBoardPatches.Apply(harmony, Monitor);
+
+        _helpWantedBridge = new HelpWantedBridge(helper, Monitor);
+        _helpWantedBridge.Register();
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
@@ -56,6 +60,9 @@ public sealed class ModEntry : Mod
         _questBoard?.GenerateDailyQuests();
         _festivalQuests?.CheckForFestivalQuests();
         _animalTracker?.CheckForTriggers();
+
+        if (_questBoard != null)
+            _helpWantedBridge?.SetDailyQuests(_questBoard.ActiveQuests);
     }
 
     private void OnDayEnding(object? sender, DayEndingEventArgs e)
