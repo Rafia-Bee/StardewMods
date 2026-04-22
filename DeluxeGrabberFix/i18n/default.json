@@ -246,6 +246,9 @@
     "page.specialized-grabbers": "Specialized Grabbers",
     "page.specialized-grabbers.paragraph": "These thresholds control how many of each stat you need before the next specialized grabber recipe is unlocked. Only applies when Grabber Mode is set to Specialized.",
 
+    "config.specialized-grabbers-count-for-perfection": "Count for Perfection",
+    "config.specialized-grabbers-count-for-perfection.tooltip": "When enabled, crafting all five specialized grabbers is required for the Craft Master achievement and the crafting portion of the perfection score. Disable this if you want to use Specialized mode without it affecting perfection.",
+
     "config.crops-shipped-threshold": "Crops Shipped to Unlock Crop Grabber",
     "config.crops-shipped-threshold.tooltip": "How many crops the player needs to ship before the Crop Grabber recipe becomes available.",
     "config.items-foraged-threshold": "Items Foraged to Unlock Forage Grabber",

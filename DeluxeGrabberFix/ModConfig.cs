@@ -96,6 +96,7 @@ internal class ModConfig
     public bool replantReminder;
     public int replantReminderTime;
     public bool debugLogging;
+    public bool specializedGrabbersCountForPerfection;
     public bool gainExperience;
     public bool fellHardwoodStumps;
     public bool fellSecretWoodsStumps;
@@ -308,6 +309,7 @@ internal class ModConfig
         replantReminder = true;
         replantReminderTime = 2000;
         debugLogging = false;
+        specializedGrabbersCountForPerfection = true;
         gainExperience = true;
         fellHardwoodStumps = false;
         garbageCans = false;

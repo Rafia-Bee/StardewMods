@@ -65,6 +65,12 @@ internal class SpecializedGrabberAssets
         }
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))
         {
+            // Only add recipes when Specialized mode is active. In Classic mode these items
+            // cannot be crafted and should not count toward the Craft Master achievement or
+            // the crafting portion of the perfection score.
+            if (_getConfig().grabberMode != ModConfig.GrabberMode.Specialized)
+                return;
+
             e.Edit(asset =>
             {
                 var data = asset.AsDictionary<string, string>().Data;
