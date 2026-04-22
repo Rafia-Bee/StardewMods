@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>DeluxeGrabberFix</AssemblyName>
     <RootNamespace>DeluxeGrabberFix</RootNamespace>
-    <Version>1.19.1</Version>
+    <Version>1.20.0</Version>
     <LangVersion>latest</LangVersion>
     <TargetFramework>net6.0</TargetFramework>
     <EnableHarmony>true</EnableHarmony>
@@ -15,5 +15,9 @@
 
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="docs/**" />
   </ItemGroup>
 </Project>

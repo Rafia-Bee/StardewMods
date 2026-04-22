@@ -227,6 +227,12 @@ internal class GmcmRegistration
         api.AddParagraph(_mod.ModManifest,
             () => _mod.Helper.Translation.Get("page.specialized-grabbers.paragraph"));
 
+        api.AddBoolOption(_mod.ModManifest,
+            () => _mod.Config.specializedGrabbersCountForPerfection,
+            v => _mod.Config.specializedGrabbersCountForPerfection = v,
+            () => _mod.Helper.Translation.Get("config.specialized-grabbers-count-for-perfection"),
+            () => _mod.Helper.Translation.Get("config.specialized-grabbers-count-for-perfection.tooltip"));
+
         api.AddNumberOption(_mod.ModManifest,
             () => _mod.Config.cropsShippedThreshold,
             v => _mod.Config.cropsShippedThreshold = v,

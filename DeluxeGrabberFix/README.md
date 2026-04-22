@@ -44,6 +44,7 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 | Setting | Default | Description |
 |---|---|---|
 | Grabber Mode | Classic | Classic: one grabber collects everything. Specialized: six grabbers each collect a specific category |
+| Count for Perfection | On | When in Specialized mode, whether crafting all five specialized grabbers is required for the Craft Master achievement and perfection score. Disable to use Specialized mode without affecting perfection. |
 
 ### Crop Harvesting
 

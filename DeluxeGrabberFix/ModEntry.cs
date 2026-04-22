@@ -424,6 +424,16 @@ public class ModEntry : Mod
             prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.Chest_addItem_Prefix))
         );
 
+        PerfectionPatch.GetConfig = () => Config;
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Utility), nameof(Utility.getCraftedRecipesPercent)),
+            postfix: new HarmonyMethod(typeof(PerfectionPatch), nameof(PerfectionPatch.GetCraftedRecipesPercent_Postfix))
+        );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Stats), nameof(Stats.checkForCraftingAchievements)),
+            postfix: new HarmonyMethod(typeof(PerfectionPatch), nameof(PerfectionPatch.CheckForCraftingAchievements_Postfix))
+        );
+
         if (Helper.ModRegistry.GetApi<IVanillaPlusProfessionsApi>("KediDili.VanillaPlusProfessions") != null)
             LogDebug("Vanilla Plus Professions detected -- VPP compatibility enabled.");
 
