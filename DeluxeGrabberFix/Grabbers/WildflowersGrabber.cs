@@ -80,7 +80,7 @@ internal class WildflowersGrabber : TerrainFeaturesMapGrabber
         dirt.modData[WildflowerKey] = "T";
 
         HarvestInterceptor.BeginIntercept();
-        crop.harvest((int)tile.X, (int)tile.Y, dirt);
+        crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);
         List<Item> items = HarvestInterceptor.EndIntercept();
 
         if (items.Count > 0)
@@ -92,7 +92,6 @@ internal class WildflowersGrabber : TerrainFeaturesMapGrabber
             }
 
             grass.modData.Remove(WildflowerKey);
-            GainExperience(Farmer.foragingSkill, 7);
             return true;
         }
         return false;
