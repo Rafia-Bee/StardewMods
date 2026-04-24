@@ -136,7 +136,7 @@ internal class MachineGrabber : ObjectsMapGrabber
 
     public override bool GrabObject(Vector2 tile, Object obj)
     {
-        if (!Config.collectMachines)
+        if (Config.disableMachineCollection)
             return false;
 
         if (!obj.readyForHarvest.Value || obj.heldObject.Value == null)

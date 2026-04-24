@@ -14,7 +14,6 @@ internal class GmcmRegistration
 
     private IGenericModConfigMenuApi _api;
     private LocationBatchAction? _pendingBatchAction;
-    private bool? _pendingMachineToggleAll;
 
     internal enum LocationBatchAction { EnableAll, DisableAll, SelectVisitedOnly }
 
@@ -104,57 +103,6 @@ internal class GmcmRegistration
         return true;
     }
 
-    internal bool ProcessPendingMachineToggle()
-    {
-        if (!_pendingMachineToggleAll.HasValue)
-            return false;
-
-        bool enable = _pendingMachineToggleAll.Value;
-        _pendingMachineToggleAll = null;
-
-        var c = _mod.Config;
-        c.collectMachines = enable;
-        c.collectAllMachines = enable;
-        c.farmCaveMushrooms = enable;
-        c.collectCrabPots = enable;
-        c.collectBeeHouses = enable;
-        c.collectTappers = enable;
-        c.collectLeafBaskets = enable;
-        c.collectMushroomLogs = enable;
-        c.collectFishPonds = enable;
-        c.collectKegs = enable;
-        c.collectPreservesJars = enable;
-        c.collectCheesePresses = enable;
-        c.collectMayonnaiseMachines = enable;
-        c.collectLooms = enable;
-        c.collectOilMakers = enable;
-        c.collectFurnaces = enable;
-        c.collectCharcoalKilns = enable;
-        c.collectRecyclingMachines = enable;
-        c.collectSeedMakers = enable;
-        c.collectBoneMills = enable;
-        c.collectGeodeCrushers = enable;
-        c.collectWoodChippers = enable;
-        c.collectDeconstructors = enable;
-        c.collectFishSmokers = enable;
-        c.collectBaitMakers = enable;
-        c.collectDehydrators = enable;
-        c.collectCrystalariums = enable;
-        c.collectLightningRods = enable;
-        c.collectWormBins = enable;
-        c.collectSolarPanels = enable;
-        c.collectSlimeEggPresses = enable;
-        c.collectCoffeeMakers = enable;
-        c.collectSodaMachines = enable;
-        c.collectStatues = enable;
-        c.collectOtherMachines = enable;
-
-        _mod.ConfigManager.SaveActiveConfig();
-        RebuildConfigMenu();
-        _api.OpenModMenu(_mod.ModManifest);
-        return true;
-    }
-
     private void RegisterConfigMenu()
     {
         var api = _api;
@@ -174,9 +122,6 @@ internal class GmcmRegistration
             },
             () =>
             {
-                if (!_mod.Config.collectMachines && _mod.Config.HasAnyMachineSubToggleEnabled())
-                    _mod.Config.collectMachines = true;
-
                 _mod.ConfigManager.SaveActiveConfig();
                 _mod.Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
                 _mod.Monitor.Log($"GMCM saved. selectVisitedOnly={_mod.Config.selectVisitedOnly}, IsWorldReady={Context.IsWorldReady}, saveData={((_locations.SaveData != null) ? "loaded" : "null")}", LogLevel.Info);
@@ -531,24 +476,14 @@ internal class GmcmRegistration
         // Machine Collection page
         api.AddPage(_mod.ModManifest, "machine-collection", () => _mod.Helper.Translation.Get("section.machine-collection"));
 
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.collectMachines,
-            v => _mod.Config.collectMachines = v,
-            () => _mod.Helper.Translation.Get("config.collect-machine-outputs"),
-            () => _mod.Helper.Translation.Get("config.collect-machine-outputs.tooltip"));
+        api.AddParagraph(_mod.ModManifest,
+            () => _mod.Helper.Translation.Get("page.machine-collection.paragraph"));
 
         api.AddBoolOption(_mod.ModManifest,
-            getValue: () => _mod.Config.collectAllMachines,
-            setValue: v => { },
-            name: () => _mod.Helper.Translation.Get("config.collect-all-machines"),
-            tooltip: () => _mod.Helper.Translation.Get("config.collect-all-machines.tooltip"),
-            fieldId: "collect-all-machines");
-
-        api.OnFieldChanged(_mod.ModManifest, (fieldId, value) =>
-        {
-            if (fieldId == "collect-all-machines")
-                _pendingMachineToggleAll = (bool)value;
-        });
+            () => _mod.Config.disableMachineCollection,
+            v => _mod.Config.disableMachineCollection = v,
+            () => _mod.Helper.Translation.Get("config.disable-machine-collection"),
+            () => _mod.Helper.Translation.Get("config.disable-machine-collection.tooltip"));
 
         // Fishing
         api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.fishing-machines"));

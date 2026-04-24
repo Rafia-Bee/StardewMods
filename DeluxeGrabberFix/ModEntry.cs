@@ -131,7 +131,7 @@ public class ModEntry : Mod
             return;
         if (_instance._isGrabbing)
             return;
-        if (_instance.Config.grabFrequency != ModConfig.GrabFrequency.Instant || !_instance.Config.collectMachines)
+        if (_instance.Config.grabFrequency != ModConfig.GrabFrequency.Instant || _instance.Config.disableMachineCollection)
             return;
 
         _instance._machineReadyLocations.Add(location);
@@ -557,7 +557,7 @@ public class ModEntry : Mod
             LogLevel.Trace);
 
         Monitor.Log(
-            $"Config (machines): machines={Config.collectMachines}, allMachines={Config.collectAllMachines}, " +
+            $"Config (machines): disableMachineCollection={Config.disableMachineCollection}, " +
             $"crabPots={Config.collectCrabPots}, beeHouses={Config.collectBeeHouses}, " +
             $"tappers={Config.collectTappers}, leafBaskets={Config.collectLeafBaskets}, " +
             $"mushroomLogs={Config.collectMushroomLogs}, fishPonds={Config.collectFishPonds}, " +
@@ -734,8 +734,6 @@ public class ModEntry : Mod
     private void OnUpdateTicked(object sender, UpdateTickedEventArgs e)
     {
         if (_gmcm.ProcessPendingBatchAction())
-            return;
-        if (_gmcm.ProcessPendingMachineToggle())
             return;
 
         // Deferred day-start grab: waits a few ticks after DayStarted so other mods
