@@ -5,7 +5,8 @@ using StardewValley;
 
 namespace MoreQuests.Framework;
 
-/// Builds the day's batch of board postings by sampling daily-board definitions.
+/// Builds the day's batch of board postings via weighted sampling. Honours per-definition
+/// cooldown + max-per-day rules and the pipeline-wide one-per-quest-giver rule.
 internal sealed class QuestPipeline
 {
     private readonly QuestContext _ctx;
@@ -24,48 +25,66 @@ internal sealed class QuestPipeline
     {
         _activePostings.Clear();
 
-        int count = _ctx.Config.QuestsPerDay;
-        var rng = Game1.random;
+        int target = System.Math.Clamp(_ctx.Config.QuestsPerDay, 1, 20);
+        var weights = _ctx.Config.QuestWeights;
 
-        var dailyPool = BoardQuestRegistry
-            .WithKind(PostingKind.DailyBoard)
-            .Where(d => d.IsAvailable(_ctx))
-            .Where(d => !_antiRepetition.DefinitionRecent(d.Id))
-            .ToList();
-
-        if (dailyPool.Count < count)
+        var pool = new List<(IQuestDefinition Def, int Weight)>();
+        foreach (var def in BoardQuestRegistry.WithKind(PostingKind.DailyBoard))
         {
-            dailyPool = BoardQuestRegistry
-                .WithKind(PostingKind.DailyBoard)
-                .Where(d => d.IsAvailable(_ctx))
-                .ToList();
+            if (!def.IsAvailable(_ctx))
+                continue;
+            if (_antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
+                continue;
+            int w = weights.TryGetValue(def.Id, out int configured) ? configured : def.DefaultWeight;
+            if (w <= 0)
+                continue;
+            pool.Add((def, w));
         }
 
-        var picked = new HashSet<QuestCategory>();
-        while (_activePostings.Count < count && dailyPool.Count > 0)
-        {
-            int idx = rng.Next(dailyPool.Count);
-            var def = dailyPool[idx];
-            dailyPool.RemoveAt(idx);
+        var giversToday = new HashSet<string>();
+        var defCounts = new Dictionary<string, int>();
+        var rng = Game1.random;
+        int safety = 200;
 
-            if (picked.Contains(def.Category))
+        while (_activePostings.Count < target && pool.Count > 0 && safety-- > 0)
+        {
+            var (def, _) = WeightedDraw(pool, rng);
+            if (def == null)
+                break;
+
+            int count = defCounts.TryGetValue(def.Id, out int c) ? c : 0;
+            if (count >= def.MaxPerDay)
+            {
+                pool.RemoveAll(x => x.Def.Id == def.Id);
                 continue;
+            }
 
             var posting = def.Build(_ctx);
             if (posting == null)
+            {
+                pool.RemoveAll(x => x.Def.Id == def.Id);
+                continue;
+            }
+
+            if (!string.IsNullOrEmpty(posting.QuestGiver) && giversToday.Contains(posting.QuestGiver))
                 continue;
 
             _activePostings.Add(posting);
             _antiRepetition.Record(posting);
-            picked.Add(def.Category);
+            defCounts[def.Id] = count + 1;
+            if (!string.IsNullOrEmpty(posting.QuestGiver))
+                giversToday.Add(posting.QuestGiver);
+
+            if (defCounts[def.Id] >= def.MaxPerDay)
+                pool.RemoveAll(x => x.Def.Id == def.Id);
         }
 
-        _ctx.Monitor.Log($"Generated {_activePostings.Count} daily-board postings.", LogLevel.Trace);
+        _ctx.Monitor.Log($"Generated {_activePostings.Count}/{target} daily-board postings.", LogLevel.Trace);
         return _activePostings;
     }
 
     /// Mail-delivered triggered quests (e.g. Hay Supply Run on a fixed cadence). Called separately
-    /// from the daily board pass so triggered quests don't compete with the daily slots.
+    /// so triggered quests don't compete with the daily slots.
     public List<QuestPosting> GenerateTriggeredMail()
     {
         var results = new List<QuestPosting>();
@@ -73,7 +92,7 @@ internal sealed class QuestPipeline
         {
             if (!def.IsAvailable(_ctx))
                 continue;
-            if (_antiRepetition.DefinitionRecent(def.Id))
+            if (_antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
                 continue;
 
             var posting = def.Build(_ctx);
@@ -83,5 +102,21 @@ internal sealed class QuestPipeline
             _antiRepetition.Record(posting);
         }
         return results;
+    }
+
+    private static (IQuestDefinition? Def, int Weight) WeightedDraw(
+        List<(IQuestDefinition Def, int Weight)> pool, System.Random rng)
+    {
+        int total = pool.Sum(x => x.Weight);
+        if (total <= 0)
+            return (null, 0);
+        int roll = rng.Next(total);
+        foreach (var entry in pool)
+        {
+            roll -= entry.Weight;
+            if (roll < 0)
+                return entry;
+        }
+        return pool[^1];
     }
 }

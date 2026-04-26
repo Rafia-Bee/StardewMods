@@ -11,6 +11,9 @@ internal sealed class CravingDish : IQuestDefinition
     public string Id => "Cooking.CravingDish";
     public QuestCategory Category => QuestCategory.Cooking;
     public PostingKind Kind => PostingKind.DailyBoard;
+    public int DefaultWeight => 30;
+    public int MaxPerDay => 1;
+    public int CooldownDays => 2;
 
     public bool IsAvailable(QuestContext ctx) => Game1.player.cookingRecipes.Length > 0;
 

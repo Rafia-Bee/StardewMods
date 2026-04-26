@@ -10,6 +10,9 @@ internal sealed class BeachCleanup : IQuestDefinition
     public string Id => "Seasonal.BeachCleanup";
     public QuestCategory Category => QuestCategory.Seasonal;
     public PostingKind Kind => PostingKind.DailyBoard;
+    public int DefaultWeight => 30;
+    public int MaxPerDay => 1;
+    public int CooldownDays => 3;
 
     private static readonly (string Id, string Name)[] BeachForage =
     {

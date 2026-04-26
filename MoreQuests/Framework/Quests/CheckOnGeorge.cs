@@ -11,6 +11,9 @@ internal sealed class CheckOnGeorge : IQuestDefinition
     public string Id => "Social.CheckOnGeorge";
     public QuestCategory Category => QuestCategory.Social;
     public PostingKind Kind => PostingKind.DailyBoard;
+    public int DefaultWeight => 25;
+    public int MaxPerDay => 1;
+    public int CooldownDays => 21;
 
     public bool IsAvailable(QuestContext ctx) =>
         Game1.getCharacterFromName("George") != null &&

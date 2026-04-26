@@ -10,6 +10,9 @@ internal sealed class SimpleFishingRequest : IQuestDefinition
     public string Id => "Fishing.SimpleRequest";
     public QuestCategory Category => QuestCategory.Fishing;
     public PostingKind Kind => PostingKind.DailyBoard;
+    public int DefaultWeight => 50;
+    public int MaxPerDay => 1;
+    public int CooldownDays => 2;
 
     public bool IsAvailable(QuestContext ctx) => true;
 

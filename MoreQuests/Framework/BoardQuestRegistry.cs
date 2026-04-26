@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using MoreQuests.Framework.Quests;
+using MoreQuests.Framework.Quests.Vanilla;
 
 namespace MoreQuests.Framework;
 
@@ -8,6 +9,10 @@ internal static class BoardQuestRegistry
 {
     public static IReadOnlyList<IQuestDefinition> All { get; } = new IQuestDefinition[]
     {
+        new VanillaItemDelivery(),
+        new VanillaResourceCollection(),
+        new VanillaSlayMonster(),
+        new VanillaFishing(),
         new BasicCropDelivery(),
         new SimpleFishingRequest(),
         new BasicSlimeClearing(),
@@ -17,7 +22,7 @@ internal static class BoardQuestRegistry
         new CheckOnGeorge(),
         new HaySupplyRun(),
         new BeachCleanup(),
-        new PlantingDrive(),
+        new SpringTea(),
         new CravingDish()
     };
 

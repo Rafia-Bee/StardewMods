@@ -10,6 +10,9 @@ internal sealed class HaySupplyRun : IQuestDefinition
     public string Id => "Animal.HaySupplyRun";
     public QuestCategory Category => QuestCategory.Animal;
     public PostingKind Kind => PostingKind.Mail;
+    public int DefaultWeight => 0;
+    public int MaxPerDay => 1;
+    public int CooldownDays => 28;
 
     public bool IsAvailable(QuestContext ctx)
     {

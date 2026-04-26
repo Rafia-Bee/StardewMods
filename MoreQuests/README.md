@@ -31,7 +31,7 @@ Each quest declares one of four `PostingKind` values describing how it reaches t
 | Social | Check on George | DailyBoard |
 | Animal | Hay Supply Run | Mail |
 | Seasonal | Beach Cleanup (summer) | DailyBoard |
-| Seasonal | Planting Drive (spring) | DailyBoard |
+| Seasonal | Spring Tea (fall) | DailyBoard |
 
 **Planned (later phases)** — animal trigger letters, festival pre-quests, special-orders quests, NPC-dialogue quests, mod-gated quests for RSV / East Scarp / Visit Mount Vapius / SVE, custom-asset quests (Protein Bar, Animal Paintings, Void Chicken Statue, Egg Basket, Legendary Fish Displays), consequence dispatch via `Data/NPCGiftTastes`. [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) and `docs/DECISION_LOG.md` has the full plan.
 

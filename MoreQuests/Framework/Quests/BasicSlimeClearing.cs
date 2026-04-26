@@ -9,6 +9,9 @@ internal sealed class BasicSlimeClearing : IQuestDefinition
     public string Id => "Mining.BasicSlimeClearing";
     public QuestCategory Category => QuestCategory.Mining;
     public PostingKind Kind => PostingKind.DailyBoard;
+    public int DefaultWeight => 50;
+    public int MaxPerDay => 1;
+    public int CooldownDays => 2;
 
     public bool IsAvailable(QuestContext ctx) => Game1.player.deepestMineLevel > 0;
 
