@@ -1,9 +1,17 @@
+using System.Collections.Generic;
+
 namespace MoreQuests;
 
 public sealed class ModConfig
 {
     // ----- Quest board -----
     public int QuestsPerDay { get; set; } = 3;
+
+    /// Per-definition selection weight for the daily board. Keys are definition IDs
+    /// (e.g. "Vanilla.ItemDelivery", "Farming.BasicCropDelivery"). Values are relative
+    /// weights; 0 disables the definition. Missing keys fall back to each definition's
+    /// declared DefaultWeight.
+    public Dictionary<string, int> QuestWeights { get; set; } = new();
 
     // ----- Master toggles -----
     public bool DifficultyScaling { get; set; } = true;

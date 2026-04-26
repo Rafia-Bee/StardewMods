@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using StardewValley.Quests;
 
 namespace MoreQuests.Framework;
 
@@ -56,6 +57,10 @@ internal sealed class QuestPosting
     public int ItemRewardCount { get; set; } = 1;
 
     public List<QuestConsequence> Consequences { get; set; } = new();
+
+    /// If set, this Quest object is used directly instead of building one from the posting fields.
+    /// Vanilla-quest definitions populate this so the vanilla random logic stays intact.
+    public Quest? PreBuiltQuest { get; set; }
 }
 
 internal sealed class QuestConsequence

@@ -1,7 +1,25 @@
 {
     "config.section.questBoard": "Quest Board",
     "config.questsPerDay": "Quests per day",
-    "config.questsPerDay.tooltip": "How many quests appear on the help-wanted board each day.",
+    "config.questsPerDay.tooltip": "How many quests appear on the help-wanted board each day (1-20).",
+
+    "config.section.weights": "Quest type weights",
+    "config.section.weights.tooltip": "Each daily-board quest type has a relative weight. Higher = more likely to appear. 0 disables that type.",
+    "config.weight.tooltip": "Selection weight for {{id}} (0 disables, higher = more likely).",
+    "config.weight.Vanilla.ItemDelivery": "Vanilla item delivery",
+    "config.weight.Vanilla.ResourceCollection": "Vanilla resource collection",
+    "config.weight.Vanilla.SlayMonster": "Vanilla monster eradication",
+    "config.weight.Vanilla.Fishing": "Vanilla fishing request",
+    "config.weight.Farming.BasicCropDelivery": "Basic crop delivery",
+    "config.weight.Fishing.SimpleRequest": "Simple fishing request",
+    "config.weight.Mining.BasicSlimeClearing": "Basic slime clearing",
+    "config.weight.Mining.BarDelivery": "Clint's bar delivery",
+    "config.weight.Foraging.Seasonal": "Seasonal foraging",
+    "config.weight.Social.ElliottPoem": "Elliott's poem inspiration",
+    "config.weight.Social.CheckOnGeorge": "Check on George",
+    "config.weight.Seasonal.BeachCleanup": "Beach cleanup",
+    "config.weight.Seasonal.SpringTea": "Spring tea",
+    "config.weight.Cooking.CravingDish": "Craving a dish",
 
     "config.section.toggles": "Toggles",
     "config.difficultyScaling": "Difficulty scaling",
@@ -133,7 +151,7 @@
     "quest.seasonal.beach.targetMessage": "Looks great, thanks for clearing those out.",
 
     "quest.seasonal.springtea.title": "{{npc}}'s spring tea",
-    "quest.seasonal.springtea.description": "{{npc}} wants to make a batch of spring tea and needs {{qty}} {{item}}.",
+    "quest.seasonal.springtea.description": "{{npc}} is asking for {{qty}} {{item}} to make some tea.",
     "quest.seasonal.springtea.objective": "Bring {{qty}} {{item}} to {{npc}}.",
     "quest.seasonal.springtea.targetMessage": "Lovely, thank you.",
 

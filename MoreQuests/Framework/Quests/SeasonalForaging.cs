@@ -10,6 +10,9 @@ internal sealed class SeasonalForaging : IQuestDefinition
     public string Id => "Foraging.Seasonal";
     public QuestCategory Category => QuestCategory.Foraging;
     public PostingKind Kind => PostingKind.DailyBoard;
+    public int DefaultWeight => 50;
+    public int MaxPerDay => 1;
+    public int CooldownDays => 2;
 
     private static readonly Dictionary<string, (string Id, string Name)[]> SeasonalForage = new()
     {

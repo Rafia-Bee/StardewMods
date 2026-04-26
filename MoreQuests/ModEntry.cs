@@ -1,4 +1,6 @@
+using HarmonyLib;
 using MoreQuests.Framework;
+using MoreQuests.Framework.Patches;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -20,6 +22,9 @@ public sealed class ModEntry : Mod
 
         _poster = new QuestPoster(helper, Monitor);
         _poster.Register();
+
+        var harmony = new Harmony(ModManifest.UniqueID);
+        BillboardPatches.Apply(harmony);
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
@@ -45,10 +50,17 @@ public sealed class ModEntry : Mod
         if (!Context.IsWorldReady || _pipeline == null || _poster == null)
             return;
 
+        _poster.BeginDay();
+
         var daily = _pipeline.GenerateDailyPostings();
         _poster.PostBatch(daily);
+        _poster.CommitBoard();
 
         var triggered = _pipeline.GenerateTriggeredMail();
         _poster.PostBatch(triggered);
+
+        // Suppress vanilla's lone questOfTheDay so we are the single source of truth on the board.
+        if (Game1.IsMasterGame)
+            Game1.netWorldState.Value.SetQuestOfTheDay(null);
     }
 }

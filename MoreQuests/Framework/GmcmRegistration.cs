@@ -24,7 +24,23 @@ internal static class GmcmRegistration
             v => ModEntry.Config.QuestsPerDay = v,
             () => t.Get("config.questsPerDay"),
             () => t.Get("config.questsPerDay.tooltip"),
-            min: 1, max: 8);
+            min: 1, max: 20);
+
+        api.AddSectionTitle(manifest, () => t.Get("config.section.weights"),
+            () => t.Get("config.section.weights.tooltip"));
+        foreach (var def in BoardQuestRegistry.All)
+        {
+            if (def.Kind != PostingKind.DailyBoard)
+                continue;
+            string id = def.Id;
+            int defaultWeight = def.DefaultWeight;
+            api.AddNumberOption(manifest,
+                () => ModEntry.Config.QuestWeights.TryGetValue(id, out int w) ? w : defaultWeight,
+                v => ModEntry.Config.QuestWeights[id] = v,
+                () => t.Get($"config.weight.{id}", new { fallback = id }),
+                () => t.Get("config.weight.tooltip", new { id }),
+                min: 0, max: 100);
+        }
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.toggles"));
         api.AddBoolOption(manifest,

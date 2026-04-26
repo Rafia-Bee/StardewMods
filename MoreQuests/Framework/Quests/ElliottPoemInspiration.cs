@@ -10,6 +10,9 @@ internal sealed class ElliottPoemInspiration : IQuestDefinition
     public string Id => "Social.ElliottPoem";
     public QuestCategory Category => QuestCategory.Social;
     public PostingKind Kind => PostingKind.DailyBoard;
+    public int DefaultWeight => 25;
+    public int MaxPerDay => 1;
+    public int CooldownDays => 7;
 
     private static readonly (string Id, string Name)[] Pool =
     {

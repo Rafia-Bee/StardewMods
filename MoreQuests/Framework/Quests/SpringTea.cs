@@ -2,24 +2,25 @@ using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
 
-/// Daily board (spring): ship spring flowers.
-/// Source: quest table row "Seasonal, Spring, Spring Tea".
+/// Daily board (fall): ship spring flowers.
+/// Source: quest table row "Seasonal, Fall, Spring Tea".
 internal sealed class SpringTea : IQuestDefinition
 {
     public string Id => "Seasonal.SpringTea";
     public QuestCategory Category => QuestCategory.Seasonal;
     public PostingKind Kind => PostingKind.DailyBoard;
+    public int DefaultWeight => 40;
+    public int MaxPerDay => 1;
+    public int CooldownDays => 8;
 
     private static readonly (string Id, string Name)[] SpringFlowers =
     {
         ("(O)591", "Tulip"),
-        ("(O)597", "Blue Jazz"),
-        ("(O)376", "Poppy"),
-        ("(O)595", "Fairy Rose")
-        // TODO: make this dynamic for modded flowers.
+        ("(O)597", "Blue Jazz")
+        // TODO: dynamic lookup to support modded spring flowers.
     };
 
-    public bool IsAvailable(QuestContext ctx) => ctx.Season == "spring";
+    public bool IsAvailable(QuestContext ctx) => ctx.Season == "fall";
 
     public QuestPosting? Build(QuestContext ctx)
     {

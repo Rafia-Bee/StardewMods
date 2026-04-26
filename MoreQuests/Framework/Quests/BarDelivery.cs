@@ -9,6 +9,9 @@ internal sealed class BarDelivery : IQuestDefinition
     public string Id => "Mining.BarDelivery";
     public QuestCategory Category => QuestCategory.Mining;
     public PostingKind Kind => PostingKind.DailyBoard;
+    public int DefaultWeight => 35;
+    public int MaxPerDay => 1;
+    public int CooldownDays => 3;
 
     private static readonly (string Id, string Name)[] BarPool =
     {
