@@ -4,7 +4,8 @@ using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
 
-/// Daily board: deliver a dish the quest giver loves or likes.
+/// Daily board: deliver a dish the quest giver loves or likes. Reward is a friendship
+/// boost plus the giver gifting back a different loved/liked dish (no gold).
 /// Source: quest table row "Cooking, Craving a meal, Craving <dish>".
 internal sealed class CravingDish : IQuestDefinition
 {
@@ -24,17 +25,19 @@ internal sealed class CravingDish : IQuestDefinition
             return null;
 
         Dictionary<string, string> tastes;
+        Dictionary<string, string> allRecipes;
         try
         {
             tastes = Game1.content.Load<Dictionary<string, string>>("Data/NPCGiftTastes");
+            allRecipes = Game1.content.Load<Dictionary<string, string>>("Data/CookingRecipes");
         }
         catch
         {
             return null;
         }
 
-        var recipes = ctx.Items.GetKnownRecipes();
-        if (recipes.Count == 0)
+        var knownRecipes = ctx.Items.GetKnownRecipes();
+        if (knownRecipes.Count == 0)
             return null;
 
         for (int attempt = 0; attempt < 10; attempt++)
@@ -50,16 +53,19 @@ internal sealed class CravingDish : IQuestDefinition
             var loved = fields[0].Split(' ').ToHashSet();
             var liked = fields[2].Split(' ').ToHashSet();
 
-            var matches = recipes.Where(r =>
+            var requestableMatches = knownRecipes.Where(r =>
             {
                 string bare = StripPrefix(r.OutputItem.QualifiedItemId);
                 return loved.Contains(bare) || liked.Contains(bare);
             }).ToList();
-
-            if (matches.Count == 0)
+            if (requestableMatches.Count == 0)
                 continue;
 
-            var dish = matches[Game1.random.Next(matches.Count)];
+            var dish = requestableMatches[Game1.random.Next(requestableMatches.Count)];
+            string requestedBareId = StripPrefix(dish.OutputItem.QualifiedItemId);
+
+            var rewardDish = PickRewardDish(allRecipes, ctx.Items, loved, liked, requestedBareId);
+
             return new QuestPosting
             {
                 DefinitionId = Id,
@@ -71,17 +77,46 @@ internal sealed class CravingDish : IQuestDefinition
                 ObjectiveItemName = dish.OutputItem.DisplayName,
                 ObjectiveQuantity = 1,
                 DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-                GoldReward = ctx.Config.GoldBasicBase / 2,
+                GoldReward = 0,
                 FriendshipReward = ctx.Config.FriendshipBasic,
                 FriendshipRewardNpc = giver,
+                ItemReward = rewardDish?.QualifiedItemId,
+                ItemRewardCount = rewardDish != null ? 1 : 0,
                 Title = ctx.Helper.Translation.Get("quest.cooking.craving.title", new { npc = giver }),
                 Description = ctx.Helper.Translation.Get("quest.cooking.craving.description", new { npc = giver, item = dish.OutputItem.DisplayName }),
                 CurrentObjective = ctx.Helper.Translation.Get("quest.cooking.craving.objective", new { item = dish.OutputItem.DisplayName, npc = giver }),
-                TargetMessage = ctx.Helper.Translation.Get("quest.cooking.craving.targetMessage")
+                TargetMessage = ctx.Helper.Translation.Get("quest.cooking.craving.targetMessage", new { item2 = rewardDish?.DisplayName ?? dish.OutputItem.DisplayName })
             };
         }
 
         return null;
+    }
+
+    private static ResolvedItem? PickRewardDish(
+        Dictionary<string, string> allRecipes,
+        ItemResolver items,
+        HashSet<string> loved,
+        HashSet<string> liked,
+        string excludeBareId)
+    {
+        var candidates = new List<ResolvedItem>();
+        foreach (var (_, raw) in allRecipes)
+        {
+            var parts = raw.Split('/');
+            if (parts.Length < 3)
+                continue;
+            string outputBare = parts[2].Split(' ')[0];
+            if (outputBare == excludeBareId)
+                continue;
+            if (!loved.Contains(outputBare) && !liked.Contains(outputBare))
+                continue;
+            var resolved = items.TryResolveItem("(O)" + outputBare);
+            if (resolved != null)
+                candidates.Add(resolved);
+        }
+        if (candidates.Count == 0)
+            return null;
+        return candidates[Game1.random.Next(candidates.Count)];
     }
 
     private static string StripPrefix(string id) =>

@@ -165,6 +165,42 @@ internal sealed class ItemResolver
         return results;
     }
 
+    /// Items tagged `forage_item` (and optionally `season_<season>`) in their context tags.
+    /// Returns vanilla and modded forage in one list.
+    public List<ResolvedItem> GetForageItems(string? season = null)
+    {
+        var results = new List<ResolvedItem>();
+        string? seasonTag = season != null ? "season_" + season.ToLowerInvariant() : null;
+        try
+        {
+            foreach (var itemType in ItemRegistry.ItemTypes)
+            {
+                if (itemType.Identifier != "(O)")
+                    continue;
+                foreach (var id in itemType.GetAllIds())
+                {
+                    var qualifiedId = itemType.Identifier + id;
+                    var parsed = ItemRegistry.GetData(qualifiedId);
+                    if (parsed?.RawData is not ObjectData obj)
+                        continue;
+                    var tags = obj.ContextTags;
+                    if (tags == null || !tags.Contains("forage_item"))
+                        continue;
+                    if (seasonTag != null && !tags.Contains(seasonTag))
+                        continue;
+                    var item = TryResolveItem(qualifiedId);
+                    if (item != null)
+                        results.Add(item);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _monitor.Log($"GetForageItems: {ex.Message}", LogLevel.Warn);
+        }
+        return results;
+    }
+
     public ResolvedItem? TryResolveItem(string itemId)
     {
         if (string.IsNullOrEmpty(itemId))

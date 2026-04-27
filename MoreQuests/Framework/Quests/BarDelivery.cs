@@ -1,3 +1,4 @@
+using System;
 using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
@@ -11,7 +12,7 @@ internal sealed class BarDelivery : IQuestDefinition
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 35;
     public int MaxPerDay => 1;
-    public int CooldownDays => 3;
+    public int CooldownDays => 5;
 
     private static readonly (string Id, string Name)[] BarPool =
     {
@@ -26,15 +27,18 @@ internal sealed class BarDelivery : IQuestDefinition
     public QuestPosting? Build(QuestContext ctx)
     {
         int level = Game1.player.MiningLevel;
+        bool skullCavernUnlocked = Game1.player.deepestMineLevel > 120;
+
+        int maxIdxExclusive = skullCavernUnlocked ? 4 : 3;
         int barIdx = level switch
         {
-            >= 8 => Game1.random.Next(2, 4),
-            >= 4 => Game1.random.Next(1, 3),
+            >= 8 => Game1.random.Next(2, maxIdxExclusive),
+            >= 4 => Game1.random.Next(1, Math.Min(3, maxIdxExclusive)),
             _ => 0
         };
         var bar = BarPool[barIdx];
 
-        int qty = Game1.random.Next(3, 8);
+        int qty = Game1.random.Next(2, 5);
         int gold = ctx.Config.GoldIntermediateBase;
 
         return new QuestPosting
@@ -48,7 +52,7 @@ internal sealed class BarDelivery : IQuestDefinition
             ObjectiveItemName = bar.Name,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            GoldReward = gold,
+            GoldReward = gold, // TODO: eward should be gold + a geode or gem.
             Title = ctx.Helper.Translation.Get("quest.mining.bar.title"),
             Description = ctx.Helper.Translation.Get("quest.mining.bar.description", new { qty, item = bar.Name }),
             CurrentObjective = ctx.Helper.Translation.Get("quest.mining.bar.objective", new { qty, item = bar.Name }),

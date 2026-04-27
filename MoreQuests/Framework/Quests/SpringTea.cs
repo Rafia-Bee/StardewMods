@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
@@ -13,22 +15,25 @@ internal sealed class SpringTea : IQuestDefinition
     public int MaxPerDay => 1;
     public int CooldownDays => 8;
 
-    private static readonly (string Id, string Name)[] SpringFlowers =
-    {
-        ("(O)591", "Tulip"),
-        ("(O)597", "Blue Jazz")
-        // TODO: dynamic lookup to support modded spring flowers.
-    };
-
     public bool IsAvailable(QuestContext ctx) => ctx.Season == "fall";
 
     public QuestPosting? Build(QuestContext ctx)
     {
-        var pick = SpringFlowers[Game1.random.Next(SpringFlowers.Length)];
+        var allFlowers = ctx.Items.GetItemsByCategory(StardewValley.Object.flowersCategory);
+        var springFlowers = allFlowers
+            .Where(f => f.ContextTags.Contains("season_spring"))
+            .ToList();
+
+        if (springFlowers.Count == 0)
+            return null;
+
+        var pick = springFlowers[Game1.random.Next(springFlowers.Count)];
         int qty = Game1.random.Next(3, 6);
 
         var npcs = NpcDispatch.MetHumanNpcs();
-        string giver = npcs.Count > 0 ? npcs[Game1.random.Next(npcs.Count)] : "Caroline";
+        if (npcs.Count == 0)
+            return null;
+        string giver = npcs[Game1.random.Next(npcs.Count)];
 
         return new QuestPosting
         {
@@ -37,16 +42,16 @@ internal sealed class SpringTea : IQuestDefinition
             Tier = DifficultyTier.Beginner,
             QuestType = BoardQuestType.ItemDelivery,
             QuestGiver = giver,
-            ObjectiveItemId = pick.Id,
-            ObjectiveItemName = pick.Name,
+            ObjectiveItemId = pick.QualifiedItemId,
+            ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             GoldReward = 0,
             FriendshipReward = ctx.Config.FriendshipBasic,
             FriendshipRewardNpc = giver,
             Title = ctx.Helper.Translation.Get("quest.seasonal.springtea.title", new { npc = giver }),
-            Description = ctx.Helper.Translation.Get("quest.seasonal.springtea.description", new { npc = giver, qty, item = pick.Name }),
-            CurrentObjective = ctx.Helper.Translation.Get("quest.seasonal.springtea.objective", new { qty, item = pick.Name, npc = giver }),
+            Description = ctx.Helper.Translation.Get("quest.seasonal.springtea.description", new { npc = giver, qty, item = pick.DisplayName }),
+            CurrentObjective = ctx.Helper.Translation.Get("quest.seasonal.springtea.objective", new { qty, item = pick.DisplayName, npc = giver }),
             TargetMessage = ctx.Helper.Translation.Get("quest.seasonal.springtea.targetMessage")
         };
     }
