@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
+using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Quests;
@@ -21,7 +22,7 @@ internal static class BillboardPatches
             transpiler: new HarmonyMethod(typeof(BillboardPatches), nameof(Ctor_Transpiler)));
 
         harmony.Patch(
-            original: AccessTools.Method(typeof(Billboard), nameof(Billboard.draw)),
+            original: AccessTools.Method(typeof(Billboard), nameof(Billboard.draw), new[] { typeof(SpriteBatch) }),
             prefix: new HarmonyMethod(typeof(BillboardPatches), nameof(Draw_Prefix)),
             transpiler: new HarmonyMethod(typeof(BillboardPatches), nameof(Generic_Transpiler)));
 

@@ -1,4 +1,5 @@
 using HarmonyLib;
+using Microsoft.Xna.Framework.Graphics;
 using MoreQuests.Framework;
 using MoreQuests.Framework.Patches;
 using StardewModdingAPI;
@@ -11,6 +12,9 @@ public sealed class ModEntry : Mod
 {
     internal static ModEntry Instance { get; private set; } = null!;
     internal static ModConfig Config { get; set; } = new();
+
+    internal const string PadAssetRoot = "Mods/RafiaBee.MoreQuests/Pad";
+    internal const string PinAssetRoot = "Mods/RafiaBee.MoreQuests/Pin";
 
     private QuestPipeline? _pipeline;
     private QuestPoster? _poster;
@@ -26,9 +30,24 @@ public sealed class ModEntry : Mod
         var harmony = new Harmony(ModManifest.UniqueID);
         BillboardPatches.Apply(harmony);
 
+        helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
+    }
+
+    private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
+    {
+        if (e.NameWithoutLocale.IsEquivalentTo(PadAssetRoot))
+        {
+            e.LoadFromModFile<Texture2D>("assets/pad.png", AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(PinAssetRoot))
+        {
+            e.LoadFromModFile<Texture2D>("assets/pin.png", AssetLoadPriority.Low);
+        }
     }
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)

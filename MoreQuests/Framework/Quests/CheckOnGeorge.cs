@@ -2,9 +2,10 @@ using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
 
-/// Daily board: Evelyn asks the farmer to talk to George and report back.
-/// Vanilla SocializeQuest behavior. Modeled here as a simple item-less posting.
-/// The underlying social-tracking subclass will be implemented in a later phase.
+/// Daily board: Evelyn asks the farmer to bring George a liked or loved gift,
+/// chat with him, then report back. Player keeps any non-consumed items.
+/// Friendship reward goes to both Evelyn and George. The custom
+/// `CheckOnGeorgeQuest` handles the gift detection and reporting flow.
 /// Source: quest table row "Social, Check-in, Check on George".
 internal sealed class CheckOnGeorge : IQuestDefinition
 {
@@ -21,24 +22,33 @@ internal sealed class CheckOnGeorge : IQuestDefinition
 
     public QuestPosting? Build(QuestContext ctx)
     {
+        var quest = new CheckOnGeorgeQuest
+        {
+            giftRecipient = { Value = "George" },
+            reportTo = { Value = "Evelyn" }
+        };
+
         return new QuestPosting
         {
             DefinitionId = Id,
             Category = Category,
             Tier = DifficultyTier.Beginner,
-            QuestType = BoardQuestType.ItemDelivery,
+            QuestType = BoardQuestType.Socialize,
             QuestGiver = "Evelyn",
-            ObjectiveItemId = "(O)216",
-            ObjectiveItemName = "Bread",
             ObjectiveQuantity = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             GoldReward = 0,
             FriendshipReward = ctx.Config.FriendshipMid,
             FriendshipRewardNpc = "Evelyn",
+            Consequences =
+            {
+                new QuestConsequence { NpcName = "George", FriendshipChange = ctx.Config.FriendshipMid, Tier = ConsequenceTier.Positive }
+            },
             Title = ctx.Helper.Translation.Get("quest.social.george.title"),
             Description = ctx.Helper.Translation.Get("quest.social.george.description"),
             CurrentObjective = ctx.Helper.Translation.Get("quest.social.george.objective"),
-            TargetMessage = ctx.Helper.Translation.Get("quest.social.george.targetMessage")
+            TargetMessage = ctx.Helper.Translation.Get("quest.social.george.targetMessage"),
+            PreBuiltQuest = quest
         };
     }
 }

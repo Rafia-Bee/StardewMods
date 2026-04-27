@@ -1,9 +1,8 @@
-using StardewModdingAPI;
 using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
 
-/// Daily board (summer): collect beach foragables.
+/// Daily board (summer): collect beach foragables and report back. Player keeps the items.
 /// Source: quest table row "Seasonal, Summer, Beach Cleanup".
 internal sealed class BeachCleanup : IQuestDefinition
 {
@@ -12,15 +11,18 @@ internal sealed class BeachCleanup : IQuestDefinition
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 30;
     public int MaxPerDay => 1;
-    public int CooldownDays => 3;
+    public int CooldownDays => 7;
 
     private static readonly (string Id, string Name)[] BeachForage =
     {
         ("(O)393", "Coral"),
         ("(O)397", "Sea Urchin"),
         ("(O)392", "Nautilus Shell"),
-        ("(O)394", "Rainbow Shell")
-        /// TODO:: modded items?
+        ("(O)394", "Rainbow Shell"),
+        ("(O)372", "Clam"),
+        ("(O)718", "Cockle"),
+        ("(O)719", "Mussel"),
+        ("(O)723", "Oyster")
     };
 
     public bool IsAvailable(QuestContext ctx) => ctx.Season == "summer";
@@ -28,18 +30,25 @@ internal sealed class BeachCleanup : IQuestDefinition
     public QuestPosting? Build(QuestContext ctx)
     {
         var pick = BeachForage[Game1.random.Next(BeachForage.Length)];
-        int qty = Game1.random.Next(3, 6);
+        int qty = Game1.random.Next(2, 6);
 
-        var registry = ctx.Helper.ModRegistry;
-        string? giver = NpcDispatch.Pick(registry, NpcDispatch.Role.BeachCleanup);
-        giver ??= "Elliott";
+        string? giver = NpcDispatch.Pick(ctx.Helper.ModRegistry, NpcDispatch.Role.BeachCleanup);
+        if (giver == null)
+            return null;
+
+        var quest = new CollectAndReportQuest
+        {
+            talkToNpc = { Value = giver },
+            requiredCount = { Value = qty }
+        };
+        quest.itemIds.Add(pick.Id);
 
         return new QuestPosting
         {
             DefinitionId = Id,
             Category = Category,
             Tier = DifficultyTier.Beginner,
-            QuestType = BoardQuestType.ItemDelivery,
+            QuestType = BoardQuestType.ResourceCollection,
             QuestGiver = giver,
             ObjectiveItemId = pick.Id,
             ObjectiveItemName = pick.Name,
@@ -51,7 +60,8 @@ internal sealed class BeachCleanup : IQuestDefinition
             Title = ctx.Helper.Translation.Get("quest.seasonal.beach.title", new { npc = giver }),
             Description = ctx.Helper.Translation.Get("quest.seasonal.beach.description", new { npc = giver, qty, item = pick.Name }),
             CurrentObjective = ctx.Helper.Translation.Get("quest.seasonal.beach.objective", new { qty, item = pick.Name, npc = giver }),
-            TargetMessage = ctx.Helper.Translation.Get("quest.seasonal.beach.targetMessage")
+            TargetMessage = ctx.Helper.Translation.Get("quest.seasonal.beach.targetMessage"),
+            PreBuiltQuest = quest
         };
     }
 }

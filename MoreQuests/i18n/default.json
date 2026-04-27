@@ -106,18 +106,18 @@
     "config.SkullCavernMaxLevel.tooltip": "Maximum floor target for Skull Cavern Deep Dive quests.",
 
     "quest.farming.basic.title": "{{npc}}'s crop request",
-    "quest.farming.basic.description": "{{npc}} is asking for {{qty}} {{item}}. Bring them by before the deadline.",
+    "quest.farming.basic.description": "Any kind farmer has some fresh {{item}}? Please bring by {{qty}} {{item}} to {{npc}} before the deadline.",
     "quest.farming.basic.objective": "Bring {{qty}} {{item}} to {{npc}}.",
     "quest.farming.basic.targetMessage": "These look great. Thank you!",
 
     "quest.fishing.simple.title": "Fresh catch needed",
-    "quest.fishing.simple.description": "Willy's looking for {{qty}} {{item}}. Bring them by before the deadline.",
-    "quest.fishing.simple.objective": "Catch {{qty}} {{item}} for Willy.",
-    "quest.fishing.simple.targetMessage": "Perfect, exactly what I was after.",
+    "quest.fishing.simple.description": "{{npc}} here. I saw some {{item}} splashing around the other day but I couldn't catch any! Could someone catch some for me?",
+    "quest.fishing.simple.objective": "Catch {{qty}} {{item}} for {{npc}}.",
+    "quest.fishing.simple.targetMessage": "Thank you! They look fresh.",
 
     "quest.mining.slime.title": "Slime trouble",
-    "quest.mining.slime.description": "Marlon wants someone to clear out {{qty}} green slimes in the mines.",
-    "quest.mining.slime.objective": "Slay {{qty}} green slimes.",
+    "quest.mining.slime.description": "Need a brave adventurer to clear out a few slimes in the mines.",
+    "quest.mining.slime.objective": "Slay {{qty}} slimes.",
     "quest.mining.slime.targetMessage": "That'll keep the mine quiet for a while. Thanks.",
 
     "quest.mining.bar.title": "Clint needs bars",
@@ -126,9 +126,9 @@
     "quest.mining.bar.targetMessage": "These are perfect, thanks for getting them so fast.",
 
     "quest.foraging.seasonal.title": "{{npc}}'s foraging request",
-    "quest.foraging.seasonal.description": "{{npc}} is putting together a stock of {{qty}} {{item}}.",
+    "quest.foraging.seasonal.description": "I've been looking for some {{item}} but to no luck. I really want to make some salad with them. If someone finds {{qty}} {{item}}, please bring them by. Thanks! - {{npc}}",
     "quest.foraging.seasonal.objective": "Bring {{qty}} {{item}} to {{npc}}.",
-    "quest.foraging.seasonal.targetMessage": "Wonderful, thank you for finding these.",
+    "quest.foraging.seasonal.targetMessage": "Wonderful, thank you for finding these!",
 
     "quest.social.elliott.title": "A token of inspiration",
     "quest.social.elliott.description": "Elliott would love a {{item}} for poetic inspiration.",
@@ -136,19 +136,19 @@
     "quest.social.elliott.targetMessage": "Beautiful. This will fit right into my next piece.",
 
     "quest.social.george.title": "Check on George",
-    "quest.social.george.description": "Evelyn is worried about George. Take some bread by their place and report back.",
-    "quest.social.george.objective": "Deliver bread to George (and let Evelyn know how he's doing).",
-    "quest.social.george.targetMessage": "Thank you for looking in on him.",
+    "quest.social.george.description": "George has been keeping to himself more than usual lately. He would love a small thoughtful gift and some farm stories. Bring him something he likes and stop by to chat.",
+    "quest.social.george.objective": "Gift George something he likes, then let Evelyn know how he's doing.",
+    "quest.social.george.targetMessage": "Thank you for looking in on him. He keeps saying he's fine but I know he misses his friends.",
 
     "quest.animal.hay.title": "Hay supply run",
-    "quest.animal.hay.description": "Marnie's stocking up the ranch and needs {{qty}} hay before the week is out.",
+    "quest.animal.hay.description": "My hay supply is running low. Could a kind farmer bring me some more? {{qty}} should be more than enough.",
     "quest.animal.hay.objective": "Bring {{qty}} hay to Marnie.",
-    "quest.animal.hay.targetMessage": "Perfect, that'll keep the ranch fed. Thanks.",
+    "quest.animal.hay.targetMessage": "Thanks! The cows were getting antsy.",
 
     "quest.seasonal.beach.title": "{{npc}}'s beach cleanup",
-    "quest.seasonal.beach.description": "{{npc}} wants to tidy up the beach. Bring back {{qty}} {{item}}.",
-    "quest.seasonal.beach.objective": "Bring {{qty}} {{item}} to {{npc}}.",
-    "quest.seasonal.beach.targetMessage": "Looks great, thanks for clearing those out.",
+    "quest.seasonal.beach.description": "I almost hurt myself on a {{item}} the other day. Can someone pick them up from the beach? You can keep them, just let me know once you've gathered enough.",
+    "quest.seasonal.beach.objective": "Collect {{qty}} {{item}} and talk to {{npc}}.",
+    "quest.seasonal.beach.targetMessage": "Thanks for clearing those out. Fun to look at but not so fun to step on!",
 
     "quest.seasonal.springtea.title": "{{npc}}'s spring tea",
     "quest.seasonal.springtea.description": "{{npc}} is asking for {{qty}} {{item}} to make some tea.",
@@ -156,7 +156,7 @@
     "quest.seasonal.springtea.targetMessage": "Lovely, thank you.",
 
     "quest.cooking.craving.title": "{{npc}} is craving a meal",
-    "quest.cooking.craving.description": "{{npc}} would love some {{item}}. Bring it over fresh.",
+    "quest.cooking.craving.description": "I really really REALLY want some {{item}}. Can someone make some for me?",
     "quest.cooking.craving.objective": "Bring {{item}} to {{npc}}.",
-    "quest.cooking.craving.targetMessage": "Oh, that smells amazing. Thank you!"
+    "quest.cooking.craving.targetMessage": "Oh, that smells amazing. Thank you! Oh, I made some {{item2}} for dinner, here, have some!"
 }

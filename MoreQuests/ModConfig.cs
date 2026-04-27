@@ -31,11 +31,11 @@ public sealed class ModConfig
     public int FriendshipMultiHeart { get; set; } = 250;
 
     // ----- Gold reward bases -----
-    public int GoldBeginnerBase { get; set; } = 200;
+    public int GoldBeginnerBase { get; set; } = 100;
     public int GoldBasicBase { get; set; } = 300;
     public int GoldIntermediateBase { get; set; } = 500;
     public int GoldAdvancedBase { get; set; } = 1000;
-    public int GoldExpertBase { get; set; } = 1500;
+    public int GoldExpertBase { get; set; } = 3000;
 
     // ----- Reward multipliers vs item sell price -----
     public float RewardMultiplierBelowSell { get; set; } = 0.8f;

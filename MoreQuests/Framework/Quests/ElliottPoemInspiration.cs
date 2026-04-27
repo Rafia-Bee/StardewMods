@@ -14,30 +14,20 @@ internal sealed class ElliottPoemInspiration : IQuestDefinition
     public int MaxPerDay => 1;
     public int CooldownDays => 7;
 
-    private static readonly (string Id, string Name)[] Pool =
-    {
-        ("(O)591", "Tulip"),
-        ("(O)597", "Blue Jazz"),
-        ("(O)593", "Summer Spangle"),
-        ("(O)376", "Poppy"),
-        ("(O)421", "Sunflower"),
-        ("(O)418", "Crocus"),
-        ("(O)60", "Emerald"),
-        ("(O)62", "Aquamarine"),
-        ("(O)64", "Ruby"),
-        ("(O)66", "Amethyst"),
-        ("(O)70", "Jade"),
-        ("(O)72", "Diamond")
-        // TODO: make this dynamic for modded gems/flowers.
-    };
-
     public bool IsAvailable(QuestContext ctx) =>
         Game1.getCharacterFromName("Elliott") != null &&
         Game1.player.friendshipData.ContainsKey("Elliott");
 
     public QuestPosting? Build(QuestContext ctx)
     {
-        var pick = Pool[Game1.random.Next(Pool.Length)];
+        var pool = new List<ResolvedItem>();
+        pool.AddRange(ctx.Items.GetItemsByCategory(StardewValley.Object.flowersCategory));
+        pool.AddRange(ctx.Items.GetItemsByCategory(StardewValley.Object.GemCategory));
+
+        if (pool.Count == 0)
+            return null;
+
+        var pick = pool[Game1.random.Next(pool.Count)];
 
         return new QuestPosting
         {
@@ -46,16 +36,16 @@ internal sealed class ElliottPoemInspiration : IQuestDefinition
             Tier = DifficultyTier.Beginner,
             QuestType = BoardQuestType.ItemDelivery,
             QuestGiver = "Elliott",
-            ObjectiveItemId = pick.Id,
-            ObjectiveItemName = pick.Name,
+            ObjectiveItemId = pick.QualifiedItemId,
+            ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             GoldReward = 0,
             FriendshipReward = ctx.Config.FriendshipBasic,
             FriendshipRewardNpc = "Elliott",
             Title = ctx.Helper.Translation.Get("quest.social.elliott.title"),
-            Description = ctx.Helper.Translation.Get("quest.social.elliott.description", new { item = pick.Name }),
-            CurrentObjective = ctx.Helper.Translation.Get("quest.social.elliott.objective", new { item = pick.Name }),
+            Description = ctx.Helper.Translation.Get("quest.social.elliott.description", new { item = pick.DisplayName }),
+            CurrentObjective = ctx.Helper.Translation.Get("quest.social.elliott.objective", new { item = pick.DisplayName }),
             TargetMessage = ctx.Helper.Translation.Get("quest.social.elliott.targetMessage")
         };
     }

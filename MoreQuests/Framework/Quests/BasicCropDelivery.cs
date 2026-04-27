@@ -13,7 +13,7 @@ internal sealed class BasicCropDelivery : IQuestDefinition
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 60;
     public int MaxPerDay => 1;
-    public int CooldownDays => 2;
+    public int CooldownDays => 7;
 
     public bool IsAvailable(QuestContext ctx) => true;
 
@@ -31,17 +31,16 @@ internal sealed class BasicCropDelivery : IQuestDefinition
         {
             DifficultyTier.Beginner => Game1.random.Next(3, 7),
             DifficultyTier.Intermediate => Game1.random.Next(6, 10),
-            _ => Game1.random.Next(8, 12)
+            _ => Game1.random.Next(8, 20)
         };
 
         int basePrice = Math.Max(crop.SellPrice, 30);
-        int gold = (int)(basePrice * qty * 0.6);
-        int floor = ctx.Config.GoldBeginnerBase;
-        int cap = ctx.Config.GoldBasicBase;
-        gold = Math.Clamp(gold, floor, cap);
+        int gold = (int)(basePrice * qty * ctx.Config.RewardMultiplierAboveSell);
 
         var npc = NpcDispatch.MetHumanNpcs();
-        string giver = npc.Count > 0 ? npc[Game1.random.Next(npc.Count)] : "Pierre";
+        if (npc.Count == 0)
+            return null;
+        string giver = npc[Game1.random.Next(npc.Count)];
 
         return new QuestPosting
         {

@@ -24,7 +24,7 @@ internal sealed class HaySupplyRun : IQuestDefinition
     public QuestPosting? Build(QuestContext ctx)
     {
         int animals = CountAnimals();
-        int qty = Math.Max(ctx.Config.HaySupplyBaseQty, animals * 2);
+        int qty = Math.Max(ctx.Config.HaySupplyBaseQty, animals * 3);
         int gold = (int)(qty * 50 * 0.8);
 
         return new QuestPosting

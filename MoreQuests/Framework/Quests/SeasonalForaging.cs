@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
@@ -14,27 +13,23 @@ internal sealed class SeasonalForaging : IQuestDefinition
     public int MaxPerDay => 1;
     public int CooldownDays => 2;
 
-    private static readonly Dictionary<string, (string Id, string Name)[]> SeasonalForage = new()
-    {
-        ["spring"] = new[] { ("(O)16", "Wild Horseradish"), ("(O)18", "Daffodil"), ("(O)20", "Leek"), ("(O)22", "Dandelion") },
-        ["summer"] = new[] { ("(O)396", "Spice Berry"), ("(O)398", "Grape"), ("(O)402", "Sweet Pea"), ("(O)257", "Morel") },
-        ["fall"] = new[] { ("(O)404", "Common Mushroom"), ("(O)406", "Wild Plum"), ("(O)408", "Hazelnut"), ("(O)410", "Blackberry") },
-        ["winter"] = new[] { ("(O)412", "Winter Root"), ("(O)414", "Crystal Fruit"), ("(O)416", "Snow Yam"), ("(O)418", "Crocus") }
-    };
-
-    public bool IsAvailable(QuestContext ctx) => SeasonalForage.ContainsKey(ctx.Season);
+    public bool IsAvailable(QuestContext ctx) =>
+        ctx.Season is "spring" or "summer" or "fall" or "winter";
 
     public QuestPosting? Build(QuestContext ctx)
     {
-        if (!SeasonalForage.TryGetValue(ctx.Season, out var pool))
+        var pool = ctx.Items.GetForageItems(ctx.Season);
+        if (pool.Count == 0)
             return null;
 
-        var pick = pool[Game1.random.Next(pool.Length)];
+        var pick = pool[Game1.random.Next(pool.Count)];
         int qty = Game1.random.Next(3, 8);
         int gold = ctx.Config.GoldBeginnerBase;
 
         var npcs = NpcDispatch.MetHumanNpcs();
-        string giver = npcs.Count > 0 ? npcs[Game1.random.Next(npcs.Count)] : "Linus";
+        if (npcs.Count == 0)
+            return null;
+        string giver = npcs[Game1.random.Next(npcs.Count)];
 
         return new QuestPosting
         {
@@ -43,14 +38,14 @@ internal sealed class SeasonalForaging : IQuestDefinition
             Tier = DifficultyTier.Beginner,
             QuestType = BoardQuestType.ResourceCollection,
             QuestGiver = giver,
-            ObjectiveItemId = pick.Id,
-            ObjectiveItemName = pick.Name,
+            ObjectiveItemId = pick.QualifiedItemId,
+            ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             GoldReward = gold,
             Title = ctx.Helper.Translation.Get("quest.foraging.seasonal.title", new { npc = giver }),
-            Description = ctx.Helper.Translation.Get("quest.foraging.seasonal.description", new { npc = giver, qty, item = pick.Name }),
-            CurrentObjective = ctx.Helper.Translation.Get("quest.foraging.seasonal.objective", new { qty, item = pick.Name, npc = giver }),
+            Description = ctx.Helper.Translation.Get("quest.foraging.seasonal.description", new { npc = giver, qty, item = pick.DisplayName }),
+            CurrentObjective = ctx.Helper.Translation.Get("quest.foraging.seasonal.objective", new { qty, item = pick.DisplayName, npc = giver }),
             TargetMessage = ctx.Helper.Translation.Get("quest.foraging.seasonal.targetMessage")
         };
     }

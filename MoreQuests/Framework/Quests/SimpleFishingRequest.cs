@@ -27,7 +27,7 @@ internal sealed class SimpleFishingRequest : IQuestDefinition
         var target = pool[Game1.random.Next(pool.Count)];
 
         int qty = Game1.random.Next(1, 4);
-        int gold = Math.Clamp((int)(target.SellPrice * qty * 0.7), 100, 250);
+        int gold = (int)(target.SellPrice * qty * ctx.Config.RewardMultiplierAboveSell);
 
         return new QuestPosting
         {
