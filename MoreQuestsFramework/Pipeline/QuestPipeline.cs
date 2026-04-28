@@ -1,0 +1,156 @@
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using MoreQuestsFramework.Registry;
+using StardewModdingAPI;
+using StardewValley;
+
+namespace MoreQuestsFramework.Pipeline;
+
+/// Builds the day's batch of board postings via weighted sampling. Honours per-definition
+/// cooldown + max-per-day rules and the pipeline-wide one-per-quest-giver rule.
+public sealed class QuestPipeline
+{
+    private readonly QuestContext _ctx;
+    private readonly QuestRegistry _registry;
+    private readonly AntiRepetition _antiRepetition;
+    private readonly List<QuestPosting> _activePostings = new();
+
+    public IReadOnlyList<QuestPosting> ActivePostings => _activePostings;
+
+    public QuestPipeline(QuestContext ctx, QuestRegistry registry, AntiRepetition antiRepetition)
+    {
+        _ctx = ctx;
+        _registry = registry;
+        _antiRepetition = antiRepetition;
+    }
+
+    public List<QuestPosting> GenerateDailyPostings()
+    {
+        var sw = Stopwatch.StartNew();
+        _activePostings.Clear();
+
+        int target = System.Math.Clamp(_ctx.Config.QuestsPerDay, 1, 20);
+        var weights = _ctx.Config.QuestWeights;
+
+        var pool = new List<(IQuestDefinition Def, int Weight)>();
+        foreach (var def in _registry.WithKind(PostingKind.DailyBoard))
+        {
+            if (!def.IsAvailable(_ctx))
+                continue;
+            if (_antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
+                continue;
+            int w = weights.TryGetValue(def.Id, out int configured) ? configured : def.DefaultWeight;
+            if (w <= 0)
+                continue;
+            pool.Add((def, w));
+        }
+
+        int initialPoolSize = pool.Count;
+        var giversToday = new HashSet<string>();
+        var defCounts = new Dictionary<string, int>();
+        var rng = Game1.random;
+        int safety = 200;
+
+        while (_activePostings.Count < target && pool.Count > 0 && safety-- > 0)
+        {
+            var (def, _) = WeightedDraw(pool, rng);
+            if (def == null)
+                break;
+
+            int count = defCounts.TryGetValue(def.Id, out int c) ? c : 0;
+            if (count >= def.MaxPerDay)
+            {
+                pool.RemoveAll(x => x.Def.Id == def.Id);
+                continue;
+            }
+
+            var posting = def.Build(_ctx);
+            if (posting == null)
+            {
+                pool.RemoveAll(x => x.Def.Id == def.Id);
+                continue;
+            }
+
+            if (!_ctx.Config.AllowDuplicateGiverPerDay
+                && !string.IsNullOrEmpty(posting.QuestGiver)
+                && giversToday.Contains(posting.QuestGiver))
+                continue;
+
+            if (_ctx.Config.SkipFriendshipQuestsAtMaxHeart && IsAtMaxHeartWithRewardNpc(posting))
+                continue;
+
+            _activePostings.Add(posting);
+            _antiRepetition.Record(posting);
+            defCounts[def.Id] = count + 1;
+            if (!string.IsNullOrEmpty(posting.QuestGiver))
+                giversToday.Add(posting.QuestGiver);
+
+            if (defCounts[def.Id] >= def.MaxPerDay)
+                pool.RemoveAll(x => x.Def.Id == def.Id);
+        }
+
+        sw.Stop();
+        _ctx.Monitor.Log(
+            $"Generated {_activePostings.Count}/{target} daily-board postings in {sw.Elapsed.TotalMilliseconds:F1} ms (pool size {initialPoolSize}).",
+            LogLevel.Trace);
+        return _activePostings;
+    }
+
+    /// Mail-delivered triggered quests (e.g. Hay Supply Run on a fixed cadence). Called separately
+    /// so triggered quests don't compete with the daily slots.
+    public List<QuestPosting> GenerateTriggeredMail()
+    {
+        var results = new List<QuestPosting>();
+        foreach (var def in _registry.WithKind(PostingKind.Mail))
+        {
+            if (!def.IsAvailable(_ctx))
+                continue;
+            if (_antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
+                continue;
+
+            var posting = def.Build(_ctx);
+            if (posting == null)
+                continue;
+            results.Add(posting);
+            _antiRepetition.Record(posting);
+        }
+        return results;
+    }
+
+    /// True if the posting rewards friendship to its own quest giver and that NPC is
+    /// already at max heart level. Quests that reward a different NPC than the giver
+    /// (e.g. CheckOnGeorge rewards Evelyn for caring about George) still post.
+    private static bool IsAtMaxHeartWithRewardNpc(QuestPosting posting)
+    {
+        if (posting.FriendshipReward <= 0 || string.IsNullOrEmpty(posting.FriendshipRewardNpc))
+            return false;
+        if (!string.Equals(posting.FriendshipRewardNpc, posting.QuestGiver, System.StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var npc = Game1.getCharacterFromName(posting.FriendshipRewardNpc);
+        if (npc == null)
+            return false;
+        if (!Game1.player.friendshipData.TryGetValue(posting.FriendshipRewardNpc, out var friendship))
+            return false;
+
+        int maxHearts = Utility.GetMaximumHeartsForCharacter(npc);
+        return friendship.Points >= maxHearts * 250;
+    }
+
+    private static (IQuestDefinition? Def, int Weight) WeightedDraw(
+        List<(IQuestDefinition Def, int Weight)> pool, System.Random rng)
+    {
+        int total = pool.Sum(x => x.Weight);
+        if (total <= 0)
+            return (null, 0);
+        int roll = rng.Next(total);
+        foreach (var entry in pool)
+        {
+            roll -= entry.Weight;
+            if (roll < 0)
+                return entry;
+        }
+        return pool[^1];
+    }
+}
