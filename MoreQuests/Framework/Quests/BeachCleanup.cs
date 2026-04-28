@@ -39,7 +39,8 @@ internal sealed class BeachCleanup : IQuestDefinition
         var quest = new CollectAndReportQuest
         {
             talkToNpc = { Value = giver },
-            requiredCount = { Value = qty }
+            requiredCount = { Value = qty },
+            reportMessage = { Value = ctx.Helper.Translation.Get("quest.seasonal.beach.targetMessage") }
         };
         quest.itemIds.Add(pick.Id);
 

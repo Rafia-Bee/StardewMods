@@ -9,6 +9,10 @@
     "UpdateKeys": [],
     "Dependencies": [
         {
+            "UniqueID": "spacechase0.SpaceCore",
+            "IsRequired": true
+        },
+        {
             "UniqueID": "spacechase0.GenericModConfigMenu",
             "IsRequired": false
         }

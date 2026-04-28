@@ -312,9 +312,10 @@ internal sealed class MoreQuestsBillboard : Billboard
 
                 if (note.Portrait != null)
                 {
-                    int portraitSide = (int)(cc.bounds.Width * 0.55f);
-                    int px = cc.bounds.Center.X - portraitSide / 2;
-                    int py = cc.bounds.Center.Y - portraitSide / 2 - (int)(cc.bounds.Height * 0.04f);
+                    int portraitSide = (int)(cc.bounds.Width * 0.28f);
+                    int padding = (int)(cc.bounds.Width * 0.08f);
+                    int px = cc.bounds.Left + padding;
+                    int py = cc.bounds.Bottom - portraitSide - padding;
                     b.Draw(
                         note.Portrait,
                         new Rectangle(px, py, portraitSide, portraitSide),

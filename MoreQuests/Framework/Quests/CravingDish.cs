@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using StardewModdingAPI;
 using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
@@ -13,7 +14,7 @@ internal sealed class CravingDish : IQuestDefinition
     public QuestCategory Category => QuestCategory.Cooking;
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 30;
-    public int MaxPerDay => 1;
+    public int MaxPerDay => 3;
     public int CooldownDays => 2;
 
     public bool IsAvailable(QuestContext ctx) => Game1.player.cookingRecipes.Length > 0;
@@ -40,56 +41,62 @@ internal sealed class CravingDish : IQuestDefinition
         if (knownRecipes.Count == 0)
             return null;
 
-        for (int attempt = 0; attempt < 10; attempt++)
+        var candidates = new List<(string Giver, CookingRecipeInfo Dish, HashSet<string> Loved, HashSet<string> Liked, HashSet<string> Neutral)>();
+        foreach (var giver in npcs)
         {
-            string giver = npcs[Game1.random.Next(npcs.Count)];
             if (!tastes.TryGetValue(giver, out var tasteData))
                 continue;
 
             var fields = tasteData.Split('/');
-            if (fields.Length < 9)
+            // NPCGiftTastes layout (per NPC.GetGiftTasteForThisItem): odd indices hold
+            // the item lists, even indices hold the matching dialogue strings.
+            //   1=loved, 3=liked, 5=disliked, 7=hated, 9=neutral.
+            if (fields.Length < 10)
                 continue;
 
-            var loved = fields[0].Split(' ').ToHashSet();
-            var liked = fields[2].Split(' ').ToHashSet();
+            var loved = fields[1].Split(' ').ToHashSet();
+            var liked = fields[3].Split(' ').ToHashSet();
+            var neutral = fields[9].Split(' ').ToHashSet();
 
-            var requestableMatches = knownRecipes.Where(r =>
+            foreach (var r in knownRecipes)
             {
                 string bare = StripPrefix(r.OutputItem.QualifiedItemId);
-                return loved.Contains(bare) || liked.Contains(bare);
-            }).ToList();
-            if (requestableMatches.Count == 0)
-                continue;
-
-            var dish = requestableMatches[Game1.random.Next(requestableMatches.Count)];
-            string requestedBareId = StripPrefix(dish.OutputItem.QualifiedItemId);
-
-            var rewardDish = PickRewardDish(allRecipes, ctx.Items, loved, liked, requestedBareId);
-
-            return new QuestPosting
-            {
-                DefinitionId = Id,
-                Category = Category,
-                Tier = DifficultyTier.Intermediate,
-                QuestType = BoardQuestType.ItemDelivery,
-                QuestGiver = giver,
-                ObjectiveItemId = dish.OutputItem.QualifiedItemId,
-                ObjectiveItemName = dish.OutputItem.DisplayName,
-                ObjectiveQuantity = 1,
-                DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-                GoldReward = 0,
-                FriendshipReward = ctx.Config.FriendshipBasic,
-                FriendshipRewardNpc = giver,
-                ItemReward = rewardDish?.QualifiedItemId,
-                ItemRewardCount = rewardDish != null ? 1 : 0,
-                Title = ctx.Helper.Translation.Get("quest.cooking.craving.title", new { npc = giver }),
-                Description = ctx.Helper.Translation.Get("quest.cooking.craving.description", new { npc = giver, item = dish.OutputItem.DisplayName }),
-                CurrentObjective = ctx.Helper.Translation.Get("quest.cooking.craving.objective", new { item = dish.OutputItem.DisplayName, npc = giver }),
-                TargetMessage = ctx.Helper.Translation.Get("quest.cooking.craving.targetMessage", new { item2 = rewardDish?.DisplayName ?? dish.OutputItem.DisplayName })
-            };
+                if (loved.Contains(bare) || liked.Contains(bare) || neutral.Contains(bare))
+                    candidates.Add((giver, r, loved, liked, neutral));
+            }
         }
 
-        return null;
+        if (candidates.Count == 0)
+        {
+            ctx.Monitor.Log($"CravingDish: no NPC/recipe match across {npcs.Count} met NPCs and {knownRecipes.Count} known recipes.", LogLevel.Trace);
+            return null;
+        }
+
+        var pick = candidates[Game1.random.Next(candidates.Count)];
+        string requestedBareId = StripPrefix(pick.Dish.OutputItem.QualifiedItemId);
+        var rewardDish = PickRewardDish(allRecipes, ctx.Items, pick.Loved, pick.Liked, requestedBareId);
+
+        return new QuestPosting
+        {
+            DefinitionId = Id,
+            Category = Category,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.ItemDelivery,
+            QuestGiver = pick.Giver,
+            ObjectiveItemId = pick.Dish.OutputItem.QualifiedItemId,
+            ObjectiveItemName = pick.Dish.OutputItem.DisplayName,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            GoldReward = 0,
+            FriendshipReward = ctx.Config.FriendshipBasic,
+            FriendshipRewardNpc = pick.Giver,
+            ItemReward = rewardDish?.QualifiedItemId,
+            ItemRewardCount = rewardDish != null ? 1 : 0,
+            Title = ctx.Helper.Translation.Get("quest.cooking.craving.title", new { npc = pick.Giver }),
+            Description = ctx.Helper.Translation.Get("quest.cooking.craving.description", new { npc = pick.Giver, item = pick.Dish.OutputItem.DisplayName }),
+            CurrentObjective = ctx.Helper.Translation.Get("quest.cooking.craving.objective", new { item = pick.Dish.OutputItem.DisplayName, npc = pick.Giver }),
+            TargetMessage = ctx.Helper.Translation.Get("quest.cooking.craving.targetMessage", new { item2 = rewardDish?.DisplayName ?? pick.Dish.OutputItem.DisplayName })
+        };
     }
 
     private static ResolvedItem? PickRewardDish(

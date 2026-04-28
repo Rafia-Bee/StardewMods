@@ -2,6 +2,7 @@ using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
 using MoreQuests.Framework;
 using MoreQuests.Framework.Patches;
+using MoreQuests.Framework.Quests;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -53,6 +54,25 @@ public sealed class ModEntry : Mod
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
         GmcmRegistration.Register(Helper, ModManifest);
+
+        // Register our custom Quest subclasses with SpaceCore's serializer factory so
+        // saving doesn't blow up on a `Quest` type the vanilla XmlSerializer can't see.
+        var spaceCore = Helper.ModRegistry.GetApi<ISpaceCoreApi>(ModCompat.SpaceCore);
+        if (spaceCore != null)
+        {
+            spaceCore.RegisterSerializerType(typeof(AnySlimeQuest));
+            spaceCore.RegisterSerializerType(typeof(CollectAndReportQuest));
+            spaceCore.RegisterSerializerType(typeof(CheckOnGeorgeQuest));
+            spaceCore.RegisterSerializerType(typeof(MoreQuestsItemDeliveryQuest));
+            Monitor.Log("Registered custom quest types with SpaceCore.", LogLevel.Trace);
+        }
+        else
+        {
+            Monitor.Log(
+                "SpaceCore not detected; quests using custom subclasses (slime, beach, George) will not save. " +
+                "Install SpaceCore for full functionality.",
+                LogLevel.Warn);
+        }
     }
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
