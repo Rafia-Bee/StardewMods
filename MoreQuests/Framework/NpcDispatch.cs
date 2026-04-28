@@ -24,7 +24,11 @@ internal static class NpcDispatch
 
     public static string? Pick(IModRegistry registry, Role role)
     {
-        var pool = Build(registry, role).Where(IsKnownNpc).ToList();
+        // Prefer NPCs the player has actually met (so quest dialogue mechanics work)
+        // and fall back to "exists in the world" only if nobody in the role is met yet.
+        var built = Build(registry, role).Where(IsKnownNpc).ToList();
+        var met = built.Where(IsSocializable).ToList();
+        var pool = met.Count > 0 ? met : built;
         if (pool.Count == 0)
             return null;
         return pool[Game1.random.Next(pool.Count)];
@@ -65,9 +69,14 @@ internal static class NpcDispatch
                 yield break;
 
             case Role.CombatVendor:
+                // Vanilla Marlon isn't friendable and right-clicking him opens the Adventure
+                // Guild shop instead of dialogue, so OnNpcSocialized never fires. SVE replaces
+                // him with the friendable "MarlonFay"; everywhere else we route slime/combat
+                // quests to Wizard or Lewis (matching how vanilla SlayMonsterQuest assigns them).
                 yield return "Wizard";
-                yield return "Marlon";
+                yield return "Lewis";
                 yield return "Abigail";
+                if (sve) yield return "MarlonFay";
                 if (sve) yield return "Lance";
                 if (rsv) yield return "Mr. Aguar";
                 if (es) yield return "Eli";
@@ -97,6 +106,12 @@ internal static class NpcDispatch
     }
 
     private static bool IsKnownNpc(string name) => Game1.getCharacterFromName(name) != null;
+
+    /// True if the player has friendship data for this NPC, i.e. they've met them and
+    /// the NPC is one that participates in the normal social/dialogue flow. Filters out
+    /// shopkeepers like vanilla Marlon whose right-click opens a shop instead of a dialogue.
+    private static bool IsSocializable(string name) =>
+        Game1.player.friendshipData.ContainsKey(name);
 
     public static List<string> MetHumanNpcs()
     {

@@ -22,6 +22,20 @@ public sealed class ModConfig
     public bool AnimalQuestsEnabled { get; set; } = true;
     public bool SecretGiftHintEnabled { get; set; } = true;
 
+    /// When true, fishing quests can request any seasonal fish even if the player hasn't
+    /// been to a location where it spawns. When false (default), the candidate pool is
+    /// filtered to fish whose spawn locations the player has visited at least once.
+    public bool FishingIgnoresVisitedLocations { get; set; } = false;
+
+    /// When true, the same NPC may give multiple different ItemDelivery / Fishing quests
+    /// in the same day. When false (default), the pipeline enforces one quest per giver.
+    public bool AllowDuplicateGiverPerDay { get; set; } = false;
+
+    /// When true (default), quests that reward friendship to a specific NPC are skipped if
+    /// the player is already at max hearts with that NPC. Quests that reward friendship to
+    /// a different NPC than the giver still post normally.
+    public bool SkipFriendshipQuestsAtMaxHeart { get; set; } = true;
+
     // ----- Friendship rewards (raw friendship points; 250 = 1 heart) -----
     public int FriendshipBasic { get; set; } = 30;
     public int FriendshipMid { get; set; } = 80;

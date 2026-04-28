@@ -25,7 +25,8 @@ internal sealed class CheckOnGeorge : IQuestDefinition
         var quest = new CheckOnGeorgeQuest
         {
             giftRecipient = { Value = "George" },
-            reportTo = { Value = "Evelyn" }
+            reportTo = { Value = "Evelyn" },
+            reportMessage = { Value = ctx.Helper.Translation.Get("quest.social.george.targetMessage") }
         };
 
         return new QuestPosting

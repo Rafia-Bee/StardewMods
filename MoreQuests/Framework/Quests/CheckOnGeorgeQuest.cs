@@ -1,4 +1,5 @@
 using System;
+using System.Xml.Serialization;
 using Netcode;
 using StardewValley;
 using StardewValley.Quests;
@@ -9,16 +10,21 @@ namespace MoreQuests.Framework.Quests;
 /// to Evelyn. Both NPCs are configurable via fields so the same class could be
 /// repurposed in future. The gift is not consumed by this quest, gifting goes
 /// through the normal NPC flow.
-internal sealed class CheckOnGeorgeQuest : Quest
+[XmlType("Mods_RafiaBee_MoreQuests_CheckOnGeorgeQuest")]
+public sealed class CheckOnGeorgeQuest : Quest
 {
     public readonly NetString giftRecipient = new();
     public readonly NetString reportTo = new();
     public readonly NetBool gifted = new();
+    public readonly NetString reportMessage = new();
 
     protected override void initNetFields()
     {
         base.initNetFields();
-        NetFields.AddField(giftRecipient, "giftRecipient").AddField(reportTo, "reportTo").AddField(gifted, "gifted");
+        NetFields.AddField(giftRecipient, "giftRecipient")
+            .AddField(reportTo, "reportTo")
+            .AddField(gifted, "gifted")
+            .AddField(reportMessage, "reportMessage");
     }
 
     public override bool OnItemOfferedToNpc(NPC npc, Item item, bool probe = false)
@@ -50,6 +56,12 @@ internal sealed class CheckOnGeorgeQuest : Quest
             return false;
         if (probe)
             return true;
+
+        if (!string.IsNullOrEmpty(reportMessage.Value))
+        {
+            npc.CurrentDialogue.Push(new Dialogue(npc, null, reportMessage.Value));
+            Game1.drawDialogue(npc);
+        }
         questComplete();
         return true;
     }

@@ -10,7 +10,7 @@ internal sealed class VanillaItemDelivery : IQuestDefinition
     public QuestCategory Category => QuestCategory.Social;
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 35;
-    public int MaxPerDay => 1;
+    public int MaxPerDay => 5;
     public int CooldownDays => 1;
 
     public bool IsAvailable(QuestContext ctx) => true;

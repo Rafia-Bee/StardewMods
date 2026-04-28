@@ -38,7 +38,7 @@ internal static class GmcmRegistration
                 () => ModEntry.Config.QuestWeights.TryGetValue(id, out int w) ? w : defaultWeight,
                 v => ModEntry.Config.QuestWeights[id] = v,
                 () => t.Get($"config.weight.{id}", new { fallback = id }),
-                () => t.Get("config.weight.tooltip", new { id }),
+                () => BuildWeightTooltip(t, id),
                 min: 0, max: 100);
         }
 
@@ -78,6 +78,21 @@ internal static class GmcmRegistration
             v => ModEntry.Config.SecretGiftHintEnabled = v,
             () => t.Get("config.secretGiftHint"),
             () => t.Get("config.secretGiftHint.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.FishingIgnoresVisitedLocations,
+            v => ModEntry.Config.FishingIgnoresVisitedLocations = v,
+            () => t.Get("config.fishingIgnoresVisitedLocations"),
+            () => t.Get("config.fishingIgnoresVisitedLocations.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.AllowDuplicateGiverPerDay,
+            v => ModEntry.Config.AllowDuplicateGiverPerDay = v,
+            () => t.Get("config.allowDuplicateGiverPerDay"),
+            () => t.Get("config.allowDuplicateGiverPerDay.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.SkipFriendshipQuestsAtMaxHeart,
+            v => ModEntry.Config.SkipFriendshipQuestsAtMaxHeart = v,
+            () => t.Get("config.skipFriendshipQuestsAtMaxHeart"),
+            () => t.Get("config.skipFriendshipQuestsAtMaxHeart.tooltip"));
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.friendship"));
         AddInt(api, manifest, t, "FriendshipBasic", () => ModEntry.Config.FriendshipBasic, v => ModEntry.Config.FriendshipBasic = v, 0, 500);
@@ -118,6 +133,17 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "CropMassiveQty", () => ModEntry.Config.CropMassiveQty, v => ModEntry.Config.CropMassiveQty = v, 1, 500);
         AddInt(api, manifest, t, "HaySupplyBaseQty", () => ModEntry.Config.HaySupplyBaseQty, v => ModEntry.Config.HaySupplyBaseQty = v, 1, 100);
         AddInt(api, manifest, t, "SkullCavernMaxLevel", () => ModEntry.Config.SkullCavernMaxLevel, v => ModEntry.Config.SkullCavernMaxLevel = v, 5, 500);
+    }
+
+    /// Combines the generic weight tooltip with a per-quest constraint hint, if one is
+    /// defined. Definitions whose `IsAvailable` is unconditional don't get a hint.
+    private static string BuildWeightTooltip(ITranslationHelper t, string id)
+    {
+        string baseLine = t.Get("config.weight.tooltip", new { id }).ToString();
+        var constraint = t.Get($"config.weight.{id}.constraints");
+        if (!constraint.HasValue())
+            return baseLine;
+        return baseLine + "\n\n" + t.Get("config.weight.constraintsLabel").Default("Requirements:") + " " + constraint;
     }
 
     private static void AddInt(IGenericModConfigMenuApi api, IManifest manifest, ITranslationHelper t,

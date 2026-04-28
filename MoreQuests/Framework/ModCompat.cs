@@ -13,6 +13,7 @@ internal static class ModCompat
     public const string LurkingInTheDark = "drbirbdev.LurkingInTheDark";
     public const string SiExtraCraftingMaterials = "Si.ExtraCraftingMaterials";
     public const string GenericModConfigMenu = "spacechase0.GenericModConfigMenu";
+    public const string SpaceCore = "spacechase0.SpaceCore";
 
     public static bool IsLoaded(IModRegistry registry, string uniqueId) => registry.IsLoaded(uniqueId);
 

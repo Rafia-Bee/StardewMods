@@ -66,7 +66,12 @@ internal sealed class QuestPipeline
                 continue;
             }
 
-            if (!string.IsNullOrEmpty(posting.QuestGiver) && giversToday.Contains(posting.QuestGiver))
+            if (!_ctx.Config.AllowDuplicateGiverPerDay
+                && !string.IsNullOrEmpty(posting.QuestGiver)
+                && giversToday.Contains(posting.QuestGiver))
+                continue;
+
+            if (_ctx.Config.SkipFriendshipQuestsAtMaxHeart && IsAtMaxHeartWithRewardNpc(posting))
                 continue;
 
             _activePostings.Add(posting);
@@ -102,6 +107,26 @@ internal sealed class QuestPipeline
             _antiRepetition.Record(posting);
         }
         return results;
+    }
+
+    /// True if the posting rewards friendship to its own quest giver and that NPC is
+    /// already at max heart level. Quests that reward a different NPC than the giver
+    /// (e.g. CheckOnGeorge rewards Evelyn for caring about George) still post.
+    private static bool IsAtMaxHeartWithRewardNpc(QuestPosting posting)
+    {
+        if (posting.FriendshipReward <= 0 || string.IsNullOrEmpty(posting.FriendshipRewardNpc))
+            return false;
+        if (!string.Equals(posting.FriendshipRewardNpc, posting.QuestGiver, System.StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var npc = Game1.getCharacterFromName(posting.FriendshipRewardNpc);
+        if (npc == null)
+            return false;
+        if (!Game1.player.friendshipData.TryGetValue(posting.FriendshipRewardNpc, out var friendship))
+            return false;
+
+        int maxHearts = Utility.GetMaximumHeartsForCharacter(npc);
+        return friendship.Points >= maxHearts * 250;
     }
 
     private static (IQuestDefinition? Def, int Weight) WeightedDraw(

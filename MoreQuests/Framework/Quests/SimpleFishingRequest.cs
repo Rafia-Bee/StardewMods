@@ -18,7 +18,9 @@ internal sealed class SimpleFishingRequest : IQuestDefinition
 
     public QuestPosting? Build(QuestContext ctx)
     {
-        var fish = ctx.Items.GetSeasonalFish(ctx.Season);
+        var fish = ctx.Config.FishingIgnoresVisitedLocations
+            ? ctx.Items.GetSeasonalFish(ctx.Season)
+            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
         if (fish.Count == 0)
             return null;
 
@@ -42,7 +44,7 @@ internal sealed class SimpleFishingRequest : IQuestDefinition
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             GoldReward = gold,
             Title = ctx.Helper.Translation.Get("quest.fishing.simple.title"),
-            Description = ctx.Helper.Translation.Get("quest.fishing.simple.description", new { qty, item = target.DisplayName }),
+            Description = ctx.Helper.Translation.Get("quest.fishing.simple.description", new { npc = "Willy", qty, item = target.DisplayName }),
             CurrentObjective = ctx.Helper.Translation.Get("quest.fishing.simple.objective", new { qty, item = target.DisplayName }),
             TargetMessage = ctx.Helper.Translation.Get("quest.fishing.simple.targetMessage")
         };

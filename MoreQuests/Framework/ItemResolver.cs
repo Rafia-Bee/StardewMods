@@ -4,6 +4,7 @@ using System.Linq;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.GameData.Crops;
+using StardewValley.GameData.Locations;
 using StardewValley.GameData.Objects;
 using StardewValley.ItemTypeDefinitions;
 
@@ -100,6 +101,64 @@ internal sealed class ItemResolver
             _monitor.Log($"GetSeasonalFish: {ex.Message}", LogLevel.Warn);
         }
         return results;
+    }
+
+    /// Subset of `GetSeasonalFish` filtered to fish whose Data/Locations spawn entries
+    /// match a location the player has visited at least once. Falls back to the full
+    /// seasonal pool if the filter would produce nothing (so quests still post on a
+    /// fresh save where the player has only been to the farm).
+    public List<ResolvedItem> GetSeasonalFishInVisitedLocations(string season, string? weatherFilter = null)
+    {
+        var seasonal = GetSeasonalFish(season, weatherFilter);
+        if (seasonal.Count == 0)
+            return seasonal;
+
+        HashSet<string>? allowed = TryGetSpawnableFishIdsForVisitedLocations(season);
+        if (allowed == null || allowed.Count == 0)
+            return seasonal;
+
+        var filtered = seasonal.Where(f => allowed.Contains(f.QualifiedItemId)).ToList();
+        return filtered.Count > 0 ? filtered : seasonal;
+    }
+
+    private HashSet<string>? TryGetSpawnableFishIdsForVisitedLocations(string season)
+    {
+        try
+        {
+            var visited = Game1.player.locationsVisited;
+            if (visited == null || visited.Count == 0)
+                return null;
+
+            var visitedSet = new HashSet<string>(visited, StringComparer.OrdinalIgnoreCase);
+            var locationData = Game1.content.Load<Dictionary<string, LocationData>>("Data/Locations");
+            var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var (locName, data) in locationData)
+            {
+                bool isDefault = locName.Equals("Default", StringComparison.OrdinalIgnoreCase);
+                bool isVisited = visitedSet.Contains(locName);
+                if (!isDefault && !isVisited)
+                    continue;
+                if (data.Fish == null)
+                    continue;
+
+                foreach (var spawn in data.Fish)
+                {
+                    if (spawn?.ItemId == null)
+                        continue;
+                    if (spawn.Season.HasValue && !string.Equals(spawn.Season.Value.ToString(), season, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    string qualified = ItemRegistry.QualifyItemId(spawn.ItemId) ?? spawn.ItemId;
+                    ids.Add(qualified);
+                }
+            }
+            return ids;
+        }
+        catch (Exception ex)
+        {
+            _monitor.Log($"TryGetSpawnableFishIdsForVisitedLocations: {ex.Message}", LogLevel.Warn);
+            return null;
+        }
     }
 
     public List<CookingRecipeInfo> GetKnownRecipes()

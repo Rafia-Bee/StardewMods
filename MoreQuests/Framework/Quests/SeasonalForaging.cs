@@ -10,7 +10,7 @@ internal sealed class SeasonalForaging : IQuestDefinition
     public QuestCategory Category => QuestCategory.Foraging;
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 50;
-    public int MaxPerDay => 1;
+    public int MaxPerDay => 3;
     public int CooldownDays => 2;
 
     public bool IsAvailable(QuestContext ctx) =>

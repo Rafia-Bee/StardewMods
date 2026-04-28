@@ -21,6 +21,17 @@
     "config.weight.Seasonal.SpringTea": "Spring tea",
     "config.weight.Cooking.CravingDish": "Craving a dish",
 
+    "config.weight.constraintsLabel": "Requirements:",
+    "config.weight.Vanilla.SlayMonster.constraints": "Mines unlocked and at least 5 days played.",
+    "config.weight.Mining.BasicSlimeClearing.constraints": "Mines entered at least once.",
+    "config.weight.Mining.BarDelivery.constraints": "Mining level 1 or higher and reached mine floor 40.",
+    "config.weight.Cooking.CravingDish.constraints": "You know at least one cooking recipe.",
+    "config.weight.Social.ElliottPoem.constraints": "You've met Elliott.",
+    "config.weight.Social.CheckOnGeorge.constraints": "You've met George and Evelyn.",
+    "config.weight.Seasonal.BeachCleanup.constraints": "Summer only.",
+    "config.weight.Seasonal.SpringTea.constraints": "Fall only.",
+    "config.weight.Animal.HaySupplyRun.constraints": "Animal quests toggle is on and you own at least 4 animals.",
+
     "config.section.toggles": "Toggles",
     "config.difficultyScaling": "Difficulty scaling",
     "config.difficultyScaling.tooltip": "When on, harder quest variants unlock based on your skill levels.",
@@ -36,6 +47,12 @@
     "config.animalQuests.tooltip": "Enables Marnie's animal quest chain after building coops or barns.",
     "config.secretGiftHint": "Winter Star secret gift hint",
     "config.secretGiftHint.tooltip": "Adds a quest that hints at your Winter Star recipient's preferences. Disable if you'd rather not be spoiled.",
+    "config.fishingIgnoresVisitedLocations": "Fishing ignores visited locations",
+    "config.fishingIgnoresVisitedLocations.tooltip": "When off (default), fishing quests only request fish that spawn somewhere you've been. Turn on if you want quests to potentially send you somewhere new.",
+    "config.allowDuplicateGiverPerDay": "Same NPC can give multiple quests",
+    "config.allowDuplicateGiverPerDay.tooltip": "When on, the same villager can post multiple different item delivery or fishing quests in the same day. Default off.",
+    "config.skipFriendshipQuestsAtMaxHeart": "Skip friendship quests at max hearts",
+    "config.skipFriendshipQuestsAtMaxHeart.tooltip": "When on (default), quests that reward friendship to a specific villager are hidden once you've maxed out their hearts.",
 
     "config.section.friendship": "Friendship reward sizes",
     "config.FriendshipBasic": "Basic friendship",
@@ -105,6 +122,10 @@
     "config.SkullCavernMaxLevel": "Skull Cavern max level",
     "config.SkullCavernMaxLevel.tooltip": "Maximum floor target for Skull Cavern Deep Dive quests.",
 
+    "quest.reward.label": "Reward",
+    "quest.reward.gold": "{{gold}}g",
+    "quest.reward.friendship": "+{{points}} friendship with {{npc}}",
+
     "quest.farming.basic.title": "{{npc}}'s crop request",
     "quest.farming.basic.description": "Any kind farmer has some fresh {{item}}? Please bring by {{qty}} {{item}} to {{npc}} before the deadline.",
     "quest.farming.basic.objective": "Bring {{qty}} {{item}} to {{npc}}.",
@@ -116,8 +137,8 @@
     "quest.fishing.simple.targetMessage": "Thank you! They look fresh.",
 
     "quest.mining.slime.title": "Slime trouble",
-    "quest.mining.slime.description": "Need a brave adventurer to clear out a few slimes in the mines.",
-    "quest.mining.slime.objective": "Slay {{qty}} slimes.",
+    "quest.mining.slime.description": "{{npc}} here. The slimes in the mines are getting out of hand. Could a brave adventurer thin them out and report back?",
+    "quest.mining.slime.objective": "Slay {{qty}} slimes, then talk to {{npc}}.",
     "quest.mining.slime.targetMessage": "That'll keep the mine quiet for a while. Thanks.",
 
     "quest.mining.bar.title": "Clint needs bars",

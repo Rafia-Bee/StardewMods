@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MoreQuests.Framework.Quests;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -85,7 +86,7 @@ internal sealed class QuestPoster
         if (!string.IsNullOrEmpty(posting.Title))
             quest.questTitle = posting.Title;
         if (!string.IsNullOrEmpty(posting.Description))
-            quest.questDescription = posting.Description;
+            quest.questDescription = AppendRewardLine(posting.Description, posting);
         if (!string.IsNullOrEmpty(posting.CurrentObjective))
             quest.currentObjective = posting.CurrentObjective;
         if (posting.GoldReward > 0)
@@ -93,6 +94,28 @@ internal sealed class QuestPoster
 
         _pendingBoard.Add((quest, posting));
         _monitor.Log($"Buffered {posting.DefinitionId} for billboard ({posting.QuestType}).", LogLevel.Trace);
+    }
+
+    /// Appends a "Reward: ..." footer to the description so the quest log shows it inline,
+    /// matching how vanilla bakes the reward into the description text.
+    private string AppendRewardLine(string description, QuestPosting posting)
+    {
+        var translation = _helper.Translation;
+        var parts = new List<string>();
+        if (posting.GoldReward > 0)
+            parts.Add(translation.Get("quest.reward.gold", new { gold = posting.GoldReward }).Default($"{posting.GoldReward}g").ToString());
+        if (posting.FriendshipReward > 0 && !string.IsNullOrEmpty(posting.FriendshipRewardNpc))
+            parts.Add(translation.Get("quest.reward.friendship", new { npc = posting.FriendshipRewardNpc, points = posting.FriendshipReward })
+                .Default($"+{posting.FriendshipReward} friendship with {posting.FriendshipRewardNpc}").ToString());
+
+        if (parts.Count == 0)
+            return description;
+
+        string label = translation.Get("quest.reward.label").Default("Reward").ToString();
+        // `Game1.parseText` (used by the quest log) treats `\n` as a hard line break;
+        // `^` doesn't work for quest descriptions (it's a mail-asset convention), and
+        // showed up rendered as `~~` glyphs.
+        return $"{description}\n\n{label}: {string.Join(", ", parts)}";
     }
 
     private void PostViaMail(QuestPosting posting)
@@ -131,59 +154,70 @@ internal sealed class QuestPoster
 
     private static Quest? BuildVanillaQuest(QuestPosting p)
     {
-        string itemId = StripPrefix(p.ObjectiveItemId);
+        // Vanilla ItemDeliveryQuest / FishingQuest compare against `item.QualifiedItemId`,
+        // so ItemId must be the qualified form (e.g. "(O)334"). Stripping the prefix
+        // breaks completion for both vanilla and modded items.
+        string itemId = ItemRegistry.QualifyItemId(p.ObjectiveItemId) ?? p.ObjectiveItemId;
         string giver = string.IsNullOrEmpty(p.QuestGiver) ? "Lewis" : p.QuestGiver;
 
-        switch (p.QuestType)
+        Quest? quest = p.QuestType switch
         {
-            case BoardQuestType.ItemDelivery:
-            case BoardQuestType.ResourceCollection:
+            BoardQuestType.ItemDelivery or BoardQuestType.ResourceCollection => BuildItemDelivery(p, giver, itemId),
+            BoardQuestType.Fishing => new FishingQuest
             {
-                var q = new ItemDeliveryQuest
-                {
-                    target = { Value = giver },
-                    ItemId = { Value = itemId },
-                    number = { Value = Math.Max(1, p.ObjectiveQuantity) },
-                    targetMessage = p.TargetMessage
-                };
-                return q;
-            }
-            case BoardQuestType.Fishing:
+                target = { Value = giver },
+                ItemId = { Value = itemId },
+                numberToFish = { Value = Math.Max(1, p.ObjectiveQuantity) },
+                reward = { Value = p.GoldReward },
+                targetMessage = p.TargetMessage
+            },
+            BoardQuestType.SlayMonster => new SlayMonsterQuest
             {
-                var q = new FishingQuest
-                {
-                    target = { Value = giver },
-                    ItemId = { Value = itemId },
-                    numberToFish = { Value = Math.Max(1, p.ObjectiveQuantity) },
-                    targetMessage = p.TargetMessage
-                };
-                return q;
-            }
-            case BoardQuestType.SlayMonster:
+                target = { Value = giver },
+                monsterName = { Value = string.IsNullOrEmpty(p.TargetMonster) ? p.ObjectiveItemName : p.TargetMonster },
+                numberToKill = { Value = Math.Max(1, p.ObjectiveQuantity) },
+                reward = { Value = p.GoldReward },
+                targetMessage = p.TargetMessage
+            },
+            BoardQuestType.Socialize => new ItemDeliveryQuest
             {
-                var monster = string.IsNullOrEmpty(p.TargetMonster) ? p.ObjectiveItemName : p.TargetMonster;
-                var q = new SlayMonsterQuest
-                {
-                    target = { Value = giver },
-                    monsterName = { Value = monster },
-                    numberToKill = { Value = Math.Max(1, p.ObjectiveQuantity) },
-                    targetMessage = p.TargetMessage
-                };
-                return q;
-            }
-            case BoardQuestType.Socialize:
-            {
-                return new ItemDeliveryQuest
-                {
-                    target = { Value = giver },
-                    ItemId = { Value = itemId },
-                    number = { Value = 1 },
-                    targetMessage = p.TargetMessage
-                };
-            }
-            default:
-                return null;
+                target = { Value = giver },
+                ItemId = { Value = itemId },
+                number = { Value = 1 },
+                targetMessage = p.TargetMessage
+            },
+            _ => null
+        };
+
+        // Stamp a unique mod-prefixed ID. MH Quest Manager uses `IsVanillaQuestId` /
+        // `FindModNameByPrefix` to classify quests; without an ID our quests fall through
+        // both checks and don't surface in its tracker. The prefix matches our manifest
+        // UniqueID so MHQM can attribute them to MoreQuests.
+        if (quest != null)
+            quest.id.Value = $"RafiaBee.MoreQuests.{p.DefinitionId}.{Guid.NewGuid():N}";
+        return quest;
+    }
+
+    private static MoreQuestsItemDeliveryQuest BuildItemDelivery(QuestPosting p, string giver, string itemId)
+    {
+        var q = new MoreQuestsItemDeliveryQuest
+        {
+            target = { Value = giver },
+            ItemId = { Value = itemId },
+            number = { Value = Math.Max(1, p.ObjectiveQuantity) },
+            targetMessage = p.TargetMessage
+        };
+        if (!string.IsNullOrEmpty(p.ItemReward) && p.ItemRewardCount > 0)
+        {
+            q.customItemReward.Value = p.ItemReward;
+            q.customItemRewardCount.Value = p.ItemRewardCount;
         }
+        if (p.FriendshipReward > 0 && !string.IsNullOrEmpty(p.FriendshipRewardNpc))
+        {
+            q.friendshipRewardNpc.Value = p.FriendshipRewardNpc;
+            q.friendshipRewardPoints.Value = p.FriendshipReward;
+        }
+        return q;
     }
 
     private static string BuildDefaultMailBody(QuestPosting p)
@@ -208,7 +242,4 @@ internal sealed class QuestPoster
                 dict[key] = body;
         });
     }
-
-    private static string StripPrefix(string id) =>
-        id.StartsWith("(O)") ? id[3..] : id;
 }

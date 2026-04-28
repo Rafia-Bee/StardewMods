@@ -12,7 +12,7 @@ internal sealed class BasicCropDelivery : IQuestDefinition
     public QuestCategory Category => QuestCategory.Farming;
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 60;
-    public int MaxPerDay => 1;
+    public int MaxPerDay => 4;
     public int CooldownDays => 7;
 
     public bool IsAvailable(QuestContext ctx) => true;
