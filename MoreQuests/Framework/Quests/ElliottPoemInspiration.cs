@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MoreQuests.Framework.Conditions;
 using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
@@ -15,8 +16,7 @@ internal sealed class ElliottPoemInspiration : IQuestDefinition
     public int CooldownDays => 7;
 
     public bool IsAvailable(QuestContext ctx) =>
-        Game1.getCharacterFromName("Elliott") != null &&
-        Game1.player.friendshipData.ContainsKey("Elliott");
+        ConditionEvaluator.NpcExists("Elliott") && ConditionEvaluator.NpcMet("Elliott");
 
     public QuestPosting? Build(QuestContext ctx)
     {

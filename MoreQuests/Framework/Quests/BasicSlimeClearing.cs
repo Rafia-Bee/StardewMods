@@ -1,3 +1,4 @@
+using MoreQuests.Framework.Conditions;
 using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
@@ -16,7 +17,7 @@ internal sealed class BasicSlimeClearing : IQuestDefinition
     public int MaxPerDay => 1;
     public int CooldownDays => 7;
 
-    public bool IsAvailable(QuestContext ctx) => Game1.player.deepestMineLevel > 0;
+    public bool IsAvailable(QuestContext ctx) => ConditionEvaluator.MinDeepestMineLevel(1);
 
     public QuestPosting? Build(QuestContext ctx)
     {

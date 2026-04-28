@@ -1,6 +1,7 @@
 using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
 using MoreQuests.Framework;
+using MoreQuests.Framework.Cache;
 using MoreQuests.Framework.Patches;
 using MoreQuests.Framework.Quests;
 using StardewModdingAPI;
@@ -19,6 +20,7 @@ public sealed class ModEntry : Mod
 
     private QuestPipeline? _pipeline;
     private QuestPoster? _poster;
+    private GameDataCache? _dataCache;
 
     public override void Entry(IModHelper helper)
     {
@@ -53,6 +55,7 @@ public sealed class ModEntry : Mod
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
+        BoardQuestRegistry.Initialize(Monitor);
         GmcmRegistration.Register(Helper, ModManifest);
 
         // Register our custom Quest subclasses with SpaceCore's serializer factory so
@@ -64,12 +67,13 @@ public sealed class ModEntry : Mod
             spaceCore.RegisterSerializerType(typeof(CollectAndReportQuest));
             spaceCore.RegisterSerializerType(typeof(CheckOnGeorgeQuest));
             spaceCore.RegisterSerializerType(typeof(MoreQuestsItemDeliveryQuest));
+            spaceCore.RegisterSerializerType(typeof(MoreQuestsFishingQuest));
             Monitor.Log("Registered custom quest types with SpaceCore.", LogLevel.Trace);
         }
         else
         {
             Monitor.Log(
-                "SpaceCore not detected; quests using custom subclasses (slime, beach, George) will not save. " +
+                "SpaceCore not detected; quests using custom subclasses (slime, beach, George, fishing) will not save. " +
                 "Install SpaceCore for full functionality.",
                 LogLevel.Warn);
         }
@@ -77,8 +81,11 @@ public sealed class ModEntry : Mod
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
     {
-        var items = new ItemResolver(Monitor);
-        var ctx = new QuestContext(Helper, Monitor, Config, items);
+        _dataCache = new GameDataCache(Monitor);
+        _dataCache.Refresh();
+
+        var items = new ItemResolver(Monitor, _dataCache);
+        var ctx = new QuestContext(Helper, Monitor, Config, items, _dataCache);
         var antiRepetition = new AntiRepetition();
 
         _pipeline = new QuestPipeline(ctx, antiRepetition);
@@ -89,6 +96,7 @@ public sealed class ModEntry : Mod
         if (!Context.IsWorldReady || _pipeline == null || _poster == null)
             return;
 
+        _dataCache?.Refresh();
         _poster.BeginDay();
 
         var daily = _pipeline.GenerateDailyPostings();

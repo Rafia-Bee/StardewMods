@@ -1,4 +1,4 @@
-using StardewValley;
+using MoreQuests.Framework.Conditions;
 
 namespace MoreQuests.Framework.Quests;
 
@@ -17,8 +17,7 @@ internal sealed class CheckOnGeorge : IQuestDefinition
     public int CooldownDays => 21;
 
     public bool IsAvailable(QuestContext ctx) =>
-        Game1.getCharacterFromName("George") != null &&
-        Game1.getCharacterFromName("Evelyn") != null;
+        ConditionEvaluator.NpcExists("George") && ConditionEvaluator.NpcExists("Evelyn");
 
     public QuestPosting? Build(QuestContext ctx)
     {

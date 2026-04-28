@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using MoreQuests.Framework.Conditions;
 using StardewModdingAPI;
 using StardewValley;
 
@@ -17,7 +18,7 @@ internal sealed class CravingDish : IQuestDefinition
     public int MaxPerDay => 3;
     public int CooldownDays => 2;
 
-    public bool IsAvailable(QuestContext ctx) => Game1.player.cookingRecipes.Length > 0;
+    public bool IsAvailable(QuestContext ctx) => ConditionEvaluator.KnowsAnyCookingRecipe();
 
     public QuestPosting? Build(QuestContext ctx)
     {
@@ -25,17 +26,8 @@ internal sealed class CravingDish : IQuestDefinition
         if (npcs.Count == 0)
             return null;
 
-        Dictionary<string, string> tastes;
-        Dictionary<string, string> allRecipes;
-        try
-        {
-            tastes = Game1.content.Load<Dictionary<string, string>>("Data/NPCGiftTastes");
-            allRecipes = Game1.content.Load<Dictionary<string, string>>("Data/CookingRecipes");
-        }
-        catch
-        {
-            return null;
-        }
+        var tastes = ctx.Data.GiftTastes;
+        var allRecipes = ctx.Data.CookingRecipes;
 
         var knownRecipes = ctx.Items.GetKnownRecipes();
         if (knownRecipes.Count == 0)
@@ -100,7 +92,7 @@ internal sealed class CravingDish : IQuestDefinition
     }
 
     private static ResolvedItem? PickRewardDish(
-        Dictionary<string, string> allRecipes,
+        IReadOnlyDictionary<string, string> allRecipes,
         ItemResolver items,
         HashSet<string> loved,
         HashSet<string> liked,

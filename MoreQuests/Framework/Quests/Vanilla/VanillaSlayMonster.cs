@@ -1,5 +1,4 @@
-using StardewValley;
-using StardewValley.Locations;
+using MoreQuests.Framework.Conditions;
 using StardewValley.Quests;
 
 namespace MoreQuests.Framework.Quests.Vanilla;
@@ -15,7 +14,7 @@ internal sealed class VanillaSlayMonster : IQuestDefinition
     public int CooldownDays => 2;
 
     public bool IsAvailable(QuestContext ctx) =>
-        MineShaft.lowestLevelReached > 0 && Game1.stats.DaysPlayed > 5;
+        ConditionEvaluator.MineShaftReached(1) && ConditionEvaluator.MinDaysPlayed(5);
 
     public QuestPosting? Build(QuestContext ctx)
     {

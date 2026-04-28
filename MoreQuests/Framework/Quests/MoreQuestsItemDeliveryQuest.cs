@@ -1,4 +1,5 @@
 using System.Xml.Serialization;
+using MoreQuests.Framework.Rewards;
 using Netcode;
 using StardewValley;
 using StardewValley.Quests;
@@ -64,26 +65,11 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest
     {
         if (completed.Value)
             return;
-        AwardCustomRewards();
+        RewardApplier.ApplyItemAndFriendship(
+            itemId: customItemReward.Value,
+            itemCount: customItemRewardCount.Value,
+            npcName: friendshipRewardNpc.Value,
+            friendshipPoints: friendshipRewardPoints.Value);
         base.questComplete();
-    }
-
-    private void AwardCustomRewards()
-    {
-        if (!string.IsNullOrEmpty(customItemReward.Value) && customItemRewardCount.Value > 0)
-        {
-            var reward = ItemRegistry.Create(customItemReward.Value, customItemRewardCount.Value);
-            if (reward != null)
-            {
-                if (!Game1.player.addItemToInventoryBool(reward))
-                    Game1.createItemDebris(reward, Game1.player.getStandingPosition(), 2);
-            }
-        }
-        if (friendshipRewardPoints.Value > 0 && !string.IsNullOrEmpty(friendshipRewardNpc.Value))
-        {
-            var rewardNpc = Game1.getCharacterFromName(friendshipRewardNpc.Value);
-            if (rewardNpc != null)
-                Game1.player.changeFriendship(friendshipRewardPoints.Value, rewardNpc);
-        }
     }
 }

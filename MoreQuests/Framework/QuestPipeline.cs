@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using StardewModdingAPI;
 using StardewValley;
@@ -23,6 +24,7 @@ internal sealed class QuestPipeline
 
     public List<QuestPosting> GenerateDailyPostings()
     {
+        var sw = Stopwatch.StartNew();
         _activePostings.Clear();
 
         int target = System.Math.Clamp(_ctx.Config.QuestsPerDay, 1, 20);
@@ -41,6 +43,7 @@ internal sealed class QuestPipeline
             pool.Add((def, w));
         }
 
+        int initialPoolSize = pool.Count;
         var giversToday = new HashSet<string>();
         var defCounts = new Dictionary<string, int>();
         var rng = Game1.random;
@@ -84,7 +87,10 @@ internal sealed class QuestPipeline
                 pool.RemoveAll(x => x.Def.Id == def.Id);
         }
 
-        _ctx.Monitor.Log($"Generated {_activePostings.Count}/{target} daily-board postings.", LogLevel.Trace);
+        sw.Stop();
+        _ctx.Monitor.Log(
+            $"Generated {_activePostings.Count}/{target} daily-board postings in {sw.Elapsed.TotalMilliseconds:F1} ms (pool size {initialPoolSize}).",
+            LogLevel.Trace);
         return _activePostings;
     }
 
