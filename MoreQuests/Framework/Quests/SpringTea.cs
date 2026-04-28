@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using MoreQuests.Framework.Conditions;
 using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
@@ -15,7 +16,7 @@ internal sealed class SpringTea : IQuestDefinition
     public int MaxPerDay => 1;
     public int CooldownDays => 8;
 
-    public bool IsAvailable(QuestContext ctx) => ctx.Season == "fall";
+    public bool IsAvailable(QuestContext ctx) => ConditionEvaluator.MatchesSeason("fall");
 
     public QuestPosting? Build(QuestContext ctx)
     {

@@ -1,4 +1,5 @@
 using System;
+using MoreQuests.Framework.Conditions;
 using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
@@ -22,7 +23,8 @@ internal sealed class BarDelivery : IQuestDefinition
         ("(O)337", "Iridium Bar")
     };
 
-    public bool IsAvailable(QuestContext ctx) => Game1.player.MiningLevel >= 1 && Game1.player.deepestMineLevel >= 40;
+    public bool IsAvailable(QuestContext ctx) =>
+        ConditionEvaluator.MiningLevel >= 1 && ConditionEvaluator.MinDeepestMineLevel(40);
 
     public QuestPosting? Build(QuestContext ctx)
     {

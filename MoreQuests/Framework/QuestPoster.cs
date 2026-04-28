@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using MoreQuests.Framework.Quests;
+using MoreQuests.Framework.Posting;
+using MoreQuests.Framework.Rewards;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -11,6 +12,9 @@ namespace MoreQuests.Framework;
 /// Routes generated postings to their delivery channel. DailyBoard postings are pushed into
 /// `BillboardSlots` for display on the help-wanted billboard. Mail postings still ship a
 /// flavour letter via a Data/mail asset edit and are added to the journal directly.
+///
+/// Quest construction is delegated to `QuestFactory`; reward summary text comes from
+/// `RewardApplier`. This class is now pure routing + asset-edit plumbing.
 internal sealed class QuestPoster
 {
     private const string MailPrefix = "RafiaBee.MoreQuests.";
@@ -73,7 +77,7 @@ internal sealed class QuestPoster
 
     private void PostToBoard(QuestPosting posting)
     {
-        Quest? quest = posting.PreBuiltQuest ?? BuildVanillaQuest(posting);
+        Quest? quest = posting.PreBuiltQuest ?? QuestFactory.Build(posting);
         if (quest == null)
         {
             _monitor.Log($"Could not build Quest for {posting.DefinitionId} ({posting.QuestType}).", LogLevel.Warn);
@@ -100,27 +104,18 @@ internal sealed class QuestPoster
     /// matching how vanilla bakes the reward into the description text.
     private string AppendRewardLine(string description, QuestPosting posting)
     {
-        var translation = _helper.Translation;
-        var parts = new List<string>();
-        if (posting.GoldReward > 0)
-            parts.Add(translation.Get("quest.reward.gold", new { gold = posting.GoldReward }).Default($"{posting.GoldReward}g").ToString());
-        if (posting.FriendshipReward > 0 && !string.IsNullOrEmpty(posting.FriendshipRewardNpc))
-            parts.Add(translation.Get("quest.reward.friendship", new { npc = posting.FriendshipRewardNpc, points = posting.FriendshipReward })
-                .Default($"+{posting.FriendshipReward} friendship with {posting.FriendshipRewardNpc}").ToString());
-
-        if (parts.Count == 0)
+        string summary = RewardApplier.BuildRewardSummary(posting, _helper.Translation);
+        if (string.IsNullOrEmpty(summary))
             return description;
-
-        string label = translation.Get("quest.reward.label").Default("Reward").ToString();
         // `Game1.parseText` (used by the quest log) treats `\n` as a hard line break;
         // `^` doesn't work for quest descriptions (it's a mail-asset convention), and
         // showed up rendered as `~~` glyphs.
-        return $"{description}\n\n{label}: {string.Join(", ", parts)}";
+        return $"{description}\n\n{summary}";
     }
 
     private void PostViaMail(QuestPosting posting)
     {
-        var quest = posting.PreBuiltQuest ?? BuildVanillaQuest(posting);
+        var quest = posting.PreBuiltQuest ?? QuestFactory.Build(posting);
         if (quest == null)
         {
             _monitor.Log($"Could not build vanilla quest for {posting.DefinitionId} ({posting.QuestType}).", LogLevel.Warn);
@@ -150,74 +145,6 @@ internal sealed class QuestPoster
             Game1.player.mailbox.Add(mailKey);
 
         _monitor.Log($"Posted {posting.DefinitionId} via mail. Days left: {quest.daysLeft.Value}.", LogLevel.Trace);
-    }
-
-    private static Quest? BuildVanillaQuest(QuestPosting p)
-    {
-        // Vanilla ItemDeliveryQuest / FishingQuest compare against `item.QualifiedItemId`,
-        // so ItemId must be the qualified form (e.g. "(O)334"). Stripping the prefix
-        // breaks completion for both vanilla and modded items.
-        string itemId = ItemRegistry.QualifyItemId(p.ObjectiveItemId) ?? p.ObjectiveItemId;
-        string giver = string.IsNullOrEmpty(p.QuestGiver) ? "Lewis" : p.QuestGiver;
-
-        Quest? quest = p.QuestType switch
-        {
-            BoardQuestType.ItemDelivery or BoardQuestType.ResourceCollection => BuildItemDelivery(p, giver, itemId),
-            BoardQuestType.Fishing => new FishingQuest
-            {
-                target = { Value = giver },
-                ItemId = { Value = itemId },
-                numberToFish = { Value = Math.Max(1, p.ObjectiveQuantity) },
-                reward = { Value = p.GoldReward },
-                targetMessage = p.TargetMessage
-            },
-            BoardQuestType.SlayMonster => new SlayMonsterQuest
-            {
-                target = { Value = giver },
-                monsterName = { Value = string.IsNullOrEmpty(p.TargetMonster) ? p.ObjectiveItemName : p.TargetMonster },
-                numberToKill = { Value = Math.Max(1, p.ObjectiveQuantity) },
-                reward = { Value = p.GoldReward },
-                targetMessage = p.TargetMessage
-            },
-            BoardQuestType.Socialize => new ItemDeliveryQuest
-            {
-                target = { Value = giver },
-                ItemId = { Value = itemId },
-                number = { Value = 1 },
-                targetMessage = p.TargetMessage
-            },
-            _ => null
-        };
-
-        // Stamp a unique mod-prefixed ID. MH Quest Manager uses `IsVanillaQuestId` /
-        // `FindModNameByPrefix` to classify quests; without an ID our quests fall through
-        // both checks and don't surface in its tracker. The prefix matches our manifest
-        // UniqueID so MHQM can attribute them to MoreQuests.
-        if (quest != null)
-            quest.id.Value = $"RafiaBee.MoreQuests.{p.DefinitionId}.{Guid.NewGuid():N}";
-        return quest;
-    }
-
-    private static MoreQuestsItemDeliveryQuest BuildItemDelivery(QuestPosting p, string giver, string itemId)
-    {
-        var q = new MoreQuestsItemDeliveryQuest
-        {
-            target = { Value = giver },
-            ItemId = { Value = itemId },
-            number = { Value = Math.Max(1, p.ObjectiveQuantity) },
-            targetMessage = p.TargetMessage
-        };
-        if (!string.IsNullOrEmpty(p.ItemReward) && p.ItemRewardCount > 0)
-        {
-            q.customItemReward.Value = p.ItemReward;
-            q.customItemRewardCount.Value = p.ItemRewardCount;
-        }
-        if (p.FriendshipReward > 0 && !string.IsNullOrEmpty(p.FriendshipRewardNpc))
-        {
-            q.friendshipRewardNpc.Value = p.FriendshipRewardNpc;
-            q.friendshipRewardPoints.Value = p.FriendshipReward;
-        }
-        return q;
     }
 
     private static string BuildDefaultMailBody(QuestPosting p)

@@ -1,3 +1,4 @@
+using MoreQuests.Framework.Conditions;
 using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
@@ -25,7 +26,7 @@ internal sealed class BeachCleanup : IQuestDefinition
         ("(O)723", "Oyster")
     };
 
-    public bool IsAvailable(QuestContext ctx) => ctx.Season == "summer";
+    public bool IsAvailable(QuestContext ctx) => ConditionEvaluator.MatchesSeason("summer");
 
     public QuestPosting? Build(QuestContext ctx)
     {

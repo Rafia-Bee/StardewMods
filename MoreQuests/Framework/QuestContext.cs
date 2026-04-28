@@ -1,3 +1,4 @@
+using MoreQuests.Framework.Cache;
 using StardewModdingAPI;
 using StardewValley;
 
@@ -11,16 +12,18 @@ internal sealed class QuestContext
     public IMonitor Monitor { get; }
     public ModConfig Config { get; }
     public ItemResolver Items { get; }
+    public GameDataCache Data { get; }
 
     public string Season => Game1.currentSeason;
     public int DayOfMonth => Game1.dayOfMonth;
     public int Year => Game1.year;
 
-    public QuestContext(IModHelper helper, IMonitor monitor, ModConfig config, ItemResolver items)
+    public QuestContext(IModHelper helper, IMonitor monitor, ModConfig config, ItemResolver items, GameDataCache data)
     {
         Helper = helper;
         Monitor = monitor;
         Config = config;
         Items = items;
+        Data = data;
     }
 }

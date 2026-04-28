@@ -1,3 +1,4 @@
+using MoreQuests.Framework.Conditions;
 using StardewValley;
 
 namespace MoreQuests.Framework.Quests;
@@ -14,7 +15,7 @@ internal sealed class SeasonalForaging : IQuestDefinition
     public int CooldownDays => 2;
 
     public bool IsAvailable(QuestContext ctx) =>
-        ctx.Season is "spring" or "summer" or "fall" or "winter";
+        ConditionEvaluator.MatchesAnySeason("spring", "summer", "fall", "winter");
 
     public QuestPosting? Build(QuestContext ctx)
     {

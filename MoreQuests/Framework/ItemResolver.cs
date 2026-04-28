@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MoreQuests.Framework.Cache;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.GameData.Crops;
-using StardewValley.GameData.Locations;
 using StardewValley.GameData.Objects;
 using StardewValley.ItemTypeDefinitions;
 
@@ -38,10 +37,12 @@ internal sealed class RecipeIngredient
 internal sealed class ItemResolver
 {
     private readonly IMonitor _monitor;
+    private readonly GameDataCache _cache;
 
-    public ItemResolver(IMonitor monitor)
+    public ItemResolver(IMonitor monitor, GameDataCache cache)
     {
         _monitor = monitor;
+        _cache = cache;
     }
 
     public List<ResolvedItem> GetSeasonalCrops(string season)
@@ -49,8 +50,7 @@ internal sealed class ItemResolver
         var results = new List<ResolvedItem>();
         try
         {
-            var cropData = Game1.content.Load<Dictionary<string, CropData>>("Data/Crops");
-            foreach (var (_, data) in cropData)
+            foreach (var (_, data) in _cache.Crops)
             {
                 if (data.Seasons == null || !data.Seasons.Any(s => string.Equals(s.ToString(), season, StringComparison.OrdinalIgnoreCase)))
                     continue;
@@ -71,8 +71,7 @@ internal sealed class ItemResolver
         var results = new List<ResolvedItem>();
         try
         {
-            var fishData = Game1.content.Load<Dictionary<string, string>>("Data/Fish");
-            foreach (var (fishId, rawData) in fishData)
+            foreach (var (fishId, rawData) in _cache.Fish)
             {
                 var fields = rawData.Split('/');
                 if (fields.Length < 13)
@@ -130,10 +129,9 @@ internal sealed class ItemResolver
                 return null;
 
             var visitedSet = new HashSet<string>(visited, StringComparer.OrdinalIgnoreCase);
-            var locationData = Game1.content.Load<Dictionary<string, LocationData>>("Data/Locations");
             var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var (locName, data) in locationData)
+            foreach (var (locName, data) in _cache.Locations)
             {
                 bool isDefault = locName.Equals("Default", StringComparison.OrdinalIgnoreCase);
                 bool isVisited = visitedSet.Contains(locName);
@@ -166,8 +164,7 @@ internal sealed class ItemResolver
         var results = new List<CookingRecipeInfo>();
         try
         {
-            var recipeData = Game1.content.Load<Dictionary<string, string>>("Data/CookingRecipes");
-            foreach (var (recipeName, rawData) in recipeData)
+            foreach (var (recipeName, rawData) in _cache.CookingRecipes)
             {
                 if (!Game1.player.cookingRecipes.ContainsKey(recipeName))
                     continue;
