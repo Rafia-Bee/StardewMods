@@ -40,44 +40,85 @@ This mod is the engine that powers [More Quests](../MoreQuests/README.md). It al
 
 GMCM registration is deferred until the first `UpdateTicking` so consumer-mod quests that register during their own `OnGameLaunched` appear in the per-quest weight list.
 
-## Registering a quest from another mod
+## Registering quests from another mod
+
+There are three entry points, depending on whether your mod is a SMAPI content pack, a C# mod with bundled JSON, or a C# mod with imperative quest definitions.
+
+### A. SMAPI content pack (no code)
+
+Drop a folder under `Mods/` with a `manifest.json` declaring `"ContentPackFor": { "UniqueID": "RafiaBee.MoreQuestsFramework" }` and a `quests.json` next to it. The framework auto-loads every owned content pack at startup. See the working example at [docs/example-pack/](docs/example-pack/).
+
+### B. C# mod with bundled JSON + generators
 
 ```csharp
-public override void Entry(IModHelper helper)
-{
-    helper.Events.GameLoop.GameLaunched += OnGameLaunched;
-}
-
 private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
 {
     var fw = Helper.ModRegistry.GetApi<MoreQuestsFramework.Api.IInternalApi>(
         "RafiaBee.MoreQuestsFramework");
     if (fw == null) return;
 
-    fw.RegisterQuest(new MyQuestDefinition());
+    // Custom Quest subclasses (must register before quests.json loads).
     fw.RegisterCustomQuestType(typeof(MyCustomQuestSubclass));
+
+    // Named C# generators referenced by quests.json `"Generator": "<name>"`.
+    fw.RegisterGenerator(ModManifest, "MyQuest", ctx => new QuestPosting { /* ... */ });
+
+    // Load the JSON pack bundled inside this mod's folder.
+    fw.LoadQuestsFromMod(Helper, ModManifest, "assets/quests.json");
 }
 ```
+
+This is the pattern our own `RafiaBee.MoreQuests` content mod uses. `quests.json` carries metadata (Id / Category / Trigger / Available); the C# generator owns runtime randomization.
+
+### C. C# mod with `IQuestDefinition` instances
+
+For mods that prefer pure C# without JSON, the original `RegisterQuest` API still works:
+
+```csharp
+fw.RegisterQuest(new MyQuestDefinition());  // implements IQuestDefinition
+```
+
+### Schema
+
+`quests.json` shape (Phase 4 subset):
+
+```jsonc
+{
+    "Schema": "1.0",
+    "Quests": [
+        {
+            "Name": "MyMod.MyQuest",
+            "Category": "Farming",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 30,
+                "MaxPerDay": 1,
+                "CooldownDays": 7,
+                "Available": { "Season": "spring|fall", "NpcMet": "Lewis" }
+            },
+            "Generator": "MyQuest"
+        },
+        {
+            "Name": "MyMod.StaticQuest",
+            "Category": "Foraging",
+            "Tier": "Beginner",
+            "Trigger": { "Source": "DailyBoard", "Weight": 10, "MaxPerDay": 1, "CooldownDays": 14 },
+            "Giver": "Lewis",
+            "Objective": { "Kind": "Deliver", "Item": "(O)628", "Count": 1 },
+            "Title": "{i18n:my.quest.title}",
+            "Rewards": [ { "Kind": "Money", "Amount": 500 } ]
+        }
+    ]
+}
+```
+
+Each `QuestDef` must set either `Generator` (a name registered via `RegisterGenerator`) or a fully-declarative `Objective`. `{i18n:key}` tokens in any string field resolve through the owning pack's translation helper. `Available` accepts every key the framework's `ConditionEvaluator` knows about (Season, NpcExists, NpcMet, MinDeepestMineLevel, SkillLevel, FriendshipLevel, HasMod, GSQ, etc. — see `plan.md §2.6`); `not:` prefix negates; `|` inside a value is OR.
 
 `IInternalApi` is the current registration seam ([Api/IInternalApi.cs](Api/IInternalApi.cs)). It's deliberately minimal until the public `IMoreQuestsApi` lands in Phase 5 (see `docs/plan.md` in the content mod). Consumer mods need a hard SMAPI dependency on `RafiaBee.MoreQuestsFramework` and either a project reference to this assembly or their own copy of the `IQuestDefinition` / `QuestPosting` / `QuestContext` shapes.
 
-`IQuestDefinition`:
+### Debug / iteration
 
-```csharp
-public interface IQuestDefinition
-{
-    string Id { get; }
-    QuestCategory Category { get; }
-    PostingKind Kind { get; }
-    int DefaultWeight { get; }
-    int MaxPerDay { get; }
-    int CooldownDays { get; }
-    bool IsAvailable(QuestContext ctx);
-    QuestPosting? Build(QuestContext ctx);
-}
-```
-
-`Build` returns `null` if generation failed (no matching items, no available NPC, etc.); the pipeline simply skips the slot.
+The framework registers an `mq_refresh` SMAPI console command that re-rolls today's daily-board postings without reloading the save. Useful while tuning new quests.
 
 ## Project layout
 

@@ -1,0 +1,107 @@
+{
+    "Schema": "1.0",
+    "Quests": [
+        {
+            "Name": "Farming.BasicCropDelivery",
+            "Category": "Farming",
+            "Trigger": { "Source": "DailyBoard", "Weight": 60, "MaxPerDay": 4, "CooldownDays": 7 },
+            "Generator": "BasicCropDelivery"
+        },
+        {
+            "Name": "Fishing.SimpleRequest",
+            "Category": "Fishing",
+            "Trigger": { "Source": "DailyBoard", "Weight": 50, "MaxPerDay": 1, "CooldownDays": 2 },
+            "Generator": "SimpleFishingRequest"
+        },
+        {
+            "Name": "Mining.BasicSlimeClearing",
+            "Category": "Mining",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 50,
+                "MaxPerDay": 1,
+                "CooldownDays": 7,
+                "Available": { "MinDeepestMineLevel": "1" }
+            },
+            "Generator": "BasicSlimeClearing"
+        },
+        {
+            "Name": "Mining.BarDelivery",
+            "Category": "Mining",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 35,
+                "MaxPerDay": 1,
+                "CooldownDays": 5,
+                "Available": { "SkillLevel": "Mining 1", "MinDeepestMineLevel": "40" }
+            },
+            "Generator": "BarDelivery"
+        },
+        {
+            "Name": "Foraging.Seasonal",
+            "Category": "Foraging",
+            "Trigger": { "Source": "DailyBoard", "Weight": 50, "MaxPerDay": 3, "CooldownDays": 2 },
+            "Generator": "SeasonalForaging"
+        },
+        {
+            "Name": "Social.ElliottPoem",
+            "Category": "Social",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 25,
+                "MaxPerDay": 1,
+                "CooldownDays": 7,
+                "Available": { "NpcExists": "Elliott", "NpcMet": "Elliott" }
+            },
+            "Generator": "ElliottPoemInspiration"
+        },
+        {
+            "Name": "Social.CheckOnGeorge",
+            "Category": "Social",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 25,
+                "MaxPerDay": 1,
+                "CooldownDays": 21,
+                "Available": { "NpcExists": "George Evelyn" }
+            },
+            "Generator": "CheckOnGeorge"
+        },
+        {
+            "Name": "Animal.HaySupplyRun",
+            "Category": "Animal",
+            "Trigger": { "Source": "Mail", "Weight": 0, "MaxPerDay": 1, "CooldownDays": 28 },
+            "Generator": "HaySupplyRun"
+        },
+        {
+            "Name": "Seasonal.BeachCleanup",
+            "Category": "Seasonal",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 30,
+                "MaxPerDay": 1,
+                "CooldownDays": 7,
+                "Available": { "Season": "summer" }
+            },
+            "Generator": "BeachCleanup"
+        },
+        {
+            "Name": "Seasonal.SpringTea",
+            "Category": "Seasonal",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 40,
+                "MaxPerDay": 1,
+                "CooldownDays": 8,
+                "Available": { "Season": "fall" }
+            },
+            "Generator": "SpringTea"
+        },
+        {
+            "Name": "Cooking.CravingDish",
+            "Category": "Cooking",
+            "Trigger": { "Source": "DailyBoard", "Weight": 30, "MaxPerDay": 3, "CooldownDays": 2 },
+            "Generator": "CravingDish"
+        }
+    ]
+}

@@ -24,6 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="assets\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Compile-time reference for shared engine types (IQuestDefinition, QuestPosting,
          QuestContext, etc.). Private=false stops MSBuild from copying the framework DLL
          next to ours; SMAPI loads the framework as its own mod via the Dependencies entry

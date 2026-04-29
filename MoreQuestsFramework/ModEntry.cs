@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Cache;
 using MoreQuestsFramework.Config;
+using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Patches;
 using MoreQuestsFramework.Pipeline;
 using MoreQuestsFramework.Quests;
@@ -24,6 +25,8 @@ public sealed class ModEntry : Mod
     internal const string PinAssetRoot = "Mods/RafiaBee.MoreQuestsFramework/Pin";
 
     private QuestRegistry _registry = null!;
+    private GeneratorRegistry _generators = null!;
+    private QuestPackLoader _loader = null!;
     private QuestPipeline? _pipeline;
     private QuestPoster? _poster;
     private GameDataCache? _dataCache;
@@ -35,7 +38,9 @@ public sealed class ModEntry : Mod
         Config = helper.ReadConfig<MoreQuestsFrameworkConfig>();
 
         _registry = new QuestRegistry(Monitor);
-        _api = new InternalApi(_registry, Monitor, () => _spaceCore);
+        _generators = new GeneratorRegistry(Monitor);
+        _loader = new QuestPackLoader(_registry, _generators, Monitor);
+        _api = new InternalApi(_registry, _generators, _loader, Monitor, () => _spaceCore, RefreshOffers);
 
         _poster = new QuestPoster(helper, Monitor);
         _poster.Register();
@@ -47,6 +52,11 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
+
+        helper.ConsoleCommands.Add(
+            "mq_refresh",
+            "Re-rolls today's daily-board postings without reloading the save.",
+            (_, _) => RefreshOffers());
         // Defer GMCM until after every consumer mod's `GameLaunched` has run, so their
         // registered quests appear in the per-quest weights section.
         helper.Events.GameLoop.UpdateTicking += OnFirstTick;
@@ -55,6 +65,11 @@ public sealed class ModEntry : Mod
     private void OnFirstTick(object? sender, UpdateTickingEventArgs e)
     {
         Helper.Events.GameLoop.UpdateTicking -= OnFirstTick;
+        // Auto-load any SMAPI content pack that targets the framework. Runs after
+        // every consumer mod's GameLaunched, so C# generators they registered are
+        // already in the registry when packs that reference them load.
+        foreach (var pack in Helper.ContentPacks.GetOwned())
+            _loader.LoadContentPack(pack);
         GmcmRegistration.Register(Helper, ModManifest, Config, _registry, onReset: () => Config = new MoreQuestsFrameworkConfig());
     }
 
@@ -107,8 +122,8 @@ public sealed class ModEntry : Mod
         // their dependencies, so by the time their OnGameLaunched fires the framework's
         // API is already available.
         //
-        // GMCM registration is deferred to OnFirstTick so the registry includes content-mod
-        // quests when the per-quest weight options are built.
+        // GMCM registration + content-pack auto-load are deferred to OnFirstTick so the
+        // registry sees content-mod quests + JSON pack quests when GMCM builds its menu.
     }
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
@@ -143,4 +158,27 @@ public sealed class ModEntry : Mod
             Game1.netWorldState.Value.SetQuestOfTheDay(null);
     }
 
+    /// Re-rolls the daily-board batch on demand. Used by `IInternalApi.RefreshOffers()`
+    /// so testers can preview new variants without reloading the save. Safe to call
+    /// at any time after save load — uses the same code path as the day-start flow.
+    private void RefreshOffers()
+    {
+        if (!Context.IsWorldReady)
+        {
+            Monitor.Log("RefreshOffers ignored: world not ready.", LogLevel.Warn);
+            return;
+        }
+        if (_pipeline == null || _poster == null)
+        {
+            Monitor.Log("RefreshOffers ignored: pipeline not initialised.", LogLevel.Warn);
+            return;
+        }
+
+        _dataCache?.Refresh();
+        _poster.BeginDay();
+        var daily = _pipeline.GenerateDailyPostings();
+        _poster.PostBatch(daily);
+        _poster.CommitBoard();
+        Monitor.Log($"RefreshOffers: re-rolled {daily.Count} daily postings.", LogLevel.Info);
+    }
 }
