@@ -2,17 +2,17 @@
 
 A SMAPI content mod for Stardew Valley that ships a curated set of new daily-board quests, mail-triggered quests, and custom completion logic on top of the [More Quests Framework](../MoreQuestsFramework/README.md).
 
-> Heavy work in progress. Phase 1 quests are implemented and the framework split (Phase 2) is in place. The remaining 60+ quest concepts described in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
+> Heavy work in progress. Phases 1-4 are complete: framework split, declarative rewards/conditions, and the JSON content-pack loader are all in place. The remaining 60+ quest concepts described in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
 
 ## What this mod does
 
-This mod is **content only**. It registers eleven `IQuestDefinition` implementations and three custom `Quest` subclasses with the framework at `GameLaunched`. The framework owns the billboard, the daily generation pipeline, the four vanilla wrappers, the reward path, and all engine-level config; this mod just supplies quests.
+This mod is **content only**. It ships [assets/quests.json](assets/quests.json) — eleven quest definitions consumed by the framework's content-pack loader — plus a small set of named C# generators and three custom `Quest` subclasses for the quests that need runtime randomization (NPC dispatch, seasonal item pools, recipe walks). The framework owns the billboard, the daily generation pipeline, the four vanilla wrappers, the reward path, and all engine-level config; this mod just supplies quests.
 
 If the framework isn't installed, this mod logs an error and registers nothing.
 
 ## Status
 
-**Implemented (Phase 1)**
+**Implemented**
 
 | Category | Quest | Channel |
 | --- | --- | --- |
@@ -67,23 +67,43 @@ For ItemDelivery and Fishing quests this mod uses the framework's `MoreQuestsIte
 ```
 MoreQuests/
   ModEntry.cs            // hooks GameLaunched, fetches the framework API,
-                         // registers all 11 quest definitions + 3 custom Quest types
+                         // registers custom Quest types + C# generators,
+                         // loads assets/quests.json
   ModConfig.cs           // per-content tunables only
   GmcmRegistration.cs    // GMCM page for the content-mod toggles
-  Quests/                // one file per IQuestDefinition implementation,
-                         // plus the three custom Quest subclasses
+  assets/
+    quests.json          // every quest's metadata (Id, Trigger, Available, Generator/Objective)
+  Quests/
+    Generators.cs        // every Build() body, registered by name with the framework
+    AnySlimeQuest.cs     // custom Quest subclass: counts any slime kill
+    CollectAndReportQuest.cs  // custom Quest subclass: gather then talk
+    CheckOnGeorgeQuest.cs     // custom Quest subclass: gift then chat then report
   i18n/                  // quest titles/descriptions/objectives + content config strings
   manifest.json
 ```
 
 ## Adding a new quest
 
-1. Drop a class under `Quests/` implementing `MoreQuestsFramework.IQuestDefinition`.
-2. Pick a `PostingKind`: `DailyBoard` (board slot), `Mail` (auto-mailed when available), `SpecialOrder` (later), or `NpcDialogue` (later).
-3. Register the class in [ModEntry.cs](ModEntry.cs) `OnGameLaunched` via `fw.RegisterQuest(new YourQuest())`.
-4. Add `quest.<category>.<id>.title|description|objective|targetMessage` keys to `i18n/default.json` and look them up via `MoreQuests.ModEntry.I18n.Get(...)`.
-5. If the quest is gated on a mod, check via `ctx.Helper.ModRegistry.IsLoaded(MoreQuestsFramework.ModCompat.<id>)` (or one of the `ModCompat.HasXxx` helpers) inside `IsAvailable`.
-6. If the quest needs a custom `Quest` subclass, mark it `[XmlType("Mods_RafiaBee_MoreQuests_<Name>")]` and register it via `fw.RegisterCustomQuestType(typeof(YourQuest))` so SpaceCore can serialize it.
+For **most quests** (anything needing runtime randomization — NPC dispatch, item-pool selection, scaling quantities), declare metadata in JSON and register a generator in C#:
+
+1. Add an entry to [assets/quests.json](assets/quests.json) with a unique `Name`, a `Category`, a `Trigger` block (`Source`, `Weight`, `MaxPerDay`, `CooldownDays`, optional `Available` condition dictionary), and a `Generator` name.
+2. Implement the generator in [Quests/Generators.cs](Quests/Generators.cs) as a `Func<QuestContext, QuestPosting?>`. Return `null` to abstain when no candidate is available; the framework drops the slot.
+3. Register the generator in `Generators.RegisterAll(...)` via `fw.RegisterGenerator(manifest, "<name>", MyGenerator)`.
+4. Add `quest.<category>.<id>.title|description|objective|targetMessage` keys to [i18n/default.json](i18n/default.json) and look them up via `MoreQuests.ModEntry.I18n.Get(...)` from the generator.
+
+For **fully-static quests** (a fixed item, a fixed giver, no runtime selection), skip the generator entirely and put `Title`, `Description`, `Giver`, `Objective`, and `Rewards` directly in JSON. See the example pack at [../MoreQuestsFramework/docs/example-pack/](../MoreQuestsFramework/docs/example-pack/).
+
+Other notes:
+
+- `Trigger.Source` accepts `DailyBoard` (board slot), `Mail` (auto-mailed when available), `SpecialOrder` (later), or `NpcDialogue` (later).
+- The `Available` dictionary is fed into the framework's `ConditionEvaluator` — every key in `plan.md §2.6` is supported (`Season`, `MinDeepestMineLevel`, `SkillLevel`, `NpcExists`, `HasMod`, `GSQ`, etc.). `not:` prefix negates; `|` inside a value is OR.
+- If the quest needs a custom `Quest` subclass, mark it `[XmlType("Mods_RafiaBee_MoreQuests_<Name>")]` and register it via `fw.RegisterCustomQuestType(typeof(YourQuest))` so SpaceCore can serialize it. The generator builds the subclass and assigns it to `posting.PreBuiltQuest`.
+- During testing, run `mq_refresh` in the SMAPI console to re-roll the daily board without reloading the save.
+
+## Known limitations
+
+- **Mail Services Mod compatibility.** When you complete a More Quests delivery quest by mailing the item through Mail Services Mod, the recipient NPC will gain a full heart of friendship in addition to whatever the quest already rewards. Mail Services Mod mimics vanilla's in-person delivery flow, which hands out a fixed 250-point friendship bump regardless of what the quest itself defines, then it calls our completion handler which layers our declarative friendship reward on top. The result is the displayed reward plus an extra heart. Delivering the item to the NPC in person produces the correct reward. A request for upstream compatibility will be filed with the Mail Services Mod author once More Quests publishes.
+TODO: Stamp custom quests with a modData marker (e.g. "RafiaBee.MoreQuests/SuppressVanillaFriendshipBonus" = "true") and ask the MSM author to honor it.
 
 ## Notes
 

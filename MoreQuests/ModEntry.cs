@@ -10,7 +10,7 @@ public sealed class ModEntry : Mod
     internal static ModEntry Instance { get; private set; } = null!;
     internal static ModConfig Config { get; set; } = new();
 
-    /// Static accessor used by content-mod quest definitions to look up their own i18n
+    /// Static accessor used by content-mod quest generators to look up their own i18n
     /// strings. The framework's `QuestContext.Helper` belongs to the framework, so its
     /// translation helper would only see the framework's i18n keys.
     internal static ITranslationHelper I18n => Instance.Helper.Translation;
@@ -35,23 +35,17 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        // Register custom Quest subclasses with SpaceCore (via framework) so saves round-trip.
+        // Custom Quest subclasses (must register before quests.json loads so generators
+        // that build PreBuiltQuests of these types round-trip through SpaceCore).
         fw.RegisterCustomQuestType(typeof(AnySlimeQuest));
         fw.RegisterCustomQuestType(typeof(CollectAndReportQuest));
         fw.RegisterCustomQuestType(typeof(CheckOnGeorgeQuest));
 
-        // Register every content-mod quest definition.
-        fw.RegisterQuest(new BasicCropDelivery());
-        fw.RegisterQuest(new SimpleFishingRequest());
-        fw.RegisterQuest(new BasicSlimeClearing());
-        fw.RegisterQuest(new BarDelivery());
-        fw.RegisterQuest(new SeasonalForaging());
-        fw.RegisterQuest(new ElliottPoemInspiration());
-        fw.RegisterQuest(new CheckOnGeorge());
-        fw.RegisterQuest(new HaySupplyRun());
-        fw.RegisterQuest(new BeachCleanup());
-        fw.RegisterQuest(new SpringTea());
-        fw.RegisterQuest(new CravingDish());
+        // Register every C# generator referenced by assets/quests.json.
+        Generators.RegisterAll(fw, ModManifest);
+
+        // Load the JSON quest pack. Each entry references a generator above.
+        fw.LoadQuestsFromMod(Helper, ModManifest, "assets/quests.json");
 
         GmcmRegistration.Register(Helper, ModManifest);
     }
