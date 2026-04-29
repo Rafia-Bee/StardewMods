@@ -84,33 +84,9 @@ public sealed class QuestPoster
             return;
         }
 
-        quest.dailyQuest.Value = false;
-        quest.daysLeft.Value = 0;
-        quest.accepted.Value = false;
-        if (!string.IsNullOrEmpty(posting.Title))
-            quest.questTitle = posting.Title;
-        if (!string.IsNullOrEmpty(posting.Description))
-            quest.questDescription = AppendRewardLine(posting.Description, posting);
-        if (!string.IsNullOrEmpty(posting.CurrentObjective))
-            quest.currentObjective = posting.CurrentObjective;
-        if (posting.GoldReward > 0)
-            quest.moneyReward.Value = posting.GoldReward;
-
+        ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: 0);
         _pendingBoard.Add((quest, posting));
         _monitor.Log($"Buffered {posting.DefinitionId} for billboard ({posting.QuestType}).", LogLevel.Trace);
-    }
-
-    /// Appends a "Reward: ..." footer to the description so the quest log shows it inline,
-    /// matching how vanilla bakes the reward into the description text.
-    private string AppendRewardLine(string description, QuestPosting posting)
-    {
-        string summary = RewardApplier.BuildRewardSummary(posting, _helper.Translation);
-        if (string.IsNullOrEmpty(summary))
-            return description;
-        // `Game1.parseText` (used by the quest log) treats `\n` as a hard line break;
-        // `^` doesn't work for quest descriptions (it's a mail-asset convention), and
-        // showed up rendered as `~~` glyphs.
-        return $"{description}\n\n{summary}";
     }
 
     private void PostViaMail(QuestPosting posting)
@@ -122,17 +98,7 @@ public sealed class QuestPoster
             return;
         }
 
-        quest.dailyQuest.Value = false;
-        quest.daysLeft.Value = Math.Max(1, posting.DeadlineDays);
-        if (!string.IsNullOrEmpty(posting.Title))
-            quest.questTitle = posting.Title;
-        if (!string.IsNullOrEmpty(posting.Description))
-            quest.questDescription = posting.Description;
-        if (!string.IsNullOrEmpty(posting.CurrentObjective))
-            quest.currentObjective = posting.CurrentObjective;
-        if (posting.GoldReward > 0)
-            quest.moneyReward.Value = posting.GoldReward;
-
+        ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: Math.Max(1, posting.DeadlineDays));
         Game1.player.questLog.Add(quest);
 
         string mailKey = MailPrefix + posting.DefinitionId.Replace('.', '_') + "_" + Game1.Date.TotalDays;
@@ -145,6 +111,45 @@ public sealed class QuestPoster
             Game1.player.mailbox.Add(mailKey);
 
         _monitor.Log($"Posted {posting.DefinitionId} via mail. Days left: {quest.daysLeft.Value}.", LogLevel.Trace);
+    }
+
+    /// Stamps title/description/objective + reward fields onto the quest. Reward routing:
+    ///   - Money rewards collapse into vanilla `Quest.moneyReward` (paid by base.questComplete).
+    ///   - Friendship/Object/Recipe/Mail rewards are encoded into the quest's NetStringList
+    ///     if it implements `IRewardedQuest`; the subclass's `questComplete` override decodes
+    ///     them back via `RewardApplier.ApplyEncoded`.
+    private void ApplyPostingFields(Quest quest, QuestPosting posting, bool dailyQuestDefault, int daysLeft)
+    {
+        quest.dailyQuest.Value = dailyQuestDefault;
+        quest.daysLeft.Value = daysLeft;
+        if (!dailyQuestDefault)
+            quest.accepted.Value = false;
+        if (!string.IsNullOrEmpty(posting.Title))
+            quest.questTitle = posting.Title;
+        if (!string.IsNullOrEmpty(posting.Description))
+            quest.questDescription = AppendRewardLine(posting.Description, posting);
+        if (!string.IsNullOrEmpty(posting.CurrentObjective))
+            quest.currentObjective = posting.CurrentObjective;
+
+        int money = posting.TotalMoney;
+        if (money > 0)
+            quest.moneyReward.Value = money;
+
+        if (quest is IRewardedQuest rewarded)
+            RewardApplier.EncodeInto(rewarded.SerializedRewards, posting.Rewards);
+    }
+
+    /// Appends a "Reward: ..." footer to the description so the quest log shows it inline,
+    /// matching how vanilla bakes the reward into the description text.
+    private string AppendRewardLine(string description, QuestPosting posting)
+    {
+        string summary = RewardApplier.BuildRewardSummary(posting.Rewards, posting.QuestGiver, _helper.Translation);
+        if (string.IsNullOrEmpty(summary))
+            return description;
+        // `Game1.parseText` (used by the quest log) treats `\n` as a hard line break;
+        // `^` doesn't work for quest descriptions (it's a mail-asset convention), and
+        // showed up rendered as `~~` glyphs.
+        return $"{description}\n\n{summary}";
     }
 
     private static string BuildDefaultMailBody(QuestPosting p)

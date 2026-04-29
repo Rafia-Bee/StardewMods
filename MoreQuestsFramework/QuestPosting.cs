@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using MoreQuestsFramework.Rewards;
 using StardewValley.Quests;
 
 namespace MoreQuestsFramework;
@@ -50,17 +52,26 @@ public sealed class QuestPosting
     public string? MailBody { get; set; }
 
     public int DeadlineDays { get; set; } = 5;
-    public int GoldReward { get; set; }
-    public int FriendshipReward { get; set; }
-    public string? FriendshipRewardNpc { get; set; }
-    public string? ItemReward { get; set; }
-    public int ItemRewardCount { get; set; } = 1;
+
+    /// Declarative reward block. Phase 3 entry point - quests author rewards as
+    /// `RewardSpec` records (Money / Friendship / Object / Recipe / Mail) and the
+    /// poster routes them into the right fields at delivery time.
+    public List<RewardSpec> Rewards { get; set; } = new();
 
     public List<QuestConsequence> Consequences { get; set; } = new();
 
     /// If set, this Quest object is used directly instead of building one from the posting fields.
     /// Vanilla-quest definitions populate this so the vanilla random logic stays intact.
     public Quest? PreBuiltQuest { get; set; }
+
+    /// Total gold across all `MoneyReward` entries. Routed into `Quest.moneyReward` at
+    /// posting time so vanilla pays it on completion.
+    public int TotalMoney => RewardApplier.SumMoney(Rewards);
+
+    /// Friendship reward to the quest giver (if any). Used by anti-spam pipeline filters
+    /// like `SkipFriendshipQuestsAtMaxHeart`.
+    public FriendshipReward? GiverFriendshipReward =>
+        Rewards.OfType<FriendshipReward>().FirstOrDefault(r => string.Equals(r.Npc, QuestGiver, System.StringComparison.OrdinalIgnoreCase));
 }
 
 public sealed class QuestConsequence

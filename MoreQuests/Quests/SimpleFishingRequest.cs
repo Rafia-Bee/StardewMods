@@ -1,5 +1,6 @@
 using System;
 using MoreQuestsFramework;
+using MoreQuestsFramework.Rewards;
 using StardewValley;
 
 namespace MoreQuests.Quests;
@@ -43,7 +44,7 @@ internal sealed class SimpleFishingRequest : IQuestDefinition
             ObjectiveItemName = target.DisplayName,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            GoldReward = gold,
+            Rewards = { new MoneyReward(gold) },
             Title = ModEntry.I18n.Get("quest.fishing.simple.title"),
             Description = ModEntry.I18n.Get("quest.fishing.simple.description", new { npc = "Willy", qty, item = target.DisplayName }),
             CurrentObjective = ModEntry.I18n.Get("quest.fishing.simple.objective", new { qty, item = target.DisplayName }),

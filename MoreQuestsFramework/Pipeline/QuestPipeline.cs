@@ -123,15 +123,14 @@ public sealed class QuestPipeline
     /// (e.g. CheckOnGeorge rewards Evelyn for caring about George) still post.
     private static bool IsAtMaxHeartWithRewardNpc(QuestPosting posting)
     {
-        if (posting.FriendshipReward <= 0 || string.IsNullOrEmpty(posting.FriendshipRewardNpc))
-            return false;
-        if (!string.Equals(posting.FriendshipRewardNpc, posting.QuestGiver, System.StringComparison.OrdinalIgnoreCase))
+        var giverReward = posting.GiverFriendshipReward;
+        if (giverReward == null || giverReward.Points <= 0)
             return false;
 
-        var npc = Game1.getCharacterFromName(posting.FriendshipRewardNpc);
+        var npc = Game1.getCharacterFromName(giverReward.Npc);
         if (npc == null)
             return false;
-        if (!Game1.player.friendshipData.TryGetValue(posting.FriendshipRewardNpc, out var friendship))
+        if (!Game1.player.friendshipData.TryGetValue(giverReward.Npc, out var friendship))
             return false;
 
         int maxHearts = Utility.GetMaximumHeartsForCharacter(npc);

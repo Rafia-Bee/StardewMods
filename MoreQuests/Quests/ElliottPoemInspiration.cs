@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using MoreQuestsFramework;
 using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Rewards;
 using StardewValley;
 
 namespace MoreQuests.Quests;
@@ -16,8 +17,14 @@ internal sealed class ElliottPoemInspiration : IQuestDefinition
     public int MaxPerDay => 1;
     public int CooldownDays => 7;
 
+    private static readonly System.Collections.Generic.Dictionary<string, string> Available = new()
+    {
+        ["NpcExists"] = "Elliott",
+        ["NpcMet"] = "Elliott"
+    };
+
     public bool IsAvailable(QuestContext ctx) =>
-        ConditionEvaluator.NpcExists("Elliott") && ConditionEvaluator.NpcMet("Elliott");
+        ConditionEvaluator.Evaluate(Available, ctx.Helper.ModRegistry);
 
     public QuestPosting? Build(QuestContext ctx)
     {
@@ -41,9 +48,7 @@ internal sealed class ElliottPoemInspiration : IQuestDefinition
             ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            GoldReward = 0,
-            FriendshipReward = ctx.Config.FriendshipBasic,
-            FriendshipRewardNpc = "Elliott",
+            Rewards = { new FriendshipReward("Elliott", ctx.Config.FriendshipBasic) },
             Title = ModEntry.I18n.Get("quest.social.elliott.title"),
             Description = ModEntry.I18n.Get("quest.social.elliott.description", new { item = pick.DisplayName }),
             CurrentObjective = ModEntry.I18n.Get("quest.social.elliott.objective", new { item = pick.DisplayName }),

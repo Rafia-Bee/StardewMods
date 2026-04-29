@@ -1,5 +1,6 @@
 using System;
 using MoreQuestsFramework;
+using MoreQuestsFramework.Rewards;
 using StardewValley;
 
 namespace MoreQuests.Quests;
@@ -39,7 +40,7 @@ internal sealed class HaySupplyRun : IQuestDefinition
             ObjectiveItemName = "Hay",
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
-            GoldReward = gold,
+            Rewards = { new MoneyReward(gold) },
             Title = ModEntry.I18n.Get("quest.animal.hay.title"),
             Description = ModEntry.I18n.Get("quest.animal.hay.description", new { qty }),
             CurrentObjective = ModEntry.I18n.Get("quest.animal.hay.objective", new { qty }),

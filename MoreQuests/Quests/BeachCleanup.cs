@@ -1,5 +1,6 @@
 using MoreQuestsFramework;
 using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Rewards;
 using StardewValley;
 
 namespace MoreQuests.Quests;
@@ -27,7 +28,13 @@ internal sealed class BeachCleanup : IQuestDefinition
         ("(O)723", "Oyster")
     };
 
-    public bool IsAvailable(QuestContext ctx) => ConditionEvaluator.MatchesSeason("summer");
+    private static readonly System.Collections.Generic.Dictionary<string, string> Available = new()
+    {
+        ["Season"] = "summer"
+    };
+
+    public bool IsAvailable(QuestContext ctx) =>
+        ConditionEvaluator.Evaluate(Available, ctx.Helper.ModRegistry);
 
     public QuestPosting? Build(QuestContext ctx)
     {
@@ -57,9 +64,7 @@ internal sealed class BeachCleanup : IQuestDefinition
             ObjectiveItemName = pick.Name,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            GoldReward = 0,
-            FriendshipReward = ctx.Config.FriendshipBasic,
-            FriendshipRewardNpc = giver,
+            Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipBasic) },
             Title = ModEntry.I18n.Get("quest.seasonal.beach.title", new { npc = giver }),
             Description = ModEntry.I18n.Get("quest.seasonal.beach.description", new { npc = giver, qty, item = pick.Name }),
             CurrentObjective = ModEntry.I18n.Get("quest.seasonal.beach.objective", new { qty, item = pick.Name, npc = giver }),

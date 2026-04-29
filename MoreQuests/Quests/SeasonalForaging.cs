@@ -1,5 +1,5 @@
 using MoreQuestsFramework;
-using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Rewards;
 using StardewValley;
 
 namespace MoreQuests.Quests;
@@ -15,8 +15,7 @@ internal sealed class SeasonalForaging : IQuestDefinition
     public int MaxPerDay => 3;
     public int CooldownDays => 2;
 
-    public bool IsAvailable(QuestContext ctx) =>
-        ConditionEvaluator.MatchesAnySeason("spring", "summer", "fall", "winter");
+    public bool IsAvailable(QuestContext ctx) => true;
 
     public QuestPosting? Build(QuestContext ctx)
     {
@@ -44,7 +43,7 @@ internal sealed class SeasonalForaging : IQuestDefinition
             ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            GoldReward = gold,
+            Rewards = { new MoneyReward(gold) },
             Title = ModEntry.I18n.Get("quest.foraging.seasonal.title", new { npc = giver }),
             Description = ModEntry.I18n.Get("quest.foraging.seasonal.description", new { npc = giver, qty, item = pick.DisplayName }),
             CurrentObjective = ModEntry.I18n.Get("quest.foraging.seasonal.objective", new { qty, item = pick.DisplayName, npc = giver }),

@@ -10,7 +10,7 @@ using StardewValley.Quests;
 namespace MoreQuestsFramework.Patches;
 
 /// Harmony patches that splice MoreQuestsBillboard into the vanilla Billboard pipeline.
-/// Strategy mirrors the semper2dem/HelpWanted reference: redirect every `Game1.questOfTheDay`
+/// Strategy mirrors the aedenthorn/HelpWanted reference: redirect every `Game1.questOfTheDay`
 /// getter inside Billboard to our currently-selected slot's Quest, and on draw, swap the
 /// vanilla daily-quest Billboard out for our multi-slot subclass.
 internal static class BillboardPatches

@@ -40,7 +40,7 @@ If the framework isn't installed, this mod logs an error and registers nothing.
 
 - **Generic Mod Config Menu** (`spacechase0.GenericModConfigMenu`) for in-game configuration of the content-mod toggles (separate from the framework's GMCM page).
 - **Ridgeside Village**, **East Scarp**, **Visit Mount Vapius**, **Stardew Valley Expanded** — adds the modded NPCs to the appropriate dispatch pools (saloon chefs, ecology-minded, conservation guides, etc.).
-- **Livestock Follows You** by me lol — required for a future quest batch (Marnie's Cow Offer, Marnie's Livestock Show, Leah's Farm Painting) (shameless plug).
+- **Livestock Follows You** by RafiaBee — required for a future quest batch (Marnie's Cow Offer, Marnie's Livestock Show, Leah's Farm Painting) (shameless plug).
 - **Si's Extra Crafting Materials** (Nexus 25467) — required for the future Winter Star Wrapping Paper quest.
 
 ## Configuration
@@ -58,7 +58,7 @@ Three of this mod's quests use bespoke `Quest` subclasses (registered with Space
 
 - **`AnySlimeQuest`** — backs Basic Slime Clearing. Counts any slime kill, not just one species.
 - **`CollectAndReportQuest`** — backs Beach Cleanup, Seasonal Foraging, etc. Player gathers items in the world, then reports to the giver to consume the stack and turn it in.
-- **`CheckOnGeorgeQuest`** — backs Check on George. Completes by socializing with George (not the giver, who is Evelyn).
+- **`CheckOnGeorgeQuest`** — backs Check on George. Multi-step quest: gift George, chat with him and finally report back to Evelyn.
 
 For ItemDelivery and Fishing quests this mod uses the framework's `MoreQuestsItemDeliveryQuest` / `MoreQuestsFishingQuest` subclasses (constructed by the framework's `QuestFactory`). Both subclasses make rewards explicit (no hidden vanilla friendship bumps or prize tickets) and route every completion path through the same `RewardApplier`.
 
