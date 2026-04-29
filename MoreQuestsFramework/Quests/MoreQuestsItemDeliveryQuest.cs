@@ -6,30 +6,27 @@ using System.Xml.Serialization;
 
 namespace MoreQuestsFramework.Quests;
 
-/// `ItemDeliveryQuest` variant that awards a configurable bonus item and friendship
-/// boost on completion. Vanilla `ItemDeliveryQuest` only ever gives money + the
-/// fixed 255 friendship to the recipient; this subclass layers our posting-defined
-/// `ItemReward` / `FriendshipReward` on top.
+/// `ItemDeliveryQuest` variant that runs the framework's declarative reward block on
+/// completion. Vanilla `ItemDeliveryQuest` only ever gives money + the fixed 255
+/// friendship to the recipient; this subclass replaces both: vanilla's bonus
+/// friendship is suppressed and the per-posting `RewardSpec` list is paid out via
+/// `RewardApplier`.
 [XmlType("Mods_RafiaBee_MoreQuestsFramework_ItemDeliveryQuest")]
-public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest
+public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQuest
 {
-    public readonly NetString customItemReward = new();
-    public readonly NetInt customItemRewardCount = new(1);
-    public readonly NetString friendshipRewardNpc = new();
-    public readonly NetInt friendshipRewardPoints = new();
+    public readonly NetStringList serializedRewards = new();
+
+    public NetStringList SerializedRewards => serializedRewards;
 
     protected override void initNetFields()
     {
         base.initNetFields();
-        NetFields.AddField(customItemReward, "customItemReward")
-            .AddField(customItemRewardCount, "customItemRewardCount")
-            .AddField(friendshipRewardNpc, "friendshipRewardNpc")
-            .AddField(friendshipRewardPoints, "friendshipRewardPoints");
+        NetFields.AddField(serializedRewards, "serializedRewards");
     }
 
     /// Fully replaces vanilla's `ItemDeliveryQuest.OnItemOfferedToNpc` so the implicit
-    /// 150/255 friendship bump is skipped. Only the per-posting `FriendshipReward` is
-    /// applied, keeping every reward explicit.
+    /// 150/255 friendship bump is skipped. The declarative `Rewards` block is the only
+    /// payout path.
     public override bool OnItemOfferedToNpc(NPC npc, Item item, bool probe = false)
     {
         if (completed.Value)
@@ -65,11 +62,7 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest
     {
         if (completed.Value)
             return;
-        RewardApplier.ApplyItemAndFriendship(
-            itemId: customItemReward.Value,
-            itemCount: customItemRewardCount.Value,
-            npcName: friendshipRewardNpc.Value,
-            friendshipPoints: friendshipRewardPoints.Value);
+        RewardApplier.ApplyEncoded(serializedRewards);
         base.questComplete();
     }
 }

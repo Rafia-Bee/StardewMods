@@ -1,6 +1,7 @@
 using System;
 using MoreQuestsFramework;
 using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Rewards;
 using StardewValley;
 
 namespace MoreQuests.Quests;
@@ -24,8 +25,14 @@ internal sealed class BarDelivery : IQuestDefinition
         ("(O)337", "Iridium Bar")
     };
 
+    private static readonly System.Collections.Generic.Dictionary<string, string> Available = new()
+    {
+        ["SkillLevel"] = "Mining 1",
+        ["MinDeepestMineLevel"] = "40"
+    };
+
     public bool IsAvailable(QuestContext ctx) =>
-        ConditionEvaluator.MiningLevel >= 1 && ConditionEvaluator.MinDeepestMineLevel(40);
+        ConditionEvaluator.Evaluate(Available, ctx.Helper.ModRegistry);
 
     public QuestPosting? Build(QuestContext ctx)
     {
@@ -55,7 +62,8 @@ internal sealed class BarDelivery : IQuestDefinition
             ObjectiveItemName = bar.Name,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            GoldReward = gold, // TODO: reward should be gold + a geode or gem.
+            // TODO: reward should be gold + a geode or gem.
+            Rewards = { new MoneyReward(gold) },
             Title = ModEntry.I18n.Get("quest.mining.bar.title"),
             Description = ModEntry.I18n.Get("quest.mining.bar.description", new { qty, item = bar.Name }),
             CurrentObjective = ModEntry.I18n.Get("quest.mining.bar.objective", new { qty, item = bar.Name }),

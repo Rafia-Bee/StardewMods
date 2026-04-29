@@ -87,6 +87,9 @@
     "config.DeadlineExtended.tooltip": "Long deadline for rare-trigger quests where the item is hard to obtain.",
 
     "quest.reward.label": "Reward",
-    "quest.reward.gold": "{{gold}}g",
-    "quest.reward.friendship": "+{{points}} friendship with {{npc}}"
+    "quest.reward.line.money": "{{npc}} will give you {{gold}}g in return",
+    "quest.reward.line.friendship": "{{npc}} will like you more",
+    "quest.reward.line.item": "You will get {{item}} as a thank you",
+    "quest.reward.line.recipe": "You will learn the {{recipe}} recipe",
+    "quest.reward.line.mail": "{{npc}} will send you a letter in the next few days"
 }

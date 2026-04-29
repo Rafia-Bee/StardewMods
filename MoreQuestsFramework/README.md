@@ -8,11 +8,11 @@ This mod is the engine that powers [More Quests](../MoreQuests/README.md). It al
 
 - **Multi-slot billboard.** Replaces vanilla's single "Quest of the Day" with a configurable per-day batch. Custom UI (`MoreQuestsBillboard`) renders all slots; `BillboardPatches` reroutes vanilla's billboard click + draw paths.
 - **Daily generation pipeline.** At `DayStarted`, samples from the registry by weight (subject to `MaxPerDay`, `CooldownDays`, per-NPC dedup, friendship-cap dedup, and a recent-history filter) to fill up to `QuestsPerDay` slots, then runs a separate pass for `PostingKind.Mail` quests.
-- **Quest factory.** Builds the right vanilla `Quest` subclass for each posting (`ItemDeliveryQuest`, `FishingQuest`, `SlayMonsterQuest`, `ResourceCollectionQuest`) and stamps a unique ID so external trackers (MH Quest Manager, etc.) attribute the quest correctly.
-- **Reward applier.** Single funnel for friendship and item rewards, applied at `questComplete` so vanilla in-person delivery, Mail Services Mod, and any future delivery channel produce the same payout. Vanilla's hidden bonuses (every-3rd-quest prize ticket, default 150/255 friendship bumps) are suppressed so every reward is explicit.
-- **Custom Quest subclasses.** `MoreQuestsItemDeliveryQuest` and `MoreQuestsFishingQuest` add `customItemReward` / `customItemRewardCount` / `friendshipRewardNpc` / `friendshipRewardPoints` NetFields and override the vanilla turn-in logic to actually consume the requested items (vanilla's `FishingQuest.OnNpcSocialized` doesn't reduce the stack — you could sell every fish and still claim the reward).
+- **Quest factory.** Builds the right vanilla `Quest` subclass for each posting (`ItemDeliveryQuest`, `FishingQuest`, `SlayMonsterQuest`, `ResourceCollectionQuest`) and stamps a unique ID so external trackers attribute the quest correctly.
+- **Declarative reward block.** Each `QuestPosting` carries a `List<RewardSpec>` (Money / Friendship / Object / Recipe / Mail). The poster routes Money into vanilla's `Quest.moneyReward` and encodes the rest into a `NetStringList` on the quest; `RewardApplier.ApplyEncoded` decodes and pays at `questComplete`, so vanilla in-person delivery, Mail Services Mod, and any future delivery channel produce the same payout. Vanilla's hidden bonuses (every-3rd-quest prize ticket, default 150/255 friendship bumps) are suppressed so every reward is explicit.
+- **Custom Quest subclasses.** `MoreQuestsItemDeliveryQuest` and `MoreQuestsFishingQuest` implement `IRewardedQuest` (a `serializedRewards` NetStringList that survives save round-trip) and override the vanilla turn-in logic to actually consume the requested items (vanilla's `FishingQuest.OnNpcSocialized` doesn't reduce the stack — you could sell every fish and still claim the reward).
 - **Four vanilla wrappers.** `VanillaItemDelivery`, `VanillaResourceCollection`, `VanillaSlayMonster`, `VanillaFishing` expose vanilla quest types as configurable `IQuestDefinition`s with their own GMCM weights, so the billboard has content even with no consumer mod installed.
-- **Condition evaluator + game-data cache.** `ConditionEvaluator` is a dictionary-driven `IsAvailable` helper (the seed for the future JSON `Available { ... }` block). `GameDataCache` reads `Data/Crops`, `Data/Fish`, `Data/Locations`, `Data/CookingRecipes`, `Data/NPCGiftTastes` once per day so quest generators don't pay the load cost per Build call.
+- **Condition evaluator + game-data cache.** `ConditionEvaluator.Evaluate(dict, modRegistry)` covers every key in plan.md §2.6: `Season`, `Date`, `DayRange`, `DaysOfWeek`, `Year`, `Weather`, `WeatherForecast`, `FriendshipLevel`, `FriendshipStatus`, `MailReceived`, `EventSeen`, `MinDaysPlayed`, `MaxDaysPlayed`, `IsPlayerMarried`, `IsMultiplayer`, `IsCommunityCenterCompleted`, `SkillLevel`, `BuildingExists`, `KnownCookingRecipe`, `KnownCraftingRecipe`, `StatAtLeast`, `ShippedAtLeast`, `HasItemEverObtained`, `HasMod`, `Random`, plus `GSQ` (the 1.6 GameStateQuery escape hatch). Top-level keys are AND-combined; `not:` prefix negates; `|` inside a value is the OR-combinator. `GameDataCache` reads `Data/Crops`, `Data/Fish`, `Data/Locations`, `Data/CookingRecipes`, `Data/NPCGiftTastes` once per day so quest generators don't pay the load cost per Build call.
 - **Item resolver + NPC dispatch.** `ItemResolver` reads the cached game data so modded items surface automatically. `NpcDispatch` is a role-based picker (saloon chefs, ecology-minded, conservation guides, etc.) that includes vanilla and modded NPCs and falls back gracefully when a referenced NPC mod is missing.
 - **Custom assets.** Pad and pin sprites for the billboard, loaded from `Mods/RafiaBee.MoreQuestsFramework/Pad` and `.../Pin`.
 
@@ -94,7 +94,11 @@ MoreQuestsFramework/
   Posting/QuestFactory.cs             // builds the vanilla Quest subclass for a posting
   Conditions/ConditionEvaluator.cs    // dictionary-driven IsAvailable helpers
   Cache/GameDataCache.cs              // per-day cache of Data/Crops, Data/Fish, etc.
-  Rewards/RewardApplier.cs            // single funnel for friendship + item rewards
+  Rewards/
+    RewardSpec.cs                     // declarative reward records (Money/Friendship/Object/Recipe/Mail)
+    RewardCodec.cs                    // encodes specs into single-line NetStringList entries
+    RewardApplier.cs                  // single funnel that decodes + pays at questComplete
+    IRewardedQuest.cs                 // marker interface custom Quest subclasses implement
   Patches/BillboardPatches.cs         // Harmony patches that reroute the vanilla billboard
   MoreQuestsBillboard.cs              // custom multi-slot billboard UI
   BillboardSlots.cs                   // model behind the billboard UI

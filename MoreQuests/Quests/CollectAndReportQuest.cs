@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using MoreQuestsFramework.Rewards;
 using Netcode;
 using StardewValley;
 using StardewValley.Quests;
@@ -13,12 +14,15 @@ namespace MoreQuests.Quests;
 /// Counter is checked from inventory at speak time, not tracked over time. Items
 /// lost (sold, gifted) before reporting must be re-collected.
 [XmlType("Mods_RafiaBee_MoreQuests_CollectAndReportQuest")]
-public sealed class CollectAndReportQuest : Quest
+public sealed class CollectAndReportQuest : Quest, IRewardedQuest
 {
     public readonly NetStringList itemIds = new();
     public readonly NetString talkToNpc = new();
     public readonly NetInt requiredCount = new();
     public readonly NetString reportMessage = new();
+    public readonly NetStringList serializedRewards = new();
+
+    public NetStringList SerializedRewards => serializedRewards;
 
     protected override void initNetFields()
     {
@@ -26,7 +30,16 @@ public sealed class CollectAndReportQuest : Quest
         NetFields.AddField(itemIds, "itemIds")
             .AddField(talkToNpc, "talkToNpc")
             .AddField(requiredCount, "requiredCount")
-            .AddField(reportMessage, "reportMessage");
+            .AddField(reportMessage, "reportMessage")
+            .AddField(serializedRewards, "serializedRewards");
+    }
+
+    public override void questComplete()
+    {
+        if (completed.Value)
+            return;
+        RewardApplier.ApplyEncoded(serializedRewards);
+        base.questComplete();
     }
 
     public override bool OnNpcSocialized(NPC npc, bool probe = false)

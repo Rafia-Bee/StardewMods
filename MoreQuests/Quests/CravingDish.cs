@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MoreQuestsFramework;
 using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Rewards;
 using StardewModdingAPI;
 using StardewValley;
 
@@ -69,7 +70,7 @@ internal sealed class CravingDish : IQuestDefinition
         string requestedBareId = StripPrefix(pick.Dish.OutputItem.QualifiedItemId);
         var rewardDish = PickRewardDish(allRecipes, ctx.Items, pick.Loved, pick.Liked, requestedBareId);
 
-        return new QuestPosting
+        var posting = new QuestPosting
         {
             DefinitionId = Id,
             Category = Category,
@@ -80,16 +81,17 @@ internal sealed class CravingDish : IQuestDefinition
             ObjectiveItemName = pick.Dish.OutputItem.DisplayName,
             ObjectiveQuantity = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            GoldReward = 0,
-            FriendshipReward = ctx.Config.FriendshipBasic,
-            FriendshipRewardNpc = pick.Giver,
-            ItemReward = rewardDish?.QualifiedItemId,
-            ItemRewardCount = rewardDish != null ? 1 : 0,
+            Rewards = { new FriendshipReward(pick.Giver, ctx.Config.FriendshipBasic) },
             Title = ModEntry.I18n.Get("quest.cooking.craving.title", new { npc = pick.Giver }),
             Description = ModEntry.I18n.Get("quest.cooking.craving.description", new { npc = pick.Giver, item = pick.Dish.OutputItem.DisplayName }),
             CurrentObjective = ModEntry.I18n.Get("quest.cooking.craving.objective", new { item = pick.Dish.OutputItem.DisplayName, npc = pick.Giver }),
             TargetMessage = ModEntry.I18n.Get("quest.cooking.craving.targetMessage", new { item2 = rewardDish?.DisplayName ?? pick.Dish.OutputItem.DisplayName })
         };
+
+        if (rewardDish != null)
+            posting.Rewards.Add(new ObjectReward(rewardDish.QualifiedItemId));
+
+        return posting;
     }
 
     private static ResolvedItem? PickRewardDish(

@@ -1,5 +1,6 @@
 using MoreQuestsFramework;
 using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Rewards;
 
 namespace MoreQuests.Quests;
 
@@ -17,8 +18,13 @@ internal sealed class CheckOnGeorge : IQuestDefinition
     public int MaxPerDay => 1;
     public int CooldownDays => 21;
 
+    private static readonly System.Collections.Generic.Dictionary<string, string> Available = new()
+    {
+        ["NpcExists"] = "George Evelyn"
+    };
+
     public bool IsAvailable(QuestContext ctx) =>
-        ConditionEvaluator.NpcExists("George") && ConditionEvaluator.NpcExists("Evelyn");
+        ConditionEvaluator.Evaluate(Available, ctx.Helper.ModRegistry);
 
     public QuestPosting? Build(QuestContext ctx)
     {
@@ -38,9 +44,7 @@ internal sealed class CheckOnGeorge : IQuestDefinition
             QuestGiver = "Evelyn",
             ObjectiveQuantity = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            GoldReward = 0,
-            FriendshipReward = ctx.Config.FriendshipMid,
-            FriendshipRewardNpc = "Evelyn",
+            Rewards = { new FriendshipReward("Evelyn", ctx.Config.FriendshipMid) },
             Consequences =
             {
                 new QuestConsequence { NpcName = "George", FriendshipChange = ctx.Config.FriendshipMid, Tier = ConsequenceTier.Positive }

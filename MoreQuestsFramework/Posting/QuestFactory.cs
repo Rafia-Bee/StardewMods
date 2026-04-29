@@ -26,13 +26,19 @@ public static class QuestFactory
 
         Quest? quest = p.QuestType switch
         {
-            BoardQuestType.ItemDelivery or BoardQuestType.ResourceCollection => BuildItemDelivery(p, giver, itemId),
+            BoardQuestType.ItemDelivery or BoardQuestType.ResourceCollection => new MoreQuestsItemDeliveryQuest
+            {
+                target = { Value = giver },
+                ItemId = { Value = itemId },
+                number = { Value = Math.Max(1, p.ObjectiveQuantity) },
+                targetMessage = p.TargetMessage
+            },
             BoardQuestType.Fishing => new MoreQuestsFishingQuest
             {
                 target = { Value = giver },
                 ItemId = { Value = itemId },
                 numberToFish = { Value = Math.Max(1, p.ObjectiveQuantity) },
-                reward = { Value = p.GoldReward },
+                reward = { Value = p.TotalMoney },
                 targetMessage = p.TargetMessage
             },
             BoardQuestType.SlayMonster => new SlayMonsterQuest
@@ -40,7 +46,7 @@ public static class QuestFactory
                 target = { Value = giver },
                 monsterName = { Value = string.IsNullOrEmpty(p.TargetMonster) ? p.ObjectiveItemName : p.TargetMonster },
                 numberToKill = { Value = Math.Max(1, p.ObjectiveQuantity) },
-                reward = { Value = p.GoldReward },
+                reward = { Value = p.TotalMoney },
                 targetMessage = p.TargetMessage
             },
             BoardQuestType.Socialize => new ItemDeliveryQuest
@@ -56,27 +62,5 @@ public static class QuestFactory
         if (quest != null)
             quest.id.Value = $"{IdPrefix}.{p.DefinitionId}.{Guid.NewGuid():N}";
         return quest;
-    }
-
-    private static MoreQuestsItemDeliveryQuest BuildItemDelivery(QuestPosting p, string giver, string itemId)
-    {
-        var q = new MoreQuestsItemDeliveryQuest
-        {
-            target = { Value = giver },
-            ItemId = { Value = itemId },
-            number = { Value = Math.Max(1, p.ObjectiveQuantity) },
-            targetMessage = p.TargetMessage
-        };
-        if (!string.IsNullOrEmpty(p.ItemReward) && p.ItemRewardCount > 0)
-        {
-            q.customItemReward.Value = p.ItemReward;
-            q.customItemRewardCount.Value = p.ItemRewardCount;
-        }
-        if (p.FriendshipReward > 0 && !string.IsNullOrEmpty(p.FriendshipRewardNpc))
-        {
-            q.friendshipRewardNpc.Value = p.FriendshipRewardNpc;
-            q.friendshipRewardPoints.Value = p.FriendshipReward;
-        }
-        return q;
     }
 }

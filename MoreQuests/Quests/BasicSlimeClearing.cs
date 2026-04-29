@@ -1,5 +1,6 @@
 using MoreQuestsFramework;
 using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Rewards;
 using StardewValley;
 
 namespace MoreQuests.Quests;
@@ -18,7 +19,13 @@ internal sealed class BasicSlimeClearing : IQuestDefinition
     public int MaxPerDay => 1;
     public int CooldownDays => 7;
 
-    public bool IsAvailable(QuestContext ctx) => ConditionEvaluator.MinDeepestMineLevel(1);
+    private static readonly System.Collections.Generic.Dictionary<string, string> Available = new()
+    {
+        ["MinDeepestMineLevel"] = "1"
+    };
+
+    public bool IsAvailable(QuestContext ctx) =>
+        ConditionEvaluator.Evaluate(Available, ctx.Helper.ModRegistry);
 
     public QuestPosting? Build(QuestContext ctx)
     {
@@ -50,7 +57,7 @@ internal sealed class BasicSlimeClearing : IQuestDefinition
             ObjectiveQuantity = qty,
             TargetMonster = "Green Slime",
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            GoldReward = gold,
+            Rewards = { new MoneyReward(gold) },
             Title = ModEntry.I18n.Get("quest.mining.slime.title"),
             Description = ModEntry.I18n.Get("quest.mining.slime.description", new { qty, npc = giver }),
             CurrentObjective = ModEntry.I18n.Get("quest.mining.slime.objective", new { qty, npc = giver }),

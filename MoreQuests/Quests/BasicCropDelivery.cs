@@ -1,5 +1,6 @@
 using System;
 using MoreQuestsFramework;
+using MoreQuestsFramework.Rewards;
 using StardewValley;
 
 namespace MoreQuests.Quests;
@@ -53,7 +54,7 @@ internal sealed class BasicCropDelivery : IQuestDefinition
             ObjectiveItemName = crop.DisplayName,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            GoldReward = gold,
+            Rewards = { new MoneyReward(gold) },
             Title = ModEntry.I18n.Get("quest.farming.basic.title", new { npc = giver }),
             Description = ModEntry.I18n.Get("quest.farming.basic.description", new { npc = giver, qty, item = crop.DisplayName }),
             CurrentObjective = ModEntry.I18n.Get("quest.farming.basic.objective", new { npc = giver, qty, item = crop.DisplayName }),

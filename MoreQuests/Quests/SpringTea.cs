@@ -1,6 +1,7 @@
 using System.Linq;
 using MoreQuestsFramework;
 using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Rewards;
 using StardewValley;
 
 namespace MoreQuests.Quests;
@@ -16,7 +17,13 @@ internal sealed class SpringTea : IQuestDefinition
     public int MaxPerDay => 1;
     public int CooldownDays => 8;
 
-    public bool IsAvailable(QuestContext ctx) => ConditionEvaluator.MatchesSeason("fall");
+    private static readonly System.Collections.Generic.Dictionary<string, string> Available = new()
+    {
+        ["Season"] = "fall"
+    };
+
+    public bool IsAvailable(QuestContext ctx) =>
+        ConditionEvaluator.Evaluate(Available, ctx.Helper.ModRegistry);
 
     public QuestPosting? Build(QuestContext ctx)
     {
@@ -47,9 +54,7 @@ internal sealed class SpringTea : IQuestDefinition
             ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            GoldReward = 0,
-            FriendshipReward = ctx.Config.FriendshipBasic,
-            FriendshipRewardNpc = giver,
+            Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipBasic) },
             Title = ModEntry.I18n.Get("quest.seasonal.springtea.title", new { npc = giver }),
             Description = ModEntry.I18n.Get("quest.seasonal.springtea.description", new { npc = giver, qty, item = pick.DisplayName }),
             CurrentObjective = ModEntry.I18n.Get("quest.seasonal.springtea.objective", new { qty, item = pick.DisplayName, npc = giver }),

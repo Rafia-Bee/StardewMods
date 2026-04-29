@@ -1,5 +1,7 @@
 using System;
 using System.Xml.Serialization;
+using MoreQuestsFramework.Rewards;
+using Netcode;
 using StardewValley;
 using StardewValley.Quests;
 
@@ -18,8 +20,26 @@ namespace MoreQuestsFramework.Quests;
 /// the journal still shows the catch counter so the player can see the quest is
 /// open.
 [XmlType("Mods_RafiaBee_MoreQuestsFramework_FishingQuest")]
-public sealed class MoreQuestsFishingQuest : FishingQuest
+public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
 {
+    public readonly NetStringList serializedRewards = new();
+
+    public NetStringList SerializedRewards => serializedRewards;
+
+    protected override void initNetFields()
+    {
+        base.initNetFields();
+        NetFields.AddField(serializedRewards, "serializedRewards");
+    }
+
+    public override void questComplete()
+    {
+        if (completed.Value)
+            return;
+        RewardApplier.ApplyEncoded(serializedRewards);
+        base.questComplete();
+    }
+
     public override bool OnNpcSocialized(NPC npc, bool probe = false)
     {
         if (!IsReportableTo(npc))

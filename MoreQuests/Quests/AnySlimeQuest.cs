@@ -1,6 +1,8 @@
 using System;
 using System.Xml.Serialization;
 using Microsoft.Xna.Framework;
+using MoreQuestsFramework.Rewards;
+using Netcode;
 using StardewValley;
 using StardewValley.Monsters;
 using StardewValley.Quests;
@@ -12,13 +14,31 @@ namespace MoreQuests.Quests;
 /// from `GreenSlime`. Replaces the vanilla name-based matching to avoid
 /// double counting and the misleading "Green Slimes" label.
 [XmlType("Mods_RafiaBee_MoreQuests_AnySlimeQuest")]
-public sealed class AnySlimeQuest : SlayMonsterQuest
+public sealed class AnySlimeQuest : SlayMonsterQuest, IRewardedQuest
 {
+    public readonly NetStringList serializedRewards = new();
+
+    public NetStringList SerializedRewards => serializedRewards;
+
     public AnySlimeQuest()
     {
         // Suppress vanilla's auto-title regeneration (which would print "Slay X Green Slime")
         // so the title we set from the posting is the one that sticks.
         _loadedTitle = true;
+    }
+
+    protected override void initNetFields()
+    {
+        base.initNetFields();
+        NetFields.AddField(serializedRewards, "serializedRewards");
+    }
+
+    public override void questComplete()
+    {
+        if (completed.Value)
+            return;
+        RewardApplier.ApplyEncoded(serializedRewards);
+        base.questComplete();
     }
 
     public override bool OnMonsterSlain(GameLocation location, Monster monster, bool killedByBomb, bool isTameMonster, bool probe = false)

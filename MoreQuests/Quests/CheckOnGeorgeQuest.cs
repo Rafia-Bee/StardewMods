@@ -1,5 +1,6 @@
 using System;
 using System.Xml.Serialization;
+using MoreQuestsFramework.Rewards;
 using Netcode;
 using StardewValley;
 using StardewValley.Quests;
@@ -11,12 +12,15 @@ namespace MoreQuests.Quests;
 /// repurposed in future. The gift is not consumed by this quest, gifting goes
 /// through the normal NPC flow.
 [XmlType("Mods_RafiaBee_MoreQuests_CheckOnGeorgeQuest")]
-public sealed class CheckOnGeorgeQuest : Quest
+public sealed class CheckOnGeorgeQuest : Quest, IRewardedQuest
 {
     public readonly NetString giftRecipient = new();
     public readonly NetString reportTo = new();
     public readonly NetBool gifted = new();
     public readonly NetString reportMessage = new();
+    public readonly NetStringList serializedRewards = new();
+
+    public NetStringList SerializedRewards => serializedRewards;
 
     protected override void initNetFields()
     {
@@ -24,7 +28,16 @@ public sealed class CheckOnGeorgeQuest : Quest
         NetFields.AddField(giftRecipient, "giftRecipient")
             .AddField(reportTo, "reportTo")
             .AddField(gifted, "gifted")
-            .AddField(reportMessage, "reportMessage");
+            .AddField(reportMessage, "reportMessage")
+            .AddField(serializedRewards, "serializedRewards");
+    }
+
+    public override void questComplete()
+    {
+        if (completed.Value)
+            return;
+        RewardApplier.ApplyEncoded(serializedRewards);
+        base.questComplete();
     }
 
     public override bool OnItemOfferedToNpc(NPC npc, Item item, bool probe = false)
