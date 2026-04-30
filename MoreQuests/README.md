@@ -2,7 +2,7 @@
 
 A SMAPI content mod for Stardew Valley that ships a curated set of new daily-board quests, mail-triggered quests, and custom completion logic on top of the [More Quests Framework](../MoreQuestsFramework/README.md).
 
-> Heavy work in progress. Phases 1-5 are complete: framework split, declarative rewards/conditions, the JSON content-pack loader, and the public `IMoreQuestsApi` (Beta) are all in place. The remaining 60+ quest concepts described in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
+> Heavy work in progress. Phases 1-6 are complete: framework split, declarative rewards/conditions, the JSON content-pack loader, the public `IMoreQuestsApi` (Beta), and the calendar/event trigger sources (Periodic, DateLocked, DateRange, OneShot, BuildingBuilt, MailReceived, WeatherForecast, NpcDialogue) with persistent save state are all in place. The remaining 60+ quest concepts described in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
 
 ## What this mod does
 
@@ -27,6 +27,9 @@ If the framework isn't installed, this mod logs an error and registers nothing.
 | Animal | Hay Supply Run | Mail |
 | Seasonal | Beach Cleanup (summer) | DailyBoard |
 | Seasonal | Spring Tea (fall) | DailyBoard |
+| Festival | Lewis's Festival Eggs (spring 8) | DateLocked / Mail |
+| Festival | Submarine Fuel (winter 12) | DateLocked / Mail |
+| Festival | Wizard's Ritual Materials (fall 24) | DateLocked / Mail |
 
 **Planned (later phases)** — animal trigger letters, festival pre-quests, special-orders quests, NPC-dialogue quests, mod-gated quests for RSV / East Scarp / Visit Mount Vapius / SVE, custom-asset quests (Protein Bar, Animal Paintings, Void Chicken Statue, Egg Basket, Legendary Fish Displays), consequence dispatch via `Data/NPCGiftTastes`. [The google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) and `docs/DECISION_LOG.md` have the full plan.
 
@@ -95,7 +98,7 @@ For **fully-static quests** (a fixed item, a fixed giver, no runtime selection),
 
 Other notes:
 
-- `Trigger.Source` accepts `DailyBoard` (board slot), `Mail` (auto-mailed when available), `SpecialOrder` (later), or `NpcDialogue` (later).
+- `Trigger.Source` accepts `DailyBoard` (board slot), `Mail` (auto-mailed each day conditions allow), `Periodic` (`EveryDays`), `DateLocked` (`Date`, optional `RepeatYearly`), `DateRange` (`From`, `To`), `OneShot` (`When`), `BuildingBuilt` (`Building`, optional `DayDelay`), `MailReceived` (`Flag`, optional `DayDelay`), `WeatherForecast` (`Weather`), `NpcDialogue` (`Npc`), or `SpecialOrder` (Phase 8). Set `Trigger.Delivery` to override the default delivery channel.
 - The `Available` dictionary is fed into the framework's `ConditionEvaluator` — every key in `plan.md §2.6` is supported (`Season`, `MinDeepestMineLevel`, `SkillLevel`, `NpcExists`, `HasMod`, `GSQ`, etc.). `not:` prefix negates; `|` inside a value is OR.
 - If the quest needs a custom `Quest` subclass, mark it `[XmlType("Mods_RafiaBee_MoreQuests_<Name>")]` and register it via `scope.RegisterCustomQuestType(typeof(YourQuest))` so SpaceCore can serialize it. The generator builds the subclass and assigns it to `posting.PreBuiltQuest`.
 - During testing, run `mq_refresh` in the SMAPI console to re-roll the daily board without reloading the save.

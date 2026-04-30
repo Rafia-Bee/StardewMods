@@ -1,7 +1,10 @@
+using MoreQuestsFramework.Triggers;
+
 namespace MoreQuestsFramework;
 
 /// One generator for a row in the quest table. Declares its delivery channel via PostingKind
-/// (daily board, special-orders board, mail, NPC-dialogue trigger).
+/// (daily board, special-orders board, mail, NPC-dialogue trigger) and its trigger via
+/// `TriggerSource` (when does it fire?).
 public interface IQuestDefinition
 {
     string Id { get; }
@@ -12,6 +15,14 @@ public interface IQuestDefinition
     /// public API to attribute `QuestAccepted` / `QuestCompleted` events to the right
     /// owner. Empty string is treated as "framework-owned".
     string OwnerUniqueId => "";
+
+    /// What event causes this definition to attempt to fire today. Default `DailyBoard`
+    /// keeps every legacy registration on the existing weighted-pool path.
+    TriggerSource Source => TriggerSource.DailyBoard;
+
+    /// Trigger-specific options (period, date, building type, mail flag, etc). Always
+    /// non-null; defaults to `TriggerInfo.Default` when the source needs no options.
+    TriggerInfo Trigger => TriggerInfo.Default;
 
     /// Default selection weight for the daily-board pool. 0 disables. Higher = more likely.
     /// Treated as a relative weight, not a percentage.

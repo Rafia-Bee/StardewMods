@@ -1,0 +1,49 @@
+using StardewModdingAPI;
+
+namespace MoreQuestsFramework.State;
+
+/// Thin SMAPI save-data wrapper. Owns the read-at-save-load / write-at-day-end
+/// lifecycle so callers don't have to care about the asset key. Multiplayer note:
+/// SMAPI scopes `Helper.Data.WriteSaveData` to the host save, which matches the
+/// "host-only" multiplayer stance in plan.md §10.
+public sealed class StateStore
+{
+    private const string Key = "MoreQuestsFrameworkState";
+
+    private readonly IDataHelper _data;
+    private readonly IMonitor _monitor;
+    private FrameworkState _state = new();
+
+    public StateStore(IDataHelper data, IMonitor monitor)
+    {
+        _data = data;
+        _monitor = monitor;
+    }
+
+    public FrameworkState State => _state;
+
+    public void Load()
+    {
+        try
+        {
+            _state = _data.ReadSaveData<FrameworkState>(Key) ?? new FrameworkState();
+        }
+        catch (System.Exception ex)
+        {
+            _monitor.Log($"Failed to read framework save data; using defaults. Reason: {ex.Message}", LogLevel.Warn);
+            _state = new FrameworkState();
+        }
+    }
+
+    public void Save()
+    {
+        try
+        {
+            _data.WriteSaveData(Key, _state);
+        }
+        catch (System.Exception ex)
+        {
+            _monitor.Log($"Failed to write framework save data: {ex.Message}", LogLevel.Error);
+        }
+    }
+}

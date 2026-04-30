@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using MoreQuestsFramework.Conditions;
 using MoreQuestsFramework.Rewards;
+using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 using StardewValley;
 
@@ -37,15 +38,20 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         _generators = generators;
         _monitor = monitor;
 
-        // Use the JSON Name verbatim as the registry ID. Authors should pick
+        // Use the JSON Name verbatim as the registry ID. Authors must pick
         // names that won't collide with other packs (e.g. "MyMod.QuestX").
-        // Phase 5 will introduce automatic owner-prefix namespacing on the
-        // public API; until then keeping the raw name preserves the existing
-        // config keys (`QuestWeights["Mining.BarDelivery"]`) for in-flight
-        // saves migrated from the C# version.
+        // Auto-prefixing by ownerUniqueId was originally slated for Phase 5
+        // but deferred — Phase 5 namespaces only generator names, not quest
+        // ids. Keeping the raw name preserves the existing `QuestWeights`
+        // config keys ("Mining.BarDelivery" etc.) for in-flight saves and
+        // for the framework's own GMCM page. Auto-prefixing will land at
+        // Phase 10 alongside the v1.0 API freeze; collisions until then are
+        // logged + rejected by `QuestRegistry.Register`.
         Id = def.Name!;
         Category = ParseEnum(def.Category, QuestCategory.Social);
-        Kind = ParseKind(def.Trigger?.Source);
+        Source = ParseSource(def.Trigger?.Source);
+        Kind = ResolveDelivery(Source, def.Trigger?.Delivery);
+        Trigger = BuildTriggerInfo(def.Trigger);
         DefaultWeight = def.Trigger?.Weight ?? 0;
         MaxPerDay = def.Trigger?.MaxPerDay ?? 1;
         CooldownDays = def.Trigger?.CooldownDays ?? 0;
@@ -54,6 +60,8 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     public string Id { get; }
     public QuestCategory Category { get; }
     public PostingKind Kind { get; }
+    public TriggerSource Source { get; }
+    public TriggerInfo Trigger { get; }
     public int DefaultWeight { get; }
     public int MaxPerDay { get; }
     public int CooldownDays { get; }
@@ -162,14 +170,66 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     private string Resolve(string? input)
         => I18nResolver.Resolve(input ?? string.Empty, _translation);
 
-    private static PostingKind ParseKind(string? source)
+    private static TriggerSource ParseSource(string? source)
         => source?.ToLowerInvariant() switch
         {
-            "mail" => PostingKind.Mail,
-            "specialorder" => PostingKind.SpecialOrder,
-            "npcdialogue" => PostingKind.NpcDialogue,
-            _ => PostingKind.DailyBoard
+            "mail" => TriggerSource.Mail,
+            "periodic" => TriggerSource.Periodic,
+            "datelocked" => TriggerSource.DateLocked,
+            "daterange" => TriggerSource.DateRange,
+            "oneshot" => TriggerSource.OneShot,
+            "buildingbuilt" => TriggerSource.BuildingBuilt,
+            "mailreceived" => TriggerSource.MailReceived,
+            "weatherforecast" => TriggerSource.WeatherForecast,
+            "npcdialogue" => TriggerSource.NpcDialogue,
+            "specialorder" => TriggerSource.SpecialOrder,
+            "customboard" => TriggerSource.CustomBoard,
+            _ => TriggerSource.DailyBoard
         };
+
+    /// Picks the delivery channel (PostingKind) based on the trigger source. Authors
+    /// can override via `Trigger.Delivery` for unusual combinations like a DateLocked
+    /// quest delivered via NPC dialogue.
+    private static PostingKind ResolveDelivery(TriggerSource source, string? deliveryOverride)
+    {
+        if (!string.IsNullOrEmpty(deliveryOverride))
+        {
+            return deliveryOverride.ToLowerInvariant() switch
+            {
+                "mail" => PostingKind.Mail,
+                "npcdialogue" => PostingKind.NpcDialogue,
+                "dailyboard" => PostingKind.DailyBoard,
+                "specialorder" => PostingKind.SpecialOrder,
+                _ => PostingKind.Mail
+            };
+        }
+        return source switch
+        {
+            TriggerSource.DailyBoard => PostingKind.DailyBoard,
+            TriggerSource.NpcDialogue => PostingKind.NpcDialogue,
+            TriggerSource.SpecialOrder => PostingKind.SpecialOrder,
+            TriggerSource.CustomBoard => PostingKind.DailyBoard,
+            _ => PostingKind.Mail
+        };
+    }
+
+    private static TriggerInfo BuildTriggerInfo(TriggerDef? t)
+    {
+        if (t == null)
+            return TriggerInfo.Default;
+        return new TriggerInfo(
+            EveryDays: t.EveryDays,
+            Date: t.Date,
+            RepeatYearly: t.RepeatYearly,
+            From: t.From,
+            To: t.To,
+            When: t.When,
+            Building: t.Building,
+            DayDelay: t.DayDelay,
+            Flag: t.Flag,
+            Weather: t.Weather,
+            Npc: t.Npc);
+    }
 
     private static BoardQuestType ParseObjectiveKind(string kind)
         => kind?.ToLowerInvariant() switch
