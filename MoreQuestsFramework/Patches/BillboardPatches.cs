@@ -126,12 +126,19 @@ internal static class BillboardPatches
 
         if (__state)
         {
+            // Capture posting before AcceptSelected drops the slot; vanilla's accept logic
+            // hardcodes `daysLeft.Value = 2`, overwriting the configured deadline.
+            var sel = BillboardSlots.Selected;
+            int deadline = sel != null ? Math.Max(1, sel.Posting.DeadlineDays) : 2;
             var accepted = BillboardSlots.AcceptSelected();
             // Vanilla's accept-click set `dailyQuest.Value = true`, which in `Quest.questComplete`
             // triggers the every-3rd-quest prize ticket and stat increment. Our quests reward
             // only what the posting configures; clear the flag so nothing fires implicitly.
             if (accepted != null)
+            {
                 accepted.dailyQuest.Value = false;
+                accepted.daysLeft.Value = deadline;
+            }
             MoreQuestsBillboard.InnerBillboard = null;
             // Override whatever the exit cascade set; rebuild from the now-reduced slot list.
             Game1.activeClickableMenu = new MoreQuestsBillboard();
