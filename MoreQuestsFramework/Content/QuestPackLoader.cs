@@ -103,16 +103,17 @@ public sealed class QuestPackLoader
             _monitor.Log($"'{ownerUniqueId}/{label}': duplicate quest name in this pack. Skipping.", LogLevel.Warn);
             return false;
         }
-        if (string.IsNullOrEmpty(def.Generator) && def.Objective == null)
+        bool hasSteps = def.Steps != null && def.Steps.Count > 0;
+        if (string.IsNullOrEmpty(def.Generator) && def.Objective == null && !hasSteps)
         {
-            _monitor.Log($"'{ownerUniqueId}/{label}': must set either 'Generator' or 'Objective'. Skipping.", LogLevel.Warn);
+            _monitor.Log($"'{ownerUniqueId}/{label}': must set 'Generator', 'Objective', or 'Steps'. Skipping.", LogLevel.Warn);
             return false;
         }
-        if (!string.IsNullOrEmpty(def.Generator) && def.Objective != null)
+        if (!string.IsNullOrEmpty(def.Generator) && (def.Objective != null || hasSteps))
         {
-            _monitor.Log($"'{ownerUniqueId}/{label}': has both 'Generator' and 'Objective'; 'Objective' is ignored.", LogLevel.Warn);
+            _monitor.Log($"'{ownerUniqueId}/{label}': has 'Generator' alongside declarative fields; declarative fields are ignored.", LogLevel.Warn);
         }
-        if (def.Objective != null && string.IsNullOrEmpty(def.Objective.Item) && def.Objective.Kind?.ToLowerInvariant() != "slay")
+        if (def.Objective != null && (def.Objective.Item == null || def.Objective.Item.Count == 0) && def.Objective.Kind?.ToLowerInvariant() != "slay")
         {
             _monitor.Log($"'{ownerUniqueId}/{label}': declarative Objective is missing 'Item'. Skipping.", LogLevel.Warn);
             return false;

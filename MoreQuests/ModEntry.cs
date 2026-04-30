@@ -22,6 +22,25 @@ public sealed class ModEntry : Mod
         Config = helper.ReadConfig<ModConfig>();
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
+        helper.Events.Content.AssetRequested += OnAssetRequested;
+    }
+
+    /// Reward letters defined by the content mod (not the framework's per-quest auto-generated
+    /// quest letters). Submarine Fuel's `When: NextDay` MailReward references one of these
+    /// keys; the framework drops the key into `mailForTomorrow` and vanilla picks the body up
+    /// from this Data/mail edit at letter-open time.
+    private void OnAssetRequested(object? sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
+    {
+        if (!e.NameWithoutLocale.IsEquivalentTo("Data/mail"))
+            return;
+        e.Edit(asset =>
+        {
+            var mail = asset.AsDictionary<string, string>().Data;
+            string submarineBody = I18n.Get("mail.festival.submarineFuelReward.body").ToString();
+            // `%item object 797 1 %%` attaches a Pearl to the letter. Vanilla mail format:
+            // the trailing `%%` closes the token block.
+            mail["RafiaBee.MoreQuests.SubmarineFuelReward"] = submarineBody + "%item object 797 1 %%";
+        });
     }
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)

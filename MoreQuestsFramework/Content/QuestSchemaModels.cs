@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace MoreQuestsFramework.Content;
 
@@ -102,9 +103,16 @@ public sealed class TriggerDef
 
 public sealed class ObjectiveDef
 {
-    /// Deliver | Resource | Fish | Slay
+    /// Deliver | Resource | Fish | Slay | Ship
     public string Kind { get; set; } = "Deliver";
-    public string? Item { get; set; }
+
+    /// Item id(s) accepted by the objective. Authors may write either a single string
+    /// (`"Item": "(O)787"`) or a string array (`"Item": ["(O)787", "(O)382"]`); the
+    /// converter normalises both shapes to a `List<string>`. The first entry is the
+    /// "primary" id used for journal text + display; any extra entries are OR-alternatives
+    /// matched at completion time.
+    [JsonConverter(typeof(StringOrArrayConverter))]
+    public List<string> Item { get; set; } = new();
     public int Count { get; set; } = 1;
     public string? TargetMonster { get; set; }
 }

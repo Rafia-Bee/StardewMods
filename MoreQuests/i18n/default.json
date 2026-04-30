@@ -92,5 +92,25 @@
     "quest.cooking.craving.title": "{{npc}} is craving a meal",
     "quest.cooking.craving.description": "I really really REALLY want some {{item}}. Can someone make some for me?",
     "quest.cooking.craving.objective": "Bring {{item}} to {{npc}}.",
-    "quest.cooking.craving.targetMessage": "Oh, that smells amazing. Thank you! Oh, I made some {{item2}} for dinner, here, have some!"
+    "quest.cooking.craving.targetMessage": "Oh, that smells amazing. Thank you! Oh, I made some {{item2}} for dinner, here, have some!",
+
+    "quest.festival.submarineFuel.title": "Fuel for the submarine",
+    "quest.festival.submarineFuel.description": "The Night Market submarine is short on power again. Battery Pack would be perfect, but plain Coal will do in a pinch. Drop one off in the shipping bin and I'll send something your way for the trouble. - Willy",
+    "quest.festival.submarineFuel.objective": "Ship 1 Battery Pack or Coal.",
+    "quest.festival.submarineFuel.targetMessage": "Thanks! That'll keep her running.",
+    "mail.festival.submarineFuelReward.body": "Dear @,^^She's running like new. The pearl divers found this little beauty last spring and I've been holding onto it for a thank-you gift. It's yours. ^^  -Willy",
+
+    "quest.festival.wizardsRitual.title": "Ritual materials for the Wizard",
+    "quest.festival.wizardsRitual.description": "The Wizard sent word that he needs a few hard-to-find ingredients before Spirit's Eve. Bring him Void Essence, Bat Wings, and Solar Essence in any order.",
+    "quest.festival.wizardsRitual.step.voidEssence": "Bring Void Essence to the Wizard.",
+    "quest.festival.wizardsRitual.step.batWing": "Bring Bat Wings to the Wizard.",
+    "quest.festival.wizardsRitual.step.solarEssence": "Bring Solar Essence to the Wizard.",
+    "quest.festival.wizardsRitual.targetMessage": "These will do nicely. Take this old volume in return - I have read it more times than I care to admit.",
+
+    "quest.festival.holidayCookies.title": "Evelyn's holiday cookies",
+    "quest.festival.holidayCookies.description": "Evelyn is baking holiday cookies and she's run short on ingredients. She needs Flour, Sugar, and an Egg. Any kind of egg will do. - Evelyn",
+    "quest.festival.holidayCookies.step.flour": "Bring Flour to Evelyn.",
+    "quest.festival.holidayCookies.step.sugar": "Bring Sugar to Evelyn.",
+    "quest.festival.holidayCookies.step.eggs": "Bring an Egg to Evelyn.",
+    "quest.festival.holidayCookies.targetMessage": "Wonderful. Here, take some of the first batch as a thank you. They're still warm."
 }

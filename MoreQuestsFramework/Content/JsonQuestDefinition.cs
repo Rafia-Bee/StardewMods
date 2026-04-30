@@ -178,6 +178,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     private QuestPosting BuildDeclarative(QuestContext ctx)
     {
         var obj = _def.Objective!;
+        string primary = obj.Item.Count > 0 ? obj.Item[0] : string.Empty;
         var posting = new QuestPosting
         {
             DefinitionId = Id,
@@ -185,8 +186,8 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             Tier = ParseEnum(_def.Tier, DifficultyTier.Beginner),
             QuestType = ParseObjectiveKind(obj.Kind),
             QuestGiver = _def.Giver ?? string.Empty,
-            ObjectiveItemId = obj.Item ?? string.Empty,
-            ObjectiveItemName = obj.Item ?? string.Empty,
+            ObjectiveItemId = primary,
+            ObjectiveItemName = primary,
             ObjectiveQuantity = Math.Max(1, obj.Count),
             TargetMonster = obj.TargetMonster,
             DeadlineDays = Difficulty.Deadline(ParseEnum(_def.DeadlineDays, DeadlineKind.Short), ctx.Config),
@@ -195,6 +196,8 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             CurrentObjective = Resolve(_def.CurrentObjective),
             TargetMessage = Resolve(_def.TargetMessage)
         };
+        for (int i = 1; i < obj.Item.Count; i++)
+            posting.AlternativeObjectiveItemIds.Add(obj.Item[i]);
         BuildRewards(posting.Rewards, _def.Rewards);
         return posting;
     }
@@ -226,7 +229,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
                 case "mail":
                     if (!string.IsNullOrEmpty(r.Letter))
                     {
-                        var when = ParseEnum(r.When, MailWhen.Today);
+                        var when = ParseMailWhen(r.When);
                         sink.Add(new MailReward(r.Letter, when));
                     }
                     break;
@@ -308,9 +311,21 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             "slay" or "slaymonster" => BoardQuestType.SlayMonster,
             "resource" or "collect" or "resourcecollection" => BoardQuestType.ResourceCollection,
             "socialize" => BoardQuestType.Socialize,
+            "ship" => BoardQuestType.Ship,
             _ => BoardQuestType.ItemDelivery
         };
 
     private static T ParseEnum<T>(string? value, T fallback) where T : struct, Enum
         => Enum.TryParse<T>(value, ignoreCase: true, out var parsed) ? parsed : fallback;
+
+    /// `When` field on a mail reward. Accepts `Today` (default — letter arrives in today's
+    /// mailbox immediately) or `Tomorrow` / `NextDay` (letter is queued for the next morning
+    /// via `mailForTomorrow`). The `NextDay` alias matches plan §7b's authoring convention
+    /// without churning the `MailWhen` enum.
+    private static MailWhen ParseMailWhen(string? value)
+        => value?.ToLowerInvariant() switch
+        {
+            "tomorrow" or "nextday" => MailWhen.Tomorrow,
+            _ => MailWhen.Today
+        };
 }
