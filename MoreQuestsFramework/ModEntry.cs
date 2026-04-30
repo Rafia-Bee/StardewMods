@@ -68,6 +68,7 @@ public sealed class ModEntry : Mod
         var harmony = new Harmony(ModManifest.UniqueID);
         BillboardPatches.Apply(harmony);
         MailQuestPatches.Apply(harmony, _mailQuests, _api, Monitor);
+        AdventureQuestPatches.Apply(harmony);
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -125,12 +126,13 @@ public sealed class ModEntry : Mod
         {
             _spaceCore.RegisterSerializerType(typeof(MoreQuestsItemDeliveryQuest));
             _spaceCore.RegisterSerializerType(typeof(MoreQuestsFishingQuest));
+            _spaceCore.RegisterSerializerType(typeof(AdventureQuest));
             Monitor.Log("Registered framework Quest subclasses with SpaceCore.", LogLevel.Trace);
         }
         else
         {
             Monitor.Log(
-                "SpaceCore not detected; framework Quest subclasses (item delivery, fishing) will not save. " +
+                "SpaceCore not detected; framework Quest subclasses (item delivery, fishing, adventure) will not save. " +
                 "Install SpaceCore for full functionality.",
                 LogLevel.Warn);
         }

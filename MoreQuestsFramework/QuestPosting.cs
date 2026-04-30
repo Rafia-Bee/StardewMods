@@ -25,6 +25,7 @@ public enum BoardQuestType
     Fishing,
     SlayMonster,
     Socialize,
+    Adventure,
     Custom
 }
 

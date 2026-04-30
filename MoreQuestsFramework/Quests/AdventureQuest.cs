@@ -1,0 +1,342 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Serialization;
+using MoreQuestsFramework.Rewards;
+using Netcode;
+using StardewValley;
+using StardewValley.Quests;
+
+namespace MoreQuestsFramework.Quests;
+
+/// Multi-step ("Adventure") quest. Each step ships its own kind (`Deliver`, `Talk`, `Gift`,
+/// ...) plus optional `Requires[]` ordering; the active step is the first not-Done step
+/// whose prerequisites are all Done. Step state — definition + progress + done flag — rides
+/// inside `stepStates`, one encoded line per step, so a single `NetStringList` covers the
+/// whole quest. Reward payout follows the same `IRewardedQuest` path the framework's other
+/// custom subclasses already use.
+///
+/// Phase 7a wires `Deliver`, `Talk`, and `Gift` through vanilla `Quest` hooks
+/// (`OnItemOfferedToNpc`, `OnNpcSocialized`); the remaining step kinds get their handlers in
+/// 7b/7c. The quest never patches the engine — every step uses an existing virtual.
+[XmlType("Mods_RafiaBee_MoreQuestsFramework_AdventureQuest")]
+public sealed class AdventureQuest : Quest, IRewardedQuest
+{
+    public readonly NetStringList stepStates = new();
+    public readonly NetStringList serializedRewards = new();
+    public readonly NetString giverNpc = new();
+
+    /// Spoken by the NPC who completes a `Talk` or `Deliver` step that closes out the quest
+    /// (e.g. Evelyn's "thank you for checking on him" line for Check on George). Optional —
+    /// when empty, the NPC continues their normal dialogue. Gift-step completions never push
+    /// this message so vanilla's gift-reaction line gets the floor.
+    public readonly NetString completionMessage = new();
+
+    public NetStringList SerializedRewards => serializedRewards;
+
+    /// Lazily-decoded mirror of `stepStates`. Re-decoded whenever the list count changes or
+    /// `Persist` writes a new entry. Kept as a field so step handlers don't allocate a fresh
+    /// decoded list per virtual call.
+    private List<AdventureStepState>? _decoded;
+
+    protected override void initNetFields()
+    {
+        base.initNetFields();
+        NetFields
+            .AddField(stepStates, "stepStates")
+            .AddField(serializedRewards, "serializedRewards")
+            .AddField(giverNpc, "giverNpc")
+            .AddField(completionMessage, "completionMessage");
+    }
+
+    /// Authoring entry point used by generators and the JSON path. Replaces any prior
+    /// step list, stamps the giver, and primes the journal text for the first active step.
+    /// `completionDialogue` is the line spoken by whoever closes out the quest's final
+    /// Talk or Deliver step — pass empty/null when the quest has no scripted thank-you line.
+    public void Initialize(IEnumerable<AdventureStepState> steps, string giver, string? completionDialogue = null)
+    {
+        stepStates.Clear();
+        foreach (var s in steps)
+            stepStates.Add(AdventureStepCodec.Encode(s));
+        giverNpc.Value = giver ?? string.Empty;
+        completionMessage.Value = completionDialogue ?? string.Empty;
+        _decoded = null;
+    }
+
+    private List<AdventureStepState> Steps
+    {
+        get
+        {
+            if (_decoded == null || _decoded.Count != stepStates.Count)
+                Refresh();
+            return _decoded!;
+        }
+    }
+
+    private void Refresh()
+    {
+        _decoded = new List<AdventureStepState>(stepStates.Count);
+        for (int i = 0; i < stepStates.Count; i++)
+        {
+            var s = AdventureStepCodec.Decode(stepStates[i]);
+            if (s != null)
+                _decoded.Add(s);
+        }
+    }
+
+    private void Persist(int index, AdventureStepState state)
+    {
+        stepStates[index] = AdventureStepCodec.Encode(state);
+        if (_decoded != null && index < _decoded.Count)
+            _decoded[index] = state;
+    }
+
+    /// First not-Done step whose `Requires[]` are all Done. Returns -1 when every step is
+    /// done (the quest will complete on the next state change) or when no step is currently
+    /// reachable (shouldn't happen with well-formed Requires graphs).
+    public int ActiveStepIndex()
+    {
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            if (steps[i].Done) continue;
+            if (RequiresMet(steps, steps[i]))
+                return i;
+        }
+        return -1;
+    }
+
+    private static bool RequiresMet(List<AdventureStepState> steps, AdventureStepState step)
+    {
+        if (step.Requires.Count == 0) return true;
+        foreach (var req in step.Requires)
+        {
+            bool found = false;
+            foreach (var s in steps)
+            {
+                if (string.Equals(s.Name, req, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!s.Done) return false;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) return false;
+        }
+        return true;
+    }
+
+    public override void reloadObjective()
+    {
+        if (completed.Value)
+            return;
+        // Single-line summary for callers that read `currentObjective` directly (external
+        // quest trackers, log lines, etc.) — pick the first active step. The vanilla journal
+        // path goes through `GetObjectiveDescriptions`, which is patched by
+        // `AdventureQuestPatches` to return one entry per active step (proper multi-bullet
+        // rendering); without that patch the journal would still only show one bullet.
+        var lines = BuildActiveObjectiveDescriptions();
+        _currentObjective = lines.Count == 0 ? string.Empty : lines[0];
+    }
+
+    /// Active objectives = every not-Done step whose `Requires[]` are all Done. Returned in
+    /// declaration order so authors can rely on a stable journal layout. Each line carries
+    /// its own `(progress/count)` suffix when `Count > 1`, matching how vanilla
+    /// `SlayMonsterQuest` renders "0/2 Rock Crab defeated".
+    public List<string> BuildActiveObjectiveDescriptions()
+    {
+        var lines = new List<string>();
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done) continue;
+            if (!RequiresMet(steps, step)) continue;
+            string line = step.Description;
+            if (step.Count > 1)
+                line = $"{line} ({step.Progress}/{step.Count})";
+            lines.Add(line);
+        }
+        if (lines.Count == 0)
+            lines.Add(string.Empty);
+        return lines;
+    }
+
+    public override bool OnItemOfferedToNpc(NPC npc, Item item, bool probe = false)
+    {
+        if (completed.Value || npc == null || item == null)
+            return false;
+        int idx = ActiveStepIndex();
+        if (idx < 0) return false;
+        var step = Steps[idx];
+        return step.Kind switch
+        {
+            AdventureStepKind.Deliver => TryAdvanceDeliver(idx, step, npc, item, probe),
+            AdventureStepKind.Gift => TryAdvanceGift(idx, step, npc, item, probe),
+            _ => false
+        };
+    }
+
+    public override bool OnNpcSocialized(NPC npc, bool probe = false)
+    {
+        if (completed.Value || npc == null)
+            return false;
+        int idx = ActiveStepIndex();
+        if (idx < 0) return false;
+        var step = Steps[idx];
+        if (step.Kind != AdventureStepKind.Talk)
+            return false;
+        return TryAdvanceTalk(idx, step, npc, probe);
+    }
+
+    public override void questComplete()
+    {
+        if (completed.Value)
+            return;
+        RewardApplier.ApplyEncoded(serializedRewards);
+        base.questComplete();
+    }
+
+    /// Vanilla `ItemDeliveryQuest`-style flow: match the target NPC + item, reduce inventory by
+    /// the step's count, mark step done, advance the journal. Returning `true` short-circuits
+    /// the gift path (the NPC won't accept the item as a normal gift). When this delivery
+    /// completes the whole quest, `completionMessage` is pushed as the NPC's response —
+    /// matching the vanilla `ItemDeliveryQuest.OnItemOfferedToNpc` flow that pushes
+    /// `targetMessage` on completion.
+    private bool TryAdvanceDeliver(int idx, AdventureStepState step, NPC npc, Item item, bool probe)
+    {
+        if (!TargetMatches(step, npc.Name)) return false;
+        if (!ItemMatches(step, item)) return false;
+        if (item.Stack < step.Count) return false;
+
+        if (probe) return true;
+
+        Game1.player.Items.Reduce(item, step.Count);
+        bool willComplete = WillStepCompleteQuest(idx);
+        if (willComplete && !string.IsNullOrEmpty(completionMessage.Value))
+        {
+            npc.CurrentDialogue.Push(new Dialogue(npc, null, completionMessage.Value));
+            Game1.drawDialogue(npc);
+        }
+        MarkStepDone(idx, step);
+        return true;
+    }
+
+    /// Gift step: matches an offered item that the recipient loves, likes, OR Stardrop Tea
+    /// (the special item that's always acceptable regardless of weekly gift cap or taste —
+    /// vanilla `getGiftTasteForThisItem` returns `gift_taste_stardroptea` (7) for it). Returns
+    /// false so the vanilla gift flow (friendship bump, daily-gift counter) still runs — the
+    /// quest observes the gift, it does not consume it.
+    private bool TryAdvanceGift(int idx, AdventureStepState step, NPC npc, Item item, bool probe)
+    {
+        if (!TargetMatches(step, npc.Name)) return false;
+        // Items list optional for Gift: empty list means "any thoughtful item to the target".
+        if (step.Items.Count > 0 && !ItemMatches(step, item)) return false;
+
+        int taste = npc.getGiftTasteForThisItem(item);
+        bool acceptable = taste == NPC.gift_taste_love
+                       || taste == NPC.gift_taste_like
+                       || taste == NPC.gift_taste_stardroptea;
+        if (!acceptable)
+            return false;
+
+        if (probe) return false; // silence the vanilla "this would advance a quest" cue
+
+        MarkStepDone(idx, step);
+        return false;
+    }
+
+    /// Talk step: matches one of the step's target NPCs. When `Count > 1` we credit each NPC
+    /// only once via `CreditedKeys` so "talk to 3 different villagers" cannot be satisfied
+    /// by speaking to the same NPC three times.
+    private bool TryAdvanceTalk(int idx, AdventureStepState step, NPC npc, bool probe)
+    {
+        if (!TargetMatches(step, npc.Name)) return false;
+        if (step.CreditedKeys.Contains(npc.Name, StringComparer.OrdinalIgnoreCase))
+            return false;
+
+        if (probe)
+            return true;
+
+        step.CreditedKeys.Add(npc.Name);
+        step.Progress++;
+        if (step.Progress >= step.Count)
+        {
+            // If this Talk closes out the entire quest, push the configured thank-you line so
+            // the NPC says it instead of falling through to their normal greeting / chat.
+            if (WillStepCompleteQuest(idx) && !string.IsNullOrEmpty(completionMessage.Value))
+            {
+                npc.CurrentDialogue.Push(new Dialogue(npc, null, completionMessage.Value));
+                Game1.drawDialogue(npc);
+            }
+            MarkStepDone(idx, step);
+        }
+        else
+        {
+            Persist(idx, step);
+            reloadObjective();
+        }
+        return true;
+    }
+
+    /// True when every step other than `doneIdx` is already Done. Used by Talk/Deliver to
+    /// decide whether to push `completionMessage` as the NPC's response.
+    private bool WillStepCompleteQuest(int doneIdx)
+    {
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            if (i == doneIdx) continue;
+            if (!steps[i].Done) return false;
+        }
+        return true;
+    }
+
+    private void MarkStepDone(int idx, AdventureStepState step)
+    {
+        step.Done = true;
+        step.Progress = Math.Max(step.Progress, step.Count);
+        Persist(idx, step);
+
+        // Refresh the journal text for whichever step becomes active next, then complete the
+        // quest if the whole step list is now Done.
+        if (ActiveStepIndex() < 0)
+            questComplete();
+        else
+            reloadObjective();
+    }
+
+    /// `$giver` resolves to the giver NPC's name; otherwise compare the literal target string.
+    /// Empty Targets list means "any NPC" for the kind in question (used by the Deliver step
+    /// when the giver is the target — the framework rewrites `$giver` to the giver name at
+    /// `Initialize` time so we never need to dereference it here).
+    private bool TargetMatches(AdventureStepState step, string npcName)
+    {
+        if (step.Targets.Count == 0)
+            return string.Equals(npcName, giverNpc.Value, StringComparison.OrdinalIgnoreCase);
+        foreach (var t in step.Targets)
+        {
+            if (string.Equals(t, npcName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+
+    private static bool ItemMatches(AdventureStepState step, Item item)
+    {
+        if (step.Items.Count == 0)
+            return false;
+        string qid = item.QualifiedItemId ?? string.Empty;
+        string id = item.ItemId ?? string.Empty;
+        foreach (var entry in step.Items)
+        {
+            if (string.IsNullOrEmpty(entry)) continue;
+            if (string.Equals(entry, qid, StringComparison.OrdinalIgnoreCase)) return true;
+            if (string.Equals(entry, id, StringComparison.OrdinalIgnoreCase)) return true;
+            // Author-supplied ids may omit the `(O)` prefix; tolerate both forms.
+            if (entry.StartsWith("(") && string.Equals(entry.Substring(entry.IndexOf(')') + 1), id, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+}
