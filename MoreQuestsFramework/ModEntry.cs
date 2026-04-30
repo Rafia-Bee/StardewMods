@@ -33,6 +33,7 @@ public sealed class ModEntry : Mod
     private QuestPipeline? _pipeline;
     private QuestPoster? _poster;
     private GameDataCache? _dataCache;
+    private AntiRepetition? _antiRepetition;
     private MoreQuestsApi _api = null!;
 
     internal DispatchRegistry Dispatch { get; private set; } = null!;
@@ -156,9 +157,9 @@ public sealed class ModEntry : Mod
 
         var items = new ItemResolver(Monitor, _dataCache);
         var ctx = new QuestContext(Helper, Monitor, Config, items, _dataCache, Dispatch);
-        var antiRepetition = new AntiRepetition();
+        _antiRepetition = new AntiRepetition();
 
-        _pipeline = new QuestPipeline(ctx, _registry, antiRepetition);
+        _pipeline = new QuestPipeline(ctx, _registry, _antiRepetition);
 
         _watching.Clear();
         _seenInLog.Clear();
@@ -171,6 +172,9 @@ public sealed class ModEntry : Mod
             return;
 
         _dataCache?.Refresh();
+        // Snapshot anti-repetition state so a same-day mq_refresh can roll back today's
+        // cooldown records and produce a fresh batch instead of an empty board.
+        _antiRepetition?.BeginDay();
         _poster.BeginDay();
 
         var daily = _pipeline.GenerateDailyPostings();
@@ -204,6 +208,9 @@ public sealed class ModEntry : Mod
         }
 
         _dataCache?.Refresh();
+        // Roll back today's cooldown records so just-posted definitions are eligible again
+        // — otherwise the re-roll pool is empty and tomorrow's batch is also blocked.
+        _antiRepetition?.RewindToDayStart();
         _poster.BeginDay();
         var daily = _pipeline.GenerateDailyPostings();
         _poster.PostBatch(daily);
