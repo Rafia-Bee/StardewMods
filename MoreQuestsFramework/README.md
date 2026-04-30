@@ -7,7 +7,8 @@ This mod is the engine that powers [More Quests](../MoreQuests/README.md). It al
 ## What this mod provides
 
 - **Multi-slot billboard.** Replaces vanilla's single "Quest of the Day" with a configurable per-day batch. Custom UI (`MoreQuestsBillboard`) renders all slots; `BillboardPatches` reroutes vanilla's billboard click + draw paths.
-- **Daily generation pipeline.** At `DayStarted`, samples from the registry by weight (subject to `MaxPerDay`, `CooldownDays`, per-NPC dedup, friendship-cap dedup, and a recent-history filter) to fill up to `QuestsPerDay` slots, then runs a separate pass for `PostingKind.Mail` quests.
+- **Daily generation pipeline.** At `DayStarted`, samples from the registry by weight (subject to `MaxPerDay`, `CooldownDays`, per-NPC dedup, friendship-cap dedup, and a recent-history filter) to fill up to `QuestsPerDay` slots, then runs a separate pass for triggered (non-board) quests.
+- **Trigger sources.** Beyond `DailyBoard`, quests can fire via `Periodic` (every N days), `DateLocked` (specific date, optionally yearly), `DateRange` (window), `OneShot` (first time a predicate becomes true), `BuildingBuilt` (farm building added), `MailReceived` (mail flag added), `WeatherForecast` (tomorrow's weather), or `NpcDialogue` (queued for the next chat with an NPC). Source is independent of delivery channel — every non-board source defaults to mail delivery, overridable via the `Delivery` field. The framework persists fire history per-save in `MoreQuestsFrameworkState` so periodic, yearly, and one-shot quests survive save/load.
 - **Quest factory.** Builds the right vanilla `Quest` subclass for each posting (`ItemDeliveryQuest`, `FishingQuest`, `SlayMonsterQuest`, `ResourceCollectionQuest`) and stamps a unique ID so external trackers attribute the quest correctly.
 - **Declarative reward block.** Each `QuestPosting` carries a `List<RewardSpec>` (Money / Friendship / Object / Recipe / Mail). The poster routes Money into vanilla's `Quest.moneyReward` and encodes the rest into a `NetStringList` on the quest; `RewardApplier.ApplyEncoded` decodes and pays at `questComplete`, so vanilla in-person delivery, Mail Services Mod, and any future delivery channel produce the same payout. Vanilla's hidden bonuses (every-3rd-quest prize ticket, default 150/255 friendship bumps) are suppressed so every reward is explicit.
 - **Custom Quest subclasses.** `MoreQuestsItemDeliveryQuest` and `MoreQuestsFishingQuest` implement `IRewardedQuest` (a `serializedRewards` NetStringList that survives save round-trip) and override the vanilla turn-in logic to actually consume the requested items (vanilla's `FishingQuest.OnNpcSocialized` doesn't reduce the stack — you could sell every fish and still claim the reward).
@@ -88,7 +89,7 @@ scope.RegisterQuest(new MyQuestDefinition());  // implements IQuestDefinition
 
 ### Schema
 
-`quests.json` shape (Phase 4 subset):
+`quests.json` shape:
 
 ```jsonc
 {
@@ -115,12 +116,43 @@ scope.RegisterQuest(new MyQuestDefinition());  // implements IQuestDefinition
             "Objective": { "Kind": "Deliver", "Item": "(O)628", "Count": 1 },
             "Title": "{i18n:my.quest.title}",
             "Rewards": [ { "Kind": "Money", "Amount": 500 } ]
+        },
+        {
+            "Name": "MyMod.YearlyHarvestFestival",
+            "Category": "Festival",
+            "Trigger": { "Source": "DateLocked", "Date": "fall 14", "RepeatYearly": true },
+            "Giver": "Lewis",
+            "Objective": { "Kind": "Deliver", "Item": "(O)276", "Count": 5 },
+            "Rewards": [ { "Kind": "Money", "Amount": 1000 } ],
+            "Title": "{i18n:my.harvest.title}"
+        },
+        {
+            "Name": "MyMod.HaySupply",
+            "Trigger": { "Source": "Periodic", "EveryDays": 28 },
+            "Generator": "HaySupplyGen"
+        },
+        {
+            "Name": "MyMod.RainyDayCatch",
+            "Trigger": { "Source": "WeatherForecast", "Weather": "rain" },
+            "Generator": "RainyDayCatchGen"
+        },
+        {
+            "Name": "MyMod.MarnieFirstEgg",
+            "Trigger": { "Source": "OneShot", "When": "FirstStat ChickenEggsLayed >= 1" },
+            "Generator": "MarnieFirstEggGen"
+        },
+        {
+            "Name": "MyMod.CowOffer",
+            "Trigger": { "Source": "BuildingBuilt", "Building": "Barn", "DayDelay": 1 },
+            "Generator": "CowOfferGen"
         }
     ]
 }
 ```
 
 Each `QuestDef` must set either `Generator` (a name registered via `RegisterGenerator`) or a fully-declarative `Objective`. `{i18n:key}` tokens in any string field resolve through the owning pack's translation helper. `Available` accepts every key the framework's `ConditionEvaluator` knows about (Season, NpcExists, NpcMet, MinDeepestMineLevel, SkillLevel, FriendshipLevel, HasMod, GSQ, etc. — see `plan.md §2.6`); `not:` prefix negates; `|` inside a value is OR.
+
+`Trigger.Source` accepts: `DailyBoard` (default), `Mail` (legacy cooldown-mail), `Periodic` (`EveryDays`), `DateLocked` (`Date`, `RepeatYearly`), `DateRange` (`From`, `To`), `OneShot` (`When`: `FirstStat name >= n`, `FirstShipped id`, `FirstItemOwned id`), `BuildingBuilt` (`Building`, optional `DayDelay`), `MailReceived` (`Flag`, optional `DayDelay`), `WeatherForecast` (`Weather`), `NpcDialogue` (`Npc`). Override the delivery channel with `Trigger.Delivery: "Mail" | "NpcDialogue" | "DailyBoard"` if the default doesn't fit.
 
 `IMoreQuestsApi` ([Api/IMoreQuestsApi.cs](Api/IMoreQuestsApi.cs)) is the public registration seam, marked Beta until framework v1.0 (Phase 10). Fetch it once via `helper.ModRegistry.GetApi<IMoreQuestsApi>(...)`, then narrow to a per-mod scope through `GetModApi(ModManifest)` for any registration call. Consumer mods need a hard SMAPI dependency on `RafiaBee.MoreQuestsFramework` and either a project reference to this assembly or their own copy of the `IQuestDefinition` / `QuestPosting` / `QuestContext` shapes.
 

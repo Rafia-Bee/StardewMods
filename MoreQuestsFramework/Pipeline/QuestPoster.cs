@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Posting;
 using MoreQuestsFramework.Rewards;
+using MoreQuestsFramework.State;
+using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -25,12 +27,23 @@ public sealed class QuestPoster
     private readonly MoreQuestsApi _api;
     private readonly Dictionary<string, string> _pendingMail = new();
     private readonly List<(Quest q, QuestPosting p)> _pendingBoard = new();
+    private MailQuestRegistry? _mailRegistry;
+    private FrameworkState? _state;
 
     public QuestPoster(IModHelper helper, IMonitor monitor, MoreQuestsApi api)
     {
         _helper = helper;
         _monitor = monitor;
         _api = api;
+    }
+
+    /// Wires the mail-quest registry + persisted state. Called from `ModEntry.OnSaveLoaded`
+    /// once the per-save state is available. Safe to call multiple times — the latest
+    /// references win.
+    public void WireMailDelivery(MailQuestRegistry registry, FrameworkState state)
+    {
+        _mailRegistry = registry;
+        _state = state;
     }
 
     public void Register()
@@ -78,6 +91,21 @@ public sealed class QuestPoster
             Post(p);
     }
 
+    /// Builds and stamps a Quest from the posting without delivering it. Used by the
+    /// `NpcDialogue` watcher, which needs to push the prepared Quest into `questLog`
+    /// at chat time rather than at posting time.
+    public Quest? PrepareQuest(QuestPosting posting, int daysLeft = 0)
+    {
+        Quest? quest = posting.PreBuiltQuest ?? QuestFactory.Build(posting);
+        if (quest == null)
+        {
+            _monitor.Log($"Could not build Quest for {posting.DefinitionId} ({posting.QuestType}).", LogLevel.Warn);
+            return null;
+        }
+        ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: daysLeft);
+        return quest;
+    }
+
     private void PostToBoard(QuestPosting posting)
     {
         Quest? quest = posting.PreBuiltQuest ?? QuestFactory.Build(posting);
@@ -103,12 +131,28 @@ public sealed class QuestPoster
         }
 
         ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: Math.Max(1, posting.DeadlineDays));
-        _api.TrackPosted(quest, posting.OwnerUniqueId, posting.DefinitionId);
-        Game1.player.questLog.Add(quest);
 
         string mailKey = MailPrefix + posting.DefinitionId.Replace('.', '_') + "_" + Game1.Date.TotalDays;
-        string body = posting.MailBody ?? BuildDefaultMailBody(posting);
+        // Use the mailKey as the Quest's id so the `%item quest <mailKey> 1 %%`
+        // token can find it via our Harmony prefix on `Quest.getQuestFromId`.
+        quest.id.Value = mailKey;
+
+        // Embed the standard vanilla mail-quest token. The trailing `1` is the
+        // "addImmediately" flag — vanilla `LetterViewerMenu` calls
+        // `Game1.player.addQuest(mailKey)` at letter-open time, which routes
+        // through `getQuestFromId` (and our prefix), pushes the prepared Quest
+        // into `questLog`, and trips Quest Helper / similar tracker hooks via
+        // the standard NetCollection-change event.
+        string flavour = posting.MailBody ?? BuildDefaultMailBody(posting);
+        string body = AppendQuestToken(flavour, mailKey);
         _pendingMail[mailKey] = body;
+
+        if (_mailRegistry != null)
+            _mailRegistry.Register(mailKey, quest, posting.OwnerUniqueId, posting.DefinitionId);
+        else
+            _monitor.Log("Mail-quest registry not wired; %item quest token will not resolve.", LogLevel.Warn);
+
+        StashForReload(posting, mailKey, body);
 
         _helper.GameContent.InvalidateCache("Data/mail");
 
@@ -116,6 +160,105 @@ public sealed class QuestPoster
             Game1.player.mailbox.Add(mailKey);
 
         _monitor.Log($"Posted {posting.DefinitionId} via mail. Days left: {quest.daysLeft.Value}.", LogLevel.Trace);
+    }
+
+    /// Appends `%item quest <id> 1 %%` to the letter body unless one is already
+    /// present. The trailing `1` is vanilla's `addImmediately` flag — quest enters
+    /// the journal at letter-open with no Accept button.
+    private static string AppendQuestToken(string body, string mailKey)
+    {
+        if (body.Contains("%item quest ", StringComparison.Ordinal))
+            return body;
+        // `^^` is vanilla's hard-line-break in mail bodies; one creates the gap
+        // before the auto-added quest's HUD message.
+        return body + "^^%item quest " + mailKey + " 1 %%";
+    }
+
+    /// Mirrors the just-posted Quest into framework save state so a letter sitting
+    /// unread across save/load still resolves the same quest. Rebuilt at SaveLoaded.
+    /// PreBuilt postings (custom Quest subclasses with their own NetFields) can't
+    /// round-trip through this DTO and will skip the stash; their owners must
+    /// re-post on the next trigger fire if the player reloaded before reading.
+    private void StashForReload(QuestPosting posting, string mailKey, string body)
+    {
+        if (_state == null || posting.PreBuiltQuest != null)
+            return;
+
+        var stash = new StashedMailQuest
+        {
+            MailKey = mailKey,
+            OwnerUniqueId = posting.OwnerUniqueId,
+            DefinitionId = posting.DefinitionId,
+            MailBody = body,
+            QuestType = (int)posting.QuestType,
+            Category = (int)posting.Category,
+            Tier = (int)posting.Tier,
+            QuestGiver = posting.QuestGiver,
+            ObjectiveItemId = posting.ObjectiveItemId,
+            ObjectiveItemName = posting.ObjectiveItemName,
+            ObjectiveQuantity = posting.ObjectiveQuantity,
+            TargetMonster = posting.TargetMonster,
+            DeadlineDays = posting.DeadlineDays,
+            Title = posting.Title,
+            Description = posting.Description,
+            CurrentObjective = posting.CurrentObjective,
+            TargetMessage = posting.TargetMessage
+        };
+        foreach (var r in posting.Rewards)
+            stash.EncodedRewards.Add(RewardCodec.Encode(r));
+
+        // Replace any prior stash with the same mailKey (re-fire on the same day).
+        _state.PendingMailDeliveries.RemoveAll(s => s.MailKey == mailKey);
+        _state.PendingMailDeliveries.Add(stash);
+    }
+
+    /// Rehydrates a stashed mail quest after save load. Called by ModEntry while
+    /// rebuilding the registry. Returns the prepared Quest (added to the registry
+    /// with its mailKey) and re-injects the body into `_pendingMail` so the
+    /// `Data/mail` asset edit still applies for letters in the player's mailbox.
+    public Quest? RehydrateStash(StashedMailQuest stash)
+    {
+        var posting = new QuestPosting
+        {
+            DefinitionId = stash.DefinitionId,
+            OwnerUniqueId = stash.OwnerUniqueId,
+            Category = (QuestCategory)stash.Category,
+            Tier = (DifficultyTier)stash.Tier,
+            QuestType = (BoardQuestType)stash.QuestType,
+            QuestGiver = stash.QuestGiver,
+            ObjectiveItemId = stash.ObjectiveItemId,
+            ObjectiveItemName = stash.ObjectiveItemName,
+            ObjectiveQuantity = stash.ObjectiveQuantity,
+            TargetMonster = stash.TargetMonster,
+            DeadlineDays = stash.DeadlineDays,
+            Title = stash.Title,
+            Description = stash.Description,
+            CurrentObjective = stash.CurrentObjective,
+            TargetMessage = stash.TargetMessage
+        };
+        foreach (var line in stash.EncodedRewards)
+        {
+            var spec = RewardCodec.Decode(line);
+            if (spec != null)
+                posting.Rewards.Add(spec);
+        }
+
+        var quest = QuestFactory.Build(posting);
+        if (quest == null)
+            return null;
+        ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: Math.Max(1, posting.DeadlineDays));
+        quest.id.Value = stash.MailKey;
+        _pendingMail[stash.MailKey] = stash.MailBody;
+        return quest;
+    }
+
+    /// Drop a stash entry when the corresponding mail letter is no longer in flight
+    /// (player opened it, or expired off the mailbox). Called from ModEntry's
+    /// `QuestAccepted` / `QuestCompleted` / `QuestRemoved` handlers.
+    public void DropStash(string mailKey)
+    {
+        _pendingMail.Remove(mailKey);
+        _state?.PendingMailDeliveries.RemoveAll(s => s.MailKey == mailKey);
     }
 
     /// Stamps title/description/objective + reward fields onto the quest. Reward routing:

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using MoreQuestsFramework.Registry;
+using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 using StardewValley;
 
@@ -14,15 +15,17 @@ public sealed class QuestPipeline
     private readonly QuestContext _ctx;
     private readonly QuestRegistry _registry;
     private readonly AntiRepetition _antiRepetition;
+    private readonly TriggerEvaluator _triggers;
     private readonly List<QuestPosting> _activePostings = new();
 
     public IReadOnlyList<QuestPosting> ActivePostings => _activePostings;
 
-    public QuestPipeline(QuestContext ctx, QuestRegistry registry, AntiRepetition antiRepetition)
+    public QuestPipeline(QuestContext ctx, QuestRegistry registry, AntiRepetition antiRepetition, TriggerEvaluator triggers)
     {
         _ctx = ctx;
         _registry = registry;
         _antiRepetition = antiRepetition;
+        _triggers = triggers;
     }
 
     public List<QuestPosting> GenerateDailyPostings()
@@ -34,8 +37,10 @@ public sealed class QuestPipeline
         var weights = _ctx.Config.QuestWeights;
 
         var pool = new List<(IQuestDefinition Def, int Weight)>();
-        foreach (var def in _registry.WithKind(PostingKind.DailyBoard))
+        foreach (var def in _registry.All)
         {
+            if (def.Source != TriggerSource.DailyBoard || def.Kind != PostingKind.DailyBoard)
+                continue;
             if (!def.IsAvailable(_ctx))
                 continue;
             if (_antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
@@ -99,16 +104,23 @@ public sealed class QuestPipeline
         return _activePostings;
     }
 
-    /// Mail-delivered triggered quests (e.g. Hay Supply Run on a fixed cadence). Called separately
-    /// so triggered quests don't compete with the daily slots.
-    public List<QuestPosting> GenerateTriggeredMail()
+    /// Triggered (non-daily-board) quests delivered via mail or NPC-dialogue. Drives the
+    /// Phase 6 trigger sources: Periodic, DateLocked, DateRange, OneShot, BuildingBuilt,
+    /// MailReceived, WeatherForecast, plus the legacy `Mail` cooldown source. Called once
+    /// per day after the building/mail snapshots have been refreshed in `TriggerEvaluator.BeginDay`.
+    public List<QuestPosting> GenerateTriggered()
     {
         var results = new List<QuestPosting>();
-        foreach (var def in _registry.WithKind(PostingKind.Mail))
+        foreach (var def in _registry.All)
         {
+            if (def.Source == TriggerSource.DailyBoard
+                || def.Source == TriggerSource.NpcDialogue
+                || def.Source == TriggerSource.SpecialOrder
+                || def.Source == TriggerSource.CustomBoard)
+                continue;
             if (!def.IsAvailable(_ctx))
                 continue;
-            if (_antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
+            if (!_triggers.ShouldFireToday(def.Id, def.Source, def.Trigger, def.CooldownDays))
                 continue;
 
             var posting = def.Build(_ctx);
@@ -116,10 +128,34 @@ public sealed class QuestPipeline
                 continue;
             if (string.IsNullOrEmpty(posting.OwnerUniqueId))
                 posting.OwnerUniqueId = def.OwnerUniqueId;
+            // Force the posting's delivery channel to match what the definition declared,
+            // since generators sometimes leave Kind unset.
+            posting.Kind = def.Kind;
             results.Add(posting);
             _antiRepetition.Record(posting);
         }
         return results;
+    }
+
+    /// Returns every NpcDialogue-source definition that should fire today (per
+    /// IsAvailable + cooldown). The caller queues them through the dialogue watcher
+    /// so they post next time the player speaks with the target NPC.
+    public List<(IQuestDefinition Def, string Npc)> GenerateNpcDialogueQueue()
+    {
+        var queue = new List<(IQuestDefinition, string)>();
+        foreach (var def in _registry.All)
+        {
+            if (def.Source != TriggerSource.NpcDialogue)
+                continue;
+            if (string.IsNullOrEmpty(def.Trigger.Npc))
+                continue;
+            if (!def.IsAvailable(_ctx))
+                continue;
+            if (_antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
+                continue;
+            queue.Add((def, def.Trigger.Npc!));
+        }
+        return queue;
     }
 
     /// True if the posting rewards friendship to its own quest giver and that NPC is

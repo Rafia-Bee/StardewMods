@@ -49,6 +49,49 @@ public sealed class TriggerDef
     public int? MaxPerDay { get; set; }
     public int? CooldownDays { get; set; }
     public Dictionary<string, string>? Available { get; set; }
+
+    /// Optional override of the delivery channel. Defaults vary by source: DailyBoard
+    /// posts to the help-wanted board, NpcDialogue queues for the next chat, every
+    /// other source defaults to `Mail`. Accepts `Mail`, `NpcDialogue`, or `DailyBoard`.
+    public string? Delivery { get; set; }
+
+    // Phase 6 trigger-specific options. See plan.md §5.4 for the full grammar.
+
+    /// Periodic: in-game days between fires. Required for `Source: Periodic`.
+    public int? EveryDays { get; set; }
+
+    /// DateLocked: in-game date as `"<season> <day>"`, e.g. `"spring 8"`.
+    public string? Date { get; set; }
+
+    /// DateLocked: re-arms the trigger every in-game year. Default false (one-shot per save).
+    public bool RepeatYearly { get; set; }
+
+    /// DateRange: inclusive window endpoints, both `"<season> <day>"`.
+    public string? From { get; set; }
+    public string? To { get; set; }
+
+    /// OneShot: predicate that must be true for the trigger to fire (once per save).
+    /// Recognised forms: `FirstStat <name> >= <n>`, `FirstShipped <itemId>`,
+    /// `FirstItemOwned <itemId>`.
+    public string? When { get; set; }
+
+    /// BuildingBuilt: farm building type to watch for, e.g. `"Coop"` or `"Slime Hutch"`.
+    public string? Building { get; set; }
+
+    /// BuildingBuilt / MailReceived: number of in-game days to wait before firing
+    /// after the trigger event. 0 = same day.
+    public int? DayDelay { get; set; }
+
+    /// MailReceived: mail flag whose appearance in `mailReceived` triggers the quest.
+    public string? Flag { get; set; }
+
+    /// WeatherForecast: weather id (`Sun`, `Rain`, `Storm`, `Snow`, `Wind`) or the
+    /// adjective alias (`sunny`, `rainy`, ...). Matches `Game1.weatherForTomorrow`.
+    public string? Weather { get; set; }
+
+    /// NpcDialogue: target NPC. Quest is queued and pushed into the journal the next
+    /// time the player speaks with this NPC.
+    public string? Npc { get; set; }
 }
 
 public sealed class ObjectiveDef

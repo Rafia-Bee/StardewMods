@@ -12,6 +12,8 @@ using MoreQuestsFramework.Pipeline;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Quests.Vanilla;
 using MoreQuestsFramework.Registry;
+using MoreQuestsFramework.State;
+using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -35,6 +37,10 @@ public sealed class ModEntry : Mod
     private GameDataCache? _dataCache;
     private AntiRepetition? _antiRepetition;
     private MoreQuestsApi _api = null!;
+    private StateStore? _stateStore;
+    private TriggerEvaluator? _triggers;
+    private DialogueWatcher? _dialogueWatcher;
+    private MailQuestRegistry _mailQuests = null!;
 
     internal DispatchRegistry Dispatch { get; private set; } = null!;
     internal MoreQuestsApi Api => _api;
@@ -57,13 +63,18 @@ public sealed class ModEntry : Mod
         _poster = new QuestPoster(helper, Monitor, _api);
         _poster.Register();
 
+        _mailQuests = new MailQuestRegistry();
+
         var harmony = new Harmony(ModManifest.UniqueID);
         BillboardPatches.Apply(harmony);
+        MailQuestPatches.Apply(harmony, _mailQuests, _api, Monitor);
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
+        helper.Events.GameLoop.DayEnding += OnDayEnding;
+        helper.Events.GameLoop.Saving += OnSaving;
         helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTick;
 
         helper.ConsoleCommands.Add(
@@ -159,11 +170,58 @@ public sealed class ModEntry : Mod
         var ctx = new QuestContext(Helper, Monitor, Config, items, _dataCache, Dispatch);
         _antiRepetition = new AntiRepetition();
 
-        _pipeline = new QuestPipeline(ctx, _registry, _antiRepetition);
+        _stateStore = new StateStore(Helper.Data, Monitor);
+        _stateStore.Load();
+
+        _triggers = new TriggerEvaluator(_stateStore.State, Monitor);
+        _pipeline = new QuestPipeline(ctx, _registry, _antiRepetition, _triggers);
+
+        _poster!.WireMailDelivery(_mailQuests, _stateStore.State);
+
+        // Rehydrate any mail letters that were sitting unread when the previous
+        // session saved. Re-injects bodies into the Data/mail edit and re-registers
+        // each prepared Quest so the `%item quest %% ` token resolves on letter-open.
+        _mailQuests.Clear();
+        var mailbox = Game1.player?.mailbox;
+        var mailReceived = Game1.player?.mailReceived;
+        var stillPending = new List<StashedMailQuest>();
+        foreach (var stash in _stateStore.State.PendingMailDeliveries)
+        {
+            bool inMailbox = mailbox != null && mailbox.Contains(stash.MailKey);
+            bool alreadyRead = mailReceived != null && mailReceived.Contains(stash.MailKey);
+            if (alreadyRead || !inMailbox)
+                continue; // already opened or vanished — drop on next save
+            var quest = _poster.RehydrateStash(stash);
+            if (quest == null)
+                continue;
+            _mailQuests.Register(stash.MailKey, quest, stash.OwnerUniqueId, stash.DefinitionId);
+            stillPending.Add(stash);
+        }
+        _stateStore.State.PendingMailDeliveries = stillPending;
+        if (stillPending.Count > 0)
+        {
+            Helper.GameContent.InvalidateCache("Data/mail");
+            Monitor.Log($"Rehydrated {stillPending.Count} unread mail-quest letter(s) from save state.", LogLevel.Trace);
+        }
+
+        _dialogueWatcher = new DialogueWatcher(
+            _registry, ctx, _stateStore.State, _api, Monitor,
+            posting => _poster!.PrepareQuest(posting, daysLeft: Math.Max(1, posting.DeadlineDays)));
+        _dialogueWatcher.Reset();
 
         _watching.Clear();
         _seenInLog.Clear();
         _completedFired.Clear();
+    }
+
+    private void OnDayEnding(object? sender, DayEndingEventArgs e)
+    {
+        _stateStore?.Save();
+    }
+
+    private void OnSaving(object? sender, SavingEventArgs e)
+    {
+        _stateStore?.Save();
     }
 
     private void OnDayStarted(object? sender, DayStartedEventArgs e)
@@ -175,14 +233,23 @@ public sealed class ModEntry : Mod
         // Snapshot anti-repetition state so a same-day mq_refresh can roll back today's
         // cooldown records and produce a fresh batch instead of an empty board.
         _antiRepetition?.BeginDay();
+        _triggers?.BeginDay();
         _poster.BeginDay();
 
         var daily = _pipeline.GenerateDailyPostings();
         _poster.PostBatch(daily);
         _poster.CommitBoard();
 
-        var triggered = _pipeline.GenerateTriggeredMail();
+        var triggered = _pipeline.GenerateTriggered();
         _poster.PostBatch(triggered);
+
+        // Queue NpcDialogue-source quests so the watcher can push them into the
+        // journal at the next chat with their target NPC.
+        if (_dialogueWatcher != null)
+        {
+            foreach (var (def, npc) in _pipeline.GenerateNpcDialogueQueue())
+                _dialogueWatcher.Enqueue(def.Id, npc);
+        }
 
         // Suppress vanilla's lone questOfTheDay so we are the single source of truth on the board.
         if (Game1.IsMasterGame)
@@ -228,6 +295,8 @@ public sealed class ModEntry : Mod
         if (!Context.IsWorldReady || Game1.player == null)
             return;
 
+        _dialogueWatcher?.Tick();
+
         var current = Game1.player.questLog;
         var seenThisTick = new HashSet<Quest>();
         for (int i = 0; i < current.Count; i++)
@@ -240,7 +309,13 @@ public sealed class ModEntry : Mod
 
             seenThisTick.Add(q);
             if (_seenInLog.Add(q))
+            {
                 _api.FireQuestAccepted(q, info);
+                // The mail letter has been opened (vanilla addQuest pushed the quest
+                // into the log); the stash + Data/mail edit are no longer needed.
+                if (!string.IsNullOrEmpty(q.id.Value))
+                    _poster?.DropStash(q.id.Value);
+            }
 
             if (q.completed.Value && _completedFired.Add(q))
                 _api.FireQuestCompleted(q, info);
