@@ -57,6 +57,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     public int DefaultWeight { get; }
     public int MaxPerDay { get; }
     public int CooldownDays { get; }
+    public string OwnerUniqueId => _ownerUniqueId;
 
     public bool IsAvailable(QuestContext ctx)
     {

@@ -4,6 +4,7 @@ using System.Linq;
 using MoreQuestsFramework;
 using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Dispatch;
 using MoreQuestsFramework.Rewards;
 using StardewModdingAPI;
 using StardewValley;
@@ -16,19 +17,19 @@ namespace MoreQuests.Quests;
 /// CooldownDays/Available) now lives in JSON; the C# side owns only runtime randomization.
 internal static class Generators
 {
-    public static void RegisterAll(IInternalApi fw, IManifest manifest)
+    public static void RegisterAll(IMoreQuestsModApi fw)
     {
-        fw.RegisterGenerator(manifest, "BasicCropDelivery", BasicCropDelivery);
-        fw.RegisterGenerator(manifest, "SimpleFishingRequest", SimpleFishingRequest);
-        fw.RegisterGenerator(manifest, "BasicSlimeClearing", BasicSlimeClearing);
-        fw.RegisterGenerator(manifest, "BarDelivery", BarDelivery);
-        fw.RegisterGenerator(manifest, "SeasonalForaging", SeasonalForaging);
-        fw.RegisterGenerator(manifest, "ElliottPoemInspiration", ElliottPoemInspiration);
-        fw.RegisterGenerator(manifest, "CheckOnGeorge", CheckOnGeorge);
-        fw.RegisterGenerator(manifest, "HaySupplyRun", HaySupplyRun);
-        fw.RegisterGenerator(manifest, "BeachCleanup", BeachCleanup);
-        fw.RegisterGenerator(manifest, "SpringTea", SpringTea);
-        fw.RegisterGenerator(manifest, "CravingDish", CravingDishGenerator);
+        fw.RegisterGenerator("BasicCropDelivery", BasicCropDelivery);
+        fw.RegisterGenerator("SimpleFishingRequest", SimpleFishingRequest);
+        fw.RegisterGenerator("BasicSlimeClearing", BasicSlimeClearing);
+        fw.RegisterGenerator("BarDelivery", BarDelivery);
+        fw.RegisterGenerator("SeasonalForaging", SeasonalForaging);
+        fw.RegisterGenerator("ElliottPoemInspiration", ElliottPoemInspiration);
+        fw.RegisterGenerator("CheckOnGeorge", CheckOnGeorge);
+        fw.RegisterGenerator("HaySupplyRun", HaySupplyRun);
+        fw.RegisterGenerator("BeachCleanup", BeachCleanup);
+        fw.RegisterGenerator("SpringTea", SpringTea);
+        fw.RegisterGenerator("CravingDish", CravingDishGenerator);
     }
 
     // -------------------- Farming --------------------
@@ -53,7 +54,7 @@ internal static class Generators
         int basePrice = Math.Max(crop.SellPrice, 30);
         int gold = (int)(basePrice * qty * ctx.Config.RewardMultiplierAboveSell);
 
-        var npcs = NpcDispatch.MetHumanNpcs();
+        var npcs = DispatchRegistry.MetHumanNpcs();
         if (npcs.Count == 0)
             return null;
         string giver = npcs[Game1.random.Next(npcs.Count)];
@@ -115,7 +116,7 @@ internal static class Generators
 
     private static QuestPosting? BasicSlimeClearing(QuestContext ctx)
     {
-        string? giver = NpcDispatch.Pick(ctx.Helper.ModRegistry, NpcDispatch.Role.CombatVendor);
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.CombatVendor);
         if (giver == null)
             return null;
 
@@ -207,7 +208,7 @@ internal static class Generators
         int qty = Game1.random.Next(3, 8);
         int gold = ctx.Config.GoldBeginnerBase;
 
-        var npcs = NpcDispatch.MetHumanNpcs();
+        var npcs = DispatchRegistry.MetHumanNpcs();
         if (npcs.Count == 0)
             return null;
         string giver = npcs[Game1.random.Next(npcs.Count)];
@@ -357,7 +358,7 @@ internal static class Generators
         var pick = BeachForage[Game1.random.Next(BeachForage.Length)];
         int qty = Game1.random.Next(2, 6);
 
-        string? giver = NpcDispatch.Pick(ctx.Helper.ModRegistry, NpcDispatch.Role.BeachCleanup);
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.BeachCleanup);
         if (giver == null)
             return null;
 
@@ -401,7 +402,7 @@ internal static class Generators
         var pick = springFlowers[Game1.random.Next(springFlowers.Count)];
         int qty = Game1.random.Next(3, 6);
 
-        var npcs = NpcDispatch.MetHumanNpcs();
+        var npcs = DispatchRegistry.MetHumanNpcs();
         if (npcs.Count == 0)
             return null;
         string giver = npcs[Game1.random.Next(npcs.Count)];
@@ -431,7 +432,7 @@ internal static class Generators
         if (!ConditionEvaluator.KnowsAnyCookingRecipe())
             return null;
 
-        var npcs = NpcDispatch.MetHumanNpcs();
+        var npcs = DispatchRegistry.MetHumanNpcs();
         if (npcs.Count == 0)
             return null;
 

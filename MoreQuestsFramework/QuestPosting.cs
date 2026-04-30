@@ -32,6 +32,11 @@ public enum BoardQuestType
 public sealed class QuestPosting
 {
     public string DefinitionId { get; set; } = "";
+    /// UniqueID of the mod that owns the source `IQuestDefinition`. Set by the
+    /// pipeline at posting time so framework events can attribute the quest back
+    /// to its owner. Empty string for postings produced by definitions registered
+    /// before Phase 5's owner-tracking landed.
+    public string OwnerUniqueId { get; set; } = "";
     public QuestCategory Category { get; set; }
     public DifficultyTier Tier { get; set; }
     public PostingKind Kind { get; set; } = PostingKind.DailyBoard;

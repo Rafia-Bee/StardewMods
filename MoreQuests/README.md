@@ -2,7 +2,7 @@
 
 A SMAPI content mod for Stardew Valley that ships a curated set of new daily-board quests, mail-triggered quests, and custom completion logic on top of the [More Quests Framework](../MoreQuestsFramework/README.md).
 
-> Heavy work in progress. Phases 1-4 are complete: framework split, declarative rewards/conditions, and the JSON content-pack loader are all in place. The remaining 60+ quest concepts described in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
+> Heavy work in progress. Phases 1-5 are complete: framework split, declarative rewards/conditions, the JSON content-pack loader, and the public `IMoreQuestsApi` (Beta) are all in place. The remaining 60+ quest concepts described in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
 
 ## What this mod does
 
@@ -88,7 +88,7 @@ For **most quests** (anything needing runtime randomization — NPC dispatch, it
 
 1. Add an entry to [assets/quests.json](assets/quests.json) with a unique `Name`, a `Category`, a `Trigger` block (`Source`, `Weight`, `MaxPerDay`, `CooldownDays`, optional `Available` condition dictionary), and a `Generator` name.
 2. Implement the generator in [Quests/Generators.cs](Quests/Generators.cs) as a `Func<QuestContext, QuestPosting?>`. Return `null` to abstain when no candidate is available; the framework drops the slot.
-3. Register the generator in `Generators.RegisterAll(...)` via `fw.RegisterGenerator(manifest, "<name>", MyGenerator)`.
+3. Register the generator in `Generators.RegisterAll(...)` via `scope.RegisterGenerator("<name>", MyGenerator)` (where `scope` is the `IMoreQuestsModApi` returned by `fw.GetModApi(ModManifest)`).
 4. Add `quest.<category>.<id>.title|description|objective|targetMessage` keys to [i18n/default.json](i18n/default.json) and look them up via `MoreQuests.ModEntry.I18n.Get(...)` from the generator.
 
 For **fully-static quests** (a fixed item, a fixed giver, no runtime selection), skip the generator entirely and put `Title`, `Description`, `Giver`, `Objective`, and `Rewards` directly in JSON. See the example pack at [../MoreQuestsFramework/docs/example-pack/](../MoreQuestsFramework/docs/example-pack/).
@@ -97,7 +97,7 @@ Other notes:
 
 - `Trigger.Source` accepts `DailyBoard` (board slot), `Mail` (auto-mailed when available), `SpecialOrder` (later), or `NpcDialogue` (later).
 - The `Available` dictionary is fed into the framework's `ConditionEvaluator` — every key in `plan.md §2.6` is supported (`Season`, `MinDeepestMineLevel`, `SkillLevel`, `NpcExists`, `HasMod`, `GSQ`, etc.). `not:` prefix negates; `|` inside a value is OR.
-- If the quest needs a custom `Quest` subclass, mark it `[XmlType("Mods_RafiaBee_MoreQuests_<Name>")]` and register it via `fw.RegisterCustomQuestType(typeof(YourQuest))` so SpaceCore can serialize it. The generator builds the subclass and assigns it to `posting.PreBuiltQuest`.
+- If the quest needs a custom `Quest` subclass, mark it `[XmlType("Mods_RafiaBee_MoreQuests_<Name>")]` and register it via `scope.RegisterCustomQuestType(typeof(YourQuest))` so SpaceCore can serialize it. The generator builds the subclass and assigns it to `posting.PreBuiltQuest`.
 - During testing, run `mq_refresh` in the SMAPI console to re-roll the daily board without reloading the save.
 
 ## Known limitations
