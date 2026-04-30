@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using DeluxeGrabberFix.Framework;
 using StardewValley;
@@ -12,11 +11,13 @@ namespace DeluxeGrabberFix.Grabbers;
 internal class FarmCaveMushroomGrabber : ObjectsMapGrabber
 {
     private readonly Func<Object, Vector2, GameLocation, KeyValuePair<Object, int>> GetMushroomHarvest;
+    private readonly HashSet<Vector2> _automateSkipTiles;
 
     public FarmCaveMushroomGrabber(ModEntry mod, GameLocation location)
         : base(mod, location)
     {
         GetMushroomHarvest = Mod.Api.GetMushroomHarvest ?? DefaultGetMushroomHarvest;
+        _automateSkipTiles = AutomateSkipTiles.Get(mod, location);
     }
 
     private KeyValuePair<Object, int> DefaultGetMushroomHarvest(Object mushroom, Vector2 mushroomBoxTile, GameLocation location)
@@ -32,6 +33,12 @@ internal class FarmCaveMushroomGrabber : ObjectsMapGrabber
 
         if (!obj.readyForHarvest.Value || obj.heldObject.Value == null)
             return false;
+
+        if (_automateSkipTiles != null && _automateSkipTiles.Contains(tile))
+        {
+            Mod.LogDebug($"Skipping mushroom box at {Location.Name} [{tile}] (managed by Automate)");
+            return false;
+        }
 
         var harvest = GetMushroomHarvest(obj.heldObject.Value, tile, Location);
         if (TryAddItem(harvest.Key))

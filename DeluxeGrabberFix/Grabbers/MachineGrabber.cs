@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using DeluxeGrabberFix.Framework;
 using StardewValley;
@@ -14,124 +13,10 @@ internal class MachineGrabber : ObjectsMapGrabber
 {
     private readonly HashSet<Vector2> _automateSkipTiles;
 
-    private static GameLocation _cachedLocation;
-    private static int _cachedTick;
-    private static HashSet<Vector2> _cachedSkipTiles;
-
     public MachineGrabber(ModEntry mod, GameLocation location)
         : base(mod, location)
     {
-        if (!Config.automateCompatibility)
-        {
-            _automateSkipTiles = null;
-        }
-        else if (_cachedLocation == location && _cachedTick == Game1.ticks)
-        {
-            _automateSkipTiles = _cachedSkipTiles;
-        }
-        else
-        {
-            _automateSkipTiles = BuildAutomateSkipTiles(mod, location);
-            _cachedLocation = location;
-            _cachedTick = Game1.ticks;
-            _cachedSkipTiles = _automateSkipTiles;
-        }
-    }
-
-    /// <summary>
-    /// Determines which automated machines should be skipped by checking whether
-    /// they belong to an Automate group that actually has a connected chest that accepts output.
-    /// Machines in groups without output-capable chests are NOT skipped so DGF can collect from them.
-    /// Machines whose type is disabled in Automate's config are also NOT skipped.
-    /// </summary>
-    private static HashSet<Vector2> BuildAutomateSkipTiles(ModEntry mod, GameLocation location)
-    {
-        const string storeItemsKey = "Pathoschild.Automate/StoreItems";
-
-        var allMachineTiles = mod.GetAutomatedMachineStates(location);
-        if (allMachineTiles == null || allMachineTiles.Count == 0)
-            return null;
-
-        var automateDisabledTypes = mod.GetAutomateDisabledMachineTypes();
-
-        var skipTiles = new HashSet<Vector2>();
-        var visited = new HashSet<Vector2>();
-
-        foreach (var startTile in allMachineTiles.Keys)
-        {
-            if (visited.Contains(startTile))
-                continue;
-
-            // BFS to find the connected component (machines + connectors + chests)
-            var component = new List<Vector2>();
-            var hasOutputChest = false;
-            var queue = new Queue<Vector2>();
-            queue.Enqueue(startTile);
-
-            while (queue.Count > 0)
-            {
-                var current = queue.Dequeue();
-                if (!visited.Add(current))
-                    continue;
-
-                if (allMachineTiles.ContainsKey(current))
-                {
-                    // Skip machines whose type is disabled in Automate's config --
-                    // Automate won't process them even though its API reports them
-                    bool isDisabledType = false;
-                    if (automateDisabledTypes != null
-                        && location.Objects.TryGetValue(current, out var machineObj)
-                        && machineObj.Name != null)
-                    {
-                        var typeId = new string(machineObj.Name.Where(char.IsLetterOrDigit).ToArray());
-                        isDisabledType = automateDisabledTypes.Contains(typeId);
-                    }
-
-                    if (!isDisabledType)
-                        component.Add(current);
-                }
-
-                if (!hasOutputChest && location.Objects.TryGetValue(current, out var currentObj) && currentObj is Chest chest
-                    && !chest.modData.ContainsKey("spacechase0.SuperHopper"))
-                {
-                    // Only count this chest if Automate can store items in it
-                    // "Disable" means "Never put items in this chest"
-                    if (!chest.modData.TryGetValue(storeItemsKey, out var storeValue) || storeValue != "Disable")
-                        hasOutputChest = true;
-                }
-
-                // Check cardinal neighbors for machines, chests, or connectors (flooring/paths)
-                Vector2[] neighbors =
-                {
-                    new(current.X, current.Y - 1),
-                    new(current.X, current.Y + 1),
-                    new(current.X - 1, current.Y),
-                    new(current.X + 1, current.Y)
-                };
-
-                foreach (var neighbor in neighbors)
-                {
-                    if (visited.Contains(neighbor))
-                        continue;
-
-                    if (allMachineTiles.ContainsKey(neighbor))
-                        queue.Enqueue(neighbor);
-                    else if (location.Objects.TryGetValue(neighbor, out var nObj) && nObj is Chest nChest
-                             && !nChest.modData.ContainsKey("spacechase0.SuperHopper"))
-                        queue.Enqueue(neighbor);
-                    else if (location.terrainFeatures.TryGetValue(neighbor, out var feature) && feature is Flooring)
-                        queue.Enqueue(neighbor);
-                }
-            }
-
-            if (hasOutputChest)
-            {
-                foreach (var tile in component)
-                    skipTiles.Add(tile);
-            }
-        }
-
-        return skipTiles.Count > 0 ? skipTiles : null;
+        _automateSkipTiles = AutomateSkipTiles.Get(mod, location);
     }
 
     public override bool GrabObject(Vector2 tile, Object obj)

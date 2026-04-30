@@ -452,6 +452,12 @@ public class ModEntry : Mod
     private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
     {
         ConfigManager.OnSaveLoaded();
+
+        // Per-save config may switch grabberMode after Data/CraftingRecipes has already
+        // loaded with the global config in effect. Invalidate so the recipe asset edit
+        // re-runs and Specialized recipes appear in the crafting menu and Better Crafting.
+        Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
+
         _locations.LoadSaveData();
         TownGarbageCanGrabber.ClearCache();
         _locations.DiscoverLocations();
