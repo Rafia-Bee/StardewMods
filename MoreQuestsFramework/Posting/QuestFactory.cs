@@ -26,13 +26,7 @@ public static class QuestFactory
 
         Quest? quest = p.QuestType switch
         {
-            BoardQuestType.ItemDelivery or BoardQuestType.ResourceCollection => new MoreQuestsItemDeliveryQuest
-            {
-                target = { Value = giver },
-                ItemId = { Value = itemId },
-                number = { Value = Math.Max(1, p.ObjectiveQuantity) },
-                targetMessage = p.TargetMessage
-            },
+            BoardQuestType.ItemDelivery or BoardQuestType.ResourceCollection => BuildItemDeliveryQuest(p, itemId, giver),
             BoardQuestType.Fishing => new MoreQuestsFishingQuest
             {
                 target = { Value = giver },
@@ -56,6 +50,7 @@ public static class QuestFactory
                 number = { Value = 1 },
                 targetMessage = p.TargetMessage
             },
+            BoardQuestType.Ship => BuildShipQuest(p, itemId, giver),
             // Adventure quests are always pre-built by the JSON path / generators because
             // their step list lives on the Quest subclass itself; the factory has nothing
             // to construct from posting-level scalars alone.
@@ -66,5 +61,40 @@ public static class QuestFactory
         if (quest != null)
             quest.id.Value = $"{IdPrefix}.{p.DefinitionId}.{Guid.NewGuid():N}";
         return quest;
+    }
+
+    private static MoreQuestsItemDeliveryQuest BuildItemDeliveryQuest(QuestPosting p, string itemId, string giver)
+    {
+        var quest = new MoreQuestsItemDeliveryQuest
+        {
+            target = { Value = giver },
+            ItemId = { Value = itemId },
+            number = { Value = Math.Max(1, p.ObjectiveQuantity) },
+            targetMessage = p.TargetMessage
+        };
+        foreach (var alt in p.AlternativeObjectiveItemIds)
+        {
+            string qualified = ItemRegistry.QualifyItemId(alt) ?? alt;
+            quest.alternativeItemIds.Add(qualified);
+        }
+        return quest;
+    }
+
+    private static MoreQuestsShipQuest BuildShipQuest(QuestPosting p, string itemId, string giver)
+    {
+        var ship = new MoreQuestsShipQuest
+        {
+            target = { Value = giver },
+            itemId = { Value = itemId },
+            numberToShip = { Value = Math.Max(1, p.ObjectiveQuantity) },
+            objectiveItemName = string.IsNullOrEmpty(p.ObjectiveItemName) ? itemId : p.ObjectiveItemName,
+            targetMessage = p.TargetMessage
+        };
+        foreach (var alt in p.AlternativeObjectiveItemIds)
+        {
+            string qualified = ItemRegistry.QualifyItemId(alt) ?? alt;
+            ship.alternativeItemIds.Add(qualified);
+        }
+        return ship;
     }
 }

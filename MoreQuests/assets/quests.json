@@ -102,6 +102,122 @@
             "Category": "Cooking",
             "Trigger": { "Source": "DailyBoard", "Weight": 30, "MaxPerDay": 3, "CooldownDays": 2 },
             "Generator": "CravingDish"
+        },
+        {
+            "Name": "Festival.SubmarineFuel",
+            "Category": "Seasonal",
+            "Tier": "Intermediate",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "winter 12",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Willy" }
+            },
+            "Giver": "Willy",
+            "Objective": {
+                "Kind": "Ship",
+                "Item": ["(O)787", "(O)382"],
+                "Count": 1
+            },
+            "DeadlineDays": "Short",
+            "Title": "{i18n:quest.festival.submarineFuel.title}",
+            "Description": "{i18n:quest.festival.submarineFuel.description}",
+            "CurrentObjective": "{i18n:quest.festival.submarineFuel.objective}",
+            "TargetMessage": "{i18n:quest.festival.submarineFuel.targetMessage}",
+            "Rewards": [
+                { "Kind": "Mail", "Letter": "RafiaBee.MoreQuests.SubmarineFuelReward", "When": "NextDay" }
+            ]
+        },
+        {
+            "Name": "Festival.WizardsRitual",
+            "Category": "Seasonal",
+            "Tier": "Advanced",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "fall 24",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Wizard" }
+            },
+            "Giver": "Wizard",
+            "Steps": [
+                {
+                    "Name": "DeliverVoidEssence",
+                    "Kind": "Deliver",
+                    "Targets": ["$giver"],
+                    "Items": ["(O)769"],
+                    "Count": 1,
+                    "Description": "{i18n:quest.festival.wizardsRitual.step.voidEssence}"
+                },
+                {
+                    "Name": "DeliverBatWing",
+                    "Kind": "Deliver",
+                    "Targets": ["$giver"],
+                    "Items": ["(O)767"],
+                    "Count": 1,
+                    "Description": "{i18n:quest.festival.wizardsRitual.step.batWing}"
+                },
+                {
+                    "Name": "DeliverSolarEssence",
+                    "Kind": "Deliver",
+                    "Targets": ["$giver"],
+                    "Items": ["(O)768"],
+                    "Count": 1,
+                    "Description": "{i18n:quest.festival.wizardsRitual.step.solarEssence}"
+                }
+            ],
+            "DeadlineDays": "Short",
+            "Title": "{i18n:quest.festival.wizardsRitual.title}",
+            "Description": "{i18n:quest.festival.wizardsRitual.description}",
+            "TargetMessage": "{i18n:quest.festival.wizardsRitual.targetMessage}",
+            "Rewards": [
+                { "Kind": "Object", "Item": "(O)Book_Mystery", "Count": 1 }
+            ]
+        },
+        {
+            "Name": "Festival.HolidayCookies",
+            "Category": "Seasonal",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "winter 21",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Evelyn" }
+            },
+            "Giver": "Evelyn",
+            "Steps": [
+                {
+                    "Name": "DeliverFlour",
+                    "Kind": "Deliver",
+                    "Targets": ["$giver"],
+                    "Items": ["(O)246"],
+                    "Count": 1,
+                    "Description": "{i18n:quest.festival.holidayCookies.step.flour}"
+                },
+                {
+                    "Name": "DeliverSugar",
+                    "Kind": "Deliver",
+                    "Targets": ["$giver"],
+                    "Items": ["(O)245"],
+                    "Count": 1,
+                    "Description": "{i18n:quest.festival.holidayCookies.step.sugar}"
+                },
+                {
+                    "Name": "DeliverEggs",
+                    "Kind": "Deliver",
+                    "Targets": ["$giver"],
+                    "Items": ["(O)176", "(O)180", "(O)174", "(O)182"],
+                    "Count": 1,
+                    "Description": "{i18n:quest.festival.holidayCookies.step.eggs}"
+                }
+            ],
+            "DeadlineDays": "Short",
+            "Title": "{i18n:quest.festival.holidayCookies.title}",
+            "Description": "{i18n:quest.festival.holidayCookies.description}",
+            "TargetMessage": "{i18n:quest.festival.holidayCookies.targetMessage}",
+            "Rewards": [
+                { "Kind": "Friendship", "Npc": "Evelyn", "Points": 250 },
+                { "Kind": "Object", "Item": "(O)223", "Count": 6 }
+            ]
         }
     ]
 }

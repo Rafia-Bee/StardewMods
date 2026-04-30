@@ -1,0 +1,134 @@
+using System;
+using System.Collections.Generic;
+using System.Xml.Serialization;
+using MoreQuestsFramework.Rewards;
+using Netcode;
+using StardewModdingAPI;
+using StardewValley;
+using StardewValley.Quests;
+
+namespace MoreQuestsFramework.Quests;
+
+/// Single-objective shipping quest. The player ships `numberToShip` units of `itemId`
+/// (or any id in `alternativeItemIds`) through the farm shipping bin; the framework
+/// observes the bin at `DayEnding` and increments `numberShipped` by the matching count.
+/// Vanilla sells the items normally — we observe, we don't consume. When `numberShipped`
+/// reaches `numberToShip`, `questComplete()` runs the declarative reward block.
+[XmlType("Mods_RafiaBee_MoreQuestsFramework_ShipQuest")]
+public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
+{
+    public readonly NetString target = new();
+    public readonly NetString itemId = new();
+    public readonly NetStringList alternativeItemIds = new();
+    public readonly NetInt numberToShip = new();
+    public readonly NetInt numberShipped = new();
+    public readonly NetStringList serializedRewards = new();
+
+    public NetStringList SerializedRewards => serializedRewards;
+
+    /// Friendly item name shown in the "Ship X / Y <name>" objective line. Stored as a
+    /// plain string field (not net-synced) — host writes it once at posting time.
+    public string objectiveItemName = string.Empty;
+
+    /// Spoken/letter line shown when the quest completes. Empty for board-posted ship
+    /// quests; mail-delivered quests usually leave this empty since the reward letter
+    /// itself is the thank-you message.
+    public string targetMessage = string.Empty;
+
+    protected override void initNetFields()
+    {
+        base.initNetFields();
+        NetFields
+            .AddField(target, "target")
+            .AddField(itemId, "itemId")
+            .AddField(alternativeItemIds, "alternativeItemIds")
+            .AddField(numberToShip, "numberToShip")
+            .AddField(numberShipped, "numberShipped")
+            .AddField(serializedRewards, "serializedRewards");
+    }
+
+    public override void questComplete()
+    {
+        if (completed.Value)
+            return;
+        RewardApplier.ApplyEncoded(serializedRewards);
+        base.questComplete();
+    }
+
+    public override void reloadObjective()
+    {
+        if (completed.Value)
+            return;
+        // currentObjective text may already be set at posting time; refresh the count
+        // suffix when the journal pulls this string. Numbers display via the standard
+        // `(progress/count)` suffix the rest of the framework uses.
+    }
+
+    /// True when the bin item matches `itemId` or any of `alternativeItemIds`. Tolerates
+    /// both qualified (`(O)787`) and bare (`787`) author input.
+    public bool MatchesItem(Item item)
+    {
+        if (item == null)
+            return false;
+        if (Matches(item, itemId.Value))
+            return true;
+        for (int i = 0; i < alternativeItemIds.Count; i++)
+        {
+            if (Matches(item, alternativeItemIds[i]))
+                return true;
+        }
+        return false;
+    }
+
+    private static bool Matches(Item item, string author)
+    {
+        if (string.IsNullOrEmpty(author))
+            return false;
+        string qid = item.QualifiedItemId ?? string.Empty;
+        string id = item.ItemId ?? string.Empty;
+        if (string.Equals(author, qid, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (string.Equals(author, id, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (author.StartsWith("(", StringComparison.Ordinal) &&
+            string.Equals(author.Substring(author.IndexOf(')') + 1), id, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    /// Walks the shipping bin once and increments `numberShipped` by the count of matching
+    /// entries. Called by the framework's DayEnding observer for each active ship quest.
+    public void ObserveShippingBin(IList<Item> bin, IMonitor? monitor = null)
+    {
+        if (completed.Value || bin == null || bin.Count == 0)
+            return;
+        int matched = 0;
+        for (int i = 0; i < bin.Count; i++)
+        {
+            var item = bin[i];
+            if (item == null) continue;
+            if (MatchesItem(item))
+                matched += item.Stack;
+        }
+        if (matched <= 0)
+            return;
+
+        int needed = numberToShip.Value;
+        int credited = Math.Min(matched, Math.Max(0, needed - numberShipped.Value));
+        if (credited <= 0)
+            return;
+        numberShipped.Value = numberShipped.Value + credited;
+        if (numberShipped.Value >= needed)
+            questComplete();
+        else
+            reloadObjective();
+    }
+
+    public List<string> AlternativeIds()
+    {
+        var list = new List<string>(alternativeItemIds.Count);
+        for (int i = 0; i < alternativeItemIds.Count; i++)
+            list.Add(alternativeItemIds[i]);
+        return list;
+    }
+}

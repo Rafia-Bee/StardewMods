@@ -5,6 +5,7 @@ using System.Xml.Serialization;
 using MoreQuestsFramework.Rewards;
 using Netcode;
 using StardewValley;
+using StardewValley.Monsters;
 using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests;
@@ -166,27 +167,113 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     {
         if (completed.Value || npc == null || item == null)
             return false;
-        int idx = ActiveStepIndex();
-        if (idx < 0) return false;
-        var step = Steps[idx];
-        return step.Kind switch
+        // Walk all currently-active steps (Requires met, not Done) instead of just the first.
+        // Lets multi-step Adventure quests like "deliver Flour + Sugar + Eggs to Evelyn" accept
+        // each item independently of declaration order — the player can hand them in any order.
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
         {
-            AdventureStepKind.Deliver => TryAdvanceDeliver(idx, step, npc, item, probe),
-            AdventureStepKind.Gift => TryAdvanceGift(idx, step, npc, item, probe),
-            _ => false
-        };
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            bool advanced = step.Kind switch
+            {
+                AdventureStepKind.Deliver => TryAdvanceDeliver(i, step, npc, item, probe),
+                AdventureStepKind.Gift => TryAdvanceGift(i, step, npc, item, probe),
+                _ => false
+            };
+            if (advanced)
+                return true;
+        }
+        return false;
     }
 
     public override bool OnNpcSocialized(NPC npc, bool probe = false)
     {
         if (completed.Value || npc == null)
             return false;
-        int idx = ActiveStepIndex();
-        if (idx < 0) return false;
-        var step = Steps[idx];
-        if (step.Kind != AdventureStepKind.Talk)
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.Talk) continue;
+            if (TryAdvanceTalk(i, step, npc, probe))
+                return true;
+        }
+        return false;
+    }
+
+    public override bool OnFishCaught(string fishId, int numberCaught, int size, bool probe = false)
+    {
+        if (completed.Value || string.IsNullOrEmpty(fishId))
             return false;
-        return TryAdvanceTalk(idx, step, npc, probe);
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.Catch) continue;
+            TryAdvanceCatch(i, step, fishId, numberCaught, probe);
+        }
+        return false;
+    }
+
+    public override bool OnMonsterSlain(GameLocation location, Monster monster, bool killedByBomb, bool isTameMonster, bool probe = false)
+    {
+        if (completed.Value || monster == null || isTameMonster)
+            return false;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.Slay) continue;
+            TryAdvanceSlay(i, step, monster, probe);
+        }
+        return false;
+    }
+
+    /// Called by the framework's DayEnding observer with the farm shipping bin contents.
+    /// Each active `Ship` step counts matching items independently.
+    public void ObserveShippingBin(IList<Item> bin)
+    {
+        if (completed.Value || bin == null || bin.Count == 0)
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.Ship) continue;
+            AdvanceShipStep(i, step, bin);
+        }
+    }
+
+    private void AdvanceShipStep(int idx, AdventureStepState step, IList<Item> bin)
+    {
+        int matched = 0;
+        for (int i = 0; i < bin.Count; i++)
+        {
+            var item = bin[i];
+            if (item == null) continue;
+            if (ItemMatches(step, item))
+                matched += item.Stack;
+        }
+        if (matched <= 0)
+            return;
+
+        int needed = Math.Max(1, step.Count);
+        int credit = Math.Min(matched, needed - step.Progress);
+        if (credit <= 0)
+            return;
+        step.Progress += credit;
+        if (step.Progress >= needed)
+            MarkStepDone(idx, step);
+        else
+        {
+            Persist(idx, step);
+            reloadObjective();
+        }
     }
 
     public override void questComplete()
@@ -243,6 +330,85 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         if (probe) return false; // silence the vanilla "this would advance a quest" cue
 
         MarkStepDone(idx, step);
+        return false;
+    }
+
+    /// Catch step: increments progress when the caught fish matches one of the step's `Items`.
+    /// `Targets` is unused here (location/weather gating is deferred to a later phase). Always
+    /// returns false so vanilla's other quests still see the catch.
+    private bool TryAdvanceCatch(int idx, AdventureStepState step, string fishId, int numberCaught, bool probe)
+    {
+        if (step.Items.Count == 0)
+            return false;
+        bool matched = false;
+        foreach (var entry in step.Items)
+        {
+            if (string.IsNullOrEmpty(entry)) continue;
+            if (string.Equals(entry, fishId, StringComparison.OrdinalIgnoreCase))
+            {
+                matched = true;
+                break;
+            }
+            if (entry.StartsWith("(", StringComparison.Ordinal))
+            {
+                string bare = entry.Substring(entry.IndexOf(')') + 1);
+                if (string.Equals(bare, fishId, StringComparison.OrdinalIgnoreCase))
+                {
+                    matched = true;
+                    break;
+                }
+            }
+        }
+        if (!matched) return false;
+        if (probe) return true;
+
+        int needed = Math.Max(1, step.Count);
+        int credit = Math.Min(numberCaught, needed - step.Progress);
+        if (credit <= 0)
+            return false;
+        step.Progress += credit;
+        if (step.Progress >= needed)
+            MarkStepDone(idx, step);
+        else
+        {
+            Persist(idx, step);
+            reloadObjective();
+        }
+        return false;
+    }
+
+    /// Slay step: matches monsters whose name appears in `Targets`. Empty Targets means
+    /// "any monster" (rarely useful but supported). Tame monsters never count, and bomb
+    /// kills count by default — vanilla `SlayMonsterQuest` accepts both.
+    private bool TryAdvanceSlay(int idx, AdventureStepState step, Monster monster, bool probe)
+    {
+        bool matched = step.Targets.Count == 0;
+        if (!matched)
+        {
+            foreach (var t in step.Targets)
+            {
+                if (string.IsNullOrEmpty(t)) continue;
+                if (string.Equals(t, monster.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    matched = true;
+                    break;
+                }
+            }
+        }
+        if (!matched) return false;
+        if (probe) return true;
+
+        int needed = Math.Max(1, step.Count);
+        if (step.Progress >= needed)
+            return false;
+        step.Progress++;
+        if (step.Progress >= needed)
+            MarkStepDone(idx, step);
+        else
+        {
+            Persist(idx, step);
+            reloadObjective();
+        }
         return false;
     }
 

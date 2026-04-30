@@ -127,6 +127,7 @@ public sealed class ModEntry : Mod
             _spaceCore.RegisterSerializerType(typeof(MoreQuestsItemDeliveryQuest));
             _spaceCore.RegisterSerializerType(typeof(MoreQuestsFishingQuest));
             _spaceCore.RegisterSerializerType(typeof(AdventureQuest));
+            _spaceCore.RegisterSerializerType(typeof(MoreQuestsShipQuest));
             Monitor.Log("Registered framework Quest subclasses with SpaceCore.", LogLevel.Trace);
         }
         else
@@ -218,7 +219,47 @@ public sealed class ModEntry : Mod
 
     private void OnDayEnding(object? sender, DayEndingEventArgs e)
     {
+        ObserveShippingBin();
         _stateStore?.Save();
+    }
+
+    /// At day-end, before vanilla sells the shipping bin, walk every active framework
+    /// quest looking for a `MoreQuestsShipQuest` or an `AdventureQuest` with an active
+    /// `Ship` step and credit them with matching items in the bin. We only observe —
+    /// items still get sold to the player at full price (the bin contents are not
+    /// removed). Cheap when no ship quest is active: the loop short-circuits the first
+    /// time it sees no candidate.
+    private void ObserveShippingBin()
+    {
+        if (!Context.IsWorldReady || Game1.player == null)
+            return;
+
+        var farm = Game1.getFarm();
+        if (farm == null)
+            return;
+
+        IList<Item>? bin = null;
+        var log = Game1.player.questLog;
+        for (int i = 0; i < log.Count; i++)
+        {
+            var q = log[i];
+            if (q == null || q.completed.Value)
+                continue;
+            bool isShip = q is MoreQuestsShipQuest;
+            bool isAdventure = q is AdventureQuest;
+            if (!isShip && !isAdventure)
+                continue;
+
+            // Lazily fetch the bin so we don't pay the cost when no ship-tracking quest is active.
+            bin ??= farm.getShippingBin(Game1.player);
+            if (bin == null || bin.Count == 0)
+                return;
+
+            if (q is MoreQuestsShipQuest s)
+                s.ObserveShippingBin(bin, Monitor);
+            else if (q is AdventureQuest a)
+                a.ObserveShippingBin(bin);
+        }
     }
 
     private void OnSaving(object? sender, SavingEventArgs e)

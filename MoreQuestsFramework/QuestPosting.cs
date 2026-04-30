@@ -25,6 +25,11 @@ public enum BoardQuestType
     Fishing,
     SlayMonster,
     Socialize,
+    /// Single-objective shipping quest — player ships N of an item (or any of a set of
+    /// alternatives) into the farm shipping bin. Counted at `DayEnding` by scanning
+    /// `Game1.getFarm().getShippingBin(player)` and matching item ids; the items are not
+    /// removed by the framework, vanilla still sells them as normal.
+    Ship,
     Adventure,
     Custom
 }
@@ -46,6 +51,10 @@ public sealed class QuestPosting
 
     public string ObjectiveItemId { get; set; } = "";
     public string ObjectiveItemName { get; set; } = "";
+    /// Optional OR-alternative item ids accepted in place of `ObjectiveItemId`. Used by the
+    /// declarative `Item: [...]` JSON form so a single posting can satisfy on any of several
+    /// items (e.g. Submarine Fuel accepts a Battery Pack OR Coal). Empty means single-item.
+    public List<string> AlternativeObjectiveItemIds { get; set; } = new();
     public int ObjectiveQuantity { get; set; } = 1;
     public string? TargetMonster { get; set; }
     public string? TargetLocation { get; set; }

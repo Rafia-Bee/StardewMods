@@ -204,6 +204,8 @@ public sealed class QuestPoster
             CurrentObjective = posting.CurrentObjective,
             TargetMessage = posting.TargetMessage
         };
+        foreach (var alt in posting.AlternativeObjectiveItemIds)
+            stash.AlternativeObjectiveItemIds.Add(alt);
         foreach (var r in posting.Rewards)
             stash.EncodedRewards.Add(RewardCodec.Encode(r));
 
@@ -229,6 +231,7 @@ public sealed class QuestPoster
             ObjectiveItemId = stash.ObjectiveItemId,
             ObjectiveItemName = stash.ObjectiveItemName,
             ObjectiveQuantity = stash.ObjectiveQuantity,
+            AlternativeObjectiveItemIds = new List<string>(stash.AlternativeObjectiveItemIds),
             TargetMonster = stash.TargetMonster,
             DeadlineDays = stash.DeadlineDays,
             Title = stash.Title,

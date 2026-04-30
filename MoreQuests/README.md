@@ -2,7 +2,7 @@
 
 A SMAPI content mod for Stardew Valley that ships a curated set of new daily-board quests, mail-triggered quests, and custom completion logic on top of the [More Quests Framework](../MoreQuestsFramework/README.md).
 
-> Heavy work in progress. Phases 1-6 are complete: framework split, declarative rewards/conditions, the JSON content-pack loader, the public `IMoreQuestsApi` (Beta), and the calendar/event trigger sources (Periodic, DateLocked, DateRange, OneShot, BuildingBuilt, MailReceived, WeatherForecast, NpcDialogue) with persistent save state are all in place. Phase 7a is in: multi-step `AdventureQuest` substrate plus `Deliver` / `Talk` / `Gift` step kinds, with Check on George converted to a 3-step adventure as the smoke test. The remaining 60+ quest concepts described in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
+> Heavy work in progress. Phases 1-6 are complete: framework split, declarative rewards/conditions, the JSON content-pack loader, the public `IMoreQuestsApi` (Beta), and the calendar/event trigger sources (Periodic, DateLocked, DateRange, OneShot, BuildingBuilt, MailReceived, WeatherForecast, NpcDialogue) with persistent save state are all in place. Phase 7a landed the `AdventureQuest` substrate plus `Deliver` / `Talk` / `Gift` step kinds with Check on George as the smoke test. Phase 7b adds single-objective `Ship` quests, multi-step `Ship` / `Catch` / `Slay` step kinds, item OR-alternatives in declarative objectives (`"Item": ["(O)787", "(O)382"]`), the `MailReward When: NextDay` alias, and migrates Submarine Fuel / Wizard's Ritual Materials / Evelyn's Holiday Cookies. The remaining 60+ quest concepts described in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
 
 ## What this mod does
 
@@ -27,9 +27,9 @@ If the framework isn't installed, this mod logs an error and registers nothing.
 | Animal | Hay Supply Run | Mail |
 | Seasonal | Beach Cleanup (summer) | DailyBoard |
 | Seasonal | Spring Tea (fall) | DailyBoard |
-| Festival | Lewis's Festival Eggs (spring 8) | DateLocked / Mail |
 | Festival | Submarine Fuel (winter 12) | DateLocked / Mail |
 | Festival | Wizard's Ritual Materials (fall 24) | DateLocked / Mail |
+| Festival | Evelyn's Holiday Cookies (winter 21) | DateLocked / Mail |
 
 **Planned (later phases)** — animal trigger letters, festival pre-quests, special-orders quests, NPC-dialogue quests, mod-gated quests for RSV / East Scarp / Visit Mount Vapius / SVE, custom-asset quests (Protein Bar, Animal Paintings, Void Chicken Statue, Egg Basket, Legendary Fish Displays), consequence dispatch via `Data/NPCGiftTastes`. [The google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) and `docs/DECISION_LOG.md` have the full plan.
 

@@ -28,6 +28,9 @@ public sealed class StashedMailQuest
     public string QuestGiver { get; set; } = "";
     public string ObjectiveItemId { get; set; } = "";
     public string ObjectiveItemName { get; set; } = "";
+    /// OR-alternative ids accepted in place of `ObjectiveItemId`. Round-trips so a mail
+    /// letter for "Submarine Fuel — battery OR coal" still resolves correctly on reload.
+    public List<string> AlternativeObjectiveItemIds { get; set; } = new();
     public int ObjectiveQuantity { get; set; } = 1;
     public string? TargetMonster { get; set; }
     public int DeadlineDays { get; set; } = 5;
