@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Posting;
 using MoreQuestsFramework.Rewards;
 using StardewModdingAPI;
@@ -21,13 +22,15 @@ public sealed class QuestPoster
 
     private readonly IModHelper _helper;
     private readonly IMonitor _monitor;
+    private readonly MoreQuestsApi _api;
     private readonly Dictionary<string, string> _pendingMail = new();
     private readonly List<(Quest q, QuestPosting p)> _pendingBoard = new();
 
-    public QuestPoster(IModHelper helper, IMonitor monitor)
+    public QuestPoster(IModHelper helper, IMonitor monitor, MoreQuestsApi api)
     {
         _helper = helper;
         _monitor = monitor;
+        _api = api;
     }
 
     public void Register()
@@ -85,6 +88,7 @@ public sealed class QuestPoster
         }
 
         ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: 0);
+        _api.TrackPosted(quest, posting.OwnerUniqueId, posting.DefinitionId);
         _pendingBoard.Add((quest, posting));
         _monitor.Log($"Buffered {posting.DefinitionId} for billboard ({posting.QuestType}).", LogLevel.Trace);
     }
@@ -99,6 +103,7 @@ public sealed class QuestPoster
         }
 
         ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: Math.Max(1, posting.DeadlineDays));
+        _api.TrackPosted(quest, posting.OwnerUniqueId, posting.DefinitionId);
         Game1.player.questLog.Add(quest);
 
         string mailKey = MailPrefix + posting.DefinitionId.Replace('.', '_') + "_" + Game1.Date.TotalDays;

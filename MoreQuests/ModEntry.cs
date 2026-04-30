@@ -1,3 +1,4 @@
+using System;
 using MoreQuests.Quests;
 using MoreQuestsFramework.Api;
 using StardewModdingAPI;
@@ -25,7 +26,7 @@ public sealed class ModEntry : Mod
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
-        var fw = Helper.ModRegistry.GetApi<IInternalApi>("RafiaBee.MoreQuestsFramework");
+        var fw = Helper.ModRegistry.GetApi<IMoreQuestsApi>("RafiaBee.MoreQuestsFramework");
         if (fw == null)
         {
             Monitor.Log(
@@ -35,17 +36,24 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        fw.RegistrationOpen += (_, _) => RegisterContent(fw);
+    }
+
+    private void RegisterContent(IMoreQuestsApi fw)
+    {
+        var scope = fw.GetModApi(ModManifest);
+
         // Custom Quest subclasses (must register before quests.json loads so generators
         // that build PreBuiltQuests of these types round-trip through SpaceCore).
-        fw.RegisterCustomQuestType(typeof(AnySlimeQuest));
-        fw.RegisterCustomQuestType(typeof(CollectAndReportQuest));
-        fw.RegisterCustomQuestType(typeof(CheckOnGeorgeQuest));
+        scope.RegisterCustomQuestType(typeof(AnySlimeQuest));
+        scope.RegisterCustomQuestType(typeof(CollectAndReportQuest));
+        scope.RegisterCustomQuestType(typeof(CheckOnGeorgeQuest));
 
         // Register every C# generator referenced by assets/quests.json.
-        Generators.RegisterAll(fw, ModManifest);
+        Generators.RegisterAll(scope);
 
         // Load the JSON quest pack. Each entry references a generator above.
-        fw.LoadQuestsFromMod(Helper, ModManifest, "assets/quests.json");
+        scope.LoadQuestsFromMod(Helper, "assets/quests.json");
 
         GmcmRegistration.Register(Helper, ModManifest);
     }

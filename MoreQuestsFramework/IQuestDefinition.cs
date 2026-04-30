@@ -8,6 +8,11 @@ public interface IQuestDefinition
     QuestCategory Category { get; }
     PostingKind Kind { get; }
 
+    /// UniqueID of the mod that registered this definition. Used by the framework's
+    /// public API to attribute `QuestAccepted` / `QuestCompleted` events to the right
+    /// owner. Empty string is treated as "framework-owned".
+    string OwnerUniqueId => "";
+
     /// Default selection weight for the daily-board pool. 0 disables. Higher = more likely.
     /// Treated as a relative weight, not a percentage.
     int DefaultWeight { get; }

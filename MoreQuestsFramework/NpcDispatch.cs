@@ -1,130 +1,71 @@
 using System.Collections.Generic;
-using System.Linq;
-using StardewModdingAPI;
-using StardewValley;
+using MoreQuestsFramework.Dispatch;
 
 namespace MoreQuestsFramework;
 
-/// Resolves which NPC posts a quest based on installed mods. Vanilla quest-givers always work; modded ones only
-/// fall through if their host mod is loaded. Caller passes the dispatch role and the resolver picks the best match.
+/// Thin facade kept around so consumer mods that referenced the pre-Phase-5 static
+/// API still compile. New code should call `IMoreQuestsApi.PickDispatchNpc(role)` /
+/// `IMoreQuestsApi.GetMetHumanNpcs()` instead. Internally delegates to the runtime
+/// `DispatchRegistry` instance owned by `ModEntry`.
 public static class NpcDispatch
 {
-    public enum Role
+    public static string? Pick(string role) =>
+        ModEntry.Instance.Dispatch.Pick(role);
+
+    public static IReadOnlyList<string> All(string role) =>
+        ModEntry.Instance.Dispatch.ResolvePool(role);
+
+    public static List<string> MetHumanNpcs() => DispatchRegistry.MetHumanNpcs();
+
+    /// Seed the framework's built-in role pools through the same registration path
+    /// third parties use. Called once at GameLaunched, before consumer mods see
+    /// `RegistrationOpen`.
+    internal static void SeedBuiltins(DispatchRegistry registry)
     {
-        SaloonChef,
-        EcologyMinded,
-        ConservationGuide,
-        CombatVendor,
-        SaloonFestival,
-        BeachCleanup,
-        RainyDayFishing,
-        HeatWaveRelief,
-        TownFestival
-    }
-
-    public static string? Pick(IModRegistry registry, Role role)
-    {
-        // Prefer NPCs the player has actually met (so quest dialogue mechanics work)
-        // and fall back to "exists in the world" only if nobody in the role is met yet.
-        var built = Build(registry, role).Where(IsKnownNpc).ToList();
-        var met = built.Where(IsSocializable).ToList();
-        var pool = met.Count > 0 ? met : built;
-        if (pool.Count == 0)
-            return null;
-        return pool[Game1.random.Next(pool.Count)];
-    }
-
-    public static IEnumerable<string> All(IModRegistry registry, Role role) =>
-        Build(registry, role).Where(IsKnownNpc);
-
-    private static IEnumerable<string> Build(IModRegistry registry, Role role)
-    {
-        bool rsv = ModCompat.HasRsv(registry);
-        bool es = ModCompat.HasEs(registry);
-        bool vmv = ModCompat.HasVmv(registry);
-        bool sve = ModCompat.HasSve(registry);
-
-        switch (role)
+        // SaloonChef + SaloonFestival share the same pool (both want a saloon-side cook).
+        foreach (var role in new[] { DispatchRoles.SaloonChef, DispatchRoles.SaloonFestival })
         {
-            case Role.SaloonChef:
-            case Role.SaloonFestival:
-                yield return "Gus";
-                if (rsv) yield return "Pika";
-                if (es) yield return "Rosa";
-                if (vmv) yield return "Celestine";
-                yield break;
-
-            case Role.EcologyMinded:
-                yield return "Demetrius";
-                if (rsv) { yield return "Maddie"; yield return "Mr. Aguar"; }
-                if (es) yield return "Dylan";
-                yield break;
-
-            case Role.ConservationGuide:
-                yield return "Linus";
-                yield return "Demetrius";
-                if (rsv) yield return "Kimpoi";
-                if (es) yield return "Dylan";
-                if (vmv) yield return "Aster";
-                yield break;
-
-            case Role.CombatVendor:
-                // Vanilla Marlon isn't friendable and right-clicking him opens the Adventure
-                // Guild shop instead of dialogue, so OnNpcSocialized never fires. SVE replaces
-                // him with the friendable "MarlonFay"; everywhere else we route slime/combat
-                // quests to Wizard or Lewis (matching how vanilla SlayMonsterQuest assigns them).
-                yield return "Wizard";
-                yield return "Lewis";
-                yield return "Abigail";
-                if (sve) yield return "MarlonFay";
-                if (sve) yield return "Lance";
-                if (rsv) yield return "Mr. Aguar";
-                if (es) yield return "Eli";
-                if (vmv) yield return "Maryam";
-                yield break;
-
-            case Role.BeachCleanup:
-                yield return "Elliott";
-                yield return "Willy";
-                if (es) yield return "Dylan";
-                yield break;
-
-            case Role.RainyDayFishing:
-                yield return "Willy";
-                if (rsv) { yield return "Blair"; yield return "Carmen"; }
-                yield break;
-
-            case Role.HeatWaveRelief:
-                yield return "Harvey";
-                if (rsv) yield return "Paula";
-                yield break;
-
-            case Role.TownFestival:
-                yield return "Lewis";
-                yield break;
+            registry.Register(role, "Gus");
+            registry.Register(role, "Pika", ModCompat.RidgesideVillage);
+            registry.Register(role, "Rosa", ModCompat.EastScarp);
+            registry.Register(role, "Celestine", ModCompat.VisitMountVapius);
         }
-    }
 
-    private static bool IsKnownNpc(string name) => Game1.getCharacterFromName(name) != null;
+        registry.Register(DispatchRoles.EcologyMinded, "Demetrius");
+        registry.Register(DispatchRoles.EcologyMinded, "Maddie", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.EcologyMinded, "Mr. Aguar", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.EcologyMinded, "Dylan", ModCompat.EastScarp);
 
-    /// True if the player has friendship data for this NPC, i.e. they've met them and
-    /// the NPC is one that participates in the normal social/dialogue flow. Filters out
-    /// shopkeepers like vanilla Marlon whose right-click opens a shop instead of a dialogue.
-    private static bool IsSocializable(string name) =>
-        Game1.player.friendshipData.ContainsKey(name);
+        registry.Register(DispatchRoles.ConservationGuide, "Linus");
+        registry.Register(DispatchRoles.ConservationGuide, "Demetrius");
+        registry.Register(DispatchRoles.ConservationGuide, "Kimpoi", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.ConservationGuide, "Dylan", ModCompat.EastScarp);
+        registry.Register(DispatchRoles.ConservationGuide, "Aster", ModCompat.VisitMountVapius);
 
-    public static List<string> MetHumanNpcs()
-    {
-        var results = new List<string>();
-        foreach (var (name, _) in Game1.player.friendshipData.Pairs)
-        {
-            var npc = Game1.getCharacterFromName(name);
-            if (npc == null || npc.IsMonster)
-                continue;
-            if (!npc.IsVillager)
-                continue;
-            results.Add(name);
-        }
-        return results;
+        // Vanilla Marlon isn't friendable and right-clicking him opens the Adventure
+        // Guild shop instead of dialogue, so OnNpcSocialized never fires. SVE replaces
+        // him with the friendable "MarlonFay"; everywhere else we route slime/combat
+        // quests to Wizard or Lewis.
+        registry.Register(DispatchRoles.CombatVendor, "Wizard");
+        registry.Register(DispatchRoles.CombatVendor, "Lewis");
+        registry.Register(DispatchRoles.CombatVendor, "Abigail");
+        registry.Register(DispatchRoles.CombatVendor, "MarlonFay", ModCompat.StardewValleyExpanded);
+        registry.Register(DispatchRoles.CombatVendor, "Lance", ModCompat.StardewValleyExpanded);
+        registry.Register(DispatchRoles.CombatVendor, "Mr. Aguar", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.CombatVendor, "Eli", ModCompat.EastScarp);
+        registry.Register(DispatchRoles.CombatVendor, "Maryam", ModCompat.VisitMountVapius);
+
+        registry.Register(DispatchRoles.BeachCleanup, "Elliott");
+        registry.Register(DispatchRoles.BeachCleanup, "Willy");
+        registry.Register(DispatchRoles.BeachCleanup, "Dylan", ModCompat.EastScarp);
+
+        registry.Register(DispatchRoles.RainyDayFishing, "Willy");
+        registry.Register(DispatchRoles.RainyDayFishing, "Blair", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.RainyDayFishing, "Carmen", ModCompat.RidgesideVillage);
+
+        registry.Register(DispatchRoles.HeatWaveRelief, "Harvey");
+        registry.Register(DispatchRoles.HeatWaveRelief, "Paula", ModCompat.RidgesideVillage);
+
+        registry.Register(DispatchRoles.TownFestival, "Lewis");
     }
 }

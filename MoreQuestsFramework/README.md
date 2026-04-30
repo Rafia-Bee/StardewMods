@@ -13,7 +13,7 @@ This mod is the engine that powers [More Quests](../MoreQuests/README.md). It al
 - **Custom Quest subclasses.** `MoreQuestsItemDeliveryQuest` and `MoreQuestsFishingQuest` implement `IRewardedQuest` (a `serializedRewards` NetStringList that survives save round-trip) and override the vanilla turn-in logic to actually consume the requested items (vanilla's `FishingQuest.OnNpcSocialized` doesn't reduce the stack — you could sell every fish and still claim the reward).
 - **Four vanilla wrappers.** `VanillaItemDelivery`, `VanillaResourceCollection`, `VanillaSlayMonster`, `VanillaFishing` expose vanilla quest types as configurable `IQuestDefinition`s with their own GMCM weights, so the billboard has content even with no consumer mod installed.
 - **Condition evaluator + game-data cache.** `ConditionEvaluator.Evaluate(dict, modRegistry)` covers every key in plan.md §2.6: `Season`, `Date`, `DayRange`, `DaysOfWeek`, `Year`, `Weather`, `WeatherForecast`, `FriendshipLevel`, `FriendshipStatus`, `MailReceived`, `EventSeen`, `MinDaysPlayed`, `MaxDaysPlayed`, `IsPlayerMarried`, `IsMultiplayer`, `IsCommunityCenterCompleted`, `SkillLevel`, `BuildingExists`, `KnownCookingRecipe`, `KnownCraftingRecipe`, `StatAtLeast`, `ShippedAtLeast`, `HasItemEverObtained`, `HasMod`, `Random`, plus `GSQ` (the 1.6 GameStateQuery escape hatch). Top-level keys are AND-combined; `not:` prefix negates; `|` inside a value is the OR-combinator. `GameDataCache` reads `Data/Crops`, `Data/Fish`, `Data/Locations`, `Data/CookingRecipes`, `Data/NPCGiftTastes` once per day so quest generators don't pay the load cost per Build call.
-- **Item resolver + NPC dispatch.** `ItemResolver` reads the cached game data so modded items surface automatically. `NpcDispatch` is a role-based picker (saloon chefs, ecology-minded, conservation guides, etc.) that includes vanilla and modded NPCs and falls back gracefully when a referenced NPC mod is missing.
+- **Item resolver + NPC dispatch.** `ItemResolver` reads the cached game data so modded items surface automatically. `DispatchRegistry` is a runtime, role-keyed picker (saloon chefs, ecology-minded, conservation guides, etc.); the framework's vanilla + RSV/ESV/VMV/SVE seed entries register through the same public `RegisterDispatchNpc` API third parties use, so consumer mods can drop their own NPCs into any role without a framework PR. Authors can also define new roles by passing any string they like.
 - **Custom assets.** Pad and pin sprites for the billboard, loaded from `Mods/RafiaBee.MoreQuestsFramework/Pad` and `.../Pin`.
 
 ## Dependencies
@@ -53,29 +53,37 @@ Drop a folder under `Mods/` with a `manifest.json` declaring `"ContentPackFor": 
 ```csharp
 private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
 {
-    var fw = Helper.ModRegistry.GetApi<MoreQuestsFramework.Api.IInternalApi>(
+    var fw = Helper.ModRegistry.GetApi<MoreQuestsFramework.Api.IMoreQuestsApi>(
         "RafiaBee.MoreQuestsFramework");
     if (fw == null) return;
 
-    // Custom Quest subclasses (must register before quests.json loads).
-    fw.RegisterCustomQuestType(typeof(MyCustomQuestSubclass));
+    fw.RegistrationOpen += (_, _) =>
+    {
+        var scope = fw.GetModApi(ModManifest);
 
-    // Named C# generators referenced by quests.json `"Generator": "<name>"`.
-    fw.RegisterGenerator(ModManifest, "MyQuest", ctx => new QuestPosting { /* ... */ });
+        // Custom Quest subclasses (must register before quests.json loads).
+        scope.RegisterCustomQuestType(typeof(MyCustomQuestSubclass));
 
-    // Load the JSON pack bundled inside this mod's folder.
-    fw.LoadQuestsFromMod(Helper, ModManifest, "assets/quests.json");
+        // Named C# generators referenced by quests.json `"Generator": "<name>"`.
+        scope.RegisterGenerator("MyQuest", ctx => new QuestPosting { /* ... */ });
+
+        // Load the JSON pack bundled inside this mod's folder.
+        scope.LoadQuestsFromMod(Helper, "assets/quests.json");
+
+        // Drop your own NPCs into any built-in role, or define a new role string.
+        scope.RegisterDispatchNpc(DispatchRoles.SaloonChef, "MyChef", "MyMod.UniqueId");
+    };
 }
 ```
 
-This is the pattern our own `RafiaBee.MoreQuests` content mod uses. `quests.json` carries metadata (Id / Category / Trigger / Available); the C# generator owns runtime randomization.
+This is the pattern our own `RafiaBee.MoreQuests` content mod uses. `quests.json` carries metadata (Id / Category / Trigger / Available); the C# generator owns runtime randomization. The `RegistrationOpen` event fires from the framework's first update tick (after every consumer mod's `GameLaunched` runs), so subscribing in your own `GameLaunched` is the correct timing.
 
 ### C. C# mod with `IQuestDefinition` instances
 
 For mods that prefer pure C# without JSON, the original `RegisterQuest` API still works:
 
 ```csharp
-fw.RegisterQuest(new MyQuestDefinition());  // implements IQuestDefinition
+scope.RegisterQuest(new MyQuestDefinition());  // implements IQuestDefinition
 ```
 
 ### Schema
@@ -114,7 +122,13 @@ fw.RegisterQuest(new MyQuestDefinition());  // implements IQuestDefinition
 
 Each `QuestDef` must set either `Generator` (a name registered via `RegisterGenerator`) or a fully-declarative `Objective`. `{i18n:key}` tokens in any string field resolve through the owning pack's translation helper. `Available` accepts every key the framework's `ConditionEvaluator` knows about (Season, NpcExists, NpcMet, MinDeepestMineLevel, SkillLevel, FriendshipLevel, HasMod, GSQ, etc. — see `plan.md §2.6`); `not:` prefix negates; `|` inside a value is OR.
 
-`IInternalApi` is the current registration seam ([Api/IInternalApi.cs](Api/IInternalApi.cs)). It's deliberately minimal until the public `IMoreQuestsApi` lands in Phase 5 (see `docs/plan.md` in the content mod). Consumer mods need a hard SMAPI dependency on `RafiaBee.MoreQuestsFramework` and either a project reference to this assembly or their own copy of the `IQuestDefinition` / `QuestPosting` / `QuestContext` shapes.
+`IMoreQuestsApi` ([Api/IMoreQuestsApi.cs](Api/IMoreQuestsApi.cs)) is the public registration seam, marked Beta until framework v1.0 (Phase 10). Fetch it once via `helper.ModRegistry.GetApi<IMoreQuestsApi>(...)`, then narrow to a per-mod scope through `GetModApi(ModManifest)` for any registration call. Consumer mods need a hard SMAPI dependency on `RafiaBee.MoreQuestsFramework` and either a project reference to this assembly or their own copy of the `IQuestDefinition` / `QuestPosting` / `QuestContext` shapes.
+
+The framework also broadcasts lifecycle events on `IMoreQuestsApi`:
+
+- `RegistrationOpen` / `RegistrationClosed` — bracket the window in which `RegisterQuest` etc. are accepted. The registry freezes immediately after `RegistrationClosed`.
+- `QuestAccepted` / `QuestCompleted` / `QuestRemoved` — fired only for framework-managed quests (other mods' quests are ignored). Each event arg carries `Quest`, `OwnerUniqueId`, `DefinitionId`.
+- `DayRefreshed(dailyCount, mailCount)` — fires at end of `OnDayStarted` and from `RefreshOffers()`.
 
 ### Debug / iteration
 
@@ -126,8 +140,11 @@ The framework registers an `mq_refresh` SMAPI console command that re-rolls toda
 MoreQuestsFramework/
   ModEntry.cs                         // hooks events, builds the API, runs the daily pipeline
   Api/
-    IInternalApi.cs                   // current registration interface for consumer mods
-    InternalApi.cs                    // public top-level concrete impl (top-level required by SMAPI)
+    IMoreQuestsApi.cs                 // public framework-wide handle (events + lookups + dispatch)
+    IMoreQuestsModApi.cs              // public per-consumer scope (registrations are namespaced by mod)
+    MoreQuestsApi.cs                  // concrete impl, top-level (SMAPI's GetApi<T> rejects nested types)
+    MoreQuestsModApi.cs               // concrete per-mod scope returned by GetModApi(ModManifest)
+    Events.cs                         // lifecycle event-arg DTOs
   Registry/QuestRegistry.cs           // runtime registry with Register/WithKind/Freeze/Clear
   Pipeline/
     QuestPipeline.cs                  // daily + triggered generation orchestrator
@@ -151,7 +168,10 @@ MoreQuestsFramework/
   QuestPosting.cs                     // shared DTO + PostingKind / BoardQuestType / consequences
   QuestContext.cs                     // helpers passed to each definition's Build
   ItemResolver.cs                     // resolves items via the cached game data
-  NpcDispatch.cs                      // role-based quest-giver picker (mod aware)
+  Dispatch/
+    DispatchRegistry.cs               // runtime role -> NPC entries, replaces the pre-Phase-5 hard-coded switch
+    DispatchRoles.cs                  // string constants for the nine built-in roles
+  NpcDispatch.cs                      // thin facade + SeedBuiltins(), kept for legacy callers
   AntiRepetition.cs                   // recent-item / NPC / definition history
   ModCompat.cs                        // mod IDs + IsLoaded helpers
   Difficulty.cs                       // tier + deadline + skill mapping

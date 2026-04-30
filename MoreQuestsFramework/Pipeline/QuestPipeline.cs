@@ -71,6 +71,8 @@ public sealed class QuestPipeline
                 pool.RemoveAll(x => x.Def.Id == def.Id);
                 continue;
             }
+            if (string.IsNullOrEmpty(posting.OwnerUniqueId))
+                posting.OwnerUniqueId = def.OwnerUniqueId;
 
             if (!_ctx.Config.AllowDuplicateGiverPerDay
                 && !string.IsNullOrEmpty(posting.QuestGiver)
@@ -112,6 +114,8 @@ public sealed class QuestPipeline
             var posting = def.Build(_ctx);
             if (posting == null)
                 continue;
+            if (string.IsNullOrEmpty(posting.OwnerUniqueId))
+                posting.OwnerUniqueId = def.OwnerUniqueId;
             results.Add(posting);
             _antiRepetition.Record(posting);
         }
