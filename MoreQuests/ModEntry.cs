@@ -45,9 +45,10 @@ public sealed class ModEntry : Mod
 
         // Custom Quest subclasses (must register before quests.json loads so generators
         // that build PreBuiltQuests of these types round-trip through SpaceCore).
+        // The framework's `AdventureQuest` is already registered framework-side, so the
+        // multistep Check on George quest doesn't need a content-mod-specific registration.
         scope.RegisterCustomQuestType(typeof(AnySlimeQuest));
         scope.RegisterCustomQuestType(typeof(CollectAndReportQuest));
-        scope.RegisterCustomQuestType(typeof(CheckOnGeorgeQuest));
 
         // Register every C# generator referenced by assets/quests.json.
         Generators.RegisterAll(scope);

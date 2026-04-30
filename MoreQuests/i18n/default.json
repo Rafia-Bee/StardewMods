@@ -68,8 +68,10 @@
     "quest.social.elliott.targetMessage": "Beautiful. This will fit right into my next piece.",
 
     "quest.social.george.title": "Check on George",
-    "quest.social.george.description": "George has been keeping to himself more than usual lately. He would love a small thoughtful gift and some farm stories. Bring him something he likes and stop by to chat.",
-    "quest.social.george.objective": "Gift George something he likes, then let Evelyn know how he's doing.",
+    "quest.social.george.description": "George has been keeping to himself more than usual lately. He would love a small thoughtful gift and some farm stories. Bring him something he likes, stop by to chat, then let me know how he's doing. - Evelyn",
+    "quest.social.george.step.gift": "Bring George something he likes or loves.",
+    "quest.social.george.step.talkGeorge": "Have a chat with George.",
+    "quest.social.george.step.reportEvelyn": "Let Evelyn know how George is doing.",
     "quest.social.george.targetMessage": "Thank you for looking in on him. He keeps saying he's fine but I know he misses his friends.",
 
     "quest.animal.hay.title": "Hay supply run",

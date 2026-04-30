@@ -2,7 +2,7 @@
 
 A SMAPI content mod for Stardew Valley that ships a curated set of new daily-board quests, mail-triggered quests, and custom completion logic on top of the [More Quests Framework](../MoreQuestsFramework/README.md).
 
-> Heavy work in progress. Phases 1-6 are complete: framework split, declarative rewards/conditions, the JSON content-pack loader, the public `IMoreQuestsApi` (Beta), and the calendar/event trigger sources (Periodic, DateLocked, DateRange, OneShot, BuildingBuilt, MailReceived, WeatherForecast, NpcDialogue) with persistent save state are all in place. The remaining 60+ quest concepts described in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
+> Heavy work in progress. Phases 1-6 are complete: framework split, declarative rewards/conditions, the JSON content-pack loader, the public `IMoreQuestsApi` (Beta), and the calendar/event trigger sources (Periodic, DateLocked, DateRange, OneShot, BuildingBuilt, MailReceived, WeatherForecast, NpcDialogue) with persistent save state are all in place. Phase 7a is in: multi-step `AdventureQuest` substrate plus `Deliver` / `Talk` / `Gift` step kinds, with Check on George converted to a 3-step adventure as the smoke test. The remaining 60+ quest concepts described in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
 
 ## What this mod does
 
@@ -57,11 +57,12 @@ Both are surfaced through Generic Mod Config Menu when GMCM is installed. The fr
 
 ## Custom completion logic
 
-Three of this mod's quests use bespoke `Quest` subclasses (registered with SpaceCore through the framework's API so saves round-trip cleanly):
+Two of this mod's quests use bespoke `Quest` subclasses (registered with SpaceCore through the framework's API so saves round-trip cleanly):
 
 - **`AnySlimeQuest`** — backs Basic Slime Clearing. Counts any slime kill, not just one species.
 - **`CollectAndReportQuest`** — backs Beach Cleanup, Seasonal Foraging, etc. Player gathers items in the world, then reports to the giver to consume the stack and turn it in.
-- **`CheckOnGeorgeQuest`** — backs Check on George. Multi-step quest: gift George, chat with him and finally report back to Evelyn.
+
+Check on George now runs on the framework's `AdventureQuest` (multi-step substrate), built directly from a generator: gift George → chat with him → report to Evelyn. The framework registers `AdventureQuest` with SpaceCore so the content mod doesn't need its own type registration.
 
 For ItemDelivery and Fishing quests this mod uses the framework's `MoreQuestsItemDeliveryQuest` / `MoreQuestsFishingQuest` subclasses (constructed by the framework's `QuestFactory`). Both subclasses make rewards explicit (no hidden vanilla friendship bumps or prize tickets) and route every completion path through the same `RewardApplier`.
 
@@ -80,7 +81,6 @@ MoreQuests/
     Generators.cs        // every Build() body, registered by name with the framework
     AnySlimeQuest.cs     // custom Quest subclass: counts any slime kill
     CollectAndReportQuest.cs  // custom Quest subclass: gather then talk
-    CheckOnGeorgeQuest.cs     // custom Quest subclass: gift then chat then report
   i18n/                  // quest titles/descriptions/objectives + content config strings
   manifest.json
 ```

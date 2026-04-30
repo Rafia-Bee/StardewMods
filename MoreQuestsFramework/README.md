@@ -11,7 +11,7 @@ This mod is the engine that powers [More Quests](../MoreQuests/README.md). It al
 - **Trigger sources.** Beyond `DailyBoard`, quests can fire via `Periodic` (every N days), `DateLocked` (specific date, optionally yearly), `DateRange` (window), `OneShot` (first time a predicate becomes true), `BuildingBuilt` (farm building added), `MailReceived` (mail flag added), `WeatherForecast` (tomorrow's weather), or `NpcDialogue` (queued for the next chat with an NPC). Source is independent of delivery channel — every non-board source defaults to mail delivery, overridable via the `Delivery` field. The framework persists fire history per-save in `MoreQuestsFrameworkState` so periodic, yearly, and one-shot quests survive save/load.
 - **Quest factory.** Builds the right vanilla `Quest` subclass for each posting (`ItemDeliveryQuest`, `FishingQuest`, `SlayMonsterQuest`, `ResourceCollectionQuest`) and stamps a unique ID so external trackers attribute the quest correctly.
 - **Declarative reward block.** Each `QuestPosting` carries a `List<RewardSpec>` (Money / Friendship / Object / Recipe / Mail). The poster routes Money into vanilla's `Quest.moneyReward` and encodes the rest into a `NetStringList` on the quest; `RewardApplier.ApplyEncoded` decodes and pays at `questComplete`, so vanilla in-person delivery, Mail Services Mod, and any future delivery channel produce the same payout. Vanilla's hidden bonuses (every-3rd-quest prize ticket, default 150/255 friendship bumps) are suppressed so every reward is explicit.
-- **Custom Quest subclasses.** `MoreQuestsItemDeliveryQuest` and `MoreQuestsFishingQuest` implement `IRewardedQuest` (a `serializedRewards` NetStringList that survives save round-trip) and override the vanilla turn-in logic to actually consume the requested items (vanilla's `FishingQuest.OnNpcSocialized` doesn't reduce the stack — you could sell every fish and still claim the reward).
+- **Custom Quest subclasses.** `MoreQuestsItemDeliveryQuest` and `MoreQuestsFishingQuest` implement `IRewardedQuest` (a `serializedRewards` NetStringList that survives save round-trip) and override the vanilla turn-in logic to actually consume the requested items (vanilla's `FishingQuest.OnNpcSocialized` doesn't reduce the stack — you could sell every fish and still claim the reward). `AdventureQuest` adds a multi-step substrate: each step ships its own kind (`Deliver`, `Talk`, `Gift` in 7a; `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearDebris`, `ClearWeeds`, `Custom` in later phases) and `Requires[]` ordering; the active step is the first not-Done step whose prerequisites are all Done. All step kinds dispatch through vanilla `Quest` virtuals (`OnItemOfferedToNpc`, `OnNpcSocialized`, ...) — no Harmony patches.
 - **Four vanilla wrappers.** `VanillaItemDelivery`, `VanillaResourceCollection`, `VanillaSlayMonster`, `VanillaFishing` expose vanilla quest types as configurable `IQuestDefinition`s with their own GMCM weights, so the billboard has content even with no consumer mod installed.
 - **Condition evaluator + game-data cache.** `ConditionEvaluator.Evaluate(dict, modRegistry)` covers every key in plan.md §2.6: `Season`, `Date`, `DayRange`, `DaysOfWeek`, `Year`, `Weather`, `WeatherForecast`, `FriendshipLevel`, `FriendshipStatus`, `MailReceived`, `EventSeen`, `MinDaysPlayed`, `MaxDaysPlayed`, `IsPlayerMarried`, `IsMultiplayer`, `IsCommunityCenterCompleted`, `SkillLevel`, `BuildingExists`, `KnownCookingRecipe`, `KnownCraftingRecipe`, `StatAtLeast`, `ShippedAtLeast`, `HasItemEverObtained`, `HasMod`, `Random`, plus `GSQ` (the 1.6 GameStateQuery escape hatch). Top-level keys are AND-combined; `not:` prefix negates; `|` inside a value is the OR-combinator. `GameDataCache` reads `Data/Crops`, `Data/Fish`, `Data/Locations`, `Data/CookingRecipes`, `Data/NPCGiftTastes` once per day so quest generators don't pay the load cost per Build call.
 - **Item resolver + NPC dispatch.** `ItemResolver` reads the cached game data so modded items surface automatically. `DispatchRegistry` is a runtime, role-keyed picker (saloon chefs, ecology-minded, conservation guides, etc.); the framework's vanilla + RSV/ESV/VMV/SVE seed entries register through the same public `RegisterDispatchNpc` API third parties use, so consumer mods can drop their own NPCs into any role without a framework PR. Authors can also define new roles by passing any string they like.
@@ -145,10 +145,23 @@ scope.RegisterQuest(new MyQuestDefinition());  // implements IQuestDefinition
             "Name": "MyMod.CowOffer",
             "Trigger": { "Source": "BuildingBuilt", "Building": "Barn", "DayDelay": 1 },
             "Generator": "CowOfferGen"
+        },
+        {
+            "Name": "MyMod.CheckOnFriend",
+            "Trigger": { "Source": "DailyBoard", "Weight": 20, "MaxPerDay": 1, "CooldownDays": 7 },
+            "Giver": "Lewis",
+            "Steps": [
+                { "Name": "GiftFriend",  "Kind": "Gift",   "Targets": [ "Sebastian" ], "Description": "{i18n:my.checkon.gift}" },
+                { "Name": "TalkFriend",  "Kind": "Talk",   "Targets": [ "Sebastian" ], "Requires": [ "GiftFriend" ], "Description": "{i18n:my.checkon.talk}" },
+                { "Name": "Report",      "Kind": "Talk",   "Targets": [ "$giver" ],    "Requires": [ "TalkFriend" ], "Description": "{i18n:my.checkon.report}" }
+            ],
+            "Rewards": [ { "Kind": "Friendship", "Npc": "Lewis", "Points": 80 } ]
         }
     ]
 }
 ```
+
+Adventure (multi-step) quests use `Steps[]` instead of `Objective`. Each step has a `Name` (used by other steps' `Requires[]`), a `Kind`, a `Description` shown in the journal, and step-kind-specific targeting fields. `$giver` in `Targets[]` rewrites to the resolved giver name at quest-creation time. Step kinds available in 7a: `Deliver`, `Talk`, `Gift`. Remaining kinds (`Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearDebris`, `ClearWeeds`, `Custom`) land in later sub-phases. The journal renders the active step as `Step N/M - <description>`.
 
 Each `QuestDef` must set either `Generator` (a name registered via `RegisterGenerator`) or a fully-declarative `Objective`. `{i18n:key}` tokens in any string field resolve through the owning pack's translation helper. `Available` accepts every key the framework's `ConditionEvaluator` knows about (Season, NpcExists, NpcMet, MinDeepestMineLevel, SkillLevel, FriendshipLevel, HasMod, GSQ, etc. — see `plan.md §2.6`); `not:` prefix negates; `|` inside a value is OR.
 

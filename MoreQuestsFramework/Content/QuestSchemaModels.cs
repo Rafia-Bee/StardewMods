@@ -33,6 +33,12 @@ public sealed class QuestDef
     public string? Giver { get; set; }
     public ObjectiveDef? Objective { get; set; }
 
+    /// Multi-step ("Adventure") quests. When set, the quest is built as an `AdventureQuest`
+    /// instead of a single-objective vanilla wrapper. `Objective` is ignored if `Steps` is
+    /// non-empty. Step `Requires[]` enforces ordering; `$giver` in `Targets[]` is rewritten
+    /// to the resolved giver name at quest-creation time.
+    public List<StepDef> Steps { get; set; } = new();
+
     public string? DeadlineDays { get; set; }
     public string? Title { get; set; }
     public string? Description { get; set; }
@@ -101,6 +107,34 @@ public sealed class ObjectiveDef
     public string? Item { get; set; }
     public int Count { get; set; } = 1;
     public string? TargetMonster { get; set; }
+}
+
+/// One step within an Adventure quest's `Steps[]` list. Mirrors `AdventureStepState` but
+/// only carries the authoring-time fields (no `Progress` / `Done` — those start at zero).
+public sealed class StepDef
+{
+    public string? Name { get; set; }
+
+    /// `Deliver` | `Talk` | `Gift` | `Catch` | `Slay` | `Ship` | `Visit` | `Build` |
+    /// `ReachLevel` | `Plant` | `Collect` | `ClearDebris` | `ClearWeeds` | `Custom`. 7a
+    /// implements `Deliver`, `Talk`, and `Gift`; the rest land in 7b/7c.
+    public string Kind { get; set; } = "Talk";
+
+    public string? Description { get; set; }
+
+    /// Other step `Name`s that must be done before this one becomes active.
+    public List<string> Requires { get; set; } = new();
+
+    /// NPC names / location names / monster types depending on Kind. Supports `$giver` —
+    /// rewritten to the resolved giver at quest-creation time.
+    public List<string> Targets { get; set; } = new();
+
+    /// Item ids accepted for `Deliver` / `Gift` / `Ship` / `Collect`. May be set as a
+    /// single string OR a string array in JSON; the parser normalises to a list.
+    public List<string> Items { get; set; } = new();
+
+    public int Count { get; set; } = 1;
+    public int MinQuality { get; set; }
 }
 
 public sealed class RewardDef

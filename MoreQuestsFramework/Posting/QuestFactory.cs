@@ -56,6 +56,10 @@ public static class QuestFactory
                 number = { Value = 1 },
                 targetMessage = p.TargetMessage
             },
+            // Adventure quests are always pre-built by the JSON path / generators because
+            // their step list lives on the Quest subclass itself; the factory has nothing
+            // to construct from posting-level scalars alone.
+            BoardQuestType.Adventure => null,
             _ => null
         };
 

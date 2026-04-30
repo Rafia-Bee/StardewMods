@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Rewards;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
@@ -79,11 +80,13 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     {
         if (!string.IsNullOrEmpty(_def.Generator))
             return BuildFromGenerator(ctx);
+        if (_def.Steps != null && _def.Steps.Count > 0)
+            return BuildAdventure(ctx);
         if (_def.Objective != null)
             return BuildDeclarative(ctx);
 
         _monitor.Log(
-            $"Quest '{Id}' has neither a Generator nor an Objective; nothing to build.",
+            $"Quest '{Id}' has neither a Generator, Steps, nor an Objective; nothing to build.",
             LogLevel.Warn);
         return null;
     }
@@ -103,6 +106,73 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         if (posting != null && string.IsNullOrEmpty(posting.DefinitionId))
             posting.DefinitionId = Id;
         return posting;
+    }
+
+    private QuestPosting BuildAdventure(QuestContext ctx)
+    {
+        string giver = _def.Giver ?? string.Empty;
+        var steps = new List<AdventureStepState>(_def.Steps.Count);
+        foreach (var sd in _def.Steps)
+        {
+            if (!Enum.TryParse<AdventureStepKind>(sd.Kind, ignoreCase: true, out var kind))
+            {
+                _monitor.Log($"Quest '{Id}': step '{sd.Name}' has unknown Kind '{sd.Kind}'; skipping.", LogLevel.Warn);
+                continue;
+            }
+            steps.Add(new AdventureStepState
+            {
+                Name = sd.Name ?? string.Empty,
+                Kind = kind,
+                Description = Resolve(sd.Description),
+                Requires = new List<string>(sd.Requires),
+                Targets = ResolveTargets(sd.Targets, giver),
+                Items = new List<string>(sd.Items),
+                Count = Math.Max(1, sd.Count),
+                MinQuality = Math.Max(0, sd.MinQuality)
+            });
+        }
+
+        var quest = new AdventureQuest();
+        quest.Initialize(steps, giver, completionDialogue: Resolve(_def.TargetMessage));
+
+        var posting = new QuestPosting
+        {
+            DefinitionId = Id,
+            Category = Category,
+            Tier = ParseEnum(_def.Tier, DifficultyTier.Beginner),
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(ParseEnum(_def.DeadlineDays, DeadlineKind.Short), ctx.Config),
+            Title = Resolve(_def.Title),
+            Description = Resolve(_def.Description),
+            CurrentObjective = Resolve(_def.CurrentObjective),
+            TargetMessage = Resolve(_def.TargetMessage),
+            PreBuiltQuest = quest
+        };
+        BuildRewards(posting.Rewards, _def.Rewards);
+        return posting;
+    }
+
+    /// `$giver` rewrites to the giver name; everything else passes through. Dispatcher
+    /// tokens (`$dispatcher.<role>`) land in 7c — until then they pass through verbatim
+    /// and the step won't match any NPC, which is the safe default.
+    private static List<string> ResolveTargets(List<string> targets, string giver)
+    {
+        var resolved = new List<string>(targets.Count);
+        foreach (var t in targets)
+        {
+            if (string.Equals(t, "$giver", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.IsNullOrEmpty(giver))
+                    resolved.Add(giver);
+            }
+            else
+            {
+                resolved.Add(t);
+            }
+        }
+        return resolved;
     }
 
     private QuestPosting BuildDeclarative(QuestContext ctx)

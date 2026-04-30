@@ -5,6 +5,7 @@ using MoreQuestsFramework;
 using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Conditions;
 using MoreQuestsFramework.Dispatch;
+using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Rewards;
 using StardewModdingAPI;
 using StardewValley;
@@ -264,29 +265,52 @@ internal static class Generators
 
     private static QuestPosting? CheckOnGeorge(QuestContext ctx)
     {
-        var quest = new CheckOnGeorgeQuest
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
         {
-            giftRecipient = { Value = "George" },
-            reportTo = { Value = "Evelyn" },
-            reportMessage = { Value = ModEntry.I18n.Get("quest.social.george.targetMessage") }
-        };
+            new AdventureStepState
+            {
+                Name = "GiftGeorge",
+                Kind = AdventureStepKind.Gift,
+                Targets = new List<string> { "George" },
+                Count = 1,
+                Description = ModEntry.I18n.Get("quest.social.george.step.gift")
+            },
+            new AdventureStepState
+            {
+                Name = "TalkGeorge",
+                Kind = AdventureStepKind.Talk,
+                Targets = new List<string> { "George" },
+                Count = 1,
+                Description = ModEntry.I18n.Get("quest.social.george.step.talkGeorge")
+            },
+            new AdventureStepState
+            {
+                Name = "ReportEvelyn",
+                Kind = AdventureStepKind.Talk,
+                Targets = new List<string> { "Evelyn" },
+                Requires = new List<string> { "GiftGeorge", "TalkGeorge" },
+                Count = 1,
+                Description = ModEntry.I18n.Get("quest.social.george.step.reportEvelyn")
+            }
+        }, giver: "Evelyn", completionDialogue: ModEntry.I18n.Get("quest.social.george.targetMessage"));
 
         return new QuestPosting
         {
             Category = QuestCategory.Social,
             Tier = DifficultyTier.Beginner,
-            QuestType = BoardQuestType.Socialize,
+            QuestType = BoardQuestType.Adventure,
             QuestGiver = "Evelyn",
             ObjectiveQuantity = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            Rewards = { new FriendshipReward("Evelyn", ctx.Config.FriendshipMid) },
-            Consequences =
+            Rewards =
             {
-                new QuestConsequence { NpcName = "George", FriendshipChange = ctx.Config.FriendshipMid, Tier = ConsequenceTier.Positive }
+                new FriendshipReward("Evelyn", ctx.Config.FriendshipMid),
+                new FriendshipReward("George", ctx.Config.FriendshipMid)
             },
             Title = ModEntry.I18n.Get("quest.social.george.title"),
             Description = ModEntry.I18n.Get("quest.social.george.description"),
-            CurrentObjective = ModEntry.I18n.Get("quest.social.george.objective"),
+            CurrentObjective = ModEntry.I18n.Get("quest.social.george.step.gift"),
             TargetMessage = ModEntry.I18n.Get("quest.social.george.targetMessage"),
             PreBuiltQuest = quest
         };
