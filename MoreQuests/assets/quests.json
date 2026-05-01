@@ -134,6 +134,39 @@
                 "Available": { "NpcExists": "Evelyn" }
             },
             "Generator": "HolidayCookies"
+        },
+        {
+            "Name": "Social.CheckOnFriends",
+            "Category": "Social",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 20,
+                "MaxPerDay": 1,
+                "CooldownDays": 7
+            },
+            "Generator": "CheckOnFriends"
+        },
+        {
+            "Name": "Festival.GusSpring",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "spring 6",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Gus" }
+            },
+            "Generator": "GusFestivalFeastSpring"
+        },
+        {
+            "Name": "Festival.GusWinter",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "winter 18",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Gus" }
+            },
+            "Generator": "GusFestivalFeastWinter"
         }
     ]
 }

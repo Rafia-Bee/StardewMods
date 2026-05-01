@@ -34,6 +34,9 @@ internal static class Generators
         fw.RegisterGenerator("SubmarineFuel", SubmarineFuel);
         fw.RegisterGenerator("WizardsRitualMaterials", WizardsRitualMaterials);
         fw.RegisterGenerator("HolidayCookies", HolidayCookies);
+        fw.RegisterGenerator("CheckOnFriends", CheckOnFriends);
+        fw.RegisterGenerator("GusFestivalFeastSpring", GusFestivalFeastSpring);
+        fw.RegisterGenerator("GusFestivalFeastWinter", GusFestivalFeastWinter);
     }
 
     // -------------------- Farming --------------------
@@ -716,5 +719,238 @@ internal static class Generators
             TargetMessage = ModEntry.I18n.Get("quest.festival.holidayCookies.targetMessage"),
             PreBuiltQuest = quest
         };
+    }
+
+    // -------------------- Phase 7c: Check on Friends --------------------
+
+    /// Two-step Adventure: pick N met villagers + a separate giver, talk to all N (in
+    /// any order — the Talk step's CreditedKeys enforces uniqueness so the same NPC
+    /// can't be counted twice), then report back to the giver. Requires at least
+    /// CheckOnFriendsCount + 1 met villagers (otherwise there are fewer NPCs than the
+    /// quest expects). Reward = FriendshipIntermediate to the giver only.
+    private static QuestPosting? CheckOnFriends(QuestContext ctx)
+    {
+        const int n = 3;
+        var metNpcs = DispatchRegistry.MetHumanNpcs();
+        if (metNpcs.Count < n + 1)
+            return null;
+
+        string giver = metNpcs[Game1.random.Next(metNpcs.Count)];
+        var pool = new List<string>(metNpcs.Count - 1);
+        for (int i = 0; i < metNpcs.Count; i++)
+        {
+            if (!string.Equals(metNpcs[i], giver, StringComparison.OrdinalIgnoreCase))
+                pool.Add(metNpcs[i]);
+        }
+
+        var picked = new List<string>(n);
+        for (int i = 0; i < n && pool.Count > 0; i++)
+        {
+            int idx = Game1.random.Next(pool.Count);
+            picked.Add(pool[idx]);
+            pool.RemoveAt(idx);
+        }
+
+        string namesList = string.Join(", ", picked);
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "TalkAll",
+                Kind = AdventureStepKind.Talk,
+                Targets = picked,
+                Count = n,
+                Description = ModEntry.I18n.Get("quest.social.checkOnFriends.step.talkAll", new { names = namesList })
+            },
+            new AdventureStepState
+            {
+                Name = "ReportToGiver",
+                Kind = AdventureStepKind.Talk,
+                Targets = new List<string> { giver },
+                Requires = new List<string> { "TalkAll" },
+                Count = 1,
+                Description = ModEntry.I18n.Get("quest.social.checkOnFriends.step.report", new { npc = giver })
+            }
+        }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.social.checkOnFriends.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Social,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipIntermediate) },
+            Title = ModEntry.I18n.Get("quest.social.checkOnFriends.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.social.checkOnFriends.description", new { npc = giver, names = namesList }),
+            TargetMessage = ModEntry.I18n.Get("quest.social.checkOnFriends.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
+    // -------------------- Phase 7c: Gus's Festival Feast variants --------------------
+
+    /// Spring 6 (Egg Festival prep). Gus is taste-testing dishes for the festival;
+    /// player delivers spring-themed ingredients, gets a "sample" cooked dish back as
+    /// reward. CSV row 30. Reward kind = `Dish` only (no Festival Bonus), so no
+    /// dependency on the Phase 9 `FestivalBias` reward kind.
+    private static QuestPosting? GusFestivalFeastSpring(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+
+        var ingredient = PickSpringIngredient(ctx);
+        if (ingredient == null)
+            return null;
+        var sampleDish = PickSpringSampleDish(ctx);
+        if (sampleDish == null)
+            return null;
+
+        int qty = ctx.Config.DifficultyScaling
+            ? Math.Max(3, 2 * Game1.player.FarmingLevel)
+            : 5;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "DeliverIngredient",
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { "Gus" },
+                Items = new List<string> { ingredient.QualifiedItemId },
+                Count = qty,
+                Description = ModEntry.I18n.Get("quest.festival.gusSpring.step.deliver", new { count = qty, item = ingredient.DisplayName })
+            }
+        }, giver: "Gus", completionDialogue: ModEntry.I18n.Get("quest.festival.gusSpring.targetMessage", new { dish = sampleDish.DisplayName }));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = "Gus",
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            Rewards = { new ObjectReward(sampleDish.QualifiedItemId) },
+            Title = ModEntry.I18n.Get("quest.festival.gusSpring.title"),
+            Description = ModEntry.I18n.Get("quest.festival.gusSpring.description", new { count = qty, item = ingredient.DisplayName }),
+            TargetMessage = ModEntry.I18n.Get("quest.festival.gusSpring.targetMessage", new { dish = sampleDish.DisplayName }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Winter 18 (Winter Star prep). Ship winter-themed forageables; reward is
+    /// FriendshipMultiSmall to every met villager (CSV row 33: "Only +friendship
+    /// with NPCs farmer has already met."). Stacked FriendshipReward entries — one
+    /// per met villager — get applied at completion via the existing reward pipeline.
+    private static QuestPosting? GusFestivalFeastWinter(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+
+        var winterForage = ctx.Items.GetForageItems("winter");
+        if (winterForage.Count < 3)
+            return null;
+
+        // Sample 3 distinct winter forageables for parallel Ship steps.
+        var pool = new List<ResolvedItem>(winterForage);
+        var picks = new List<ResolvedItem>(3);
+        for (int i = 0; i < 3 && pool.Count > 0; i++)
+        {
+            int idx = Game1.random.Next(pool.Count);
+            picks.Add(pool[idx]);
+            pool.RemoveAt(idx);
+        }
+
+        int qty = ctx.Config.DifficultyScaling
+            ? Math.Max(3, 2 * Game1.player.FarmingLevel)
+            : 5;
+
+        var steps = new List<AdventureStepState>(picks.Count);
+        for (int i = 0; i < picks.Count; i++)
+        {
+            steps.Add(new AdventureStepState
+            {
+                Name = "ShipItem" + i,
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { picks[i].QualifiedItemId },
+                Count = qty,
+                Description = ModEntry.I18n.Get("quest.festival.gusWinter.step.ship", new { count = qty, item = picks[i].DisplayName })
+            });
+        }
+
+        var quest = new AdventureQuest();
+        quest.Initialize(steps, giver: "Gus");
+
+        var posting = new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = "Gus",
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            Title = ModEntry.I18n.Get("quest.festival.gusWinter.title"),
+            Description = ModEntry.I18n.Get("quest.festival.gusWinter.description", new
+            {
+                count = qty,
+                item1 = picks.Count > 0 ? picks[0].DisplayName : string.Empty,
+                item2 = picks.Count > 1 ? picks[1].DisplayName : string.Empty,
+                item3 = picks.Count > 2 ? picks[2].DisplayName : string.Empty
+            }),
+            PreBuiltQuest = quest
+        };
+
+        // FriendshipMultiSmall to every met villager. Iterating
+        // `Game1.player.friendshipData` covers vanilla + modded NPCs uniformly.
+        foreach (var (name, _) in Game1.player.friendshipData.Pairs)
+        {
+            var npc = Game1.getCharacterFromName(name);
+            if (npc == null || npc.IsMonster || !npc.IsVillager)
+                continue;
+            posting.Rewards.Add(new FriendshipReward(name, ctx.Config.FriendshipMultiSmall));
+        }
+
+        return posting;
+    }
+
+    /// Curated vanilla spring cooking ingredients. Modded ingredient pickup is a
+    /// follow-up; for now we keep the pool focused on items the player can plausibly
+    /// produce on the farm or forage by Spring 6 (the trigger date is early in the
+    /// season so deep-game crops aren't reachable yet).
+    private static readonly (string Id, string Name)[] SpringIngredientPool =
+    {
+        ("(O)20", "Leek"),
+        ("(O)16", "Wild Horseradish"),
+        ("(O)18", "Daffodil"),
+        ("(O)22", "Dandelion"),
+        ("(O)399", "Spring Onion")
+    };
+
+    /// Curated vanilla spring "sample" dishes Gus could plausibly hand back as a taste
+    /// from his potluck testing. All have spring-themed ingredients in their vanilla
+    /// recipes, so they read as in-character for the Egg Festival prep flavour.
+    private static readonly (string Id, string Name)[] SpringSampleDishPool =
+    {
+        ("(O)196", "Salad"),
+        ("(O)244", "Roots Platter"),
+        ("(O)457", "Vegetable Medley"),
+        ("(O)195", "Omelet")
+    };
+
+    private static ResolvedItem? PickSpringIngredient(QuestContext ctx)
+    {
+        var (id, _) = SpringIngredientPool[Game1.random.Next(SpringIngredientPool.Length)];
+        return ctx.Items.TryResolveItem(id);
+    }
+
+    private static ResolvedItem? PickSpringSampleDish(QuestContext ctx)
+    {
+        var (id, _) = SpringSampleDishPool[Game1.random.Next(SpringSampleDishPool.Length)];
+        return ctx.Items.TryResolveItem(id);
     }
 }

@@ -125,7 +125,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
                 Kind = kind,
                 Description = Resolve(sd.Description),
                 Requires = new List<string>(sd.Requires),
-                Targets = ResolveTargets(sd.Targets, giver),
+                Targets = ResolveTargets(sd.Targets, giver, ctx.Dispatch),
                 Items = new List<string>(sd.Items),
                 Count = Math.Max(1, sd.Count),
                 MinQuality = Math.Max(0, sd.MinQuality)
@@ -154,10 +154,14 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         return posting;
     }
 
-    /// `$giver` rewrites to the giver name; everything else passes through. Dispatcher
-    /// tokens (`$dispatcher.<role>`) land in 7c — until then they pass through verbatim
-    /// and the step won't match any NPC, which is the safe default.
-    private static List<string> ResolveTargets(List<string> targets, string giver)
+    /// `$giver` rewrites to the giver name. `$dispatcher.<role>` resolves to one NPC
+    /// from the named dispatch role; `$dispatcher.<role>[N]` resolves to N distinct
+    /// NPCs (or as many as the role has, when the pool is smaller than N). Resolution
+    /// happens once at quest-creation time so the picked NPC names are stable through
+    /// the quest's lifetime and round-trip through SpaceCore's serializer along with
+    /// the rest of the step state. Unrecognised tokens pass through verbatim, which
+    /// makes the step match no NPC — the safe default rather than a crash.
+    private static List<string> ResolveTargets(List<string> targets, string giver, Dispatch.DispatchRegistry dispatch)
     {
         var resolved = new List<string>(targets.Count);
         foreach (var t in targets)
@@ -167,12 +171,52 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
                 if (!string.IsNullOrEmpty(giver))
                     resolved.Add(giver);
             }
+            else if (t.StartsWith("$dispatcher.", StringComparison.OrdinalIgnoreCase))
+            {
+                ResolveDispatcherToken(t, dispatch, resolved);
+            }
             else
             {
                 resolved.Add(t);
             }
         }
         return resolved;
+    }
+
+    /// Forms accepted: `$dispatcher.<role>` (one NPC) or `$dispatcher.<role>[N]`
+    /// (N distinct NPCs). Falls back to whatever the role pool yields when N is
+    /// larger than the available pool — better to under-deliver than crash.
+    private static void ResolveDispatcherToken(string token, Dispatch.DispatchRegistry dispatch, List<string> sink)
+    {
+        string body = token.Substring("$dispatcher.".Length);
+        int n = 1;
+        string role = body;
+        int bracketAt = body.IndexOf('[');
+        if (bracketAt > 0 && body.EndsWith("]"))
+        {
+            role = body.Substring(0, bracketAt);
+            string countStr = body.Substring(bracketAt + 1, body.Length - bracketAt - 2);
+            if (!int.TryParse(countStr, out n) || n < 1)
+                n = 1;
+        }
+
+        var pool = dispatch.ResolvePool(role);
+        if (pool.Count == 0)
+            return;
+
+        // Sample without replacement so the same NPC never appears twice in one step's
+        // Targets[] (e.g. "talk to 3 different villagers" can't be satisfied by the
+        // same NPC three times even if the role pool repeats them).
+        var indices = new List<int>(pool.Count);
+        for (int i = 0; i < pool.Count; i++)
+            indices.Add(i);
+        int take = Math.Min(n, pool.Count);
+        for (int i = 0; i < take; i++)
+        {
+            int pick = StardewValley.Game1.random.Next(indices.Count);
+            sink.Add(pool[indices[pick]]);
+            indices.RemoveAt(pick);
+        }
     }
 
     private QuestPosting BuildDeclarative(QuestContext ctx)

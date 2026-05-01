@@ -112,5 +112,20 @@
     "quest.festival.holidayCookies.step.flour": "Bring {{count}} Flour to Evelyn.",
     "quest.festival.holidayCookies.step.sugar": "Bring {{count}} Sugar to Evelyn.",
     "quest.festival.holidayCookies.step.eggs": "Bring {{count}} Egg to Evelyn.",
-    "quest.festival.holidayCookies.targetMessage": "Wonderful! Here, take some of the first batch as a thank you - still warm from the oven."
+    "quest.festival.holidayCookies.targetMessage": "Wonderful! Here, take some of the first batch as a thank you - still warm from the oven.",
+
+    "quest.social.checkOnFriends.title": "Check in on a few friends",
+    "quest.social.checkOnFriends.description": "I haven't had time to make the rounds lately and I worry about how everyone's holding up. Could you stop in on {{names}} and let me know how they're doing? - {{npc}}",
+    "quest.social.checkOnFriends.step.talkAll": "Check in on {{names}}.",
+    "quest.social.checkOnFriends.step.report": "Tell {{npc}} how everyone is doing.",
+    "quest.social.checkOnFriends.targetMessage": "Thank you for taking the time. It really does mean a lot when someone bothers to ask.",
+
+    "quest.festival.gusSpring.title": "Gus's festival taste-test",
+    "quest.festival.gusSpring.description": "I'm planning the saloon's spread for the Egg Festival and I'd like to test a few recipes early. Bring me {{count}} {{item}} when you have a moment and I'll fix you up a sample plate.",
+    "quest.festival.gusSpring.step.deliver": "Bring {{count}} {{item}} to Gus.",
+    "quest.festival.gusSpring.targetMessage": "Perfect, just what I needed. Here, try the {{dish}} - tell me honestly what you think.",
+
+    "quest.festival.gusWinter.title": "Winter Star feast prep",
+    "quest.festival.gusWinter.description": "The Winter Star spread won't cook itself and the pantry's looking thin. Ship {{count}} of each: {{item1}}, {{item2}}, {{item3}}. The whole town will appreciate the effort once they hear who pulled it together.",
+    "quest.festival.gusWinter.step.ship": "Ship {{count}} {{item}}."
 }

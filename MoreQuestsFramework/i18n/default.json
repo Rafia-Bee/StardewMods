@@ -20,6 +20,7 @@
     "config.weight.Seasonal.BeachCleanup": "Beach cleanup",
     "config.weight.Seasonal.SpringTea": "Spring tea",
     "config.weight.Cooking.CravingDish": "Craving a dish",
+    "config.weight.Social.CheckOnFriends": "Check on friends",
 
     "config.weight.constraintsLabel": "Requirements:",
     "config.weight.Vanilla.SlayMonster.constraints": "Mines unlocked and at least 5 days played.",
@@ -31,6 +32,7 @@
     "config.weight.Seasonal.BeachCleanup.constraints": "Summer only.",
     "config.weight.Seasonal.SpringTea.constraints": "Fall only.",
     "config.weight.Animal.HaySupplyRun.constraints": "Animal quests toggle is on and you own at least 4 animals.",
+    "config.weight.Social.CheckOnFriends.constraints": "You've met at least 4 villagers.",
 
     "config.section.toggles": "Toggles",
     "config.difficultyScaling": "Difficulty scaling",
