@@ -2,7 +2,7 @@
 
 A SMAPI content mod for Stardew Valley that ships a curated set of new daily-board, mail, and festival quests on top of the [More Quests Framework](../MoreQuestsFramework/README.md).
 
-> Heavy work in progress. Fourteen quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
+> Heavy work in progress. Seventeen quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
 
 ## Dependencies
 
@@ -42,7 +42,7 @@ A SMAPI content mod for Stardew Valley that ships a curated set of new daily-boa
 | Fishing | Location-Specific Overpopulation | Daily board | Demetrius / Maddie / Mr Aguar / Dylan | Catch a specific fish at a specific spot | Gold (Intermediate) + 10x Challenge Bait | Cooldown 4d | Not started |
 | Animal | Alex's Protein Shakes | Periodic | Alex | Deliver eggs scaled to chicken count | Energy Tonic / Muscle Remedy / Protein Bar | Cooldown 14d, OnePerGiver | Not started |
 | Farming | Caroline's Tea Garden | Daily board | Caroline | Deliver spring flowers/herbs for tea | Friendship (Mid) + 10 Tea Leaves | Fall only, Cooldown 7d, OnePerGiver | Not started |
-| Social | Check on Friends | Daily board | Any | Talk to X NPCs and report back | Friendship (Intermediate) | Cooldown 7d | Not started |
+| Social | Check on Friends | Daily board | Any met villager | Talk to 3 randomly-picked met villagers, then report back | Friendship (Intermediate) with the giver | Cooldown 7d | Implemented |
 | Foraging | Clear Debris | Daily board | Any | Clear debris around town | Friendship (Mid) | Cooldown 5d | Not started |
 | Cooking | Dinner Party | Daily board | Any human NPC | Deliver multiple liked dishes | Gold (sell-price scaled) + Friendship (Basic) | Cooldown 10d | Not started |
 | Festival | Festival Decor: Moonlight Jellies | Summer 24 | Lewis | Ship Torches and Wood | Gold (Basic) + random Pierre Moonlight Jellies decor | DateLocked, OneTimePerYear | Not started |
@@ -55,10 +55,10 @@ A SMAPI content mod for Stardew Valley that ships a curated set of new daily-boa
 | Foraging | Forage with Linus | Daily board | Linus | Gift loved/liked forage to 5 people | Friendship (Large) with Linus | Cooldown 14d, OnePerGiver | Not started |
 | Social | Gift Delivery | Daily board | Any | Deliver a gift to the giver's friend | Friendship (sell-price scaled) | Cooldown 4d | Not started |
 | Animal | Gunther's Dinosaur Study | First Dinosaur Egg hatched | Gunther | Deliver a spare Dinosaur Egg | Gold (Advanced) + upgraded-quality Dinosaur Egg | OneTime | Not started |
-| Festival | Gus's Feast: Egg Festival | Spring 6 | Gus | Deliver spring-themed ingredients | Sample of the dish | DateLocked, OneTimePerYear | Not started |
-| Festival | Gus's Feast: Fair | Fall 8 | Gus | Large ingredient delivery | Sample dishes + Fair token bonus | DateLocked, OneTimePerYear | Not started |
-| Festival | Gus's Feast: Luau | Summer 8 | Gus | Deliver 3 random spring/summer ingredients | Higher base potluck score | DateLocked, OneTimePerYear | Not started |
-| Festival | Gus's Feast: Winter Star | Winter 18 | Gus | Ship winter-themed ingredients | Friendship (MultiSmall, all met NPCs) | DateLocked, OneTimePerYear | Not started |
+| Festival | Gus's Feast: Egg Festival | Spring 6 (mail) | Gus | Deliver spring-themed ingredients | Sample of a spring dish | DateLocked, OneTimePerYear | Implemented |
+| Festival | Gus's Feast: Fair | Fall 8 | Gus | Large ingredient delivery | Sample dishes + Fair token bonus | DateLocked, OneTimePerYear | Deferred to Phase 9 (Festival Bonus reward kind) |
+| Festival | Gus's Feast: Luau | Summer 8 | Gus | Deliver 3 random spring/summer ingredients | Higher base potluck score | DateLocked, OneTimePerYear | Deferred to Phase 9 (Festival Bonus reward kind) |
+| Festival | Gus's Feast: Winter Star | Winter 18 (mail) | Gus | Ship winter-themed forageables | Friendship (MultiSmall) to every met NPC | DateLocked, OneTimePerYear | Implemented |
 | Cooking | Saloon Grand Feast | Daily board | Gus / Rosa / Celestine / Pika | Deliver ingredients for multiple recipes | Gold (Expert) + Friendship (MultiSmall) | Cooldown 14d, OnePerGiver | Not started |
 | Cooking | Weekly Special (Common) | Daily board | Gus / Rosa / Celestine / Pika | Deliver ingredients for a common recipe | Gold (Beginner) + Friendship (MultiSmall) | Cooldown 5d, OnePerGiver | Not started |
 | Cooking | Weekly Special (Complex) | Daily board | Gus / Rosa / Celestine / Pika | Deliver ingredients for a complex recipe | Gold (Intermediate) + Friendship (MultiSmall) | Cooldown 7d, OnePerGiver | Not started |
@@ -110,7 +110,7 @@ Two of this mod's quests use bespoke `Quest` subclasses:
 - **`AnySlimeQuest`** — backs Basic Slime Clearing. Counts any slime kill, not just one species.
 - **`CollectAndReportQuest`** — backs Beach Cleanup, Seasonal Foraging, etc. Player gathers items in the world, then reports to the giver to consume the stack and turn it in.
 
-Check on George runs on the framework's `AdventureQuest` multistep substrate (gift George, chat with him, report to Evelyn). All other quests use the framework's `MoreQuestsItemDeliveryQuest`, `MoreQuestsFishingQuest`, or `MoreQuestsShipQuest` subclasses, all built by the framework's `QuestFactory`.
+Multi-step quests run on the framework's `AdventureQuest` substrate: Check on George (gift, chat, report), the three Phase-7b festival migrations (Submarine Fuel, Wizard's Ritual, Holiday Cookies), and the Phase-7c content (Check on Friends, Gus's Feast Spring 6, Gus's Feast Winter 18). All other quests use the framework's `MoreQuestsItemDeliveryQuest`, `MoreQuestsFishingQuest`, or `MoreQuestsShipQuest` subclasses, all built by the framework's `QuestFactory`.
 
 ## Known limitations
 

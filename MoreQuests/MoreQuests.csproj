@@ -21,6 +21,9 @@
     <Compile Remove="docs\**" />
     <None Remove="docs\**" />
     <EmbeddedResource Remove="docs\**" />
+    <Compile Remove="hiddenDocs\**" />
+    <None Remove="hiddenDocs\**" />
+    <EmbeddedResource Remove="hiddenDocs\**" />
   </ItemGroup>
 
   <ItemGroup>
