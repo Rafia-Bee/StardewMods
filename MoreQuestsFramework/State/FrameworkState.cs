@@ -46,4 +46,44 @@ public sealed class FrameworkState
     /// letter sitting unread in the mailbox across save/load still resolves to the
     /// same quest.
     public List<StashedMailQuest> PendingMailDeliveries { get; set; } = new();
+
+    /// SpecialOrder entries the framework has emitted into `Data/SpecialOrders` and
+    /// not yet retired. Keyed by the order's runtime id. Survives save/load so the
+    /// `OnAssetRequested` edit can be re-applied after the cache is wiped, and so
+    /// expired entries can be swept on the next DayStarted.
+    public List<EmittedSpecialOrder> EmittedSpecialOrders { get; set; } = new();
+}
+
+/// One SpecialOrder entry the framework has injected into `Data/SpecialOrders`. The
+/// `Spec` block carries the framework-neutral SpecialOrder shape; the writer constructs
+/// a fresh vanilla `SpecialOrderData` from it on every asset-edit pass so the entry stays
+/// in sync with whatever Stardew's strongly-typed asset dictionary expects (avoids the
+/// pre-serialised-JSON route, which collided with SMAPI's `AsDictionary<string, T>` cast).
+public sealed class EmittedSpecialOrder
+{
+    /// `Data/SpecialOrders` dict key. Namespaced as `<ownerUniqueId>.<defId>.<dayStamp>`
+    /// so colliding with a vanilla or third-party order is essentially impossible.
+    public string OrderId { get; set; } = "";
+
+    /// `Game1.Date.TotalDays` when the entry was emitted. Used as the daystamp suffix
+    /// in OrderId and for `Repeatable` re-emission gating.
+    public int EmittedDay { get; set; }
+
+    /// `Game1.Date.TotalDays` after which the framework drops the entry from the dict
+    /// even if the player never accepted it. Set to emit-day + duration-in-days + a
+    /// small grace window. Vanilla owns the in-flight order's actual due date once
+    /// accepted.
+    public int ExpiresAfterDay { get; set; }
+
+    /// Owning content mod's UniqueID; set on the matching `IQuestDefinition`.
+    public string OwnerUniqueId { get; set; } = "";
+
+    /// Source definition id. Used to attribute `QuestCompleted` events back to the
+    /// definition the order was generated from.
+    public string DefinitionId { get; set; } = "";
+
+    /// Framework-neutral SpecialOrder spec. Round-trips through Newtonsoft via
+    /// `Helper.Data.WriteSaveData`. The writer translates this to a vanilla
+    /// `SpecialOrderData` instance at every `Data/SpecialOrders` edit pass.
+    public Pipeline.SpecialOrderSpec Spec { get; set; } = new();
 }

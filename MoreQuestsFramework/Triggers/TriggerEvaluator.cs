@@ -99,6 +99,7 @@ public sealed class TriggerEvaluator
             TriggerSource.MailReceived => MailTriggered(defId, info),
             TriggerSource.WeatherForecast => WeatherForecastMatches(info.Weather),
             TriggerSource.NpcDialogue => false, // queued at registration, fired by watcher
+            TriggerSource.SpecialOrder => SpecialOrderReady(defId, info.StartDate, cooldownDays),
             _ => false
         };
 
@@ -196,6 +197,25 @@ public sealed class TriggerEvaluator
             return false;
         }
         return true;
+    }
+
+    /// SpecialOrder triggers fire when today matches `StartDate` (interpreted as a
+    /// `<season> <day>` tuple, same grammar as `DateLocked`) AND the cooldown since the
+    /// last fire has elapsed. Re-fires every year when the date comes round again, so
+    /// authors don't have to re-spec the cooldown to also enforce yearly cadence.
+    private bool SpecialOrderReady(string defId, string? startDate, int cooldownDays)
+    {
+        if (string.IsNullOrWhiteSpace(startDate))
+            return false;
+        if (!ParseDate(startDate, out string season, out int day))
+            return false;
+        if (Game1.dayOfMonth != day || !string.Equals(Game1.currentSeason, season, StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (!_state.LastFiredDay.TryGetValue(defId, out int last))
+            return true;
+        if (cooldownDays <= 0)
+            return true;
+        return Game1.Date.TotalDays - last >= cooldownDays;
     }
 
     private static bool WeatherForecastMatches(string? weather)

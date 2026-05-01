@@ -137,6 +137,39 @@ public sealed class QuestPipeline
         return results;
     }
 
+    /// SpecialOrder-source definitions whose `StartDate` matches today and whose cooldown
+    /// has elapsed. The framework writes each into `Data/SpecialOrders` via
+    /// `SpecialOrderWriter`; vanilla owns the accept/track/reward path from there.
+    public List<QuestPosting> GenerateSpecialOrders()
+    {
+        var results = new List<QuestPosting>();
+        foreach (var def in _registry.All)
+        {
+            if (def.Source != TriggerSource.SpecialOrder)
+                continue;
+            if (!def.IsAvailable(_ctx))
+                continue;
+            if (!_triggers.ShouldFireToday(def.Id, def.Source, def.Trigger, def.CooldownDays))
+                continue;
+
+            var posting = def.Build(_ctx);
+            if (posting == null)
+                continue;
+            if (posting.SpecialOrder == null)
+            {
+                _ctx.Monitor.Log(
+                    $"SpecialOrder definition '{def.Id}' returned a posting with no SpecialOrder spec; skipping.",
+                    LogLevel.Warn);
+                continue;
+            }
+            if (string.IsNullOrEmpty(posting.OwnerUniqueId))
+                posting.OwnerUniqueId = def.OwnerUniqueId;
+            posting.Kind = PostingKind.SpecialOrder;
+            results.Add(posting);
+        }
+        return results;
+    }
+
     /// Returns every NpcDialogue-source definition that should fire today (per
     /// IsAvailable + cooldown). The caller queues them through the dialogue watcher
     /// so they post next time the player speaks with the target NPC.

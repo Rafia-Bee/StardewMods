@@ -15,7 +15,9 @@ public sealed record TriggerInfo(
     int? DayDelay = null,
     string? Flag = null,
     string? Weather = null,
-    string? Npc = null)
+    string? Npc = null,
+    string? StartDate = null,
+    string? Duration = null)
 {
     public static readonly TriggerInfo Default = new();
 }

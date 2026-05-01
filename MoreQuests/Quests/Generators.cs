@@ -5,6 +5,7 @@ using MoreQuestsFramework;
 using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Conditions;
 using MoreQuestsFramework.Dispatch;
+using MoreQuestsFramework.Pipeline;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Rewards;
 using StardewModdingAPI;
@@ -37,6 +38,7 @@ internal static class Generators
         fw.RegisterGenerator("CheckOnFriends", CheckOnFriends);
         fw.RegisterGenerator("GusFestivalFeastSpring", GusFestivalFeastSpring);
         fw.RegisterGenerator("GusFestivalFeastWinter", GusFestivalFeastWinter);
+        fw.RegisterGenerator("PreservesSeason", PreservesSeason);
     }
 
     // -------------------- Farming --------------------
@@ -952,5 +954,121 @@ internal static class Generators
     {
         var (id, _) = SpringSampleDishPool[Game1.random.Next(SpringSampleDishPool.Length)];
         return ctx.Items.TryResolveItem(id);
+    }
+
+    // -------------------- Phase 8a: Preserves Season (SpecialOrder) --------------------
+
+    /// Vanilla artisan-good context tags. Each entry is one shippable category the order
+    /// can ask for. The synthetic `id_o_<itemid>` tag (vanilla auto-generates these per
+    /// `Utility.getStandardDescriptionFromItem`) lets us target a single specific item
+    /// without needing the item to declare a custom context tag in `Data/Objects`.
+    private static readonly (string Tag, string I18nKey)[] PreservesCategories =
+    {
+        ("jelly_item", "quest.fall.preservesSeason.category.jam"),
+        ("pickle_item", "quest.fall.preservesSeason.category.pickle"),
+        ("wine_item", "quest.fall.preservesSeason.category.wine"),
+        ("id_o_driedmushrooms", "quest.fall.preservesSeason.category.driedMushroom")
+    };
+
+    /// CSV row 57. Fall 1, mail-deferred (delivered as a vanilla SpecialOrder so vanilla
+    /// owns accept + objective tracking + reward grant). Single dispatched requester
+    /// asks for `objectiveCount` distinct artisan-good categories at `qty` units each;
+    /// objective count + qty both scale with Farming level when `DifficultyScaling` is on.
+    /// Reward = approximate "above sell" gold bonus (computed across the requested units)
+    /// + `FriendshipBasic` to the requester. `DeadlineExtended` → vanilla `Month` window.
+    private static QuestPosting? PreservesSeason(QuestContext ctx)
+    {
+        var metNpcs = DispatchRegistry.MetHumanNpcs();
+        if (metNpcs.Count == 0)
+            return null;
+        string requester = metNpcs[Game1.random.Next(metNpcs.Count)];
+
+        bool scaling = ctx.Config.DifficultyScaling;
+        int farming = Game1.player.FarmingLevel;
+        // Objective count: 2 at level 0-2, 3 at 3-5, 4 at 6+. Off → all 4 categories.
+        int objectiveCount = scaling
+            ? Math.Clamp(2 + farming / 3, 2, PreservesCategories.Length)
+            : PreservesCategories.Length;
+        // Per-objective quantity: floor 3, +1 per farming level above 1. Off → fixed 8.
+        int qty = scaling
+            ? Math.Max(3, 2 + farming)
+            : 8;
+
+        // Sample objectiveCount distinct categories from the pool so the order doesn't
+        // ask for the same category twice on a high-skill roll.
+        var idx = new List<int>(PreservesCategories.Length);
+        for (int i = 0; i < PreservesCategories.Length; i++)
+            idx.Add(i);
+        var picked = new List<(string Tag, string I18nKey)>(objectiveCount);
+        for (int i = 0; i < objectiveCount; i++)
+        {
+            int p = Game1.random.Next(idx.Count);
+            picked.Add(PreservesCategories[idx[p]]);
+            idx.RemoveAt(p);
+        }
+
+        var objectives = new List<SpecialOrderObjectiveSpec>(picked.Count);
+        var displayNames = new List<string>(picked.Count);
+        foreach (var (tag, i18nKey) in picked)
+        {
+            string categoryName = ModEntry.I18n.Get(i18nKey);
+            displayNames.Add(categoryName);
+            objectives.Add(new SpecialOrderObjectiveSpec
+            {
+                Type = "Ship",
+                Text = ModEntry.I18n.Get("quest.fall.preservesSeason.objective", new { count = qty, item = categoryName }),
+                RequiredCount = qty,
+                Data = { ["AcceptedContextTags"] = tag }
+            });
+        }
+
+        // Money reward = approximate "above sell" bonus across the requested units. The
+        // vanilla shipping bin already pays the player at full sell price; this is the
+        // bonus on top, sized to feel like a meaningful reward at the relevant skill
+        // band. Avg price ~200 gold matches the median sell price across the four
+        // artisan-good categories at silver quality.
+        const int approxAvgPrice = 200;
+        int totalUnits = qty * picked.Count;
+        int moneyBonus = (int)(approxAvgPrice * totalUnits * Math.Max(0f, ctx.Config.RewardMultiplierAboveSell - 1f));
+        if (moneyBonus < 200)
+            moneyBonus = 200;
+
+        var rewards = new List<SpecialOrderRewardSpec>
+        {
+            new()
+            {
+                Type = "Money",
+                Data = { ["Amount"] = moneyBonus.ToString() }
+            },
+            new()
+            {
+                Type = "Friendship",
+                Data =
+                {
+                    ["TargetName"] = requester,
+                    ["Amount"] = ctx.Config.FriendshipBasic.ToString()
+                }
+            }
+        };
+
+        string namesList = string.Join(", ", displayNames);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Seasonal,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Custom,
+            Kind = PostingKind.SpecialOrder,
+            QuestGiver = requester,
+            SpecialOrder = new SpecialOrderSpec
+            {
+                Name = ModEntry.I18n.Get("quest.fall.preservesSeason.title", new { npc = requester }),
+                Text = ModEntry.I18n.Get("quest.fall.preservesSeason.text", new { npc = requester, items = namesList, count = qty }),
+                Requester = requester,
+                Duration = "Month",
+                Objectives = objectives,
+                Rewards = rewards
+            }
+        };
     }
 }

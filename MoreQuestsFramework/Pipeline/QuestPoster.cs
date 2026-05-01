@@ -29,6 +29,7 @@ public sealed class QuestPoster
     private readonly List<(Quest q, QuestPosting p)> _pendingBoard = new();
     private MailQuestRegistry? _mailRegistry;
     private FrameworkState? _state;
+    private SpecialOrderWriter? _specialOrders;
 
     public QuestPoster(IModHelper helper, IMonitor monitor, MoreQuestsApi api)
     {
@@ -44,6 +45,13 @@ public sealed class QuestPoster
     {
         _mailRegistry = registry;
         _state = state;
+    }
+
+    /// Wires the SpecialOrder writer so PostingKind.SpecialOrder routes through it. Called
+    /// once at startup from `ModEntry`.
+    public void WireSpecialOrders(SpecialOrderWriter writer)
+    {
+        _specialOrders = writer;
     }
 
     public void Register()
@@ -77,7 +85,10 @@ public sealed class QuestPoster
                 PostViaMail(posting);
                 break;
             case PostingKind.SpecialOrder:
-                _monitor.Log($"SpecialOrder posting for {posting.DefinitionId} skipped (not yet implemented).", LogLevel.Trace);
+                if (_specialOrders == null)
+                    _monitor.Log($"SpecialOrder posting for {posting.DefinitionId} dropped (writer not wired).", LogLevel.Warn);
+                else
+                    _specialOrders.Emit(posting);
                 break;
             case PostingKind.NpcDialogue:
                 _monitor.Log($"NpcDialogue posting for {posting.DefinitionId} skipped (not yet implemented).", LogLevel.Trace);

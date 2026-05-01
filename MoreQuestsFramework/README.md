@@ -7,8 +7,9 @@ This mod powers [More Quests](../MoreQuests/README.md) and ships four configurab
 ## What this mod provides
 
 - **Multi-slot billboard.** Replaces vanilla's single "Quest of the Day" with a configurable per-day batch, rendered by `MoreQuestsBillboard`.
+- **Paginated SpecialOrders board (opt-in).** Vanilla's SpecialOrders board hardcodes two random slots from the eligible pool, which can hide framework-emitted (and other modded) orders behind a 2/N random pick. Setting `SpecialOrdersBoardPages` to 2 or 3 in config adds prev/next arrows to the board so the player can browse every eligible order, two per page. Default is 1 (vanilla behaviour, patches no-op). No orders are evicted; existing modded SpecialOrders flow through the same `availableSpecialOrders` list and appear naturally in the rotation. Vanilla's accept flow + per-week accept limit are unchanged.
 - **Daily generation pipeline.** Samples the registry by weight at `DayStarted`, subject to `MaxPerDay`, `CooldownDays`, per-NPC dedup, friendship-cap dedup, and recent history. Triggered (non-board) quests run as a separate pass.
-- **Trigger sources.** `DailyBoard`, `Mail`, `Periodic` (every N days), `DateLocked` (specific date, optionally yearly), `DateRange`, `OneShot` (first time a predicate is true), `BuildingBuilt`, `MailReceived`, `WeatherForecast`, and `NpcDialogue`. Source is independent of delivery channel — every non-board source defaults to mail, overridable via `Trigger.Delivery`. Fire history persists per-save in `MoreQuestsFrameworkState`.
+- **Trigger sources.** `DailyBoard`, `Mail`, `Periodic` (every N days), `DateLocked` (specific date, optionally yearly), `DateRange`, `OneShot` (first time a predicate is true), `BuildingBuilt`, `MailReceived`, `WeatherForecast`, `NpcDialogue`, and `SpecialOrder` (writes a configurable `Data/SpecialOrders` entry on the matching `StartDate` for `Duration` days; vanilla owns the accept + objective + reward flow from there). Source is independent of delivery channel — every non-board source defaults to mail, overridable via `Trigger.Delivery`. Fire history persists per-save in `MoreQuestsFrameworkState`.
 - **Quest factory.** Builds the right `Quest` subclass per posting (`ItemDeliveryQuest`, `FishingQuest`, `SlayMonsterQuest`, `ResourceCollectionQuest`, plus the framework's own multistep `AdventureQuest` and shipping-tracked `MoreQuestsShipQuest`).
 - **Declarative rewards.** Each `QuestPosting` carries a `List<RewardSpec>` (Money / Friendship / Object / Recipe / Mail). `RewardApplier.ApplyEncoded` decodes and pays at `questComplete`, so vanilla in-person delivery, Mail Services Mod, and any future channel produce the same payout. Vanilla's hidden bonuses (every-3rd-quest prize ticket, default 150/255 friendship bumps) are suppressed.
 - **Custom Quest subclasses.** `MoreQuestsItemDeliveryQuest` / `MoreQuestsFishingQuest` implement `IRewardedQuest` (rewards survive save round-trip) and override vanilla turn-in to actually consume requested items. `MoreQuestsShipQuest` is observed at `DayEnding` against the player's shipping bin. `AdventureQuest` is a multistep substrate: each step ships its own kind (`Deliver`, `Talk`, `Gift`, `Ship`, `Catch`, `Slay`; the rest of the planned verb set lands as later phases need it) with `Requires[]` ordering. Every active step sees each event in parallel, so independent steps complete in any order. Adventure JSON also accepts `$giver` (resolves to the giver) and `$dispatcher.<role>[N]` (samples N distinct NPCs from a registered dispatch role) tokens in step `Targets[]`.
@@ -125,6 +126,12 @@ scope.RegisterQuest(new MyQuestDefinition());
                 { "Name": "Report",     "Kind": "Talk", "Targets": [ "$giver" ],    "Requires": [ "TalkFriend" ], "Description": "{i18n:my.checkon.report}" }
             ],
             "Rewards": [ { "Kind": "Friendship", "Npc": "Lewis", "Points": 80 } ]
+        },
+        {
+            "Name": "MyMod.PreservesOrder",
+            "Category": "Seasonal",
+            "Trigger": { "Source": "SpecialOrder", "StartDate": "fall 1", "Duration": "Month", "CooldownDays": 21 },
+            "Generator": "PreservesOrder"
         }
     ]
 }
@@ -139,6 +146,7 @@ Notes on the schema:
 - Adventure (multistep) quests use `Steps[]` instead of `Objective`. Each step has a `Name` (used by other steps' `Requires[]`), a `Kind`, a `Description`, and step-kind-specific targeting fields. `$giver` in `Targets[]` rewrites to the resolved giver name. `$dispatcher.<role>` resolves to one NPC from the named dispatch role; `$dispatcher.<role>[N]` resolves to N distinct NPCs (clamped to whatever the role's pool yields when smaller). Resolution happens once at quest-creation time, so the picked names are stable across save/reload. Step kinds available now: `Deliver`, `Talk`, `Gift`, `Ship`, `Catch`, `Slay`. Independent steps (no `Requires[]`) are all active simultaneously.
 - Single-objective `Ship` quests use `"Objective": { "Kind": "Ship", "Item": "(O)787", "Count": 1 }`. `Item` accepts a single string or an array — when an array, any id satisfies the delivery. Observed against `Game1.getFarm().getShippingBin(player)` at `DayEnding`.
 - `MailReward` accepts `"When": "Today"` (default), `"Tomorrow"`, or `"NextDay"` (alias for `Tomorrow`).
+- **`SpecialOrder` source.** Trigger fires when `today == StartDate` (`<season> <day>`) and the cooldown has elapsed. The framework writes a vanilla `Data/SpecialOrders` entry (key namespaced as `<ownerUniqueId>.<defId>.<dayStamp>` so other mods' SpecialOrders are never disturbed) for `Duration` days (`OneDay`/`TwoDays`/`ThreeDays`/`Week`/`TwoWeeks`/`Month`). The matching `Generator` returns a `QuestPosting` with `Kind = PostingKind.SpecialOrder` and a populated `SpecialOrder` block (`Name`/`Text`/`Requester`/`Duration`/`Objectives[]`/`Rewards[]`); each `SpecialOrderObjectiveSpec.Type`/`SpecialOrderRewardSpec.Type` is the vanilla type name without the `Objective`/`Reward` suffix (e.g. `Ship`, `Money`, `Friendship`). Vanilla owns accept + objective tracking + reward grant from there.
 
 ## Public API
 

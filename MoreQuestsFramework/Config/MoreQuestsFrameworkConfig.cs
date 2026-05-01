@@ -10,6 +10,13 @@ public sealed class MoreQuestsFrameworkConfig
     // ----- Quest board -----
     public int QuestsPerDay { get; set; } = 3;
 
+    /// How many pages of orders the SpecialOrders board displays. 1 = vanilla behaviour
+    /// (the two random orders vanilla picked at the weekly refresh). 2 or 3 enables a
+    /// paginated view that surfaces every eligible order in `Data/SpecialOrders` (vanilla
+    /// + every loaded mod's), 2 per page, with prev/next arrows. Capped at 3 so heavily
+    /// modded saves don't flood the board.
+    public int SpecialOrdersBoardPages { get; set; } = 1;
+
     /// Per-definition selection weight for the daily board. Keys are definition IDs
     /// (e.g. "Vanilla.ItemDelivery", "Farming.BasicCropDelivery"). Values are relative
     /// weights; 0 disables the definition. Missing keys fall back to each definition's

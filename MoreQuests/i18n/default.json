@@ -127,5 +127,13 @@
 
     "quest.festival.gusWinter.title": "Winter Star feast prep",
     "quest.festival.gusWinter.description": "The Winter Star spread won't cook itself and the pantry's looking thin. Ship {{count}} of each: {{item1}}, {{item2}}, {{item3}}. The whole town will appreciate the effort once they hear who pulled it together.",
-    "quest.festival.gusWinter.step.ship": "Ship {{count}} {{item}}."
+    "quest.festival.gusWinter.step.ship": "Ship {{count}} {{item}}.",
+
+    "quest.fall.preservesSeason.title": "{{npc}}'s preserves stockpile",
+    "quest.fall.preservesSeason.text": "Winter's coming and {{npc}} is putting up the pantry early this year. They asked around town to see if anyone could spare {{count}} each of: {{items}}. Drop them in the shipping bin like always; the bookkeeping is already sorted.",
+    "quest.fall.preservesSeason.objective": "Ship {{count}} {{item}}.",
+    "quest.fall.preservesSeason.category.jam": "any jelly or jam",
+    "quest.fall.preservesSeason.category.pickle": "any pickled vegetable",
+    "quest.fall.preservesSeason.category.wine": "any wine",
+    "quest.fall.preservesSeason.category.driedMushroom": "Dried Mushrooms"
 }

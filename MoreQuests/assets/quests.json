@@ -167,6 +167,17 @@
                 "Available": { "NpcExists": "Gus" }
             },
             "Generator": "GusFestivalFeastWinter"
+        },
+        {
+            "Name": "Seasonal.PreservesSeason",
+            "Category": "Seasonal",
+            "Trigger": {
+                "Source": "SpecialOrder",
+                "StartDate": "fall 1",
+                "Duration": "Month",
+                "CooldownDays": 21
+            },
+            "Generator": "PreservesSeason"
         }
     ]
 }

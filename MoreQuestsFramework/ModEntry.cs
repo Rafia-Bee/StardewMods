@@ -41,6 +41,7 @@ public sealed class ModEntry : Mod
     private TriggerEvaluator? _triggers;
     private DialogueWatcher? _dialogueWatcher;
     private MailQuestRegistry _mailQuests = null!;
+    private SpecialOrderWriter? _specialOrderWriter;
 
     internal DispatchRegistry Dispatch { get; private set; } = null!;
     internal MoreQuestsApi Api => _api;
@@ -63,12 +64,17 @@ public sealed class ModEntry : Mod
         _poster = new QuestPoster(helper, Monitor, _api);
         _poster.Register();
 
+        _specialOrderWriter = new SpecialOrderWriter(helper, Monitor);
+        _specialOrderWriter.Register();
+        _poster.WireSpecialOrders(_specialOrderWriter);
+
         _mailQuests = new MailQuestRegistry();
 
         var harmony = new Harmony(ModManifest.UniqueID);
         BillboardPatches.Apply(harmony);
         MailQuestPatches.Apply(harmony, _mailQuests, _api, Monitor);
         AdventureQuestPatches.Apply(harmony);
+        SpecialOrdersBoardPatches.Apply(harmony, Monitor, _specialOrderWriter);
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -82,6 +88,15 @@ public sealed class ModEntry : Mod
             "mq_refresh",
             "Re-rolls today's daily-board postings without reloading the save.",
             (_, _) => RefreshOffers());
+
+        helper.ConsoleCommands.Add(
+            "mq_reemit_specialorders",
+            "Force-fires every SpecialOrder-source definition as if today were its StartDate "
+            + "(ignores cooldown, bypasses date-match). Drops any persisted emitted entries "
+            + "for those defs first so re-emission lands on a clean slate. Open the SpecialOrders "
+            + "board after running to see the entries (requires SpecialOrdersBoardPages >= 2 "
+            + "if vanilla's two slots are already filled by other mods' picks).",
+            (_, _) => ReemitSpecialOrders());
         // Defer GMCM + content-pack loading + RegistrationClosed until after every consumer
         // mod's `GameLaunched` has run, so their registered quests appear in GMCM and
         // any content pack that references their generators sees them in the registry.
@@ -180,6 +195,11 @@ public sealed class ModEntry : Mod
         _pipeline = new QuestPipeline(ctx, _registry, _antiRepetition, _triggers);
 
         _poster!.WireMailDelivery(_mailQuests, _stateStore.State);
+        _specialOrderWriter?.WireState(_stateStore.State);
+        // Re-publish any persisted SpecialOrder entries by invalidating the cache;
+        // the writer's OnAssetRequested handler injects them on the next read.
+        if (_stateStore.State.EmittedSpecialOrders.Count > 0)
+            Helper.GameContent.InvalidateCache("Data/SpecialOrders");
 
         // Rehydrate any mail letters that were sitting unread when the previous
         // session saved. Re-injects bodies into the Data/mail edit and re-registers
@@ -286,6 +306,12 @@ public sealed class ModEntry : Mod
         var triggered = _pipeline.GenerateTriggered();
         _poster.PostBatch(triggered);
 
+        // Sweep expired SpecialOrder dict entries before emitting today's batch so a
+        // re-fire on a yearly cadence doesn't collide with a stale entry from last year.
+        _specialOrderWriter?.SweepExpired();
+        var specialOrders = _pipeline.GenerateSpecialOrders();
+        _poster.PostBatch(specialOrders);
+
         // Queue NpcDialogue-source quests so the watcher can push them into the
         // journal at the next chat with their target NPC.
         if (_dialogueWatcher != null)
@@ -304,6 +330,58 @@ public sealed class ModEntry : Mod
     /// Re-rolls the daily-board batch on demand. Used by `IMoreQuestsApi.RefreshOffers()`
     /// so testers can preview new variants without reloading the save. Safe to call at
     /// any time after save load — uses the same code path as the day-start flow.
+    /// Test/debug helper. Force-fires every SpecialOrder-source definition regardless of
+    /// today's date or cooldown, dropping any persisted emit records for those defs first.
+    /// Bypasses `TriggerEvaluator.SpecialOrderReady` entirely so a save that already saw
+    /// the trigger fire (LastFiredDay populated) can re-emit the entry without waiting
+    /// for the next StartDate. Caller must open the SpecialOrders board afterwards to see
+    /// the result.
+    private void ReemitSpecialOrders()
+    {
+        if (!Context.IsWorldReady || _pipeline == null || _poster == null || _stateStore == null)
+        {
+            Monitor.Log("mq_reemit_specialorders ignored: world not ready or pipeline not initialised.", LogLevel.Warn);
+            return;
+        }
+
+        var ctx = new QuestContext(Helper, Monitor, Config, new ItemResolver(Monitor, _dataCache!), _dataCache!, Dispatch);
+        var state = _stateStore.State;
+        int emitted = 0;
+        int skipped = 0;
+
+        foreach (var def in _registry.All)
+        {
+            if (def.Source != TriggerSource.SpecialOrder)
+                continue;
+            // Drop any persisted entry for this def so the writer can emit fresh.
+            state.EmittedSpecialOrders.RemoveAll(e => e.DefinitionId == def.Id);
+            // Clear cooldown bookkeeping so the trigger evaluator wouldn't block future fires.
+            state.LastFiredDay.Remove(def.Id);
+
+            if (!def.IsAvailable(ctx))
+            {
+                skipped++;
+                Monitor.Log($"mq_reemit_specialorders: '{def.Id}' skipped (Available conditions not met).", LogLevel.Info);
+                continue;
+            }
+
+            var posting = def.Build(ctx);
+            if (posting?.SpecialOrder == null)
+            {
+                skipped++;
+                Monitor.Log($"mq_reemit_specialorders: '{def.Id}' skipped (generator returned null or no SpecialOrder spec).", LogLevel.Info);
+                continue;
+            }
+            if (string.IsNullOrEmpty(posting.OwnerUniqueId))
+                posting.OwnerUniqueId = def.OwnerUniqueId;
+            posting.Kind = PostingKind.SpecialOrder;
+            _poster.Post(posting);
+            emitted++;
+        }
+
+        Monitor.Log($"mq_reemit_specialorders: emitted {emitted}, skipped {skipped}. Open the SpecialOrders board to view.", LogLevel.Info);
+    }
+
     private void RefreshOffers()
     {
         if (!Context.IsWorldReady)

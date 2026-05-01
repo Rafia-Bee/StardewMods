@@ -99,6 +99,15 @@ public sealed class TriggerDef
     /// NpcDialogue: target NPC. Quest is queued and pushed into the journal the next
     /// time the player speaks with this NPC.
     public string? Npc { get; set; }
+
+    /// SpecialOrder: in-game date as `"<season> <day>"` when the order is offered on the
+    /// SpecialOrders board. Cooldown gates re-fires across years.
+    public string? StartDate { get; set; }
+
+    /// SpecialOrder: window length the order stays on the board. Accepts vanilla's
+    /// QuestDuration enum names — `OneDay`, `TwoDays`, `ThreeDays`, `Week`, `TwoWeeks`,
+    /// `Month`. Defaults to `Week` when omitted. Maps to vanilla's `SetDuration`.
+    public string? Duration { get; set; }
 }
 
 public sealed class ObjectiveDef

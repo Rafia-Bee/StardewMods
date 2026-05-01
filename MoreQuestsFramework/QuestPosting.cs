@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using MoreQuestsFramework.Pipeline;
 using MoreQuestsFramework.Rewards;
 using StardewValley.Quests;
 
@@ -81,6 +82,12 @@ public sealed class QuestPosting
     public List<RewardSpec> Rewards { get; set; } = new();
 
     public List<QuestConsequence> Consequences { get; set; } = new();
+
+    /// Populated only when `Kind == PostingKind.SpecialOrder`. Carries the full
+    /// `Data/SpecialOrders` shape for one entry (objectives + rewards + duration +
+    /// requester). Read by `SpecialOrderWriter` at emit time. Null for every other
+    /// posting kind.
+    public SpecialOrderSpec? SpecialOrder { get; set; }
 
     /// If set, this Quest object is used directly instead of building one from the posting fields.
     /// Vanilla-quest definitions populate this so the vanilla random logic stays intact.
