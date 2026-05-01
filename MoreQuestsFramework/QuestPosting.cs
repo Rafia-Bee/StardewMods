@@ -55,6 +55,13 @@ public sealed class QuestPosting
     /// declarative `Item: [...]` JSON form so a single posting can satisfy on any of several
     /// items (e.g. Submarine Fuel accepts a Battery Pack OR Coal). Empty means single-item.
     public List<string> AlternativeObjectiveItemIds { get; set; } = new();
+    /// Per-stack credit toward `ObjectiveQuantity` when the primary item is matched. Defaults
+    /// to 1 (count items 1:1). Higher values let one item count as N units of progress —
+    /// Submarine Fuel uses weight 15 on Battery Pack so 1 battery = 15 coal of fuel toward
+    /// the same shipping bar.
+    public int ObjectiveItemWeight { get; set; } = 1;
+    /// Parallel to `AlternativeObjectiveItemIds`. Missing entries default to 1.
+    public List<int> AlternativeObjectiveItemWeights { get; set; } = new();
     public int ObjectiveQuantity { get; set; } = 1;
     public string? TargetMonster { get; set; }
     public string? TargetLocation { get; set; }

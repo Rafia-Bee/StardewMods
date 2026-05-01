@@ -31,6 +31,10 @@ public sealed class StashedMailQuest
     /// OR-alternative ids accepted in place of `ObjectiveItemId`. Round-trips so a mail
     /// letter for "Submarine Fuel — battery OR coal" still resolves correctly on reload.
     public List<string> AlternativeObjectiveItemIds { get; set; } = new();
+    /// Weight applied to the primary item per stack matched. Defaults to 1.
+    public int ObjectiveItemWeight { get; set; } = 1;
+    /// Parallel to `AlternativeObjectiveItemIds`. Missing entries default to 1.
+    public List<int> AlternativeObjectiveItemWeights { get; set; } = new();
     public int ObjectiveQuantity { get; set; } = 1;
     public string? TargetMonster { get; set; }
     public int DeadlineDays { get; set; } = 5;

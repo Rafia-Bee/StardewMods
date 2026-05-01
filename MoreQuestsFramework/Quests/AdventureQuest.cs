@@ -497,11 +497,42 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         foreach (var entry in step.Items)
         {
             if (string.IsNullOrEmpty(entry)) continue;
+            // `$`-prefixed entries are tokens evaluated by category/property checks
+            // rather than literal id comparison — `$edible-egg` covers vanilla + modded
+            // eggs (Category -5, Edibility != -300), `$category:N` is a generic escape
+            // hatch for any other vanilla object category.
+            if (entry.StartsWith("$", StringComparison.Ordinal))
+            {
+                if (TokenMatches(entry, item)) return true;
+                continue;
+            }
             if (string.Equals(entry, qid, StringComparison.OrdinalIgnoreCase)) return true;
             if (string.Equals(entry, id, StringComparison.OrdinalIgnoreCase)) return true;
             // Author-supplied ids may omit the `(O)` prefix; tolerate both forms.
             if (entry.StartsWith("(") && string.Equals(entry.Substring(entry.IndexOf(')') + 1), id, StringComparison.OrdinalIgnoreCase))
                 return true;
+        }
+        return false;
+    }
+
+    /// `$`-prefixed Items entries are treated as predicates rather than literal ids.
+    /// Recognised tokens:
+    /// - `$edible-egg`: any Object with Category == -5 and Edibility != -300. Catches
+    ///   vanilla + modded eggs (Hootin' & Hollerin', SVE, VMV all use Category -5);
+    ///   excludes Dinosaur Egg (Edibility -300, inedible per vanilla).
+    /// - `$category:N`: any Object with the given vanilla category constant.
+    private static bool TokenMatches(string token, Item item)
+    {
+        if (item is not StardewValley.Object obj)
+            return false;
+        const int eggCategory = -5;
+        const int inedible = -300;
+        if (string.Equals(token, "$edible-egg", StringComparison.OrdinalIgnoreCase))
+            return obj.Category == eggCategory && obj.Edibility != inedible;
+        if (token.StartsWith("$category:", StringComparison.OrdinalIgnoreCase))
+        {
+            if (int.TryParse(token.Substring("$category:".Length), out int cat))
+                return obj.Category == cat;
         }
         return false;
     }
