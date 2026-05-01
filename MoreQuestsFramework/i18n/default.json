@@ -2,6 +2,8 @@
     "config.section.questBoard": "Quest Board",
     "config.questsPerDay": "Quests per day",
     "config.questsPerDay.tooltip": "How many quests appear on the help-wanted board each day (1-20).",
+    "config.specialOrdersBoardPages": "Special Orders board pages",
+    "config.specialOrdersBoardPages.tooltip": "How many pages of orders the SpecialOrders board displays. 1 keeps vanilla behaviour (the two random orders vanilla picked at the weekly refresh). 2 or 3 enables a paginated view that surfaces every eligible order from every loaded mod, two per page, with prev/next arrows. Other mods' orders are never evicted; they appear naturally in the rotation.",
 
     "config.section.weights": "Quest type weights",
     "config.section.weights.tooltip": "Each daily-board quest type has a relative weight. Higher = more likely to appear. 0 disables that type.",

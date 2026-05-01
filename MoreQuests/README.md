@@ -82,7 +82,7 @@ A SMAPI content mod for Stardew Valley that ships a curated set of new daily-boa
 | Farming | Pierre's Stock-Up | Daily board | Pierre | Deliver bulk mixed seasonal crops | Discount on requested seeds at Pierre's | Cooldown 7d, OnePerGiver | Not started |
 | Foraging | Plant Trees | Daily board | Linus / Dylan / Demetrius / Kimpoi / Aster | Plant X trees at a target location | Friendship (Intermediate) with giver | Cooldown 7d, OnePerGiver | Not started |
 | Farming | Premium Crop Order | Daily board | Any | Deliver X Iridium-quality rare crops | Gold (Advanced) + rare/ancient seeds | Cooldown 5d | Not started |
-| Seasonal | Preserves Season | Special Orders board | Various | Deliver jams, pickles, wines, dried mushrooms to multiple NPCs | Gold (sell-price scaled) + Friendship (Basic) | Fall only, Cooldown 21d | Not started |
+| Seasonal | Preserves Season | Special Orders board (Fall 1) | Single dispatched villager | Ship a scaling number of jam, pickle, wine, and dried mushroom artisan goods (counts + objective count both scale with Farming) | Gold (above-sell bonus) + Friendship (Basic) to requester | Fall 1, Cooldown 21d, vanilla `Month` window | Implemented (8a) |
 | Farming | Quality Crop Delivery | Daily board | Any | Deliver X Gold-quality seasonal crops | Gold (Basic-Intermediate) + Friendship (Basic) | Cooldown 3d | Not started |
 | Fishing | Quality Fish Delivery | Daily board | Willy | Catch X Gold-quality fish of a specific type | Gold (Basic-Intermediate) + Friendship (Basic) | Cooldown 3d, OnePerGiver | Not started |
 | Festival | Rainbow Platter (Trout Derby) | Summer 20-21 | Gus / Pika / Rosa / Celestine | Catch FestivalFishQty Rainbow Trout | Recipe + shop discount on the dish | DateLocked, OneTimePerYear | Not started |
@@ -92,7 +92,8 @@ A SMAPI content mod for Stardew Valley that ships a curated set of new daily-boa
 | Animal | Robin's Silo Offer | After first Coop/Barn (no Silo) | Robin | Gather one type of build material | Discounted Silo | OneTime | Not started |
 | Fishing | Seafood Night | Daily board | Gus / Pika / Rosa / Celestine | Catch FishHaulLargeQty+ edible non-poisonous fish | Gold (sell-price premium, very high) | Cooldown 10d, OnePerGiver | Not started |
 | Festival | Secret Gift Hint | Winter 22 | Board | Hint about your assigned Winter Star recipient | Information (preference hint) | DateLocked, OneTimePerYear | Not started |
-| Mining | Skull Cavern Deep Dive | Daily board | Adventurer's Guild | Reach floor X and retrieve ore | Gold (Advanced) + smelted bars | Cooldown 14d | Not started |
+| Mining | Skull Cavern Deep Dive | Daily board | Adventurer's Guild | Reach floor X in Skull Cavern and retrieve ore | Gold (Advanced) + smelted bars | Cooldown 14d, configurable max floor | Not started |
+| Mining | Mines Deep Dive | Daily board | Adventurer's Guild | Reach floor X in The Mines (max 120) and retrieve ore | Gold (Intermediate) + smelted bars | Cooldown 14d, configurable max floor | Not started |
 | Fishing | Size-Specific Overpopulation | Daily board | Demetrius | Catch X fish of a specific size | Gold (Intermediate) + bait | Cooldown 4d, OnePerGiver | Not started |
 | Seasonal | Spring Cleaning | Daily board | Any | Clear weeds around town | Friendship (Basic) | Spring only, Cooldown 5d | Not started |
 | Festival | SquidFest Showcase | Winter 12-13 | Gus / Pika / Rosa / Celestine | Catch FestivalFishQty Squid | Recipe + shop discount on the dish | DateLocked, OneTimePerYear | Not started |

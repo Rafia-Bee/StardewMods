@@ -345,7 +345,9 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             DayDelay: t.DayDelay,
             Flag: t.Flag,
             Weather: t.Weather,
-            Npc: t.Npc);
+            Npc: t.Npc,
+            StartDate: t.StartDate,
+            Duration: t.Duration);
     }
 
     private static BoardQuestType ParseObjectiveKind(string kind)

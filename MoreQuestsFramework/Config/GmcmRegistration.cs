@@ -28,6 +28,12 @@ internal static class GmcmRegistration
             () => t.Get("config.questsPerDay"),
             () => t.Get("config.questsPerDay.tooltip"),
             min: 1, max: 20);
+        api.AddNumberOption(manifest,
+            () => System.Math.Clamp(ModEntry.Config.SpecialOrdersBoardPages, 1, 3),
+            v => ModEntry.Config.SpecialOrdersBoardPages = System.Math.Clamp(v, 1, 3),
+            () => t.Get("config.specialOrdersBoardPages"),
+            () => t.Get("config.specialOrdersBoardPages.tooltip"),
+            min: 1, max: 3);
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.weights"),
             () => t.Get("config.section.weights.tooltip"));
