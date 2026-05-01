@@ -1,0 +1,59 @@
+{
+    "Schema": "1.0",
+    "Quests": [
+        {
+            "Name": "ExamplePack.SaplingForLewis",
+            "Category": "Foraging",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 20,
+                "MaxPerDay": 1,
+                "CooldownDays": 14,
+                "Available": { "Season": "spring|summer" }
+            },
+            "Giver": "Lewis",
+            "DeadlineDays": "Short",
+            "Objective": {
+                "Kind": "Deliver",
+                "Item": "(O)628",
+                "Count": 1
+            },
+            "Title": "{i18n:example.sapling.title}",
+            "Description": "{i18n:example.sapling.description}",
+            "CurrentObjective": "{i18n:example.sapling.objective}",
+            "TargetMessage": "{i18n:example.sapling.targetMessage}",
+            "Rewards": [
+                { "Kind": "Money", "Amount": 750 },
+                { "Kind": "Friendship", "Npc": "Lewis", "Points": 60 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.SapphireForEmily",
+            "Category": "Mining",
+            "Tier": "Intermediate",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 15,
+                "MaxPerDay": 1,
+                "CooldownDays": 21,
+                "Available": { "MinDeepestMineLevel": "60", "NpcMet": "Emily" }
+            },
+            "Giver": "Emily",
+            "DeadlineDays": "Medium",
+            "Objective": {
+                "Kind": "Deliver",
+                "Item": "(O)64",
+                "Count": 1
+            },
+            "Title": "{i18n:example.sapphire.title}",
+            "Description": "{i18n:example.sapphire.description}",
+            "CurrentObjective": "{i18n:example.sapphire.objective}",
+            "TargetMessage": "{i18n:example.sapphire.targetMessage}",
+            "Rewards": [
+                { "Kind": "Friendship", "Npc": "Emily", "Points": 120 },
+                { "Kind": "Object", "Item": "(O)395", "Count": 1 }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "example.sapling.title": "Lewis needs a maple sapling",
+    "example.sapling.description": "Lewis wants to plant a maple sapling near the town square. Can you bring him one?",
+    "example.sapling.objective": "Bring 1 Maple Sapling to Lewis.",
+    "example.sapling.targetMessage": "Perfect, I'll get this in the ground today. Thanks!",
+
+    "example.sapphire.title": "Emily's sapphire request",
+    "example.sapphire.description": "Emily is working on a new piece and needs a Sapphire. Could you spare one?",
+    "example.sapphire.objective": "Bring 1 Sapphire to Emily.",
+    "example.sapphire.targetMessage": "Oh wow, the colors are gorgeous. Thank you!"
+}
