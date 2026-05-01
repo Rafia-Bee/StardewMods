@@ -36,10 +36,15 @@ public sealed class ModEntry : Mod
         e.Edit(asset =>
         {
             var mail = asset.AsDictionary<string, string>().Data;
-            string submarineBody = I18n.Get("mail.festival.submarineFuelReward.body").ToString();
             // `%item object 797 1 %%` attaches a Pearl to the letter. Vanilla mail format:
             // the trailing `%%` closes the token block.
+            string submarineBody = I18n.Get("mail.festival.submarineFuelReward.body").ToString();
             mail["RafiaBee.MoreQuests.SubmarineFuelReward"] = submarineBody + "%item object 797 1 %%";
+
+            // Book_Mystery is a 1.6 string-id item; the `%item object` token accepts string
+            // ids the same way it accepts numeric ones.
+            string wizardBody = I18n.Get("mail.festival.wizardsRitualReward.body").ToString();
+            mail["RafiaBee.MoreQuests.WizardsRitualReward"] = wizardBody + "%item object Book_Mystery 1 %%";
         });
     }
 

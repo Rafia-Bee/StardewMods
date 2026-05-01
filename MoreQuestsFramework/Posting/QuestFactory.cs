@@ -86,14 +86,20 @@ public static class QuestFactory
         {
             target = { Value = giver },
             itemId = { Value = itemId },
+            itemWeight = { Value = Math.Max(1, p.ObjectiveItemWeight) },
             numberToShip = { Value = Math.Max(1, p.ObjectiveQuantity) },
             objectiveItemName = string.IsNullOrEmpty(p.ObjectiveItemName) ? itemId : p.ObjectiveItemName,
             targetMessage = p.TargetMessage
         };
-        foreach (var alt in p.AlternativeObjectiveItemIds)
+        for (int i = 0; i < p.AlternativeObjectiveItemIds.Count; i++)
         {
+            string alt = p.AlternativeObjectiveItemIds[i];
             string qualified = ItemRegistry.QualifyItemId(alt) ?? alt;
             ship.alternativeItemIds.Add(qualified);
+            int weight = i < p.AlternativeObjectiveItemWeights.Count
+                ? Math.Max(1, p.AlternativeObjectiveItemWeights[i])
+                : 1;
+            ship.alternativeItemWeights.Add(weight);
         }
         return ship;
     }

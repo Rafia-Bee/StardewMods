@@ -20,6 +20,14 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
     public readonly NetString target = new();
     public readonly NetString itemId = new();
     public readonly NetStringList alternativeItemIds = new();
+    /// Per-stack credit applied when the primary `itemId` is shipped. Defaults to 1, so a
+    /// quest counts items 1:1. Higher weights let one item id be worth N "fuel units" of
+    /// progress — Submarine Fuel uses this so 1 Battery Pack = 15 Coal toward the same
+    /// shipping bar.
+    public readonly NetInt itemWeight = new();
+    /// Parallel to `alternativeItemIds`. Each entry is the credit applied per matched
+    /// stack of that alternative. Missing entries default to 1.
+    public readonly NetIntList alternativeItemWeights = new();
     public readonly NetInt numberToShip = new();
     public readonly NetInt numberShipped = new();
     public readonly NetStringList serializedRewards = new();
@@ -42,6 +50,8 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
             .AddField(target, "target")
             .AddField(itemId, "itemId")
             .AddField(alternativeItemIds, "alternativeItemIds")
+            .AddField(itemWeight, "itemWeight")
+            .AddField(alternativeItemWeights, "alternativeItemWeights")
             .AddField(numberToShip, "numberToShip")
             .AddField(numberShipped, "numberShipped")
             .AddField(serializedRewards, "serializedRewards");
@@ -96,19 +106,23 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
         return false;
     }
 
-    /// Walks the shipping bin once and increments `numberShipped` by the count of matching
-    /// entries. Called by the framework's DayEnding observer for each active ship quest.
+    /// Walks the shipping bin once and increments `numberShipped` by the weighted count of
+    /// matching entries. Each match's contribution is `weight * stack` so a single Battery
+    /// Pack with weight 15 contributes 15 toward a `numberToShip` of 30 (= 2 batteries to
+    /// finish). Called by the framework's DayEnding observer for each active ship quest.
     public void ObserveShippingBin(IList<Item> bin, IMonitor? monitor = null)
     {
         if (completed.Value || bin == null || bin.Count == 0)
             return;
+        int primaryWeight = Math.Max(1, itemWeight.Value);
         int matched = 0;
         for (int i = 0; i < bin.Count; i++)
         {
             var item = bin[i];
             if (item == null) continue;
-            if (MatchesItem(item))
-                matched += item.Stack;
+            int w = MatchedWeight(item, primaryWeight);
+            if (w > 0)
+                matched += w * item.Stack;
         }
         if (matched <= 0)
             return;
@@ -122,6 +136,20 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
             questComplete();
         else
             reloadObjective();
+    }
+
+    private int MatchedWeight(Item item, int primaryWeight)
+    {
+        if (Matches(item, itemId.Value))
+            return primaryWeight;
+        for (int i = 0; i < alternativeItemIds.Count; i++)
+        {
+            if (Matches(item, alternativeItemIds[i]))
+                return i < alternativeItemWeights.Count
+                    ? Math.Max(1, alternativeItemWeights[i])
+                    : 1;
+        }
+        return 0;
     }
 
     public List<string> AlternativeIds()

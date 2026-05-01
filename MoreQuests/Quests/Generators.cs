@@ -31,6 +31,9 @@ internal static class Generators
         fw.RegisterGenerator("BeachCleanup", BeachCleanup);
         fw.RegisterGenerator("SpringTea", SpringTea);
         fw.RegisterGenerator("CravingDish", CravingDishGenerator);
+        fw.RegisterGenerator("SubmarineFuel", SubmarineFuel);
+        fw.RegisterGenerator("WizardsRitualMaterials", WizardsRitualMaterials);
+        fw.RegisterGenerator("HolidayCookies", HolidayCookies);
     }
 
     // -------------------- Farming --------------------
@@ -551,4 +554,167 @@ internal static class Generators
 
     private static string StripPrefix(string id) =>
         id.StartsWith("(O)") ? id[3..] : id;
+
+    // -------------------- Festival quests (Phase 7b) --------------------
+
+    /// Single-objective Ship quest. Player ships Battery Pack OR Coal into the farm
+    /// shipping bin; the framework's DayEnding observer credits each match by weight,
+    /// where one Battery Pack equals 15 Coal of "fuel". The reward Pearl arrives by mail
+    /// the next morning. Mining-skill scaling: base = 15 fuel (= 1 battery / 15 coal),
+    /// scales 1.5× per mining level when DifficultyScaling is on. With scaling off it's
+    /// a fixed 30 fuel target (= 2 batteries / 30 coal).
+    private static QuestPosting? SubmarineFuel(QuestContext ctx)
+    {
+        const int batteryWeight = 15;
+        int totalFuel = ctx.Config.DifficultyScaling
+            ? Math.Max(15, (int)Math.Floor(15 * 1.5 * Game1.player.MiningLevel))
+            : 30;
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Ship,
+            QuestGiver = "Captain",
+            ObjectiveItemId = "(O)787",
+            ObjectiveItemName = "Battery Pack",
+            ObjectiveItemWeight = batteryWeight,
+            AlternativeObjectiveItemIds = { "(O)382" },
+            AlternativeObjectiveItemWeights = { 1 },
+            ObjectiveQuantity = totalFuel,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards =
+            {
+                new MailReward("RafiaBee.MoreQuests.SubmarineFuelReward", MailWhen.Tomorrow)
+            },
+            Title = ModEntry.I18n.Get("quest.festival.submarineFuel.title"),
+            Description = ModEntry.I18n.Get("quest.festival.submarineFuel.description"),
+            CurrentObjective = ModEntry.I18n.Get("quest.festival.submarineFuel.objective", new { batteries = Math.Max(1, (int)Math.Ceiling(totalFuel / (double)batteryWeight)), coal = totalFuel }),
+            TargetMessage = ModEntry.I18n.Get("quest.festival.submarineFuel.targetMessage")
+        };
+    }
+
+    /// Multi-step Ship Adventure: ship Void Essence + Bat Wings + Solar Essence to the
+    /// shipping bin, in any order. Combat-skill scaling: count = max(1, 2 × CombatLevel)
+    /// per item when DifficultyScaling is on; fixed 3 of each when off. Reward = Book of
+    /// Mysteries via inventory add on completion.
+    private static QuestPosting? WizardsRitualMaterials(QuestContext ctx)
+    {
+        int countPer = ctx.Config.DifficultyScaling
+            ? Math.Max(1, 2 * Game1.player.CombatLevel)
+            : 3;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ShipVoidEssence",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)769" },
+                Count = countPer,
+                Description = ModEntry.I18n.Get("quest.festival.wizardsRitual.step.voidEssence", new { count = countPer })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipBatWing",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)767" },
+                Count = countPer,
+                Description = ModEntry.I18n.Get("quest.festival.wizardsRitual.step.batWing", new { count = countPer })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipSolarEssence",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)768" },
+                Count = countPer,
+                Description = ModEntry.I18n.Get("quest.festival.wizardsRitual.step.solarEssence", new { count = countPer })
+            }
+        }, giver: "M. Rasmodius");
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = "M. Rasmodius",
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards =
+            {
+                new MailReward("RafiaBee.MoreQuests.WizardsRitualReward", MailWhen.Tomorrow)
+            },
+            Title = ModEntry.I18n.Get("quest.festival.wizardsRitual.title"),
+            Description = ModEntry.I18n.Get("quest.festival.wizardsRitual.description", new { count = countPer }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Multi-step Deliver Adventure: hand Flour + Sugar + Egg to Evelyn in any order.
+    /// Farming-skill scaling: count = max(3, 6 × FarmingLevel) per ingredient when
+    /// DifficultyScaling is on; fixed 3 of each when off. Egg step accepts ANY edible egg
+    /// (Object Category -5 with non-inedible Edibility) via the `$edible-egg` token, so
+    /// modded eggs (Hootin' & Hollerin' Owl, SVE Goose, VMV Speckled Fowl, etc.) all
+    /// count alongside the vanilla white/brown chicken / duck / ostrich / void eggs.
+    /// Dinosaur Egg is excluded because vanilla marks it `Edibility = -300` (inedible).
+    private static QuestPosting? HolidayCookies(QuestContext ctx)
+    {
+        int countPer = ctx.Config.DifficultyScaling
+            ? Math.Max(3, 6 * Game1.player.FarmingLevel)
+            : 3;
+
+        var eggIds = new List<string> { "$edible-egg" };
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "DeliverFlour",
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { "Evelyn" },
+                Items = new List<string> { "(O)246" },
+                Count = countPer,
+                Description = ModEntry.I18n.Get("quest.festival.holidayCookies.step.flour", new { count = countPer })
+            },
+            new AdventureStepState
+            {
+                Name = "DeliverSugar",
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { "Evelyn" },
+                Items = new List<string> { "(O)245" },
+                Count = countPer,
+                Description = ModEntry.I18n.Get("quest.festival.holidayCookies.step.sugar", new { count = countPer })
+            },
+            new AdventureStepState
+            {
+                Name = "DeliverEggs",
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { "Evelyn" },
+                Items = eggIds,
+                Count = countPer,
+                Description = ModEntry.I18n.Get("quest.festival.holidayCookies.step.eggs", new { count = countPer })
+            }
+        }, giver: "Evelyn", completionDialogue: ModEntry.I18n.Get("quest.festival.holidayCookies.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = "Evelyn",
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards =
+            {
+                new FriendshipReward("Evelyn", ctx.Config.FriendshipLarge),
+                new ObjectReward("(O)223", 6)
+            },
+            Title = ModEntry.I18n.Get("quest.festival.holidayCookies.title"),
+            Description = ModEntry.I18n.Get("quest.festival.holidayCookies.description", new { count = countPer }),
+            TargetMessage = ModEntry.I18n.Get("quest.festival.holidayCookies.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
 }
