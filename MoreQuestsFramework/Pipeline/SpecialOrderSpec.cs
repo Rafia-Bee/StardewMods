@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MoreQuestsFramework.Rewards;
 
 namespace MoreQuestsFramework.Pipeline;
 
@@ -58,4 +59,16 @@ public sealed class SpecialOrderSpec
 
     public List<SpecialOrderObjectiveSpec> Objectives { get; set; } = new();
     public List<SpecialOrderRewardSpec> Rewards { get; set; } = new();
+
+    /// Framework-owned rewards granted directly by `SpecialOrderWriter` once the order
+    /// flips to `Complete`. Sits OUTSIDE vanilla's `Data/SpecialOrders` Rewards array, so
+    /// third-party content packs that edit the asset to "configure" or "boost" vanilla
+    /// rewards (e.g. friendship-tuning packs that overwrite all Friendship `OrderReward`
+    /// entries) cannot intercept these. Use this path for any reward whose semantics must
+    /// be exactly what the content mod author specified.
+    ///
+    /// Money is intentionally kept in the vanilla `Rewards` path: vanilla's reward UI
+    /// shows it, the player clicks the reward box, money is paid. That UX is worth more
+    /// than the small risk of a third-party mod adjusting the displayed gold amount.
+    public List<RewardSpec> FrameworkRewards { get; set; } = new();
 }
