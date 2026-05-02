@@ -351,7 +351,15 @@ public class ModEntry : Mod
         }
 
         _grabbers.ResetGrabCycleTracking();
-        _grabbers.FireGlobalGrab();
+        _isGrabbing = true;
+        try
+        {
+            _grabbers.FireGlobalGrab();
+        }
+        finally
+        {
+            _isGrabbing = false;
+        }
         _grabbers.ShowGrabCycleResults(showSummary: true);
     }
 
@@ -784,7 +792,15 @@ public class ModEntry : Mod
 
             LogDebug("Executing deferred auto-fire global grab");
             _grabbers.ResetGrabCycleTracking();
-            _grabbers.FireGlobalGrab();
+            _isGrabbing = true;
+            try
+            {
+                _grabbers.FireGlobalGrab();
+            }
+            finally
+            {
+                _isGrabbing = false;
+            }
             _grabbers.ShowGrabCycleResults(showSummary: true);
             return;
         }
