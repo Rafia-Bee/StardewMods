@@ -26,8 +26,8 @@ internal class GlobalGrabberButton
         _grabberObject = grabberObject;
         _isDesignated = grabberObject.modData.ContainsKey(ModEntry.GlobalGrabberModDataKey);
 
-        int offsetX = mod.Config.globalButtonOffsetX;
-        int offsetY = mod.Config.globalButtonOffsetY;
+        int offsetX = mod.Config.GlobalGrab.globalButtonOffsetX;
+        int offsetY = mod.Config.GlobalGrab.globalButtonOffsetY;
 
         // Position: top-right area of the menu, near the organize button
         int x = menu.xPositionOnScreen + menu.width + offsetX;

@@ -15,7 +15,7 @@ internal class ForageHoeDirtGrabber : TerrainFeaturesMapGrabber
 
     public override bool GrabFeature(Vector2 tile, TerrainFeature feature)
     {
-        if (!Config.forage || !Mod.IsForageGrabEnabled || feature is not HoeDirt dirt || !IsForageableHoeDirt(feature))
+        if (!Config.Features.forage || !Mod.IsForageGrabEnabled || feature is not HoeDirt dirt || !IsForageableHoeDirt(feature))
             return false;
 
         // Try crop.harvest() first (handles spring onions and any modded forage crops)

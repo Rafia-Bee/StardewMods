@@ -14,7 +14,7 @@ internal static class PerfectionPatch
     internal static void GetCraftedRecipesPercent_Postfix(Farmer who, ref float __result)
     {
         var config = GetConfig();
-        if (config.grabberMode != ModConfig.GrabberMode.Specialized || config.specializedGrabbersCountForPerfection)
+        if (config.grabberMode != ModConfig.GrabberMode.Specialized || config.Specialized.specializedGrabbersCountForPerfection)
             return;
 
         who ??= Game1.player;
@@ -52,7 +52,7 @@ internal static class PerfectionPatch
     internal static void CheckForCraftingAchievements_Postfix()
     {
         var config = GetConfig();
-        if (config.grabberMode != ModConfig.GrabberMode.Specialized || config.specializedGrabbersCountForPerfection)
+        if (config.grabberMode != ModConfig.GrabberMode.Specialized || config.Specialized.specializedGrabbersCountForPerfection)
             return;
 
         if (Game1.player.achievements.Contains(22)) return;

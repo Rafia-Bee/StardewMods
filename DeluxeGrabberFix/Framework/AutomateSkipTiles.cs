@@ -27,7 +27,7 @@ internal static class AutomateSkipTiles
     /// </summary>
     public static HashSet<Vector2> Get(ModEntry mod, GameLocation location)
     {
-        if (!mod.Config.automateCompatibility)
+        if (!mod.Config.Machines.automateCompatibility)
             return null;
 
         if (_cachedLocation == location && _cachedTick == Game1.ticks)

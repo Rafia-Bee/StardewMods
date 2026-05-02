@@ -19,7 +19,7 @@ internal class TownGarbageCanGrabber : MapGrabber
 
     public override bool GrabItems()
     {
-        if (!Config.garbageCans)
+        if (!Config.Features.garbageCans)
             return false;
 
         List<string> canIds = GetGarbageCanIds();

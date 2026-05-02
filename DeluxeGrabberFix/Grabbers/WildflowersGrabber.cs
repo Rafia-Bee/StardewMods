@@ -24,7 +24,7 @@ internal class WildflowersGrabber : TerrainFeaturesMapGrabber
 
     public override bool GrabFeature(Vector2 tile, TerrainFeature feature)
     {
-        if (!Config.collectWildflowers)
+        if (!Config.Features.collectWildflowers)
             return false;
 
         if (feature is not Grass grass)
@@ -44,11 +44,11 @@ internal class WildflowersGrabber : TerrainFeaturesMapGrabber
 
     private bool PassesFlowerMode(Vector2 tile)
     {
-        if (Config.flowers == ModConfig.FlowerHarvestMode.Off)
+        if (Config.Features.flowers == ModConfig.FlowerHarvestMode.Off)
             return false;
 
-        if (Config.flowers == ModConfig.FlowerHarvestMode.Smart
-            && Helpers.IsFlowerNearBeeHouse(Location, tile, Config.beeHouseRange))
+        if (Config.Features.flowers == ModConfig.FlowerHarvestMode.Smart
+            && Helpers.IsFlowerNearBeeHouse(Location, tile, Config.Features.beeHouseRange))
             return false;
 
         return true;

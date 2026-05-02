@@ -89,7 +89,7 @@ internal abstract class MapGrabber
         if (item == null || item.Stack < 1)
             return false;
 
-        if (Config.excludeQuestItems && item is Object obj && (obj.questItem.Value || obj.Type == "Quest"))
+        if (Config.Compatibility.excludeQuestItems && item is Object obj && (obj.questItem.Value || obj.Type == "Quest"))
         {
             Mod.LogDebug($"Quest item excluded: {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             return false;
@@ -97,13 +97,13 @@ internal abstract class MapGrabber
 
         if (Config.IsItemExcluded(item.QualifiedItemId))
         {
-            if (Config.visitMtVapiusExclusions && item.QualifiedItemId.Contains("_Node_"))
+            if (Config.Compatibility.visitMtVapiusExclusions && item.QualifiedItemId.Contains("_Node_"))
                 Mod.LogDebug($"VMV exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
-            else if (Config.baublesExclusions && ModConfig.BaublesExcludedItems.Contains(item.QualifiedItemId))
+            else if (Config.Compatibility.baublesExclusions && ModConfig.BaublesExcludedItems.Contains(item.QualifiedItemId))
                 Mod.LogDebug($"Baubles exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
-            else if (Config.resourceChickensExclusions && ModConfig.ResourceChickensExcludedItems.Contains(item.QualifiedItemId))
+            else if (Config.Compatibility.resourceChickensExclusions && ModConfig.ResourceChickensExcludedItems.Contains(item.QualifiedItemId))
                 Mod.LogDebug($"Resource Chickens exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
-            else if (Config.capeStardewExclusions && ModConfig.CapeStardewExcludedItems.Contains(item.QualifiedItemId))
+            else if (Config.Compatibility.capeStardewExclusions && ModConfig.CapeStardewExcludedItems.Contains(item.QualifiedItemId))
                 Mod.LogDebug($"Cape Stardew exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             else
                 Mod.LogDebug($"Skipping excluded item {item.Name} ({item.QualifiedItemId}) at {Location.Name}");

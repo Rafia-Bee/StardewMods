@@ -13,7 +13,7 @@ internal class TreeMossGrabber : TerrainFeaturesMapGrabber
 
     public override bool GrabFeature(Vector2 tile, TerrainFeature feature)
     {
-        if (!Config.harvestMoss)
+        if (!Config.Features.harvestMoss)
             return false;
 
         if (feature is not Tree tree || !tree.hasMoss.Value)

@@ -13,7 +13,7 @@ internal class GenericObjectGrabber : ObjectsMapGrabber
 
     public override bool GrabObject(Vector2 tile, Object obj)
     {
-        if (!Config.forage || !Mod.IsForageGrabEnabled || !IsGrabbable(obj))
+        if (!Config.Features.forage || !Mod.IsForageGrabEnabled || !IsGrabbable(obj))
             return false;
 
         bool isForage = obj.isForage();

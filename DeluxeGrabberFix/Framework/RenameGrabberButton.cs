@@ -21,8 +21,8 @@ internal class RenameGrabberButton
         _grabberObject = grabberObject;
         _currentName = ModEntry.GetGrabberCustomName(grabberObject);
 
-        int offsetX = mod.Config.renameButtonOffsetX;
-        int offsetY = mod.Config.renameButtonOffsetY;
+        int offsetX = mod.Config.GlobalGrab.renameButtonOffsetX;
+        int offsetY = mod.Config.GlobalGrab.renameButtonOffsetY;
 
         int x = menu.xPositionOnScreen + menu.width + offsetX;
         int y = menu.yPositionOnScreen + offsetY + 72;

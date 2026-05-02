@@ -13,7 +13,7 @@ internal class SeedSpotsGrabber : ObjectsMapGrabber
 
     public override bool GrabObject(Vector2 tile, Object obj)
     {
-        if (!Config.seedSpots || obj.QualifiedItemId != ItemIds.SeedSpot)
+        if (!Config.Features.seedSpots || obj.QualifiedItemId != ItemIds.SeedSpot)
             return false;
 
         Item seed = Utility.getRaccoonSeedForCurrentTimeOfYear(

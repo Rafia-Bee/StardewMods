@@ -12,7 +12,7 @@ internal class FishPondGrabber : MapGrabber
 
     public override bool GrabItems()
     {
-        if (Config.disableMachineCollection || !Config.collectFishPonds)
+        if (Config.Machines.disableMachineCollection || !Config.Machines.collectFishPonds)
             return false;
 
         bool grabbed = false;
