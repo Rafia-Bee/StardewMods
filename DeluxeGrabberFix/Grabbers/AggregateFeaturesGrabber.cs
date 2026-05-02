@@ -14,6 +14,9 @@ internal class AggregateFeaturesGrabber : TerrainFeaturesMapGrabber
     public AggregateFeaturesGrabber(ModEntry mod, GameLocation location)
         : base(mod, location)
     {
+        // Only retain sub-grabbers whose BelongsToType has a matching specialized grabber
+        // at this location. Without this, Specialized mode runs every sub-grabber on every
+        // feature and harvests-then-drops items when no chest of the right type exists.
         grabbers = new List<TerrainFeaturesMapGrabber>
         {
             new ForageHoeDirtGrabber(mod, location) { BelongsToType = GrabberType.Forage },
@@ -23,7 +26,7 @@ internal class AggregateFeaturesGrabber : TerrainFeaturesMapGrabber
             new BerryBushGrabber(mod, location) { BelongsToType = GrabberType.Forage },
             new TreeMossGrabber(mod, location) { BelongsToType = GrabberType.Forage },
             new WildflowersGrabber(mod, location) { BelongsToType = GrabberType.Forage }
-        };
+        }.Where(g => g.CanGrab()).ToList();
     }
 
     public override bool GrabFeature(Vector2 tile, TerrainFeature feature)

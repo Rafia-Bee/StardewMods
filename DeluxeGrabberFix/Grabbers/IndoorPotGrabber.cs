@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using StardewValley;
 using DeluxeGrabberFix.Framework;
@@ -37,6 +38,11 @@ internal class IndoorPotGrabber : ObjectsMapGrabber
         }
 
         var nearbyGrabbers = Helpers.GetNearbyObjectsToTile(tile, GetFilteredGrabberPairs(), Config.harvestCropsRange, Config.harvestCropsRangeMode);
+
+        // No grabber in range to receive the harvest, leave the crop alone rather than
+        // destroying it and dropping debris on the ground.
+        if (!nearbyGrabbers.Any())
+            return false;
 
         HarvestInterceptor.BeginIntercept();
         bool shouldDestroy = dirt.crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);
