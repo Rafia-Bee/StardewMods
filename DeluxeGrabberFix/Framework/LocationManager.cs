@@ -48,9 +48,9 @@ internal class LocationManager
 
     internal void ApplyVisitAutoSkip()
     {
-        if (!_mod.Config.selectVisitedOnly || DiscoveredLocations == null)
+        if (!_mod.Config.Locations.selectVisitedOnly || DiscoveredLocations == null)
         {
-            _mod.LogDebug($"ApplyVisitAutoSkip skipped: selectVisitedOnly={_mod.Config.selectVisitedOnly}, discoveredLocations={DiscoveredLocations?.Count ?? -1}");
+            _mod.LogDebug($"ApplyVisitAutoSkip skipped: selectVisitedOnly={_mod.Config.Locations.selectVisitedOnly}, discoveredLocations={DiscoveredLocations?.Count ?? -1}");
             return;
         }
 
@@ -60,7 +60,7 @@ internal class LocationManager
             return;
         }
 
-        _mod.Config.SkippedLocations ??= new HashSet<string>();
+        _mod.Config.Locations.SkippedLocations ??= new HashSet<string>();
         int skipped = 0;
         int enabled = 0;
 
@@ -69,17 +69,17 @@ internal class LocationManager
             bool visited = Game1.MasterPlayer.locationsVisited.Contains(locName);
 
             if (!visited
-                && !_mod.Config.SkippedLocations.Contains(locName)
+                && !_mod.Config.Locations.SkippedLocations.Contains(locName)
                 && !SaveData.AutoSkippedLocations.Contains(locName)
                 && !SaveData.ManuallyManagedLocations.Contains(locName))
             {
-                _mod.Config.SkippedLocations.Add(locName);
+                _mod.Config.Locations.SkippedLocations.Add(locName);
                 SaveData.AutoSkippedLocations.Add(locName);
                 skipped++;
             }
             else if (visited && SaveData.AutoSkippedLocations.Contains(locName))
             {
-                _mod.Config.SkippedLocations.Remove(locName);
+                _mod.Config.Locations.SkippedLocations.Remove(locName);
                 SaveData.AutoSkippedLocations.Remove(locName);
                 enabled++;
             }
@@ -103,13 +103,13 @@ internal class LocationManager
         if (string.IsNullOrEmpty(name))
             return false;
 
-        if (_mod.Config.SkippedLocations?.Contains(name) == true)
+        if (_mod.Config.Locations.SkippedLocations?.Contains(name) == true)
         {
             _mod.LogDebug($"Skipping {name}: disabled in config");
             return false;
         }
 
-        if (_mod.Config.skipFestivalLocations)
+        if (_mod.Config.Locations.skipFestivalLocations)
         {
             if (name.Contains("Festival", StringComparison.OrdinalIgnoreCase)
                 || name.StartsWith("Temp", StringComparison.OrdinalIgnoreCase))
@@ -130,7 +130,7 @@ internal class LocationManager
 
     internal bool HandleLocationVisit(string locationName)
     {
-        if (!_mod.Config.selectVisitedOnly || SaveData == null)
+        if (!_mod.Config.Locations.selectVisitedOnly || SaveData == null)
             return false;
 
         if (string.IsNullOrEmpty(locationName))
@@ -139,7 +139,7 @@ internal class LocationManager
         if (SaveData.BlacklistedLocations.Contains(locationName))
             return false;
 
-        bool wasSkipped = _mod.Config.SkippedLocations?.Remove(locationName) == true;
+        bool wasSkipped = _mod.Config.Locations.SkippedLocations?.Remove(locationName) == true;
         SaveData.AutoSkippedLocations.Remove(locationName);
 
         if (wasSkipped)

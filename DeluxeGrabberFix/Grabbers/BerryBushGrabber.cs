@@ -29,7 +29,7 @@ internal class BerryBushGrabber : TerrainFeaturesMapGrabber
 
     public override bool GrabFeature(Vector2 tile, TerrainFeature feature)
     {
-        if (!Config.bushes || !IsForageableBush(feature, out var bush))
+        if (!Config.Features.bushes || !IsForageableBush(feature, out var bush))
             return false;
 
         // Custom Bush: use its API for correct quality/quantity

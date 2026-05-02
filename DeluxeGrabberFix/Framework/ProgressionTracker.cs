@@ -83,7 +83,7 @@ internal class ProgressionTracker
         {
             // Crop Grabber
             if (!farmer.mailReceived.Contains(UnlockCropMail)
-                && Game1.stats.CropsShipped >= (uint)config.cropsShippedThreshold)
+                && Game1.stats.CropsShipped >= (uint)config.Specialized.cropsShippedThreshold)
             {
                 GrantRecipeAndMail(farmer, UnlockCropMail, CropRecipe);
                 unlocked++;
@@ -97,7 +97,7 @@ internal class ProgressionTracker
         {
             // Forage Grabber
             if (!farmer.mailReceived.Contains(UnlockForageMail)
-                && Game1.stats.ItemsForaged >= (uint)config.itemsForagedThreshold)
+                && Game1.stats.ItemsForaged >= (uint)config.Specialized.itemsForagedThreshold)
             {
                 GrantRecipeAndMail(farmer, UnlockForageMail, ForageRecipe);
                 unlocked++;
@@ -111,7 +111,7 @@ internal class ProgressionTracker
         {
             // Tree Grabber
             if (!farmer.mailReceived.Contains(UnlockTreeMail)
-                && Game1.stats.StumpsChopped >= (uint)config.stumpsChoppedThreshold)
+                && Game1.stats.StumpsChopped >= (uint)config.Specialized.stumpsChoppedThreshold)
             {
                 GrantRecipeAndMail(farmer, UnlockTreeMail, TreeRecipe);
                 unlocked++;
@@ -125,7 +125,7 @@ internal class ProgressionTracker
         {
             // Scavenger Grabber
             if (!farmer.mailReceived.Contains(UnlockScavengerMail)
-                && GetMuseumDonationCount() >= config.museumDonationsThreshold)
+                && GetMuseumDonationCount() >= config.Specialized.museumDonationsThreshold)
             {
                 GrantRecipeAndMail(farmer, UnlockScavengerMail, ScavengerRecipe);
                 unlocked++;
@@ -139,7 +139,7 @@ internal class ProgressionTracker
         {
             // Machine Grabber
             if (!farmer.mailReceived.Contains(UnlockMachineMail)
-                && farmer.totalMoneyEarned >= (uint)config.totalMoneyEarnedThreshold)
+                && farmer.totalMoneyEarned >= (uint)config.Specialized.totalMoneyEarnedThreshold)
             {
                 GrantRecipeAndMail(farmer, UnlockMachineMail, MachineRecipe);
                 unlocked++;
@@ -181,7 +181,7 @@ internal class ProgressionTracker
         // Crop Grabber: owns Animal + shipped enough crops
         if (ownedTypes.Contains(GrabberType.Animal)
             && !farmer.mailReceived.Contains(UnlockCropMail)
-            && Game1.stats.CropsShipped >= (uint)config.cropsShippedThreshold)
+            && Game1.stats.CropsShipped >= (uint)config.Specialized.cropsShippedThreshold)
         {
             AddMailIfNotQueued(farmer, UnlockCropMail);
             _mod.LogDebug("Crop Grabber milestone met, unlock mail queued");
@@ -190,7 +190,7 @@ internal class ProgressionTracker
         // Forage Grabber: owns Animal + Crop + foraged enough
         if (ownedTypes.Contains(GrabberType.Crop)
             && !farmer.mailReceived.Contains(UnlockForageMail)
-            && Game1.stats.ItemsForaged >= (uint)config.itemsForagedThreshold)
+            && Game1.stats.ItemsForaged >= (uint)config.Specialized.itemsForagedThreshold)
         {
             AddMailIfNotQueued(farmer, UnlockForageMail);
             _mod.LogDebug("Forage Grabber milestone met, unlock mail queued");
@@ -199,7 +199,7 @@ internal class ProgressionTracker
         // Tree Grabber: owns previous + chopped enough stumps
         if (ownedTypes.Contains(GrabberType.Forage)
             && !farmer.mailReceived.Contains(UnlockTreeMail)
-            && Game1.stats.StumpsChopped >= (uint)config.stumpsChoppedThreshold)
+            && Game1.stats.StumpsChopped >= (uint)config.Specialized.stumpsChoppedThreshold)
         {
             AddMailIfNotQueued(farmer, UnlockTreeMail);
             _mod.LogDebug("Tree Grabber milestone met, unlock mail queued");
@@ -208,7 +208,7 @@ internal class ProgressionTracker
         // Scavenger Grabber: owns previous + enough museum donations
         if (ownedTypes.Contains(GrabberType.Tree)
             && !farmer.mailReceived.Contains(UnlockScavengerMail)
-            && GetMuseumDonationCount() >= config.museumDonationsThreshold)
+            && GetMuseumDonationCount() >= config.Specialized.museumDonationsThreshold)
         {
             AddMailIfNotQueued(farmer, UnlockScavengerMail);
             _mod.LogDebug("Scavenger Grabber milestone met, unlock mail queued");
@@ -217,7 +217,7 @@ internal class ProgressionTracker
         // Machine Grabber: owns previous + earned enough gold
         if (ownedTypes.Contains(GrabberType.Scavenger)
             && !farmer.mailReceived.Contains(UnlockMachineMail)
-            && farmer.totalMoneyEarned >= (uint)config.totalMoneyEarnedThreshold)
+            && farmer.totalMoneyEarned >= (uint)config.Specialized.totalMoneyEarnedThreshold)
         {
             AddMailIfNotQueued(farmer, UnlockMachineMail);
             _mod.LogDebug("Machine Grabber milestone met, unlock mail queued");

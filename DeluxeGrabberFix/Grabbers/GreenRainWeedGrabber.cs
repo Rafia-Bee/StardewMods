@@ -16,7 +16,7 @@ internal class GreenRainWeedGrabber : MapGrabber
 
     public override bool GrabItems()
     {
-        if (!Config.harvestGreenRainWeeds)
+        if (!Config.Features.harvestGreenRainWeeds)
             return false;
 
         if (Location.resourceClumps.Count == 0)

@@ -15,7 +15,7 @@ internal class DebrisGrabber : MapGrabber
 
     public override bool GrabItems()
     {
-        if (!Config.collectDebris)
+        if (!Config.Features.collectDebris)
             return false;
 
         var debrisList = Location.debris.ToList();

@@ -37,7 +37,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
         if (obj.modData.TryGetValue("spacechase0.SpaceCore/TillDropOverride", out string tillDropId))
             return TryGrabSpaceCoreTillSpot(tile, tillDropId);
 
-        if (!Config.artifactSpots)
+        if (!Config.Features.artifactSpots)
             return false;
 
         var items = GetForagedArtifactsFromArtifactSpot(Location, tile);
@@ -52,7 +52,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
 
     private bool TryGrabSpaceCoreTillSpot(Vector2 tile, string qualifiedItemId)
     {
-        if (!Config.artifactSpots)
+        if (!Config.Features.artifactSpots)
             return false;
 
         var item = ItemRegistry.Create(qualifiedItemId);
@@ -67,7 +67,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
 
     private bool TryGrabBuriedItems(Vector2 tile, Object obj)
     {
-        if (!Config.buriedItems)
+        if (!Config.Features.buriedItems)
             return false;
 
         FieldInfo itemsField = obj.GetType().GetField("Items");

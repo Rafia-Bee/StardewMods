@@ -23,7 +23,7 @@ internal class OrePanGrabber : MapGrabber
 
     public override bool GrabItems()
     {
-        if (!Config.orePan)
+        if (!Config.Features.orePan)
             return false;
 
         Point panPoint = Location.orePanPoint.Value;

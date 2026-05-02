@@ -88,10 +88,10 @@ public class ModEntry : Mod
 
         ConfigManager.SetGlobalConfig(Config);
 
-        if (Config.fellSecretWoodsStumps)
+        if (Config.Features.fellSecretWoodsStumps)
         {
-            Config.fellHardwoodStumps = true;
-            Config.fellSecretWoodsStumps = false;
+            Config.Features.fellHardwoodStumps = true;
+            Config.Features.fellSecretWoodsStumps = false;
             Helper.WriteConfig(Config);
         }
 
@@ -133,7 +133,7 @@ public class ModEntry : Mod
             return;
         if (_instance.IsGrabbing)
             return;
-        if (_instance.Config.grabFrequency != ModConfig.GrabFrequency.Instant || _instance.Config.disableMachineCollection)
+        if (_instance.Config.grabFrequency != ModConfig.GrabFrequency.Instant || _instance.Config.Machines.disableMachineCollection)
             return;
 
         _instance._machineReadyLocations.Add(location);
@@ -289,7 +289,7 @@ public class ModEntry : Mod
         // In Specialized mode, the fire keybind respects the global grabber setting
         if (Config.grabberMode == ModConfig.GrabberMode.Specialized)
         {
-            if (Config.globalFireButton == SButton.None || e.Button != Config.globalFireButton)
+            if (Config.GlobalGrab.globalFireButton == SButton.None || e.Button != Config.GlobalGrab.globalFireButton)
                 return;
 
             // Off mode: fire keybind disabled (grabbers work locally via automatic grabs)
@@ -318,14 +318,14 @@ public class ModEntry : Mod
             return;
         }
 
-        if (e.Button == Config.designateGrabberButton
+        if (e.Button == Config.GlobalGrab.designateGrabberButton
             && Config.globalGrabber == ModConfig.GlobalGrabberMode.All)
         {
             _grabbers.HandleDesignateGrabber();
             return;
         }
 
-        if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Off || Config.globalFireButton != e.Button)
+        if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Off || Config.GlobalGrab.globalFireButton != e.Button)
             return;
 
         if (Config.globalGrabber == ModConfig.GlobalGrabberMode.All && !_grabbers.HasDesignatedGrabber())
@@ -533,60 +533,18 @@ public class ModEntry : Mod
 
     private void LogConfig()
     {
-        Monitor.Log(
-            $"Config: grabberMode={Config.grabberMode}, " +
-            $"forage={Config.forage}, animalProducts={Config.animalProducts}, " +
-            $"slimeHutch={Config.slimeHutch}, farmCaveMushrooms={Config.farmCaveMushrooms}, " +
-            $"harvestCrops={Config.harvestCrops}, indoorPots={Config.harvestCropsIndoorPots}, " +
-            $"flowers={Config.flowers}, beeHouseRange={Config.beeHouseRange}, " +
-            $"cropRange={Config.harvestCropsRange}, rangeMode={Config.harvestCropsRangeMode}, " +
-            $"fruitTrees={Config.fruitTrees}, bushes={Config.bushes}, seedTrees={Config.seedTrees}, " +
-            $"artifactSpots={Config.artifactSpots}, buriedItems={Config.buriedItems}, " +
-            $"seedSpots={Config.seedSpots}, orePan={Config.orePan}, " +
-            $"garbageCans={Config.garbageCans}, fellStumps={Config.fellHardwoodStumps}, " +
-            $"fellSecretWoodsStumps={Config.fellSecretWoodsStumps}, " +
-            $"moss={Config.harvestMoss}, greenRainWeeds={Config.harvestGreenRainWeeds}, " +
-            $"debris={Config.collectDebris}, excludeQuestItems={Config.excludeQuestItems}",
-            LogLevel.Trace);
-
-        Monitor.Log(
-            $"Config (machines): disableMachineCollection={Config.disableMachineCollection}, " +
-            $"crabPots={Config.collectCrabPots}, beeHouses={Config.collectBeeHouses}, " +
-            $"tappers={Config.collectTappers}, leafBaskets={Config.collectLeafBaskets}, " +
-            $"mushroomLogs={Config.collectMushroomLogs}, fishPonds={Config.collectFishPonds}, " +
-            $"kegs={Config.collectKegs}, preservesJars={Config.collectPreservesJars}, " +
-            $"cheesePresses={Config.collectCheesePresses}, mayo={Config.collectMayonnaiseMachines}, " +
-            $"looms={Config.collectLooms}, oilMakers={Config.collectOilMakers}, " +
-            $"furnaces={Config.collectFurnaces}, charcoalKilns={Config.collectCharcoalKilns}, " +
-            $"recycling={Config.collectRecyclingMachines}, seedMakers={Config.collectSeedMakers}, " +
-            $"boneMills={Config.collectBoneMills}, geodeCrushers={Config.collectGeodeCrushers}, " +
-            $"woodChippers={Config.collectWoodChippers}, deconstructors={Config.collectDeconstructors}, " +
-            $"fishSmokers={Config.collectFishSmokers}, baitMakers={Config.collectBaitMakers}, " +
-            $"dehydrators={Config.collectDehydrators}, crystalariums={Config.collectCrystalariums}, " +
-            $"lightningRods={Config.collectLightningRods}, wormBins={Config.collectWormBins}, " +
-            $"solarPanels={Config.collectSolarPanels}, slimeEggPresses={Config.collectSlimeEggPresses}, " +
-            $"coffeeMakers={Config.collectCoffeeMakers}, sodaMachines={Config.collectSodaMachines}, " +
-            $"statues={Config.collectStatues}, otherMachines={Config.collectOtherMachines}",
-            LogLevel.Trace);
-
-        Monitor.Log(
-            $"Config (global/misc): globalMode={Config.globalGrabber}, globalAutoFire={Config.globalAutoFire}, " +
-            $"fireButton={Config.globalFireButton}, designateButton={Config.designateGrabberButton}, " +
-            $"reportYield={Config.reportYield}, debugLogging={Config.debugLogging}, " +
-            $"gainXP={Config.gainExperience}, grabFrequency={Config.grabFrequency}, " +
-            $"skipFestivals={Config.skipFestivalLocations}, selectVisitedOnly={Config.selectVisitedOnly}, " +
-            $"replantReminder={Config.replantReminder}, replantReminderTime={Config.replantReminderTime}",
-            LogLevel.Trace);
-
-        Monitor.Log(
-            $"Config (compat): automateCompat={Config.automateCompatibility}, " +
-            $"sunberryExcl={Config.sunberryVillageExclusions}, mtVapiusExcl={Config.visitMtVapiusExclusions}, " +
-            $"baublesExcl={Config.baublesExclusions}, resourceChickensExcl={Config.resourceChickensExclusions}, " +
-            $"capeStardewExcl={Config.capeStardewExclusions}, wildflowers={Config.collectWildflowers}",
-            LogLevel.Trace);
-
-        if (Config.excludedItems?.Count > 0)
-            Monitor.Log($"Excluded items: {string.Join(", ", Config.excludedItems)}", LogLevel.Trace);
+        // Reflection-based dump: any new field added to ModConfig (top-level or nested
+        // group) is automatically picked up. No hand-maintained list to drift out of sync.
+        var settings = new Newtonsoft.Json.JsonSerializerSettings
+        {
+            Formatting = Newtonsoft.Json.Formatting.Indented,
+            ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver
+            {
+                IgnoreSerializableInterface = true
+            }
+        };
+        var json = Newtonsoft.Json.JsonConvert.SerializeObject(Config, settings);
+        Monitor.Log("Config:\n" + json, LogLevel.Trace);
     }
 
     private void RepairStuckMachines()
@@ -857,7 +815,7 @@ public class ModEntry : Mod
 
     private void OnDayEnding(object sender, DayEndingEventArgs e)
     {
-        if (!Config.forage)
+        if (!Config.Features.forage)
             return;
 
         LogDebug("Autograbbing forage before sleep");
@@ -877,7 +835,7 @@ public class ModEntry : Mod
 
         // Auto-fire global grab at day start if configured (disabled in Specialized mode)
         if (Config.grabberMode != ModConfig.GrabberMode.Specialized
-            && Config.globalAutoFire && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber())
+            && Config.GlobalGrab.globalAutoFire && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber())
         {
             _pendingGlobalAutoFire = true;
             _globalAutoFireDelay = _automateApi != null ? 5 : 1;
@@ -898,7 +856,7 @@ public class ModEntry : Mod
     private void OnRenderedWorld(object sender, RenderedWorldEventArgs e)
     {
         if (!Context.IsPlayerFree || Game1.eventUp || Game1.farmEvent != null
-            || Config.harvestCropsRange <= 0 || !Config.harvestCrops
+            || Config.Features.harvestCropsRange <= 0 || !Config.Features.harvestCrops
             || Game1.player.ActiveObject == null
             || !Game1.player.ActiveObject.bigCraftable.Value
             || !GrabberTypeHelper.IsGrabber(Game1.player.ActiveObject.QualifiedItemId))
@@ -913,12 +871,12 @@ public class ModEntry : Mod
         if (!Game1.IsPerformingMousePlacement())
             return;
 
-        int range = Config.harvestCropsRange;
+        int range = Config.Features.harvestCropsRange;
         for (int x = centerX - range; x <= centerX + range; x++)
         {
             for (int y = centerY - range; y <= centerY + range; y++)
             {
-                if (Config.harvestCropsRangeMode != ModConfig.HarvestCropsRangeMode.Walk
+                if (Config.Features.harvestCropsRangeMode != ModConfig.HarvestCropsRangeMode.Walk
                     || Math.Abs(centerX - x) + Math.Abs(centerY - y) <= range)
                 {
                     Game1.spriteBatch.Draw(

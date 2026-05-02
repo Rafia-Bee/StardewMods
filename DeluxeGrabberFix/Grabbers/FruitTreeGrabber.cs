@@ -24,7 +24,7 @@ internal class FruitTreeGrabber : TerrainFeaturesMapGrabber
 
     public override bool GrabFeature(Vector2 tile, TerrainFeature feature)
     {
-        if (!Config.fruitTrees)
+        if (!Config.Features.fruitTrees)
             return false;
 
         if (feature is not FruitTree tree || !IsHarvestableFruitTree(tree))

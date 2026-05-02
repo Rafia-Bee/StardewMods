@@ -16,7 +16,7 @@ internal class HarvestableCropHoeDirtGrabber : TerrainFeaturesMapGrabber
 
     public override bool GrabFeature(Vector2 tile, TerrainFeature feature)
     {
-        if (!Config.harvestCrops)
+        if (!Config.Features.harvestCrops)
             return false;
 
         if (feature is not HoeDirt dirt || dirt.crop == null)
@@ -30,12 +30,12 @@ internal class HarvestableCropHoeDirtGrabber : TerrainFeaturesMapGrabber
             if (qualifiedId != null && Config.IsItemExcluded(qualifiedId))
                 return false;
 
-            if (Config.flowers != ModConfig.FlowerHarvestMode.All
+            if (Config.Features.flowers != ModConfig.FlowerHarvestMode.All
                 && ItemRegistry.Create<Object>(harvestId).Category == Object.flowersCategory)
             {
-                if (Config.flowers == ModConfig.FlowerHarvestMode.Off)
+                if (Config.Features.flowers == ModConfig.FlowerHarvestMode.Off)
                     return false;
-                if (Config.flowers == ModConfig.FlowerHarvestMode.Smart && Helpers.IsFlowerNearBeeHouse(Location, tile, Config.beeHouseRange))
+                if (Config.Features.flowers == ModConfig.FlowerHarvestMode.Smart && Helpers.IsFlowerNearBeeHouse(Location, tile, Config.Features.beeHouseRange))
                     return false;
             }
         }
@@ -44,7 +44,7 @@ internal class HarvestableCropHoeDirtGrabber : TerrainFeaturesMapGrabber
         // (the .Any() guard, TryAddItem's foreach, and TryAddItem's chest-full
         // report loop). Specialized mode's GetFilteredGrabberPairs adds a Where
         // over a Where, so re-evaluating is non-trivial on big farms.
-        var nearbyGrabbers = Helpers.GetNearbyObjectsToTile(tile, GetFilteredGrabberPairs(), Config.harvestCropsRange, Config.harvestCropsRangeMode).ToList();
+        var nearbyGrabbers = Helpers.GetNearbyObjectsToTile(tile, GetFilteredGrabberPairs(), Config.Features.harvestCropsRange, Config.Features.harvestCropsRangeMode).ToList();
 
         // No grabber in range to receive the harvest, leave the crop alone rather than
         // destroying it and dropping debris on the ground.

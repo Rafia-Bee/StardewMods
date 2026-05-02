@@ -14,7 +14,7 @@ internal class AnimalProductGrabber : MapGrabber
 
     public override bool GrabItems()
     {
-        if (!Config.animalProducts)
+        if (!Config.Features.animalProducts)
             return false;
 
         bool grabbed = false;

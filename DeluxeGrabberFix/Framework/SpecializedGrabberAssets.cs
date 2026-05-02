@@ -74,7 +74,7 @@ internal class SpecializedGrabberAssets
             e.Edit(asset =>
             {
                 var data = asset.AsDictionary<string, string>().Data;
-                var c = _getConfig();
+                var c = _getConfig().Specialized;
 
                 // Format: ingredients/context/output id/isBigCraftable/conditions/display name
                 // Condition "none" prevents auto-learning; recipes are taught via mail

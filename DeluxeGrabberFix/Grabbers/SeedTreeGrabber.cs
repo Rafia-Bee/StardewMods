@@ -15,7 +15,7 @@ internal class SeedTreeGrabber : TerrainFeaturesMapGrabber
 
     public override bool GrabFeature(Vector2 tile, TerrainFeature feature)
     {
-        if (!Config.seedTrees)
+        if (!Config.Features.seedTrees)
             return false;
 
         if (feature is not Tree tree || !IsHarvestableSeedTree(tree))

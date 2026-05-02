@@ -39,124 +39,164 @@ internal class ModConfig
         Specialized
     }
 
-    public GrabberMode grabberMode;
-    public GlobalGrabberMode globalGrabber;
-    public GrabFrequency grabFrequency;
-    public HarvestCropsRangeMode harvestCropsRangeMode;
-    public int harvestCropsRange;
+    // ---- Top-level: modes + cross-cutting UX flags ----
 
-    // Specialized grabber milestone thresholds
-    public int cropsShippedThreshold = 200;
-    public int itemsForagedThreshold = 200;
-    public int stumpsChoppedThreshold = 50;
-    public int museumDonationsThreshold = 15;
-    public int totalMoneyEarnedThreshold = 250000;
+    public GrabberMode grabberMode = GrabberMode.Classic;
+    public GlobalGrabberMode globalGrabber = GlobalGrabberMode.Off;
+    public GrabFrequency grabFrequency = GrabFrequency.Instant;
 
-    // Specialized grabber crafting costs
-    // Crop Grabber: Wood, Gold Bar, Quality Sprinkler
-    public int recipeCropWood = 1000;
-    public int recipeCropGoldBar = 5;
-    public int recipeCropQualitySprinkler = 4;
-    // Forage Grabber: Wood, Gold Bar, Mixed Seeds, Fiber
-    public int recipeForageWood = 2000;
-    public int recipeForageGoldBar = 20;
-    public int recipeForageMixedSeeds = 100;
-    public int recipeForageFiber = 100;
-    // Tree Grabber: Hardwood, Iridium Bar, Maple Syrup, Oak Resin, Pine Tar
-    public int recipeTreeHardwood = 50;
-    public int recipeTreeIridiumBar = 2;
-    public int recipeTreeMapleSyrup = 10;
-    public int recipeTreeOakResin = 10;
-    public int recipeTreePineTar = 10;
-    // Scavenger Grabber: Hardwood, Iridium Bar, Bone Fragment, Artifact Trove
-    public int recipeScavengerHardwood = 200;
-    public int recipeScavengerIridiumBar = 5;
-    public int recipeScavengerBoneFragment = 50;
-    public int recipeScavengerArtifactTrove = 5;
-    // Machine Grabber: Iridium Bar, Battery Pack, Diamond
-    public int recipeMachineIridiumBar = 20;
-    public int recipeMachineBatteryPack = 10;
-    public int recipeMachineDiamond = 10;
-
-    public bool animalProducts;
-    public bool slimeHutch;
-    public bool farmCaveMushrooms;
-    public bool harvestCrops;
-    public bool harvestCropsIndoorPots;
-    public bool artifactSpots;
-    public bool buriedItems = true;
-    public bool orePan;
-    public bool forage;
-    public bool bushes;
-    public bool fruitTrees;
-    public bool seedTrees;
-    public FlowerHarvestMode flowers;
-    public int beeHouseRange;
-    public bool reportYield;
-    public bool replantReminder;
-    public int replantReminderTime;
+    public bool reportYield = true;
     public bool debugLogging;
-    public bool specializedGrabbersCountForPerfection;
-    public bool gainExperience;
-    public bool fellHardwoodStumps;
-    public bool fellSecretWoodsStumps;
-    public bool garbageCans;
-    public bool seedSpots;
-    public bool harvestMoss;
-    public bool harvestGreenRainWeeds;
-    public bool excludeQuestItems;
-    public bool skipFestivalLocations;
-    public bool selectVisitedOnly;
-    public bool disableMachineCollection;
-    public bool collectCrabPots;
-    public bool collectBeeHouses;
-    public bool collectTappers;
-    public bool collectLeafBaskets;
-    public bool collectMushroomLogs;
-    public bool collectFishPonds;
-    public bool collectKegs;
-    public bool collectPreservesJars;
-    public bool collectCheesePresses;
-    public bool collectMayonnaiseMachines;
-    public bool collectLooms;
-    public bool collectOilMakers;
-    public bool collectFurnaces;
-    public bool collectCharcoalKilns;
-    public bool collectRecyclingMachines;
-    public bool collectSeedMakers;
-    public bool collectBoneMills;
-    public bool collectGeodeCrushers;
-    public bool collectWoodChippers;
-    public bool collectDeconstructors;
-    public bool collectFishSmokers;
-    public bool collectBaitMakers;
-    public bool collectDehydrators;
-    public bool collectCrystalariums;
-    public bool collectLightningRods;
-    public bool collectWormBins;
-    public bool collectSolarPanels;
-    public bool collectSlimeEggPresses;
-    public bool collectCoffeeMakers;
-    public bool collectSodaMachines;
-    public bool collectStatues;
-    public bool collectOtherMachines;
-    public bool collectDebris;
-    public bool automateCompatibility;
-    public HashSet<string> SkippedLocations;
-    public HashSet<string> excludedItems;
-    public bool sunberryVillageExclusions;
-    public bool visitMtVapiusExclusions;
-    public bool baublesExclusions;
-    public bool resourceChickensExclusions;
-    public bool capeStardewExclusions;
-    public bool collectWildflowers;
-    public SButton globalFireButton;
-    public SButton designateGrabberButton;
-    public bool globalAutoFire;
-    public int globalButtonOffsetX;
-    public int globalButtonOffsetY;
-    public int renameButtonOffsetX;
-    public int renameButtonOffsetY;
+    public bool gainExperience = true;
+    public bool replantReminder = true;
+    public int replantReminderTime = 2000;
+
+    // ---- Nested groups ----
+
+    public FeatureSettings Features { get; set; } = new();
+    public MachineSettings Machines { get; set; } = new();
+    public SpecializedSettings Specialized { get; set; } = new();
+    public LocationSettings Locations { get; set; } = new();
+    public GlobalGrabSettings GlobalGrab { get; set; } = new();
+    public CompatibilitySettings Compatibility { get; set; } = new();
+
+    internal class FeatureSettings
+    {
+        public bool animalProducts = true;
+        public bool slimeHutch = true;
+        public bool farmCaveMushrooms = true;
+        public bool harvestCrops;
+        public bool harvestCropsIndoorPots = true;
+        public int harvestCropsRange = -1;
+        public HarvestCropsRangeMode harvestCropsRangeMode = HarvestCropsRangeMode.Walk;
+        public bool artifactSpots;
+        public bool buriedItems = true;
+        public bool orePan;
+        public bool forage = true;
+        public bool bushes = true;
+        public bool fruitTrees;
+        public bool seedTrees;
+        public FlowerHarvestMode flowers = FlowerHarvestMode.Smart;
+        public int beeHouseRange = 5;
+        public bool garbageCans;
+        public bool seedSpots;
+        public bool harvestMoss;
+        public bool harvestGreenRainWeeds;
+        public bool fellHardwoodStumps;
+        public bool fellSecretWoodsStumps;
+        public bool collectDebris;
+        public bool collectWildflowers = true;
+    }
+
+    internal class MachineSettings
+    {
+        public bool disableMachineCollection;
+        public bool collectCrabPots = true;
+        public bool collectBeeHouses = true;
+        public bool collectTappers = true;
+        public bool collectLeafBaskets = true;
+        public bool collectMushroomLogs = true;
+        public bool collectFishPonds = true;
+        public bool collectKegs = true;
+        public bool collectPreservesJars = true;
+        public bool collectCheesePresses = true;
+        public bool collectMayonnaiseMachines = true;
+        public bool collectLooms = true;
+        public bool collectOilMakers = true;
+        public bool collectFurnaces = true;
+        public bool collectCharcoalKilns = true;
+        public bool collectRecyclingMachines = true;
+        public bool collectSeedMakers = true;
+        public bool collectBoneMills = true;
+        public bool collectGeodeCrushers = true;
+        public bool collectWoodChippers = true;
+        public bool collectDeconstructors = true;
+        public bool collectFishSmokers = true;
+        public bool collectBaitMakers = true;
+        public bool collectDehydrators = true;
+        public bool collectCrystalariums = true;
+        public bool collectLightningRods = true;
+        public bool collectWormBins = true;
+        public bool collectSolarPanels = true;
+        public bool collectSlimeEggPresses = true;
+        public bool collectCoffeeMakers = true;
+        public bool collectSodaMachines = true;
+        public bool collectStatues = true;
+        public bool collectOtherMachines = true;
+        public bool automateCompatibility = true;
+    }
+
+    internal class SpecializedSettings
+    {
+        // Milestone thresholds
+        public int cropsShippedThreshold = 200;
+        public int itemsForagedThreshold = 200;
+        public int stumpsChoppedThreshold = 50;
+        public int museumDonationsThreshold = 15;
+        public int totalMoneyEarnedThreshold = 250000;
+
+        public bool specializedGrabbersCountForPerfection = true;
+
+        // Crop Grabber: Wood, Gold Bar, Quality Sprinkler
+        public int recipeCropWood = 1000;
+        public int recipeCropGoldBar = 5;
+        public int recipeCropQualitySprinkler = 4;
+
+        // Forage Grabber: Wood, Gold Bar, Mixed Seeds, Fiber
+        public int recipeForageWood = 2000;
+        public int recipeForageGoldBar = 20;
+        public int recipeForageMixedSeeds = 100;
+        public int recipeForageFiber = 100;
+
+        // Tree Grabber: Hardwood, Iridium Bar, Maple Syrup, Oak Resin, Pine Tar
+        public int recipeTreeHardwood = 50;
+        public int recipeTreeIridiumBar = 2;
+        public int recipeTreeMapleSyrup = 10;
+        public int recipeTreeOakResin = 10;
+        public int recipeTreePineTar = 10;
+
+        // Scavenger Grabber: Hardwood, Iridium Bar, Bone Fragment, Artifact Trove
+        public int recipeScavengerHardwood = 200;
+        public int recipeScavengerIridiumBar = 5;
+        public int recipeScavengerBoneFragment = 50;
+        public int recipeScavengerArtifactTrove = 5;
+
+        // Machine Grabber: Iridium Bar, Battery Pack, Diamond
+        public int recipeMachineIridiumBar = 20;
+        public int recipeMachineBatteryPack = 10;
+        public int recipeMachineDiamond = 10;
+    }
+
+    internal class LocationSettings
+    {
+        public HashSet<string> SkippedLocations = new();
+        public bool skipFestivalLocations = true;
+        public bool selectVisitedOnly;
+    }
+
+    internal class GlobalGrabSettings
+    {
+        public SButton globalFireButton = SButton.B;
+        public SButton designateGrabberButton = SButton.G;
+        public bool globalAutoFire;
+        public int globalButtonOffsetX;
+        public int globalButtonOffsetY;
+        public int renameButtonOffsetX;
+        public int renameButtonOffsetY;
+    }
+
+    internal class CompatibilitySettings
+    {
+        public HashSet<string> excludedItems = new();
+        public bool excludeQuestItems = true;
+        public bool sunberryVillageExclusions = true;
+        public bool visitMtVapiusExclusions = true;
+        public bool baublesExclusions = true;
+        public bool resourceChickensExclusions = true;
+        public bool capeStardewExclusions = true;
+    }
+
+    // ---- Static enum lookups (unchanged) ----
 
     internal static Dictionary<HarvestCropsRangeMode, string> HarvestCropsRangeDict = new()
     {
@@ -258,112 +298,62 @@ internal class ModConfig
 
     public bool IsItemExcluded(string qualifiedItemId)
     {
-        if (excludedItems != null && excludedItems.Contains(qualifiedItemId))
+        var c = Compatibility;
+        if (c.excludedItems != null && c.excludedItems.Contains(qualifiedItemId))
             return true;
-        if (sunberryVillageExclusions && SunberryVillageExcludedItems.Contains(qualifiedItemId))
+        if (c.sunberryVillageExclusions && SunberryVillageExcludedItems.Contains(qualifiedItemId))
             return true;
-        if (visitMtVapiusExclusions && qualifiedItemId.Contains("_Node_"))
+        if (c.visitMtVapiusExclusions && qualifiedItemId.Contains("_Node_"))
             return true;
-        if (baublesExclusions && BaublesExcludedItems.Contains(qualifiedItemId))
+        if (c.baublesExclusions && BaublesExcludedItems.Contains(qualifiedItemId))
             return true;
-        if (resourceChickensExclusions && ResourceChickensExcludedItems.Contains(qualifiedItemId))
+        if (c.resourceChickensExclusions && ResourceChickensExcludedItems.Contains(qualifiedItemId))
             return true;
-        if (capeStardewExclusions && CapeStardewExcludedItems.Contains(qualifiedItemId))
+        if (c.capeStardewExclusions && CapeStardewExcludedItems.Contains(qualifiedItemId))
             return true;
         return false;
     }
 
-    public ModConfig()
-    {
-        grabberMode = GrabberMode.Classic;
-        animalProducts = true;
-        slimeHutch = true;
-        farmCaveMushrooms = true;
-        harvestCrops = false;
-        harvestCropsIndoorPots = true;
-        harvestCropsRange = -1;
-        harvestCropsRangeMode = HarvestCropsRangeMode.Walk;
-        artifactSpots = false;
-        orePan = false;
-        forage = true;
-        bushes = true;
-        fruitTrees = false;
-        seedTrees = false;
-        flowers = FlowerHarvestMode.Smart;
-        beeHouseRange = 5;
-        reportYield = true;
-        replantReminder = true;
-        replantReminderTime = 2000;
-        debugLogging = false;
-        specializedGrabbersCountForPerfection = true;
-        gainExperience = true;
-        fellHardwoodStumps = false;
-        garbageCans = false;
-        globalGrabber = GlobalGrabberMode.Off;
-        globalFireButton = SButton.B;
-        designateGrabberButton = SButton.G;
-        globalAutoFire = false;
-        globalButtonOffsetX = 0;
-        globalButtonOffsetY = 0;
-        renameButtonOffsetX = 0;
-        renameButtonOffsetY = 0;
-        seedSpots = false;
-        harvestMoss = false;
-        harvestGreenRainWeeds = false;
-        collectDebris = false;
-        grabFrequency = GrabFrequency.Instant;
-        excludeQuestItems = true;
-        skipFestivalLocations = true;
-        selectVisitedOnly = false;
-        disableMachineCollection = false;
-        collectCrabPots = true;
-        collectBeeHouses = true;
-        collectTappers = true;
-        collectLeafBaskets = true;
-        collectMushroomLogs = true;
-        collectFishPonds = true;
-        collectKegs = true;
-        collectPreservesJars = true;
-        collectCheesePresses = true;
-        collectMayonnaiseMachines = true;
-        collectLooms = true;
-        collectOilMakers = true;
-        collectFurnaces = true;
-        collectCharcoalKilns = true;
-        collectRecyclingMachines = true;
-        collectSeedMakers = true;
-        collectBoneMills = true;
-        collectGeodeCrushers = true;
-        collectWoodChippers = true;
-        collectDeconstructors = true;
-        collectFishSmokers = true;
-        collectBaitMakers = true;
-        collectDehydrators = true;
-        collectCrystalariums = true;
-        collectLightningRods = true;
-        collectWormBins = true;
-        collectSolarPanels = true;
-        collectSlimeEggPresses = true;
-        collectCoffeeMakers = true;
-        collectSodaMachines = true;
-        collectStatues = true;
-        collectOtherMachines = true;
-        automateCompatibility = true;
-        SkippedLocations = new HashSet<string>();
-        excludedItems = new HashSet<string>();
-        sunberryVillageExclusions = true;
-        visitMtVapiusExclusions = true;
-        baublesExclusions = true;
-        resourceChickensExclusions = true;
-        capeStardewExclusions = true;
-        collectWildflowers = true;
-    }
+    public ModConfig() { }
 
     internal ModConfig Clone()
     {
         var clone = (ModConfig)MemberwiseClone();
-        clone.SkippedLocations = SkippedLocations != null ? new HashSet<string>(SkippedLocations) : new HashSet<string>();
-        clone.excludedItems = excludedItems != null ? new HashSet<string>(excludedItems) : new HashSet<string>();
+
+        clone.Features = new FeatureSettings();
+        CopyAll(Features, clone.Features);
+
+        clone.Machines = new MachineSettings();
+        CopyAll(Machines, clone.Machines);
+
+        clone.Specialized = new SpecializedSettings();
+        CopyAll(Specialized, clone.Specialized);
+
+        clone.Locations = new LocationSettings();
+        CopyAll(Locations, clone.Locations);
+        clone.Locations.SkippedLocations = Locations.SkippedLocations != null
+            ? new HashSet<string>(Locations.SkippedLocations)
+            : new HashSet<string>();
+
+        clone.GlobalGrab = new GlobalGrabSettings();
+        CopyAll(GlobalGrab, clone.GlobalGrab);
+
+        clone.Compatibility = new CompatibilitySettings();
+        CopyAll(Compatibility, clone.Compatibility);
+        clone.Compatibility.excludedItems = Compatibility.excludedItems != null
+            ? new HashSet<string>(Compatibility.excludedItems)
+            : new HashSet<string>();
+
         return clone;
+    }
+
+    private static void CopyAll<T>(T source, T target) where T : class
+    {
+        foreach (var field in typeof(T).GetFields(
+            System.Reflection.BindingFlags.Public |
+            System.Reflection.BindingFlags.Instance))
+        {
+            field.SetValue(target, field.GetValue(source));
+        }
     }
 }

@@ -136,7 +136,7 @@ internal class GrabberManager
     internal void FireGlobalGrab()
     {
         _locations.DiscoverLocations();
-        if (_mod.Config.selectVisitedOnly)
+        if (_mod.Config.Locations.selectVisitedOnly)
             _locations.ApplyVisitAutoSkip();
 
         _mod.LogDebug("Firing global grab");
