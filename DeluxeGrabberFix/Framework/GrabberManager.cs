@@ -129,6 +129,10 @@ internal class GrabberManager
                + _mod.Helper.Translation.Get("hud.grabber-full-overflow", new { count = list.Count - maxShown });
     }
 
+    /// Iterates every location and runs a full grab. Caller is responsible for
+    /// holding an active <see cref="GrabSession"/> with <see cref="GrabSessionKind.ManualGlobalFire"/>;
+    /// the session owns _isGrabbing, IsGlobalGrabActive, IsForageGrabEnabled, and the
+    /// designated-grabbers cache.
     internal void FireGlobalGrab()
     {
         _locations.DiscoverLocations();
@@ -136,36 +140,8 @@ internal class GrabberManager
             _locations.ApplyVisitAutoSkip();
 
         _mod.LogDebug("Firing global grab");
-        _mod.IsGlobalGrabActive = true;
-        _mod.IsForageGrabEnabled = true;
-        try
-        {
-            var allLocations = ModEntry.GetAllLocations().ToList();
-
-            if (_mod.Config.globalGrabber == ModConfig.GlobalGrabberMode.All)
-            {
-                _mod.CachedDesignatedGrabbers = new List<KeyValuePair<Vector2, Object>>();
-                foreach (var loc in allLocations)
-                {
-                    _mod.CachedDesignatedGrabbers.AddRange(
-                        loc.Objects.Pairs
-                            .Where(pair => pair.Value != null
-                                && pair.Value.modData.ContainsKey(ModEntry.GlobalGrabberModDataKey))
-                            .ToList());
-                }
-            }
-
-            foreach (var location in allLocations)
-            {
-                GrabAtLocation(location);
-            }
-        }
-        finally
-        {
-            _mod.IsGlobalGrabActive = false;
-            _mod.IsForageGrabEnabled = false;
-            _mod.CachedDesignatedGrabbers = null;
-        }
+        foreach (var location in ModEntry.GetAllLocations())
+            GrabAtLocation(location);
     }
 
     internal void HandleDesignateGrabber()
