@@ -16,6 +16,12 @@ public class ModEntry : Mod
 
     public override void Entry(IModHelper helper)
     {
+        if (helper.ModRegistry.IsLoaded("Kree.CustomChestSize"))
+        {
+            Monitor.Log("Custom Chest Size is loaded; yielding to it. Bigger Auto-Grabber will not apply any patches this session.", LogLevel.Info);
+            return;
+        }
+
         try
         {
             Config = helper.ReadConfig<ModConfig>();
