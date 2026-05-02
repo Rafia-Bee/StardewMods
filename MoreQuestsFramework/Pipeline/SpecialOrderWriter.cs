@@ -6,6 +6,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.GameData.SpecialOrders;
+using StardewValley.SpecialOrders;
 
 namespace MoreQuestsFramework.Pipeline;
 
@@ -124,12 +125,80 @@ public sealed class SpecialOrderWriter
         }
 
         int dropped = _state.EmittedSpecialOrders.RemoveAll(e =>
-            e.ExpiresAfterDay <= today && !inFlight.Contains(e.OrderId));
+        {
+            if (e.ExpiresAfterDay > today || inFlight.Contains(e.OrderId))
+                return false;
+            // Also clear granted-rewards bookkeeping for the dropped entry so a future
+            // re-emit of the same definition (next year, after cooldown) re-grants on
+            // its own completion instead of being mistaken as already-granted.
+            _state.FrameworkRewardsGranted.Remove(e.OrderId);
+            return true;
+        });
 
         if (dropped > 0)
         {
             _helper.GameContent.InvalidateCache(AssetName);
             _monitor.Log($"Swept {dropped} expired SpecialOrder entr{(dropped == 1 ? "y" : "ies")}.", LogLevel.Trace);
+        }
+    }
+
+    /// Walks `Game1.player.team.specialOrders` once and applies framework-owned rewards
+    /// (anything in `Spec.FrameworkRewards`) for any of our emitted entries that have
+    /// flipped to `Complete` since the last check. Idempotent — `FrameworkRewardsGranted`
+    /// dedups across ticks and across save/load. Called from the existing
+    /// `ModEntry.OnOneSecondTick` so the grant fires within ~1s of completion.
+    ///
+    /// This path bypasses vanilla's `Data/SpecialOrders` Rewards array entirely, so any
+    /// third-party content pack that mutates the asset's reward data (e.g. a friendship-
+    /// configuration pack overwriting `Friendship` `OrderReward` entries) cannot intercept
+    /// these. Money rewards are NOT applied here — they stay in the vanilla path because
+    /// the player-facing reward UI handles them and the user's modset hasn't shown any
+    /// interception of money.
+    public void CheckCompletionsAndGrantRewards()
+    {
+        if (_state == null || _state.EmittedSpecialOrders.Count == 0)
+            return;
+        var team = Game1.player?.team;
+        if (team == null || team.specialOrders.Count == 0)
+            return;
+
+        // Index emitted entries by orderId for O(1) lookup against the in-flight list.
+        var byOrderId = new Dictionary<string, EmittedSpecialOrder>(StringComparer.Ordinal);
+        foreach (var e in _state.EmittedSpecialOrders)
+            byOrderId[e.OrderId] = e;
+
+        var alreadyGranted = new HashSet<string>(_state.FrameworkRewardsGranted, StringComparer.Ordinal);
+
+        foreach (var order in team.specialOrders)
+        {
+            string? key = order?.questKey?.Value;
+            if (string.IsNullOrEmpty(key))
+                continue;
+            if (order!.questState.Value != SpecialOrderStatus.Complete)
+                continue;
+            if (alreadyGranted.Contains(key))
+                continue;
+            if (!byOrderId.TryGetValue(key, out var emitted))
+                continue;
+            if (emitted.Spec.FrameworkRewards.Count == 0)
+            {
+                // Mark granted anyway so we don't keep re-checking an empty reward list.
+                _state.FrameworkRewardsGranted.Add(key);
+                continue;
+            }
+
+            try
+            {
+                Rewards.RewardApplier.Apply(emitted.Spec.FrameworkRewards);
+                _state.FrameworkRewardsGranted.Add(key);
+                _monitor.Log(
+                    $"Granted framework rewards for completed SpecialOrder '{key}' ({emitted.Spec.FrameworkRewards.Count} reward(s)).",
+                    LogLevel.Trace);
+            }
+            catch (Exception ex)
+            {
+                _monitor.Log($"Failed to grant framework rewards for SpecialOrder '{key}': {ex.Message}", LogLevel.Warn);
+            }
         }
     }
 

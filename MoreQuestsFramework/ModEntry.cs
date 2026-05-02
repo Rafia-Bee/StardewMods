@@ -417,6 +417,10 @@ public sealed class ModEntry : Mod
             return;
 
         _dialogueWatcher?.Tick();
+        // Grant FrameworkRewards for any framework-emitted SpecialOrder that completed
+        // this tick. Bypasses vanilla's Data/SpecialOrders Rewards array entirely so
+        // third-party content packs that mutate that array can't intercept the grant.
+        _specialOrderWriter?.CheckCompletionsAndGrantRewards();
 
         var current = Game1.player.questLog;
         var seenThisTick = new HashSet<Quest>();

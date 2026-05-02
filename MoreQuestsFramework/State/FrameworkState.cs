@@ -52,6 +52,12 @@ public sealed class FrameworkState
     /// `OnAssetRequested` edit can be re-applied after the cache is wiped, and so
     /// expired entries can be swept on the next DayStarted.
     public List<EmittedSpecialOrder> EmittedSpecialOrders { get; set; } = new();
+
+    /// OrderIds for which the framework has already applied its `FrameworkRewards` block.
+    /// Persisted across save/load so a reload after completion doesn't double-grant. Each
+    /// entry corresponds to one EmittedSpecialOrder.OrderId; cleared automatically when
+    /// `SweepExpired` drops the parent emit record.
+    public List<string> FrameworkRewardsGranted { get; set; } = new();
 }
 
 /// One SpecialOrder entry the framework has injected into `Data/SpecialOrders`. The

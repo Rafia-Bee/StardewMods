@@ -1033,22 +1033,22 @@ internal static class Generators
         if (moneyBonus < 200)
             moneyBonus = 200;
 
-        var rewards = new List<SpecialOrderRewardSpec>
+        // Money stays in vanilla's Rewards path so the player gets the standard "click
+        // reward box for X gold" UX. Friendship moves to FrameworkRewards because the
+        // Special Order Adjustments content pack (a friendship-tuning mod) edits
+        // Data/SpecialOrders to overwrite vanilla Friendship rewards globally; routing
+        // through the framework path bypasses that interception entirely.
+        var vanillaRewards = new List<SpecialOrderRewardSpec>
         {
             new()
             {
                 Type = "Money",
                 Data = { ["Amount"] = moneyBonus.ToString() }
-            },
-            new()
-            {
-                Type = "Friendship",
-                Data =
-                {
-                    ["TargetName"] = requester,
-                    ["Amount"] = ctx.Config.FriendshipBasic.ToString()
-                }
             }
+        };
+        var frameworkRewards = new List<RewardSpec>
+        {
+            new FriendshipReward(requester, ctx.Config.FriendshipBasic)
         };
 
         string namesList = string.Join(", ", displayNames);
@@ -1067,7 +1067,8 @@ internal static class Generators
                 Requester = requester,
                 Duration = "Month",
                 Objectives = objectives,
-                Rewards = rewards
+                Rewards = vanillaRewards,
+                FrameworkRewards = frameworkRewards
             }
         };
     }
