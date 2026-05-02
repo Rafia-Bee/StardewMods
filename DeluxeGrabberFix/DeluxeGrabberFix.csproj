@@ -23,4 +23,8 @@
     <None Remove="hiddenDocs\**" />
     <EmbeddedResource Remove="hiddenDocs\**" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DeluxeGrabberFix.Tests" />
+  </ItemGroup>
 </Project>
