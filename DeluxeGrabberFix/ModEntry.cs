@@ -48,7 +48,7 @@ public class ModEntry : Mod
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private readonly HashSet<GameLocation> _machineReadyLocations = new();
     private bool _isGrabbingField;
-    private bool _isGrabbing
+    internal bool IsGrabbing
     {
         get => _isGrabbingField;
         set
@@ -124,12 +124,13 @@ public class ModEntry : Mod
     internal void ReportCropsHarvested(GameLocation location) => _grabbers.ReportCropsHarvested(location);
     internal void ResetDayTracking() => _grabbers.ResetDayTracking();
     internal void ShowEveningReplantReminder() => _grabbers.ShowEveningReplantReminder();
+    internal bool HasDesignatedGrabber() => _grabbers.HasDesignatedGrabber();
 
     internal static void FlagMachineReadyLocation(GameLocation location)
     {
         if (_instance == null || location == null)
             return;
-        if (_instance._isGrabbing)
+        if (_instance.IsGrabbing)
             return;
         if (_instance.Config.grabFrequency != ModConfig.GrabFrequency.Instant || _instance.Config.disableMachineCollection)
             return;
@@ -307,28 +308,10 @@ public class ModEntry : Mod
             }
 
             _grabbers.ResetGrabCycleTracking();
-
-            // Hover keybind: set IsGlobalGrabActive but leave CachedDesignatedGrabbers null
-            // so MapGrabber's Hover branch picks only the cursor-targeted grabber.
-            // All mode: full global cache via SetupSpecializedGlobalCache.
-            if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover)
-                IsGlobalGrabActive = true;
-            else
-                SetupSpecializedGlobalCache();
-
-            _isGrabbing = true;
-            IsForageGrabEnabled = true;
-            try
+            using (var session = new GrabSession(this, GrabSessionKind.ManualGlobalFire))
             {
                 foreach (var location in GetAllLocations())
                     _grabbers.GrabAtLocation(location);
-            }
-            finally
-            {
-                IsForageGrabEnabled = false;
-                _isGrabbing = false;
-                IsGlobalGrabActive = false;
-                CachedDesignatedGrabbers = null;
             }
             _grabbers.ShowGrabCycleResults(showSummary: true);
             return;
@@ -351,14 +334,9 @@ public class ModEntry : Mod
         }
 
         _grabbers.ResetGrabCycleTracking();
-        _isGrabbing = true;
-        try
+        using (var session = new GrabSession(this, GrabSessionKind.ManualGlobalFire))
         {
             _grabbers.FireGlobalGrab();
-        }
-        finally
-        {
-            _isGrabbing = false;
         }
         _grabbers.ShowGrabCycleResults(showSummary: true);
     }
@@ -675,37 +653,6 @@ public class ModEntry : Mod
             _gmcm.RebuildConfigMenu();
     }
 
-    private bool SetupSpecializedGlobalCache()
-    {
-        if (Config.grabberMode != ModConfig.GrabberMode.Specialized)
-            return false;
-
-        // Off mode: grabbers work locally only, no global cache
-        if (Config.globalGrabber == ModConfig.GlobalGrabberMode.Off)
-            return true;
-
-        IsGlobalGrabActive = true;
-        CachedDesignatedGrabbers = new List<KeyValuePair<Vector2, Object>>();
-        foreach (var loc in GetAllLocations())
-        {
-            CachedDesignatedGrabbers.AddRange(
-                loc.Objects.Pairs
-                    .Where(pair => pair.Value != null
-                        && GrabberTypeHelper.IsGrabber(pair.Value.QualifiedItemId)
-                        && pair.Value.heldObject.Value is StardewValley.Objects.Chest)
-                    .ToList());
-        }
-        return true;
-    }
-
-    private void CleanupSpecializedGlobalCache(bool wasSpecialized)
-    {
-        if (!wasSpecialized)
-            return;
-        IsGlobalGrabActive = false;
-        CachedDesignatedGrabbers = null;
-    }
-
     private void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
     {
         // Convert newly placed custom grabbers to (BC)165 + modData
@@ -739,7 +686,7 @@ public class ModEntry : Mod
             }
         }
 
-        if (_isGrabbing)
+        if (IsGrabbing)
             return;
 
         _dirtyLocations.Add(e.Location);
@@ -762,23 +709,11 @@ public class ModEntry : Mod
 
             LogDebug("Executing deferred day-start grab");
             _grabbers.ResetGrabCycleTracking();
-            bool wasSpecialized = SetupSpecializedGlobalCache();
-            _isGrabbing = true;
-            IsForageGrabEnabled = true;
-            try
+            using (var session = new GrabSession(this, GrabSessionKind.AutoSweep))
             {
                 foreach (var location in GetAllLocations())
-                {
                     _grabbers.GrabAtLocation(location);
-                }
             }
-            finally
-            {
-                IsForageGrabEnabled = false;
-                _isGrabbing = false;
-                CleanupSpecializedGlobalCache(wasSpecialized);
-            }
-
             _grabbers.ShowGrabCycleResults(showSummary: true);
             return;
         }
@@ -792,14 +727,9 @@ public class ModEntry : Mod
 
             LogDebug("Executing deferred auto-fire global grab");
             _grabbers.ResetGrabCycleTracking();
-            _isGrabbing = true;
-            try
+            using (var session = new GrabSession(this, GrabSessionKind.ManualGlobalFire))
             {
                 _grabbers.FireGlobalGrab();
-            }
-            finally
-            {
-                _isGrabbing = false;
             }
             _grabbers.ShowGrabCycleResults(showSummary: true);
             return;
@@ -814,24 +744,7 @@ public class ModEntry : Mod
             var machineLocations = _machineReadyLocations.ToList();
             _machineReadyLocations.Clear();
 
-            bool wasSpecializedM = SetupSpecializedGlobalCache();
-            bool useGlobal = !wasSpecializedM && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber();
-            if (useGlobal)
-            {
-                IsGlobalGrabActive = true;
-                CachedDesignatedGrabbers = new List<KeyValuePair<Vector2, Object>>();
-                foreach (var loc in GetAllLocations())
-                {
-                    CachedDesignatedGrabbers.AddRange(
-                        loc.Objects.Pairs
-                            .Where(pair => pair.Value != null
-                                && pair.Value.modData.ContainsKey(GlobalGrabberModDataKey))
-                            .ToList());
-                }
-            }
-
-            _isGrabbing = true;
-            try
+            using (var session = new GrabSession(this, GrabSessionKind.MachineSweep))
             {
                 foreach (var location in machineLocations)
                 {
@@ -839,17 +752,7 @@ public class ModEntry : Mod
                     _grabbers.GrabMachinesAtLocation(location);
                 }
             }
-            finally
-            {
-                _isGrabbing = false;
-                if (useGlobal)
-                {
-                    IsGlobalGrabActive = false;
-                    CachedDesignatedGrabbers = null;
-                }
-                CleanupSpecializedGlobalCache(wasSpecializedM);
-                _grabbers.ShowGrabCycleResults(showSummary: false);
-            }
+            _grabbers.ShowGrabCycleResults(showSummary: false);
         }
 
         // Process dirty locations (forage, debris, artifacts)
@@ -859,10 +762,7 @@ public class ModEntry : Mod
         var locations = _dirtyLocations.ToList();
         _dirtyLocations.Clear();
 
-        bool wasSpecialized2 = SetupSpecializedGlobalCache();
-        _isGrabbing = true;
-        IsForageGrabEnabled = true;
-        try
+        using (var session = new GrabSession(this, GrabSessionKind.AutoSweep))
         {
             foreach (var location in locations)
             {
@@ -870,13 +770,7 @@ public class ModEntry : Mod
                 _grabbers.GrabAtLocation(location);
             }
         }
-        finally
-        {
-            IsForageGrabEnabled = false;
-            _isGrabbing = false;
-            CleanupSpecializedGlobalCache(wasSpecialized2);
-            _grabbers.ShowGrabCycleResults(showSummary: false);
-        }
+        _grabbers.ShowGrabCycleResults(showSummary: false);
     }
 
     private void OnHourlyUpdate(object sender, TimeChangedEventArgs e)
@@ -890,25 +784,7 @@ public class ModEntry : Mod
         LogDebug("Autograbbing on time change");
         _grabbers.ResetGrabCycleTracking();
 
-        bool wasSpecialized = SetupSpecializedGlobalCache();
-        bool useGlobal = !wasSpecialized && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber();
-        if (useGlobal)
-        {
-            IsGlobalGrabActive = true;
-            CachedDesignatedGrabbers = new List<KeyValuePair<Vector2, Object>>();
-            foreach (var loc in GetAllLocations())
-            {
-                CachedDesignatedGrabbers.AddRange(
-                    loc.Objects.Pairs
-                        .Where(pair => pair.Value != null
-                            && pair.Value.modData.ContainsKey(GlobalGrabberModDataKey))
-                        .ToList());
-            }
-        }
-
-        _isGrabbing = true;
-        IsForageGrabEnabled = Config.grabFrequency != ModConfig.GrabFrequency.Daily;
-        try
+        using (var session = new GrabSession(this, GrabSessionKind.Hourly))
         {
             foreach (var location in GetAllLocations())
             {
@@ -965,35 +841,17 @@ public class ModEntry : Mod
                 // fruit trees, bushes, etc. (terrain features that don't trigger ObjectListChanged)
                 // are collected. In Instant mode, only run full grab for dirty locations;
                 // terrain features are handled by the day-start sweep instead.
-                if (Config.grabFrequency == ModConfig.GrabFrequency.Hourly)
+                if (Config.grabFrequency == ModConfig.GrabFrequency.Hourly
+                    || (Config.grabFrequency == ModConfig.GrabFrequency.Instant && _dirtyLocations.Contains(location)))
                 {
-                    IsForageGrabEnabled = true;
                     _grabbers.GrabAtLocation(location);
-                    IsForageGrabEnabled = Config.grabFrequency != ModConfig.GrabFrequency.Daily;
-                }
-                else if (Config.grabFrequency == ModConfig.GrabFrequency.Instant && _dirtyLocations.Contains(location))
-                {
-                    IsForageGrabEnabled = true;
-                    _grabbers.GrabAtLocation(location);
-                    IsForageGrabEnabled = Config.grabFrequency != ModConfig.GrabFrequency.Daily;
                 }
             }
 
             if (Config.grabFrequency == ModConfig.GrabFrequency.Hourly)
                 _dirtyLocations.Clear();
         }
-        finally
-        {
-            IsForageGrabEnabled = false;
-            _isGrabbing = false;
-            if (useGlobal)
-            {
-                IsGlobalGrabActive = false;
-                CachedDesignatedGrabbers = null;
-            }
-            CleanupSpecializedGlobalCache(wasSpecialized);
-            _grabbers.ShowGrabCycleResults(showSummary: false);
-        }
+        _grabbers.ShowGrabCycleResults(showSummary: false);
     }
 
     private void OnDayEnding(object sender, DayEndingEventArgs e)
@@ -1003,23 +861,12 @@ public class ModEntry : Mod
 
         LogDebug("Autograbbing forage before sleep");
         _grabbers.ResetGrabCycleTracking();
-        bool wasSpecialized = SetupSpecializedGlobalCache();
-        _isGrabbing = true;
-        IsForageGrabEnabled = true;
-        try
+        using (var session = new GrabSession(this, GrabSessionKind.AutoSweep))
         {
             foreach (var location in GetAllLocations())
-            {
                 _grabbers.GrabForageAtLocation(location);
-            }
         }
-        finally
-        {
-            IsForageGrabEnabled = false;
-            _isGrabbing = false;
-            CleanupSpecializedGlobalCache(wasSpecialized);
-            _grabbers.ShowGrabCycleResults(showSummary: false);
-        }
+        _grabbers.ShowGrabCycleResults(showSummary: false);
     }
 
     private void OnDayStarted(object sender, DayStartedEventArgs e)
