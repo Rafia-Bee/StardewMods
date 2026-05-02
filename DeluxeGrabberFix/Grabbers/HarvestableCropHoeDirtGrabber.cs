@@ -40,11 +40,15 @@ internal class HarvestableCropHoeDirtGrabber : TerrainFeaturesMapGrabber
             }
         }
 
-        var nearbyGrabbers = Helpers.GetNearbyObjectsToTile(tile, GetFilteredGrabberPairs(), Config.harvestCropsRange, Config.harvestCropsRangeMode);
+        // Materialize once: this list is enumerated up to three times per tile
+        // (the .Any() guard, TryAddItem's foreach, and TryAddItem's chest-full
+        // report loop). Specialized mode's GetFilteredGrabberPairs adds a Where
+        // over a Where, so re-evaluating is non-trivial on big farms.
+        var nearbyGrabbers = Helpers.GetNearbyObjectsToTile(tile, GetFilteredGrabberPairs(), Config.harvestCropsRange, Config.harvestCropsRangeMode).ToList();
 
         // No grabber in range to receive the harvest, leave the crop alone rather than
         // destroying it and dropping debris on the ground.
-        if (!nearbyGrabbers.Any())
+        if (nearbyGrabbers.Count == 0)
             return false;
 
         HarvestInterceptor.BeginIntercept();

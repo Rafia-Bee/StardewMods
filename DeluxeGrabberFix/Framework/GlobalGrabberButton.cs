@@ -70,7 +70,7 @@ internal class GlobalGrabberButton
         }
         else
         {
-            ClearAllDesignations();
+            _mod.ClearAllDesignations();
             _grabberObject.modData[ModEntry.GlobalGrabberModDataKey] = "true";
             _isDesignated = true;
             Game1.addHUDMessage(new HUDMessage(_mod.Helper.Translation.Get("hud.now-global")));
@@ -82,17 +82,5 @@ internal class GlobalGrabberButton
             : _mod.Helper.Translation.Get("button.set-global-grabber");
 
         return true;
-    }
-
-    private void ClearAllDesignations()
-    {
-        foreach (var location in ModEntry.GetAllLocations())
-        {
-            foreach (var pair in location.Objects.Pairs)
-            {
-                if (pair.Value.modData.ContainsKey(ModEntry.GlobalGrabberModDataKey))
-                    pair.Value.modData.Remove(ModEntry.GlobalGrabberModDataKey);
-            }
-        }
     }
 }

@@ -125,6 +125,7 @@ public class ModEntry : Mod
     internal void ResetDayTracking() => _grabbers.ResetDayTracking();
     internal void ShowEveningReplantReminder() => _grabbers.ShowEveningReplantReminder();
     internal bool HasDesignatedGrabber() => _grabbers.HasDesignatedGrabber();
+    internal void ClearAllDesignations() => _grabbers.ClearAllDesignations();
 
     internal static void FlagMachineReadyLocation(GameLocation location)
     {
