@@ -1,0 +1,18 @@
+{
+    "Schema": "1.0",
+    "Boards": [
+        {
+            "Name": "AdventurersGuild",
+            "Location": "Mine",
+            "Tile": [ 12, 6 ],
+            "Texture": "Mods/RafiaBee.MoreQuests/AdventureBoard",
+            "WorldScale": 2,
+            "Title": "Adventurer's Guild Board",
+            "Available": { "MinDaysPlayed": "14" },
+            "Indicator": { "Show": true, "Offset": [ 0, -8 ] },
+            "PoolSize": 3,
+            "PoolStrategy": "WeightedRandom",
+            "AllowedCategories": [ "Mining" ]
+        }
+    ]
+}

@@ -1,58 +1,86 @@
 using System;
 using System.Collections.Generic;
-using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MoreQuestsFramework.Posting.Boards;
+using MoreQuestsFramework.Api;
 using StardewValley;
 using StardewValley.Menus;
 
-namespace MoreQuestsFramework;
+namespace MoreQuestsFramework.Posting.Boards;
 
-/// Custom Billboard menu that renders a scattered "cork-board" of quest notes (pad + pin +
-/// NPC portrait) instead of vanilla's single quest slot. Clicking a note selects that quest
-/// and spawns a vanilla `Billboard(true)` over the top so the player sees vanilla's
-/// accept-quest UI; our Harmony patches redirect `Game1.questOfTheDay` getters there to the
-/// selected slot.
-public sealed class MoreQuestsBillboard : Billboard
+/// Generic cork-board menu rendered when the player interacts with a `BoardDefinition`'s
+/// anchor tile. Shares its scatter layout / pad-pin sprite logic with `MoreQuestsBillboard`
+/// via `BoardLayout`, but does NOT inherit vanilla `Billboard` — accept-quest popup
+/// integration for custom boards lands in Phase 8c when `TriggerSource.CustomBoard` quests
+/// start populating slots. Until then this menu renders the cork-board background and the
+/// "Nothing posted" fallback string, matching vanilla's empty-board behaviour.
+public sealed class CustomBoardMenu : IClickableMenu
 {
-    private readonly List<Note> _notes = new();
-    private readonly Dictionary<int, Note> _notesByCc = new();
+    private const int MenuWidth = 338 * 4;
+    private const int MenuHeight = 198 * 4;
+    private const int CcIndexBase = -42100;
+
+    private readonly BoardDefinition _board;
     private readonly Texture2D _billboardTexture;
     private readonly Texture2D _padTexture;
     private readonly Texture2D _pinTexture;
-    public static Billboard? InnerBillboard { get; set; }
-
-    private const int CcIndexBase = -42000;
-
+    private readonly List<Note> _notes = new();
+    private readonly Dictionary<int, Note> _notesByCc = new();
     private string _hoverTitle = "";
     private string _hoverText = "";
 
     private sealed class Note
     {
         public ClickableTextureComponent Cc { get; init; } = null!;
-        public BillboardSlots.Slot Slot { get; init; } = null!;
+        public CustomBoardSlots.Slot Slot { get; init; } = null!;
         public Color PadColor { get; init; }
         public Color PinColor { get; init; }
         public Texture2D? Portrait { get; init; }
     }
 
-    public MoreQuestsBillboard()
-        : base(true)
+    public CustomBoardMenu(BoardDefinition board)
     {
-        _billboardTexture = Game1.temporaryContent.Load<Texture2D>("LooseSprites\\Billboard");
-        _padTexture = Game1.content.Load<Texture2D>(ModEntry.PadAssetRoot);
-        _pinTexture = Game1.content.Load<Texture2D>(ModEntry.PinAssetRoot);
-        InnerBillboard = null;
+        _board = board;
+
+        width = MenuWidth;
+        height = MenuHeight;
+        xPositionOnScreen = (Game1.uiViewport.Width - width) / 2;
+        yPositionOnScreen = (Game1.uiViewport.Height - height) / 2;
+
+        _billboardTexture = LoadOrFallback(
+            board.Texture,
+            "LooseSprites\\Billboard");
+        _padTexture = LoadOrFallback(
+            board.Pad?.Texture,
+            ModEntry.PadAssetRoot);
+        _pinTexture = LoadOrFallback(
+            board.Pin?.Texture,
+            ModEntry.PinAssetRoot);
+
+        upperRightCloseButton = new ClickableTextureComponent(
+            new Rectangle(xPositionOnScreen + width - 36, yPositionOnScreen - 8, 48, 48),
+            Game1.mouseCursors,
+            new Rectangle(337, 494, 12, 12),
+            4f);
 
         BuildNotes();
-
-        exitFunction = delegate
-        {
-            if (InnerBillboard != null)
-                Game1.activeClickableMenu = new MoreQuestsBillboard();
-        };
         populateClickableComponentList();
+    }
+
+    private static Texture2D LoadOrFallback(string? assetName, string fallback)
+    {
+        if (!string.IsNullOrEmpty(assetName))
+        {
+            try
+            {
+                return Game1.content.Load<Texture2D>(assetName);
+            }
+            catch
+            {
+                // Asset not registered or missing — fall through to the framework default.
+            }
+        }
+        return Game1.content.Load<Texture2D>(fallback);
     }
 
     private void BuildNotes()
@@ -60,7 +88,7 @@ public sealed class MoreQuestsBillboard : Billboard
         _notes.Clear();
         _notesByCc.Clear();
 
-        var slots = BillboardSlots.Slots;
+        var slots = CustomBoardSlots.SlotsFor(_board);
         if (slots.Count == 0)
             return;
 
@@ -68,7 +96,7 @@ public sealed class MoreQuestsBillboard : Billboard
         int side = (int)(BoardLayout.PadSpriteSize * scale);
 
         var placed = new List<Rectangle>(slots.Count);
-        var rng = new Random(Game1.Date.TotalDays * 7919 + slots.Count);
+        var rng = new Random(Game1.Date.TotalDays * 7919 + slots.Count + (_board.Name?.GetHashCode() ?? 0));
 
         for (int i = 0; i < slots.Count; i++)
         {
@@ -92,26 +120,20 @@ public sealed class MoreQuestsBillboard : Billboard
                 downNeighborID = -7777
             };
 
-            var note = new Note
+            _notes.Add(new Note
             {
                 Cc = cc,
                 Slot = slot,
                 PadColor = padColor,
                 PinColor = pinColor,
                 Portrait = BoardLayout.TryGetPortrait(slot.Posting.QuestGiver)
-            };
-            _notes.Add(note);
-            _notesByCc[cc.myID] = note;
+            });
+            _notesByCc[cc.myID] = _notes[^1];
         }
     }
 
     public override void performHoverAction(int x, int y)
     {
-        if (InnerBillboard != null)
-        {
-            InnerBillboard.performHoverAction(x, y);
-            return;
-        }
         _hoverTitle = "";
         _hoverText = "";
         foreach (var note in _notes)
@@ -128,57 +150,26 @@ public sealed class MoreQuestsBillboard : Billboard
                 cc.scale = Math.Max(cc.scale - 0.04f, cc.baseScale);
             }
         }
+        if (upperRightCloseButton != null)
+            upperRightCloseButton.tryHover(x, y);
     }
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
     {
-        if (InnerBillboard != null)
+        if (upperRightCloseButton != null && readyToClose() && upperRightCloseButton.containsPoint(x, y))
         {
-            InnerBillboard.receiveLeftClick(x, y, playSound);
+            exitThisMenu();
+            if (playSound)
+                Game1.playSound("bigDeSelect");
             return;
         }
-
-        foreach (var note in _notes)
-        {
-            if (note.Cc.containsPoint(x, y))
-            {
-                BillboardSlots.Selected = note.Slot;
-                InnerBillboard = new Billboard(true);
-                InnerBillboard.acceptQuestButton.visible = true;
-                Game1.playSound("smallSelect");
-                return;
-            }
-        }
-
-        InvokeBaseLeftClick(x, y, playSound);
-    }
-
-    private void InvokeBaseLeftClick(int x, int y, bool playSound)
-    {
-        var method = AccessTools.Method(typeof(IClickableMenu), nameof(IClickableMenu.receiveLeftClick));
-        var ftn = method.MethodHandle.GetFunctionPointer();
-        var func = (Action<int, int, bool>)Activator.CreateInstance(typeof(Action<int, int, bool>), this, ftn)!;
-        func.Invoke(x, y, playSound);
-    }
-
-    public override bool readyToClose()
-    {
-        if (InnerBillboard != null)
-        {
-            InnerBillboard = null;
-            BillboardSlots.Selected = null;
-            return false;
-        }
-        return true;
+        // Phase 8c: route note clicks through an accept-popup. For 8b the menu has no
+        // active slots, so left-clicks on the empty board just fall through to base.
+        base.receiveLeftClick(x, y, playSound);
     }
 
     public override void snapToDefaultClickableComponent()
     {
-        if (InnerBillboard != null)
-        {
-            InnerBillboard.snapToDefaultClickableComponent();
-            return;
-        }
         if (_notes.Count > 0)
         {
             currentlySnappedComponent = getComponentWithID(_notes[0].Cc.myID);
@@ -188,12 +179,6 @@ public sealed class MoreQuestsBillboard : Billboard
 
     public override void draw(SpriteBatch b)
     {
-        if (InnerBillboard != null)
-        {
-            InnerBillboard.draw(b);
-            return;
-        }
-
         if (!Game1.options.showClearBackgrounds)
             b.Draw(Game1.fadeToBlackRect, Game1.graphics.GraphicsDevice.Viewport.Bounds, Color.Black * 0.75f);
 
@@ -218,7 +203,6 @@ public sealed class MoreQuestsBillboard : Billboard
             foreach (var note in _notes)
             {
                 var cc = note.Cc;
-
                 b.Draw(_padTexture, cc.bounds, padSource, note.PadColor);
 
                 if (note.Portrait != null)
@@ -236,6 +220,16 @@ public sealed class MoreQuestsBillboard : Billboard
 
                 b.Draw(_pinTexture, cc.bounds, padSource, note.PinColor);
             }
+        }
+
+        if (!string.IsNullOrEmpty(_board.Title))
+        {
+            var titleVec = Game1.dialogueFont.MeasureString(_board.Title);
+            b.DrawString(
+                Game1.dialogueFont,
+                _board.Title,
+                new Vector2(xPositionOnScreen + (width - titleVec.X) / 2f, yPositionOnScreen - 48),
+                Game1.textColor);
         }
 
         if (upperRightCloseButton != null && shouldDrawCloseButton())

@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Xna.Framework.Graphics;
 using MoreQuests.Quests;
 using MoreQuestsFramework.Api;
 using StardewModdingAPI;
@@ -25,12 +26,20 @@ public sealed class ModEntry : Mod
         helper.Events.Content.AssetRequested += OnAssetRequested;
     }
 
-    /// Reward letters defined by the content mod (not the framework's per-quest auto-generated
-    /// quest letters). Submarine Fuel's `When: NextDay` MailReward references one of these
-    /// keys; the framework drops the key into `mailForTomorrow` and vanilla picks the body up
-    /// from this Data/mail edit at letter-open time.
+    internal const string AdventureBoardAssetRoot = "Mods/RafiaBee.MoreQuests/AdventureBoard";
+
+    /// Asset edits and loads owned by the content mod:
+    /// - `Data/mail` reward letters (Submarine Fuel pearl, Wizard's Ritual book).
+    /// - `Mods/RafiaBee.MoreQuests/AdventureBoard` placeholder texture for the
+    ///   Adventurer's Guild custom board declared in `assets/boards.json`.
     private void OnAssetRequested(object? sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
     {
+        if (e.NameWithoutLocale.IsEquivalentTo(AdventureBoardAssetRoot))
+        {
+            e.LoadFromModFile<Texture2D>("assets/AdventureBoard.png", AssetLoadPriority.Low);
+            return;
+        }
+
         if (!e.NameWithoutLocale.IsEquivalentTo("Data/mail"))
             return;
         e.Edit(asset =>
@@ -79,6 +88,10 @@ public sealed class ModEntry : Mod
 
         // Load the JSON quest pack. Each entry references a generator above.
         scope.LoadQuestsFromMod(Helper, "assets/quests.json");
+
+        // Custom boards (Phase 8b). Adventurer's Guild board lands here; quest content
+        // that targets it ships in 8c.
+        scope.LoadBoardsFromMod(Helper, "assets/boards.json");
 
         GmcmRegistration.Register(Helper, ModManifest);
     }

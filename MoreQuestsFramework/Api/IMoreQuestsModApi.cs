@@ -35,4 +35,16 @@ public interface IMoreQuestsModApi
     /// the entry out unless that mod is loaded — used to scope modded NPCs to their
     /// host mod. Authors can add new roles by passing any string they like.
     void RegisterDispatchNpc(string role, string npcName, string? requiredModUniqueId = null);
+
+    /// Registers a custom pin-board placed at a tile in a named location. The framework
+    /// renders the board sprite (if `Texture` is set), gates visibility on `Available`,
+    /// and opens a `CustomBoardMenu` when the player presses the action button on the
+    /// anchor tile. Phase 8c routes `TriggerSource.CustomBoard` quests to the matching
+    /// board's slot list; until then the board opens with vanilla's "Nothing posted"
+    /// fallback string.
+    void RegisterBoard(BoardDefinition board);
+
+    /// Reads a `boards.json` bundled inside this mod's folder (relative to the mod
+    /// directory) and registers each entry. Mirrors `LoadQuestsFromMod` for boards.
+    void LoadBoardsFromMod(IModHelper helper, string relativePath);
 }
