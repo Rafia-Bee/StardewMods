@@ -51,8 +51,9 @@ internal abstract class MapGrabber
         else if (UseGlobalMode
             && Mod.CachedDesignatedGrabbers != null && Mod.CachedDesignatedGrabbers.Count > 0)
         {
-            // Specialized mode with Hover/All during automatic grabs:
-            // CachedDesignatedGrabbers is populated, use the global cache
+            // Global cache populated by GrabSession (Specialized fire/sweep, or Classic
+            // with a designated grabber). The All-mode case above wins this branch first;
+            // we land here for the Classic-global fallback and the manual-fire paths.
             GrabberPairs = Mod.CachedDesignatedGrabbers
                 .Where(pair => IsValidGrabber(pair.Value, pair.Key))
                 .ToList();
