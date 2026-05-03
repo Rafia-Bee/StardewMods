@@ -88,13 +88,6 @@ public class ModEntry : Mod
 
         ConfigManager.SetGlobalConfig(Config);
 
-        if (Config.Features.fellSecretWoodsStumps)
-        {
-            Config.Features.fellHardwoodStumps = true;
-            Config.Features.fellSecretWoodsStumps = false;
-            Helper.WriteConfig(Config);
-        }
-
         _specializedAssets = new SpecializedGrabberAssets(helper, () => Config);
         _specializedAssets.Register();
         _progression = new ProgressionTracker(this);
@@ -450,43 +443,60 @@ public class ModEntry : Mod
         _locations.DiscoverLocations();
         _locations.ApplyVisitAutoSkip();
         _gmcm.RebuildConfigMenu();
-        InitializeSpecializedGrabbers();
+        RunPerSaveMigrations();
+        RecountSpecializedGrabbers();
         _progression.RetroactiveCheck();
         LogConfig();
-        RepairStuckMachines();
     }
 
-    private void InitializeSpecializedGrabbers()
+    // One-shot per-save migrations gated by SaveData.SchemaVersion. New saves and
+    // already-migrated ones skip the heavy world scans entirely; legacy saves run
+    // the migrations once and then get bumped to current.
+    private void RunPerSaveMigrations()
+    {
+        if (_locations.SaveData == null)
+            return;
+        if (_locations.SaveData.SchemaVersion >= SaveData.CurrentSchemaVersion)
+            return;
+
+        int from = _locations.SaveData.SchemaVersion;
+        LogDebug($"Running per-save migrations (schema {from} -> {SaveData.CurrentSchemaVersion})");
+
+        MigrateSpecializedGrabbers();
+        RepairStuckMachines();
+
+        _locations.SaveData.SchemaVersion = SaveData.CurrentSchemaVersion;
+        _locations.WriteSaveData();
+    }
+
+    // Converts pre-(BC)165 custom-id grabbers, normalizes inner Chests on existing
+    // specialized grabbers (init missing chest, replace legacy playerChest:true).
+    // Idempotent: re-running on an already-migrated save is a no-op walk.
+    private void MigrateSpecializedGrabbers()
     {
         int converted = 0;
         int initialized = 0;
-        int total = 0;
         foreach (var location in GetAllLocations())
         {
             var toConvert = new List<KeyValuePair<Vector2, Object>>();
 
             foreach (var pair in location.Objects.Pairs)
             {
-                // Migration: convert old-format custom grabbers to (BC)165 + modData
                 if (GrabberTypeHelper.IsSpecializedGrabberItem(pair.Value.QualifiedItemId))
                 {
                     toConvert.Add(pair);
                     continue;
                 }
 
-                // Ensure (BC)165 with DGF modData has a Chest and propagate type to it
                 if (pair.Value.QualifiedItemId == BigCraftableIds.AutoGrabber
                     && pair.Value.modData.TryGetValue(SpecializedGrabberPatches.ModDataGrabberType, out string existingType))
                 {
-                    total++;
                     if (pair.Value.heldObject.Value is not StardewValley.Objects.Chest)
                     {
                         pair.Value.heldObject.Value = new StardewValley.Objects.Chest();
                         pair.Value.showNextIndex.Value = false;
                         initialized++;
                     }
-                    // Migrate: replace playerChest:true chests with default Chest()
-                    // to match vanilla auto-grabber behavior and prevent Automate IO
                     else if (pair.Value.heldObject.Value is StardewValley.Objects.Chest oldChest && oldChest.playerChest.Value)
                     {
                         var replacement = new StardewValley.Objects.Chest();
@@ -525,14 +535,36 @@ public class ModEntry : Mod
                     migChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
                 location.Objects.Add(tile, autoGrabber);
                 converted++;
-                total++;
             }
         }
-        SpecializedGrabberPatches.SpecializedGrabberCount = total;
         if (converted > 0)
             LogDebug($"Migrated {converted} old-format specialized grabber(s) to (BC)165 format");
         if (initialized > 0)
             LogDebug($"Initialized Chests for {initialized} specialized grabber(s)");
+    }
+
+    // Authoritative recount of placed specialized grabbers across the world. Sets
+    // SpecializedGrabberPatches.SpecializedGrabberCount so Chest_addItem_Prefix's
+    // early-out (audit step 3) stays accurate. Cheap: a modData ContainsKey per
+    // (BC)165 object, no GetMachineData / OutputRules walks.
+    private void RecountSpecializedGrabbers()
+    {
+        int total = 0;
+        foreach (var location in GetAllLocations())
+        {
+            if (location?.Objects == null)
+                continue;
+
+            foreach (var pair in location.Objects.Pairs)
+            {
+                if (pair.Value?.QualifiedItemId == BigCraftableIds.AutoGrabber
+                    && pair.Value.modData.ContainsKey(SpecializedGrabberPatches.ModDataGrabberType))
+                {
+                    total++;
+                }
+            }
+        }
+        SpecializedGrabberPatches.SpecializedGrabberCount = total;
     }
 
     private void LogConfig()
