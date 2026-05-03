@@ -27,6 +27,9 @@ public class ModEntry : Mod
     internal bool IsGlobalGrabActive { get; set; }
     internal bool IsForageGrabEnabled { get; set; }
     internal List<KeyValuePair<Vector2, Object>> CachedDesignatedGrabbers { get; set; }
+    // Captured at GrabSession entry for Specialized + Hover manual-fire so the per-iteration
+    // grab path doesn't re-read Game1.lastCursorTile mid-cycle. Null outside a Hover session.
+    internal KeyValuePair<Vector2, Object>? CachedHoverGrabber { get; set; }
     internal bool UseLocationCache { get; set; }
     internal List<KeyValuePair<Vector2, Object>> CachedGrabberPairs { get; set; }
     internal List<KeyValuePair<Vector2, Object>> CachedObjectPairs { get; set; }
@@ -757,6 +760,17 @@ public class ModEntry : Mod
                 return;
             _pendingGlobalAutoFire = false;
 
+            // Re-check current state: GMCM stays open across ticks, so the player can
+            // toggle globalGrabber to Off or change grabberMode in the delay window
+            // (audit §1.1). Skip rather than fire against a config that no longer
+            // matches the queue intent.
+            if (Config.globalGrabber != ModConfig.GlobalGrabberMode.All
+                || (Config.grabberMode == ModConfig.GrabberMode.Classic && !_grabbers.HasDesignatedGrabber()))
+            {
+                LogDebug("Skipping deferred auto-fire: config changed during delay window");
+                return;
+            }
+
             LogDebug("Executing deferred auto-fire global grab");
             _grabbers.ResetGrabCycleTracking();
             using (var session = new GrabSession(this, GrabSessionKind.ManualGlobalFire))
@@ -906,9 +920,14 @@ public class ModEntry : Mod
         ResetDayTracking();
         _progression.CheckProgression();
 
-        // Auto-fire global grab at day start if configured (disabled in Specialized mode)
-        if (Config.grabberMode != ModConfig.GrabberMode.Specialized
-            && Config.GlobalGrab.globalAutoFire && Config.globalGrabber == ModConfig.GlobalGrabberMode.All && _grabbers.HasDesignatedGrabber())
+        // Auto-fire global grab at day start. Only meaningful when globalGrabber == All
+        // (Hover requires a cursor target the player isn't supplying at day start;
+        // Off means no global grab). Classic-mode additionally requires a designated
+        // grabber to exist; Specialized routes by grabber type instead, so any placed
+        // specialized grabber is sufficient.
+        if (Config.GlobalGrab.globalAutoFire
+            && Config.globalGrabber == ModConfig.GlobalGrabberMode.All
+            && (Config.grabberMode == ModConfig.GrabberMode.Specialized || _grabbers.HasDesignatedGrabber()))
         {
             _pendingGlobalAutoFire = true;
             _globalAutoFireDelay = _automateApi != null ? 5 : 1;

@@ -12,6 +12,21 @@ internal class ModConfig
         Walk
     }
 
+    // Audit §4.11: this enum's values mean different things depending on grabberMode.
+    //   Classic mode:
+    //     Off   -- no global grab; only the auto-grabber on the player's tile fires on keybind.
+    //     All   -- the keybind fires the player's *designated* grabber (set via the menu button
+    //              or designate keybind) and routes items to it from every location.
+    //     Hover -- the keybind fires the auto-grabber under the cursor.
+    //   Specialized mode:
+    //     Off   -- grabbers work locally only; the fire keybind does nothing.
+    //     All   -- on keybind / day-start auto-fire, every specialized grabber across every
+    //              location pulls type-routed items globally.
+    //     Hover -- the keybind fires only the specialized grabber under the cursor; non-keybind
+    //              sweeps stay per-location (issue #74 bug 1).
+    // The dual meaning is load-bearing for backwards compatibility -- splitting the enum would
+    // break existing configs. Code paths that branch on (grabberMode, globalGrabber) live in
+    // GrabSession (cache setup) and ModEntry.OnButtonPressed (keybind dispatch).
     public enum GlobalGrabberMode
     {
         Off,
