@@ -924,7 +924,10 @@ public class ModEntry : Mod
         // (Hover requires a cursor target the player isn't supplying at day start;
         // Off means no global grab). Classic-mode additionally requires a designated
         // grabber to exist; Specialized routes by grabber type instead, so any placed
-        // specialized grabber is sufficient.
+        // specialized grabber is sufficient. Intentionally queued before the Hourly
+        // early-return below: Hourly users still get the day-start auto-fire (the
+        // hourly poll only starts at 0700+, so without this they'd miss the morning
+        // sweep), while skipping the redundant Instant/Daily-style day-start sweep.
         if (Config.GlobalGrab.globalAutoFire
             && Config.globalGrabber == ModConfig.GlobalGrabberMode.All
             && (Config.grabberMode == ModConfig.GrabberMode.Specialized || _grabbers.HasDesignatedGrabber()))
