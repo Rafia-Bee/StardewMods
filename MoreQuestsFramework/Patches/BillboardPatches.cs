@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
+using MoreQuestsFramework.Posting.Boards;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Quests;
@@ -70,11 +71,19 @@ internal static class BillboardPatches
         var sel = BillboardSlots.Selected;
         if (sel != null)
             return sel.Quest;
+        var custom = CustomBoardSlots.Selected;
+        if (custom != null)
+            return custom.Quest;
         return Game1.questOfTheDay;
     }
 
     public static bool CanAccept_Prefix(ref bool __result)
     {
+        if (CustomBoardSlots.Selected != null)
+        {
+            __result = !CustomBoardSlots.Selected.Accepted;
+            return false;
+        }
         if (BillboardSlots.Slots.Count > 0)
         {
             __result = BillboardSlots.Selected != null && !BillboardSlots.Selected.Accepted;
@@ -84,7 +93,8 @@ internal static class BillboardPatches
     }
 
     /// If the player opens the daily-quest Billboard, swap it for our subclass (unless we're
-    /// already showing a `MoreQuestsBillboard` or one of its inner accept-quest popups).
+    /// already showing a `MoreQuestsBillboard`, a `CustomBoardMenu` (whose inner accept popup
+    /// reuses `Billboard(true)`), or there are no slot postings to display).
     public static bool Draw_Prefix(Billboard __instance, bool ___dailyQuestBoard)
     {
         if (!___dailyQuestBoard)
@@ -92,6 +102,8 @@ internal static class BillboardPatches
         if (__instance is MoreQuestsBillboard)
             return true;
         if (Game1.activeClickableMenu is MoreQuestsBillboard)
+            return true;
+        if (Game1.activeClickableMenu is CustomBoardMenu)
             return true;
         if (BillboardSlots.Slots.Count == 0)
             return true;
@@ -107,7 +119,7 @@ internal static class BillboardPatches
         __state = false;
         if (!___dailyQuestBoard)
             return;
-        if (BillboardSlots.Selected == null)
+        if (BillboardSlots.Selected == null && CustomBoardSlots.Selected == null)
             return;
         if (__instance.acceptQuestButton == null || !__instance.acceptQuestButton.visible)
             return;
@@ -121,32 +133,60 @@ internal static class BillboardPatches
     {
         if (!___dailyQuestBoard)
             return;
-        if (Game1.activeClickableMenu is not MoreQuestsBillboard)
-            return;
 
-        if (__state)
+        // Help-wanted board accept flow.
+        if (Game1.activeClickableMenu is MoreQuestsBillboard)
         {
-            // Capture posting before AcceptSelected drops the slot; vanilla's accept logic
-            // hardcodes `daysLeft.Value = 2`, overwriting the configured deadline.
-            var sel = BillboardSlots.Selected;
-            int deadline = sel != null ? Math.Max(1, sel.Posting.DeadlineDays) : 2;
-            var accepted = BillboardSlots.AcceptSelected();
-            // Keep `dailyQuest.Value = true` (set by vanilla's accept logic) so vanilla's
-            // billboard-quest side-effects on completion still fire: stats increment, prize
-            // ticket every 3rd quest, the milestone mail flags. Just override the deadline,
-            // which vanilla otherwise hardcodes to 2.
-            if (accepted != null)
-                accepted.daysLeft.Value = deadline;
-            MoreQuestsBillboard.InnerBillboard = null;
-            // Override whatever the exit cascade set; rebuild from the now-reduced slot list.
-            Game1.activeClickableMenu = new MoreQuestsBillboard();
+            if (__state)
+            {
+                // Capture posting before AcceptSelected drops the slot; vanilla's accept logic
+                // hardcodes `daysLeft.Value = 2`, overwriting the configured deadline.
+                var sel = BillboardSlots.Selected;
+                int deadline = sel != null ? Math.Max(1, sel.Posting.DeadlineDays) : 2;
+                var accepted = BillboardSlots.AcceptSelected();
+                // Keep `dailyQuest.Value = true` (set by vanilla's accept logic) so vanilla's
+                // billboard-quest side-effects on completion still fire: stats increment, prize
+                // ticket every 3rd quest, the milestone mail flags. Just override the deadline,
+                // which vanilla otherwise hardcodes to 2.
+                if (accepted != null)
+                    accepted.daysLeft.Value = deadline;
+                MoreQuestsBillboard.InnerBillboard = null;
+                Game1.activeClickableMenu = new MoreQuestsBillboard();
+                return;
+            }
+            if (__instance.upperRightCloseButton != null && __instance.upperRightCloseButton.containsPoint(x, y))
+            {
+                MoreQuestsBillboard.InnerBillboard = null;
+                BillboardSlots.Selected = null;
+            }
             return;
         }
 
-        if (__instance.upperRightCloseButton != null && __instance.upperRightCloseButton.containsPoint(x, y))
+        // Custom-board accept flow. The outer menu is a `CustomBoardMenu`; its inner
+        // `Billboard(true)` popup runs the same accept-quest UX as the help-wanted board.
+        if (Game1.activeClickableMenu is CustomBoardMenu customBoard)
         {
-            MoreQuestsBillboard.InnerBillboard = null;
-            BillboardSlots.Selected = null;
+            if (__state)
+            {
+                var sel = CustomBoardSlots.Selected;
+                int deadline = sel != null ? Math.Max(1, sel.Posting.DeadlineDays) : 2;
+                var accepted = CustomBoardSlots.AcceptSelected();
+                if (accepted != null)
+                {
+                    accepted.daysLeft.Value = deadline;
+                    // CustomBoard quests are not "daily" quests in the vanilla
+                    // `dailyQuest`/prize-ticket sense; clear the flag vanilla's accept
+                    // logic flipped on so completion doesn't trigger billboard-quest
+                    // milestone mail.
+                    accepted.dailyQuest.Value = false;
+                }
+                customBoard.OnInnerAcceptClosed(reopen: true);
+                return;
+            }
+            if (__instance.upperRightCloseButton != null && __instance.upperRightCloseButton.containsPoint(x, y))
+            {
+                customBoard.OnInnerAcceptClosed(reopen: false);
+            }
         }
     }
 }

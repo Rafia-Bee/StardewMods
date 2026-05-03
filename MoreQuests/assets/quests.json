@@ -178,6 +178,42 @@
                 "CooldownDays": 21
             },
             "Generator": "PreservesSeason"
+        },
+        {
+            "Name": "Mining.SkullCavernDeepDive",
+            "Category": "Mining",
+            "Trigger": {
+                "Source": "CustomBoard",
+                "Weight": 30,
+                "MaxPerDay": 1,
+                "CooldownDays": 14,
+                "Available": { "MinDeepestMineLevel": "121" }
+            },
+            "Generator": "SkullCavernDeepDive"
+        },
+        {
+            "Name": "Mining.MinesDeepDive",
+            "Category": "Mining",
+            "Trigger": {
+                "Source": "CustomBoard",
+                "Weight": 40,
+                "MaxPerDay": 1,
+                "CooldownDays": 14,
+                "Available": { "MinDeepestMineLevel": "5" }
+            },
+            "Generator": "MinesDeepDive"
+        },
+        {
+            "Name": "Farming.PierresStockUp",
+            "Category": "Farming",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 20,
+                "MaxPerDay": 1,
+                "CooldownDays": 7,
+                "Available": { "SkillLevel": "Farming 4", "NpcExists": "Pierre" }
+            },
+            "Generator": "PierresStockUp"
         }
     ]
 }

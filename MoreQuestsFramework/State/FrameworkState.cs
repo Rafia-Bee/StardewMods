@@ -58,6 +58,25 @@ public sealed class FrameworkState
     /// entry corresponds to one EmittedSpecialOrder.OrderId; cleared automatically when
     /// `SweepExpired` drops the parent emit record.
     public List<string> FrameworkRewardsGranted { get; set; } = new();
+
+    /// Active shop-price discounts granted by `ShopDiscountReward`. Each entry rewrites
+    /// matching `Data/Shops/<ShopId>` items at lookup time and is dropped on `DayStarted`
+    /// once the in-game day passes `ExpiresAfterDay`.
+    public List<ActiveShopDiscount> ActiveShopDiscounts { get; set; } = new();
+}
+
+/// One in-flight shop discount. Persisted in framework save state so the price reduction
+/// survives save/reload across the full duration window.
+public sealed class ActiveShopDiscount
+{
+    public string ShopId { get; set; } = "";
+    public int PercentOff { get; set; }
+    public int ExpiresAfterDay { get; set; }
+    /// Item ids the discount applies to. Empty = discount every entry in the shop.
+    public List<string> AppliesTo { get; set; } = new();
+    /// When > 0, items in `AppliesTo` that the shop doesn't already sell are added as
+    /// temporary entries with this per-visit stock count at the discounted price.
+    public int GuaranteedStock { get; set; }
 }
 
 /// One SpecialOrder entry the framework has injected into `Data/SpecialOrders`. The

@@ -21,6 +21,13 @@ namespace MoreQuestsFramework.Rewards;
 /// posting time rather than going through the encoded list.
 public static class RewardApplier
 {
+    /// Set by `ModEntry.OnSaveLoaded` to a callback that writes the granted ShopDiscount
+    /// into per-save framework state. Static so generators / tests can fire individual
+    /// rewards via `Apply(...)` without threading a save-state reference through every
+    /// completion path. Null when no save is loaded — `ApplyOne` no-ops the discount in
+    /// that case (test / generator authoring scenarios won't have a save to write to).
+    public static System.Action<ShopDiscountReward>? OnShopDiscountGranted { get; set; }
+
     /// Applies every reward in the encoded list to the active player. Designed for
     /// `Quest.questComplete()` overrides on our custom subclasses.
     public static void ApplyEncoded(IEnumerable<string> encoded)
@@ -119,6 +126,14 @@ public static class RewardApplier
                 .Default($"{giver} will send you a letter").ToString());
         }
 
+        foreach (var r in rewards.OfType<ShopDiscountReward>())
+        {
+            if (string.IsNullOrEmpty(r.ShopId) || r.PercentOff <= 0 || r.DurationDays <= 0)
+                continue;
+            lines.Add(translation.Get("quest.reward.line.shopDiscount", new { percent = r.PercentOff, days = r.DurationDays, npc = giver })
+                .Default($"{giver} will mark down their shop {r.PercentOff}% for {r.DurationDays} day(s)").ToString());
+        }
+
         if (lines.Count == 0)
             return string.Empty;
 
@@ -162,6 +177,12 @@ public static class RewardApplier
                     : Game1.player.craftingRecipes;
                 if (!recipes.ContainsKey(r.RecipeName))
                     recipes.Add(r.RecipeName, 0);
+                break;
+
+            case ShopDiscountReward sd:
+                if (string.IsNullOrEmpty(sd.ShopId) || sd.PercentOff <= 0 || sd.DurationDays <= 0)
+                    return;
+                OnShopDiscountGranted?.Invoke(sd);
                 break;
 
             case MailReward ml:
