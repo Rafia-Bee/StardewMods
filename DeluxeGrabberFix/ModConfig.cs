@@ -83,7 +83,6 @@ internal class ModConfig
         public bool harvestMoss;
         public bool harvestGreenRainWeeds;
         public bool fellHardwoodStumps;
-        public bool fellSecretWoodsStumps;
         public bool collectDebris;
         public bool collectWildflowers = true;
     }
