@@ -83,6 +83,7 @@ internal sealed class GrabSession : IDisposable
         {
             _mod.IsGlobalGrabActive = false;
             _mod.CachedDesignatedGrabbers = null;
+            _mod.CachedHoverGrabber = null;
         }
 
         _mod.IsGrabbing = false;
@@ -95,12 +96,15 @@ internal sealed class GrabSession : IDisposable
     }
 
     /// Specialized-mode global cache: every grabber on every location whose held item is a Chest.
-    /// Returns true only when the cache was actually populated (Specialized + globalGrabber != Off).
+    /// Returns true only when the cache was actually populated (Specialized + globalGrabber == All).
+    /// Hover is keybind-only by design -- non-keybind sweeps must fall back to per-location range
+    /// grabbing, otherwise placed grabbers would silently global-grab without the player ever
+    /// hovering and firing (issue #74 bug 1).
     private bool TrySetupSpecializedCache()
     {
         if (_mod.Config.grabberMode != ModConfig.GrabberMode.Specialized)
             return false;
-        if (_mod.Config.globalGrabber == ModConfig.GlobalGrabberMode.Off)
+        if (_mod.Config.globalGrabber != ModConfig.GlobalGrabberMode.All)
             return false;
 
         _mod.IsGlobalGrabActive = true;
@@ -142,8 +146,10 @@ internal sealed class GrabSession : IDisposable
     }
 
     /// Manual-fire setup: branch on grabberMode and globalGrabber sub-mode. Hover sub-mode
-    /// leaves the cache null so MapGrabber's Hover branch resolves the cursor-targeted
-    /// grabber at iteration time. Off is unreachable here (caller filters it).
+    /// captures the cursor-targeted grabber at session entry into CachedHoverGrabber, so the
+    /// per-iteration path (MapGrabber's Hover branch) reads from a stable session snapshot
+    /// rather than re-resolving Game1.lastCursorTile mid-cycle (audit §2.2). Off is
+    /// unreachable here (caller filters it).
     private void SetupManualFireGlobalState()
     {
         if (_mod.Config.grabberMode == ModConfig.GrabberMode.Specialized)
@@ -151,6 +157,7 @@ internal sealed class GrabSession : IDisposable
             if (_mod.Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover)
             {
                 _mod.IsGlobalGrabActive = true;
+                CaptureHoverGrabber();
                 _restoreGlobalCache = true;
             }
             else
@@ -172,6 +179,26 @@ internal sealed class GrabSession : IDisposable
                         .Where(pair => pair.Value != null
                             && pair.Value.modData.ContainsKey(ModEntry.GlobalGrabberModDataKey)));
             }
+        }
+        else if (_mod.Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover)
+        {
+            CaptureHoverGrabber();
+        }
+    }
+
+    private void CaptureHoverGrabber()
+    {
+        var loc = Game1.player?.currentLocation;
+        if (loc == null)
+            return;
+
+        var tile = Game1.lastCursorTile;
+        var hoverObj = loc.getObjectAtTile((int)tile.X, (int)tile.Y);
+        if (hoverObj != null
+            && GrabberTypeHelper.IsGrabber(hoverObj.QualifiedItemId)
+            && hoverObj.heldObject.Value is StardewValley.Objects.Chest)
+        {
+            _mod.CachedHoverGrabber = new KeyValuePair<Vector2, Object>(tile, hoverObj);
         }
     }
 }

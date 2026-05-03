@@ -61,18 +61,15 @@ internal abstract class MapGrabber
         else if (UseGlobalMode
             && Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover)
         {
-            var hoverObj = Game1.player.currentLocation?.getObjectAtTile((int)Game1.lastCursorTile.X, (int)Game1.lastCursorTile.Y);
-            if (hoverObj != null && ObjectIsGrabber(hoverObj))
-            {
-                GrabberPairs = new List<KeyValuePair<Vector2, Object>>
-                {
-                    new(Game1.lastCursorTile, hoverObj)
-                };
-            }
-            else
-            {
-                GrabberPairs = new List<KeyValuePair<Vector2, Object>>();
-            }
+            // Hover pair was captured by GrabSession at entry (audit §2.2). Use it as the
+            // sole receiver for every location's iteration so items collected from any map
+            // route into the hovered chest (type-filtered by sub-grabber BelongsToType).
+            // If the player wasn't hovering a grabber when the keybind fired, the pair is
+            // null and we route to nothing -- preserves the pre-fix silent-no-op behavior
+            // for the "fired keybind on empty space" case.
+            GrabberPairs = Mod.CachedHoverGrabber.HasValue
+                ? new List<KeyValuePair<Vector2, Object>> { Mod.CachedHoverGrabber.Value }
+                : new List<KeyValuePair<Vector2, Object>>();
         }
         else
         {
@@ -271,15 +268,5 @@ internal abstract class MapGrabber
                 && obj.heldObject.Value is Chest;
         }
         return false;
-    }
-
-    private bool ObjectIsGrabber(Object obj)
-    {
-        if (obj == null)
-            return false;
-
-        return GrabberTypeHelper.IsGrabber(obj.QualifiedItemId)
-            && obj.heldObject.Value != null
-            && obj.heldObject.Value is Chest;
     }
 }
