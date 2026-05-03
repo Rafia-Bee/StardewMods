@@ -31,6 +31,12 @@ public sealed class RecipeIngredient
 {
     public ResolvedItem Item { get; set; } = null!;
     public int Count { get; set; }
+    /// When non-zero, the ingredient line was a vanilla category sentinel (negative id in
+    /// `Data/CookingRecipes`) rather than a literal item id — `Item` then carries the
+    /// per-category display name and a synthetic placeholder `QualifiedItemId` so step
+    /// builders can still feed `AdventureStep.Items` with `$category:<CategoryId>`.
+    public int CategoryId { get; set; }
+    public bool IsCategoryToken => CategoryId != 0;
 }
 
 /// Dynamically resolves items from the game registry. Designed to surface modded crops/fish/objects automatically.
@@ -157,6 +163,47 @@ public sealed class ItemResolver
             _monitor.Log($"TryGetSpawnableFishIdsForVisitedLocations: {ex.Message}", LogLevel.Warn);
             return null;
         }
+    }
+
+    /// All recipes from `Data/CookingRecipes` whose ingredient list resolves cleanly into
+    /// either literal items or `$category:N` tokens (negative ids in vanilla recipes encode
+    /// "any item with category N"). Unlike `GetKnownRecipes`, this ignores
+    /// `Game1.player.cookingRecipes` — the saloon's menu doesn't depend on what the player
+    /// already knows, so quests that pull from the saloon's dish pool need the full list.
+    /// Recipes with a non-resolvable ingredient (corrupt data, bad modded entries) are
+    /// silently dropped so the caller never has to check.
+    public List<CookingRecipeInfo> GetAllCookingRecipes()
+    {
+        var results = new List<CookingRecipeInfo>();
+        try
+        {
+            foreach (var (recipeName, rawData) in _cache.CookingRecipes)
+            {
+                var fields = rawData.Split('/');
+                if (fields.Length < 3)
+                    continue;
+
+                var ingredients = ParseIngredientsStrict(fields[0]);
+                if (ingredients == null)
+                    continue;
+                var outputItem = TryResolveItem("(O)" + fields[2].Split(' ')[0]);
+
+                if (outputItem != null && ingredients.Count > 0)
+                {
+                    results.Add(new CookingRecipeInfo
+                    {
+                        RecipeName = recipeName,
+                        OutputItem = outputItem,
+                        Ingredients = ingredients
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _monitor.Log($"GetAllCookingRecipes: {ex.Message}", LogLevel.Warn);
+        }
+        return results;
     }
 
     public List<CookingRecipeInfo> GetKnownRecipes()
@@ -310,4 +357,62 @@ public sealed class ItemResolver
         }
         return ingredients;
     }
+
+    /// Variant of `ParseIngredients` that returns null when the ingredient string can't be
+    /// parsed cleanly (bad pair, unresolved literal id). Negative integer ids are kept as
+    /// `CategoryId` sentinel ingredients with a per-category display name; callers feed
+    /// these into `AdventureStep.Items` as `$category:<n>` tokens.
+    private List<RecipeIngredient>? ParseIngredientsStrict(string ingredientString)
+    {
+        var ingredients = new List<RecipeIngredient>();
+        var parts = ingredientString.Split(' ');
+        for (int i = 0; i + 1 < parts.Length; i += 2)
+        {
+            if (!int.TryParse(parts[i + 1], out int count))
+                return null;
+
+            string idStr = parts[i];
+            if (int.TryParse(idStr, out int idNum) && idNum < 0)
+            {
+                // Negative id encodes a vanilla category sentinel (e.g. -5 = egg, -6 = milk).
+                string displayName = CategoryDisplayName(idNum);
+                var placeholder = new ResolvedItem
+                {
+                    QualifiedItemId = $"$category:{idNum}",
+                    DisplayName = displayName,
+                    SellPrice = 0,
+                    Category = idNum
+                };
+                ingredients.Add(new RecipeIngredient { Item = placeholder, Count = count, CategoryId = idNum });
+                continue;
+            }
+
+            var item = TryResolveItem(idStr);
+            if (item == null)
+                return null;
+            ingredients.Add(new RecipeIngredient { Item = item, Count = count });
+        }
+        return ingredients;
+    }
+
+    /// Player-facing names for the vanilla `Data/Objects` category constants that show up
+    /// in `Data/CookingRecipes` ingredient lists. Used so a quest description can say
+    /// "Bring 1 milk" instead of "Bring 1 (-6)".
+    private static string CategoryDisplayName(int category) => category switch
+    {
+        -5 => "egg",
+        -6 => "milk",
+        -7 => "cooked dish",
+        -25 => "cooking ingredient",
+        -26 => "artisan good",
+        -27 => "syrup",
+        -28 => "monster loot",
+        -75 => "vegetable",
+        -79 => "fruit",
+        -80 => "flower",
+        -81 => "forage",
+        -4 => "fish",
+        -2 => "mineral",
+        _ => "ingredient"
+    };
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.State;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -180,24 +181,38 @@ public sealed class SpecialOrderWriter
                 continue;
             if (!byOrderId.TryGetValue(key, out var emitted))
                 continue;
-            if (emitted.Spec.FrameworkRewards.Count == 0)
+            if (emitted.Spec.FrameworkRewards.Count == 0 && emitted.Spec.Consequences.Count == 0)
             {
-                // Mark granted anyway so we don't keep re-checking an empty reward list.
+                // Mark granted anyway so we don't keep re-checking an empty payload.
                 _state.FrameworkRewardsGranted.Add(key);
                 continue;
             }
 
             try
             {
-                Rewards.RewardApplier.Apply(emitted.Spec.FrameworkRewards);
+                if (emitted.Spec.FrameworkRewards.Count > 0)
+                    Rewards.RewardApplier.Apply(emitted.Spec.FrameworkRewards);
+
+                int firedConsequences = 0;
+                if (emitted.Spec.Consequences.Count > 0 && ConsequenceEngine.Active != null)
+                {
+                    foreach (var spec in emitted.Spec.Consequences)
+                    {
+                        if (spec == null || spec.Tier == ConsequenceTier.Tier0)
+                            continue;
+                        ConsequenceEngine.Active.Apply(spec);
+                        firedConsequences++;
+                    }
+                }
+
                 _state.FrameworkRewardsGranted.Add(key);
                 _monitor.Log(
-                    $"Granted framework rewards for completed SpecialOrder '{key}' ({emitted.Spec.FrameworkRewards.Count} reward(s)).",
+                    $"Granted framework payload for completed SpecialOrder '{key}' ({emitted.Spec.FrameworkRewards.Count} reward(s), {firedConsequences} consequence(s)).",
                     LogLevel.Trace);
             }
             catch (Exception ex)
             {
-                _monitor.Log($"Failed to grant framework rewards for SpecialOrder '{key}': {ex.Message}", LogLevel.Warn);
+                _monitor.Log($"Failed to grant framework payload for SpecialOrder '{key}': {ex.Message}", LogLevel.Warn);
             }
         }
     }
