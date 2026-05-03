@@ -956,12 +956,12 @@ public class ModEntry : Mod
             return;
         }
 
+        if (!Game1.IsPerformingMousePlacement())
+            return;
+
         Vector2 grabTile = Game1.GetPlacementGrabTile();
         int centerX = (int)grabTile.X;
         int centerY = (int)grabTile.Y;
-
-        if (!Game1.IsPerformingMousePlacement())
-            return;
 
         int range = Config.Features.harvestCropsRange;
         for (int x = centerX - range; x <= centerX + range; x++)
