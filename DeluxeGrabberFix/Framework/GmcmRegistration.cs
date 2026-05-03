@@ -105,11 +105,8 @@ internal class GmcmRegistration
 
     private void RegisterConfigMenu()
     {
-        var api = _api;
-        var config = _mod.Config;
-
-        api.Register(_mod.ModManifest,
-            () =>
+        _api.Register(_mod.ModManifest,
+            reset: () =>
             {
                 _mod.Config = new ModConfig();
                 if (_locations.SaveData != null)
@@ -121,7 +118,7 @@ internal class GmcmRegistration
                 }
                 _mod.RefreshRenderedWorldHook();
             },
-            () =>
+            save: () =>
             {
                 _mod.ConfigManager.SaveActiveConfig();
                 _mod.Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
@@ -134,773 +131,307 @@ internal class GmcmRegistration
                 _mod.RefreshRenderedWorldHook();
             });
 
-        // Main page -- category links
-        api.AddPageLink(_mod.ModManifest, "crop-harvesting",
-            () => _mod.Helper.Translation.Get("page.crop-harvesting.link"),
-            () => _mod.Helper.Translation.Get("section.crop-harvesting.tooltip"));
+        // Lambdas below MUST read `_mod.Config` directly each invocation -- never cache
+        // it into a local. Reset-to-defaults swaps the `_mod.Config` reference for a
+        // fresh ModConfig, and PerSaveConfigManager swaps it on save load / return to
+        // title; a captured local would leave the lambdas reading/writing the orphaned
+        // old instance (audit §4.12). Same reason the original pre-refactor code didn't
+        // cache it either.
+        var b = new GmcmBuilder(_api, _mod.ModManifest, _mod.Helper.Translation);
 
-        api.AddPageLink(_mod.ModManifest, "other-harvesting",
-            () => _mod.Helper.Translation.Get("page.other-harvesting.link"));
+        // Main page -- category links. A few links use a tooltip key that doesn't follow
+        // the `{linkKey}.tooltip` convention (crop-harvesting and machine-collection
+        // inherit their section's tooltip; compatibility and specialized-grabbers use
+        // the page key's tooltip), so those pass an explicit tooltipKey override.
+        b.PageLink("crop-harvesting", "page.crop-harvesting.link", tooltipKey: "section.crop-harvesting.tooltip")
+         .PageLink("other-harvesting", "page.other-harvesting.link")
+         .PageLink("machine-collection", "page.machine-collection.link", tooltipKey: "section.machine-collection.tooltip")
+         .PageLink("miscellaneous", "page.miscellaneous.link")
+         .PageLink("compatibility", "page.compatibility.link", tooltipKey: "page.compatibility.tooltip")
+         .PageLink("enabled-locations", "config.enabled-locations-link")
+         .PageLink("specialized-grabbers", "page.specialized-grabbers.link", tooltipKey: "page.specialized-grabbers.tooltip");
 
-        api.AddPageLink(_mod.ModManifest, "machine-collection",
-            () => _mod.Helper.Translation.Get("page.machine-collection.link"),
-            () => _mod.Helper.Translation.Get("section.machine-collection.tooltip"));
-
-        api.AddPageLink(_mod.ModManifest, "miscellaneous",
-            () => _mod.Helper.Translation.Get("page.miscellaneous.link"));
-
-        api.AddPageLink(_mod.ModManifest, "compatibility",
-            () => _mod.Helper.Translation.Get("page.compatibility.link"),
-            () => _mod.Helper.Translation.Get("page.compatibility.tooltip"));
-
-        api.AddPageLink(_mod.ModManifest, "enabled-locations",
-            () => _mod.Helper.Translation.Get("config.enabled-locations-link"),
-            () => _mod.Helper.Translation.Get("config.enabled-locations-link.tooltip"));
-
-        api.AddPageLink(_mod.ModManifest, "specialized-grabbers",
-            () => _mod.Helper.Translation.Get("page.specialized-grabbers.link"),
-            () => _mod.Helper.Translation.Get("page.specialized-grabbers.tooltip"));
-
-        api.AddTextOption(_mod.ModManifest,
-            () => ModConfig.GrabberModeDict[_mod.Config.grabberMode],
-            v => _mod.Config.grabberMode = ModConfig.GrabberModeReverseDict[v],
-            () => _mod.Helper.Translation.Get("config.grabber-mode"),
-            () => _mod.Helper.Translation.Get("config.grabber-mode.tooltip"),
-            ModConfig.GrabberModeStrings);
+        b.Dropdown("config.grabber-mode",
+            () => _mod.Config.grabberMode, v => _mod.Config.grabberMode = v,
+            ModConfig.GrabberModeDict, ModConfig.GrabberModeReverseDict, ModConfig.GrabberModeStrings);
 
         // Specialized Grabbers page
-        api.AddPage(_mod.ModManifest, "specialized-grabbers", () => _mod.Helper.Translation.Get("page.specialized-grabbers"));
-
-        api.AddParagraph(_mod.ModManifest,
-            () => _mod.Helper.Translation.Get("page.specialized-grabbers.paragraph"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.specializedGrabbersCountForPerfection,
-            v => _mod.Config.Specialized.specializedGrabbersCountForPerfection = v,
-            () => _mod.Helper.Translation.Get("config.specialized-grabbers-count-for-perfection"),
-            () => _mod.Helper.Translation.Get("config.specialized-grabbers-count-for-perfection.tooltip"));
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.cropsShippedThreshold,
-            v => _mod.Config.Specialized.cropsShippedThreshold = v,
-            () => _mod.Helper.Translation.Get("config.crops-shipped-threshold"),
-            () => _mod.Helper.Translation.Get("config.crops-shipped-threshold.tooltip"),
-            min: 1, max: 10000, interval: 10);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.itemsForagedThreshold,
-            v => _mod.Config.Specialized.itemsForagedThreshold = v,
-            () => _mod.Helper.Translation.Get("config.items-foraged-threshold"),
-            () => _mod.Helper.Translation.Get("config.items-foraged-threshold.tooltip"),
-            min: 1, max: 10000, interval: 10);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.stumpsChoppedThreshold,
-            v => _mod.Config.Specialized.stumpsChoppedThreshold = v,
-            () => _mod.Helper.Translation.Get("config.stumps-chopped-threshold"),
-            () => _mod.Helper.Translation.Get("config.stumps-chopped-threshold.tooltip"),
-            min: 1, max: 1000, interval: 5);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.museumDonationsThreshold,
-            v => _mod.Config.Specialized.museumDonationsThreshold = v,
-            () => _mod.Helper.Translation.Get("config.museum-donations-threshold"),
-            () => _mod.Helper.Translation.Get("config.museum-donations-threshold.tooltip"),
-            min: 1, max: 100, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.totalMoneyEarnedThreshold,
-            v => _mod.Config.Specialized.totalMoneyEarnedThreshold = v,
-            () => _mod.Helper.Translation.Get("config.total-money-earned-threshold"),
-            () => _mod.Helper.Translation.Get("config.total-money-earned-threshold.tooltip"),
-            min: 10000, max: 10000000, interval: 10000);
+        b.Page("specialized-grabbers", "page.specialized-grabbers")
+         .Paragraph("page.specialized-grabbers.paragraph")
+         .Bool("config.specialized-grabbers-count-for-perfection",
+             () => _mod.Config.Specialized.specializedGrabbersCountForPerfection,
+             v => _mod.Config.Specialized.specializedGrabbersCountForPerfection = v)
+         .Number("config.crops-shipped-threshold",
+             () => _mod.Config.Specialized.cropsShippedThreshold,
+             v => _mod.Config.Specialized.cropsShippedThreshold = v,
+             min: 1, max: 10000, interval: 10)
+         .Number("config.items-foraged-threshold",
+             () => _mod.Config.Specialized.itemsForagedThreshold,
+             v => _mod.Config.Specialized.itemsForagedThreshold = v,
+             min: 1, max: 10000, interval: 10)
+         .Number("config.stumps-chopped-threshold",
+             () => _mod.Config.Specialized.stumpsChoppedThreshold,
+             v => _mod.Config.Specialized.stumpsChoppedThreshold = v,
+             min: 1, max: 1000, interval: 5)
+         .Number("config.museum-donations-threshold",
+             () => _mod.Config.Specialized.museumDonationsThreshold,
+             v => _mod.Config.Specialized.museumDonationsThreshold = v,
+             min: 1, max: 100, interval: 1)
+         .Number("config.total-money-earned-threshold",
+             () => _mod.Config.Specialized.totalMoneyEarnedThreshold,
+             v => _mod.Config.Specialized.totalMoneyEarnedThreshold = v,
+             min: 10000, max: 10000000, interval: 10000);
 
         // Recipe costs
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.recipe-costs.crop"));
+        b.Section("section.recipe-costs.crop")
+         .Number("config.recipe-crop-wood",
+             () => _mod.Config.Specialized.recipeCropWood, v => _mod.Config.Specialized.recipeCropWood = v,
+             min: 1, max: 9999, interval: 1)
+         .Number("config.recipe-crop-gold-bar",
+             () => _mod.Config.Specialized.recipeCropGoldBar, v => _mod.Config.Specialized.recipeCropGoldBar = v,
+             min: 1, max: 999, interval: 1)
+         .Number("config.recipe-crop-quality-sprinkler",
+             () => _mod.Config.Specialized.recipeCropQualitySprinkler, v => _mod.Config.Specialized.recipeCropQualitySprinkler = v,
+             min: 1, max: 999, interval: 1);
 
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeCropWood,
-            v => _mod.Config.Specialized.recipeCropWood = v,
-            () => _mod.Helper.Translation.Get("config.recipe-crop-wood"),
-            min: 1, max: 9999, interval: 1);
+        b.Section("section.recipe-costs.forage")
+         .Number("config.recipe-forage-wood",
+             () => _mod.Config.Specialized.recipeForageWood, v => _mod.Config.Specialized.recipeForageWood = v,
+             min: 1, max: 9999, interval: 1)
+         .Number("config.recipe-forage-gold-bar",
+             () => _mod.Config.Specialized.recipeForageGoldBar, v => _mod.Config.Specialized.recipeForageGoldBar = v,
+             min: 1, max: 999, interval: 1)
+         .Number("config.recipe-forage-mixed-seeds",
+             () => _mod.Config.Specialized.recipeForageMixedSeeds, v => _mod.Config.Specialized.recipeForageMixedSeeds = v,
+             min: 1, max: 999, interval: 1)
+         .Number("config.recipe-forage-fiber",
+             () => _mod.Config.Specialized.recipeForageFiber, v => _mod.Config.Specialized.recipeForageFiber = v,
+             min: 1, max: 999, interval: 1);
 
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeCropGoldBar,
-            v => _mod.Config.Specialized.recipeCropGoldBar = v,
-            () => _mod.Helper.Translation.Get("config.recipe-crop-gold-bar"),
-            min: 1, max: 999, interval: 1);
+        b.Section("section.recipe-costs.tree")
+         .Number("config.recipe-tree-hardwood",
+             () => _mod.Config.Specialized.recipeTreeHardwood, v => _mod.Config.Specialized.recipeTreeHardwood = v,
+             min: 1, max: 999, interval: 1)
+         .Number("config.recipe-tree-iridium-bar",
+             () => _mod.Config.Specialized.recipeTreeIridiumBar, v => _mod.Config.Specialized.recipeTreeIridiumBar = v,
+             min: 1, max: 999, interval: 1)
+         .Number("config.recipe-tree-maple-syrup",
+             () => _mod.Config.Specialized.recipeTreeMapleSyrup, v => _mod.Config.Specialized.recipeTreeMapleSyrup = v,
+             min: 1, max: 999, interval: 1)
+         .Number("config.recipe-tree-oak-resin",
+             () => _mod.Config.Specialized.recipeTreeOakResin, v => _mod.Config.Specialized.recipeTreeOakResin = v,
+             min: 1, max: 999, interval: 1)
+         .Number("config.recipe-tree-pine-tar",
+             () => _mod.Config.Specialized.recipeTreePineTar, v => _mod.Config.Specialized.recipeTreePineTar = v,
+             min: 1, max: 999, interval: 1);
 
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeCropQualitySprinkler,
-            v => _mod.Config.Specialized.recipeCropQualitySprinkler = v,
-            () => _mod.Helper.Translation.Get("config.recipe-crop-quality-sprinkler"),
-            min: 1, max: 999, interval: 1);
+        b.Section("section.recipe-costs.scavenger")
+         .Number("config.recipe-scavenger-hardwood",
+             () => _mod.Config.Specialized.recipeScavengerHardwood, v => _mod.Config.Specialized.recipeScavengerHardwood = v,
+             min: 1, max: 999, interval: 1)
+         .Number("config.recipe-scavenger-iridium-bar",
+             () => _mod.Config.Specialized.recipeScavengerIridiumBar, v => _mod.Config.Specialized.recipeScavengerIridiumBar = v,
+             min: 1, max: 999, interval: 1)
+         .Number("config.recipe-scavenger-bone-fragment",
+             () => _mod.Config.Specialized.recipeScavengerBoneFragment, v => _mod.Config.Specialized.recipeScavengerBoneFragment = v,
+             min: 1, max: 999, interval: 1)
+         .Number("config.recipe-scavenger-artifact-trove",
+             () => _mod.Config.Specialized.recipeScavengerArtifactTrove, v => _mod.Config.Specialized.recipeScavengerArtifactTrove = v,
+             min: 1, max: 999, interval: 1);
 
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.recipe-costs.forage"));
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeForageWood,
-            v => _mod.Config.Specialized.recipeForageWood = v,
-            () => _mod.Helper.Translation.Get("config.recipe-forage-wood"),
-            min: 1, max: 9999, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeForageGoldBar,
-            v => _mod.Config.Specialized.recipeForageGoldBar = v,
-            () => _mod.Helper.Translation.Get("config.recipe-forage-gold-bar"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeForageMixedSeeds,
-            v => _mod.Config.Specialized.recipeForageMixedSeeds = v,
-            () => _mod.Helper.Translation.Get("config.recipe-forage-mixed-seeds"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeForageFiber,
-            v => _mod.Config.Specialized.recipeForageFiber = v,
-            () => _mod.Helper.Translation.Get("config.recipe-forage-fiber"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.recipe-costs.tree"));
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeTreeHardwood,
-            v => _mod.Config.Specialized.recipeTreeHardwood = v,
-            () => _mod.Helper.Translation.Get("config.recipe-tree-hardwood"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeTreeIridiumBar,
-            v => _mod.Config.Specialized.recipeTreeIridiumBar = v,
-            () => _mod.Helper.Translation.Get("config.recipe-tree-iridium-bar"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeTreeMapleSyrup,
-            v => _mod.Config.Specialized.recipeTreeMapleSyrup = v,
-            () => _mod.Helper.Translation.Get("config.recipe-tree-maple-syrup"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeTreeOakResin,
-            v => _mod.Config.Specialized.recipeTreeOakResin = v,
-            () => _mod.Helper.Translation.Get("config.recipe-tree-oak-resin"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeTreePineTar,
-            v => _mod.Config.Specialized.recipeTreePineTar = v,
-            () => _mod.Helper.Translation.Get("config.recipe-tree-pine-tar"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.recipe-costs.scavenger"));
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeScavengerHardwood,
-            v => _mod.Config.Specialized.recipeScavengerHardwood = v,
-            () => _mod.Helper.Translation.Get("config.recipe-scavenger-hardwood"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeScavengerIridiumBar,
-            v => _mod.Config.Specialized.recipeScavengerIridiumBar = v,
-            () => _mod.Helper.Translation.Get("config.recipe-scavenger-iridium-bar"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeScavengerBoneFragment,
-            v => _mod.Config.Specialized.recipeScavengerBoneFragment = v,
-            () => _mod.Helper.Translation.Get("config.recipe-scavenger-bone-fragment"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeScavengerArtifactTrove,
-            v => _mod.Config.Specialized.recipeScavengerArtifactTrove = v,
-            () => _mod.Helper.Translation.Get("config.recipe-scavenger-artifact-trove"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.recipe-costs.machine"));
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeMachineIridiumBar,
-            v => _mod.Config.Specialized.recipeMachineIridiumBar = v,
-            () => _mod.Helper.Translation.Get("config.recipe-machine-iridium-bar"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeMachineBatteryPack,
-            v => _mod.Config.Specialized.recipeMachineBatteryPack = v,
-            () => _mod.Helper.Translation.Get("config.recipe-machine-battery-pack"),
-            min: 1, max: 999, interval: 1);
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Specialized.recipeMachineDiamond,
-            v => _mod.Config.Specialized.recipeMachineDiamond = v,
-            () => _mod.Helper.Translation.Get("config.recipe-machine-diamond"),
-            min: 1, max: 999, interval: 1);
+        b.Section("section.recipe-costs.machine")
+         .Number("config.recipe-machine-iridium-bar",
+             () => _mod.Config.Specialized.recipeMachineIridiumBar, v => _mod.Config.Specialized.recipeMachineIridiumBar = v,
+             min: 1, max: 999, interval: 1)
+         .Number("config.recipe-machine-battery-pack",
+             () => _mod.Config.Specialized.recipeMachineBatteryPack, v => _mod.Config.Specialized.recipeMachineBatteryPack = v,
+             min: 1, max: 999, interval: 1)
+         .Number("config.recipe-machine-diamond",
+             () => _mod.Config.Specialized.recipeMachineDiamond, v => _mod.Config.Specialized.recipeMachineDiamond = v,
+             min: 1, max: 999, interval: 1);
 
         // Crop Harvesting page
-        api.AddPage(_mod.ModManifest, "crop-harvesting", () => _mod.Helper.Translation.Get("section.crop-harvesting"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.harvestCrops,
-            v => _mod.Config.Features.harvestCrops = v,
-            () => _mod.Helper.Translation.Get("config.harvest-crops"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.harvestCropsIndoorPots,
-            v => _mod.Config.Features.harvestCropsIndoorPots = v,
-            () => _mod.Helper.Translation.Get("config.harvest-crops-indoor-pots"),
-            () => _mod.Helper.Translation.Get("config.harvest-crops-indoor-pots.tooltip"));
-
-        api.AddTextOption(_mod.ModManifest,
-            () => ModConfig.FlowerHarvestDict[_mod.Config.Features.flowers],
-            v => _mod.Config.Features.flowers = ModConfig.FlowerHarvestReverseDict[v],
-            () => _mod.Helper.Translation.Get("config.harvest-flowers"),
-            () => _mod.Helper.Translation.Get("config.harvest-flowers.tooltip"),
-            ModConfig.FlowerHarvestStrings,
-            v => _mod.Helper.Translation.Get($"dropdown.flower-{v.ToLower()}"));
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Features.beeHouseRange,
-            v => _mod.Config.Features.beeHouseRange = Math.Max(1, v),
-            () => _mod.Helper.Translation.Get("config.bee-house-range"),
-            () => _mod.Helper.Translation.Get("config.bee-house-range.tooltip"));
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.Features.harvestCropsRange,
-            v => _mod.Config.Features.harvestCropsRange = Math.Max(-1, v),
-            () => _mod.Helper.Translation.Get("config.harvest-range"),
-            () => _mod.Helper.Translation.Get("config.harvest-range.tooltip"));
-
-        api.AddTextOption(_mod.ModManifest,
-            () => ModConfig.HarvestCropsRangeDict[_mod.Config.Features.harvestCropsRangeMode],
-            v => _mod.Config.Features.harvestCropsRangeMode = ModConfig.HarvestCropsRangeReverseDict[v],
-            () => _mod.Helper.Translation.Get("config.harvest-range-mode"),
-            () => _mod.Helper.Translation.Get("config.harvest-range-mode.tooltip"),
-            ModConfig.HarvestCropsRangeModeStrings,
-            v => _mod.Helper.Translation.Get($"dropdown.{v.ToLower()}"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.replantReminder,
-            v => _mod.Config.replantReminder = v,
-            () => _mod.Helper.Translation.Get("config.replant-reminder"),
-            () => _mod.Helper.Translation.Get("config.replant-reminder.tooltip"));
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.replantReminderTime,
-            v => _mod.Config.replantReminderTime = v,
-            () => _mod.Helper.Translation.Get("config.replant-reminder-time"),
-            () => _mod.Helper.Translation.Get("config.replant-reminder-time.tooltip"),
-            min: 600,
-            max: 2500,
-            interval: 100);
+        b.Page("crop-harvesting", "section.crop-harvesting")
+         .Bool("config.harvest-crops",
+             () => _mod.Config.Features.harvestCrops, v => _mod.Config.Features.harvestCrops = v)
+         .Bool("config.harvest-crops-indoor-pots",
+             () => _mod.Config.Features.harvestCropsIndoorPots, v => _mod.Config.Features.harvestCropsIndoorPots = v)
+         .Dropdown("config.harvest-flowers",
+             () => _mod.Config.Features.flowers, v => _mod.Config.Features.flowers = v,
+             ModConfig.FlowerHarvestDict, ModConfig.FlowerHarvestReverseDict, ModConfig.FlowerHarvestStrings,
+             dropdownLabelPrefix: "flower-")
+         .Number("config.bee-house-range",
+             () => _mod.Config.Features.beeHouseRange, v => _mod.Config.Features.beeHouseRange = Math.Max(1, v))
+         .Number("config.harvest-range",
+             () => _mod.Config.Features.harvestCropsRange, v => _mod.Config.Features.harvestCropsRange = Math.Max(-1, v))
+         .Dropdown("config.harvest-range-mode",
+             () => _mod.Config.Features.harvestCropsRangeMode, v => _mod.Config.Features.harvestCropsRangeMode = v,
+             ModConfig.HarvestCropsRangeDict, ModConfig.HarvestCropsRangeReverseDict, ModConfig.HarvestCropsRangeModeStrings,
+             dropdownLabelPrefix: "")
+         .Bool("config.replant-reminder",
+             () => _mod.Config.replantReminder, v => _mod.Config.replantReminder = v)
+         .Number("config.replant-reminder-time",
+             () => _mod.Config.replantReminderTime, v => _mod.Config.replantReminderTime = v,
+             min: 600, max: 2500, interval: 100);
 
         // Other Harvesting page
-        api.AddPage(_mod.ModManifest, "other-harvesting", () => _mod.Helper.Translation.Get("section.other-harvesting"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.forage,
-            v => _mod.Config.Features.forage = v,
-            () => _mod.Helper.Translation.Get("config.collect-forage"),
-            () => _mod.Helper.Translation.Get("config.collect-forage.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.fruitTrees,
-            v => _mod.Config.Features.fruitTrees = v,
-            () => _mod.Helper.Translation.Get("config.harvest-fruit-trees"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.bushes,
-            v => _mod.Config.Features.bushes = v,
-            () => _mod.Helper.Translation.Get("config.harvest-berry-bushes"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.seedTrees,
-            v => _mod.Config.Features.seedTrees = v,
-            () => _mod.Helper.Translation.Get("config.shake-seed-trees"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.animalProducts,
-            v => _mod.Config.Features.animalProducts = v,
-            () => _mod.Helper.Translation.Get("config.collect-animal-products"),
-            () => _mod.Helper.Translation.Get("config.collect-animal-products.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.slimeHutch,
-            v => _mod.Config.Features.slimeHutch = v,
-            () => _mod.Helper.Translation.Get("config.grab-slime-balls"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.artifactSpots,
-            v => _mod.Config.Features.artifactSpots = v,
-            () => _mod.Helper.Translation.Get("config.dig-up-artifact-spots"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.orePan,
-            v => _mod.Config.Features.orePan = v,
-            () => _mod.Helper.Translation.Get("config.collect-ore-from-panning"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.fellHardwoodStumps,
-            v => _mod.Config.Features.fellHardwoodStumps = v,
-            () => _mod.Helper.Translation.Get("config.fell-stumps"),
-            () => _mod.Helper.Translation.Get("config.fell-stumps.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.garbageCans,
-            v => _mod.Config.Features.garbageCans = v,
-            () => _mod.Helper.Translation.Get("config.search-garbage-cans"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.seedSpots,
-            v => _mod.Config.Features.seedSpots = v,
-            () => _mod.Helper.Translation.Get("config.dig-up-seed-spots"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.harvestMoss,
-            v => _mod.Config.Features.harvestMoss = v,
-            () => _mod.Helper.Translation.Get("config.harvest-moss"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.harvestGreenRainWeeds,
-            v => _mod.Config.Features.harvestGreenRainWeeds = v,
-            () => _mod.Helper.Translation.Get("config.harvest-green-rain-weeds"),
-            () => _mod.Helper.Translation.Get("config.harvest-green-rain-weeds.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.collectDebris,
-            v => _mod.Config.Features.collectDebris = v,
-            () => _mod.Helper.Translation.Get("config.collect-debris"),
-            () => _mod.Helper.Translation.Get("config.collect-debris.tooltip"));
+        b.Page("other-harvesting", "section.other-harvesting")
+         .Bool("config.collect-forage", () => _mod.Config.Features.forage, v => _mod.Config.Features.forage = v)
+         .Bool("config.harvest-fruit-trees", () => _mod.Config.Features.fruitTrees, v => _mod.Config.Features.fruitTrees = v)
+         .Bool("config.harvest-berry-bushes", () => _mod.Config.Features.bushes, v => _mod.Config.Features.bushes = v)
+         .Bool("config.shake-seed-trees", () => _mod.Config.Features.seedTrees, v => _mod.Config.Features.seedTrees = v)
+         .Bool("config.collect-animal-products", () => _mod.Config.Features.animalProducts, v => _mod.Config.Features.animalProducts = v)
+         .Bool("config.grab-slime-balls", () => _mod.Config.Features.slimeHutch, v => _mod.Config.Features.slimeHutch = v)
+         .Bool("config.dig-up-artifact-spots", () => _mod.Config.Features.artifactSpots, v => _mod.Config.Features.artifactSpots = v)
+         .Bool("config.collect-ore-from-panning", () => _mod.Config.Features.orePan, v => _mod.Config.Features.orePan = v)
+         .Bool("config.fell-stumps", () => _mod.Config.Features.fellHardwoodStumps, v => _mod.Config.Features.fellHardwoodStumps = v)
+         .Bool("config.search-garbage-cans", () => _mod.Config.Features.garbageCans, v => _mod.Config.Features.garbageCans = v)
+         .Bool("config.dig-up-seed-spots", () => _mod.Config.Features.seedSpots, v => _mod.Config.Features.seedSpots = v)
+         .Bool("config.harvest-moss", () => _mod.Config.Features.harvestMoss, v => _mod.Config.Features.harvestMoss = v)
+         .Bool("config.harvest-green-rain-weeds", () => _mod.Config.Features.harvestGreenRainWeeds, v => _mod.Config.Features.harvestGreenRainWeeds = v)
+         .Bool("config.collect-debris", () => _mod.Config.Features.collectDebris, v => _mod.Config.Features.collectDebris = v);
 
         // Machine Collection page
-        api.AddPage(_mod.ModManifest, "machine-collection", () => _mod.Helper.Translation.Get("section.machine-collection"));
+        b.Page("machine-collection", "section.machine-collection")
+         .Paragraph("page.machine-collection.paragraph")
+         .Bool("config.disable-machine-collection",
+             () => _mod.Config.Machines.disableMachineCollection, v => _mod.Config.Machines.disableMachineCollection = v);
 
-        api.AddParagraph(_mod.ModManifest,
-            () => _mod.Helper.Translation.Get("page.machine-collection.paragraph"));
+        b.Section("section.fishing-machines")
+         .Bool("config.collect-crab-pots", () => _mod.Config.Machines.collectCrabPots, v => _mod.Config.Machines.collectCrabPots = v)
+         .Bool("config.collect-fish-ponds", () => _mod.Config.Machines.collectFishPonds, v => _mod.Config.Machines.collectFishPonds = v);
 
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.disableMachineCollection,
-            v => _mod.Config.Machines.disableMachineCollection = v,
-            () => _mod.Helper.Translation.Get("config.disable-machine-collection"),
-            () => _mod.Helper.Translation.Get("config.disable-machine-collection.tooltip"));
+        b.Section("section.outdoor-producers")
+         .Bool("config.collect-bee-houses", () => _mod.Config.Machines.collectBeeHouses, v => _mod.Config.Machines.collectBeeHouses = v)
+         .Bool("config.collect-tappers", () => _mod.Config.Machines.collectTappers, v => _mod.Config.Machines.collectTappers = v)
+         .Bool("config.collect-leaf-baskets", () => _mod.Config.Machines.collectLeafBaskets, v => _mod.Config.Machines.collectLeafBaskets = v);
 
-        // Fishing
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.fishing-machines"));
+        b.Section("section.farm-cave")
+         .Bool("config.collect-mushroom-boxes", () => _mod.Config.Features.farmCaveMushrooms, v => _mod.Config.Features.farmCaveMushrooms = v);
 
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectCrabPots,
-            v => _mod.Config.Machines.collectCrabPots = v,
-            () => _mod.Helper.Translation.Get("config.collect-crab-pots"),
-            () => _mod.Helper.Translation.Get("config.collect-crab-pots.tooltip"));
+        b.Section("section.artisan-machines")
+         .Bool("config.collect-kegs", () => _mod.Config.Machines.collectKegs, v => _mod.Config.Machines.collectKegs = v)
+         .Bool("config.collect-preserves-jars", () => _mod.Config.Machines.collectPreservesJars, v => _mod.Config.Machines.collectPreservesJars = v)
+         .Bool("config.collect-cheese-presses", () => _mod.Config.Machines.collectCheesePresses, v => _mod.Config.Machines.collectCheesePresses = v)
+         .Bool("config.collect-mayonnaise-machines", () => _mod.Config.Machines.collectMayonnaiseMachines, v => _mod.Config.Machines.collectMayonnaiseMachines = v)
+         .Bool("config.collect-looms", () => _mod.Config.Machines.collectLooms, v => _mod.Config.Machines.collectLooms = v)
+         .Bool("config.collect-oil-makers", () => _mod.Config.Machines.collectOilMakers, v => _mod.Config.Machines.collectOilMakers = v);
 
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectFishPonds,
-            v => _mod.Config.Machines.collectFishPonds = v,
-            () => _mod.Helper.Translation.Get("config.collect-fish-ponds"),
-            () => _mod.Helper.Translation.Get("config.collect-fish-ponds.tooltip"));
+        b.Section("section.processing-machines")
+         .Bool("config.collect-furnaces", () => _mod.Config.Machines.collectFurnaces, v => _mod.Config.Machines.collectFurnaces = v)
+         .Bool("config.collect-charcoal-kilns", () => _mod.Config.Machines.collectCharcoalKilns, v => _mod.Config.Machines.collectCharcoalKilns = v)
+         .Bool("config.collect-recycling-machines", () => _mod.Config.Machines.collectRecyclingMachines, v => _mod.Config.Machines.collectRecyclingMachines = v)
+         .Bool("config.collect-seed-makers", () => _mod.Config.Machines.collectSeedMakers, v => _mod.Config.Machines.collectSeedMakers = v)
+         .Bool("config.collect-bone-mills", () => _mod.Config.Machines.collectBoneMills, v => _mod.Config.Machines.collectBoneMills = v)
+         .Bool("config.collect-geode-crushers", () => _mod.Config.Machines.collectGeodeCrushers, v => _mod.Config.Machines.collectGeodeCrushers = v)
+         .Bool("config.collect-wood-chippers", () => _mod.Config.Machines.collectWoodChippers, v => _mod.Config.Machines.collectWoodChippers = v)
+         .Bool("config.collect-deconstructors", () => _mod.Config.Machines.collectDeconstructors, v => _mod.Config.Machines.collectDeconstructors = v);
 
-        // Outdoor Producers
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.outdoor-producers"));
+        b.Section("section.16-machines")
+         .Bool("config.collect-mushroom-logs", () => _mod.Config.Machines.collectMushroomLogs, v => _mod.Config.Machines.collectMushroomLogs = v)
+         .Bool("config.collect-fish-smokers", () => _mod.Config.Machines.collectFishSmokers, v => _mod.Config.Machines.collectFishSmokers = v)
+         .Bool("config.collect-bait-makers", () => _mod.Config.Machines.collectBaitMakers, v => _mod.Config.Machines.collectBaitMakers = v)
+         .Bool("config.collect-dehydrators", () => _mod.Config.Machines.collectDehydrators, v => _mod.Config.Machines.collectDehydrators = v);
 
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectBeeHouses,
-            v => _mod.Config.Machines.collectBeeHouses = v,
-            () => _mod.Helper.Translation.Get("config.collect-bee-houses"),
-            () => _mod.Helper.Translation.Get("config.collect-bee-houses.tooltip"));
+        b.Section("section.passive-producers")
+         .Bool("config.collect-crystalariums", () => _mod.Config.Machines.collectCrystalariums, v => _mod.Config.Machines.collectCrystalariums = v)
+         .Bool("config.collect-lightning-rods", () => _mod.Config.Machines.collectLightningRods, v => _mod.Config.Machines.collectLightningRods = v)
+         .Bool("config.collect-worm-bins", () => _mod.Config.Machines.collectWormBins, v => _mod.Config.Machines.collectWormBins = v)
+         .Bool("config.collect-solar-panels", () => _mod.Config.Machines.collectSolarPanels, v => _mod.Config.Machines.collectSolarPanels = v)
+         .Bool("config.collect-slime-egg-presses", () => _mod.Config.Machines.collectSlimeEggPresses, v => _mod.Config.Machines.collectSlimeEggPresses = v)
+         .Bool("config.collect-coffee-makers", () => _mod.Config.Machines.collectCoffeeMakers, v => _mod.Config.Machines.collectCoffeeMakers = v)
+         .Bool("config.collect-soda-machines", () => _mod.Config.Machines.collectSodaMachines, v => _mod.Config.Machines.collectSodaMachines = v);
 
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectTappers,
-            v => _mod.Config.Machines.collectTappers = v,
-            () => _mod.Helper.Translation.Get("config.collect-tappers"),
-            () => _mod.Helper.Translation.Get("config.collect-tappers.tooltip"));
+        b.Section("section.statues")
+         .Bool("config.collect-statues", () => _mod.Config.Machines.collectStatues, v => _mod.Config.Machines.collectStatues = v);
 
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectLeafBaskets,
-            v => _mod.Config.Machines.collectLeafBaskets = v,
-            () => _mod.Helper.Translation.Get("config.collect-leaf-baskets"),
-            () => _mod.Helper.Translation.Get("config.collect-leaf-baskets.tooltip"));
-
-        // Farm Cave
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.farm-cave"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.farmCaveMushrooms,
-            v => _mod.Config.Features.farmCaveMushrooms = v,
-            () => _mod.Helper.Translation.Get("config.collect-mushroom-boxes"),
-            () => _mod.Helper.Translation.Get("config.collect-mushroom-boxes.tooltip"));
-
-        // Artisan Equipment
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.artisan-machines"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectKegs,
-            v => _mod.Config.Machines.collectKegs = v,
-            () => _mod.Helper.Translation.Get("config.collect-kegs"),
-            () => _mod.Helper.Translation.Get("config.collect-kegs.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectPreservesJars,
-            v => _mod.Config.Machines.collectPreservesJars = v,
-            () => _mod.Helper.Translation.Get("config.collect-preserves-jars"),
-            () => _mod.Helper.Translation.Get("config.collect-preserves-jars.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectCheesePresses,
-            v => _mod.Config.Machines.collectCheesePresses = v,
-            () => _mod.Helper.Translation.Get("config.collect-cheese-presses"),
-            () => _mod.Helper.Translation.Get("config.collect-cheese-presses.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectMayonnaiseMachines,
-            v => _mod.Config.Machines.collectMayonnaiseMachines = v,
-            () => _mod.Helper.Translation.Get("config.collect-mayonnaise-machines"),
-            () => _mod.Helper.Translation.Get("config.collect-mayonnaise-machines.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectLooms,
-            v => _mod.Config.Machines.collectLooms = v,
-            () => _mod.Helper.Translation.Get("config.collect-looms"),
-            () => _mod.Helper.Translation.Get("config.collect-looms.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectOilMakers,
-            v => _mod.Config.Machines.collectOilMakers = v,
-            () => _mod.Helper.Translation.Get("config.collect-oil-makers"),
-            () => _mod.Helper.Translation.Get("config.collect-oil-makers.tooltip"));
-
-        // Processing Machines
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.processing-machines"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectFurnaces,
-            v => _mod.Config.Machines.collectFurnaces = v,
-            () => _mod.Helper.Translation.Get("config.collect-furnaces"),
-            () => _mod.Helper.Translation.Get("config.collect-furnaces.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectCharcoalKilns,
-            v => _mod.Config.Machines.collectCharcoalKilns = v,
-            () => _mod.Helper.Translation.Get("config.collect-charcoal-kilns"),
-            () => _mod.Helper.Translation.Get("config.collect-charcoal-kilns.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectRecyclingMachines,
-            v => _mod.Config.Machines.collectRecyclingMachines = v,
-            () => _mod.Helper.Translation.Get("config.collect-recycling-machines"),
-            () => _mod.Helper.Translation.Get("config.collect-recycling-machines.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectSeedMakers,
-            v => _mod.Config.Machines.collectSeedMakers = v,
-            () => _mod.Helper.Translation.Get("config.collect-seed-makers"),
-            () => _mod.Helper.Translation.Get("config.collect-seed-makers.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectBoneMills,
-            v => _mod.Config.Machines.collectBoneMills = v,
-            () => _mod.Helper.Translation.Get("config.collect-bone-mills"),
-            () => _mod.Helper.Translation.Get("config.collect-bone-mills.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectGeodeCrushers,
-            v => _mod.Config.Machines.collectGeodeCrushers = v,
-            () => _mod.Helper.Translation.Get("config.collect-geode-crushers"),
-            () => _mod.Helper.Translation.Get("config.collect-geode-crushers.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectWoodChippers,
-            v => _mod.Config.Machines.collectWoodChippers = v,
-            () => _mod.Helper.Translation.Get("config.collect-wood-chippers"),
-            () => _mod.Helper.Translation.Get("config.collect-wood-chippers.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectDeconstructors,
-            v => _mod.Config.Machines.collectDeconstructors = v,
-            () => _mod.Helper.Translation.Get("config.collect-deconstructors"),
-            () => _mod.Helper.Translation.Get("config.collect-deconstructors.tooltip"));
-
-        // 1.6 Machines
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.16-machines"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectMushroomLogs,
-            v => _mod.Config.Machines.collectMushroomLogs = v,
-            () => _mod.Helper.Translation.Get("config.collect-mushroom-logs"),
-            () => _mod.Helper.Translation.Get("config.collect-mushroom-logs.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectFishSmokers,
-            v => _mod.Config.Machines.collectFishSmokers = v,
-            () => _mod.Helper.Translation.Get("config.collect-fish-smokers"),
-            () => _mod.Helper.Translation.Get("config.collect-fish-smokers.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectBaitMakers,
-            v => _mod.Config.Machines.collectBaitMakers = v,
-            () => _mod.Helper.Translation.Get("config.collect-bait-makers"),
-            () => _mod.Helper.Translation.Get("config.collect-bait-makers.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectDehydrators,
-            v => _mod.Config.Machines.collectDehydrators = v,
-            () => _mod.Helper.Translation.Get("config.collect-dehydrators"),
-            () => _mod.Helper.Translation.Get("config.collect-dehydrators.tooltip"));
-
-        // Passive Producers
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.passive-producers"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectCrystalariums,
-            v => _mod.Config.Machines.collectCrystalariums = v,
-            () => _mod.Helper.Translation.Get("config.collect-crystalariums"),
-            () => _mod.Helper.Translation.Get("config.collect-crystalariums.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectLightningRods,
-            v => _mod.Config.Machines.collectLightningRods = v,
-            () => _mod.Helper.Translation.Get("config.collect-lightning-rods"),
-            () => _mod.Helper.Translation.Get("config.collect-lightning-rods.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectWormBins,
-            v => _mod.Config.Machines.collectWormBins = v,
-            () => _mod.Helper.Translation.Get("config.collect-worm-bins"),
-            () => _mod.Helper.Translation.Get("config.collect-worm-bins.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectSolarPanels,
-            v => _mod.Config.Machines.collectSolarPanels = v,
-            () => _mod.Helper.Translation.Get("config.collect-solar-panels"),
-            () => _mod.Helper.Translation.Get("config.collect-solar-panels.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectSlimeEggPresses,
-            v => _mod.Config.Machines.collectSlimeEggPresses = v,
-            () => _mod.Helper.Translation.Get("config.collect-slime-egg-presses"),
-            () => _mod.Helper.Translation.Get("config.collect-slime-egg-presses.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectCoffeeMakers,
-            v => _mod.Config.Machines.collectCoffeeMakers = v,
-            () => _mod.Helper.Translation.Get("config.collect-coffee-makers"),
-            () => _mod.Helper.Translation.Get("config.collect-coffee-makers.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectSodaMachines,
-            v => _mod.Config.Machines.collectSodaMachines = v,
-            () => _mod.Helper.Translation.Get("config.collect-soda-machines"),
-            () => _mod.Helper.Translation.Get("config.collect-soda-machines.tooltip"));
-
-        // Statues
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.statues"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectStatues,
-            v => _mod.Config.Machines.collectStatues = v,
-            () => _mod.Helper.Translation.Get("config.collect-statues"),
-            () => _mod.Helper.Translation.Get("config.collect-statues.tooltip"));
-
-        // Other / Modded Machines
-        api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.other-machines"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.collectOtherMachines,
-            v => _mod.Config.Machines.collectOtherMachines = v,
-            () => _mod.Helper.Translation.Get("config.collect-other-machines"),
-            () => _mod.Helper.Translation.Get("config.collect-other-machines.tooltip"));
+        b.Section("section.other-machines")
+         .Bool("config.collect-other-machines", () => _mod.Config.Machines.collectOtherMachines, v => _mod.Config.Machines.collectOtherMachines = v);
 
         // Miscellaneous page
-        api.AddPage(_mod.ModManifest, "miscellaneous", () => _mod.Helper.Translation.Get("section.miscellaneous"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.reportYield,
-            v => _mod.Config.reportYield = v,
-            () => _mod.Helper.Translation.Get("config.report-yield"),
-            () => _mod.Helper.Translation.Get("config.report-yield.tooltip"));
-
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.debugLogging,
-            v => _mod.Config.debugLogging = v,
-            () => _mod.Helper.Translation.Get("config.debug-logging"),
-            () => _mod.Helper.Translation.Get("config.debug-logging.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.gainExperience,
-            v => _mod.Config.gainExperience = v,
-            () => _mod.Helper.Translation.Get("config.gain-experience"),
-            () => _mod.Helper.Translation.Get("config.gain-experience.tooltip"));
-
-        api.AddTextOption(_mod.ModManifest,
-            () => ModConfig.GrabFrequencyDict[_mod.Config.grabFrequency],
-            v => _mod.Config.grabFrequency = ModConfig.GrabFrequencyReverseDict[v],
-            () => _mod.Helper.Translation.Get("config.grab-frequency"),
-            () => _mod.Helper.Translation.Get("config.grab-frequency.tooltip"),
-            ModConfig.GrabFrequencyStrings,
-            v => _mod.Helper.Translation.Get($"dropdown.{v.ToLower()}"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Compatibility.excludeQuestItems,
-            v => _mod.Config.Compatibility.excludeQuestItems = v,
-            () => _mod.Helper.Translation.Get("config.exclude-quest-items"),
-            () => _mod.Helper.Translation.Get("config.exclude-quest-items.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Locations.skipFestivalLocations,
-            v => _mod.Config.Locations.skipFestivalLocations = v,
-            () => _mod.Helper.Translation.Get("config.skip-festival-locations"),
-            () => _mod.Helper.Translation.Get("config.skip-festival-locations.tooltip"));
-
-        api.AddTextOption(_mod.ModManifest,
-            () => string.Join(", ", _mod.Config.Compatibility.excludedItems ?? new HashSet<string>()),
-            v => _mod.Config.Compatibility.excludedItems = new HashSet<string>(
-                v.Split(',', System.StringSplitOptions.RemoveEmptyEntries | System.StringSplitOptions.TrimEntries)),
-            () => _mod.Helper.Translation.Get("config.excluded-items"),
-            () => _mod.Helper.Translation.Get("config.excluded-items.tooltip"));
-
-        api.AddTextOption(_mod.ModManifest,
-            () => ModConfig.GlobalGrabberDict[_mod.Config.globalGrabber],
-            v => _mod.Config.globalGrabber = ModConfig.GlobalGrabberReverseDict[v],
-            () => _mod.Helper.Translation.Get("config.global-grabber-mode"),
-            () => _mod.Helper.Translation.Get("config.global-grabber-mode.tooltip"),
-            ModConfig.GlobalGrabberModeStrings,
-            v => _mod.Helper.Translation.Get($"dropdown.{v.ToLower()}"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.GlobalGrab.globalAutoFire,
-            v => _mod.Config.GlobalGrab.globalAutoFire = v,
-            () => _mod.Helper.Translation.Get("config.auto-fire-global-grabber"),
-            () => _mod.Helper.Translation.Get("config.auto-fire-global-grabber.tooltip"));
-
-        api.AddKeybind(_mod.ModManifest,
-            () => _mod.Config.GlobalGrab.globalFireButton,
-            v => _mod.Config.GlobalGrab.globalFireButton = v,
-            () => _mod.Helper.Translation.Get("config.fire-global-grabber"),
-            () => _mod.Helper.Translation.Get("config.fire-global-grabber.tooltip"));
-
-        api.AddKeybind(_mod.ModManifest,
-            () => _mod.Config.GlobalGrab.designateGrabberButton,
-            v => _mod.Config.GlobalGrab.designateGrabberButton = v,
-            () => _mod.Helper.Translation.Get("config.designate-global-grabber"),
-            () => _mod.Helper.Translation.Get("config.designate-global-grabber.tooltip"));
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.GlobalGrab.globalButtonOffsetX,
-            v => _mod.Config.GlobalGrab.globalButtonOffsetX = Math.Clamp(v, -500, 500),
-            () => _mod.Helper.Translation.Get("config.global-button-x-offset"),
-            () => _mod.Helper.Translation.Get("config.global-button-x-offset.tooltip"));
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.GlobalGrab.globalButtonOffsetY,
-            v => _mod.Config.GlobalGrab.globalButtonOffsetY = Math.Clamp(v, -500, 500),
-            () => _mod.Helper.Translation.Get("config.global-button-y-offset"),
-            () => _mod.Helper.Translation.Get("config.global-button-y-offset.tooltip"));
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.GlobalGrab.renameButtonOffsetX,
-            v => _mod.Config.GlobalGrab.renameButtonOffsetX = Math.Clamp(v, -500, 500),
-            () => _mod.Helper.Translation.Get("config.rename-button-x-offset"),
-            () => _mod.Helper.Translation.Get("config.rename-button-x-offset.tooltip"));
-
-        api.AddNumberOption(_mod.ModManifest,
-            () => _mod.Config.GlobalGrab.renameButtonOffsetY,
-            v => _mod.Config.GlobalGrab.renameButtonOffsetY = Math.Clamp(v, -500, 500),
-            () => _mod.Helper.Translation.Get("config.rename-button-y-offset"),
-            () => _mod.Helper.Translation.Get("config.rename-button-y-offset.tooltip"));
+        b.Page("miscellaneous", "section.miscellaneous")
+         .Bool("config.report-yield", () => _mod.Config.reportYield, v => _mod.Config.reportYield = v)
+         .Bool("config.debug-logging", () => _mod.Config.debugLogging, v => _mod.Config.debugLogging = v)
+         .Bool("config.gain-experience", () => _mod.Config.gainExperience, v => _mod.Config.gainExperience = v)
+         .Dropdown("config.grab-frequency",
+             () => _mod.Config.grabFrequency, v => _mod.Config.grabFrequency = v,
+             ModConfig.GrabFrequencyDict, ModConfig.GrabFrequencyReverseDict, ModConfig.GrabFrequencyStrings,
+             dropdownLabelPrefix: "")
+         .Bool("config.exclude-quest-items",
+             () => _mod.Config.Compatibility.excludeQuestItems, v => _mod.Config.Compatibility.excludeQuestItems = v)
+         .Bool("config.skip-festival-locations",
+             () => _mod.Config.Locations.skipFestivalLocations, v => _mod.Config.Locations.skipFestivalLocations = v)
+         .TextOption("config.excluded-items",
+             () => string.Join(", ", _mod.Config.Compatibility.excludedItems ?? new HashSet<string>()),
+             v => _mod.Config.Compatibility.excludedItems = new HashSet<string>(
+                 v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)))
+         .Dropdown("config.global-grabber-mode",
+             () => _mod.Config.globalGrabber, v => _mod.Config.globalGrabber = v,
+             ModConfig.GlobalGrabberDict, ModConfig.GlobalGrabberReverseDict, ModConfig.GlobalGrabberModeStrings,
+             dropdownLabelPrefix: "")
+         .Bool("config.auto-fire-global-grabber",
+             () => _mod.Config.GlobalGrab.globalAutoFire, v => _mod.Config.GlobalGrab.globalAutoFire = v)
+         .Keybind("config.fire-global-grabber",
+             () => _mod.Config.GlobalGrab.globalFireButton, v => _mod.Config.GlobalGrab.globalFireButton = v)
+         .Keybind("config.designate-global-grabber",
+             () => _mod.Config.GlobalGrab.designateGrabberButton, v => _mod.Config.GlobalGrab.designateGrabberButton = v)
+         .Number("config.global-button-x-offset",
+             () => _mod.Config.GlobalGrab.globalButtonOffsetX, v => _mod.Config.GlobalGrab.globalButtonOffsetX = Math.Clamp(v, -500, 500))
+         .Number("config.global-button-y-offset",
+             () => _mod.Config.GlobalGrab.globalButtonOffsetY, v => _mod.Config.GlobalGrab.globalButtonOffsetY = Math.Clamp(v, -500, 500))
+         .Number("config.rename-button-x-offset",
+             () => _mod.Config.GlobalGrab.renameButtonOffsetX, v => _mod.Config.GlobalGrab.renameButtonOffsetX = Math.Clamp(v, -500, 500))
+         .Number("config.rename-button-y-offset",
+             () => _mod.Config.GlobalGrab.renameButtonOffsetY, v => _mod.Config.GlobalGrab.renameButtonOffsetY = Math.Clamp(v, -500, 500));
 
         // Compatibility page
-        api.AddPage(_mod.ModManifest, "compatibility", () => _mod.Helper.Translation.Get("page.compatibility"));
-
-        api.AddParagraph(_mod.ModManifest,
-            () => _mod.Helper.Translation.Get("page.compatibility.paragraph"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Compatibility.sunberryVillageExclusions,
-            v => _mod.Config.Compatibility.sunberryVillageExclusions = v,
-            () => _mod.Helper.Translation.Get("config.sunberry-village-exclusions"),
-            () => _mod.Helper.Translation.Get("config.sunberry-village-exclusions.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Compatibility.visitMtVapiusExclusions,
-            v => _mod.Config.Compatibility.visitMtVapiusExclusions = v,
-            () => _mod.Helper.Translation.Get("config.visit-mt-vapius-exclusions"),
-            () => _mod.Helper.Translation.Get("config.visit-mt-vapius-exclusions.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Compatibility.baublesExclusions,
-            v => _mod.Config.Compatibility.baublesExclusions = v,
-            () => _mod.Helper.Translation.Get("config.baubles-exclusions"),
-            () => _mod.Helper.Translation.Get("config.baubles-exclusions.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Compatibility.resourceChickensExclusions,
-            v => _mod.Config.Compatibility.resourceChickensExclusions = v,
-            () => _mod.Helper.Translation.Get("config.resource-chickens-exclusions"),
-            () => _mod.Helper.Translation.Get("config.resource-chickens-exclusions.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Compatibility.capeStardewExclusions,
-            v => _mod.Config.Compatibility.capeStardewExclusions = v,
-            () => _mod.Helper.Translation.Get("config.cape-stardew-exclusions"),
-            () => _mod.Helper.Translation.Get("config.cape-stardew-exclusions.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.collectWildflowers,
-            v => _mod.Config.Features.collectWildflowers = v,
-            () => _mod.Helper.Translation.Get("config.collect-wildflowers"),
-            () => _mod.Helper.Translation.Get("config.collect-wildflowers.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Features.buriedItems,
-            v => _mod.Config.Features.buriedItems = v,
-            () => _mod.Helper.Translation.Get("config.collect-buried-items"),
-            () => _mod.Helper.Translation.Get("config.collect-buried-items.tooltip"));
-
-        api.AddBoolOption(_mod.ModManifest,
-            () => _mod.Config.Machines.automateCompatibility,
-            v => _mod.Config.Machines.automateCompatibility = v,
-            () => _mod.Helper.Translation.Get("config.automate-compatibility"),
-            () => _mod.Helper.Translation.Get("config.automate-compatibility.tooltip"));
+        b.Page("compatibility", "page.compatibility")
+         .Paragraph("page.compatibility.paragraph")
+         .Bool("config.sunberry-village-exclusions",
+             () => _mod.Config.Compatibility.sunberryVillageExclusions, v => _mod.Config.Compatibility.sunberryVillageExclusions = v)
+         .Bool("config.visit-mt-vapius-exclusions",
+             () => _mod.Config.Compatibility.visitMtVapiusExclusions, v => _mod.Config.Compatibility.visitMtVapiusExclusions = v)
+         .Bool("config.baubles-exclusions",
+             () => _mod.Config.Compatibility.baublesExclusions, v => _mod.Config.Compatibility.baublesExclusions = v)
+         .Bool("config.resource-chickens-exclusions",
+             () => _mod.Config.Compatibility.resourceChickensExclusions, v => _mod.Config.Compatibility.resourceChickensExclusions = v)
+         .Bool("config.cape-stardew-exclusions",
+             () => _mod.Config.Compatibility.capeStardewExclusions, v => _mod.Config.Compatibility.capeStardewExclusions = v)
+         .Bool("config.collect-wildflowers",
+             () => _mod.Config.Features.collectWildflowers, v => _mod.Config.Features.collectWildflowers = v)
+         .Bool("config.collect-buried-items",
+             () => _mod.Config.Features.buriedItems, v => _mod.Config.Features.buriedItems = v)
+         .Bool("config.automate-compatibility",
+             () => _mod.Config.Machines.automateCompatibility, v => _mod.Config.Machines.automateCompatibility = v);
 
         // Enabled Locations page
-        api.AddPage(_mod.ModManifest, "enabled-locations", () => _mod.Helper.Translation.Get("config.enabled-locations-page"));
+        b.Page("enabled-locations", "config.enabled-locations-page");
 
         if (_locations.DiscoveredLocations != null && _locations.DiscoveredLocations.Count > 0)
         {
-            api.AddParagraph(_mod.ModManifest,
-                () => _mod.Helper.Translation.Get("config.enabled-locations-paragraph"));
-
-            api.AddBoolOption(_mod.ModManifest,
-                getValue: () => _locations.DiscoveredLocations.All(loc => _mod.Config.Locations.SkippedLocations?.Contains(loc.Name) != true),
-                setValue: v => { },
-                name: () => _mod.Helper.Translation.Get("config.enable-all"),
-                tooltip: () => _mod.Helper.Translation.Get("config.enable-all.tooltip"),
-                fieldId: "enable-all");
-
-            api.AddBoolOption(_mod.ModManifest,
-                getValue: () => _mod.Config.Locations.selectVisitedOnly,
-                setValue: v => { },
-                name: () => _mod.Helper.Translation.Get("config.select-visited-only"),
-                tooltip: () => _mod.Helper.Translation.Get("config.select-visited-only.tooltip"),
-                fieldId: "select-visited-only");
-
-            api.OnFieldChanged(_mod.ModManifest, (fieldId, value) =>
-            {
-                if (fieldId == "enable-all")
-                    _pendingBatchAction = (bool)value
-                        ? LocationBatchAction.EnableAll
-                        : LocationBatchAction.DisableAll;
-                else if (fieldId == "select-visited-only")
-                {
-                    if ((bool)value)
-                        _pendingBatchAction = LocationBatchAction.SelectVisitedOnly;
-                    else
-                        _mod.Config.Locations.selectVisitedOnly = false;
-                }
-            });
+            b.Paragraph("config.enabled-locations-paragraph")
+             .Bool("config.enable-all",
+                 () => _locations.DiscoveredLocations.All(loc => _mod.Config.Locations.SkippedLocations?.Contains(loc.Name) != true),
+                 v => { },
+                 fieldId: "enable-all")
+             .Bool("config.select-visited-only",
+                 () => _mod.Config.Locations.selectVisitedOnly,
+                 v => { },
+                 fieldId: "select-visited-only")
+             .OnFieldChanged((fieldId, value) =>
+             {
+                 if (fieldId == "enable-all")
+                     _pendingBatchAction = (bool)value
+                         ? LocationBatchAction.EnableAll
+                         : LocationBatchAction.DisableAll;
+                 else if (fieldId == "select-visited-only")
+                 {
+                     if ((bool)value)
+                         _pendingBatchAction = LocationBatchAction.SelectVisitedOnly;
+                     else
+                         _mod.Config.Locations.selectVisitedOnly = false;
+                 }
+             });
 
             if (Context.IsWorldReady)
             {
@@ -913,37 +444,39 @@ internal class GmcmRegistration
 
                 if (visitedLocs.Count > 0)
                 {
-                    api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.visited-locations"));
+                    b.Section("section.visited-locations");
                     foreach (var (locName, displayName) in visitedLocs)
-                        AddLocationToggle(api, locName, displayName);
+                        AddLocationToggle(b, locName, displayName);
                 }
 
                 if (unvisitedLocs.Count > 0)
                 {
-                    api.AddSectionTitle(_mod.ModManifest, () => _mod.Helper.Translation.Get("section.not-yet-visited"));
+                    b.Section("section.not-yet-visited");
                     foreach (var (locName, displayName) in unvisitedLocs)
-                        AddLocationToggle(api, locName, displayName);
+                        AddLocationToggle(b, locName, displayName);
                 }
             }
             else
             {
                 foreach (var (locName, displayName) in _locations.DiscoveredLocations)
-                    AddLocationToggle(api, locName, displayName);
+                    AddLocationToggle(b, locName, displayName);
             }
         }
         else
         {
-            api.AddParagraph(_mod.ModManifest,
-                () => _mod.Helper.Translation.Get("config.no-save-loaded"));
+            b.Paragraph("config.no-save-loaded");
         }
     }
 
-    private void AddLocationToggle(IGenericModConfigMenuApi api, string locName, string displayName)
+    // Per-location toggle uses the location's own display name (not an i18n key)
+    // and a setter that mutates SaveData alongside the SkippedLocations set, so
+    // it sidesteps GmcmBuilder.Bool and calls the api directly.
+    private void AddLocationToggle(GmcmBuilder b, string locName, string displayName)
     {
         string capturedName = locName;
         string capturedDisplay = displayName;
 
-        api.AddBoolOption(_mod.ModManifest,
+        b.Api.AddBoolOption(b.Manifest,
             getValue: () => _mod.Config.Locations.SkippedLocations?.Contains(capturedName) != true,
             setValue: v =>
             {
