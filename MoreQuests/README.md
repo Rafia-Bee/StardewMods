@@ -2,7 +2,7 @@
 
 A SMAPI content mod for Stardew Valley that ships a curated set of new daily-board, mail, and festival quests on top of the [More Quests Framework](../MoreQuestsFramework/README.md).
 
-> Heavy work in progress. Twenty-three quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
+> Heavy work in progress. Twenty-six quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
 
 ## Dependencies
 
@@ -54,12 +54,12 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Festival | Festival Decor: Luau | Summer 6 | Lewis | Ship Fiber, Basic Log, Wood Lamp-post | Gold (Intermediate) + random Pierre Luau decor | DateLocked, OneTimePerYear | Not started |
 | Festival | Festival Decor: Ridgeside Gathering | Fall 15 | Lenny | Ship Tub o' Flowers, Wood, Tables | Friendship (MultiHeart, RSV NPCs) | DateLocked, OneTimePerYear, requires RSV | Not started |
 | Festival | Festival Decor: Spirit's Eve | Fall 22 | Lewis | Ship Pumpkins, Cloth, Torches | Gold (Intermediate) + Jack o' Lantern | DateLocked, OneTimePerYear | Not started |
-| Foraging | Forage with Linus | Daily board | Linus | Gift loved/liked forage to 5 people | Friendship (Large) with Linus | Cooldown 14d, OnePerGiver | Not started |
+| Foraging | Forage with Linus | Daily board | Linus | Gift loved/liked forage to 5 different villagers | Friendship (Large) with Linus | Cooldown 14d, requires Linus met | Implemented (9d) |
 | Social | Gift Delivery | Daily board | Any | Deliver a gift to the giver's friend | Friendship (sell-price scaled) | Cooldown 4d | Not started |
 | Animal | Gunther's Dinosaur Study | First Dinosaur Egg hatched | Gunther | Deliver a spare Dinosaur Egg | Gold (Advanced) + upgraded-quality Dinosaur Egg | OneTime | Not started |
 | Festival | Gus's Feast: Egg Festival | Spring 6 (mail) | Gus | Deliver spring-themed ingredients | Sample of a spring dish | DateLocked, OneTimePerYear | Implemented |
-| Festival | Gus's Feast: Fair | Fall 8 | Gus | Large ingredient delivery | Sample dishes + Fair token bonus | DateLocked, OneTimePerYear | Deferred to Phase 9 (Festival Bonus reward kind) |
-| Festival | Gus's Feast: Luau | Summer 8 | Gus | Deliver 3 random spring/summer ingredients | Higher base potluck score | DateLocked, OneTimePerYear | Deferred to Phase 9 (Festival Bonus reward kind) |
+| Festival | Gus's Feast: Fair | Fall 8 | Gus | Deliver 3 distinct fall ingredients (curated pool) | Sample fall dish + FestivalBias on the Fair grange judging (+15 grange score) | DateLocked, OneTimePerYear | Implemented (9d) |
+| Festival | Gus's Feast: Luau | Summer 8 | Gus | Deliver 3 distinct first-year-friendly summer ingredients | FestivalBias on the Luau governor reaction (+1 tier, capped at 5) | DateLocked, OneTimePerYear | Implemented (9d) |
 | Festival | Gus's Feast: Winter Star | Winter 18 (mail) | Gus | Ship winter-themed forageables | Friendship (MultiSmall) to every met NPC | DateLocked, OneTimePerYear | Implemented |
 | Cooking | Saloon Grand Feast | Special Orders board | Gus / Rosa / Celestine / Pika | Ship aggregated ingredients across 3 complex recipes | Gold (Expert) + Friendship (MultiSmall) to liked-by NPCs + per-dish Tier 2 taste reaction | Cooldown 14d, vanilla `Week` window | Implemented (9b) |
 | Cooking | Weekly Special (Common) | Daily board | Gus / Rosa / Celestine / Pika | Deliver ingredients for a common (≤ 3 ingredient) recipe | Gold (Beginner) + Friendship (MultiSmall) to liked-by NPCs + Tier 1 taste reaction | Cooldown 5d, OnePerGiver | Implemented (9b) |

@@ -35,6 +35,15 @@ public sealed record ShopDiscountReward(
     System.Collections.Generic.List<string>? AppliesTo = null,
     int GuaranteedStock = 0) : RewardSpec;
 
+/// One-shot judging-time bias on a vanilla festival outcome. Currently supports the Luau
+/// (bumps the governor's reaction tier up by `Magnitude`, capped at the "loved it" tier
+/// shy of the Mayor's Shorts gag) and the Stardew Valley Fair (adds `Magnitude` flat
+/// points to the player's grange display score before Lewis judges it). The bias is
+/// stored on per-save state and consumed at the festival's judging hook.
+public sealed record FestivalBiasReward(FestivalKind Festival, int Magnitude) : RewardSpec;
+
 public enum RecipeKind { Cooking, Crafting }
 
 public enum MailWhen { Today, Tomorrow }
+
+public enum FestivalKind { Luau, Fair }

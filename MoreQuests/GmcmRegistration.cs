@@ -75,6 +75,9 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "WeeklySpecialCommonMaxIngredients", () => ModEntry.Config.WeeklySpecialCommonMaxIngredients, v => ModEntry.Config.WeeklySpecialCommonMaxIngredients = v, 1, 10);
         AddInt(api, manifest, t, "WeeklySpecialComplexMinIngredients", () => ModEntry.Config.WeeklySpecialComplexMinIngredients, v => ModEntry.Config.WeeklySpecialComplexMinIngredients = v, 1, 10);
         AddInt(api, manifest, t, "GrandFeastRecipeCount", () => ModEntry.Config.GrandFeastRecipeCount, v => ModEntry.Config.GrandFeastRecipeCount = v, 1, 6);
+        AddInt(api, manifest, t, "GusFestivalFeastIngredientCount", () => ModEntry.Config.GusFestivalFeastIngredientCount, v => ModEntry.Config.GusFestivalFeastIngredientCount = v, 1, 6);
+        AddInt(api, manifest, t, "FestivalBiasLuauMagnitude", () => ModEntry.Config.FestivalBiasLuauMagnitude, v => ModEntry.Config.FestivalBiasLuauMagnitude = v, 0, 5);
+        AddInt(api, manifest, t, "FestivalBiasFairMagnitude", () => ModEntry.Config.FestivalBiasFairMagnitude, v => ModEntry.Config.FestivalBiasFairMagnitude = v, 0, 100);
 
         // Per-quest weight overrides (for content-mod quests) live in the framework's GMCM page
         // alongside the vanilla quest weights, since the framework owns the registry view.

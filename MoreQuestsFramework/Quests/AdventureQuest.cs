@@ -179,6 +179,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             {
                 AdventureStepKind.Deliver => TryAdvanceDeliver(i, step, npc, item, probe),
                 AdventureStepKind.Gift => TryAdvanceGift(i, step, npc, item, probe),
+                AdventureStepKind.GiftUniqueNpcs => TryAdvanceGiftUniqueNpcs(i, step, npc, item, probe),
                 _ => false
             };
             if (advanced)
@@ -370,6 +371,56 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return false;
     }
 
+    /// GiftUniqueNpcs step: counts unique NPC recipients across the run. Each gift must
+    /// pass the `Items` filter (e.g. `$forage` for forage-category items) AND be loved or
+    /// liked by that specific recipient. The same NPC never counts twice — `CreditedKeys`
+    /// dedupes by name. Returns false so the vanilla gift flow (friendship bump, daily-gift
+    /// counter) still runs; we observe, we don't consume.
+    private bool TryAdvanceGiftUniqueNpcs(int idx, AdventureStepState step, NPC npc, Item item, bool probe)
+    {
+        // Recipient pool: when Targets is non-empty, treat it as a whitelist; otherwise
+        // any villager qualifies. Skip non-villager NPCs (monsters, horses, pets) regardless.
+        if (!npc.IsVillager) return false;
+        if (step.Targets.Count > 0)
+        {
+            bool whitelisted = false;
+            foreach (var t in step.Targets)
+            {
+                if (string.Equals(t, npc.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    whitelisted = true;
+                    break;
+                }
+            }
+            if (!whitelisted) return false;
+        }
+
+        if (step.Items.Count > 0 && !ItemMatches(step, item))
+            return false;
+
+        int taste = npc.getGiftTasteForThisItem(item);
+        bool acceptable = taste == NPC.gift_taste_love
+                       || taste == NPC.gift_taste_like
+                       || taste == NPC.gift_taste_stardroptea;
+        if (!acceptable) return false;
+
+        if (step.CreditedKeys.Contains(npc.Name, StringComparer.OrdinalIgnoreCase))
+            return false;
+
+        if (probe) return false; // observe only — don't consume the vanilla gift cue
+
+        step.CreditedKeys.Add(npc.Name);
+        step.Progress++;
+        if (step.Progress >= step.Count)
+            MarkStepDone(idx, step);
+        else
+        {
+            Persist(idx, step);
+            reloadObjective();
+        }
+        return false;
+    }
+
     /// Catch step: increments progress when the caught fish matches one of the step's `Items`.
     /// `Targets` is unused here (location/weather gating is deferred to a later phase). Always
     /// returns false so vanilla's other quests still see the catch.
@@ -558,6 +609,9 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     ///   vanilla + modded eggs (Hootin' & Hollerin', SVE, VMV all use Category -5);
     ///   excludes Dinosaur Egg (Edibility -300, inedible per vanilla).
     /// - `$category:N`: any Object with the given vanilla category constant.
+    /// - `$forage`: any Object whose `Data/Objects` row carries the `forage_item`
+    ///   context tag. Covers vanilla seasonal forage, beach forage, and modded forage
+    ///   uniformly via the same source of truth `ItemResolver.GetForageItems` reads.
     private static bool TokenMatches(string token, Item item)
     {
         if (item is not StardewValley.Object obj)
@@ -566,11 +620,29 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         const int inedible = -300;
         if (string.Equals(token, "$edible-egg", StringComparison.OrdinalIgnoreCase))
             return obj.Category == eggCategory && obj.Edibility != inedible;
+        if (string.Equals(token, "$forage", StringComparison.OrdinalIgnoreCase))
+            return HasContextTag(obj, "forage_item");
         if (token.StartsWith("$category:", StringComparison.OrdinalIgnoreCase))
         {
             if (int.TryParse(token.Substring("$category:".Length), out int cat))
                 return obj.Category == cat;
         }
         return false;
+    }
+
+    private static bool HasContextTag(StardewValley.Object obj, string tag)
+    {
+        try
+        {
+            // ItemContextTagManager.HasBaseTag covers both the authored tags from
+            // Data/Objects and any runtime tags injected by Stardew (e.g. preserve_sheet_*),
+            // which is exactly the source of truth `Data/Shops` and other vanilla
+            // systems use for tag-based filtering.
+            return StardewValley.ItemContextTagManager.HasBaseTag(obj.QualifiedItemId, tag);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

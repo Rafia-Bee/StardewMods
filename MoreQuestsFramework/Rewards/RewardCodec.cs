@@ -63,6 +63,7 @@ public static class RewardCodec
         RecipeReward r => $"Recipe|Name={r.RecipeName}|Kind={r.Kind}",
         MailReward ml => $"Mail|Letter={ml.LetterKey}|When={ml.When}",
         ShopDiscountReward s => $"ShopDiscount|ShopId={s.ShopId}|Percent={s.PercentOff}|Days={s.DurationDays}|Items={JoinAppliesTo(s.AppliesTo)}|Stock={s.GuaranteedStock}",
+        FestivalBiasReward fb => $"FestivalBias|Festival={fb.Festival}|Magnitude={fb.Magnitude}",
         _ => throw new ArgumentException($"Unknown reward spec: {spec.GetType()}")
     };
 
@@ -138,6 +139,17 @@ public static class RewardCodec
                     if (fields.TryGetValue("When", out var w))
                         Enum.TryParse(w, ignoreCase: true, out when);
                     return new MailReward(letter, when);
+                }
+                return null;
+
+            case "FestivalBias":
+                if (fields.TryGetValue("Festival", out var fest)
+                    && Enum.TryParse<FestivalKind>(fest, ignoreCase: true, out var festKind))
+                {
+                    int mag = 1;
+                    if (fields.TryGetValue("Magnitude", out var magRaw))
+                        int.TryParse(magRaw, out mag);
+                    return new FestivalBiasReward(festKind, mag);
                 }
                 return null;
 

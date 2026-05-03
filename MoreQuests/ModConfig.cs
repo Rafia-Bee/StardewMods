@@ -44,4 +44,15 @@ public sealed class ModConfig
     public int WeeklySpecialComplexMinIngredients { get; set; } = 4;
     /// Number of distinct recipes a Grand Feast SpecialOrder asks for.
     public int GrandFeastRecipeCount { get; set; } = 3;
+
+    // ----- Phase 9d: Gus's festival feasts -----
+    /// Number of distinct ingredient kinds Gus's Fall + Summer feasts ask for.
+    public int GusFestivalFeastIngredientCount { get; set; } = 3;
+    /// Tier bump applied to the governor's Luau reaction (clamped to 5 = "loved it"; 6 is
+    /// the Mayor's Shorts gag and is never overwritten). 1 = one tier up.
+    public int FestivalBiasLuauMagnitude { get; set; } = 1;
+    /// Flat bonus added to the player's Stardew Valley Fair grange score before Lewis
+    /// judges. The pass-the-test threshold is 60 / podium tiers at 75 + 90, so 15 nudges
+    /// most submissions one podium step up without forcing a guaranteed first.
+    public int FestivalBiasFairMagnitude { get; set; } = 15;
 }
