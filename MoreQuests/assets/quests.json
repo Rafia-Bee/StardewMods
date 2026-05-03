@@ -258,6 +258,42 @@
                 "CooldownDays": 14
             },
             "Generator": "GrandFeast"
+        },
+        {
+            "Name": "Fishing.MediumHaul",
+            "Category": "Fishing",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 15,
+                "MaxPerDay": 1,
+                "CooldownDays": 5,
+                "Available": { "SkillLevel": "Fishing 5" }
+            },
+            "Generator": "MediumFishingHaul"
+        },
+        {
+            "Name": "Fishing.SeafoodNight",
+            "Category": "Fishing",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 10,
+                "MaxPerDay": 1,
+                "CooldownDays": 10,
+                "Available": { "SkillLevel": "Fishing 8" }
+            },
+            "Generator": "SeafoodNight"
+        },
+        {
+            "Name": "Mining.MonsterParts",
+            "Category": "Mining",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 20,
+                "MaxPerDay": 1,
+                "CooldownDays": 5,
+                "Available": { "MinDeepestMineLevel": "40" }
+            },
+            "Generator": "MonsterParts"
         }
     ]
 }

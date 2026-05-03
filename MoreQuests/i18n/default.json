@@ -188,5 +188,26 @@
     "quest.cooking.grandFeast.text": "{{npc}} is throwing a big feast at the saloon this week with {{dishes}} on the menu. They're asking around for help with the prep list. Drop the ingredients in the shipping bin like usual and they'll handle the cooking.",
     "quest.cooking.grandFeast.objective": "Ship {{count}} {{item}}.",
     "quest.cooking.grandFeast.consequence.loved": "{{npc}}'s feast was incredible. I had three plates of {{dish}} alone.",
-    "quest.cooking.grandFeast.consequence.hated": "Oh! You're the one who supplied the ingredients for {{dish}} at {{npc}}'s feast?! I thought I was going to be sick."
+    "quest.cooking.grandFeast.consequence.hated": "Oh! You're the one who supplied the ingredients for {{dish}} at {{npc}}'s feast?! I thought I was going to be sick.",
+
+    "quest.fishing.mediumHaul.title": "{{npc}}'s fish haul",
+    "quest.fishing.mediumHaul.description.joja": "{{npc}} from JojaMart here. A shipping mishap left the Zuzu branch dry on {{item}} and the manager wants the shelves restocked yesterday. Bring in {{qty}} {{item}} - we pay on the spot.",
+    "quest.fishing.mediumHaul.description.pierre": "Pierre's spotted a side hustle at the Zuzu City waterpark and he's willing to share the take if you can land him {{qty}} {{item}}. Bring them by the shop when you have them.",
+    "quest.fishing.mediumHaul.objective": "Catch {{qty}} {{item}} for {{npc}}.",
+    "quest.fishing.mediumHaul.targetMessage": "Perfect, that's the load. Pleasure doing business.",
+    "quest.fishing.mediumHaul.consequence.hated": "I've noticed fish populations declining. Pulling {{item}} out by the cratefull for {{npc}} isn't going to help.",
+
+    "quest.fishing.seafoodNight.title": "Seafood night at {{npc}}'s",
+    "quest.fishing.seafoodNight.description": "{{npc}} is putting on a seafood night and needs a serious haul - {{qty}} {{item}} for the kitchen. The pay is well above market, but a catch this size won't go unnoticed by the folks who watch the water.",
+    "quest.fishing.seafoodNight.objective": "Catch {{qty}} {{item}} for {{npc}}.",
+    "quest.fishing.seafoodNight.targetMessage": "That's a haul. The whole valley's eating well tonight.",
+    "quest.fishing.seafoodNight.consequence.chain.day1": "I heard about the {{item}} haul for {{npc}}'s seafood night. That's the kind of catch that empties a fishing hole for years.",
+    "quest.fishing.seafoodNight.consequence.chain.day2": "I checked the spawn counts again this morning. {{item}} numbers are way down. We may be looking at a generational gap.",
+    "quest.fishing.seafoodNight.consequence.chain.day3": "I had hoped you'd think twice before pulling that many {{item}} for one dinner service. Trust takes longer to grow back than fish do.",
+
+    "quest.mining.monsterParts.title": "{{npc}} needs monster parts",
+    "quest.mining.monsterParts.description": "{{npc}} is putting in an order for {{qty}} {{item}} - research, alchemy, or just a strong stomach, depends who you ask. Bring them by when you have the count and they'll trade you a gem worth the trip.",
+    "quest.mining.monsterParts.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.mining.monsterParts.targetMessage": "Excellent. That'll do nicely.",
+    "quest.mining.monsterParts.consequence.hated": "So you're {{npc}}'s {{item}} courier now. The creatures down there have names too, you know."
 }

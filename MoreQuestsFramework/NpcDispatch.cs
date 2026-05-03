@@ -75,5 +75,22 @@ public static class NpcDispatch
         // the role's pool collapses to zero (quest correctly stops posting).
         registry.Register(DispatchRoles.JojaCorpRep, "Morris");
         registry.Register(DispatchRoles.JojaCorpRep, "MorrisTod", ModCompat.StardewValleyExpanded);
+
+        // BulkFishBuyer: Pierre is always in the pool (vanilla shopkeeper, never lost
+        // on any save path). Morris / MorrisTod join him on Joja-route saves.
+        registry.Register(DispatchRoles.BulkFishBuyer, "Pierre");
+        registry.Register(DispatchRoles.BulkFishBuyer, "Morris");
+        registry.Register(DispatchRoles.BulkFishBuyer, "MorrisTod", ModCompat.StardewValleyExpanded);
+
+        // MonsterPartsBuyer: matches CSV row 53 verbatim. Wizard always available;
+        // SVE adds Lance + MarlonFay (vanilla Marlon isn't friendable so we never
+        // route social quests to him); Mr. Aguar (RSV); Eli (East Scarp); Maryam (VMV).
+        registry.Register(DispatchRoles.MonsterPartsBuyer, "Wizard");
+        registry.Register(DispatchRoles.MonsterPartsBuyer, "Abigail");
+        registry.Register(DispatchRoles.MonsterPartsBuyer, "Lance", ModCompat.StardewValleyExpanded);
+        registry.Register(DispatchRoles.MonsterPartsBuyer, "MarlonFay", ModCompat.StardewValleyExpanded);
+        registry.Register(DispatchRoles.MonsterPartsBuyer, "Mr. Aguar", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.MonsterPartsBuyer, "Eli", ModCompat.EastScarp);
+        registry.Register(DispatchRoles.MonsterPartsBuyer, "Maryam", ModCompat.VisitMountVapius);
     }
 }

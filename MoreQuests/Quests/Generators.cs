@@ -47,6 +47,9 @@ internal static class Generators
         fw.RegisterGenerator("WeeklySpecialCommon", WeeklySpecialCommon);
         fw.RegisterGenerator("WeeklySpecialComplex", WeeklySpecialComplex);
         fw.RegisterGenerator("GrandFeast", GrandFeast);
+        fw.RegisterGenerator("MediumFishingHaul", MediumFishingHaul);
+        fw.RegisterGenerator("SeafoodNight", SeafoodNight);
+        fw.RegisterGenerator("MonsterParts", MonsterParts);
     }
 
     // -------------------- Farming --------------------
@@ -1746,6 +1749,286 @@ internal static class Generators
                 Consequences = consequences
             }
         };
+    }
+
+    // -------------------- Phase 9c: Fishing ecology + Monster Parts --------------------
+
+    /// CSV row 49. Daily-board fishing quest. Pierre or Joja (Morris/MorrisTod) ask the
+    /// player for a bulk haul of one specific seasonal fish; reward is sell-price scaled
+    /// below market (`RewardMultiplierBelowSell`). Tier 2 ecology consequence: every
+    /// member of the `EcologyMinded` pool present on the save (Demetrius + RSV's Maddie /
+    /// Mr. Aguar + East Scarp's Dylan) gets a single negative line + the Tier 2 default
+    /// negative friendship delta on the next chat. Linus is intentionally excluded — the
+    /// plan reserves him for Tier 3 (Seafood Night).
+    private static QuestPosting? MediumFishingHaul(QuestContext ctx)
+    {
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.BulkFishBuyer);
+        if (giver == null)
+            return null;
+
+        var fish = ctx.Config.FishingIgnoresVisitedLocations
+            ? ctx.Items.GetSeasonalFish(ctx.Season)
+            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
+        if (fish.Count == 0)
+            return null;
+
+        var target = fish[Game1.random.Next(fish.Count)];
+        int qty = Math.Max(1, ModEntry.Config.FishHaulMediumQty);
+        int basePrice = Math.Max(target.SellPrice, 30);
+        int gold = (int)(basePrice * qty * ctx.Config.RewardMultiplierBelowSell);
+
+        ConsequenceSpec? consequence = null;
+        if (ModEntry.Config.ConsequencesEnabled)
+        {
+            var ecology = ResolveEcologyTargets(ctx, includeLinus: false, exclude: giver);
+            if (ecology.Count > 0)
+            {
+                consequence = new ConsequenceSpec
+                {
+                    Tier = ConsequenceTier.Tier2,
+                    Source = ConsequenceSource.Static,
+                    Targets = ecology,
+                    HatedLine = ModEntry.I18n.Get(
+                        "quest.fishing.mediumHaul.consequence.hated",
+                        new { item = target.DisplayName, npc = giver })
+                };
+            }
+        }
+
+        string flavour = string.Equals(giver, "Pierre", StringComparison.OrdinalIgnoreCase)
+            ? ModEntry.I18n.Get("quest.fishing.mediumHaul.description.pierre", new { qty, item = target.DisplayName })
+            : ModEntry.I18n.Get("quest.fishing.mediumHaul.description.joja", new { qty, item = target.DisplayName, npc = giver });
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Fishing,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.Fishing,
+            QuestGiver = giver,
+            ObjectiveItemId = target.QualifiedItemId,
+            ObjectiveItemName = target.DisplayName,
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards = { new MoneyReward(gold) },
+            Consequence = consequence,
+            Title = ModEntry.I18n.Get("quest.fishing.mediumHaul.title", new { npc = giver }),
+            Description = flavour,
+            CurrentObjective = ModEntry.I18n.Get("quest.fishing.mediumHaul.objective", new { qty, item = target.DisplayName, npc = giver }),
+            TargetMessage = ModEntry.I18n.Get("quest.fishing.mediumHaul.targetMessage")
+        };
+    }
+
+    /// CSV row 65. Daily-board fishing quest. SaloonChef-pool giver (Gus / Pika RSV /
+    /// Rosa ESV / Celestine VMV) asks for a large haul of one edible non-poisonous fish;
+    /// reward is `RewardMultiplierFishPremium` of the fish's price × qty. Tier 3 ecology
+    /// chain consequence: every ecology NPC present on the save plus Linus loses
+    /// `FriendshipLarge` worth of friendship spread evenly over `ChainDays` days, with
+    /// one chained dialogue line per day. Static source so the engine pushes a chain to
+    /// every target rather than sampling a single NPC.
+    private static QuestPosting? SeafoodNight(QuestContext ctx)
+    {
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
+        if (giver == null)
+            return null;
+
+        var fish = ctx.Config.FishingIgnoresVisitedLocations
+            ? ctx.Items.GetSeasonalFish(ctx.Season)
+            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
+        var pool = fish.Where(IsEdibleNonPoisonous).ToList();
+        if (pool.Count == 0)
+            return null;
+
+        var target = pool[Game1.random.Next(pool.Count)];
+        int qty = Math.Max(1, ModEntry.Config.FishHaulLargeQty);
+        int basePrice = Math.Max(target.SellPrice, 30);
+        int gold = (int)(basePrice * qty * ctx.Config.RewardMultiplierFishPremium);
+
+        ConsequenceSpec? consequence = null;
+        if (ModEntry.Config.ConsequencesEnabled)
+        {
+            var ecology = ResolveEcologyTargets(ctx, includeLinus: true, exclude: giver);
+            if (ecology.Count > 0)
+            {
+                consequence = new ConsequenceSpec
+                {
+                    Tier = ConsequenceTier.Tier3,
+                    Source = ConsequenceSource.Static,
+                    Targets = ecology,
+                    ChainDays = 3,
+                    ChainLines = new List<string>
+                    {
+                        ModEntry.I18n.Get("quest.fishing.seafoodNight.consequence.chain.day1", new { item = target.DisplayName, npc = giver }),
+                        ModEntry.I18n.Get("quest.fishing.seafoodNight.consequence.chain.day2", new { item = target.DisplayName, npc = giver }),
+                        ModEntry.I18n.Get("quest.fishing.seafoodNight.consequence.chain.day3", new { item = target.DisplayName, npc = giver })
+                    }
+                };
+            }
+        }
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Fishing,
+            Tier = DifficultyTier.Expert,
+            QuestType = BoardQuestType.Fishing,
+            QuestGiver = giver,
+            ObjectiveItemId = target.QualifiedItemId,
+            ObjectiveItemName = target.DisplayName,
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            Rewards = { new MoneyReward(gold) },
+            Consequence = consequence,
+            Title = ModEntry.I18n.Get("quest.fishing.seafoodNight.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.fishing.seafoodNight.description", new { qty, item = target.DisplayName, npc = giver }),
+            CurrentObjective = ModEntry.I18n.Get("quest.fishing.seafoodNight.objective", new { qty, item = target.DisplayName, npc = giver }),
+            TargetMessage = ModEntry.I18n.Get("quest.fishing.seafoodNight.targetMessage")
+        };
+    }
+
+    /// CSV row 53. Daily-board item delivery. Picks a buyer from the `MonsterPartsBuyer`
+    /// dispatch pool (Wizard + Abigail vanilla; Lance + MarlonFay SVE; Mr. Aguar RSV;
+    /// Eli ESV; Maryam VMV) and asks for a quantity of one rare monster drop (Bat Wing
+    /// / Solar Essence / Void Essence / Bug Meat). Reward = a stack of one random gem
+    /// scaled to clear `GoldIntermediateBase`. Tier 1 negative consequence routed via
+    /// `Source: Static` to Krobus / Sen (East Scarp) / Dwarf — friends of the underground
+    /// don't appreciate the trade.
+    private static QuestPosting? MonsterParts(QuestContext ctx)
+    {
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.MonsterPartsBuyer);
+        if (giver == null)
+            return null;
+
+        var drop = MonsterDropPool[Game1.random.Next(MonsterDropPool.Length)];
+        var resolved = ctx.Items.TryResolveItem(drop.Id);
+        if (resolved == null)
+            return null;
+        int qty = Game1.random.Next(5, 11);
+
+        var gem = MonsterPartsGemRewards[Game1.random.Next(MonsterPartsGemRewards.Length)];
+
+        ConsequenceSpec? consequence = null;
+        if (ModEntry.Config.ConsequencesEnabled)
+        {
+            var underground = ResolveUndergroundTargets(exclude: giver);
+            if (underground.Count > 0)
+            {
+                consequence = new ConsequenceSpec
+                {
+                    Tier = ConsequenceTier.Tier1,
+                    Source = ConsequenceSource.Static,
+                    Targets = underground,
+                    HatedLine = ModEntry.I18n.Get(
+                        "quest.mining.monsterParts.consequence.hated",
+                        new { item = resolved.DisplayName, npc = giver })
+                };
+            }
+        }
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Mining,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.ItemDelivery,
+            QuestGiver = giver,
+            ObjectiveItemId = resolved.QualifiedItemId,
+            ObjectiveItemName = resolved.DisplayName,
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards = { new ObjectReward(gem.Id, gem.Count) },
+            Consequence = consequence,
+            Title = ModEntry.I18n.Get("quest.mining.monsterParts.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.mining.monsterParts.description", new { qty, item = resolved.DisplayName, npc = giver }),
+            CurrentObjective = ModEntry.I18n.Get("quest.mining.monsterParts.objective", new { qty, item = resolved.DisplayName, npc = giver }),
+            TargetMessage = ModEntry.I18n.Get("quest.mining.monsterParts.targetMessage")
+        };
+    }
+
+    /// Vanilla "rare" monster drops. Modded drops aren't enumerable without per-mod data,
+    /// so the pool stays vanilla — the framework's `Data/NPCGiftTastes` consequence path
+    /// still picks up modded NPCs who happen to like or hate any of these.
+    private static readonly (string Id, string Name)[] MonsterDropPool =
+    {
+        ("(O)767", "Bat Wing"),
+        ("(O)768", "Solar Essence"),
+        ("(O)769", "Void Essence"),
+        ("(O)684", "Bug Meat")
+    };
+
+    /// Gem reward pool sized so the headline value clears `GoldIntermediateBase` (~500g).
+    /// Vanilla sell prices: Diamond 750, Ruby 250 (×3 = 750), Emerald 250 (×3 = 750),
+    /// Topaz 80 (×7 = 560), Jade 200 (×3 = 600), Aquamarine 180 (×3 = 540), Amethyst 100
+    /// (×6 = 600). All comfortably above the GoldIntermediateBase floor.
+    private static readonly (string Id, int Count)[] MonsterPartsGemRewards =
+    {
+        ("(O)72", 1),  // Diamond
+        ("(O)64", 3),  // Ruby
+        ("(O)60", 3),  // Emerald
+        ("(O)68", 7),  // Topaz
+        ("(O)70", 3),  // Jade
+        ("(O)62", 3),  // Aquamarine
+        ("(O)66", 6)   // Amethyst
+    };
+
+    /// Pufferfish carries the Nausea status effect when eaten — the only vanilla "fish"
+    /// any reasonable cook would call poisonous. Filtered out of the Seafood Night pool
+    /// so the CSV's "edible non-poisonous" framing holds. Modded fish stay in as long as
+    /// their Edibility is positive.
+    private static readonly HashSet<string> SeafoodNightExclusions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "(O)128" // Pufferfish
+    };
+
+    private static bool IsEdibleNonPoisonous(ResolvedItem fish)
+    {
+        if (SeafoodNightExclusions.Contains(fish.QualifiedItemId))
+            return false;
+        var data = StardewValley.ItemRegistry.GetData(fish.QualifiedItemId);
+        if (data?.RawData is StardewValley.GameData.Objects.ObjectData obj)
+            return obj.Edibility > 0;
+        return false;
+    }
+
+    /// Resolves the live `EcologyMinded` pool (filtered by mod presence + NPC existence)
+    /// and optionally appends Linus for Tier 3 quests. Excludes the quest giver — a
+    /// shopkeeper who's also coincidentally in the ecology role shouldn't shame
+    /// themselves on the next chat. The list is the resolved snapshot, so saves where a
+    /// modded NPC is missing simply drop that entry.
+    private static List<string> ResolveEcologyTargets(QuestContext ctx, bool includeLinus, string exclude)
+    {
+        var pool = ctx.Dispatch.ResolvePool(DispatchRoles.EcologyMinded);
+        var targets = new List<string>(pool.Count + 1);
+        foreach (var npc in pool)
+        {
+            if (string.Equals(npc, exclude, StringComparison.OrdinalIgnoreCase))
+                continue;
+            targets.Add(npc);
+        }
+        if (includeLinus
+            && Game1.getCharacterFromName("Linus") != null
+            && !targets.Any(n => string.Equals(n, "Linus", StringComparison.OrdinalIgnoreCase))
+            && !string.Equals(exclude, "Linus", StringComparison.OrdinalIgnoreCase))
+        {
+            targets.Add("Linus");
+        }
+        return targets;
+    }
+
+    /// Krobus + Dwarf are vanilla; Sen ships with East Scarp. The list is the literal
+    /// CSV row 53 set; the engine filters to met villagers downstream so unknown NPCs
+    /// silently drop out. We still pre-filter by `getCharacterFromName` so we never queue
+    /// a line for an NPC whose mod isn't loaded.
+    private static List<string> ResolveUndergroundTargets(string exclude)
+    {
+        string[] candidates = { "Krobus", "Dwarf", "Sen" };
+        var targets = new List<string>(candidates.Length);
+        foreach (var npc in candidates)
+        {
+            if (string.Equals(npc, exclude, StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (Game1.getCharacterFromName(npc) == null)
+                continue;
+            targets.Add(npc);
+        }
+        return targets;
     }
 
     private static List<RewardSpec> DedupeFriendshipRewards(List<RewardSpec> rewards)
