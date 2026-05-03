@@ -18,8 +18,31 @@ public static class RewardCodec
         ObjectReward o => $"Object|ItemId={o.ItemId}|Count={o.Count}",
         RecipeReward r => $"Recipe|Name={r.RecipeName}|Kind={r.Kind}",
         MailReward ml => $"Mail|Letter={ml.LetterKey}|When={ml.When}",
+        ShopDiscountReward s => $"ShopDiscount|ShopId={s.ShopId}|Percent={s.PercentOff}|Days={s.DurationDays}|Items={JoinAppliesTo(s.AppliesTo)}|Stock={s.GuaranteedStock}",
         _ => throw new ArgumentException($"Unknown reward spec: {spec.GetType()}")
     };
+
+    private static string JoinAppliesTo(System.Collections.Generic.List<string>? items)
+    {
+        if (items == null || items.Count == 0)
+            return string.Empty;
+        // Sanitise: id list never contains `|` (the codec separator) or `,` (our sub-delimiter)
+        // for vanilla / modded item ids, so a plain `,` join round-trips cleanly.
+        return string.Join(",", items);
+    }
+
+    private static System.Collections.Generic.List<string>? SplitAppliesTo(string s)
+    {
+        if (string.IsNullOrEmpty(s))
+            return null;
+        var list = new System.Collections.Generic.List<string>();
+        foreach (var part in s.Split(','))
+        {
+            var trimmed = part.Trim();
+            if (trimmed.Length > 0) list.Add(trimmed);
+        }
+        return list.Count == 0 ? null : list;
+    }
 
     public static RewardSpec? Decode(string line)
     {
@@ -71,6 +94,19 @@ public static class RewardCodec
                     if (fields.TryGetValue("When", out var w))
                         Enum.TryParse(w, ignoreCase: true, out when);
                     return new MailReward(letter, when);
+                }
+                return null;
+
+            case "ShopDiscount":
+                if (fields.TryGetValue("ShopId", out var shopId)
+                    && fields.TryGetValue("Percent", out var pct) && int.TryParse(pct, out int percent)
+                    && fields.TryGetValue("Days", out var dys) && int.TryParse(dys, out int days))
+                {
+                    fields.TryGetValue("Items", out var itemsRaw);
+                    int stock = 0;
+                    if (fields.TryGetValue("Stock", out var stk))
+                        int.TryParse(stk, out stock);
+                    return new ShopDiscountReward(shopId, percent, days, SplitAppliesTo(itemsRaw ?? string.Empty), stock);
                 }
                 return null;
 

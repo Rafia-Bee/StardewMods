@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Registry;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
@@ -168,6 +169,113 @@ public sealed class QuestPipeline
             results.Add(posting);
         }
         return results;
+    }
+
+    /// Per-board batch of `TriggerSource.CustomBoard` postings, keyed by the board's
+    /// `OwnerUniqueId/Name` lookup key. Each board draws independently — its own
+    /// `AllowedCategories` filter applies, its own `PoolSize` caps the result, and the
+    /// pipeline's daily-board cooldown / availability gates still apply.
+    ///
+    /// `GenerateCustomBoardPostings` is called from `ModEntry.OnDayStarted` after the
+    /// help-wanted batch lands. Postings are not posted via `QuestPoster` (board-bound
+    /// quests don't have a delivery channel of their own — they live on the board until
+    /// the player opens it and clicks Accept), so the caller stamps slot lists directly.
+    public Dictionary<string, List<(QuestPosting posting, BoardDefinition board)>> GenerateCustomBoardPostings(BoardRegistry boardRegistry)
+    {
+        var sw = Stopwatch.StartNew();
+        var result = new Dictionary<string, List<(QuestPosting, BoardDefinition)>>(System.StringComparer.OrdinalIgnoreCase);
+        if (boardRegistry == null || boardRegistry.All.Count == 0)
+            return result;
+
+        // Gather every CustomBoard-source definition once so the per-board passes only
+        // re-evaluate availability + cooldown filters.
+        var allDefs = new List<IQuestDefinition>();
+        foreach (var def in _registry.All)
+        {
+            if (def.Source != TriggerSource.CustomBoard)
+                continue;
+            allDefs.Add(def);
+        }
+        if (allDefs.Count == 0)
+            return result;
+
+        var weights = _ctx.Config.QuestWeights;
+        var rng = Game1.random;
+
+        foreach (var board in boardRegistry.All)
+        {
+            string boardKey = (board.OwnerUniqueId ?? string.Empty) + "/" + (board.Name ?? string.Empty);
+            int target = System.Math.Max(1, board.PoolSize);
+
+            var pool = new List<(IQuestDefinition Def, int Weight)>();
+            foreach (var def in allDefs)
+            {
+                if (!CategoryAllowedOnBoard(board, def))
+                    continue;
+                if (!def.IsAvailable(_ctx))
+                    continue;
+                if (_antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
+                    continue;
+                int w = weights.TryGetValue(def.Id, out int configured) ? configured : def.DefaultWeight;
+                if (w <= 0)
+                    continue;
+                pool.Add((def, w));
+            }
+
+            var picked = new List<(QuestPosting, BoardDefinition)>();
+            var defCounts = new Dictionary<string, int>();
+            int safety = 200;
+            while (picked.Count < target && pool.Count > 0 && safety-- > 0)
+            {
+                var (def, _) = WeightedDraw(pool, rng);
+                if (def == null)
+                    break;
+
+                int count = defCounts.TryGetValue(def.Id, out int c) ? c : 0;
+                if (count >= def.MaxPerDay)
+                {
+                    pool.RemoveAll(x => x.Def.Id == def.Id);
+                    continue;
+                }
+
+                var posting = def.Build(_ctx);
+                if (posting == null)
+                {
+                    pool.RemoveAll(x => x.Def.Id == def.Id);
+                    continue;
+                }
+                if (string.IsNullOrEmpty(posting.OwnerUniqueId))
+                    posting.OwnerUniqueId = def.OwnerUniqueId;
+
+                picked.Add((posting, board));
+                _antiRepetition.Record(posting);
+                defCounts[def.Id] = count + 1;
+                if (defCounts[def.Id] >= def.MaxPerDay)
+                    pool.RemoveAll(x => x.Def.Id == def.Id);
+            }
+
+            result[boardKey] = picked;
+        }
+
+        sw.Stop();
+        int total = result.Sum(kv => kv.Value.Count);
+        _ctx.Monitor.Log(
+            $"Generated {total} custom-board posting(s) across {result.Count} board(s) in {sw.Elapsed.TotalMilliseconds:F1} ms.",
+            LogLevel.Trace);
+        return result;
+    }
+
+    private static bool CategoryAllowedOnBoard(BoardDefinition board, IQuestDefinition def)
+    {
+        if (board.AllowedCategories == null || board.AllowedCategories.Count == 0)
+            return true;
+        string defCategory = def.Category.ToString();
+        for (int i = 0; i < board.AllowedCategories.Count; i++)
+        {
+            if (string.Equals(board.AllowedCategories[i], defCategory, System.StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
     }
 
     /// Returns every NpcDialogue-source definition that should fire today (per

@@ -13,6 +13,7 @@ using MoreQuestsFramework.Posting.Boards;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Quests.Vanilla;
 using MoreQuestsFramework.Registry;
+using MoreQuestsFramework.Rewards;
 using MoreQuestsFramework.State;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
@@ -46,6 +47,7 @@ public sealed class ModEntry : Mod
     private DialogueWatcher? _dialogueWatcher;
     private MailQuestRegistry _mailQuests = null!;
     private SpecialOrderWriter? _specialOrderWriter;
+    private ShopDiscountWriter? _shopDiscountWriter;
 
     internal DispatchRegistry Dispatch { get; private set; } = null!;
     internal MoreQuestsApi Api => _api;
@@ -77,6 +79,9 @@ public sealed class ModEntry : Mod
         _specialOrderWriter.Register();
         _poster.WireSpecialOrders(_specialOrderWriter);
 
+        _shopDiscountWriter = new ShopDiscountWriter(helper, Monitor);
+        _shopDiscountWriter.Register();
+
         _mailQuests = new MailQuestRegistry();
 
         var harmony = new Harmony(ModManifest.UniqueID);
@@ -92,6 +97,7 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.DayEnding += OnDayEnding;
         helper.Events.GameLoop.Saving += OnSaving;
         helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTick;
+        helper.Events.Player.Warped += OnPlayerWarped;
 
         helper.ConsoleCommands.Add(
             "mq_refresh",
@@ -209,6 +215,11 @@ public sealed class ModEntry : Mod
 
         _poster!.WireMailDelivery(_mailQuests, _stateStore.State);
         _specialOrderWriter?.WireState(_stateStore.State);
+        _shopDiscountWriter?.WireState(_stateStore.State);
+        // Always invalidate the shop cache after wiring state — discounts loaded from the
+        // save would otherwise sit dormant until something else triggers the next read.
+        if (_stateStore.State.ActiveShopDiscounts.Count > 0)
+            Helper.GameContent.InvalidateCache("Data/Shops");
         // Re-publish any persisted SpecialOrder entries by invalidating the cache;
         // the writer's OnAssetRequested handler injects them on the next read.
         if (_stateStore.State.EmittedSpecialOrders.Count > 0)
@@ -333,11 +344,85 @@ public sealed class ModEntry : Mod
                 _dialogueWatcher.Enqueue(def.Id, npc);
         }
 
+        // Custom-board postings (Phase 8c). Drawn per-board with each board's own
+        // `AllowedCategories` filter + `PoolSize` cap. Slots stay scoped to their board
+        // key; the BoardWorldRenderer's "!" indicator activates as soon as the list is
+        // non-empty.
+        CustomBoardSlots.ClearAll();
+        var customByBoard = _pipeline.GenerateCustomBoardPostings(_boards);
+        foreach (var (_, perBoard) in customByBoard)
+        {
+            if (perBoard.Count == 0) continue;
+            var board = perBoard[0].board;
+            var entries = new List<(StardewValley.Quests.Quest q, QuestPosting p)>(perBoard.Count);
+            foreach (var (posting, _) in perBoard)
+            {
+                var quest = _poster.PrepareCustomBoardQuest(posting);
+                if (quest != null)
+                    entries.Add((quest, posting));
+            }
+            CustomBoardSlots.Replace(board, entries, Monitor);
+        }
+
         // Suppress vanilla's lone questOfTheDay so we are the single source of truth on the board.
         if (Game1.IsMasterGame)
             Game1.netWorldState.Value.SetQuestOfTheDay(null);
 
+        // Poll ReachLevel steps once per day so a quest accepted on a previous session,
+        // where the player already descended past the target floor, advances without
+        // requiring a fresh warp into the mine.
+        ObserveReachLevelOnQuestLog();
+
+        // Sweep expired ShopDiscount entries; invalidate the shop cache when something
+        // dropped off so the asset edit picks up the smaller list.
+        SweepShopDiscounts();
+
         _api.FireDayRefreshed(daily.Count, triggered.Count);
+    }
+
+    private void OnPlayerWarped(object? sender, StardewModdingAPI.Events.WarpedEventArgs e)
+    {
+        if (!Context.IsWorldReady || !e.IsLocalPlayer)
+            return;
+        ObserveReachLevelOnQuestLog();
+    }
+
+    /// Walks the active quest log once and lets every `AdventureQuest` with an active
+    /// `ReachLevel` step compare its target floor against the player's deepest reached
+    /// mine/skull-cavern level. Cheap when no ReachLevel quest is active (just a type check
+    /// per quest). Called from DayStarted and `Player.Warped`.
+    private void ObserveReachLevelOnQuestLog()
+    {
+        if (Game1.player == null)
+            return;
+        int deepest = Game1.player.deepestMineLevel;
+        var log = Game1.player.questLog;
+        for (int i = 0; i < log.Count; i++)
+        {
+            if (log[i] is AdventureQuest a && !a.completed.Value)
+                a.ObserveReachLevel(deepest);
+        }
+    }
+
+    private void SweepShopDiscounts()
+    {
+        if (_stateStore == null) return;
+        var state = _stateStore.State;
+        if (state.ActiveShopDiscounts.Count == 0) return;
+
+        int today = Game1.Date.TotalDays;
+        var dropped = new HashSet<string>();
+        for (int i = state.ActiveShopDiscounts.Count - 1; i >= 0; i--)
+        {
+            var d = state.ActiveShopDiscounts[i];
+            if (today > d.ExpiresAfterDay)
+            {
+                dropped.Add(d.ShopId);
+                state.ActiveShopDiscounts.RemoveAt(i);
+            }
+        }
+        if (dropped.Count > 0)
+            Helper.GameContent.InvalidateCache("Data/Shops");
     }
 
     /// Re-rolls the daily-board batch on demand. Used by `IMoreQuestsApi.RefreshOffers()`

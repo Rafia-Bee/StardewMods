@@ -102,6 +102,24 @@ public sealed class QuestPoster
             Post(p);
     }
 
+    /// Builds + stamps a Quest from a CustomBoard-source posting and registers it with the
+    /// API (so QuestAccepted/QuestCompleted events attribute back to the owning mod). The
+    /// caller then stuffs the Quest into the per-board `CustomBoardSlots` for display —
+    /// no help-wanted billboard plumbing involved. Returns null when the QuestType isn't
+    /// constructable from posting fields.
+    public Quest? PrepareCustomBoardQuest(QuestPosting posting)
+    {
+        Quest? quest = posting.PreBuiltQuest ?? QuestFactory.Build(posting);
+        if (quest == null)
+        {
+            _monitor.Log($"Could not build Quest for {posting.DefinitionId} ({posting.QuestType}).", LogLevel.Warn);
+            return null;
+        }
+        ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: 0);
+        _api.TrackPosted(quest, posting.OwnerUniqueId, posting.DefinitionId);
+        return quest;
+    }
+
     /// Builds and stamps a Quest from the posting without delivering it. Used by the
     /// `NpcDialogue` watcher, which needs to push the prepared Quest into `questLog`
     /// at chat time rather than at posting time.

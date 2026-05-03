@@ -2,7 +2,7 @@
 
 A SMAPI content mod for Stardew Valley that ships a curated set of new daily-board, mail, and festival quests on top of the [More Quests Framework](../MoreQuestsFramework/README.md).
 
-> Heavy work in progress. Seventeen quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
+> Heavy work in progress. Twenty quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
 
 ## Dependencies
 
@@ -79,7 +79,7 @@ A SMAPI content mod for Stardew Valley that ships a curated set of new daily-boa
 | Animal | Moira's Exotic Animal Offer | Player unlocks "Ewes" (VMV) | Moira (VMV) | Bring a modded crop | Discounted Ewe | OneTime, requires VMV | Not started |
 | Mining | Monster Hunt | Daily board | Adventurer's Guild | Slay X of any monsters | Gold (Intermediate) + combat-buff food | Cooldown 3d | Not started |
 | Mining | Monster Parts | Daily board | Wizard / Lance / Marlon / Mr Aguar / Abigail / Eli / Mariam | Collect rare monster drops | High-value gem or artifact | Cooldown 5d, OnePerGiver | Not started |
-| Farming | Pierre's Stock-Up | Daily board | Pierre | Deliver bulk mixed seasonal crops | Discount on requested seeds at Pierre's | Cooldown 7d, OnePerGiver | Not started |
+| Farming | Pierre's Stock-Up | Daily board | Pierre | Deliver bulk mixed seasonal crops (3 distinct, qty scales with farming) | ShopDiscount on the matching seeds at Pierre's | Cooldown 7d, requires Farming 4 | Implemented |
 | Foraging | Plant Trees | Daily board | Linus / Dylan / Demetrius / Kimpoi / Aster | Plant X trees at a target location | Friendship (Intermediate) with giver | Cooldown 7d, OnePerGiver | Not started |
 | Farming | Premium Crop Order | Daily board | Any | Deliver X Iridium-quality rare crops | Gold (Advanced) + rare/ancient seeds | Cooldown 5d | Not started |
 | Seasonal | Preserves Season | Special Orders board (Fall 1) | Single dispatched villager | Ship a scaling number of jam, pickle, wine, and dried mushroom artisan goods (counts + objective count both scale with Farming) | Gold (above-sell bonus) + Friendship (Basic) to requester | Fall 1, Cooldown 21d, vanilla `Month` window | Implemented (8a) |
@@ -92,8 +92,8 @@ A SMAPI content mod for Stardew Valley that ships a curated set of new daily-boa
 | Animal | Robin's Silo Offer | After first Coop/Barn (no Silo) | Robin | Gather one type of build material | Discounted Silo | OneTime | Not started |
 | Fishing | Seafood Night | Daily board | Gus / Pika / Rosa / Celestine | Catch FishHaulLargeQty+ edible non-poisonous fish | Gold (sell-price premium, very high) | Cooldown 10d, OnePerGiver | Not started |
 | Festival | Secret Gift Hint | Winter 22 | Board | Hint about your assigned Winter Star recipient | Information (preference hint) | DateLocked, OneTimePerYear | Not started |
-| Mining | Skull Cavern Deep Dive | Daily board | Adventurer's Guild | Reach floor X in Skull Cavern and retrieve ore | Gold (Advanced) + smelted bars | Cooldown 14d, configurable max floor | Not started |
-| Mining | Mines Deep Dive | Daily board | Adventurer's Guild | Reach floor X in The Mines (max 120) and retrieve ore | Gold (Intermediate) + smelted bars | Cooldown 14d, configurable max floor | Not started |
+| Mining | Skull Cavern Deep Dive | Adventurer's Guild board | Marlon | Reach floor X in Skull Cavern and deliver an ore/stone haul | Gold (Advanced) + Iridium Bars | Cooldown 14d, requires Skull Cavern unlocked, configurable max floor | Implemented |
+| Mining | Mines Deep Dive | Adventurer's Guild board | Marlon | Reach floor X in The Mines (max 120) and deliver an ore/stone haul | Gold (Intermediate) + bars matching the floor band | Cooldown 14d, requires deepestMineLevel >= 5 | Implemented |
 | Fishing | Size-Specific Overpopulation | Daily board | Demetrius | Catch X fish of a specific size | Gold (Intermediate) + bait | Cooldown 4d, OnePerGiver | Not started |
 | Seasonal | Spring Cleaning | Daily board | Any | Clear weeds around town | Friendship (Basic) | Spring only, Cooldown 5d | Not started |
 | Festival | SquidFest Showcase | Winter 12-13 | Gus / Pika / Rosa / Celestine | Catch FestivalFishQty Squid | Recipe + shop discount on the dish | DateLocked, OneTimePerYear | Not started |
@@ -111,7 +111,7 @@ Two of this mod's quests use bespoke `Quest` subclasses:
 - **`AnySlimeQuest`** — backs Basic Slime Clearing. Counts any slime kill, not just one species.
 - **`CollectAndReportQuest`** — backs Beach Cleanup, Seasonal Foraging, etc. Player gathers items in the world, then reports to the giver to consume the stack and turn it in.
 
-Multi-step quests run on the framework's `AdventureQuest` substrate: Check on George (gift, chat, report), the three Phase-7b festival migrations (Submarine Fuel, Wizard's Ritual, Holiday Cookies), and the Phase-7c content (Check on Friends, Gus's Feast Spring 6, Gus's Feast Winter 18). All other quests use the framework's `MoreQuestsItemDeliveryQuest`, `MoreQuestsFishingQuest`, or `MoreQuestsShipQuest` subclasses, all built by the framework's `QuestFactory`.
+Multi-step quests run on the framework's `AdventureQuest` substrate: Check on George (gift, chat, report), the three Phase-7b festival migrations (Submarine Fuel, Wizard's Ritual, Holiday Cookies), the Phase-7c content (Check on Friends, Gus's Feast Spring 6, Gus's Feast Winter 18), and the Phase-8c content (Skull Cavern Deep Dive, Mines Deep Dive, Pierre's Stock-Up). All other quests use the framework's `MoreQuestsItemDeliveryQuest`, `MoreQuestsFishingQuest`, or `MoreQuestsShipQuest` subclasses, all built by the framework's `QuestFactory`.
 
 ## Known limitations
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MoreQuestsFramework.Api;
@@ -28,6 +29,11 @@ public sealed class CustomBoardMenu : IClickableMenu
     private readonly Dictionary<int, Note> _notesByCc = new();
     private string _hoverTitle = "";
     private string _hoverText = "";
+
+    /// Vanilla `Billboard(true)` instance used as the accept-quest popup. When non-null,
+    /// the outer cork board defers all input + draw to this inner menu (matching the
+    /// help-wanted board's `MoreQuestsBillboard.InnerBillboard` pattern).
+    public Billboard? InnerBillboard { get; private set; }
 
     private sealed class Note
     {
@@ -134,6 +140,11 @@ public sealed class CustomBoardMenu : IClickableMenu
 
     public override void performHoverAction(int x, int y)
     {
+        if (InnerBillboard != null)
+        {
+            InnerBillboard.performHoverAction(x, y);
+            return;
+        }
         _hoverTitle = "";
         _hoverText = "";
         foreach (var note in _notes)
@@ -156,6 +167,12 @@ public sealed class CustomBoardMenu : IClickableMenu
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
     {
+        if (InnerBillboard != null)
+        {
+            InnerBillboard.receiveLeftClick(x, y, playSound);
+            return;
+        }
+
         if (upperRightCloseButton != null && readyToClose() && upperRightCloseButton.containsPoint(x, y))
         {
             exitThisMenu();
@@ -163,13 +180,45 @@ public sealed class CustomBoardMenu : IClickableMenu
                 Game1.playSound("bigDeSelect");
             return;
         }
-        // Phase 8c: route note clicks through an accept-popup. For 8b the menu has no
-        // active slots, so left-clicks on the empty board just fall through to base.
-        base.receiveLeftClick(x, y, playSound);
+
+        foreach (var note in _notes)
+        {
+            if (note.Cc.containsPoint(x, y))
+            {
+                CustomBoardSlots.Selected = note.Slot;
+                InnerBillboard = new Billboard(true);
+                InnerBillboard.acceptQuestButton.visible = true;
+                if (playSound)
+                    Game1.playSound("smallSelect");
+                return;
+            }
+        }
+
+        InvokeBaseLeftClick(x, y, playSound);
+    }
+
+    public override bool readyToClose()
+    {
+        // Match `MoreQuestsBillboard.readyToClose`: the inner accept popup eats the close
+        // request so the outer cork board stays up after dismissal. Vanilla's exit cascade
+        // calls `readyToClose` from the close-button click; returning false there both
+        // cancels the close AND lets us tear down the inner popup atomically.
+        if (InnerBillboard != null)
+        {
+            InnerBillboard = null;
+            CustomBoardSlots.Selected = null;
+            return false;
+        }
+        return true;
     }
 
     public override void snapToDefaultClickableComponent()
     {
+        if (InnerBillboard != null)
+        {
+            InnerBillboard.snapToDefaultClickableComponent();
+            return;
+        }
         if (_notes.Count > 0)
         {
             currentlySnappedComponent = getComponentWithID(_notes[0].Cc.myID);
@@ -177,8 +226,34 @@ public sealed class CustomBoardMenu : IClickableMenu
         }
     }
 
+    /// Called by `BillboardPatches.Click_Postfix` after the player clicks the inner accept
+    /// popup's accept or close button. `reopen` rebuilds the cork board after a successful
+    /// accept so the just-accepted slot drops out of the layout; on a plain dismiss we
+    /// just clear the popup and leave the existing layout in place.
+    public void OnInnerAcceptClosed(bool reopen)
+    {
+        InnerBillboard = null;
+        CustomBoardSlots.Selected = null;
+        if (reopen)
+            Game1.activeClickableMenu = new CustomBoardMenu(_board);
+    }
+
+    private void InvokeBaseLeftClick(int x, int y, bool playSound)
+    {
+        var method = AccessTools.Method(typeof(IClickableMenu), nameof(IClickableMenu.receiveLeftClick));
+        var ftn = method.MethodHandle.GetFunctionPointer();
+        var func = (Action<int, int, bool>)Activator.CreateInstance(typeof(Action<int, int, bool>), this, ftn)!;
+        func.Invoke(x, y, playSound);
+    }
+
     public override void draw(SpriteBatch b)
     {
+        if (InnerBillboard != null)
+        {
+            InnerBillboard.draw(b);
+            return;
+        }
+
         if (!Game1.options.showClearBackgrounds)
             b.Draw(Game1.fadeToBlackRect, Game1.graphics.GraphicsDevice.Viewport.Bounds, Color.Black * 0.75f);
 

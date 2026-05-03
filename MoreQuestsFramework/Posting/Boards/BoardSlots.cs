@@ -20,15 +20,22 @@ public static class CustomBoardSlots
         public string SyncId { get; }
         public Quest Quest { get; }
         public QuestPosting Posting { get; }
+        public string BoardKey { get; }
         public bool Accepted { get; set; }
 
-        public Slot(Quest quest, QuestPosting posting)
+        public Slot(Quest quest, QuestPosting posting, string boardKey)
         {
             SyncId = Guid.NewGuid().ToString("N");
             Quest = quest;
             Posting = posting;
+            BoardKey = boardKey;
         }
     }
+
+    /// Currently-selected slot for the inner accept-quest popup (`Billboard(true)` reused
+    /// from vanilla via the `BillboardPatches` `questOfTheDay` redirect). Null when no
+    /// custom-board accept popup is up. Mirrors `BillboardSlots.Selected`.
+    public static Slot? Selected { get; set; }
 
     public static IReadOnlyList<Slot> SlotsFor(BoardDefinition board)
     {
@@ -45,7 +52,7 @@ public static class CustomBoardSlots
             _byBoardKey[key] = list = new List<Slot>();
         list.Clear();
         foreach (var (q, p) in entries)
-            list.Add(new Slot(q, p));
+            list.Add(new Slot(q, p, key));
         monitor?.Log($"CustomBoardSlots[{key}] populated with {list.Count} quest(s).", LogLevel.Trace);
     }
 
@@ -56,7 +63,25 @@ public static class CustomBoardSlots
             list.Clear();
     }
 
-    public static void ClearAll() => _byBoardKey.Clear();
+    public static void ClearAll()
+    {
+        _byBoardKey.Clear();
+        Selected = null;
+    }
+
+    /// Marks the currently selected slot accepted and removes it from the unaccepted pool
+    /// for whichever board it belongs to. Mirrors `BillboardSlots.AcceptSelected`.
+    public static Quest? AcceptSelected()
+    {
+        if (Selected == null)
+            return null;
+        Selected.Accepted = true;
+        var quest = Selected.Quest;
+        if (_byBoardKey.TryGetValue(Selected.BoardKey, out var list))
+            list.Remove(Selected);
+        Selected = null;
+        return quest;
+    }
 
     private static string KeyOf(BoardDefinition board) =>
         (board.OwnerUniqueId ?? "") + "/" + (board.Name ?? "");

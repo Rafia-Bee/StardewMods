@@ -39,6 +39,9 @@ internal static class Generators
         fw.RegisterGenerator("GusFestivalFeastSpring", GusFestivalFeastSpring);
         fw.RegisterGenerator("GusFestivalFeastWinter", GusFestivalFeastWinter);
         fw.RegisterGenerator("PreservesSeason", PreservesSeason);
+        fw.RegisterGenerator("SkullCavernDeepDive", SkullCavernDeepDive);
+        fw.RegisterGenerator("MinesDeepDive", MinesDeepDive);
+        fw.RegisterGenerator("PierresStockUp", PierresStockUp);
     }
 
     // -------------------- Farming --------------------
@@ -1071,5 +1074,299 @@ internal static class Generators
                 FrameworkRewards = frameworkRewards
             }
         };
+    }
+
+    // -------------------- Phase 8c: Adventurer's Guild deep-dive quests --------------------
+
+    /// Vanilla ore + stone ids accepted by both deep-dive quests' Deliver step. Stone is
+    /// included per the CSV row's "(any type of ore)/stone" wording — Marlon's not picky
+    /// about what fills the crate, the bar reward is fixed by quest difficulty rather
+    /// than the player's specific haul.
+    private static readonly string[] AnyOreOrStone =
+    {
+        "(O)378", // Copper Ore
+        "(O)380", // Iron Ore
+        "(O)384", // Gold Ore
+        "(O)386", // Iridium Ore
+        "(O)390"  // Stone
+    };
+
+    /// CSV row 67. Daily-board posting on the Adventurer's Guild custom board. Two-step
+    /// Adventure: ReachLevel a target floor in Skull Cavern → ship the ore/stone haul via
+    /// the farm shipping bin. Floor target rolls in [50, Config.SkullCavernMaxLevel]; haul
+    /// size scales with Mining skill when DifficultyScaling is on. Reward = `GoldAdvancedBase`
+    /// + an iridium-bar count proportional to the haul (5 ores ≈ 1 bar, vanilla smelt ratio),
+    /// granted directly into inventory + money on quest completion.
+    ///
+    /// Shipping-step framing keeps the quest playable on vanilla saves: Marlon is only a
+    /// shopkeeper sprite without SVE, so `OnItemOfferedToNpc` never fires for him. The
+    /// shipping-bin observer (`AdventureQuest.ObserveShippingBin` at DayEnding) doesn't
+    /// require an NPC at all.
+    private static QuestPosting? SkullCavernDeepDive(QuestContext ctx)
+    {
+        // Gate on Skull Cavern access. Vanilla unlocks the Cavern after the first iridium
+        // ore drops the player past floor 120; reflecting that in availability keeps the
+        // quest from posting on saves where Skull Cavern is still locked.
+        if (Game1.player.deepestMineLevel <= 120)
+            return null;
+
+        int maxFloor = Math.Max(20, ModEntry.Config.SkullCavernMaxLevel);
+        int targetFloor = Game1.random.Next(50, maxFloor + 1);
+
+        int haul = ctx.Config.DifficultyScaling
+            ? Math.Max(15, 10 + 2 * Game1.player.MiningLevel)
+            : 25;
+
+        int bars = Math.Max(2, haul / 5);
+        int gold = ctx.Config.GoldAdvancedBase;
+
+        // Marlon is the in-character "giver" the journal references, but no NPC turn-in
+        // happens — the Ship step closes the quest on its own at DayEnding. The bar
+        // reward arrives the morning after via a parameterised mail key so the player
+        // doesn't get items mysteriously appearing in inventory while sleeping.
+        const string giver = "Marlon";
+        const string barId = "337"; // Iridium Bar (bare id; the mail token uses bare ids)
+        string letterKey = BuildDeepDiveRewardLetterKey(barId, bars);
+        var oreIds = new List<string>(AnyOreOrStone);
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ReachFloor",
+                Kind = AdventureStepKind.ReachLevel,
+                Targets = new List<string> { "SkullCavern" },
+                Count = targetFloor,
+                Description = ModEntry.I18n.Get("quest.mining.skullCavernDeepDive.step.reach", new { floor = targetFloor })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipHaul",
+                Kind = AdventureStepKind.Ship,
+                Items = oreIds,
+                Count = haul,
+                Requires = new List<string> { "ReachFloor" },
+                Description = ModEntry.I18n.Get("quest.mining.skullCavernDeepDive.step.ship", new { count = haul })
+            }
+        }, giver: giver);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Mining,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            Rewards =
+            {
+                new MoneyReward(gold),
+                new MailReward(letterKey, MailWhen.Tomorrow)
+            },
+            Title = ModEntry.I18n.Get("quest.mining.skullCavernDeepDive.title"),
+            Description = ModEntry.I18n.Get("quest.mining.skullCavernDeepDive.description", new { floor = targetFloor, count = haul }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// CSV row 78. Sibling of `SkullCavernDeepDive` for the regular Mines (capped at 120).
+    /// Floor target rolls in a band that scales with Mining skill so a fresh save isn't
+    /// asked to reach floor 120 immediately. Bar type reward matches the floor band:
+    /// Copper at 1-79, Iron at 80-99, Gold at 100-120. Ship step at DayEnding closes the
+    /// quest without requiring an NPC turn-in (vanilla Marlon isn't a giftable villager).
+    private static QuestPosting? MinesDeepDive(QuestContext ctx)
+    {
+        int currentDeepest = Math.Min(120, Game1.player.deepestMineLevel);
+        if (currentDeepest < 5)
+            return null; // need at least a few floors of progress before asking for more
+
+        // Target a floor band slightly past where the player has already been so the
+        // quest demands genuine progress without being unreachable. Cap at 120.
+        int low = Math.Max(20, currentDeepest - 30);
+        int high = Math.Min(120, currentDeepest + 30);
+        if (high <= low)
+            high = low + 1;
+        int targetFloor = Game1.random.Next(low, high + 1);
+
+        int haul = ctx.Config.DifficultyScaling
+            ? Math.Max(8, 6 + Game1.player.MiningLevel)
+            : 15;
+
+        // Bar reward type matches the floor band the quest targets — the Guild scales the
+        // payout to whatever's plausible at that depth.
+        (string barId, int barCount) = targetFloor switch
+        {
+            >= 100 => ("336", Math.Max(1, haul / 5)), // Gold Bar
+            >= 80 => ("335", Math.Max(1, haul / 5)),  // Iron Bar
+            _ => ("334", Math.Max(1, haul / 5))        // Copper Bar
+        };
+        int gold = ctx.Config.GoldIntermediateBase;
+        string letterKey = BuildDeepDiveRewardLetterKey(barId, barCount);
+
+        const string giver = "Marlon";
+        var oreIds = new List<string>(AnyOreOrStone);
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ReachFloor",
+                Kind = AdventureStepKind.ReachLevel,
+                Targets = new List<string> { "Mine" },
+                Count = targetFloor,
+                Description = ModEntry.I18n.Get("quest.mining.minesDeepDive.step.reach", new { floor = targetFloor })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipHaul",
+                Kind = AdventureStepKind.Ship,
+                Items = oreIds,
+                Count = haul,
+                Requires = new List<string> { "ReachFloor" },
+                Description = ModEntry.I18n.Get("quest.mining.minesDeepDive.step.ship", new { count = haul })
+            }
+        }, giver: giver);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Mining,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards =
+            {
+                new MoneyReward(gold),
+                new MailReward(letterKey, MailWhen.Tomorrow)
+            },
+            Title = ModEntry.I18n.Get("quest.mining.minesDeepDive.title"),
+            Description = ModEntry.I18n.Get("quest.mining.minesDeepDive.description", new { floor = targetFloor, count = haul }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Builds a parameterised reward letter key that bakes the bar id + count into the
+    /// key itself. The content mod's `Data/mail` asset edit parses the suffix on the fly,
+    /// so neither the framework nor save state needs to track per-quest reward bodies.
+    /// Format: `RafiaBee.MoreQuests.DeepDiveReward.{barId}.{count}` — both numeric so the
+    /// `%item object {barId} {count} %%` mail token slots in directly.
+    internal static string BuildDeepDiveRewardLetterKey(string barId, int count)
+        => $"RafiaBee.MoreQuests.DeepDiveReward.{barId}.{count}";
+
+    /// CSV row 54. Daily-board bulk-crop delivery for Pierre's General Store. Picks 3
+    /// distinct seasonal crops; player delivers a per-crop quantity that scales with
+    /// Farming skill. Reward = `ShopDiscount` on Pierre's `SeedShop` for the matching
+    /// seed ids, lasting `SeedShopDiscountDurationDays` in-game days at
+    /// `SeedShopDiscountPercent` off.
+    private static QuestPosting? PierresStockUp(QuestContext ctx)
+    {
+        var crops = ctx.Items.GetSeasonalCrops(ctx.Season);
+        if (crops.Count < 3)
+            return null;
+
+        // Sample 3 distinct seasonal crops; smaller pools fall back to whatever the
+        // season has (we already early-return on Count < 3 above).
+        var pool = new List<ResolvedItem>(crops);
+        var picks = new List<ResolvedItem>(3);
+        for (int i = 0; i < 3 && pool.Count > 0; i++)
+        {
+            int idx = Game1.random.Next(pool.Count);
+            picks.Add(pool[idx]);
+            pool.RemoveAt(idx);
+        }
+
+        int qtyPer = ctx.Config.DifficultyScaling
+            ? Math.Max(6, 4 + 2 * Game1.player.FarmingLevel)
+            : 12;
+
+        const string giver = "Pierre";
+
+        // Reverse-map each picked crop's harvest item id to its seed id so the discount
+        // applies specifically to the seeds Pierre stocks for the requested crops. Misses
+        // (modded crops with no SeedShop entry) just don't get discounted; the whole
+        // quest still posts.
+        var seedIds = new List<string>(picks.Count);
+        foreach (var crop in picks)
+        {
+            string? seedId = ResolveSeedIdForHarvest(ctx, crop.QualifiedItemId);
+            if (!string.IsNullOrEmpty(seedId))
+                seedIds.Add(seedId!);
+        }
+
+        var steps = new List<AdventureStepState>(picks.Count);
+        for (int i = 0; i < picks.Count; i++)
+        {
+            steps.Add(new AdventureStepState
+            {
+                Name = "DeliverCrop" + i,
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { giver },
+                Items = new List<string> { picks[i].QualifiedItemId },
+                Count = qtyPer,
+                Description = ModEntry.I18n.Get("quest.farming.pierresStockUp.step.deliver", new { count = qtyPer, item = picks[i].DisplayName, npc = giver })
+            });
+        }
+
+        var quest = new AdventureQuest();
+        quest.Initialize(steps, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.farming.pierresStockUp.targetMessage"));
+
+        var posting = new QuestPosting
+        {
+            Category = QuestCategory.Farming,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            Title = ModEntry.I18n.Get("quest.farming.pierresStockUp.title"),
+            Description = ModEntry.I18n.Get("quest.farming.pierresStockUp.description", new
+            {
+                count = qtyPer,
+                item1 = picks.Count > 0 ? picks[0].DisplayName : string.Empty,
+                item2 = picks.Count > 1 ? picks[1].DisplayName : string.Empty,
+                item3 = picks.Count > 2 ? picks[2].DisplayName : string.Empty
+            }),
+            TargetMessage = ModEntry.I18n.Get("quest.farming.pierresStockUp.targetMessage"),
+            PreBuiltQuest = quest
+        };
+
+        if (ModEntry.Config.SeedShopDiscountPercent > 0 && ModEntry.Config.SeedShopDiscountDurationDays > 0)
+        {
+            // Half the requested haul as the per-visit seed cap on quest-injected
+            // entries. Pierre stocks `qtyPer / 2` per missing seed (minimum 2) so a
+            // 16-crop request lands as 8 seeds at the discount — enough to grow back a
+            // comparable harvest without making the discount window an unlimited
+            // farming press.
+            int guaranteedStock = Math.Max(2, qtyPer / 2);
+            posting.Rewards.Add(new ShopDiscountReward(
+                ShopId: "SeedShop",
+                PercentOff: ModEntry.Config.SeedShopDiscountPercent,
+                DurationDays: ModEntry.Config.SeedShopDiscountDurationDays,
+                AppliesTo: seedIds.Count > 0 ? seedIds : null,
+                GuaranteedStock: guaranteedStock));
+        }
+
+        return posting;
+    }
+
+    /// Walks `Data/Crops` for a row whose `HarvestItemId` matches the requested crop, and
+    /// returns the qualified seed id (the dictionary key is the seed's bare item id). Used
+    /// to scope Pierre's seed-shop discount to the seeds for the quested crops.
+    private static string? ResolveSeedIdForHarvest(QuestContext ctx, string harvestQualifiedId)
+    {
+        if (string.IsNullOrEmpty(harvestQualifiedId))
+            return null;
+        string bareHarvest = harvestQualifiedId.StartsWith("(O)", StringComparison.Ordinal)
+            ? harvestQualifiedId[3..]
+            : harvestQualifiedId;
+        foreach (var (seedId, data) in ctx.Data.Crops)
+        {
+            if (string.Equals(data.HarvestItemId, bareHarvest, StringComparison.OrdinalIgnoreCase))
+                return "(O)" + seedId;
+        }
+        return null;
     }
 }

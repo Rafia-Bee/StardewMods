@@ -135,5 +135,24 @@
     "quest.fall.preservesSeason.category.jam": "any jelly or jam",
     "quest.fall.preservesSeason.category.pickle": "any pickled vegetable",
     "quest.fall.preservesSeason.category.wine": "any wine",
-    "quest.fall.preservesSeason.category.driedMushroom": "Dried Mushrooms"
+    "quest.fall.preservesSeason.category.driedMushroom": "Dried Mushrooms",
+
+    "quest.mining.skullCavernDeepDive.title": "Skull Cavern deep dive",
+    "quest.mining.skullCavernDeepDive.description": "The Guild's posted a bounty for anyone willing to push deep into the Skull Cavern. Reach floor {{floor}} and ship {{count}} ore (any kind, stone counts too) through your shipping bin. Payment shows up the day after the haul lands.",
+    "quest.mining.skullCavernDeepDive.step.reach": "Reach floor {{floor}} of the Skull Cavern.",
+    "quest.mining.skullCavernDeepDive.step.ship": "Ship {{count}} ore or stone through the bin.",
+
+    "quest.mining.minesDeepDive.title": "Mines deep dive",
+    "quest.mining.minesDeepDive.description": "The Adventurer's Guild is paying for a deep dive into the mines. Reach floor {{floor}} and ship {{count}} ore or stone through your shipping bin. Reward comes with the morning after the haul lands.",
+    "quest.mining.minesDeepDive.step.reach": "Reach floor {{floor}} of the Mines.",
+    "quest.mining.minesDeepDive.step.ship": "Ship {{count}} ore or stone through the bin.",
+
+    "mail.mining.deepDiveReward.body": "Dear farmer,^^Your haul came through clean. The Guild had everything smelted overnight and ran the numbers. Here's your share of the bars - {{count}} {{bar}}, payment in full. There's plenty more work like this if you're up for it.^^  -Marlon",
+
+    "quest.farming.pierresStockUp.title": "Pierre's stock-up",
+    "quest.farming.pierresStockUp.description": "Pierre's running low on a few seasonal staples for the store. He's asking for {{count}} each of {{item1}}, {{item2}}, and {{item3}}. Bring them by the shop when you can - he'll knock the price down on the seeds for those crops in return.",
+    "quest.farming.pierresStockUp.step.deliver": "Bring {{count}} {{item}} to {{npc}}.",
+    "quest.farming.pierresStockUp.targetMessage": "Wonderful, that'll keep the shelves stocked. I've marked down the seeds for those crops as a thank-you.",
+
+    "quest.reward.line.shopDiscount": "{{npc}} will mark down their shop {{percent}}% for {{days}} day(s)"
 }

@@ -233,6 +233,42 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return false;
     }
 
+    /// Called by the framework when the player's deepest reached mine/skull-cavern level
+    /// might have advanced (DayStarted, or after warping out of a MineShaft). Each active
+    /// `ReachLevel` step compares its target floor against the relevant counter:
+    /// `Mine` → `min(120, deepestMineLevel)`; `SkullCavern` → `max(0, deepestMineLevel - 120)`.
+    public void ObserveReachLevel(int deepestMineLevel)
+    {
+        if (completed.Value)
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.ReachLevel) continue;
+
+            string target = step.Targets.Count > 0 ? step.Targets[0] : "Mine";
+            int currentFloor = target.Replace(" ", "").ToLowerInvariant() switch
+            {
+                "skullcavern" => Math.Max(0, deepestMineLevel - 120),
+                _ => Math.Min(120, deepestMineLevel)
+            };
+
+            if (currentFloor >= step.Count)
+            {
+                step.Progress = step.Count;
+                MarkStepDone(i, step);
+            }
+            else if (currentFloor != step.Progress)
+            {
+                step.Progress = currentFloor;
+                Persist(i, step);
+                reloadObjective();
+            }
+        }
+    }
+
     /// Called by the framework's DayEnding observer with the farm shipping bin contents.
     /// Each active `Ship` step counts matching items independently.
     public void ObserveShippingBin(IList<Item> bin)
