@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MoreQuestsFramework.Consequences;
 
 namespace MoreQuestsFramework.State;
 
@@ -63,6 +64,12 @@ public sealed class FrameworkState
     /// matching `Data/Shops/<ShopId>` items at lookup time and is dropped on `DayStarted`
     /// once the in-game day passes `ExpiresAfterDay`.
     public List<ActiveShopDiscount> ActiveShopDiscounts { get; set; } = new();
+
+    /// Pending consequence dialogue lines, queued by `ConsequenceEngine.Apply` on quest
+    /// completion and popped by `ConsequenceDialogueWatcher` the next time the player
+    /// chats with the named NPC. Tier 3 chains span multiple entries with stepping
+    /// `EarliestFireDay` values so one line surfaces per day.
+    public List<DialogueQueueEntry> PendingConsequenceLines { get; set; } = new();
 }
 
 /// One in-flight shop discount. Persisted in framework save state so the price reduction

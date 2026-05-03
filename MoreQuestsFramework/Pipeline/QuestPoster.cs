@@ -240,6 +240,8 @@ public sealed class QuestPoster
             stash.AlternativeObjectiveItemWeights.Add(w);
         foreach (var r in posting.Rewards)
             stash.EncodedRewards.Add(RewardCodec.Encode(r));
+        if (posting.Consequence != null && posting.Consequence.Tier != Consequences.ConsequenceTier.Tier0)
+            stash.EncodedConsequence = RewardCodec.EncodeConsequence(posting.Consequence);
 
         // Replace any prior stash with the same mailKey (re-fire on the same day).
         _state.PendingMailDeliveries.RemoveAll(s => s.MailKey == mailKey);
@@ -279,6 +281,8 @@ public sealed class QuestPoster
             if (spec != null)
                 posting.Rewards.Add(spec);
         }
+        if (!string.IsNullOrEmpty(stash.EncodedConsequence))
+            posting.Consequence = RewardCodec.DecodeConsequence(new[] { stash.EncodedConsequence });
 
         var quest = QuestFactory.Build(posting);
         if (quest == null)
@@ -321,7 +325,7 @@ public sealed class QuestPoster
             quest.moneyReward.Value = money;
 
         if (quest is IRewardedQuest rewarded)
-            RewardApplier.EncodeInto(rewarded.SerializedRewards, posting.Rewards);
+            RewardApplier.EncodeInto(rewarded.SerializedRewards, posting.Rewards, posting.Consequence);
     }
 
     /// Appends a "Reward: ..." footer to the description so the quest log shows it inline,

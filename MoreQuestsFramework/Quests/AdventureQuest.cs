@@ -317,6 +317,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         if (completed.Value)
             return;
         RewardApplier.ApplyEncoded(serializedRewards);
+        RewardApplier.FireEncodedConsequence(serializedRewards);
         base.questComplete();
     }
 

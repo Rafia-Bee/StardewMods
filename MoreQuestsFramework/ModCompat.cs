@@ -8,7 +8,12 @@ public static class ModCompat
     public const string RidgesideVillage = "Rafseazz.RidgesideVillage";
     public const string EastScarp = "FlashShifter.EastScarpMod";
     public const string VisitMountVapius = "FlashShifter.VisitMountVapius";
-    public const string StardewValleyExpanded = "FlashShifter.StardewValleyExpanded";
+    /// SVE ships as two mods: a C# mod (`FlashShifter.SVECode`) plus a CP content pack
+    /// (`FlashShifter.StardewValleyExpandedCP`). The C# mod is the authoritative one —
+    /// it's what places SVE NPCs (MarlonFay, MorrisTod, Lance, etc.) into the world.
+    /// Earlier versions of this constant used `FlashShifter.StardewValleyExpanded` which
+    /// matches neither install ID and silently dropped every SVE-gated dispatch entry.
+    public const string StardewValleyExpanded = "FlashShifter.SVECode";
     public const string EliAndDylan = "Devilduke.EliandDylan";
     public const string LurkingInTheDark = "drbirbdev.LurkingInTheDark";
     public const string SiExtraCraftingMaterials = "Si.ExtraCraftingMaterials";

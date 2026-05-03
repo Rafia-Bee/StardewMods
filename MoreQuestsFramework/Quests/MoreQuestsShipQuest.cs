@@ -62,6 +62,7 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
         if (completed.Value)
             return;
         RewardApplier.ApplyEncoded(serializedRewards);
+        RewardApplier.FireEncodedConsequence(serializedRewards);
         base.questComplete();
     }
 

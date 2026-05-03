@@ -4,6 +4,7 @@ using System.Linq;
 using MoreQuestsFramework;
 using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Dispatch;
 using MoreQuestsFramework.Pipeline;
 using MoreQuestsFramework.Quests;
@@ -42,6 +43,7 @@ internal static class Generators
         fw.RegisterGenerator("SkullCavernDeepDive", SkullCavernDeepDive);
         fw.RegisterGenerator("MinesDeepDive", MinesDeepDive);
         fw.RegisterGenerator("PierresStockUp", PierresStockUp);
+        fw.RegisterGenerator("MassiveHarvestRequest", MassiveHarvestRequest);
     }
 
     // -------------------- Farming --------------------
@@ -1368,5 +1370,70 @@ internal static class Generators
                 return "(O)" + seedId;
         }
         return null;
+    }
+
+    // -------------------- Phase 9a: Massive Harvest Request --------------------
+
+    /// CSV row 48. Daily-board single-objective Ship quest. Morris (JojaMart manager)
+    /// asks the farmer to dump `qty` of one seasonal crop into the farm shipping bin;
+    /// vanilla sells the items normally and the framework's DayEnding observer credits
+    /// the count. Reward = `RewardMultiplierBelowSell` of the crop's price (Joja pays
+    /// below sell so the headline gold figure looks high while the crop's lost-value
+    /// brings it back near break-even).
+    ///
+    /// Tier 1 consequence keyed off `Data/NPCGiftTastes`: villagers who love the chosen
+    /// crop comment positively + gain `+FriendshipBasic`; villagers who hate it
+    /// comment negatively + lose `-FriendshipBasic`. Lines are pre-resolved against
+    /// the content mod's i18n at build-time so the persisted dialogue queue holds
+    /// plain strings.
+    private static QuestPosting? MassiveHarvestRequest(QuestContext ctx)
+    {
+        if (Game1.player.FarmingLevel < 7)
+            return null; // CSV labels this Expert (Skill 10); start surfacing it once the
+                         // farmer is plausibly in the late-game band.
+
+        // JojaCorpRep dispatcher pool covers both vanilla Morris and SVE's MorrisTod.
+        // Returns null on Community-Center-route saves where neither character exists.
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.JojaCorpRep);
+        if (giver == null)
+            return null;
+
+        var crops = ctx.Items.GetSeasonalCrops(ctx.Season);
+        if (crops.Count == 0)
+            return null;
+
+        var crop = crops[Game1.random.Next(crops.Count)];
+        int qty = Math.Max(ModEntry.Config.CropMassiveQty, 30 + 5 * Game1.player.FarmingLevel);
+        int basePrice = Math.Max(crop.SellPrice, 30);
+        int gold = (int)(basePrice * qty * ctx.Config.RewardMultiplierBelowSell);
+
+        var consequence = ModEntry.Config.ConsequencesEnabled
+            ? new ConsequenceSpec
+            {
+                Tier = ConsequenceTier.Tier1,
+                Source = ConsequenceSource.GiftTastes,
+                Subject = crop.QualifiedItemId,
+                LovedLine = ModEntry.I18n.Get("quest.farming.massiveHarvest.consequence.loved", new { item = crop.DisplayName }),
+                HatedLine = ModEntry.I18n.Get("quest.farming.massiveHarvest.consequence.hated", new { item = crop.DisplayName, npc = giver })
+            }
+            : null;
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Farming,
+            Tier = DifficultyTier.Expert,
+            QuestType = BoardQuestType.Ship,
+            QuestGiver = giver,
+            ObjectiveItemId = crop.QualifiedItemId,
+            ObjectiveItemName = crop.DisplayName,
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            Rewards = { new MoneyReward(gold) },
+            Consequence = consequence,
+            Title = ModEntry.I18n.Get("quest.farming.massiveHarvest.title"),
+            Description = ModEntry.I18n.Get("quest.farming.massiveHarvest.description", new { npc = giver, qty, item = crop.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.farming.massiveHarvest.objective", new { qty, item = crop.DisplayName }),
+            TargetMessage = ModEntry.I18n.Get("quest.farming.massiveHarvest.targetMessage")
+        };
     }
 }

@@ -29,15 +29,31 @@ public static class RewardApplier
     public static System.Action<ShopDiscountReward>? OnShopDiscountGranted { get; set; }
 
     /// Applies every reward in the encoded list to the active player. Designed for
-    /// `Quest.questComplete()` overrides on our custom subclasses.
+    /// `Quest.questComplete()` overrides on our custom subclasses. Consequence-spec
+    /// lines (`Consequence|...`) are ignored here — they're forwarded to the
+    /// `ConsequenceEngine` separately via `FireEncodedConsequence`.
     public static void ApplyEncoded(IEnumerable<string> encoded)
     {
         foreach (var line in encoded)
         {
+            if (RewardCodec.IsConsequenceLine(line))
+                continue;
             var spec = RewardCodec.Decode(line);
             if (spec != null)
                 ApplyOne(spec);
         }
+    }
+
+    /// Decodes the consequence line (if any) from the encoded list and forwards it to
+    /// the active `ConsequenceEngine`. Called from custom Quest subclasses' `questComplete()`
+    /// overrides alongside `ApplyEncoded` so the consequence fires on the same event as
+    /// reward payout. No-ops gracefully when the engine isn't wired (e.g. authoring tests).
+    public static void FireEncodedConsequence(IEnumerable<string> encoded)
+    {
+        var spec = RewardCodec.DecodeConsequence(encoded);
+        if (spec == null)
+            return;
+        Consequences.ConsequenceEngine.Active?.Apply(spec);
     }
 
     /// Applies a single reward spec. Public so generators / tests can fire individual
@@ -50,8 +66,10 @@ public static class RewardApplier
 
     /// Encodes the non-Money rewards in `rewards` into `target`, replacing existing
     /// entries. Money rewards are skipped because they're paid by vanilla via
-    /// `Quest.moneyReward` instead.
-    public static void EncodeInto(NetStringList target, IEnumerable<RewardSpec> rewards)
+    /// `Quest.moneyReward` instead. When `consequence` is non-null, its encoded form
+    /// is appended as a `Consequence|...` line so the same NetStringList carries both
+    /// reward + consequence state through save/reload.
+    public static void EncodeInto(NetStringList target, IEnumerable<RewardSpec> rewards, Consequences.ConsequenceSpec? consequence = null)
     {
         target.Clear();
         foreach (var r in rewards)
@@ -60,6 +78,8 @@ public static class RewardApplier
                 continue;
             target.Add(RewardCodec.Encode(r));
         }
+        if (consequence != null && consequence.Tier != Consequences.ConsequenceTier.Tier0)
+            target.Add(RewardCodec.EncodeConsequence(consequence));
     }
 
     /// Total of all `MoneyReward` entries, summed. Routed into `Quest.moneyReward` at
