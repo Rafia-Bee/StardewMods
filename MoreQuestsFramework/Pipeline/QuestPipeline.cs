@@ -40,7 +40,12 @@ public sealed class QuestPipeline
         var pool = new List<(IQuestDefinition Def, int Weight)>();
         foreach (var def in _registry.All)
         {
-            if (def.Source != TriggerSource.DailyBoard || def.Kind != PostingKind.DailyBoard)
+            // Effective source consults `OverrideTriggerSource` first so a quest authored
+            // as `CustomBoard` (or vice versa) can flip routing at runtime without
+            // re-registration. `Kind` (delivery channel) is unaffected by the override —
+            // both `DailyBoard` and `CustomBoard` sources resolve to `PostingKind.DailyBoard`
+            // delivery, so the existing `Kind` field on `def` still validates.
+            if (_registry.EffectiveSource(def) != TriggerSource.DailyBoard || def.Kind != PostingKind.DailyBoard)
                 continue;
             if (!def.IsAvailable(_ctx))
                 continue;
@@ -114,14 +119,15 @@ public sealed class QuestPipeline
         var results = new List<QuestPosting>();
         foreach (var def in _registry.All)
         {
-            if (def.Source == TriggerSource.DailyBoard
-                || def.Source == TriggerSource.NpcDialogue
-                || def.Source == TriggerSource.SpecialOrder
-                || def.Source == TriggerSource.CustomBoard)
+            var src = _registry.EffectiveSource(def);
+            if (src == TriggerSource.DailyBoard
+                || src == TriggerSource.NpcDialogue
+                || src == TriggerSource.SpecialOrder
+                || src == TriggerSource.CustomBoard)
                 continue;
             if (!def.IsAvailable(_ctx))
                 continue;
-            if (!_triggers.ShouldFireToday(def.Id, def.Source, def.Trigger, def.CooldownDays))
+            if (!_triggers.ShouldFireToday(def.Id, src, def.Trigger, def.CooldownDays))
                 continue;
 
             var posting = def.Build(_ctx);
@@ -146,11 +152,12 @@ public sealed class QuestPipeline
         var results = new List<QuestPosting>();
         foreach (var def in _registry.All)
         {
-            if (def.Source != TriggerSource.SpecialOrder)
+            var src = _registry.EffectiveSource(def);
+            if (src != TriggerSource.SpecialOrder)
                 continue;
             if (!def.IsAvailable(_ctx))
                 continue;
-            if (!_triggers.ShouldFireToday(def.Id, def.Source, def.Trigger, def.CooldownDays))
+            if (!_triggers.ShouldFireToday(def.Id, src, def.Trigger, def.CooldownDays))
                 continue;
 
             var posting = def.Build(_ctx);
@@ -188,11 +195,13 @@ public sealed class QuestPipeline
             return result;
 
         // Gather every CustomBoard-source definition once so the per-board passes only
-        // re-evaluate availability + cooldown filters.
+        // re-evaluate availability + cooldown filters. Routes through `EffectiveSource`
+        // so an `OverrideTriggerSource` flip pulls the quest in/out of the custom-board
+        // pool the same day the override is set.
         var allDefs = new List<IQuestDefinition>();
         foreach (var def in _registry.All)
         {
-            if (def.Source != TriggerSource.CustomBoard)
+            if (_registry.EffectiveSource(def) != TriggerSource.CustomBoard)
                 continue;
             allDefs.Add(def);
         }
@@ -286,7 +295,7 @@ public sealed class QuestPipeline
         var queue = new List<(IQuestDefinition, string)>();
         foreach (var def in _registry.All)
         {
-            if (def.Source != TriggerSource.NpcDialogue)
+            if (_registry.EffectiveSource(def) != TriggerSource.NpcDialogue)
                 continue;
             if (string.IsNullOrEmpty(def.Trigger.Npc))
                 continue;

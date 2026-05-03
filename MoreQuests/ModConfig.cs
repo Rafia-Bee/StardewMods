@@ -13,6 +13,14 @@ public sealed class ModConfig
     public bool AnimalQuestsEnabled { get; set; } = true;
     public bool SecretGiftHintEnabled { get; set; } = true;
 
+    /// When on (default), an Adventurer's Guild board renders at the Mine entrance and
+    /// hosts the mining + monster quests (Mines / Skull Cavern Deep Dive, Basic Slime
+    /// Clearing, Vanilla monster eradication); the help-wanted board only sees Bar
+    /// Delivery from the mining category. When off, the guild board is hidden entirely
+    /// and every guild-tagged quest falls back to the help-wanted board so the content
+    /// stays reachable. Per-quest weights still gate individual quests on top of this.
+    public bool EnableAdventurersGuildBoard { get; set; } = true;
+
     // ----- Shop discounts -----
     public int ShopDiscountPercent { get; set; } = 50;
     public int ShopDiscountDurationDays { get; set; } = 2;

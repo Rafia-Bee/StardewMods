@@ -1,4 +1,5 @@
 using System;
+using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Api;
@@ -47,4 +48,13 @@ public interface IMoreQuestsModApi
     /// Reads a `boards.json` bundled inside this mod's folder (relative to the mod
     /// directory) and registers each entry. Mirrors `LoadQuestsFromMod` for boards.
     void LoadBoardsFromMod(IModHelper helper, string relativePath);
+
+    /// Re-routes an already-registered quest to a different `TriggerSource`. The override
+    /// is consulted by the pipeline instead of the definition's declared `Source`, so a
+    /// quest authored as `CustomBoard` can be flipped to `DailyBoard` (or vice versa) at
+    /// runtime without re-registering. Useful for player-toggleable routing — e.g. a
+    /// content mod's "enable Adventurer's Guild board" config flag flipping the guild's
+    /// quest pool back to the help-wanted board when off so the content stays reachable.
+    /// No-ops with a warning if no quest with that id is registered.
+    void OverrideTriggerSource(string definitionId, TriggerSource source);
 }

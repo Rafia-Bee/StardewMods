@@ -2,6 +2,7 @@ using System;
 using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Dispatch;
 using MoreQuestsFramework.Registry;
+using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Api;
@@ -78,4 +79,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
 
     public void LoadBoardsFromMod(IModHelper helper, string relativePath)
         => _boardLoader.LoadFromMod(helper, Owner, relativePath);
+
+    public void OverrideTriggerSource(string definitionId, TriggerSource source)
+        => _registry.OverrideSource(definitionId, source);
 }
