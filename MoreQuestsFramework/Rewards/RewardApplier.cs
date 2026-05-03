@@ -28,6 +28,11 @@ public static class RewardApplier
     /// that case (test / generator authoring scenarios won't have a save to write to).
     public static System.Action<ShopDiscountReward>? OnShopDiscountGranted { get; set; }
 
+    /// Same shape as `OnShopDiscountGranted` for `FestivalBiasReward`. Wired by the
+    /// `FestivalBiasWriter` at save-load so the static `Apply` path reaches per-save state
+    /// without each reward record knowing about it. Null when no save is loaded.
+    public static System.Action<FestivalBiasReward>? OnFestivalBiasGranted { get; set; }
+
     /// Applies every reward in the encoded list to the active player. Designed for
     /// `Quest.questComplete()` overrides on our custom subclasses. Consequence-spec
     /// lines (`Consequence|...`) are ignored here — they're forwarded to the
@@ -154,6 +159,15 @@ public static class RewardApplier
                 .Default($"{giver} will mark down their shop {r.PercentOff}% for {r.DurationDays} day(s)").ToString());
         }
 
+        foreach (var r in rewards.OfType<FestivalBiasReward>())
+        {
+            if (r.Magnitude <= 0)
+                continue;
+            string festivalKey = r.Festival == FestivalKind.Luau ? "luau" : "fair";
+            lines.Add(translation.Get($"quest.reward.line.festivalBias.{festivalKey}", new { npc = giver })
+                .Default($"{giver}'s help will tilt the {festivalKey} judging in your favour").ToString());
+        }
+
         if (lines.Count == 0)
             return string.Empty;
 
@@ -203,6 +217,12 @@ public static class RewardApplier
                 if (string.IsNullOrEmpty(sd.ShopId) || sd.PercentOff <= 0 || sd.DurationDays <= 0)
                     return;
                 OnShopDiscountGranted?.Invoke(sd);
+                break;
+
+            case FestivalBiasReward fb:
+                if (fb.Magnitude <= 0)
+                    return;
+                OnFestivalBiasGranted?.Invoke(fb);
                 break;
 
             case MailReward ml:

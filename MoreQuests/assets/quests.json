@@ -294,6 +294,40 @@
                 "Available": { "MinDeepestMineLevel": "40" }
             },
             "Generator": "MonsterParts"
+        },
+        {
+            "Name": "Foraging.ForageWithLinus",
+            "Category": "Foraging",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 20,
+                "MaxPerDay": 1,
+                "CooldownDays": 14,
+                "Available": { "NpcExists": "Linus", "NpcMet": "Linus" }
+            },
+            "Generator": "ForageWithLinus"
+        },
+        {
+            "Name": "Festival.GusFall",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "fall 8",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Gus" }
+            },
+            "Generator": "GusFestivalFeastFall"
+        },
+        {
+            "Name": "Festival.GusSummer",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "summer 8",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Gus" }
+            },
+            "Generator": "GusFestivalFeastSummer"
         }
     ]
 }

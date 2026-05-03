@@ -49,6 +49,7 @@ public sealed class ModEntry : Mod
     private MailQuestRegistry _mailQuests = null!;
     private SpecialOrderWriter? _specialOrderWriter;
     private ShopDiscountWriter? _shopDiscountWriter;
+    private FestivalBiasWriter? _festivalBiasWriter;
     private ConsequenceEngine? _consequenceEngine;
     private ConsequenceDialogueWatcher? _consequenceWatcher;
 
@@ -85,6 +86,8 @@ public sealed class ModEntry : Mod
         _shopDiscountWriter = new ShopDiscountWriter(helper, Monitor);
         _shopDiscountWriter.Register();
 
+        _festivalBiasWriter = new FestivalBiasWriter(Monitor);
+
         _mailQuests = new MailQuestRegistry();
 
         var harmony = new Harmony(ModManifest.UniqueID);
@@ -93,6 +96,7 @@ public sealed class ModEntry : Mod
         AdventureQuestPatches.Apply(harmony);
         SpecialOrdersBoardPatches.Apply(harmony, Monitor, _specialOrderWriter);
         ConsequenceDialoguePatches.Apply(harmony, Monitor);
+        FestivalBiasPatches.Apply(harmony, Monitor);
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -220,6 +224,7 @@ public sealed class ModEntry : Mod
         _poster!.WireMailDelivery(_mailQuests, _stateStore.State);
         _specialOrderWriter?.WireState(_stateStore.State);
         _shopDiscountWriter?.WireState(_stateStore.State);
+        _festivalBiasWriter?.WireState(_stateStore.State);
         // Always invalidate the shop cache after wiring state — discounts loaded from the
         // save would otherwise sit dormant until something else triggers the next read.
         if (_stateStore.State.ActiveShopDiscounts.Count > 0)
@@ -390,6 +395,10 @@ public sealed class ModEntry : Mod
         // Sweep expired ShopDiscount entries; invalidate the shop cache when something
         // dropped off so the asset edit picks up the smaller list.
         SweepShopDiscounts();
+
+        // Sweep expired FestivalBias entries so the patches stay fast on saves where the
+        // player accepted a feast quest months ago and never made it to the festival.
+        _festivalBiasWriter?.SweepExpired();
 
         _api.FireDayRefreshed(daily.Count, triggered.Count);
     }

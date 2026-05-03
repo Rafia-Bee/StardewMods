@@ -70,6 +70,31 @@ public sealed class FrameworkState
     /// chats with the named NPC. Tier 3 chains span multiple entries with stepping
     /// `EarliestFireDay` values so one line surfaces per day.
     public List<DialogueQueueEntry> PendingConsequenceLines { get; set; } = new();
+
+    /// Active festival-bias rewards waiting to be consumed at their festival's judging
+    /// hook (Luau governor reaction, Fair grange judging). One entry per granted reward;
+    /// the Luau / Fair patches read and remove the relevant entry once the bias has been
+    /// applied. Expired entries get swept on `DayStarted`.
+    public List<ActiveFestivalBias> ActiveFestivalBiases { get; set; } = new();
+}
+
+/// One in-flight festival bias granted by a `FestivalBiasReward`. Persisted to per-save
+/// state so a quest completed days before the festival still nudges the outcome on the
+/// festival day.
+public sealed class ActiveFestivalBias
+{
+    /// `"Luau"` or `"Fair"`. Stringly-typed so the enum can move without breaking save
+    /// compat — the readers tolerate unknown values by skipping them.
+    public string Festival { get; set; } = "";
+
+    /// How strong the bias is. Luau treats this as tier-bump steps (clamped 0..5);
+    /// Fair adds it directly to `grangeScore`.
+    public int Magnitude { get; set; }
+
+    /// `Game1.Date.TotalDays` after which the bias gets dropped on the next sweep.
+    /// Set generously to the festival day plus a small grace so a save loaded mid-festival
+    /// still has the entry available.
+    public int ExpiresAfterDay { get; set; }
 }
 
 /// One in-flight shop discount. Persisted in framework save state so the price reduction

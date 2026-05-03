@@ -50,6 +50,9 @@ internal static class Generators
         fw.RegisterGenerator("MediumFishingHaul", MediumFishingHaul);
         fw.RegisterGenerator("SeafoodNight", SeafoodNight);
         fw.RegisterGenerator("MonsterParts", MonsterParts);
+        fw.RegisterGenerator("ForageWithLinus", ForageWithLinus);
+        fw.RegisterGenerator("GusFestivalFeastFall", GusFestivalFeastFall);
+        fw.RegisterGenerator("GusFestivalFeastSummer", GusFestivalFeastSummer);
     }
 
     // -------------------- Farming --------------------
@@ -2029,6 +2032,246 @@ internal static class Generators
             targets.Add(npc);
         }
         return targets;
+    }
+
+    // -------------------- Phase 9d: Forage with Linus --------------------
+
+    /// CSV row 27. Daily-board, Linus giver, single-step `GiftUniqueNpcs` objective: gift a
+    /// forage-category item that the recipient loves or likes to 5 distinct NPCs. Reward is
+    /// `FriendshipLarge` with Linus only — no consequence engine wiring needed since the
+    /// gift recipients already get the standard friendship boost from vanilla's gift flow.
+    /// Quest gates on Linus being met (no point posting a "deliver gifts on Linus's behalf"
+    /// quest before the player has met Linus).
+    private static QuestPosting? ForageWithLinus(QuestContext ctx)
+    {
+        if (Game1.getCharacterFromName("Linus") == null)
+            return null;
+
+        const int recipientCount = 5;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "GiftForage",
+                Kind = AdventureStepKind.GiftUniqueNpcs,
+                // Empty Targets = any villager qualifies. The handler enforces the
+                // "loved or liked by recipient" + "$forage tagged item" filter at gift-time.
+                Items = new List<string> { "$forage" },
+                Count = recipientCount,
+                Description = ModEntry.I18n.Get("quest.foraging.forageWithLinus.step.gift", new { count = recipientCount })
+            }
+        }, giver: "Linus");
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Foraging,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = "Linus",
+            ObjectiveQuantity = recipientCount,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            Rewards = { new FriendshipReward("Linus", ctx.Config.FriendshipLarge) },
+            Title = ModEntry.I18n.Get("quest.foraging.forageWithLinus.title"),
+            Description = ModEntry.I18n.Get("quest.foraging.forageWithLinus.description", new { count = recipientCount }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    // -------------------- Phase 9d: Gus's Festival Feasts (Fall + Summer) --------------------
+
+    /// Curated vanilla fall ingredients. CSV row 31 calls for a "large" delivery; we keep
+    /// the pool focused on items the player can plausibly produce or forage by Fall 8.
+    private static readonly (string Id, string Name)[] FallIngredientPool =
+    {
+        ("(O)24", "Parsnip"),
+        ("(O)266", "Red Cabbage"),
+        ("(O)272", "Eggplant"),
+        ("(O)270", "Corn"),
+        ("(O)276", "Pumpkin"),
+        ("(O)278", "Bok Choy"),
+        ("(O)408", "Hazelnut"),
+        ("(O)404", "Common Mushroom")
+    };
+
+    /// Vanilla fall-themed sample dishes Gus could plausibly hand back from his Fair
+    /// taste-testing. Picked for ingredients in the fall pool above.
+    private static readonly (string Id, string Name)[] FallSampleDishPool =
+    {
+        ("(O)205", "Fried Mushroom"),
+        ("(O)225", "Fried Eel"),
+        ("(O)240", "Farmer's Lunch"),
+        ("(O)244", "Roots Platter"),
+        ("(O)457", "Vegetable Medley"),
+        ("(O)607", "Roasted Hazelnuts"),
+        ("(O)608", "Pumpkin Pie")
+    };
+
+    /// Vanilla summer-themed dishes — ingredients that can be sourced by Summer 8 on a
+    /// first-year save. Tighter than Fall because the trigger is earlier in the season.
+    private static readonly (string Id, string Name)[] SummerIngredientPool =
+    {
+        ("(O)190", "Cauliflower"),
+        ("(O)20", "Leek"),
+        ("(O)188", "Green Bean"),
+        ("(O)24", "Parsnip"),
+        ("(O)252", "Rhubarb"),
+        ("(O)254", "Melon"),
+        ("(O)256", "Tomato"),
+        ("(O)258", "Blueberry"),
+        ("(O)260", "Hot Pepper"),
+        ("(O)262", "Wheat"),
+        ("(O)16", "Wild Horseradish")
+    };
+
+    /// Fall 8 prep for the Stardew Valley Fair. CSV row 31. Multi-step Adventure: deliver
+    /// `GusFestivalFeastIngredientCount` distinct fall ingredients to Gus. Reward = a sample
+    /// dish via `ObjectReward` plus a `FestivalBias` Fair magnitude — the bias bumps the
+    /// player's grange score on Fall 16. Tier = Intermediate per the CSV.
+    private static QuestPosting? GusFestivalFeastFall(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+        if (Game1.getCharacterFromName("Gus") == null)
+            return null;
+
+        int ingredientCount = ModEntry.Config.GusFestivalFeastIngredientCount;
+        var picks = PickDistinctIngredients(ctx, FallIngredientPool, ingredientCount);
+        if (picks.Count == 0)
+            return null;
+        var sampleDish = PickSample(ctx, FallSampleDishPool);
+        if (sampleDish == null)
+            return null;
+
+        int qty = ctx.Config.DifficultyScaling
+            ? Math.Max(3, 2 * Game1.player.FarmingLevel)
+            : 5;
+
+        var steps = new List<AdventureStepState>(picks.Count);
+        for (int i = 0; i < picks.Count; i++)
+        {
+            steps.Add(new AdventureStepState
+            {
+                Name = "DeliverIngredient" + i,
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { "Gus" },
+                Items = new List<string> { picks[i].QualifiedItemId },
+                Count = qty,
+                Description = ModEntry.I18n.Get("quest.festival.gusFall.step.deliver", new { count = qty, item = picks[i].DisplayName })
+            });
+        }
+
+        var quest = new AdventureQuest();
+        quest.Initialize(steps, giver: "Gus", completionDialogue: ModEntry.I18n.Get("quest.festival.gusFall.targetMessage", new { dish = sampleDish.DisplayName }));
+
+        string ingredientList = string.Join(", ", picks.Select(p => p.DisplayName));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = "Gus",
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            Rewards =
+            {
+                new ObjectReward(sampleDish.QualifiedItemId),
+                new FestivalBiasReward(FestivalKind.Fair, ModEntry.Config.FestivalBiasFairMagnitude)
+            },
+            Title = ModEntry.I18n.Get("quest.festival.gusFall.title"),
+            Description = ModEntry.I18n.Get("quest.festival.gusFall.description", new { count = qty, ingredients = ingredientList }),
+            TargetMessage = ModEntry.I18n.Get("quest.festival.gusFall.targetMessage", new { dish = sampleDish.DisplayName }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Summer 8 prep for the Luau (Summer 11). CSV row 32. Multi-step Adventure: deliver 3
+    /// summer/spring-themed ingredients to Gus. Reward = `FestivalBias` Luau magnitude only
+    /// — no sample dish, since the CSV explicitly calls out "Festival Bonus" as the only
+    /// reward kind (a higher base potluck score). Tier = Intermediate.
+    private static QuestPosting? GusFestivalFeastSummer(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+        if (Game1.getCharacterFromName("Gus") == null)
+            return null;
+
+        int ingredientCount = ModEntry.Config.GusFestivalFeastIngredientCount;
+        var picks = PickDistinctIngredients(ctx, SummerIngredientPool, ingredientCount);
+        if (picks.Count == 0)
+            return null;
+
+        int qty = ctx.Config.DifficultyScaling
+            ? Math.Max(3, 2 * Game1.player.FarmingLevel)
+            : 5;
+
+        var steps = new List<AdventureStepState>(picks.Count);
+        for (int i = 0; i < picks.Count; i++)
+        {
+            steps.Add(new AdventureStepState
+            {
+                Name = "DeliverIngredient" + i,
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { "Gus" },
+                Items = new List<string> { picks[i].QualifiedItemId },
+                Count = qty,
+                Description = ModEntry.I18n.Get("quest.festival.gusSummer.step.deliver", new { count = qty, item = picks[i].DisplayName })
+            });
+        }
+
+        var quest = new AdventureQuest();
+        quest.Initialize(steps, giver: "Gus", completionDialogue: ModEntry.I18n.Get("quest.festival.gusSummer.targetMessage"));
+
+        string ingredientList = string.Join(", ", picks.Select(p => p.DisplayName));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = "Gus",
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards =
+            {
+                new FestivalBiasReward(FestivalKind.Luau, ModEntry.Config.FestivalBiasLuauMagnitude)
+            },
+            Title = ModEntry.I18n.Get("quest.festival.gusSummer.title"),
+            Description = ModEntry.I18n.Get("quest.festival.gusSummer.description", new { count = qty, ingredients = ingredientList }),
+            TargetMessage = ModEntry.I18n.Get("quest.festival.gusSummer.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Picks up to `count` distinct entries from `pool`, dropping any whose id doesn't
+    /// resolve (modded mismatch, Game1 not yet ready). Returns the resolved items in pick
+    /// order. May return fewer than `count` when the pool can't satisfy that many resolves.
+    private static List<ResolvedItem> PickDistinctIngredients(QuestContext ctx, (string Id, string Name)[] pool, int count)
+    {
+        var picks = new List<ResolvedItem>(count);
+        var indices = new List<int>(pool.Length);
+        for (int i = 0; i < pool.Length; i++)
+            indices.Add(i);
+        for (int i = 0; i < count && indices.Count > 0; i++)
+        {
+            int j = Game1.random.Next(indices.Count);
+            int poolIdx = indices[j];
+            indices.RemoveAt(j);
+            var resolved = ctx.Items.TryResolveItem(pool[poolIdx].Id);
+            if (resolved != null)
+                picks.Add(resolved);
+            else
+                i--; // try another
+        }
+        return picks;
+    }
+
+    private static ResolvedItem? PickSample(QuestContext ctx, (string Id, string Name)[] pool)
+    {
+        var (id, _) = pool[Game1.random.Next(pool.Length)];
+        return ctx.Items.TryResolveItem(id);
     }
 
     private static List<RewardSpec> DedupeFriendshipRewards(List<RewardSpec> rewards)

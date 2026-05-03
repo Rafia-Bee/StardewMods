@@ -16,6 +16,7 @@ public enum AdventureStepKind
     Deliver,
     Talk,
     Gift,
+    GiftUniqueNpcs,
     Catch,
     Slay,
     Ship,
