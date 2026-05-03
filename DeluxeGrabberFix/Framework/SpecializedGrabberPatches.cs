@@ -14,6 +14,13 @@ internal static class SpecializedGrabberPatches
     internal const string ModDataOriginalId = "Rafia.DGF/OriginalId";
     internal static bool IsGrabbingActive { get; set; }
 
+    // Conservative counter of placed specialized grabbers across all loaded locations.
+    // Lets Chest_addItem_Prefix early-out without touching modData when zero exist --
+    // every Chest.addItem call in the game (player chests, mini-fridges, Automate's
+    // batched IO, ChestsAnywhere reads) goes through this prefix. Maintained
+    // incrementally via OnObjectListChanged and recounted on save load / title return.
+    internal static int SpecializedGrabberCount { get; set; }
+
     internal static bool MinutesElapsed_Prefix(Object __instance)
     {
         if (__instance.QualifiedItemId != BigCraftableIds.AutoGrabber)
@@ -97,6 +104,13 @@ internal static class SpecializedGrabberPatches
     // types reject so the caller falls through to the next (BC)165 or drops the item on the ground.
     internal static bool Chest_addItem_Prefix(Chest __instance, Item item, ref Item __result)
     {
+        // Fast skip when no specialized grabbers are loaded -- spares the modData
+        // dictionary lookup on every chest add in the game (Automate batches dozens
+        // per second on heavy modlists). Conservative: only skips when we're sure
+        // no chest in the world has the modData key.
+        if (SpecializedGrabberCount <= 0)
+            return true;
+
         if (!__instance.modData.TryGetValue(ModDataGrabberType, out string grabberType))
             return true;
 
