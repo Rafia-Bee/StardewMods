@@ -460,6 +460,7 @@ public class ModEntry : Mod
     {
         int converted = 0;
         int initialized = 0;
+        int total = 0;
         foreach (var location in GetAllLocations())
         {
             var toConvert = new List<KeyValuePair<Vector2, Object>>();
@@ -477,6 +478,7 @@ public class ModEntry : Mod
                 if (pair.Value.QualifiedItemId == BigCraftableIds.AutoGrabber
                     && pair.Value.modData.TryGetValue(SpecializedGrabberPatches.ModDataGrabberType, out string existingType))
                 {
+                    total++;
                     if (pair.Value.heldObject.Value is not StardewValley.Objects.Chest)
                     {
                         pair.Value.heldObject.Value = new StardewValley.Objects.Chest();
@@ -523,8 +525,10 @@ public class ModEntry : Mod
                     migChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
                 location.Objects.Add(tile, autoGrabber);
                 converted++;
+                total++;
             }
         }
+        SpecializedGrabberPatches.SpecializedGrabberCount = total;
         if (converted > 0)
             LogDebug($"Migrated {converted} old-format specialized grabber(s) to (BC)165 format");
         if (initialized > 0)
@@ -603,6 +607,7 @@ public class ModEntry : Mod
         _locations.ClearState();
         TownGarbageCanGrabber.ClearCache();
         ConfigManager.OnReturnedToTitle();
+        SpecializedGrabberPatches.SpecializedGrabberCount = 0;
         _gmcm.RebuildConfigMenu();
     }
 
@@ -641,7 +646,20 @@ public class ModEntry : Mod
                 autoGrabber.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
                 autoGrabber.modData[SpecializedGrabberPatches.ModDataOriginalId] = originalId;
                 e.Location.Objects.Add(tile, autoGrabber);
+                SpecializedGrabberPatches.SpecializedGrabberCount++;
                 LogDebug($"Placed {grabberType} grabber at {e.Location.Name} ({tile})");
+            }
+        }
+
+        // Track pickups so the Chest_addItem_Prefix early-out flag stays accurate.
+        // Counter is conservative: any drift only loses the optimization, never breaks
+        // protection (it fully resyncs on save load and title return).
+        foreach (var pair in e.Removed)
+        {
+            if (pair.Value?.modData.ContainsKey(SpecializedGrabberPatches.ModDataGrabberType) == true
+                && SpecializedGrabberPatches.SpecializedGrabberCount > 0)
+            {
+                SpecializedGrabberPatches.SpecializedGrabberCount--;
             }
         }
 
