@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Cache;
 using MoreQuestsFramework.Config;
+using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Dispatch;
 using MoreQuestsFramework.Patches;
@@ -48,6 +49,8 @@ public sealed class ModEntry : Mod
     private MailQuestRegistry _mailQuests = null!;
     private SpecialOrderWriter? _specialOrderWriter;
     private ShopDiscountWriter? _shopDiscountWriter;
+    private ConsequenceEngine? _consequenceEngine;
+    private ConsequenceDialogueWatcher? _consequenceWatcher;
 
     internal DispatchRegistry Dispatch { get; private set; } = null!;
     internal MoreQuestsApi Api => _api;
@@ -89,6 +92,7 @@ public sealed class ModEntry : Mod
         MailQuestPatches.Apply(harmony, _mailQuests, _api, Monitor);
         AdventureQuestPatches.Apply(harmony);
         SpecialOrdersBoardPatches.Apply(harmony, Monitor, _specialOrderWriter);
+        ConsequenceDialoguePatches.Apply(harmony, Monitor);
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -255,6 +259,16 @@ public sealed class ModEntry : Mod
             _registry, ctx, _stateStore.State, _api, Monitor,
             posting => _poster!.PrepareQuest(posting, daysLeft: Math.Max(1, posting.DeadlineDays)));
         _dialogueWatcher.Reset();
+
+        // Phase 9a: stand up the consequence engine + dialogue watcher per-save. Engine is
+        // exposed via a static `Active` so quest-subclass `questComplete` overrides can fire
+        // it from anywhere without threading an instance reference through every subclass.
+        _consequenceEngine = new ConsequenceEngine(Config, _dataCache, _stateStore.State, Monitor);
+        MoreQuestsFramework.Api.ConsequenceOverrides.ApplyTo(_consequenceEngine);
+        ConsequenceEngine.Active = _consequenceEngine;
+        _consequenceWatcher = new ConsequenceDialogueWatcher(_stateStore.State, Monitor);
+        _consequenceWatcher.Reset();
+        Patches.ConsequenceDialoguePatches.ActiveState = _stateStore.State;
 
         _watching.Clear();
         _seenInLog.Clear();
@@ -515,6 +529,7 @@ public sealed class ModEntry : Mod
             return;
 
         _dialogueWatcher?.Tick();
+        _consequenceWatcher?.Tick();
         // Grant FrameworkRewards for any framework-emitted SpecialOrder that completed
         // this tick. Bypasses vanilla's Data/SpecialOrders Rewards array entirely so
         // third-party content packs that mutate that array can't intercept the grant.

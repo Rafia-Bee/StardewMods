@@ -1,4 +1,5 @@
 using System;
+using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 
@@ -57,4 +58,13 @@ public interface IMoreQuestsModApi
     /// quest pool back to the help-wanted board when off so the content stays reachable.
     /// No-ops with a warning if no quest with that id is registered.
     void OverrideTriggerSource(string definitionId, TriggerSource source);
+
+    /// Replaces the built-in handler for `tier` with the supplied implementation. Useful
+    /// for content packs that want a different friendship-delta curve, dialogue-queue
+    /// cadence, or gold-loss formula than the framework defaults. The framework's seed
+    /// handlers are registered before `RegistrationOpen` fires, so a consumer-mod call
+    /// during registration cleanly takes precedence. Engine availability follows the
+    /// save lifecycle — calls before the first save load are buffered and applied to
+    /// each fresh engine when it stands up.
+    void RegisterConsequenceTier(ConsequenceTier tier, IConsequenceHandler handler);
 }

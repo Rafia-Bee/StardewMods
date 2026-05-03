@@ -37,6 +37,7 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
         if (completed.Value)
             return;
         RewardApplier.ApplyEncoded(serializedRewards);
+        RewardApplier.FireEncodedConsequence(serializedRewards);
         base.questComplete();
     }
 

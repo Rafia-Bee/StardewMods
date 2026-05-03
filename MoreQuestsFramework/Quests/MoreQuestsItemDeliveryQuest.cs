@@ -102,6 +102,7 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
         if (completed.Value)
             return;
         RewardApplier.ApplyEncoded(serializedRewards);
+        RewardApplier.FireEncodedConsequence(serializedRewards);
         base.questComplete();
     }
 }

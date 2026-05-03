@@ -156,5 +156,12 @@
     "quest.farming.pierresStockUp.step.deliver": "Bring {{count}} {{item}} to {{npc}}.",
     "quest.farming.pierresStockUp.targetMessage": "Wonderful, that'll keep the shelves stocked. I've marked down the seeds for those crops as a thank-you.",
 
+    "quest.farming.massiveHarvest.title": "Massive harvest request",
+    "quest.farming.massiveHarvest.description": "{{npc}} from JojaMart here. Our usual supplier botched the {{item}} order, so we're stuck with empty crates and a manager breathing down our necks. We need {{qty}} {{item}} into the shipping bin by the deadline, anything you can spare. JojaMart will pay above market for the load.",
+    "quest.farming.massiveHarvest.objective": "Ship {{qty}} {{item}} to JojaMart.",
+    "quest.farming.massiveHarvest.targetMessage": "Order received. JojaMart appreciates your cooperation.",
+    "quest.farming.massiveHarvest.consequence.loved": "I heard JojaMart finally got a decent batch of {{item}} in. Thank you for that - the store-bought stuff was always rubbish.",
+    "quest.farming.massiveHarvest.consequence.hated": "Why couldn't {{npc}} get better quality crops instead? I never eat {{item}}.",
+
     "quest.reward.line.shopDiscount": "{{npc}} will mark down their shop {{percent}}% for {{days}} day(s)"
 }

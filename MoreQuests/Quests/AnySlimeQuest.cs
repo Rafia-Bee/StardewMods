@@ -38,6 +38,7 @@ public sealed class AnySlimeQuest : SlayMonsterQuest, IRewardedQuest
         if (completed.Value)
             return;
         RewardApplier.ApplyEncoded(serializedRewards);
+        RewardApplier.FireEncodedConsequence(serializedRewards);
         base.questComplete();
     }
 

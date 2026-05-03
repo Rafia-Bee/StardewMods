@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Pipeline;
 using MoreQuestsFramework.Rewards;
 using StardewValley.Quests;
@@ -81,7 +82,10 @@ public sealed class QuestPosting
     /// poster routes them into the right fields at delivery time.
     public List<RewardSpec> Rewards { get; set; } = new();
 
-    public List<QuestConsequence> Consequences { get; set; } = new();
+    /// Optional Phase 9 consequence block. Fired by `ConsequenceEngine.Apply` from every
+    /// `IRewardedQuest.questComplete()` and `AdventureQuest.questComplete()` override.
+    /// Null = no consequence (the engine no-ops on a null spec or `Tier0`).
+    public ConsequenceSpec? Consequence { get; set; }
 
     /// Populated only when `Kind == PostingKind.SpecialOrder`. Carries the full
     /// `Data/SpecialOrders` shape for one entry (objectives + rewards + duration +
@@ -103,18 +107,3 @@ public sealed class QuestPosting
         Rewards.OfType<FriendshipReward>().FirstOrDefault(r => string.Equals(r.Npc, QuestGiver, System.StringComparison.OrdinalIgnoreCase));
 }
 
-public sealed class QuestConsequence
-{
-    public string NpcName { get; set; } = "";
-    public int FriendshipChange { get; set; }
-    public ConsequenceTier Tier { get; set; }
-    public string DialogueKey { get; set; } = "";
-}
-
-public enum ConsequenceTier
-{
-    Positive,
-    Mild,
-    Moderate,
-    Significant
-}

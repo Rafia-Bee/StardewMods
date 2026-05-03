@@ -214,6 +214,18 @@
                 "Available": { "SkillLevel": "Farming 4", "NpcExists": "Pierre" }
             },
             "Generator": "PierresStockUp"
+        },
+        {
+            "Name": "Farming.MassiveHarvest",
+            "Category": "Farming",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 15,
+                "MaxPerDay": 1,
+                "CooldownDays": 10,
+                "Available": { "SkillLevel": "Farming 7" }
+            },
+            "Generator": "MassiveHarvestRequest"
         }
     ]
 }

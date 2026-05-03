@@ -46,4 +46,10 @@ public sealed class StashedMailQuest
     /// Each reward is encoded via `RewardCodec.Encode` so the persisted record
     /// stays text-only — no polymorphic serializer required.
     public List<string> EncodedRewards { get; set; } = new();
+
+    /// Encoded consequence line (`Consequence|<base64-json>`) when the original posting
+    /// carried a `ConsequenceSpec`. Empty when the quest had no consequence. Round-trips
+    /// through the same NetStringList path on rehydrate so a mail letter sitting unread
+    /// at save time still fires its consequence on the eventual completion.
+    public string EncodedConsequence { get; set; } = "";
 }

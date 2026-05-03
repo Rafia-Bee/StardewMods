@@ -67,5 +67,13 @@ public static class NpcDispatch
         registry.Register(DispatchRoles.HeatWaveRelief, "Paula", ModCompat.RidgesideVillage);
 
         registry.Register(DispatchRoles.TownFestival, "Lewis");
+
+        // JojaCorpRep: vanilla Morris is the JojaMart manager; SVE renames the same
+        // character to MorrisTod (full body + dialogue + house). When SVE is loaded
+        // both entries are eligible — the picker lands on whichever the save actually
+        // has. Joja-route saves keep him; Community-Center-route saves lose him and
+        // the role's pool collapses to zero (quest correctly stops posting).
+        registry.Register(DispatchRoles.JojaCorpRep, "Morris");
+        registry.Register(DispatchRoles.JojaCorpRep, "MorrisTod", ModCompat.StardewValleyExpanded);
     }
 }
