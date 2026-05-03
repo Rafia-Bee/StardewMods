@@ -9,6 +9,7 @@ using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Dispatch;
 using MoreQuestsFramework.Patches;
 using MoreQuestsFramework.Pipeline;
+using MoreQuestsFramework.Posting.Boards;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Quests.Vanilla;
 using MoreQuestsFramework.Registry;
@@ -32,6 +33,9 @@ public sealed class ModEntry : Mod
     private QuestRegistry _registry = null!;
     private GeneratorRegistry _generators = null!;
     private QuestPackLoader _loader = null!;
+    private BoardRegistry _boards = null!;
+    private BoardPackLoader _boardLoader = null!;
+    private BoardWorldRenderer? _boardRenderer;
     private QuestPipeline? _pipeline;
     private QuestPoster? _poster;
     private GameDataCache? _dataCache;
@@ -58,8 +62,13 @@ public sealed class ModEntry : Mod
         _registry = new QuestRegistry(Monitor);
         _generators = new GeneratorRegistry(Monitor);
         _loader = new QuestPackLoader(_registry, _generators, Monitor);
+        _boards = new BoardRegistry(Monitor);
+        _boardLoader = new BoardPackLoader(_boards, Monitor);
         Dispatch = new DispatchRegistry(helper.ModRegistry, Monitor);
-        _api = new MoreQuestsApi(_registry, _generators, _loader, Dispatch, Monitor, () => _spaceCore, RefreshOffers);
+        _api = new MoreQuestsApi(_registry, _generators, _loader, _boardLoader, Dispatch, _boards, Monitor, () => _spaceCore, RefreshOffers);
+
+        _boardRenderer = new BoardWorldRenderer(helper, Monitor, _boards);
+        _boardRenderer.Register();
 
         _poster = new QuestPoster(helper, Monitor, _api);
         _poster.Register();
@@ -171,10 +180,14 @@ public sealed class ModEntry : Mod
         // RegistrationOpen handlers, so C# generators consumer mods just registered
         // are visible when packs that reference them load.
         foreach (var pack in Helper.ContentPacks.GetOwned())
+        {
             _loader.LoadContentPack(pack);
+            _boardLoader.LoadContentPack(pack);
+        }
 
         _api.FireRegistrationClosed();
         _registry.Freeze();
+        _boards.Freeze();
 
         GmcmRegistration.Register(Helper, ModManifest, Config, _registry, onReset: () => Config = new MoreQuestsFrameworkConfig());
     }

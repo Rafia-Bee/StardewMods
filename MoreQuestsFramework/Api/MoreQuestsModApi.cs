@@ -12,6 +12,8 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
     private readonly GeneratorRegistry _generators;
     private readonly QuestPackLoader _loader;
     private readonly DispatchRegistry _dispatch;
+    private readonly BoardRegistry _boards;
+    private readonly BoardPackLoader _boardLoader;
     private readonly IMonitor _monitor;
     private readonly Func<ISpaceCoreApi?> _spaceCore;
 
@@ -23,6 +25,8 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
         GeneratorRegistry generators,
         QuestPackLoader loader,
         DispatchRegistry dispatch,
+        BoardRegistry boards,
+        BoardPackLoader boardLoader,
         IMonitor monitor,
         Func<ISpaceCoreApi?> spaceCore)
     {
@@ -31,6 +35,8 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
         _generators = generators;
         _loader = loader;
         _dispatch = dispatch;
+        _boards = boards;
+        _boardLoader = boardLoader;
         _monitor = monitor;
         _spaceCore = spaceCore;
     }
@@ -62,4 +68,14 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
 
     public void RegisterDispatchNpc(string role, string npcName, string? requiredModUniqueId = null)
         => _dispatch.Register(role, npcName, requiredModUniqueId);
+
+    public void RegisterBoard(BoardDefinition board)
+    {
+        if (board == null)
+            throw new ArgumentNullException(nameof(board));
+        _boards.Register(board, Owner.UniqueID);
+    }
+
+    public void LoadBoardsFromMod(IModHelper helper, string relativePath)
+        => _boardLoader.LoadFromMod(helper, Owner, relativePath);
 }
