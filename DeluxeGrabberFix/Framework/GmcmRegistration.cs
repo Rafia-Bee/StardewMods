@@ -119,6 +119,7 @@ internal class GmcmRegistration
                     _locations.SaveData.BlacklistedLocations.Clear();
                     _locations.WriteSaveData();
                 }
+                _mod.RefreshRenderedWorldHook();
             },
             () =>
             {
@@ -130,6 +131,7 @@ internal class GmcmRegistration
                     _locations.DiscoverLocations();
                     _locations.ApplyVisitAutoSkip();
                 }
+                _mod.RefreshRenderedWorldHook();
             });
 
         // Main page -- category links

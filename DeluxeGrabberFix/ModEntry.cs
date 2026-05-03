@@ -96,7 +96,6 @@ public class ModEntry : Mod
         helper.Events.GameLoop.DayStarted += OnDayStarted;
         helper.Events.GameLoop.TimeChanged += OnHourlyUpdate;
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
-        helper.Events.Display.RenderedWorld += OnRenderedWorld;
         helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
         helper.Events.Display.MenuChanged += OnMenuChanged;
         helper.Events.World.ObjectListChanged += OnObjectListChanged;
@@ -105,6 +104,28 @@ public class ModEntry : Mod
         helper.Events.GameLoop.DayEnding += OnDayEnding;
         helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
         helper.Events.Player.Warped += OnPlayerWarped;
+
+        RefreshRenderedWorldHook();
+    }
+
+    private bool _renderedWorldHooked;
+
+    // Hooks Display.RenderedWorld only when crop-harvest range preview is enabled, so
+    // most users don't pay a per-frame guard check for a feature they never turned on.
+    // Call after any path that may have mutated Config (initial load, GMCM save/reset,
+    // per-save config swap on save load and return to title).
+    internal void RefreshRenderedWorldHook()
+    {
+        bool shouldHook = Config?.Features?.harvestCrops == true;
+        if (shouldHook == _renderedWorldHooked)
+            return;
+
+        if (shouldHook)
+            Helper.Events.Display.RenderedWorld += OnRenderedWorld;
+        else
+            Helper.Events.Display.RenderedWorld -= OnRenderedWorld;
+
+        _renderedWorldHooked = shouldHook;
     }
 
     public void LogDebug(string message)
@@ -432,6 +453,7 @@ public class ModEntry : Mod
     private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
     {
         ConfigManager.OnSaveLoaded();
+        RefreshRenderedWorldHook();
 
         // Per-save config may switch grabberMode after Data/CraftingRecipes has already
         // loaded with the global config in effect. Invalidate so the recipe asset edit
@@ -641,6 +663,7 @@ public class ModEntry : Mod
         ConfigManager.OnReturnedToTitle();
         SpecializedGrabberPatches.SpecializedGrabberCount = 0;
         _gmcm.RebuildConfigMenu();
+        RefreshRenderedWorldHook();
     }
 
     private void OnPlayerWarped(object sender, WarpedEventArgs e)
