@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Rewards;
 
 namespace MoreQuestsFramework.Pipeline;
@@ -71,4 +72,11 @@ public sealed class SpecialOrderSpec
     /// shows it, the player clicks the reward box, money is paid. That UX is worth more
     /// than the small risk of a third-party mod adjusting the displayed gold amount.
     public List<RewardSpec> FrameworkRewards { get; set; } = new();
+
+    /// Consequence specs fired by `ConsequenceEngine.Active` once the order completes.
+    /// Multiple specs are supported because a Grand Feast SpecialOrder pulls one taste
+    /// reaction per requested dish (CSV row 34: "Tier 2 consequence per dish"). Each
+    /// spec is dispatched independently, so the engine's per-spec NPC sampling caps
+    /// the total fanfare at one reaction per dish rather than one per save.
+    public List<ConsequenceSpec> Consequences { get; set; } = new();
 }

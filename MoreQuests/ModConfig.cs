@@ -36,4 +36,12 @@ public sealed class ModConfig
 
     // ----- Skull Cavern depth cap for Deep Dive quest -----
     public int SkullCavernMaxLevel { get; set; } = 100;
+
+    // ----- Saloon weekly special / Grand Feast tunables -----
+    /// Recipes with at most this many distinct ingredient lines qualify for the Common pool.
+    public int WeeklySpecialCommonMaxIngredients { get; set; } = 3;
+    /// Recipes with at least this many distinct ingredient lines qualify for the Complex pool.
+    public int WeeklySpecialComplexMinIngredients { get; set; } = 4;
+    /// Number of distinct recipes a Grand Feast SpecialOrder asks for.
+    public int GrandFeastRecipeCount { get; set; } = 3;
 }

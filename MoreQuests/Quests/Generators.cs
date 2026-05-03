@@ -44,6 +44,9 @@ internal static class Generators
         fw.RegisterGenerator("MinesDeepDive", MinesDeepDive);
         fw.RegisterGenerator("PierresStockUp", PierresStockUp);
         fw.RegisterGenerator("MassiveHarvestRequest", MassiveHarvestRequest);
+        fw.RegisterGenerator("WeeklySpecialCommon", WeeklySpecialCommon);
+        fw.RegisterGenerator("WeeklySpecialComplex", WeeklySpecialComplex);
+        fw.RegisterGenerator("GrandFeast", GrandFeast);
     }
 
     // -------------------- Farming --------------------
@@ -1436,4 +1439,336 @@ internal static class Generators
             TargetMessage = ModEntry.I18n.Get("quest.farming.massiveHarvest.targetMessage")
         };
     }
+
+    // -------------------- Phase 9b: saloon weekly specials + Grand Feast --------------------
+
+    /// CSV row 35. Daily-board AdventureQuest. The picked saloon NPC asks the player to
+    /// bring the ingredients for one randomly-chosen common-tier recipe (≤
+    /// `WeeklySpecialCommonMaxIngredients` distinct ingredients). One Deliver step per
+    /// ingredient. Reward = `GoldBeginnerBase` + `FriendshipMultiSmall` to every met
+    /// villager who loves or likes the cooked dish (the saloon-going crowd who'd actually
+    /// eat the special). Tier 1 consequence keys to the dish output id — the Sample-One
+    /// rule in `ConsequenceEngine` keeps the fanfare to one randomly-picked NPC across the
+    /// loved + hated union.
+    private static QuestPosting? WeeklySpecialCommon(QuestContext ctx)
+    {
+        return BuildWeeklySpecial(
+            ctx,
+            tier: DifficultyTier.Beginner,
+            consequenceTier: ConsequenceTier.Tier1,
+            goldBase: ctx.Config.GoldBeginnerBase,
+            deadlineKind: DeadlineKind.Short,
+            minIngredients: 1,
+            maxIngredients: ModEntry.Config.WeeklySpecialCommonMaxIngredients,
+            titleKey: "quest.cooking.weeklySpecial.common.title",
+            descriptionKey: "quest.cooking.weeklySpecial.common.description",
+            consequenceLovedKey: "quest.cooking.weeklySpecial.common.consequence.loved",
+            consequenceHatedKey: "quest.cooking.weeklySpecial.common.consequence.hated");
+    }
+
+    /// CSV row 36. Same shape as the Common variant but the recipe pool is filtered to
+    /// `WeeklySpecialComplexMinIngredients`+ distinct ingredients, the gold base steps up
+    /// to `GoldIntermediateBase`, the deadline grows to `Medium`, and the consequence
+    /// jumps to Tier 2 — loved NPCs get `+FriendshipBasic`, hated NPCs get the Tier 2
+    /// default negative delta (mid between `FriendshipBasic` and `FriendshipMid`).
+    private static QuestPosting? WeeklySpecialComplex(QuestContext ctx)
+    {
+        return BuildWeeklySpecial(
+            ctx,
+            tier: DifficultyTier.Advanced,
+            consequenceTier: ConsequenceTier.Tier2,
+            goldBase: ctx.Config.GoldIntermediateBase,
+            deadlineKind: DeadlineKind.Medium,
+            minIngredients: ModEntry.Config.WeeklySpecialComplexMinIngredients,
+            maxIngredients: int.MaxValue,
+            titleKey: "quest.cooking.weeklySpecial.complex.title",
+            descriptionKey: "quest.cooking.weeklySpecial.complex.description",
+            consequenceLovedKey: "quest.cooking.weeklySpecial.complex.consequence.loved",
+            consequenceHatedKey: "quest.cooking.weeklySpecial.complex.consequence.hated");
+    }
+
+    private static QuestPosting? BuildWeeklySpecial(
+        QuestContext ctx,
+        DifficultyTier tier,
+        ConsequenceTier consequenceTier,
+        int goldBase,
+        DeadlineKind deadlineKind,
+        int minIngredients,
+        int maxIngredients,
+        string titleKey,
+        string descriptionKey,
+        string consequenceLovedKey,
+        string consequenceHatedKey)
+    {
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
+        if (giver == null)
+            return null;
+
+        var pool = ctx.Items.GetAllCookingRecipes()
+            .Where(r => r.Ingredients.Count >= minIngredients && r.Ingredients.Count <= maxIngredients)
+            .ToList();
+        if (pool.Count == 0)
+            return null;
+
+        var pick = pool[Game1.random.Next(pool.Count)];
+
+        var steps = new List<AdventureStepState>(pick.Ingredients.Count);
+        foreach (var ing in pick.Ingredients)
+        {
+            string token = ing.IsCategoryToken ? ing.Item.QualifiedItemId : ing.Item.QualifiedItemId;
+            steps.Add(new AdventureStepState
+            {
+                Name = "Deliver_" + Sanitise(ing.Item.DisplayName),
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { giver },
+                Items = new List<string> { token },
+                Count = ing.Count,
+                Description = ModEntry.I18n.Get(
+                    "quest.cooking.weeklySpecial.step.deliver",
+                    new { count = ing.Count, item = ing.Item.DisplayName, npc = giver })
+            });
+        }
+
+        var quest = new AdventureQuest();
+        quest.Initialize(
+            steps,
+            giver: giver,
+            completionDialogue: ModEntry.I18n.Get(
+                "quest.cooking.weeklySpecial.targetMessage",
+                new { dish = pick.OutputItem.DisplayName }));
+
+        var rewards = new List<RewardSpec> { new MoneyReward(goldBase) };
+        AddSaloonCrowdFriendship(ctx, pick.OutputItem.QualifiedItemId, rewards);
+
+        ConsequenceSpec? consequence = null;
+        if (ModEntry.Config.ConsequencesEnabled)
+        {
+            consequence = new ConsequenceSpec
+            {
+                Tier = consequenceTier,
+                Source = ConsequenceSource.GiftTastes,
+                Subject = pick.OutputItem.QualifiedItemId,
+                LovedLine = ModEntry.I18n.Get(
+                    consequenceLovedKey,
+                    new { dish = pick.OutputItem.DisplayName, npc = giver }),
+                HatedLine = ModEntry.I18n.Get(
+                    consequenceHatedKey,
+                    new { dish = pick.OutputItem.DisplayName, npc = giver })
+            };
+        }
+
+        string ingredientsList = string.Join(", ", pick.Ingredients
+            .Select(i => i.Count + " " + i.Item.DisplayName));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Cooking,
+            Tier = tier,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(deadlineKind, ctx.Config),
+            Rewards = rewards,
+            Consequence = consequence,
+            Title = ModEntry.I18n.Get(titleKey, new { npc = giver }),
+            Description = ModEntry.I18n.Get(
+                descriptionKey,
+                new { npc = giver, dish = pick.OutputItem.DisplayName, ingredients = ingredientsList }),
+            TargetMessage = ModEntry.I18n.Get(
+                "quest.cooking.weeklySpecial.targetMessage",
+                new { dish = pick.OutputItem.DisplayName }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Adds a per-NPC `FriendshipMultiSmall` reward for every met human villager whose
+    /// `Data/NPCGiftTastes` entry has the dish in its loved or liked list. Models the
+    /// CSV's "FriendshipMultiSmall with multiple NPCs" reward column — the saloon
+    /// regulars who'd enjoy that week's dish appreciate the help. NPCs who hate the
+    /// dish or are indifferent are skipped on the reward side; the consequence layer
+    /// handles the loved-or-hated reactions separately.
+    private static void AddSaloonCrowdFriendship(QuestContext ctx, string dishQualifiedId, List<RewardSpec> rewards)
+    {
+        string bareDish = dishQualifiedId.StartsWith("(O)") ? dishQualifiedId[3..] : dishQualifiedId;
+        var tastes = ctx.Data.GiftTastes;
+        foreach (var (npcName, _) in Game1.player.friendshipData.Pairs)
+        {
+            var npc = Game1.getCharacterFromName(npcName);
+            if (npc == null || npc.IsMonster || !npc.IsVillager)
+                continue;
+            if (!tastes.TryGetValue(npcName, out var tasteData))
+                continue;
+            var fields = tasteData.Split('/');
+            if (fields.Length < 4)
+                continue;
+            var loved = fields[1].Split(' ');
+            var liked = fields[3].Split(' ');
+            bool likes = loved.Contains(bareDish, StringComparer.Ordinal)
+                        || liked.Contains(bareDish, StringComparer.Ordinal);
+            if (!likes)
+                continue;
+            rewards.Add(new FriendshipReward(npcName, ctx.Config.FriendshipMultiSmall));
+        }
+    }
+
+    /// CSV row 34. SpecialOrder source. Picks `GrandFeastRecipeCount` distinct complex-
+    /// tier recipes (same pool as the Complex Weekly Special); aggregates their
+    /// ingredients into one Ship objective per unique ingredient (using vanilla
+    /// `id_o_<id>` context tags so the shipping bin counts modded items too); seeds one
+    /// Tier 2 consequence per dish so each sampled NPC reacts to a different dish across
+    /// the post-completion week. Reward = `GoldExpertBase` (vanilla path so the player
+    /// gets the standard reward-box UX) + `FriendshipMultiSmall` to every met villager
+    /// who loves or likes any of the chosen dishes (framework path, bypasses third-party
+    /// SpecialOrder reward overrides).
+    private static QuestPosting? GrandFeast(QuestContext ctx)
+    {
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
+        if (giver == null)
+            return null;
+
+        int wanted = Math.Max(1, ModEntry.Config.GrandFeastRecipeCount);
+        // Grand Feast translates each ingredient into a vanilla SpecialOrder Ship objective
+        // keyed off the auto-generated `id_o_<id>` context tag. Category-token ingredients
+        // (negative ids like -5 = egg, -6 = milk) don't have a single literal context tag
+        // we can ship-match against, so recipes containing one are dropped from this pool —
+        // they remain eligible for the AdventureQuest-based Weekly Special variants where
+        // the `$category:N` token resolves at gift/deliver time.
+        var pool = ctx.Items.GetAllCookingRecipes()
+            .Where(r => r.Ingredients.Count >= ModEntry.Config.WeeklySpecialComplexMinIngredients)
+            .Where(r => r.Ingredients.All(i => !i.IsCategoryToken))
+            .ToList();
+        if (pool.Count < wanted)
+            return null;
+
+        var picked = new List<CookingRecipeInfo>(wanted);
+        var available = new List<CookingRecipeInfo>(pool);
+        for (int i = 0; i < wanted && available.Count > 0; i++)
+        {
+            int idx = Game1.random.Next(available.Count);
+            picked.Add(available[idx]);
+            available.RemoveAt(idx);
+        }
+
+        // Aggregate ingredients across the picked recipes — duplicates merge into one
+        // objective with summed counts so the player ships one bigger pile of cheese
+        // instead of three smaller piles.
+        var aggregate = new Dictionary<string, (string DisplayName, int Count, bool IsCategory, int CategoryId)>(StringComparer.Ordinal);
+        foreach (var recipe in picked)
+        {
+            foreach (var ing in recipe.Ingredients)
+            {
+                string key = ing.Item.QualifiedItemId;
+                if (aggregate.TryGetValue(key, out var existing))
+                    aggregate[key] = (existing.DisplayName, existing.Count + ing.Count, existing.IsCategory, existing.CategoryId);
+                else
+                    aggregate[key] = (ing.Item.DisplayName, ing.Count, ing.IsCategoryToken, ing.CategoryId);
+            }
+        }
+
+        var objectives = new List<SpecialOrderObjectiveSpec>(aggregate.Count);
+        foreach (var (key, val) in aggregate)
+        {
+            string contextTag = val.IsCategory
+                ? "category_" + Math.Abs(val.CategoryId)
+                : "id_" + key.ToLowerInvariant().Replace("(", string.Empty).Replace(")", "_");
+            objectives.Add(new SpecialOrderObjectiveSpec
+            {
+                Type = "Ship",
+                Text = ModEntry.I18n.Get("quest.cooking.grandFeast.objective", new { count = val.Count, item = val.DisplayName }),
+                RequiredCount = val.Count,
+                Data = { ["AcceptedContextTags"] = contextTag }
+            });
+        }
+
+        var dishNames = picked.Select(r => r.OutputItem.DisplayName).ToList();
+        string dishesList = string.Join(", ", dishNames);
+
+        // Money stays in vanilla's path so the reward-box UX is the standard one. The
+        // friendship payout moves to FrameworkRewards because friendship-tuning content
+        // packs (e.g. Special Order Adjustments) overwrite vanilla `Friendship` reward
+        // entries on `Data/SpecialOrders` globally — routing through the framework path
+        // bypasses that interception entirely.
+        var vanillaRewards = new List<SpecialOrderRewardSpec>
+        {
+            new()
+            {
+                Type = "Money",
+                Data = { ["Amount"] = ctx.Config.GoldExpertBase.ToString() }
+            }
+        };
+
+        var frameworkRewards = new List<RewardSpec>();
+        foreach (var dish in picked)
+            AddSaloonCrowdFriendship(ctx, dish.OutputItem.QualifiedItemId, frameworkRewards);
+        // Multiple dishes can share the same liked-by NPC — collapse duplicate
+        // FriendshipReward entries so the same NPC isn't paid twice for the same
+        // SpecialOrder completion.
+        frameworkRewards = DedupeFriendshipRewards(frameworkRewards);
+
+        var consequences = new List<ConsequenceSpec>();
+        if (ModEntry.Config.ConsequencesEnabled)
+        {
+            foreach (var dish in picked)
+            {
+                consequences.Add(new ConsequenceSpec
+                {
+                    Tier = ConsequenceTier.Tier2,
+                    Source = ConsequenceSource.GiftTastes,
+                    Subject = dish.OutputItem.QualifiedItemId,
+                    LovedLine = ModEntry.I18n.Get(
+                        "quest.cooking.grandFeast.consequence.loved",
+                        new { dish = dish.OutputItem.DisplayName, npc = giver }),
+                    HatedLine = ModEntry.I18n.Get(
+                        "quest.cooking.grandFeast.consequence.hated",
+                        new { dish = dish.OutputItem.DisplayName, npc = giver })
+                });
+            }
+        }
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Cooking,
+            Tier = DifficultyTier.Expert,
+            QuestType = BoardQuestType.Custom,
+            Kind = PostingKind.SpecialOrder,
+            QuestGiver = giver,
+            SpecialOrder = new SpecialOrderSpec
+            {
+                Name = ModEntry.I18n.Get("quest.cooking.grandFeast.title", new { npc = giver }),
+                Text = ModEntry.I18n.Get(
+                    "quest.cooking.grandFeast.text",
+                    new { npc = giver, dishes = dishesList }),
+                Requester = giver,
+                Duration = "Week",
+                Objectives = objectives,
+                Rewards = vanillaRewards,
+                FrameworkRewards = frameworkRewards,
+                Consequences = consequences
+            }
+        };
+    }
+
+    private static List<RewardSpec> DedupeFriendshipRewards(List<RewardSpec> rewards)
+    {
+        var byNpc = new Dictionary<string, int>(StringComparer.Ordinal);
+        var others = new List<RewardSpec>(rewards.Count);
+        foreach (var r in rewards)
+        {
+            if (r is FriendshipReward f)
+            {
+                byNpc.TryGetValue(f.Npc, out int total);
+                byNpc[f.Npc] = total == 0 ? f.Points : Math.Max(total, f.Points);
+            }
+            else
+            {
+                others.Add(r);
+            }
+        }
+        foreach (var (npc, amount) in byNpc)
+            others.Add(new FriendshipReward(npc, amount));
+        return others;
+    }
+
+    private static string Sanitise(string s) =>
+        new string((s ?? string.Empty).Where(c => char.IsLetterOrDigit(c)).ToArray());
 }

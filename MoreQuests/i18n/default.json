@@ -38,6 +38,12 @@
     "config.HaySupplyBaseQty.tooltip": "Base hay before animal-count scaling for Marnie's hay run.",
     "config.SkullCavernMaxLevel": "Skull Cavern max level",
     "config.SkullCavernMaxLevel.tooltip": "Maximum floor target for Skull Cavern Deep Dive quests.",
+    "config.WeeklySpecialCommonMaxIngredients": "Weekly Special (Common) max ingredients",
+    "config.WeeklySpecialCommonMaxIngredients.tooltip": "Recipes with at most this many distinct ingredient lines qualify for the Common saloon weekly special pool.",
+    "config.WeeklySpecialComplexMinIngredients": "Weekly Special (Complex) min ingredients",
+    "config.WeeklySpecialComplexMinIngredients.tooltip": "Recipes with at least this many distinct ingredient lines qualify for the Complex saloon weekly special and Grand Feast pools.",
+    "config.GrandFeastRecipeCount": "Grand Feast recipe count",
+    "config.GrandFeastRecipeCount.tooltip": "Number of distinct recipes a Grand Feast SpecialOrder asks for.",
 
     "quest.farming.basic.title": "{{npc}}'s crop request",
     "quest.farming.basic.description": "Any kind farmer has some fresh {{item}}? Please bring by {{qty}} {{item}} to {{npc}} before the deadline.",
@@ -163,5 +169,24 @@
     "quest.farming.massiveHarvest.consequence.loved": "I heard JojaMart finally got a decent batch of {{item}} in. Thank you for that - the store-bought stuff was always rubbish.",
     "quest.farming.massiveHarvest.consequence.hated": "Why couldn't {{npc}} get better quality crops instead? I never eat {{item}}.",
 
-    "quest.reward.line.shopDiscount": "{{npc}} will mark down their shop {{percent}}% for {{days}} day(s)"
+    "quest.reward.line.shopDiscount": "{{npc}} will mark down their shop {{percent}}% for {{days}} day(s)",
+
+    "quest.cooking.weeklySpecial.common.title": "{{npc}}'s weekly special",
+    "quest.cooking.weeklySpecial.common.description": "{{npc}} is running {{dish}} as the saloon's special this week. Bring the kitchen everything on the prep list - {{ingredients}} - and there'll be a stack of gold and a few happy regulars in it for you.",
+    "quest.cooking.weeklySpecial.common.consequence.loved": "I had {{npc}}'s {{dish}} this week. Honestly the best thing I've eaten all season.",
+    "quest.cooking.weeklySpecial.common.consequence.hated": "{{npc}} ran {{dish}} as the special. You couldn't get me to touch that with a ten foot pole.",
+
+    "quest.cooking.weeklySpecial.complex.title": "{{npc}}'s grand weekly special",
+    "quest.cooking.weeklySpecial.complex.description": "{{npc}} is putting up an ambitious special this week - {{dish}} - and the prep list isn't small. Drop everything off at the saloon: {{ingredients}}. Bigger payday, but the kitchen needs it all by the deadline.",
+    "quest.cooking.weeklySpecial.complex.consequence.loved": "{{npc}} had {{dish}} on special. Made my week.",
+    "quest.cooking.weeklySpecial.complex.consequence.hated": "The saloon reeked of {{dish}} all week. I'm still trying to forget it.",
+
+    "quest.cooking.weeklySpecial.step.deliver": "Bring {{count}} {{item}} to {{npc}}.",
+    "quest.cooking.weeklySpecial.targetMessage": "Perfect, that's everything I need for the {{dish}}. Dinner service is saved.",
+
+    "quest.cooking.grandFeast.title": "{{npc}}'s grand feast",
+    "quest.cooking.grandFeast.text": "{{npc}} is throwing a big feast at the saloon this week with {{dishes}} on the menu. They're asking around for help with the prep list. Drop the ingredients in the shipping bin like usual and they'll handle the cooking.",
+    "quest.cooking.grandFeast.objective": "Ship {{count}} {{item}}.",
+    "quest.cooking.grandFeast.consequence.loved": "{{npc}}'s feast was incredible. I had three plates of {{dish}} alone.",
+    "quest.cooking.grandFeast.consequence.hated": "Oh! You're the one who supplied the ingredients for {{dish}} at {{npc}}'s feast?! I thought I was going to be sick."
 }

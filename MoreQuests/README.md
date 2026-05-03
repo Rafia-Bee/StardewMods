@@ -2,7 +2,7 @@
 
 A SMAPI content mod for Stardew Valley that ships a curated set of new daily-board, mail, and festival quests on top of the [More Quests Framework](../MoreQuestsFramework/README.md).
 
-> Heavy work in progress. Twenty quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
+> Heavy work in progress. Twenty-three quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
 
 ## Dependencies
 
@@ -61,9 +61,9 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Festival | Gus's Feast: Fair | Fall 8 | Gus | Large ingredient delivery | Sample dishes + Fair token bonus | DateLocked, OneTimePerYear | Deferred to Phase 9 (Festival Bonus reward kind) |
 | Festival | Gus's Feast: Luau | Summer 8 | Gus | Deliver 3 random spring/summer ingredients | Higher base potluck score | DateLocked, OneTimePerYear | Deferred to Phase 9 (Festival Bonus reward kind) |
 | Festival | Gus's Feast: Winter Star | Winter 18 (mail) | Gus | Ship winter-themed forageables | Friendship (MultiSmall) to every met NPC | DateLocked, OneTimePerYear | Implemented |
-| Cooking | Saloon Grand Feast | Daily board | Gus / Rosa / Celestine / Pika | Deliver ingredients for multiple recipes | Gold (Expert) + Friendship (MultiSmall) | Cooldown 14d, OnePerGiver | Not started |
-| Cooking | Weekly Special (Common) | Daily board | Gus / Rosa / Celestine / Pika | Deliver ingredients for a common recipe | Gold (Beginner) + Friendship (MultiSmall) | Cooldown 5d, OnePerGiver | Not started |
-| Cooking | Weekly Special (Complex) | Daily board | Gus / Rosa / Celestine / Pika | Deliver ingredients for a complex recipe | Gold (Intermediate) + Friendship (MultiSmall) | Cooldown 7d, OnePerGiver | Not started |
+| Cooking | Saloon Grand Feast | Special Orders board | Gus / Rosa / Celestine / Pika | Ship aggregated ingredients across 3 complex recipes | Gold (Expert) + Friendship (MultiSmall) to liked-by NPCs + per-dish Tier 2 taste reaction | Cooldown 14d, vanilla `Week` window | Implemented (9b) |
+| Cooking | Weekly Special (Common) | Daily board | Gus / Rosa / Celestine / Pika | Deliver ingredients for a common (≤ 3 ingredient) recipe | Gold (Beginner) + Friendship (MultiSmall) to liked-by NPCs + Tier 1 taste reaction | Cooldown 5d, OnePerGiver | Implemented (9b) |
+| Cooking | Weekly Special (Complex) | Daily board | Gus / Rosa / Celestine / Pika | Deliver ingredients for a complex (≥ 4 ingredient) recipe | Gold (Intermediate) + Friendship (MultiSmall) to liked-by NPCs + Tier 2 taste reaction | Cooldown 7d, OnePerGiver | Implemented (9b) |
 | Seasonal | Heat Wave Relief | Daily board | Harvey / Paula (RSV) | Ship cold drinks, melons, ice cream | Random items from Harvey's shop | Summer only, Cooldown 5d, OnePerGiver | Not started |
 | Seasonal | Jellyfish Watch Prep | Daily board | Demetrius / Maddie / Mr Aguar / Dylan | Deliver beach forageables for study | Friendship (Basic) + a loved item | Summer only, Cooldown 5d, OnePerGiver | Not started |
 | Animal | Krobus's Void Note | First Void Egg + 1 heart Krobus | Krobus | Deliver a Void Egg to Krobus | Void Chicken Statue + Friendship (Mid) | OneTime | Not started |

@@ -226,6 +226,38 @@
                 "Available": { "SkillLevel": "Farming 7" }
             },
             "Generator": "MassiveHarvestRequest"
+        },
+        {
+            "Name": "Cooking.WeeklySpecialCommon",
+            "Category": "Cooking",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 25,
+                "MaxPerDay": 1,
+                "CooldownDays": 5
+            },
+            "Generator": "WeeklySpecialCommon"
+        },
+        {
+            "Name": "Cooking.WeeklySpecialComplex",
+            "Category": "Cooking",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 15,
+                "MaxPerDay": 1,
+                "CooldownDays": 7
+            },
+            "Generator": "WeeklySpecialComplex"
+        },
+        {
+            "Name": "Cooking.GrandFeast",
+            "Category": "Cooking",
+            "Trigger": {
+                "Source": "SpecialOrder",
+                "Duration": "Week",
+                "CooldownDays": 14
+            },
+            "Generator": "GrandFeast"
         }
     ]
 }

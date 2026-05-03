@@ -72,6 +72,9 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "CropMassiveQty", () => ModEntry.Config.CropMassiveQty, v => ModEntry.Config.CropMassiveQty = v, 1, 500);
         AddInt(api, manifest, t, "HaySupplyBaseQty", () => ModEntry.Config.HaySupplyBaseQty, v => ModEntry.Config.HaySupplyBaseQty = v, 1, 100);
         AddInt(api, manifest, t, "SkullCavernMaxLevel", () => ModEntry.Config.SkullCavernMaxLevel, v => ModEntry.Config.SkullCavernMaxLevel = v, 5, 500);
+        AddInt(api, manifest, t, "WeeklySpecialCommonMaxIngredients", () => ModEntry.Config.WeeklySpecialCommonMaxIngredients, v => ModEntry.Config.WeeklySpecialCommonMaxIngredients = v, 1, 10);
+        AddInt(api, manifest, t, "WeeklySpecialComplexMinIngredients", () => ModEntry.Config.WeeklySpecialComplexMinIngredients, v => ModEntry.Config.WeeklySpecialComplexMinIngredients = v, 1, 10);
+        AddInt(api, manifest, t, "GrandFeastRecipeCount", () => ModEntry.Config.GrandFeastRecipeCount, v => ModEntry.Config.GrandFeastRecipeCount = v, 1, 6);
 
         // Per-quest weight overrides (for content-mod quests) live in the framework's GMCM page
         // alongside the vanilla quest weights, since the framework owns the registry view.
