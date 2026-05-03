@@ -12,6 +12,8 @@
     "config.animalQuests.tooltip": "Enables Marnie's animal quest chain after building coops or barns.",
     "config.secretGiftHint": "Winter Star secret gift hint",
     "config.secretGiftHint.tooltip": "Adds a quest that hints at your Winter Star recipient's preferences. Disable if you'd rather not be spoiled.",
+    "config.enableAdventurersGuildBoard": "Adventurer's Guild board",
+    "config.enableAdventurersGuildBoard.tooltip": "When on (default), a separate quest board appears near the mine entrance and hosts the mining and monster quests (deep dives, slime clearing, monster eradication). When off, the guild board is hidden entirely and those quests appear on the regular help-wanted board so the content stays reachable. Per-quest weights still let you disable individual quests on top of this.",
 
     "config.section.discounts": "Shop discounts",
     "config.ShopDiscountPercent": "Festival shop discount %",

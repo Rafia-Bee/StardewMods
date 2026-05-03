@@ -53,6 +53,11 @@ internal static class GmcmRegistration
             v => ModEntry.Config.SecretGiftHintEnabled = v,
             () => t.Get("config.secretGiftHint"),
             () => t.Get("config.secretGiftHint.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.EnableAdventurersGuildBoard,
+            v => ModEntry.Config.EnableAdventurersGuildBoard = v,
+            () => t.Get("config.enableAdventurersGuildBoard"),
+            () => t.Get("config.enableAdventurersGuildBoard.tooltip"));
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.discounts"));
         AddInt(api, manifest, t, "ShopDiscountPercent", () => ModEntry.Config.ShopDiscountPercent, v => ModEntry.Config.ShopDiscountPercent = v, 0, 100);

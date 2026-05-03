@@ -19,7 +19,9 @@ A SMAPI content mod for Stardew Valley that ships a curated set of new daily-boa
 
 ## Configuration
 
-`Mods/MoreQuests/config.json` carries per-quest content settings: animal/festival quest toggles, shop discount sizes, fish-haul quantities, Skull Cavern max level, secret-gift hint toggle, etc. Engine-level tunables (quests per day, weights, deadlines, reward sizes) live on the [framework's config](../MoreQuestsFramework/README.md#configuration). Both pages are surfaced through GMCM.
+`Mods/MoreQuests/config.json` carries per-quest content settings: animal/festival quest toggles, Adventurer's Guild board toggle, shop discount sizes, fish-haul quantities, Skull Cavern max level, secret-gift hint toggle, etc. Engine-level tunables (quests per day, weights, deadlines, reward sizes) live on the [framework's config](../MoreQuestsFramework/README.md#configuration). Both pages are surfaced through GMCM.
+
+The **Adventurer's Guild board** toggle (default on) controls whether the mining + monster quests get their own board at the mine entrance, or whether they all fold back into the regular help-wanted board. With it on, the help-wanted board only shows Bar Delivery from the mining category; the deep dives, slime clearing, and vanilla monster eradication post on the guild board instead. With it off, every guild-tagged quest appears on the help-wanted board so the content stays reachable. Per-quest weights still let you disable individual quests on top of this.
 
 ## Quests
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 using MoreQuests.Quests;
 using MoreQuestsFramework.Api;
+using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -159,10 +160,34 @@ public sealed class ModEntry : Mod
         // Load the JSON quest pack. Each entry references a generator above.
         scope.LoadQuestsFromMod(Helper, "assets/quests.json");
 
-        // Custom boards (Phase 8b). Adventurer's Guild board lands here; quest content
-        // that targets it ships in 8c.
-        scope.LoadBoardsFromMod(Helper, "assets/boards.json");
+        // Adventurer's Guild board (Phase 8b/8c). When the player keeps it enabled, the
+        // guild board renders at the mine entrance and the mining/monster quests route
+        // there. When disabled, the board doesn't render and the same quests fall back
+        // onto the help-wanted board so the content stays reachable. Per-quest weights
+        // still gate individual quests on top of this.
+        ApplyGuildBoardRouting(scope);
 
         GmcmRegistration.Register(Helper, ModManifest);
+    }
+
+    /// Wires up the routing for the Adventurer's Guild board based on
+    /// `EnableAdventurersGuildBoard`. When on, mining/monster quests authored as
+    /// `DailyBoard` (Mining.BasicSlimeClearing + the framework's Vanilla.SlayMonster
+    /// wrapper) flip to `CustomBoard` so they post on the guild. When off, the guild
+    /// board never registers and the quests authored as `CustomBoard` (the deep dives)
+    /// flip back to `DailyBoard` so they reach the player via the help-wanted board.
+    private void ApplyGuildBoardRouting(IMoreQuestsModApi scope)
+    {
+        if (Config.EnableAdventurersGuildBoard)
+        {
+            scope.LoadBoardsFromMod(Helper, "assets/boards.json");
+            scope.OverrideTriggerSource("Mining.BasicSlimeClearing", TriggerSource.CustomBoard);
+            scope.OverrideTriggerSource("Vanilla.SlayMonster", TriggerSource.CustomBoard);
+        }
+        else
+        {
+            scope.OverrideTriggerSource("Mining.SkullCavernDeepDive", TriggerSource.DailyBoard);
+            scope.OverrideTriggerSource("Mining.MinesDeepDive", TriggerSource.DailyBoard);
+        }
     }
 }
