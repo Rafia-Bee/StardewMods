@@ -41,7 +41,7 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Festival | Submarine Fuel | Winter 12 (mail) | Captain | Ship Battery Pack or Coal (weighted alternatives) | Pearl via NextDay mail | DateLocked, OneTimePerYear | Implemented |
 | Festival | Wizard's Ritual Materials | Fall 24 (mail) | M. Rasmodius | Ship Void Essence + Bat Wings + Solar Essence | Book of Mysteries via NextDay mail | DateLocked, OneTimePerYear | Implemented |
 | Festival | Evelyn's Holiday Cookies | Winter 21 (mail) | Evelyn | Deliver Flour, Sugar, and any edible egg | Friendship (Large) + 6x Cookie | DateLocked, OneTimePerYear | Implemented |
-| Fishing | Location-Specific Overpopulation | Daily board | Demetrius / Maddie / Mr Aguar / Dylan | Catch a specific fish at a specific spot | Gold (Intermediate) + 10x Challenge Bait | Cooldown 4d | Not started |
+| Fishing | Location-Specific Overpopulation | Daily board | Demetrius / Maddie / Mr Aguar / Dylan | Catch a specific fish at a specific spot (visited locations only) | Gold (Intermediate) + 10x Challenge Bait | Cooldown 4d, requires Fishing 2 | Implemented (9.5e) |
 | Animal | Alex's Protein Shakes | Periodic | Alex | Deliver eggs scaled to chicken count | Energy Tonic / Muscle Remedy / Protein Bar | Cooldown 14d, OnePerGiver | Not started |
 | Farming | Caroline's Tea Garden | Daily board | Caroline | Deliver spring flowers/herbs for tea | Friendship (Mid) + 10 Tea Leaves | Fall only, Cooldown 7d, OnePerGiver | Not started |
 | Social | Check on Friends | Daily board | Any met villager | Talk to 3 randomly-picked met villagers, then report back | Friendship (Intermediate) with the giver | Cooldown 7d | Implemented |
@@ -87,8 +87,8 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Seasonal | Preserves Season | Special Orders board (Fall 1) | Single dispatched villager | Ship a scaling number of jam, pickle, wine, and dried mushroom artisan goods (counts + objective count both scale with Farming) | Gold (above-sell bonus) + Friendship (Basic) to requester | Fall 1, Cooldown 21d, vanilla `Month` window | Implemented (8a) |
 | Farming | Quality Crop Delivery | Daily board | Any | Deliver X Gold-quality seasonal crops | Gold (Basic-Intermediate) + Friendship (Basic) | Cooldown 3d, Farming 4+ | Implemented (9.5b) |
 | Fishing | Quality Fish Delivery | Daily board | Willy | Deliver X Gold-quality fish of a specific type | Gold (Basic-Intermediate) + Friendship (Basic) | Cooldown 3d, Fishing 4+ | Implemented (9.5b) |
-| Festival | Rainbow Platter (Trout Derby) | Summer 20-21 | Gus / Pika / Rosa / Celestine | Catch FestivalFishQty Rainbow Trout | Recipe + shop discount on the dish | DateLocked, OneTimePerYear | Not started |
-| Fishing | Rainy Day Catch | Daily board / mail | Willy / Blair / Carmen | Catch fish that only spawn in rain | Gold (Intermediate) + rare tackle | Cooldown 5d, OnePerGiver | Not started |
+| Festival | Rainbow Platter (Trout Derby) | Summer 20 | Gus / Pika / Rosa / Celestine | Catch FestivalFishQty Rainbow Trout | Recipe + shop discount on the dish (Gus saves only) | DateLocked, OneTimePerYear | Implemented (9.5e) |
+| Fishing | Rainy Day Catch | Daily board / mail | Willy / Blair / Carmen | Catch fish that only spawn in rain (runtime weather gate) | Gold (Intermediate) + rare tackle | Cooldown 5d, mail trigger when forecast is rain | Implemented (9.5e) |
 | Foraging | Rare Forage Hunt | Daily board | Any | Gather rare forage items | Gold (Intermediate) + 10x random seasonal seeds | Cooldown 4d, Foraging 5+ | Implemented (9.5a) |
 | Mining | Rare Material Request | Daily board | Clint | Deliver Iridium Bars or rare gems | Gold (Advanced) + 3x Artifact Trove or 5x gems | Cooldown 7d, Mining 7+ | Implemented (9.5a) |
 | Animal | Robin's Silo Offer | After first Coop/Barn (no Silo) | Robin | Gather one type of build material | Discounted Silo | OneTime | Not started |
@@ -96,9 +96,9 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Festival | Secret Gift Hint | Winter 22 | Lewis | Hint about your assigned Winter Star recipient | Information (preference hint) | DateLocked, OneTimePerYear, opt-out via config | Implemented (9.5a) |
 | Mining | Skull Cavern Deep Dive | Adventurer's Guild board | Marlon | Reach floor X in Skull Cavern and deliver an ore/stone haul | Gold (Advanced) + Iridium Bars | Cooldown 14d, requires Skull Cavern unlocked, configurable max floor | Implemented |
 | Mining | Mines Deep Dive | Adventurer's Guild board | Marlon | Reach floor X in The Mines (max 120) and deliver an ore/stone haul | Gold (Intermediate) + bars matching the floor band | Cooldown 14d, requires deepestMineLevel >= 5 | Implemented |
-| Fishing | Size-Specific Overpopulation | Daily board | Demetrius | Catch X fish of a specific size | Gold (Intermediate) + bait | Cooldown 4d, OnePerGiver | Not started |
+| Fishing | Size-Specific Overpopulation | Daily board | Demetrius | Catch X fish at or above a size threshold (Small/Medium/Large bucket) | Gold (Intermediate) + 25x Bait | Cooldown 4d, OnePerGiver, requires Fishing 3 | Implemented (9.5e) |
 | Seasonal | Spring Cleaning | Daily board | Any | Clear weeds around town | Friendship (Basic) | Spring only, Cooldown 5d | Not started |
-| Festival | SquidFest Showcase | Winter 12-13 | Gus / Pika / Rosa / Celestine | Catch FestivalFishQty Squid | Recipe + shop discount on the dish | DateLocked, OneTimePerYear | Not started |
+| Festival | SquidFest Showcase | Winter 12 | Gus / Pika / Rosa / Celestine | Catch FestivalFishQty Squid | Recipe + shop discount on the dish (Gus saves only) | DateLocked, OneTimePerYear | Implemented (9.5e) |
 | Festival | Wrapping Paper | Winter 20 | Lewis | Ship Paper and Tape | Book of Stars | DateLocked, OneTimePerYear, requires Si.ExtraCraftingMaterials | Implemented (9.5a) |
 | Social | Deep Friendship Quest | Heart-level trigger | Various | NPC-specific requests at higher hearts | Unique per NPC | — | Won't do |
 | Seasonal | Harvest Bounty Competition | Special Orders board | Multiple | NPCs compete for crop donations | Varies | Fall only | Won't do |

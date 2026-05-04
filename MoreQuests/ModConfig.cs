@@ -83,4 +83,46 @@ public sealed class ModConfig
     /// Crafting recipe name for Tub o' Flowers. Granted via `Player.craftingRecipes.Add`
     /// at quest-accept if the player doesn't already know it. Defaults to vanilla "Tub o' Flowers".
     public string RsvTubOFlowersRecipeName { get; set; } = "Tub o' Flowers";
+
+    // ----- Phase 9.5e: Fishing-track tunables -----
+    /// Inches threshold for the "Small" bucket of the Size Fish Overpopulation quest.
+    /// A catch with reported size in `[1, SizeBucketSmallMaxInches]` counts toward the
+    /// Small bucket. Defaults match vanilla Data/Fish max sizes for small species (perch /
+    /// chub / smallmouth bass land at 12-16 inches).
+    public int SizeBucketSmallMaxInches { get; set; } = 12;
+    /// Inches threshold separating Medium from Large. Catches in
+    /// `(SizeBucketSmallMaxInches, SizeBucketMediumMaxInches]` count Medium; above counts
+    /// Large. Vanilla Data/Fish max sizes cluster around 24-30 inches at the medium-large
+    /// boundary (carp, salmon, etc.).
+    public int SizeBucketMediumMaxInches { get; set; } = 24;
+
+    /// Trout Derby (Rainbow Platter) recipe granted to Gus / vanilla saloon-chef saves.
+    /// Vanilla cooking recipes that use Rainbow Trout: "Trout Soup". Authors can override
+    /// to "Maki Roll" or any other recipe name. RecipeKind defaults to Cooking.
+    public string TroutDerbyRecipeGus { get; set; } = "Trout Soup";
+    /// Trout Derby recipe for Pika (Ridgeside Village). RSV recipe; the framework grants
+    /// via `RecipeReward` so authors can swap if a content pack renames the recipe.
+    public string TroutDerbyRecipePika { get; set; } = "Highland Ice Cream";
+    /// Trout Derby recipe for Celestine (Visit Mount Vapius). VMV recipe.
+    public string TroutDerbyRecipeCelestine { get; set; } = "Toast and Trout";
+    /// Trout Derby recipe for Rosa (East Scarp). Falls back to vanilla Trout Soup unless
+    /// East Scarp ships a trout-derby-specific dish — override here when one lands.
+    public string TroutDerbyRecipeRosa { get; set; } = "Trout Soup";
+    /// Qualified item id for the Gus Trout Derby reward dish, used by `ShopDiscountReward`
+    /// to discount the dish in the Saloon shop. Defaults to vanilla Trout Soup `(O)219`.
+    /// Pair with `TroutDerbyRecipeGus`.
+    public string TroutDerbyDishGus { get; set; } = "(O)219";
+
+    /// SquidFest recipe for Gus / vanilla saloon. Vanilla recipes using Squid: "Squid Ink
+    /// Ravioli" (uses Squid Ink) or "Fried Calamari".
+    public string SquidFestRecipeGus { get; set; } = "Fried Calamari";
+    /// SquidFest recipe for Pika (RSV). RSV recipe.
+    public string SquidFestRecipePika { get; set; } = "Ridgeside Shaketini";
+    /// SquidFest recipe for Celestine (VMV).
+    public string SquidFestRecipeCelestine { get; set; } = "Squid Ink Ravioli";
+    /// SquidFest recipe for Rosa (East Scarp).
+    public string SquidFestRecipeRosa { get; set; } = "Fried Calamari";
+    /// Qualified item id for the Gus SquidFest reward dish, used by `ShopDiscountReward`
+    /// to discount the dish in the Saloon shop. Defaults to Fried Calamari `(O)227`.
+    public string SquidFestDishGus { get; set; } = "(O)227";
 }

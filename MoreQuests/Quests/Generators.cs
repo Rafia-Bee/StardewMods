@@ -72,6 +72,11 @@ internal static class Generators
         fw.RegisterGenerator("SpiritsEveDecor", SpiritsEveDecor);
         fw.RegisterGenerator("EastScarpSpiritsEveDecor", EastScarpSpiritsEveDecor);
         fw.RegisterGenerator("RidgesideGatheringDecor", RidgesideGatheringDecor);
+        fw.RegisterGenerator("LocationFishOverpopulation", LocationFishOverpopulation);
+        fw.RegisterGenerator("RainyDayCatch", RainyDayCatch);
+        fw.RegisterGenerator("SizeFishOverpopulation", SizeFishOverpopulation);
+        fw.RegisterGenerator("RainbowPlatter", RainbowPlatter);
+        fw.RegisterGenerator("SquidFestShowcase", SquidFestShowcase);
     }
 
     // -------------------- Farming --------------------
@@ -3742,4 +3747,397 @@ internal static class Generators
             PreBuiltQuest = quest
         };
     }
+
+    // -------------------- Phase 9.5e: Fishing-track quests --------------------
+
+    /// Curated rare-tackle pool for the Rainy Day Catch reward. All vanilla qualified ids;
+    /// modded saves get the same pool unless the picker resolves to a missing id, in which
+    /// case the pick falls through.
+    private static readonly (string Id, string Name)[] RainyDayTacklePool =
+    {
+        ("(O)694", "Spinner"),
+        ("(O)695", "Trap Bobber"),
+        ("(O)691", "Barbed Hook"),
+        ("(O)693", "Treasure Hunter"),
+        ("(O)877", "Curiosity Lure")
+    };
+
+    /// Vanilla Challenge Bait — high-attract bait used as a 10-pack reward for the
+    /// location overpopulation quest. Modded saves keep the same id; if a content pack
+    /// removes the item the resolver returns null and the reward gracefully no-ops.
+    private const string ChallengeBaitId = "(O)910";
+    private const string BaitId = "(O)685";
+
+    /// Row 13 — `<Location>` fish overpopulation. Daily-board FishingQuest gated on a
+    /// specific location: pick a fish from the player's visited-location pool, then read
+    /// its first eligible spawn location from the visited set so the quest description
+    /// can ground the request in a real spot. Reward = `GoldIntermediateBase` + 10x
+    /// Challenge Bait. Giver is dispatched via `EcologyMinded`.
+    private static QuestPosting? LocationFishOverpopulation(QuestContext ctx)
+    {
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.EcologyMinded);
+        if (giver == null)
+            return null;
+
+        // The CSV's "fish for a specific fish at a specific spot" only makes sense if the
+        // player has actually visited a spawn location for the fish. Use the visited-only
+        // helper so quests target reachable water; the helper falls back to the full pool
+        // only if the visited set is empty (fresh save).
+        var fish = ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
+        if (fish.Count == 0)
+            return null;
+
+        // Try a handful of fish so a fish whose only spawn locations the player hasn't
+        // actually visited drops out. Each pick walks Data/Locations to verify the fish
+        // has at least one spawn in a visited spot.
+        ResolvedItem? target = null;
+        string? targetLocation = null;
+        var pool = new List<ResolvedItem>(fish);
+        for (int i = 0; i < 8 && pool.Count > 0; i++)
+        {
+            int idx = Game1.random.Next(pool.Count);
+            var candidate = pool[idx];
+            pool.RemoveAt(idx);
+            string? loc = ResolveVisitedSpawnLocation(ctx, candidate.QualifiedItemId);
+            if (loc != null)
+            {
+                target = candidate;
+                targetLocation = loc;
+                break;
+            }
+        }
+        if (target == null || targetLocation == null)
+            return null;
+
+        int qty = Math.Max(2, Math.Min(5, 2 + Game1.player.FishingLevel / 3));
+        int gold = ctx.Config.GoldIntermediateBase;
+
+        var rewards = new List<RewardSpec> { new MoneyReward(gold) };
+        var bait = ctx.Items.TryResolveItem(ChallengeBaitId);
+        if (bait != null)
+            rewards.Add(new ObjectReward(ChallengeBaitId, 10));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Fishing,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Fishing,
+            QuestGiver = giver,
+            ObjectiveItemId = target.QualifiedItemId,
+            ObjectiveItemName = target.DisplayName,
+            ObjectiveQuantity = qty,
+            CatchLocationName = targetLocation,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.fishing.locationOverpop.title"),
+            Description = ModEntry.I18n.Get("quest.fishing.locationOverpop.description", new
+            {
+                npc = giver,
+                qty,
+                item = target.DisplayName,
+                location = LocationDisplayName(targetLocation)
+            }),
+            CurrentObjective = ModEntry.I18n.Get("quest.fishing.locationOverpop.objective", new
+            {
+                qty,
+                item = target.DisplayName,
+                location = LocationDisplayName(targetLocation)
+            }),
+            TargetMessage = ModEntry.I18n.Get("quest.fishing.locationOverpop.targetMessage")
+        };
+    }
+
+    /// Row 61 — Rainy Day Catch. Daily-board FishingQuest filtered to fish whose
+    /// `Data/Fish` weather field includes "rainy", with a runtime gate that the player is
+    /// fishing in actual rain (Rain or Storm). Giver dispatched via `RainyDayFishing`.
+    /// Reward = `GoldIntermediateBase` + one rare tackle.
+    private static QuestPosting? RainyDayCatch(QuestContext ctx)
+    {
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.RainyDayFishing);
+        if (giver == null)
+            return null;
+
+        // GetSeasonalFish accepts a weather filter that intersects against `Data/Fish`'s
+        // weather field. "rainy" = vanilla token used for rain-only fish (Eel, Catfish,
+        // Lingcod, etc.).
+        var fish = ctx.Config.FishingIgnoresVisitedLocations
+            ? ctx.Items.GetSeasonalFish(ctx.Season, "rainy")
+            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season, "rainy");
+        if (fish.Count == 0)
+            return null;
+        var target = fish[Game1.random.Next(fish.Count)];
+
+        int qty = Game1.random.Next(1, 4);
+        int gold = ctx.Config.GoldIntermediateBase;
+
+        var rewards = new List<RewardSpec> { new MoneyReward(gold) };
+        var tackle = PickResolved(ctx, RainyDayTacklePool);
+        if (tackle != null)
+            rewards.Add(new ObjectReward(tackle.QualifiedItemId));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Fishing,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.Fishing,
+            QuestGiver = giver,
+            ObjectiveItemId = target.QualifiedItemId,
+            ObjectiveItemName = target.DisplayName,
+            ObjectiveQuantity = qty,
+            CatchWeather = "Rain",
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.fishing.rainyDay.title"),
+            Description = ModEntry.I18n.Get("quest.fishing.rainyDay.description", new { npc = giver, qty, item = target.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.fishing.rainyDay.objective", new { qty, item = target.DisplayName }),
+            TargetMessage = ModEntry.I18n.Get("quest.fishing.rainyDay.targetMessage")
+        };
+    }
+
+    /// Row 68 — Small/Medium/Large fish overpopulation. Daily-board FishingQuest filtered
+    /// by a size threshold (the catch's reported size in inches must clear the bucket
+    /// floor). Bucket is sampled per-quest; description embeds the bucket label and one
+    /// representative fish for flavour. Giver = Demetrius. Reward = `GoldIntermediateBase`
+    /// + bait.
+    private static QuestPosting? SizeFishOverpopulation(QuestContext ctx)
+    {
+        const string giver = "Demetrius";
+
+        // Pick a bucket. Mapping bucket → minimum-size threshold (inches). Floor of the
+        // bucket is what the runtime gate compares against `OnFishCaught(size)`.
+        int bucket = Game1.random.Next(3); // 0=Small, 1=Medium, 2=Large
+        int smallMax = Math.Max(1, ModEntry.Config.SizeBucketSmallMaxInches);
+        int mediumMax = Math.Max(smallMax + 1, ModEntry.Config.SizeBucketMediumMaxInches);
+        int minSize = bucket switch
+        {
+            0 => 1,
+            1 => smallMax + 1,
+            _ => mediumMax + 1
+        };
+        string bucketKey = bucket switch
+        {
+            0 => "small",
+            1 => "medium",
+            _ => "large"
+        };
+
+        // Pick a representative fish for the description — any seasonal fish; we don't
+        // strictly require its max size to match the bucket because the quest accepts any
+        // catch above the threshold. The ObjectiveItemId is set to this fish for vanilla
+        // FishingQuest's counter, but the size gate is what actually bounds completion.
+        var fish = ctx.Config.FishingIgnoresVisitedLocations
+            ? ctx.Items.GetSeasonalFish(ctx.Season)
+            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
+        if (fish.Count == 0)
+            return null;
+        var target = fish[Game1.random.Next(fish.Count)];
+
+        int qty = Math.Max(2, Math.Min(5, 2 + Game1.player.FishingLevel / 3));
+        int gold = ctx.Config.GoldIntermediateBase;
+
+        var rewards = new List<RewardSpec> { new MoneyReward(gold) };
+        var bait = ctx.Items.TryResolveItem(BaitId);
+        if (bait != null)
+            rewards.Add(new ObjectReward(BaitId, 25));
+
+        string bucketLabel = ModEntry.I18n.Get($"quest.fishing.sizeOverpop.bucket.{bucketKey}");
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Fishing,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Fishing,
+            QuestGiver = giver,
+            ObjectiveItemId = target.QualifiedItemId,
+            ObjectiveItemName = target.DisplayName,
+            ObjectiveQuantity = qty,
+            CatchMinSize = minSize,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.fishing.sizeOverpop.title", new { bucket = bucketLabel }),
+            Description = ModEntry.I18n.Get("quest.fishing.sizeOverpop.description", new
+            {
+                qty,
+                item = target.DisplayName,
+                bucket = bucketLabel,
+                minSize
+            }),
+            CurrentObjective = ModEntry.I18n.Get("quest.fishing.sizeOverpop.objective", new
+            {
+                qty,
+                item = target.DisplayName,
+                minSize
+            }),
+            TargetMessage = ModEntry.I18n.Get("quest.fishing.sizeOverpop.targetMessage")
+        };
+    }
+
+    /// Row 60 — Rainbow Platter (Trout Derby, Summer 20-21). DateLocked yearly DailyBoard
+    /// posting on Summer 20: catch `FestivalFishQty` Rainbow Trout (O)138. Giver dispatched
+    /// via `SaloonChef`; reward = recipe (per-giver) + `ShopDiscountReward` on the dish for
+    /// vanilla Gus saves only (the framework's discount writer needs a known shop id).
+    private static QuestPosting? RainbowPlatter(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
+        if (giver == null)
+            return null;
+
+        const string rainbowTroutId = "(O)138";
+        int qty = Math.Max(1, ModEntry.Config.FestivalFishQty);
+
+        string recipeName = ResolveTroutDerbyRecipe(giver);
+        var rewards = new List<RewardSpec>
+        {
+            new RecipeReward(recipeName)
+        };
+        // Only Gus has a known vanilla shop; for modded givers we grant just the recipe.
+        if (string.Equals(giver, "Gus", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(ModEntry.Config.TroutDerbyDishGus))
+        {
+            rewards.Add(new ShopDiscountReward(
+                ShopId: "Saloon",
+                PercentOff: ModEntry.Config.ShopDiscountPercent,
+                DurationDays: ModEntry.Config.ShopDiscountDurationDays,
+                AppliesTo: new List<string> { ModEntry.Config.TroutDerbyDishGus },
+                GuaranteedStock: 5));
+        }
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.Fishing,
+            QuestGiver = giver,
+            ObjectiveItemId = rainbowTroutId,
+            ObjectiveItemName = "Rainbow Trout",
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.festival.rainbowPlatter.title"),
+            Description = ModEntry.I18n.Get("quest.festival.rainbowPlatter.description", new { npc = giver, qty, recipe = recipeName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.festival.rainbowPlatter.objective", new { qty, npc = giver }),
+            TargetMessage = ModEntry.I18n.Get("quest.festival.rainbowPlatter.targetMessage")
+        };
+    }
+
+    /// Row 70 — SquidFest Showcase (Winter 12-13). DateLocked yearly posting on Winter 12:
+    /// catch `FestivalFishQty` Squid (O)151. Same shape as Rainbow Platter — saloon-chef
+    /// giver, recipe reward per giver, ShopDiscountReward on the dish for vanilla Gus.
+    private static QuestPosting? SquidFestShowcase(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
+        if (giver == null)
+            return null;
+
+        const string squidId = "(O)151";
+        int qty = Math.Max(1, ModEntry.Config.FestivalFishQty);
+
+        string recipeName = ResolveSquidFestRecipe(giver);
+        var rewards = new List<RewardSpec>
+        {
+            new RecipeReward(recipeName)
+        };
+        if (string.Equals(giver, "Gus", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(ModEntry.Config.SquidFestDishGus))
+        {
+            rewards.Add(new ShopDiscountReward(
+                ShopId: "Saloon",
+                PercentOff: ModEntry.Config.ShopDiscountPercent,
+                DurationDays: ModEntry.Config.ShopDiscountDurationDays,
+                AppliesTo: new List<string> { ModEntry.Config.SquidFestDishGus },
+                GuaranteedStock: 5));
+        }
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.Fishing,
+            QuestGiver = giver,
+            ObjectiveItemId = squidId,
+            ObjectiveItemName = "Squid",
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.festival.squidFest.title"),
+            Description = ModEntry.I18n.Get("quest.festival.squidFest.description", new { npc = giver, qty, recipe = recipeName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.festival.squidFest.objective", new { qty, npc = giver }),
+            TargetMessage = ModEntry.I18n.Get("quest.festival.squidFest.targetMessage")
+        };
+    }
+
+    private static string ResolveTroutDerbyRecipe(string giver) => giver switch
+    {
+        "Pika" => ModEntry.Config.TroutDerbyRecipePika,
+        "Celestine" => ModEntry.Config.TroutDerbyRecipeCelestine,
+        "Rosa" => ModEntry.Config.TroutDerbyRecipeRosa,
+        _ => ModEntry.Config.TroutDerbyRecipeGus
+    };
+
+    private static string ResolveSquidFestRecipe(string giver) => giver switch
+    {
+        "Pika" => ModEntry.Config.SquidFestRecipePika,
+        "Celestine" => ModEntry.Config.SquidFestRecipeCelestine,
+        "Rosa" => ModEntry.Config.SquidFestRecipeRosa,
+        _ => ModEntry.Config.SquidFestRecipeGus
+    };
+
+    /// Walks Data/Locations for the fish's spawn entries, intersected with the player's
+    /// visited locations, returning the first matching location key. Returns null when
+    /// the fish has no spawn in any visited spot. The CSV row asks for a fish at a
+    /// specific spot, so we need an actual reachable location to ground the quest in.
+    private static string? ResolveVisitedSpawnLocation(QuestContext ctx, string fishQualifiedId)
+    {
+        try
+        {
+            var visited = Game1.player?.locationsVisited;
+            if (visited == null || visited.Count == 0)
+                return null;
+            var visitedSet = new HashSet<string>(visited, StringComparer.OrdinalIgnoreCase);
+
+            string season = ctx.Season;
+            foreach (var (locName, data) in ctx.Data.Locations)
+            {
+                if (string.Equals(locName, "Default", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (!visitedSet.Contains(locName))
+                    continue;
+                if (data.Fish == null)
+                    continue;
+                foreach (var spawn in data.Fish)
+                {
+                    if (spawn?.ItemId == null) continue;
+                    if (spawn.Season.HasValue && !string.Equals(spawn.Season.Value.ToString(), season, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    string qualified = StardewValley.ItemRegistry.QualifyItemId(spawn.ItemId) ?? spawn.ItemId;
+                    if (string.Equals(qualified, fishQualifiedId, StringComparison.OrdinalIgnoreCase))
+                        return locName;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ctx.Monitor.Log($"ResolveVisitedSpawnLocation: {ex.Message}", LogLevel.Warn);
+        }
+        return null;
+    }
+
+    /// Lightweight pretty-printer for vanilla location keys used in quest descriptions.
+    /// Maps the common keys back to their in-game labels; unknown keys (modded) pass
+    /// through verbatim, which is usually what the player sees on the map anyway.
+    private static string LocationDisplayName(string key) => key?.ToLowerInvariant() switch
+    {
+        "town" => "Pelican Town",
+        "beach" => "the beach",
+        "mountain" => "the mountain lake",
+        "forest" => "Cindersap Forest",
+        "woods" => "the Secret Woods",
+        "backwoods" => "the Backwoods",
+        "desert" => "the Calico Desert",
+        "submarine" => "the Night Market submarine",
+        "islandsouth" or "islandnorth" or "islandwest" or "islandeast" or "islandsoutheast" => "Ginger Island",
+        _ => key ?? string.Empty
+    };
 }

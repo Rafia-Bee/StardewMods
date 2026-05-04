@@ -43,6 +43,21 @@ public sealed class AdventureStepState
     /// while the parent quest is in the active log. Read by `AdventureQuest.HasDecorShippingStep`
     /// so the per-quest flag tracks any opted-in step. See `DecorShippingPatches`.
     public bool AllowDecorShipping { get; set; }
+    /// `Catch` step filter: when non-empty, the caught fish only credits the step when the
+    /// player's current location name matches (case-insensitive). Plain location key — e.g.
+    /// `"Mountain"` or `"Beach"`.
+    public string LocationName { get; set; } = string.Empty;
+    /// `Catch` step filter: when > 0, the caught fish only credits the step when its size
+    /// (in inches, the value vanilla passes through `OnFishCaught`) is ≥ this threshold.
+    /// Squid / Octopus / pond-caught fish that report size -1 fail the gate, which matches
+    /// the "only counts a properly-sized rod-caught specimen" intent of the size-bucket rows.
+    public int MinSize { get; set; }
+    /// `Catch` step filter: when non-empty, the caught fish only credits the step when the
+    /// runtime weather at the player's current location matches the requested label. Accepts
+    /// `Sun` / `Rain` / `Storm` / `Snow` / `Wind` (and the `sunny` / `rainy` / ... aliases
+    /// used by `WeatherForecast` triggers). `Rain` matches both Rain and Storm (vanilla
+    /// fish-data rain spawns fire under both).
+    public string Weather { get; set; } = string.Empty;
     public int Progress { get; set; }
     public bool Done { get; set; }
     public string Description { get; set; } = string.Empty;
@@ -66,6 +81,9 @@ internal static class AdventureStepCodec
         sb.Append("|Count=").Append(s.Count);
         sb.Append("|MinQuality=").Append(s.MinQuality);
         sb.Append("|AllowDecor=").Append(s.AllowDecorShipping ? "1" : "0");
+        sb.Append("|Loc=").Append(Sanitise(s.LocationName));
+        sb.Append("|MinSize=").Append(s.MinSize);
+        sb.Append("|Weather=").Append(Sanitise(s.Weather));
         sb.Append("|Progress=").Append(s.Progress);
         sb.Append("|Done=").Append(s.Done ? "1" : "0");
         sb.Append("|Credited=").Append(JoinList(s.CreditedKeys));
@@ -133,6 +151,16 @@ internal static class AdventureStepCodec
                     break;
                 case "AllowDecor":
                     state.AllowDecorShipping = val == "1" || string.Equals(val, "true", StringComparison.OrdinalIgnoreCase);
+                    break;
+                case "Loc":
+                    state.LocationName = val;
+                    break;
+                case "MinSize":
+                    int.TryParse(val, out int minSize);
+                    state.MinSize = minSize;
+                    break;
+                case "Weather":
+                    state.Weather = val;
                     break;
                 case "Progress":
                     int.TryParse(val, out int p);

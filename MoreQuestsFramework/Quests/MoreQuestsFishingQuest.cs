@@ -24,12 +24,81 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
 {
     public readonly NetStringList serializedRewards = new();
 
+    /// Phase 9.5e Catch filters. When non-empty, the catch only credits when the player's
+    /// current location matches; when > 0, the reported catch size (inches) must be ≥ the
+    /// threshold; when non-empty, the runtime weather must match. All three are independent
+    /// — empty / zero defaults disable each gate, so a vanilla single-objective fishing
+    /// quest with none of these set behaves exactly like base `FishingQuest`.
+    public readonly NetString catchLocationName = new();
+    public readonly NetInt catchMinSize = new();
+    public readonly NetString catchWeather = new();
+
     public NetStringList SerializedRewards => serializedRewards;
 
     protected override void initNetFields()
     {
         base.initNetFields();
-        NetFields.AddField(serializedRewards, "serializedRewards");
+        NetFields
+            .AddField(serializedRewards, "serializedRewards")
+            .AddField(catchLocationName, "catchLocationName")
+            .AddField(catchMinSize, "catchMinSize")
+            .AddField(catchWeather, "catchWeather");
+    }
+
+    /// Apply the Phase 9.5e Catch filters before letting the base `FishingQuest`
+    /// increment its counter. When a filter is unset (empty / zero) the gate is
+    /// pass-through; when set, a mismatch returns false without crediting (vanilla's
+    /// "this counted toward a quest" UI cue stays silent).
+    public override bool OnFishCaught(string fishId, int numberCaught, int size, bool probe = false)
+    {
+        if (!CatchFiltersPass(fishId, size))
+            return false;
+        return base.OnFishCaught(fishId, numberCaught, size, probe);
+    }
+
+    private bool CatchFiltersPass(string fishId, int size)
+    {
+        if (!string.IsNullOrEmpty(catchLocationName.Value))
+        {
+            string current = Game1.currentLocation?.Name ?? string.Empty;
+            if (!string.Equals(current, catchLocationName.Value, StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+        if (catchMinSize.Value > 0 && size < catchMinSize.Value)
+            return false;
+        if (!string.IsNullOrEmpty(catchWeather.Value))
+        {
+            if (!CurrentWeatherMatches(catchWeather.Value))
+                return false;
+        }
+        return true;
+    }
+
+    /// Reads the runtime weather at the player's current location and compares to the
+    /// requested label. Mirrors `ConditionEvaluator.MatchesWeather`'s alias handling.
+    /// `Rain` matches Rain or Storm so vanilla rain-only fish data stays consistent (Storm
+    /// is a thunderstorm variant that still fires rain spawns in `Data/Fish`).
+    private static bool CurrentWeatherMatches(string requested)
+    {
+        string contextId = Game1.player?.currentLocation?.GetLocationContextId() ?? "Default";
+        string actual = Game1.netWorldState?.Value?.GetWeatherForLocation(contextId)?.Weather ?? string.Empty;
+        if (string.IsNullOrEmpty(actual))
+            return false;
+
+        string norm = requested.ToLowerInvariant() switch
+        {
+            "sunny" => "Sun",
+            "rainy" => "Rain",
+            "stormy" => "Storm",
+            "snowy" => "Snow",
+            "windy" => "Wind",
+            _ => requested
+        };
+
+        if (string.Equals(norm, "Rain", StringComparison.OrdinalIgnoreCase))
+            return string.Equals(actual, "Rain", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(actual, "Storm", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(actual, norm, StringComparison.OrdinalIgnoreCase);
     }
 
     public override void questComplete()

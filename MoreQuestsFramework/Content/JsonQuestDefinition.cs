@@ -129,7 +129,10 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
                 Items = new List<string>(sd.Items),
                 Count = Math.Max(1, sd.Count),
                 MinQuality = Math.Max(0, sd.MinQuality),
-                AllowDecorShipping = sd.AllowDecorShipping
+                AllowDecorShipping = sd.AllowDecorShipping,
+                LocationName = sd.LocationName ?? string.Empty,
+                MinSize = Math.Max(0, sd.MinSize),
+                Weather = sd.Weather ?? string.Empty
             });
         }
 
@@ -235,6 +238,9 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             ObjectiveItemName = primary,
             ObjectiveQuantity = Math.Max(1, obj.Count),
             TargetMonster = obj.TargetMonster,
+            CatchLocationName = obj.LocationName ?? string.Empty,
+            CatchMinSize = Math.Max(0, obj.MinSize),
+            CatchWeather = obj.Weather ?? string.Empty,
             DeadlineDays = Difficulty.Deadline(ParseEnum(_def.DeadlineDays, DeadlineKind.Short), ctx.Config),
             Title = Resolve(_def.Title),
             Description = Resolve(_def.Description),

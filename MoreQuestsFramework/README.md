@@ -169,12 +169,14 @@ Custom `Quest` subclasses must carry a unique `[XmlType("Mods_<owner>_<name>")]`
 
 `ObjectiveDef.MinQuality` and `AdventureStep.MinQuality` gate item acceptance on `Object.Quality >= MinQuality` for `MoreQuestsItemDeliveryQuest` and AdventureQuest `Deliver` steps. Quality 0 = base / vanilla behaviour (any quality accepted), 1 = silver, 2 = gold, 4 = iridium (vanilla skips 3). Non-Object items (rings, weapons, etc.) fail any non-zero gate. Quest descriptions render the requirement on the content side; the framework only enforces.
 
+`ObjectiveDef.LocationName` / `MinSize` / `Weather` extend single-objective `Fishing` quests with the same filter set the `Catch` step exposes. Set on a `QuestPosting` (or via the JSON `Objective.{LocationName,MinSize,Weather}` fields) and the catch only credits when the player is at the named location, the catch's reported size (inches) clears the threshold, and the runtime weather matches. Weather alias / `Rain ∋ Storm` rules mirror the `Catch` step. Empty / zero values disable each gate independently.
+
 ### AdventureQuest step kinds
 
 Multi-step "Adventure" quests carry a `Steps[]` list; each entry has a `Kind` driving how the step advances:
 
 - `Deliver` / `Talk` / `Gift` / `GiftUniqueNpcs` — vanilla `OnItemOfferedToNpc` / `OnNpcSocialized` virtuals. `Targets[]` = NPC names, `Items[]` = accepted item ids (or `$`-prefixed predicates: `$edible-egg`, `$category:N`, `$tag:<contextTag>`, `$forage` (alias for `$tag:forage_item`)).
-- `Catch` — `OnFishCaught` virtual. `Items[]` = accepted fish ids.
+- `Catch` — `OnFishCaught` virtual. `Items[]` = accepted fish ids. Optional `LocationName`, `MinSize`, `Weather` filters gate the catch on current location, reported size in inches (size -1 always fails non-zero gates), and runtime weather (`Sun` / `Rain` / `Storm` / `Snow` / `Wind`; `Rain` matches both Rain and Storm).
 - `Slay` — `OnMonsterSlain` virtual. `Targets[]` = monster type names.
 - `Ship` — DayEnding shipping-bin observer. `Items[]` filter, `Count` = stack to credit. Set `AllowDecorShipping: true` on the step to bypass vanilla's furniture / decor shipping ban while the parent quest is in the active log.
 - `ReachLevel` — DayStarted + `Player.Warped` poll of `deepestMineLevel`. `Targets[0]` = `Mine` or `SkullCavern`, `Count` = floor.
