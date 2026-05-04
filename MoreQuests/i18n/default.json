@@ -344,5 +344,33 @@
     "quest.festival.rsvGathering.description": "Lenny is putting together the Ridgeside Gathering and needs the village square dressed up. Ship a Tub o' Flowers, {{wood}} wood, and any one table. The recipe for the Tub is included with this letter if you don't already know it.",
     "quest.festival.rsvGathering.step.tub": "Ship {{count}} Tub o' Flowers.",
     "quest.festival.rsvGathering.step.wood": "Ship {{count}} wood.",
-    "quest.festival.rsvGathering.step.table": "Ship {{count}} table (any kind)."
+    "quest.festival.rsvGathering.step.table": "Ship {{count}} table (any kind).",
+
+    "quest.fishing.locationOverpop.title": "Trouble at {{location}}",
+    "quest.fishing.locationOverpop.description": "{{npc}} here. The population of {{item}} at {{location}} is way past balanced and the rest of the food web is feeling it. Pull {{qty}} from there and we'll be in better shape.",
+    "quest.fishing.locationOverpop.objective": "Catch {{qty}} {{item}} at {{location}}.",
+    "quest.fishing.locationOverpop.targetMessage": "Thanks. The numbers should settle now.",
+
+    "quest.fishing.rainyDay.title": "Catches that hide in the rain",
+    "quest.fishing.rainyDay.description": "{{npc}} only sees these on rainy days, and there's a stretch coming. Bring back {{qty}} {{item}} caught in the rain and the kit's yours.",
+    "quest.fishing.rainyDay.objective": "Catch {{qty}} {{item}} while it's raining.",
+    "quest.fishing.rainyDay.targetMessage": "Lovely catch. Rain or shine, you've got the touch.",
+
+    "quest.fishing.sizeOverpop.bucket.small": "small",
+    "quest.fishing.sizeOverpop.bucket.medium": "medium-sized",
+    "quest.fishing.sizeOverpop.bucket.large": "large",
+    "quest.fishing.sizeOverpop.title": "Thinning the {{bucket}} catches",
+    "quest.fishing.sizeOverpop.description": "I'm trying to balance the food web. The {{bucket}} fish around here are crowding out the smaller stock, so pull {{qty}} catches that measure at least {{minSize}} inches. Anything that size counts, even if it's a {{item}}.",
+    "quest.fishing.sizeOverpop.objective": "Catch {{qty}} fish at least {{minSize}} inches long.",
+    "quest.fishing.sizeOverpop.targetMessage": "Good. The numbers should settle now.",
+
+    "quest.festival.rainbowPlatter.title": "Rainbow Platter for the Trout Derby",
+    "quest.festival.rainbowPlatter.description": "{{npc}} is running a Trout Derby tasting. Bring in {{qty}} Rainbow Trout for the kitchen and you'll walk away with the {{recipe}} recipe and a discount on the dish.",
+    "quest.festival.rainbowPlatter.objective": "Catch {{qty}} Rainbow Trout for {{npc}}.",
+    "quest.festival.rainbowPlatter.targetMessage": "Beautiful catch. The platter's going to look incredible.",
+
+    "quest.festival.squidFest.title": "Showcase dish for SquidFest",
+    "quest.festival.squidFest.description": "{{npc}} wants a SquidFest showcase plate and needs {{qty}} fresh squid for it. Hand them in and you'll get the {{recipe}} recipe and a discount on the dish.",
+    "quest.festival.squidFest.objective": "Catch {{qty}} Squid for {{npc}}.",
+    "quest.festival.squidFest.targetMessage": "Perfect. SquidFest is going to be a hit."
 }

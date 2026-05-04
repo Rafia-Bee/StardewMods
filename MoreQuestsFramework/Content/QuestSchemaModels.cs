@@ -124,6 +124,21 @@ public sealed class ObjectiveDef
     public List<string> Item { get; set; } = new();
     public int Count { get; set; } = 1;
     public string? TargetMonster { get; set; }
+
+    /// `Catch` / `Fish` / `Fishing` filter: when set, only counts fish caught at the
+    /// matching location name (case-insensitive against `Game1.currentLocation.Name`).
+    public string? LocationName { get; set; }
+
+    /// `Catch` / `Fish` / `Fishing` filter: when > 0, only counts a catch whose `size`
+    /// (the inches value vanilla passes through `OnFishCaught`) is ≥ the threshold. Squid /
+    /// Octopus and pond catches that report size -1 fail this gate.
+    public int MinSize { get; set; }
+
+    /// `Catch` / `Fish` / `Fishing` filter: when set, only counts fish caught while the
+    /// runtime weather at the player's current location matches. Accepts `Sun` / `Rain` /
+    /// `Storm` / `Snow` / `Wind` plus the `sunny` / `rainy` / ... aliases. `Rain` matches
+    /// both Rain and Storm states.
+    public string? Weather { get; set; }
 }
 
 /// One step within an Adventure quest's `Steps[]` list. Mirrors `AdventureStepState` but
@@ -157,6 +172,20 @@ public sealed class StepDef
     /// parent quest is in the active log and any step has this flag set, vanilla's
     /// shipping ban is lifted via a gated Harmony postfix on `Object.canBeShipped`.
     public bool AllowDecorShipping { get; set; }
+
+    /// `Catch` step filter: when set, only counts fish caught at the matching location name
+    /// (case-insensitive against `Game1.currentLocation.Name`).
+    public string? LocationName { get; set; }
+
+    /// `Catch` step filter: when > 0, only counts a catch whose `size` (the inches value
+    /// vanilla passes through `OnFishCaught`) is ≥ the threshold. Squid / Octopus and pond
+    /// catches that report size -1 fail this gate.
+    public int MinSize { get; set; }
+
+    /// `Catch` step filter: when set, only counts fish caught while the runtime weather at
+    /// the player's current location matches. Accepts `Sun` / `Rain` / `Storm` / `Snow` /
+    /// `Wind` plus the `sunny` / `rainy` / ... aliases. `Rain` matches both Rain and Storm.
+    public string? Weather { get; set; }
 }
 
 public sealed class RewardDef

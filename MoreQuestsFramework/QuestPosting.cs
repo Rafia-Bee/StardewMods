@@ -69,6 +69,23 @@ public sealed class QuestPosting
     public string? TargetLocation { get; set; }
     public int MinQuality { get; set; }
 
+    /// `BoardQuestType.Fishing` filter: when set, the catch only counts when the player's
+    /// current location name matches (case-insensitive). Routed into `MoreQuestsFishingQuest`
+    /// at build time so the runtime gate sits next to the existing item-id check.
+    public string CatchLocationName { get; set; } = string.Empty;
+
+    /// `BoardQuestType.Fishing` filter: when > 0, the catch only counts when its size (in
+    /// inches, the value vanilla passes through `OnFishCaught`) is ≥ the threshold. Used by
+    /// the small/medium/large overpopulation row to bucket fish by size. Squid / Octopus and
+    /// pond catches that report size -1 always fail this gate.
+    public int CatchMinSize { get; set; }
+
+    /// `BoardQuestType.Fishing` filter: when set, the catch only counts when the runtime
+    /// weather at the player's current location matches. Accepts `Sun` / `Rain` / `Storm` /
+    /// `Snow` / `Wind` plus the `sunny` / `rainy` / ... aliases. `Rain` matches both Rain
+    /// and Storm.
+    public string CatchWeather { get; set; } = string.Empty;
+
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
     public string CurrentObjective { get; set; } = "";

@@ -242,7 +242,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             var step = steps[i];
             if (step.Done || !RequiresMet(steps, step)) continue;
             if (step.Kind != AdventureStepKind.Catch) continue;
-            TryAdvanceCatch(i, step, fishId, numberCaught, probe);
+            TryAdvanceCatch(i, step, fishId, numberCaught, size, probe);
         }
         return false;
     }
@@ -491,6 +491,49 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
+    /// Phase 9.5e Catch step filters. A step with empty / zero filters passes through
+    /// unchanged. Set fields gate against the player's current location, the catch's
+    /// reported size, and the runtime weather respectively. `Rain` matches both `Rain`
+    /// and `Storm` so vanilla rain-only fish data stays consistent across thunderstorms.
+    private static bool CatchFiltersPass(AdventureStepState step, int size)
+    {
+        if (!string.IsNullOrEmpty(step.LocationName))
+        {
+            string current = Game1.currentLocation?.Name ?? string.Empty;
+            if (!string.Equals(current, step.LocationName, StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+        if (step.MinSize > 0 && size < step.MinSize)
+            return false;
+        if (!string.IsNullOrEmpty(step.Weather))
+        {
+            if (!CurrentWeatherMatches(step.Weather))
+                return false;
+        }
+        return true;
+    }
+
+    private static bool CurrentWeatherMatches(string requested)
+    {
+        string contextId = Game1.player?.currentLocation?.GetLocationContextId() ?? "Default";
+        string actual = Game1.netWorldState?.Value?.GetWeatherForLocation(contextId)?.Weather ?? string.Empty;
+        if (string.IsNullOrEmpty(actual))
+            return false;
+        string norm = requested.ToLowerInvariant() switch
+        {
+            "sunny" => "Sun",
+            "rainy" => "Rain",
+            "stormy" => "Storm",
+            "snowy" => "Snow",
+            "windy" => "Wind",
+            _ => requested
+        };
+        if (string.Equals(norm, "Rain", StringComparison.OrdinalIgnoreCase))
+            return string.Equals(actual, "Rain", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(actual, "Storm", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(actual, norm, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool LocationMatches(AdventureStepState step, string locationName)
     {
         if (step.Targets.Count == 0)
@@ -612,10 +655,11 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return false;
     }
 
-    /// Catch step: increments progress when the caught fish matches one of the step's `Items`.
-    /// `Targets` is unused here (location/weather gating is deferred to a later phase). Always
-    /// returns false so vanilla's other quests still see the catch.
-    private bool TryAdvanceCatch(int idx, AdventureStepState step, string fishId, int numberCaught, bool probe)
+    /// Catch step: increments progress when the caught fish matches one of the step's `Items`
+    /// AND passes the optional `LocationName` / `MinSize` / `Weather` filters added in 9.5e.
+    /// `Targets` stays unused so the existing item-id encoding keeps working without churn.
+    /// Always returns false so vanilla's other quests still see the catch.
+    private bool TryAdvanceCatch(int idx, AdventureStepState step, string fishId, int numberCaught, int size, bool probe)
     {
         if (step.Items.Count == 0)
             return false;
@@ -639,6 +683,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             }
         }
         if (!matched) return false;
+        if (!CatchFiltersPass(step, size)) return false;
         if (probe) return true;
 
         int needed = Math.Max(1, step.Count);

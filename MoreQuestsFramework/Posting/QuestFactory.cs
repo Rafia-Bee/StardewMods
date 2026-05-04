@@ -33,6 +33,9 @@ public static class QuestFactory
                 ItemId = { Value = itemId },
                 numberToFish = { Value = Math.Max(1, p.ObjectiveQuantity) },
                 reward = { Value = p.TotalMoney },
+                catchLocationName = { Value = p.CatchLocationName ?? string.Empty },
+                catchMinSize = { Value = Math.Max(0, p.CatchMinSize) },
+                catchWeather = { Value = p.CatchWeather ?? string.Empty },
                 targetMessage = p.TargetMessage
             },
             BoardQuestType.SlayMonster => new SlayMonsterQuest

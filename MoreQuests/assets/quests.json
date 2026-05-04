@@ -543,6 +543,72 @@
                 "Available": { "HasMod": "Rafseazz.RidgesideVillage", "NpcExists": "Lenny" }
             },
             "Generator": "RidgesideGatheringDecor"
+        },
+        {
+            "Name": "Fishing.LocationOverpopulation",
+            "Category": "Fishing",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 22,
+                "MaxPerDay": 1,
+                "CooldownDays": 4,
+                "Available": { "SkillLevel": "Fishing 2" }
+            },
+            "Generator": "LocationFishOverpopulation"
+        },
+        {
+            "Name": "Fishing.RainyDayCatch",
+            "Category": "Fishing",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 18,
+                "MaxPerDay": 1,
+                "CooldownDays": 5,
+                "Available": { "SkillLevel": "Fishing 3", "Weather": "Rain" }
+            },
+            "Generator": "RainyDayCatch"
+        },
+        {
+            "Name": "Fishing.RainyDayCatchMail",
+            "Category": "Fishing",
+            "Trigger": {
+                "Source": "WeatherForecast",
+                "Weather": "Rain",
+                "Available": { "SkillLevel": "Fishing 3" }
+            },
+            "Generator": "RainyDayCatch"
+        },
+        {
+            "Name": "Fishing.SizeOverpopulation",
+            "Category": "Fishing",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 18,
+                "MaxPerDay": 1,
+                "CooldownDays": 4,
+                "Available": { "SkillLevel": "Fishing 3", "NpcMet": "Demetrius" }
+            },
+            "Generator": "SizeFishOverpopulation"
+        },
+        {
+            "Name": "Festival.RainbowPlatter",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "summer 20",
+                "RepeatYearly": true
+            },
+            "Generator": "RainbowPlatter"
+        },
+        {
+            "Name": "Festival.SquidFestShowcase",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "winter 12",
+                "RepeatYearly": true
+            },
+            "Generator": "SquidFestShowcase"
         }
     ]
 }
