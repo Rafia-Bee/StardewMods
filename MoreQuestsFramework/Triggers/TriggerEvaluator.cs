@@ -25,6 +25,11 @@ public sealed class TriggerEvaluator
     /// type still all see it.
     private readonly HashSet<string> _newBuildingsToday = new(StringComparer.OrdinalIgnoreCase);
 
+    /// Read-only view of `_newBuildingsToday` so AdventureQuest's `Build` step observers
+    /// can credit on the same per-day diff the trigger pass uses, without each quest
+    /// re-scanning the farm.
+    public IReadOnlyCollection<string> NewBuildingsToday => _newBuildingsToday;
+
     /// Mail flags newly added to `Game1.player.mailReceived` since the last DayStarted.
     private readonly HashSet<string> _newMailFlagsToday = new(StringComparer.OrdinalIgnoreCase);
 

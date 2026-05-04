@@ -108,6 +108,8 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.Saving += OnSaving;
         helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTick;
         helper.Events.Player.Warped += OnPlayerWarped;
+        helper.Events.World.TerrainFeatureListChanged += OnTerrainFeatureListChanged;
+        helper.Events.World.ObjectListChanged += OnObjectListChanged;
 
         helper.ConsoleCommands.Add(
             "mq_refresh",
@@ -344,6 +346,11 @@ public sealed class ModEntry : Mod
         _triggers?.BeginDay();
         _poster.BeginDay();
 
+        // Phase 9.5c: credit AdventureQuest `Build` steps with the building-types diff
+        // computed by `_triggers.BeginDay()`. Same source of truth the BuildingBuilt
+        // trigger uses, no extra farm scan.
+        ObserveBuildOnQuestLog();
+
         var daily = _pipeline.GenerateDailyPostings();
         _poster.PostBatch(daily);
         _poster.CommitBoard();
@@ -414,6 +421,63 @@ public sealed class ModEntry : Mod
         if (!Context.IsWorldReady || !e.IsLocalPlayer)
             return;
         ObserveReachLevelOnQuestLog();
+        ObserveVisitOnQuestLog(e.NewLocation?.Name);
+    }
+
+    private void ObserveVisitOnQuestLog(string? locationName)
+    {
+        if (string.IsNullOrEmpty(locationName) || Game1.player == null)
+            return;
+        var log = Game1.player.questLog;
+        for (int i = 0; i < log.Count; i++)
+        {
+            if (log[i] is AdventureQuest a && !a.completed.Value)
+                a.ObserveVisit(locationName);
+        }
+    }
+
+    private void OnTerrainFeatureListChanged(object? sender, StardewModdingAPI.Events.TerrainFeatureListChangedEventArgs e)
+    {
+        if (!Context.IsWorldReady || Game1.player == null || e.Location == null)
+            return;
+        int trees = 0;
+        foreach (var pair in e.Added)
+        {
+            if (pair.Value is StardewValley.TerrainFeatures.Tree)
+                trees++;
+        }
+        if (trees == 0)
+            return;
+        string locName = e.Location.Name;
+        var log = Game1.player.questLog;
+        for (int i = 0; i < log.Count; i++)
+        {
+            if (log[i] is AdventureQuest a && !a.completed.Value)
+                a.ObservePlantedTree(locName, trees);
+        }
+    }
+
+    private void OnObjectListChanged(object? sender, StardewModdingAPI.Events.ObjectListChangedEventArgs e)
+    {
+        if (!Context.IsWorldReady || Game1.player == null || e.Location == null)
+            return;
+        int weeds = 0;
+        foreach (var pair in e.Removed)
+        {
+            var obj = pair.Value;
+            if (obj == null) continue;
+            if (obj.IsWeeds())
+                weeds++;
+        }
+        if (weeds == 0)
+            return;
+        string locName = e.Location.Name;
+        var log = Game1.player.questLog;
+        for (int i = 0; i < log.Count; i++)
+        {
+            if (log[i] is AdventureQuest a && !a.completed.Value)
+                a.ObserveWeedsCleared(locName, weeds);
+        }
     }
 
     /// Walks the active quest log once and lets every `AdventureQuest` with an active
@@ -430,6 +494,45 @@ public sealed class ModEntry : Mod
         {
             if (log[i] is AdventureQuest a && !a.completed.Value)
                 a.ObserveReachLevel(deepest);
+        }
+    }
+
+    /// Walks the active quest log once at DayStarted and lets every `AdventureQuest` with
+    /// an active `Build` step credit against the building-types newly added to the farm
+    /// since yesterday's snapshot. Diff is computed by `TriggerEvaluator.BeginDay`, so no
+    /// extra farm scan here.
+    private void ObserveBuildOnQuestLog()
+    {
+        if (Game1.player == null || _triggers == null)
+            return;
+        var newTypes = _triggers.NewBuildingsToday;
+        if (newTypes == null || newTypes.Count == 0)
+            return;
+        var log = Game1.player.questLog;
+        for (int i = 0; i < log.Count; i++)
+        {
+            if (log[i] is AdventureQuest a && !a.completed.Value)
+                a.ObserveBuild(newTypes);
+        }
+    }
+
+    /// Walks the active quest log once a second and lets every `AdventureQuest` with an
+    /// active `ClearDebris` step poll the resource-clump count at its target location.
+    /// Cheap when no ClearDebris quest is active — early-returns on the per-step kind
+    /// check before touching `location.resourceClumps`.
+    private void PollClumpsOnQuestLog()
+    {
+        if (Game1.player == null)
+            return;
+        var log = Game1.player.questLog;
+        for (int i = 0; i < log.Count; i++)
+        {
+            if (log[i] is not AdventureQuest a || a.completed.Value)
+                continue;
+            // Player.currentLocation is the most-likely spot for clump removal; polling
+            // there is enough for the common case (player breaks a clump where they
+            // stand). For multi-location ClearDebris quests the next warp re-baselines.
+            a.PollResourceClumps(Game1.currentLocation);
         }
     }
 
@@ -545,6 +648,7 @@ public sealed class ModEntry : Mod
 
         _dialogueWatcher?.Tick();
         _consequenceWatcher?.Tick();
+        PollClumpsOnQuestLog();
         // Grant FrameworkRewards for any framework-emitted SpecialOrder that completed
         // this tick. Bypasses vanilla's Data/SpecialOrders Rewards array entirely so
         // third-party content packs that mutate that array can't intercept the grant.

@@ -169,6 +169,23 @@ Custom `Quest` subclasses must carry a unique `[XmlType("Mods_<owner>_<name>")]`
 
 `ObjectiveDef.MinQuality` and `AdventureStep.MinQuality` gate item acceptance on `Object.Quality >= MinQuality` for `MoreQuestsItemDeliveryQuest` and AdventureQuest `Deliver` steps. Quality 0 = base / vanilla behaviour (any quality accepted), 1 = silver, 2 = gold, 4 = iridium (vanilla skips 3). Non-Object items (rings, weapons, etc.) fail any non-zero gate. Quest descriptions render the requirement on the content side; the framework only enforces.
 
+### AdventureQuest step kinds
+
+Multi-step "Adventure" quests carry a `Steps[]` list; each entry has a `Kind` driving how the step advances:
+
+- `Deliver` / `Talk` / `Gift` / `GiftUniqueNpcs` — vanilla `OnItemOfferedToNpc` / `OnNpcSocialized` virtuals. `Targets[]` = NPC names, `Items[]` = accepted item ids (or `$`-prefixed predicates: `$forage`, `$edible-egg`, `$category:N`).
+- `Catch` — `OnFishCaught` virtual. `Items[]` = accepted fish ids.
+- `Slay` — `OnMonsterSlain` virtual. `Targets[]` = monster type names.
+- `Ship` — DayEnding shipping-bin observer. `Items[]` filter, `Count` = stack to credit.
+- `ReachLevel` — DayStarted + `Player.Warped` poll of `deepestMineLevel`. `Targets[0]` = `Mine` or `SkullCavern`, `Count` = floor.
+- `Visit` — `Player.Warped` observer. `Targets[0]` = location name. `Items[]` reserved for future "with N following animals" gating (no-op until LivestockFollowsYou exposes a follower API).
+- `Build` — DayStarted diff against the previous day's farm-building snapshot. `Targets[0]` = building type.
+- `Plant` — `World.TerrainFeatureListChanged` filter Tree. `Targets[0]` = location, `Count` = trees planted.
+- `ClearWeeds` — `World.ObjectListChanged` removed list filter `IsWeeds()`. `Targets[0]` = location, `Count` = weeds cleared.
+- `ClearDebris` — per-second poll of `location.resourceClumps`. `Targets[0]` = location, `Count` = clumps removed.
+
+Step ordering is enforced by `Requires[]` (other step `Name`s that must be Done before the step becomes active). `$giver` in `Targets[]` rewrites to the resolved giver at quest-creation time. None of the step observers add Harmony patches; every kind rides an existing SMAPI event or a framework-owned tick.
+
 ### Combat-food reward pool
 
 Quests that hand out a random combat-buff food on completion (e.g. More Quests' Monster Hunt) draw from a shared item-id pool the framework owns. The pool starts empty; the content mod seeds vanilla defaults at `RegistrationOpen`, and other mods can append their own combat foods through:
