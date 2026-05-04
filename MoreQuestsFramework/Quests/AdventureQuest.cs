@@ -50,6 +50,24 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     /// gating) only emits one "deferred" log line per quest, not one per warp.
     private bool _visitItemsDeferralLogged;
 
+    /// True when any step of this quest opts into decor-shipping. Read by the framework's
+    /// per-tick log diff to decide whether this quest contributes to the
+    /// `Object.canBeShipped` patch's active-quest count. Cheap — the decoded list is
+    /// already cached, so this is a single iteration over `Steps`.
+    public bool HasDecorShippingStep
+    {
+        get
+        {
+            var steps = Steps;
+            for (int i = 0; i < steps.Count; i++)
+            {
+                if (steps[i].AllowDecorShipping)
+                    return true;
+            }
+            return false;
+        }
+    }
+
     protected override void initNetFields()
     {
         base.initNetFields();
@@ -783,35 +801,46 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     ///   excludes Dinosaur Egg (Edibility -300, inedible per vanilla).
     /// - `$category:N`: any Object with the given vanilla category constant.
     /// - `$forage`: any Object whose `Data/Objects` row carries the `forage_item`
-    ///   context tag. Covers vanilla seasonal forage, beach forage, and modded forage
-    ///   uniformly via the same source of truth `ItemResolver.GetForageItems` reads.
+    ///   context tag. Convenience alias for `$tag:forage_item`.
+    /// - `$tag:<contextTag>`: any item whose qualified id carries the given context tag
+    ///   per `ItemContextTagManager.HasBaseTag`. Used for filters like `$tag:color_purple`
+    ///   (purple-dye items) or `$tag:furniture_table` (any table furniture). Item ids
+    ///   resolved this way can be Furniture / BigCraftable / Object alike — the matcher
+    ///   doesn't constrain Item subtype, so authors can request decor items the way they
+    ///   request crops.
     private static bool TokenMatches(string token, Item item)
     {
-        if (item is not StardewValley.Object obj)
-            return false;
         const int eggCategory = -5;
         const int inedible = -300;
         if (string.Equals(token, "$edible-egg", StringComparison.OrdinalIgnoreCase))
-            return obj.Category == eggCategory && obj.Edibility != inedible;
+            return item is StardewValley.Object eggObj && eggObj.Category == eggCategory && eggObj.Edibility != inedible;
         if (string.Equals(token, "$forage", StringComparison.OrdinalIgnoreCase))
-            return HasContextTag(obj, "forage_item");
+            return HasContextTag(item, "forage_item");
         if (token.StartsWith("$category:", StringComparison.OrdinalIgnoreCase))
         {
-            if (int.TryParse(token.Substring("$category:".Length), out int cat))
-                return obj.Category == cat;
+            if (item is StardewValley.Object catObj && int.TryParse(token.Substring("$category:".Length), out int cat))
+                return catObj.Category == cat;
+            return false;
+        }
+        if (token.StartsWith("$tag:", StringComparison.OrdinalIgnoreCase))
+        {
+            string tag = token.Substring("$tag:".Length).Trim();
+            return !string.IsNullOrEmpty(tag) && HasContextTag(item, tag);
         }
         return false;
     }
 
-    private static bool HasContextTag(StardewValley.Object obj, string tag)
+    private static bool HasContextTag(Item item, string tag)
     {
+        if (item == null)
+            return false;
         try
         {
             // ItemContextTagManager.HasBaseTag covers both the authored tags from
             // Data/Objects and any runtime tags injected by Stardew (e.g. preserve_sheet_*),
             // which is exactly the source of truth `Data/Shops` and other vanilla
             // systems use for tag-based filtering.
-            return StardewValley.ItemContextTagManager.HasBaseTag(obj.QualifiedItemId, tag);
+            return StardewValley.ItemContextTagManager.HasBaseTag(item.QualifiedItemId, tag);
         }
         catch
         {

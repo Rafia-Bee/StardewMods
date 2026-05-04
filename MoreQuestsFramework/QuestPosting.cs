@@ -77,6 +77,13 @@ public sealed class QuestPosting
 
     public int DeadlineDays { get; set; } = 5;
 
+    /// When true, vanilla's furniture / decor shipping ban is bypassed for the duration
+    /// the quest sits in the player's active log. Implemented via a gated Harmony postfix
+    /// on `Object.canBeShipped` (see `DecorShippingPatches`). Used by festival-supply quests
+    /// (Moonlight Jellies, Luau, Spirit's Eve, etc.) that ask the player to ship items
+    /// vanilla otherwise wouldn't accept (Hay Bales, Wood Lamp-posts, Tubs of Flowers).
+    public bool AllowDecorShipping { get; set; }
+
     /// Declarative reward block. Phase 3 entry point - quests author rewards as
     /// `RewardSpec` records (Money / Friendship / Object / Recipe / Mail) and the
     /// poster routes them into the right fields at delivery time.

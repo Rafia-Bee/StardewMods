@@ -128,7 +128,8 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
                 Targets = ResolveTargets(sd.Targets, giver, ctx.Dispatch),
                 Items = new List<string>(sd.Items),
                 Count = Math.Max(1, sd.Count),
-                MinQuality = Math.Max(0, sd.MinQuality)
+                MinQuality = Math.Max(0, sd.MinQuality),
+                AllowDecorShipping = sd.AllowDecorShipping
             });
         }
 

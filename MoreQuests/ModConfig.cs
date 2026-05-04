@@ -64,4 +64,23 @@ public sealed class ModConfig
     /// judges. The pass-the-test threshold is 60 / podium tiers at 75 + 90, so 15 nudges
     /// most submissions one podium step up without forcing a guaranteed first.
     public int FestivalBiasFairMagnitude { get; set; } = 15;
+
+    // ----- Phase 9.5d: Festival decor-supply quests -----
+    /// Comma-separated list of East Scarp NPC names that get a `FriendshipMultiHeart` bump
+    /// on completing the East Scarp Spirit's Eve festival quest (CSV row 21). Curated to
+    /// well-known mod NPCs; users can extend or override. Friendships to NPCs the save
+    /// doesn't have silently no-op, so over-listing is safe.
+    public string EastScarpFestivalNpcs { get; set; } = "Sonny, Rosa, Eli, Andy, Bonnie, Lily";
+    /// Comma-separated list of Ridgeside Village NPC names that get a `FriendshipMultiHeart`
+    /// bump on completing the Ridgeside Gathering quest (CSV row 25). Same conventions as
+    /// `EastScarpFestivalNpcs`.
+    public string RidgesideFestivalNpcs { get; set; } = "Pika, Lenny, Mr. Aguar, Pam, Blair, Kimpoi, Hugo";
+
+    /// Qualified item id for Tub o' Flowers, the RSV Gathering quest's primary ship item.
+    /// Defaults to vanilla Stardew's Tub o' Flowers `(BC)272`. RSV ships its own variant
+    /// via a different id; override here if your save uses the RSV-namespaced item.
+    public string RsvTubOFlowersId { get; set; } = "(BC)272";
+    /// Crafting recipe name for Tub o' Flowers. Granted via `Player.craftingRecipes.Add`
+    /// at quest-accept if the player doesn't already know it. Defaults to vanilla "Tub o' Flowers".
+    public string RsvTubOFlowersRecipeName { get; set; } = "Tub o' Flowers";
 }

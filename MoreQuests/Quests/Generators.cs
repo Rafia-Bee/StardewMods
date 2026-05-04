@@ -65,6 +65,13 @@ internal static class Generators
         fw.RegisterGenerator("PremiumCropOrder", PremiumCropOrder);
         fw.RegisterGenerator("QualityCropDelivery", QualityCropDelivery);
         fw.RegisterGenerator("QualityFishDelivery", QualityFishDelivery);
+        fw.RegisterGenerator("MoonlightJelliesFestivalDecor", MoonlightJelliesFestivalDecor);
+        fw.RegisterGenerator("EggFestivalDecor", EggFestivalDecor);
+        fw.RegisterGenerator("FairFestivalDecor", FairFestivalDecor);
+        fw.RegisterGenerator("LuauFestivalDecor", LuauFestivalDecor);
+        fw.RegisterGenerator("SpiritsEveDecor", SpiritsEveDecor);
+        fw.RegisterGenerator("EastScarpSpiritsEveDecor", EastScarpSpiritsEveDecor);
+        fw.RegisterGenerator("RidgesideGatheringDecor", RidgesideGatheringDecor);
     }
 
     // -------------------- Farming --------------------
@@ -3257,4 +3264,482 @@ internal static class Generators
         4 => ModEntry.I18n.Get("quest.quality.iridium"),
         _ => ModEntry.I18n.Get("quest.quality.normal")
     };
+
+    // -------------------- Phase 9.5d: Festival decor-supply quests --------------------
+
+    /// Curated decor pool for the Dance of the Moonlight Jellies festival reward.
+    /// Vanilla Big-Craftable / Furniture ids picked for thematic fit (lights, decor).
+    /// Unknown ids silently no-op via `RewardApplier`, so over-listing is safe across
+    /// game versions.
+    private static readonly string[] MoonlightJelliesDecorPool = { "(BC)21", "(BC)74", "(BC)272" };
+    private static readonly string[] EggFestivalDecorPool = { "(BC)272", "(BC)143", "(BC)74" };
+    private static readonly string[] LuauDecorPool = { "(BC)73", "(BC)74", "(BC)272" };
+
+    /// Picks one item id from a curated decor pool. Returns the id verbatim — any
+    /// resolution / instantiation happens later in `RewardApplier.ApplyOne` via
+    /// `ItemRegistry.Create`. Empty pools return null (caller skips the reward step).
+    private static string? PickDecor(string[] pool)
+    {
+        if (pool == null || pool.Length == 0)
+            return null;
+        return pool[Game1.random.Next(pool.Length)];
+    }
+
+    /// Splits a comma-separated NPC list (from `ModConfig.EastScarpFestivalNpcs` /
+    /// `RidgesideFestivalNpcs`) into a deduplicated list of trimmed names. Empty entries
+    /// are dropped; case-insensitive dedup so "Rosa, rosa" only counts once.
+    private static List<string> SplitNpcList(string raw)
+    {
+        var result = new List<string>();
+        if (string.IsNullOrWhiteSpace(raw))
+            return result;
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var part in raw.Split(','))
+        {
+            var trimmed = part.Trim();
+            if (trimmed.Length == 0) continue;
+            if (seen.Add(trimmed))
+                result.Add(trimmed);
+        }
+        return result;
+    }
+
+    /// Row 20 — Dance of the Moonlight Jellies Festival Decor Supply (Lewis, Summer 24).
+    /// Two-step Ship Adventure: Torches + Wood. Reward = GoldBasicBase + one random decor
+    /// item from a curated Moonlight-Jellies pool. Decor-shipping bypass enabled in case
+    /// any of the modded extension items in the pool wouldn't normally ship.
+    private static QuestPosting? MoonlightJelliesFestivalDecor(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+        const string giver = "Lewis";
+        const int torchCount = 5;
+        const int woodCount = 10;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ShipTorches",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)93" },
+                Count = torchCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.moonlightJellies.step.torches", new { count = torchCount })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipWood",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)388" },
+                Count = woodCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.moonlightJellies.step.wood", new { count = woodCount })
+            }
+        }, giver: giver);
+
+        var rewards = new List<RewardSpec> { new MoneyReward(ctx.Config.GoldBasicBase) };
+        var decor = PickDecor(MoonlightJelliesDecorPool);
+        if (!string.IsNullOrEmpty(decor))
+            rewards.Add(new ObjectReward(decor));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            AllowDecorShipping = true,
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.festival.moonlightJellies.title"),
+            Description = ModEntry.I18n.Get("quest.festival.moonlightJellies.description", new { torches = torchCount, wood = woodCount }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Row 22 — Egg Festival Decor Supply (Lewis, Spring 10). Single-step Ship Adventure
+    /// for Hay Bales (a Big-Craftable that vanilla won't ship without the bypass).
+    /// Reward = GoldBeginnerBase + one random decor from a curated Egg-Festival pool.
+    private static QuestPosting? EggFestivalDecor(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+        const string giver = "Lewis";
+        const int hayBaleCount = 5;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ShipHayBales",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(BC)45" },
+                Count = hayBaleCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.eggFestivalDecor.step.hayBales", new { count = hayBaleCount })
+            }
+        }, giver: giver);
+
+        var rewards = new List<RewardSpec> { new MoneyReward(ctx.Config.GoldBeginnerBase) };
+        var decor = PickDecor(EggFestivalDecorPool);
+        if (!string.IsNullOrEmpty(decor))
+            rewards.Add(new ObjectReward(decor));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            AllowDecorShipping = true,
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.festival.eggFestivalDecor.title"),
+            Description = ModEntry.I18n.Get("quest.festival.eggFestivalDecor.description", new { count = hayBaleCount }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Row 23 — Stardew Valley Fair Decor Supply (Lewis, Fall 12). Three-step Ship
+    /// Adventure: Wood + Wood Signs + flowers (any vanilla flower-category Object).
+    /// Reward = `FestivalBiasReward(Fair, FestivalBiasFairMagnitude)` so the Fair-day
+    /// grange judging bumps in the player's favour. Wood Signs need the decor bypass.
+    private static QuestPosting? FairFestivalDecor(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+        const string giver = "Lewis";
+        const int woodCount = 10;
+        const int signCount = 3;
+        const int flowerCount = 5;
+        const int flowerCategory = -80;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ShipWood",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)388" },
+                Count = woodCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.fairDecor.step.wood", new { count = woodCount })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipSigns",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(BC)37" },
+                Count = signCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.fairDecor.step.signs", new { count = signCount })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipFlowers",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { $"$category:{flowerCategory}" },
+                Count = flowerCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.fairDecor.step.flowers", new { count = flowerCount })
+            }
+        }, giver: giver);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            AllowDecorShipping = true,
+            Rewards =
+            {
+                new FestivalBiasReward(FestivalKind.Fair, Math.Max(1, ModEntry.Config.FestivalBiasFairMagnitude))
+            },
+            Title = ModEntry.I18n.Get("quest.festival.fairDecor.title"),
+            Description = ModEntry.I18n.Get("quest.festival.fairDecor.description", new { wood = woodCount, signs = signCount, flowers = flowerCount }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Row 24 — Luau Decor Supply (Lewis, Summer 6). Three-step Ship Adventure: Fiber +
+    /// Log Section ("Basic Log" furniture) + Wood Lamp-post. Reward = GoldIntermediateBase
+    /// + one random decor from a curated Luau pool. Both furniture / Big-Craftable steps
+    /// need the decor-shipping bypass.
+    private static QuestPosting? LuauFestivalDecor(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+        const string giver = "Lewis";
+        const int fiberCount = 10;
+        const int logCount = 1;
+        const int lampCount = 1;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ShipFiber",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)771" },
+                Count = fiberCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.luauDecor.step.fiber", new { count = fiberCount })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipBasicLog",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(F)1376" },
+                Count = logCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.luauDecor.step.basicLog", new { count = logCount })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipLampPost",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(BC)21" },
+                Count = lampCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.luauDecor.step.lampPost", new { count = lampCount })
+            }
+        }, giver: giver);
+
+        var rewards = new List<RewardSpec> { new MoneyReward(ctx.Config.GoldIntermediateBase) };
+        var decor = PickDecor(LuauDecorPool);
+        if (!string.IsNullOrEmpty(decor))
+            rewards.Add(new ObjectReward(decor));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            AllowDecorShipping = true,
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.festival.luauDecor.title"),
+            Description = ModEntry.I18n.Get("quest.festival.luauDecor.description", new { fiber = fiberCount, log = logCount, lamp = lampCount }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Row 26 — Spirit's Eve Decor Supply (Lewis, Fall 22). Three-step Ship Adventure:
+    /// Pumpkins + Cloth + Torches. Reward = GoldIntermediateBase + Jack o' Lantern.
+    /// Decor bypass enabled mostly for parity; vanilla ships all three objective items
+    /// without help.
+    private static QuestPosting? SpiritsEveDecor(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+        const string giver = "Lewis";
+        const int pumpkinCount = 5;
+        const int clothCount = 3;
+        const int torchCount = 5;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ShipPumpkins",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)276" },
+                Count = pumpkinCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.spiritsEveDecor.step.pumpkins", new { count = pumpkinCount })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipCloth",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)428" },
+                Count = clothCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.spiritsEveDecor.step.cloth", new { count = clothCount })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipTorches",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)93" },
+                Count = torchCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.spiritsEveDecor.step.torches", new { count = torchCount })
+            }
+        }, giver: giver);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            AllowDecorShipping = true,
+            Rewards =
+            {
+                new MoneyReward(ctx.Config.GoldIntermediateBase),
+                new ObjectReward("(BC)126")
+            },
+            Title = ModEntry.I18n.Get("quest.festival.spiritsEveDecor.title"),
+            Description = ModEntry.I18n.Get("quest.festival.spiritsEveDecor.description", new { pumpkins = pumpkinCount, cloth = clothCount, torches = torchCount }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Row 21 — East Scarp Spirit's Eve Decor Supply (Rosa, Fall 24). Mod-gated on the
+    /// East Scarp / Eli & Dylan / Lurking in the Dark modset (any of the three lights up
+    /// the role). Three-step Ship Adventure: purple-dye items + slime + stone. Reward =
+    /// `FriendshipMultiHeart` to each named ESV festival NPC; the reward summary collapses
+    /// 3+ named friendships into one generic line so the loved-by pool isn't spoiled.
+    private static QuestPosting? EastScarpSpiritsEveDecor(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+        if (!MoreQuestsFramework.ModCompat.HasEs(ctx.Helper.ModRegistry))
+            return null;
+        const string giver = "Rosa";
+        const int purpleCount = 5;
+        const int slimeCount = 10;
+        const int stoneCount = 20;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ShipPurpleDye",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "$tag:color_purple" },
+                Count = purpleCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.esvSpiritsEve.step.purple", new { count = purpleCount })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipSlime",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)766" },
+                Count = slimeCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.esvSpiritsEve.step.slime", new { count = slimeCount })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipStone",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)390" },
+                Count = stoneCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.esvSpiritsEve.step.stone", new { count = stoneCount })
+            }
+        }, giver: giver);
+
+        var rewards = new List<RewardSpec>();
+        foreach (var npc in SplitNpcList(ModEntry.Config.EastScarpFestivalNpcs))
+            rewards.Add(new FriendshipReward(npc, ctx.Config.FriendshipMultiHeart));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            AllowDecorShipping = true,
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.festival.esvSpiritsEve.title"),
+            Description = ModEntry.I18n.Get("quest.festival.esvSpiritsEve.description", new { purple = purpleCount, slime = slimeCount, stone = stoneCount }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Row 25 — Ridgeside Gathering Decor Supply (Lenny, Fall 15). Mod-gated on Ridgeside
+    /// Village. Three-step Ship Adventure: Tub o' Flowers + Wood + any table furniture
+    /// (matched via `$tag:furniture_table` so vanilla AND modded tables count). Reward =
+    /// `FriendshipMultiHeart` to each named RSV festival NPC. The Tub o' Flowers crafting
+    /// recipe is granted at quest-accept by `MoreQuests.ModEntry.OnQuestAccepted` if the
+    /// player doesn't already know it (so they can craft tubs without scrambling for the
+    /// vanilla recipe).
+    private static QuestPosting? RidgesideGatheringDecor(QuestContext ctx)
+    {
+        if (!ModEntry.Config.FestivalQuestsEnabled)
+            return null;
+        if (!MoreQuestsFramework.ModCompat.HasRsv(ctx.Helper.ModRegistry))
+            return null;
+        const string giver = "Lenny";
+        const int tubCount = 1;
+        const int woodCount = 20;
+        const int tableCount = 1;
+
+        string tubId = string.IsNullOrWhiteSpace(ModEntry.Config.RsvTubOFlowersId)
+            ? "(BC)272"
+            : ModEntry.Config.RsvTubOFlowersId;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ShipTubOFlowers",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { tubId },
+                Count = tubCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.rsvGathering.step.tub", new { count = tubCount })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipWood",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)388" },
+                Count = woodCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.rsvGathering.step.wood", new { count = woodCount })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipTables",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "$tag:furniture_table" },
+                Count = tableCount,
+                AllowDecorShipping = true,
+                Description = ModEntry.I18n.Get("quest.festival.rsvGathering.step.table", new { count = tableCount })
+            }
+        }, giver: giver);
+
+        var rewards = new List<RewardSpec>();
+        foreach (var npc in SplitNpcList(ModEntry.Config.RidgesideFestivalNpcs))
+            rewards.Add(new FriendshipReward(npc, ctx.Config.FriendshipMultiHeart));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            AllowDecorShipping = true,
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.festival.rsvGathering.title"),
+            Description = ModEntry.I18n.Get("quest.festival.rsvGathering.description", new { wood = woodCount }),
+            PreBuiltQuest = quest
+        };
+    }
 }

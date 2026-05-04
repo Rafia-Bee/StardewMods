@@ -99,6 +99,7 @@ public sealed class ModEntry : Mod
         SpecialOrdersBoardPatches.Apply(harmony, Monitor, _specialOrderWriter);
         ConsequenceDialoguePatches.Apply(harmony, Monitor);
         FestivalBiasPatches.Apply(harmony, Monitor);
+        DecorShippingPatches.Apply(harmony, Monitor);
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -282,6 +283,7 @@ public sealed class ModEntry : Mod
         _watching.Clear();
         _seenInLog.Clear();
         _completedFired.Clear();
+        Patches.DecorShippingPatches.ActiveCount = 0;
     }
 
     private void OnDayEnding(object? sender, DayEndingEventArgs e)
@@ -516,6 +518,33 @@ public sealed class ModEntry : Mod
         }
     }
 
+    /// Recomputes `DecorShippingPatches.ActiveCount` from the player's quest log.
+    /// Called once a second alongside the dialogue / consequence / clump pollers. Counts
+    /// every active framework quest (`AdventureQuest` with any decor-shipping step,
+    /// `MoreQuestsShipQuest` with the flag set) so the gated `Object.canBeShipped`
+    /// postfix can fast-path out when no decor-shipping quest is in the log.
+    private static void RecomputeDecorShippingCount()
+    {
+        if (Game1.player == null)
+        {
+            Patches.DecorShippingPatches.ActiveCount = 0;
+            return;
+        }
+        int count = 0;
+        var log = Game1.player.questLog;
+        for (int i = 0; i < log.Count; i++)
+        {
+            var q = log[i];
+            if (q == null || q.completed.Value)
+                continue;
+            if (q is Quests.AdventureQuest a && a.HasDecorShippingStep)
+                count++;
+            else if (q is Quests.MoreQuestsShipQuest s && s.allowDecorShipping.Value)
+                count++;
+        }
+        Patches.DecorShippingPatches.ActiveCount = count;
+    }
+
     /// Walks the active quest log once a second and lets every `AdventureQuest` with an
     /// active `ClearDebris` step poll the resource-clump count at its target location.
     /// Cheap when no ClearDebris quest is active — early-returns on the per-step kind
@@ -649,6 +678,7 @@ public sealed class ModEntry : Mod
         _dialogueWatcher?.Tick();
         _consequenceWatcher?.Tick();
         PollClumpsOnQuestLog();
+        RecomputeDecorShippingCount();
         // Grant FrameworkRewards for any framework-emitted SpecialOrder that completed
         // this tick. Bypasses vanilla's Data/SpecialOrders Rewards array entirely so
         // third-party content packs that mutate that array can't intercept the grant.

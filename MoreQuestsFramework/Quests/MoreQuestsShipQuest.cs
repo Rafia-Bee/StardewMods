@@ -31,6 +31,10 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
     public readonly NetInt numberToShip = new();
     public readonly NetInt numberShipped = new();
     public readonly NetStringList serializedRewards = new();
+    /// Mirrors `QuestPosting.AllowDecorShipping`. While this quest is in the active log
+    /// the framework's `DecorShippingPatches` postfix on `Object.canBeShipped` returns
+    /// true so the player can deposit furniture / decor through the bin.
+    public readonly NetBool allowDecorShipping = new();
 
     public NetStringList SerializedRewards => serializedRewards;
 
@@ -54,7 +58,8 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
             .AddField(alternativeItemWeights, "alternativeItemWeights")
             .AddField(numberToShip, "numberToShip")
             .AddField(numberShipped, "numberShipped")
-            .AddField(serializedRewards, "serializedRewards");
+            .AddField(serializedRewards, "serializedRewards")
+            .AddField(allowDecorShipping, "allowDecorShipping");
     }
 
     public override void questComplete()

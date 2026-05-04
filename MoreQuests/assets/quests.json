@@ -466,6 +466,83 @@
                 "Available": { "SkillLevel": "Fishing 4", "NpcMet": "Willy" }
             },
             "Generator": "QualityFishDelivery"
+        },
+        {
+            "Name": "Festival.MoonlightJelliesDecor",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "summer 24",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Lewis" }
+            },
+            "Generator": "MoonlightJelliesFestivalDecor"
+        },
+        {
+            "Name": "Festival.EggFestivalDecor",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "spring 10",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Lewis" }
+            },
+            "Generator": "EggFestivalDecor"
+        },
+        {
+            "Name": "Festival.FairDecor",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "fall 12",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Lewis" }
+            },
+            "Generator": "FairFestivalDecor"
+        },
+        {
+            "Name": "Festival.LuauDecor",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "summer 6",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Lewis" }
+            },
+            "Generator": "LuauFestivalDecor"
+        },
+        {
+            "Name": "Festival.SpiritsEveDecor",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "fall 22",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Lewis" }
+            },
+            "Generator": "SpiritsEveDecor"
+        },
+        {
+            "Name": "Festival.EastScarpSpiritsEveDecor",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "fall 24",
+                "RepeatYearly": true,
+                "Available": { "HasMod": "FlashShifter.EastScarpMod|Devilduke.EliandDylan|drbirbdev.LurkingInTheDark", "NpcExists": "Rosa" }
+            },
+            "Generator": "EastScarpSpiritsEveDecor"
+        },
+        {
+            "Name": "Festival.RidgesideGatheringDecor",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "fall 15",
+                "RepeatYearly": true,
+                "Available": { "HasMod": "Rafseazz.RidgesideVillage", "NpcExists": "Lenny" }
+            },
+            "Generator": "RidgesideGatheringDecor"
         }
     ]
 }
