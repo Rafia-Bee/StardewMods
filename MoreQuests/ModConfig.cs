@@ -45,6 +45,15 @@ public sealed class ModConfig
     /// Number of distinct recipes a Grand Feast SpecialOrder asks for.
     public int GrandFeastRecipeCount { get; set; } = 3;
 
+    // ----- Phase 9.5a: Wrapping Paper (mod-gated on Si.ExtraCraftingMaterials) -----
+    /// Qualified item id for the Paper item from Si's Extra Crafting Materials. Override
+    /// here if the source mod renames the item between versions.
+    public string WrappingPaperPaperId { get; set; } = "Si.ECM_Paper";
+    /// Qualified item id for the Tape item from Si's Extra Crafting Materials.
+    public string WrappingPaperTapeId { get; set; } = "Si.ECM_Tape";
+    /// Qualified item id for the Book of Stars reward item from Si's Extra Crafting Materials.
+    public string WrappingPaperBookOfStarsId { get; set; } = "Si.ECM_BookOfStars";
+
     // ----- Phase 9d: Gus's festival feasts -----
     /// Number of distinct ingredient kinds Gus's Fall + Summer feasts ask for.
     public int GusFestivalFeastIngredientCount { get; set; } = 3;

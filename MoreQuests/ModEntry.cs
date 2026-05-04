@@ -15,6 +15,11 @@ public sealed class ModEntry : Mod
     internal static ModEntry Instance { get; private set; } = null!;
     internal static ModConfig Config { get; set; } = new();
 
+    /// Cached reference to the framework API. Set when `OnGameLaunched` first resolves
+    /// the API; quest generators read framework registries (combat-food pool, etc.)
+    /// through this handle since the framework's own `ModEntry.Instance` is `internal`.
+    internal static IMoreQuestsApi? Framework { get; private set; }
+
     /// Static accessor used by content-mod quest generators to look up their own i18n
     /// strings. The framework's `QuestContext.Helper` belongs to the framework, so its
     /// translation helper would only see the framework's i18n keys.
@@ -129,6 +134,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        Framework = fw;
         fw.RegistrationOpen += (_, _) => RegisterContent(fw);
         // Deep-dive reward letters are parameterised — when one completes, invalidate
         // `Data/mail` so the asset edit re-runs and populates the new key's body before
@@ -152,7 +158,12 @@ public sealed class ModEntry : Mod
         // The framework's `AdventureQuest` is already registered framework-side, so the
         // multistep Check on George quest doesn't need a content-mod-specific registration.
         scope.RegisterCustomQuestType(typeof(AnySlimeQuest));
+        scope.RegisterCustomQuestType(typeof(AnyMonsterQuest));
         scope.RegisterCustomQuestType(typeof(CollectAndReportQuest));
+
+        // Seed the framework's combat-food pool with the vanilla combat-buff foods used
+        // by Monster Hunt. Other mods can extend the pool through `IMoreQuestsApi.RegisterCombatFood`.
+        SeedCombatFoodPool(fw);
 
         // Register every C# generator referenced by assets/quests.json.
         Generators.RegisterAll(scope);
@@ -168,6 +179,25 @@ public sealed class ModEntry : Mod
         ApplyGuildBoardRouting(scope);
 
         GmcmRegistration.Register(Helper, ModManifest);
+    }
+
+    /// Vanilla combat-buff foods used as the default Monster Hunt reward pool. Mirrors
+    /// the curated list in plan.md §9.5a row 52: Crab Cakes / Pepper Poppers / Eggplant
+    /// Parmesan / Spicy Eel / Tom Kha Soup. Other mods can extend the pool through
+    /// `IMoreQuestsApi.RegisterCombatFood`.
+    private static readonly string[] VanillaCombatFoods =
+    {
+        "(O)220", // Crab Cakes
+        "(O)215", // Pepper Poppers
+        "(O)218", // Eggplant Parmesan
+        "(O)226", // Spicy Eel
+        "(O)730"  // Tom Kha Soup
+    };
+
+    private void SeedCombatFoodPool(IMoreQuestsApi fw)
+    {
+        foreach (string id in VanillaCombatFoods)
+            fw.RegisterCombatFood(id);
     }
 
     /// Wires up the routing for the Adventurer's Guild board based on

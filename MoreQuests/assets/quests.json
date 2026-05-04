@@ -328,6 +328,108 @@
                 "Available": { "NpcExists": "Gus" }
             },
             "Generator": "GusFestivalFeastSummer"
+        },
+        {
+            "Name": "Social.GiftDelivery",
+            "Category": "Social",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 25,
+                "MaxPerDay": 1,
+                "CooldownDays": 4
+            },
+            "Generator": "GiftDelivery"
+        },
+        {
+            "Name": "Seasonal.HeatWaveRelief",
+            "Category": "Seasonal",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 20,
+                "MaxPerDay": 1,
+                "CooldownDays": 5,
+                "Available": { "Season": "summer" }
+            },
+            "Generator": "HeatWaveRelief"
+        },
+        {
+            "Name": "Seasonal.JellyfishWatchPrep",
+            "Category": "Seasonal",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 20,
+                "MaxPerDay": 1,
+                "CooldownDays": 5,
+                "Available": { "Season": "summer" }
+            },
+            "Generator": "JellyfishWatchPrep"
+        },
+        {
+            "Name": "Festival.MerchantUnpacking",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "winter 13",
+                "RepeatYearly": true
+            },
+            "Generator": "MerchantUnpacking"
+        },
+        {
+            "Name": "Mining.MonsterHunt",
+            "Category": "Mining",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 25,
+                "MaxPerDay": 1,
+                "CooldownDays": 3,
+                "Available": { "MinDeepestMineLevel": "1" }
+            },
+            "Generator": "MonsterHunt"
+        },
+        {
+            "Name": "Foraging.RareForageHunt",
+            "Category": "Foraging",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 15,
+                "MaxPerDay": 1,
+                "CooldownDays": 4,
+                "Available": { "SkillLevel": "Foraging 5" }
+            },
+            "Generator": "RareForageHunt"
+        },
+        {
+            "Name": "Mining.RareMaterialRequest",
+            "Category": "Mining",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 15,
+                "MaxPerDay": 1,
+                "CooldownDays": 7,
+                "Available": { "SkillLevel": "Mining 7", "NpcExists": "Clint" }
+            },
+            "Generator": "RareMaterialRequest"
+        },
+        {
+            "Name": "Festival.SecretGiftHint",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "winter 22",
+                "RepeatYearly": true
+            },
+            "Generator": "SecretGiftHint"
+        },
+        {
+            "Name": "Festival.WrappingPaper",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "winter 20",
+                "RepeatYearly": true,
+                "Available": { "HasMod": "Si.ExtraCraftingMaterials", "NpcExists": "Lewis" }
+            },
+            "Generator": "WrappingPaper"
         }
     ]
 }

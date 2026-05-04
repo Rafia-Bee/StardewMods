@@ -20,6 +20,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     private readonly BoardPackLoader _boardLoader;
     private readonly DispatchRegistry _dispatch;
     private readonly BoardRegistry _boards;
+    private readonly CombatFoodRegistry _combatFood;
     private readonly IMonitor _monitor;
     private readonly Func<ISpaceCoreApi?> _spaceCore;
     private readonly Action _refreshOffers;
@@ -42,6 +43,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         BoardPackLoader boardLoader,
         DispatchRegistry dispatch,
         BoardRegistry boards,
+        CombatFoodRegistry combatFood,
         IMonitor monitor,
         Func<ISpaceCoreApi?> spaceCore,
         Action refreshOffers)
@@ -52,6 +54,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         _boardLoader = boardLoader;
         _dispatch = dispatch;
         _boards = boards;
+        _combatFood = combatFood;
         _monitor = monitor;
         _spaceCore = spaceCore;
         _refreshOffers = refreshOffers;
@@ -81,6 +84,10 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     public IReadOnlyList<string> GetDispatchPool(string role) => _dispatch.ResolvePool(role);
 
     public IReadOnlyList<string> GetMetHumanNpcs() => DispatchRegistry.MetHumanNpcs();
+
+    public void RegisterCombatFood(string itemId) => _combatFood.Register(itemId);
+
+    public IReadOnlyList<string> GetCombatFoodPool() => _combatFood.Pool;
 
     // --- Internal hooks called by framework code ---
 
