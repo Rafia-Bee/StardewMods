@@ -21,6 +21,20 @@ public sealed class ModConfig
     /// stays reachable. Per-quest weights still gate individual quests on top of this.
     public bool EnableAdventurersGuildBoard { get; set; } = true;
 
+    /// Tile X of the Adventurer's Guild board's anchor (the player walks here to interact).
+    /// Default places the anchor on a reachable Mine entrance tile beneath the wall art;
+    /// tunable from GMCM so players can move the board after installing other Mine-modifying mods.
+    public int AdventureBoardTileX { get; set; } = 20;
+    /// Tile Y of the Adventurer's Guild board's anchor.
+    public int AdventureBoardTileY { get; set; } = 4;
+    /// Pixel X offset applied to the in-world board sprite (and the indicator). 1 tile = 64px.
+    /// Lets players park the sprite art on a nearby wall while keeping the click target at
+    /// a walkable spot. Negative values move left.
+    public int AdventureBoardDrawOffsetX { get; set; } = 0;
+    /// Pixel Y offset applied to the in-world board sprite. Negative values move up. Default
+    /// lifts the sprite onto the Mine wall above the anchor tile.
+    public int AdventureBoardDrawOffsetY { get; set; } = -197;
+
     // ----- Shop discounts -----
     public int ShopDiscountPercent { get; set; } = 50;
     public int ShopDiscountDurationDays { get; set; } = 2;

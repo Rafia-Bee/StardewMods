@@ -27,16 +27,42 @@ public sealed class BoardDefinition
     /// tile opens the board menu; the in-world board sprite (if any) draws here.
     public int[] Tile { get; set; } = Array.Empty<int>();
 
-    /// Optional content-asset name of the cork-board background texture used by the menu.
-    /// Null → fall back to vanilla `LooseSprites/Billboard`.
+    /// Optional content-asset name of the in-world board sprite (the wall painting / sign
+    /// drawn at the anchor tile). Has nothing to do with the menu skin; that's `Background`.
+    /// Null → no in-world sprite; the tile stays clickable but invisible.
     public string? Texture { get; set; }
+
+    /// Optional content-asset name of the menu skin used by both the cork-board view and
+    /// the accept-quest popup. Sheet layout matches vanilla `LooseSprites/Billboard`: the
+    /// top 338x198 region is drawn at 4x scale to fill the popup. Null → fall back to
+    /// `Texture`, then to vanilla `LooseSprites/Billboard`.
+    public string? Background { get; set; }
 
     /// World-render scale multiplier for the in-world board sprite. Defaults to 2 so a
     /// 64×64 placeholder texture renders as a 2-tile-tall wall sign. Authors shipping
     /// pre-scaled board art (e.g. a 32×32 source meant to fill ~3 tiles) can set their
-    /// own value. Doesn't affect the menu — the menu always uses the cork-board texture
+    /// own value. Doesn't affect the menu, the menu always uses the cork-board texture
     /// at vanilla's 4× scale.
     public float WorldScale { get; set; } = 2f;
+
+    /// Optional `[x, y]` pixel offset applied to the in-world sprite (and the indicator,
+    /// which anchors to the sprite). Lets authors keep the click-target tile at a
+    /// player-walkable spot while parking the sprite art on a nearby wall. Defaults to
+    /// `[0, 0]`, i.e. drawn at the anchor tile's top-left in world pixels.
+    public int[] DrawOffset { get; set; } = Array.Empty<int>();
+
+    public int DrawOffsetX => DrawOffset.Length >= 1 ? DrawOffset[0] : 0;
+    public int DrawOffsetY => DrawOffset.Length >= 2 ? DrawOffset[1] : 0;
+
+    /// `[width, height]` of the sprite's visual footprint in tiles. Used for two things:
+    /// (a) collision, the framework blocks player movement through these tiles so the
+    /// sprite reads as a solid object instead of one the player can walk under, and
+    /// (b) click hit-testing, the action button on any tile inside the footprint opens
+    /// the board (not just the anchor tile). Defaults to `[1, 1]`.
+    public int[] FootprintTiles { get; set; } = Array.Empty<int>();
+
+    public int FootprintWidth => FootprintTiles.Length >= 1 && FootprintTiles[0] > 0 ? FootprintTiles[0] : 1;
+    public int FootprintHeight => FootprintTiles.Length >= 2 && FootprintTiles[1] > 0 ? FootprintTiles[1] : 1;
 
     /// Optional title shown in the menu's hover/header area. Defaults to `Name` when null.
     public string? Title { get; set; }

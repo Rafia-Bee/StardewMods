@@ -82,6 +82,9 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
     public void LoadBoardsFromMod(IModHelper helper, string relativePath)
         => _boardLoader.LoadFromMod(helper, Owner, relativePath);
 
+    public BoardDefinition? FindBoard(string name)
+        => _boards.Find(Owner.UniqueID, name);
+
     public void OverrideTriggerSource(string definitionId, TriggerSource source)
         => _registry.OverrideSource(definitionId, source);
 

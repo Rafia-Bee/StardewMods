@@ -18,8 +18,16 @@ internal static class GmcmRegistration
 
         api.Register(
             mod: manifest,
-            reset: () => ModEntry.Config = new ModConfig(),
-            save: () => helper.WriteConfig(ModEntry.Config)
+            reset: () =>
+            {
+                ModEntry.Config = new ModConfig();
+                ModEntry.ApplyAdventureBoardConfig();
+            },
+            save: () =>
+            {
+                helper.WriteConfig(ModEntry.Config);
+                ModEntry.ApplyAdventureBoardConfig();
+            }
         );
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.toggles"));
@@ -58,6 +66,12 @@ internal static class GmcmRegistration
             v => ModEntry.Config.EnableAdventurersGuildBoard = v,
             () => t.Get("config.enableAdventurersGuildBoard"),
             () => t.Get("config.enableAdventurersGuildBoard.tooltip"));
+
+        api.AddSectionTitle(manifest, () => t.Get("config.section.adventureBoardPlacement"));
+        AddInt(api, manifest, t, "AdventureBoardTileX", () => ModEntry.Config.AdventureBoardTileX, v => ModEntry.Config.AdventureBoardTileX = v, 0, 200);
+        AddInt(api, manifest, t, "AdventureBoardTileY", () => ModEntry.Config.AdventureBoardTileY, v => ModEntry.Config.AdventureBoardTileY = v, 0, 200);
+        AddInt(api, manifest, t, "AdventureBoardDrawOffsetX", () => ModEntry.Config.AdventureBoardDrawOffsetX, v => ModEntry.Config.AdventureBoardDrawOffsetX = v, -512, 512);
+        AddInt(api, manifest, t, "AdventureBoardDrawOffsetY", () => ModEntry.Config.AdventureBoardDrawOffsetY, v => ModEntry.Config.AdventureBoardDrawOffsetY = v, -512, 512);
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.discounts"));
         AddInt(api, manifest, t, "ShopDiscountPercent", () => ModEntry.Config.ShopDiscountPercent, v => ModEntry.Config.ShopDiscountPercent = v, 0, 100);

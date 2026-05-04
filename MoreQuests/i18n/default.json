@@ -15,6 +15,16 @@
     "config.enableAdventurersGuildBoard": "Adventurer's Guild board",
     "config.enableAdventurersGuildBoard.tooltip": "When on (default), a separate quest board appears near the mine entrance and hosts the mining and monster quests (deep dives, slime clearing, monster eradication). When off, the guild board is hidden entirely and those quests appear on the regular help-wanted board so the content stays reachable. Per-quest weights still let you disable individual quests on top of this.",
 
+    "config.section.adventureBoardPlacement": "Adventurer's Guild board placement",
+    "config.AdventureBoardTileX": "Anchor tile X",
+    "config.AdventureBoardTileX.tooltip": "Tile X coordinate where the player walks to interact with the board (the click target). Default 12 for the Mine entrance.",
+    "config.AdventureBoardTileY": "Anchor tile Y",
+    "config.AdventureBoardTileY.tooltip": "Tile Y coordinate of the click target. Default 6.",
+    "config.AdventureBoardDrawOffsetX": "Sprite offset X (pixels)",
+    "config.AdventureBoardDrawOffsetX.tooltip": "Pixel offset applied to the in-world board sprite. 1 tile = 64 pixels. Negative values move left. Lets you park the art on a wall while keeping the click target at a walkable tile.",
+    "config.AdventureBoardDrawOffsetY": "Sprite offset Y (pixels)",
+    "config.AdventureBoardDrawOffsetY.tooltip": "Pixel offset applied to the in-world board sprite. Negative values move up.",
+
     "config.section.discounts": "Shop discounts",
     "config.ShopDiscountPercent": "Festival shop discount %",
     "config.ShopDiscountPercent.tooltip": "Discount applied to a shop after a fishing festival quest.",
