@@ -61,6 +61,15 @@ public sealed class BoardRegistry
         _monitor.Log($"Registered board '{key}' at {def.Location} ({def.TileX}, {def.TileY}).", LogLevel.Trace);
     }
 
+    /// Returns the board registered by `ownerUniqueId` under the short `name`, or null.
+    /// Used by content mods that want to mutate their own board (tile, draw offset, etc.)
+    /// at runtime, e.g. driving the values from a GMCM page.
+    public BoardDefinition? Find(string ownerUniqueId, string name)
+    {
+        string key = ownerUniqueId + "/" + name;
+        return _byKey.TryGetValue(key, out var def) ? def : null;
+    }
+
     /// First match wins when boards from different owners share a `Name` and the caller
     /// only knows the short name. Phase 8c quest definitions look up their target board
     /// by `OwnerUniqueId/Name`, so ambiguity there is impossible.

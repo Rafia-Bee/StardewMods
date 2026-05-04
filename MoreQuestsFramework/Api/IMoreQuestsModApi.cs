@@ -50,6 +50,12 @@ public interface IMoreQuestsModApi
     /// directory) and registers each entry. Mirrors `LoadQuestsFromMod` for boards.
     void LoadBoardsFromMod(IModHelper helper, string relativePath);
 
+    /// Returns the board this mod registered under the given short `name`, or null. The
+    /// returned `BoardDefinition` is the live registry instance, so mutating its fields
+    /// (e.g. `Tile`, `DrawOffset`) takes effect on the next render. Useful for content
+    /// mods that want to drive their board's draw position from a config menu.
+    BoardDefinition? FindBoard(string name);
+
     /// Re-routes an already-registered quest to a different `TriggerSource`. The override
     /// is consulted by the pipeline instead of the definition's declared `Source`, so a
     /// quest authored as `CustomBoard` can be flipped to `DailyBoard` (or vice versa) at

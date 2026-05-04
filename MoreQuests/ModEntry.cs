@@ -20,6 +20,10 @@ public sealed class ModEntry : Mod
     /// through this handle since the framework's own `ModEntry.Instance` is `internal`.
     internal static IMoreQuestsApi? Framework { get; private set; }
 
+    /// Per-mod scope captured at `GameLaunched`. Held so the GMCM save callback can call
+    /// `FindBoard` and re-apply tile/offset edits to the live registry instance.
+    internal static IMoreQuestsModApi? ModScope { get; private set; }
+
     /// Static accessor used by content-mod quest generators to look up their own i18n
     /// strings. The framework's `QuestContext.Helper` belongs to the framework, so its
     /// translation helper would only see the framework's i18n keys.
@@ -35,6 +39,7 @@ public sealed class ModEntry : Mod
     }
 
     internal const string AdventureBoardAssetRoot = "Mods/RafiaBee.MoreQuests/AdventureBoard";
+    internal const string AdventureBoardBackgroundAssetRoot = "Mods/RafiaBee.MoreQuests/AdventureBoardBackground";
 
     /// Mail key prefix shared by every deep-dive reward letter. The bar id + count are
     /// embedded directly in the key (e.g. `...DeepDiveReward.337.4` for 4 Iridium Bars),
@@ -44,13 +49,21 @@ public sealed class ModEntry : Mod
 
     /// Asset edits and loads owned by the content mod:
     /// - `Data/mail` reward letters (Submarine Fuel pearl, Wizard's Ritual book, deep-dive bars).
-    /// - `Mods/RafiaBee.MoreQuests/AdventureBoard` placeholder texture for the
-    ///   Adventurer's Guild custom board declared in `assets/boards.json`.
+    /// - `Mods/RafiaBee.MoreQuests/AdventureBoard` in-world wall sprite drawn at the board's
+    ///   anchor tile (Mine [12,6]).
+    /// - `Mods/RafiaBee.MoreQuests/AdventureBoardBackground` menu skin used for both the
+    ///   cork-board view and the accept-quest popup; sheet matches vanilla `LooseSprites/Billboard`.
     private void OnAssetRequested(object? sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
     {
         if (e.NameWithoutLocale.IsEquivalentTo(AdventureBoardAssetRoot))
         {
             e.LoadFromModFile<Texture2D>("assets/AdventureBoard.png", AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(AdventureBoardBackgroundAssetRoot))
+        {
+            e.LoadFromModFile<Texture2D>("assets/AdventureBoardBackground.png", AssetLoadPriority.Low);
             return;
         }
 
@@ -171,6 +184,7 @@ public sealed class ModEntry : Mod
     private void RegisterContent(IMoreQuestsApi fw)
     {
         var scope = fw.GetModApi(ModManifest);
+        ModScope = scope;
 
         // Custom Quest subclasses (must register before quests.json loads so generators
         // that build PreBuiltQuests of these types round-trip through SpaceCore).
@@ -232,11 +246,25 @@ public sealed class ModEntry : Mod
             scope.LoadBoardsFromMod(Helper, "assets/boards.json");
             scope.OverrideTriggerSource("Mining.BasicSlimeClearing", TriggerSource.CustomBoard);
             scope.OverrideTriggerSource("Vanilla.SlayMonster", TriggerSource.CustomBoard);
+            ApplyAdventureBoardConfig();
         }
         else
         {
             scope.OverrideTriggerSource("Mining.SkullCavernDeepDive", TriggerSource.DailyBoard);
             scope.OverrideTriggerSource("Mining.MinesDeepDive", TriggerSource.DailyBoard);
         }
+    }
+
+    /// Mutates the registered `AdventurersGuild` board's anchor tile + draw offset to
+    /// match `ModConfig`. Called once after `LoadBoardsFromMod` registers the board, and
+    /// again whenever GMCM saves so live edits in the config menu take effect on the
+    /// next render.
+    internal static void ApplyAdventureBoardConfig()
+    {
+        var board = ModScope?.FindBoard("AdventurersGuild");
+        if (board == null)
+            return;
+        board.Tile = new[] { Config.AdventureBoardTileX, Config.AdventureBoardTileY };
+        board.DrawOffset = new[] { Config.AdventureBoardDrawOffsetX, Config.AdventureBoardDrawOffsetY };
     }
 }

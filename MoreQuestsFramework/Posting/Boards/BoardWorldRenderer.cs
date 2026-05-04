@@ -53,7 +53,9 @@ public sealed class BoardWorldRenderer
             var texture = GetTextureFor(board);
             if (texture != null)
             {
-                var worldPos = new Vector2(board.TileX * TilePixels, board.TileY * TilePixels);
+                var worldPos = new Vector2(
+                    board.TileX * TilePixels + board.DrawOffsetX,
+                    board.TileY * TilePixels + board.DrawOffsetY);
                 var screenPos = Game1.GlobalToLocal(Game1.viewport, worldPos);
                 float scale = board.WorldScale > 0 ? board.WorldScale : 2f;
                 e.SpriteBatch.Draw(
@@ -82,7 +84,9 @@ public sealed class BoardWorldRenderer
 
     private static void DrawIndicator(SpriteBatch b, BoardDefinition board)
     {
-        var anchor = new Vector2(board.TileX * TilePixels, board.TileY * TilePixels);
+        var anchor = new Vector2(
+            board.TileX * TilePixels + board.DrawOffsetX,
+            board.TileY * TilePixels + board.DrawOffsetY);
         if (board.Indicator != null)
             anchor += new Vector2(board.Indicator.OffsetX, board.Indicator.OffsetY);
         var screenPos = Game1.GlobalToLocal(Game1.viewport, anchor);
@@ -116,14 +120,14 @@ public sealed class BoardWorldRenderer
         string locationName = Game1.currentLocation.Name;
         foreach (var board in _boards.InLocation(locationName))
         {
-            if (board.TileX != tx || board.TileY != ty)
+            if (!IsClickInFootprint(board, tx, ty))
                 continue;
             if (!IsAvailable(board))
                 continue;
 
             // Player must be standing close enough to interact (mirrors how vanilla
             // gates action-button presses on neighbouring tiles).
-            if (!IsPlayerWithinReach(tx, ty))
+            if (!IsPlayerWithinReach(board, tx, ty))
                 continue;
 
             Game1.activeClickableMenu = new CustomBoardMenu(board);
@@ -134,7 +138,23 @@ public sealed class BoardWorldRenderer
         }
     }
 
-    private static bool IsPlayerWithinReach(int tileX, int tileY)
+    /// True when `(tileX, tileY)` falls inside the board's visual footprint (anchor tile
+    /// shifted by `DrawOffset` in tile units, sized by `FootprintTiles`). Falls back to
+    /// the anchor tile alone for boards whose footprint floats off-grid (sub-tile pixel
+    /// offsets) so the anchor is always clickable.
+    private static bool IsClickInFootprint(Api.BoardDefinition board, int tileX, int tileY)
+    {
+        if (board.TileX == tileX && board.TileY == tileY)
+            return true;
+        int fpX = board.TileX + (board.DrawOffsetX / TilePixels);
+        int fpY = board.TileY + (board.DrawOffsetY / TilePixels);
+        return tileX >= fpX
+            && tileY >= fpY
+            && tileX < fpX + board.FootprintWidth
+            && tileY < fpY + board.FootprintHeight;
+    }
+
+    private static bool IsPlayerWithinReach(Api.BoardDefinition board, int tileX, int tileY)
     {
         var player = Game1.player;
         if (player == null)

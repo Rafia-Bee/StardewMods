@@ -30,10 +30,9 @@ public sealed class CustomBoardMenu : IClickableMenu
     private string _hoverTitle = "";
     private string _hoverText = "";
 
-    /// Vanilla `Billboard(true)` instance used as the accept-quest popup. When non-null,
-    /// the outer cork board defers all input + draw to this inner menu (matching the
-    /// help-wanted board's `MoreQuestsBillboard.InnerBillboard` pattern).
-    public Billboard? InnerBillboard { get; private set; }
+    /// Inner accept-quest popup shown when the player clicks a pad. When non-null, the
+    /// outer cork board defers all input + draw to this inner menu.
+    public CustomBoardQuestMenu? InnerAcceptPopup { get; private set; }
 
     private sealed class Note
     {
@@ -54,7 +53,7 @@ public sealed class CustomBoardMenu : IClickableMenu
         yPositionOnScreen = (Game1.uiViewport.Height - height) / 2;
 
         _billboardTexture = LoadOrFallback(
-            board.Texture,
+            board.Background ?? board.Texture,
             "LooseSprites\\Billboard");
         _padTexture = LoadOrFallback(
             board.Pad?.Texture,
@@ -140,9 +139,9 @@ public sealed class CustomBoardMenu : IClickableMenu
 
     public override void performHoverAction(int x, int y)
     {
-        if (InnerBillboard != null)
+        if (InnerAcceptPopup != null)
         {
-            InnerBillboard.performHoverAction(x, y);
+            InnerAcceptPopup.performHoverAction(x, y);
             return;
         }
         _hoverTitle = "";
@@ -167,9 +166,9 @@ public sealed class CustomBoardMenu : IClickableMenu
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
     {
-        if (InnerBillboard != null)
+        if (InnerAcceptPopup != null)
         {
-            InnerBillboard.receiveLeftClick(x, y, playSound);
+            InnerAcceptPopup.receiveLeftClick(x, y, playSound);
             return;
         }
 
@@ -185,9 +184,8 @@ public sealed class CustomBoardMenu : IClickableMenu
         {
             if (note.Cc.containsPoint(x, y))
             {
-                CustomBoardSlots.Selected = note.Slot;
-                InnerBillboard = new Billboard(true);
-                InnerBillboard.acceptQuestButton.visible = true;
+                InnerAcceptPopup = new CustomBoardQuestMenu(this, note.Slot, _billboardTexture);
+                InnerAcceptPopup.acceptQuestButton.visible = !note.Slot.Accepted;
                 if (playSound)
                     Game1.playSound("smallSelect");
                 return;
@@ -199,14 +197,9 @@ public sealed class CustomBoardMenu : IClickableMenu
 
     public override bool readyToClose()
     {
-        // Match `MoreQuestsBillboard.readyToClose`: the inner accept popup eats the close
-        // request so the outer cork board stays up after dismissal. Vanilla's exit cascade
-        // calls `readyToClose` from the close-button click; returning false there both
-        // cancels the close AND lets us tear down the inner popup atomically.
-        if (InnerBillboard != null)
+        if (InnerAcceptPopup != null)
         {
-            InnerBillboard = null;
-            CustomBoardSlots.Selected = null;
+            InnerAcceptPopup = null;
             return false;
         }
         return true;
@@ -214,11 +207,6 @@ public sealed class CustomBoardMenu : IClickableMenu
 
     public override void snapToDefaultClickableComponent()
     {
-        if (InnerBillboard != null)
-        {
-            InnerBillboard.snapToDefaultClickableComponent();
-            return;
-        }
         if (_notes.Count > 0)
         {
             currentlySnappedComponent = getComponentWithID(_notes[0].Cc.myID);
@@ -226,14 +214,13 @@ public sealed class CustomBoardMenu : IClickableMenu
         }
     }
 
-    /// Called by `BillboardPatches.Click_Postfix` after the player clicks the inner accept
-    /// popup's accept or close button. `reopen` rebuilds the cork board after a successful
-    /// accept so the just-accepted slot drops out of the layout; on a plain dismiss we
-    /// just clear the popup and leave the existing layout in place.
+    /// Called by `CustomBoardQuestMenu` after the player clicks the inner accept or close
+    /// button. `reopen` rebuilds the cork board after a successful accept so the
+    /// just-accepted slot drops out of the layout; on a plain dismiss we just clear the
+    /// popup and leave the existing layout in place.
     public void OnInnerAcceptClosed(bool reopen)
     {
-        InnerBillboard = null;
-        CustomBoardSlots.Selected = null;
+        InnerAcceptPopup = null;
         if (reopen)
             Game1.activeClickableMenu = new CustomBoardMenu(_board);
     }
@@ -248,9 +235,9 @@ public sealed class CustomBoardMenu : IClickableMenu
 
     public override void draw(SpriteBatch b)
     {
-        if (InnerBillboard != null)
+        if (InnerAcceptPopup != null)
         {
-            InnerBillboard.draw(b);
+            InnerAcceptPopup.draw(b);
             return;
         }
 

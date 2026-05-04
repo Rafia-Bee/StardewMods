@@ -4,9 +4,12 @@
         {
             "Name": "AdventurersGuild",
             "Location": "Mine",
-            "Tile": [ 12, 6 ],
+            "Tile": [ 20, 4 ],
             "Texture": "Mods/RafiaBee.MoreQuests/AdventureBoard",
+            "Background": "Mods/RafiaBee.MoreQuests/AdventureBoardBackground",
             "WorldScale": 2,
+            "DrawOffset": [ 0, -197 ],
+            "FootprintTiles": [ 2, 2 ],
             "Title": "Adventurer's Guild Board",
             "Available": { "MinDaysPlayed": "14" },
             "Indicator": { "Show": true, "Offset": [ 0, -8 ] },
