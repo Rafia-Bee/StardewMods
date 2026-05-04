@@ -305,5 +305,44 @@
     "quest.fishing.qualityFish.title": "Willy's quality fish order",
     "quest.fishing.qualityFish.description": "Willy's running a special and the kitchen wants only the best. Bring him {{qty}} {{quality}} {{item}} when you can land them. The pay reflects the difficulty.",
     "quest.fishing.qualityFish.objective": "Bring {{qty}} {{quality}} {{item}} to Willy.",
-    "quest.fishing.qualityFish.targetMessage": "Beautiful catch. The chef will be pleased."
+    "quest.fishing.qualityFish.targetMessage": "Beautiful catch. The chef will be pleased.",
+
+    "quest.festival.moonlightJellies.title": "Lights for the Moonlight Jellies",
+    "quest.festival.moonlightJellies.description": "Lewis is decking the pier out for the Dance of the Moonlight Jellies and could use a hand. Ship {{torches}} torches and {{wood}} wood through the bin and he'll see something nice gets sent your way.",
+    "quest.festival.moonlightJellies.step.torches": "Ship {{count}} torches.",
+    "quest.festival.moonlightJellies.step.wood": "Ship {{count}} wood.",
+
+    "quest.festival.eggFestivalDecor.title": "Hay for the Egg Festival",
+    "quest.festival.eggFestivalDecor.description": "The town square needs hay bales for the children to hide eggs around. Lewis asks if you can spare {{count}} from the barn loft. Ship them through the bin a few days before the festival.",
+    "quest.festival.eggFestivalDecor.step.hayBales": "Ship {{count}} hay bales.",
+
+    "quest.festival.fairDecor.title": "Fair grounds preparation",
+    "quest.festival.fairDecor.description": "Lewis is setting up the Fair grounds and needs help dressing the place. Ship {{wood}} wood, {{signs}} wood signs, and {{flowers}} flowers through the bin. He'll put in a good word with the judges on Fair day.",
+    "quest.festival.fairDecor.step.wood": "Ship {{count}} wood.",
+    "quest.festival.fairDecor.step.signs": "Ship {{count}} wood signs.",
+    "quest.festival.fairDecor.step.flowers": "Ship {{count}} flowers (any kind).",
+
+    "quest.festival.luauDecor.title": "Luau setup",
+    "quest.festival.luauDecor.description": "Lewis is setting the beach for the Luau and the decoration list outpaced his budget. Ship {{fiber}} fiber, {{log}} log section, and {{lamp}} wood lamp-post and he'll sort you out with something off the festival stand.",
+    "quest.festival.luauDecor.step.fiber": "Ship {{count}} fiber.",
+    "quest.festival.luauDecor.step.basicLog": "Ship {{count}} log section.",
+    "quest.festival.luauDecor.step.lampPost": "Ship {{count}} wood lamp-post.",
+
+    "quest.festival.spiritsEveDecor.title": "Spirit's Eve atmosphere",
+    "quest.festival.spiritsEveDecor.description": "Spirit's Eve is around the corner and Lewis wants the maze proper this year. Ship {{pumpkins}} pumpkins, {{cloth}} cloth, and {{torches}} torches; there'll be a Jack o' Lantern waiting for you when the festival rolls round.",
+    "quest.festival.spiritsEveDecor.step.pumpkins": "Ship {{count}} pumpkins.",
+    "quest.festival.spiritsEveDecor.step.cloth": "Ship {{count}} cloth.",
+    "quest.festival.spiritsEveDecor.step.torches": "Ship {{count}} torches.",
+
+    "quest.festival.esvSpiritsEve.title": "An East Scarp Spirit's Eve",
+    "quest.festival.esvSpiritsEve.description": "Rosa's hosting an East Scarp Spirit's Eve gathering and the colour palette is firm: deep purple, slime, stone. Ship {{purple}} purple-coloured items, {{slime}} slime, and {{stone}} stone. The neighbourhood will remember.",
+    "quest.festival.esvSpiritsEve.step.purple": "Ship {{count}} purple-coloured items.",
+    "quest.festival.esvSpiritsEve.step.slime": "Ship {{count}} slime.",
+    "quest.festival.esvSpiritsEve.step.stone": "Ship {{count}} stone.",
+
+    "quest.festival.rsvGathering.title": "Ridgeside Gathering setup",
+    "quest.festival.rsvGathering.description": "Lenny is putting together the Ridgeside Gathering and needs the village square dressed up. Ship a Tub o' Flowers, {{wood}} wood, and any one table. The recipe for the Tub is included with this letter if you don't already know it.",
+    "quest.festival.rsvGathering.step.tub": "Ship {{count}} Tub o' Flowers.",
+    "quest.festival.rsvGathering.step.wood": "Ship {{count}} wood.",
+    "quest.festival.rsvGathering.step.table": "Ship {{count}} table (any kind)."
 }

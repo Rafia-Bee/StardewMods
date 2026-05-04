@@ -140,6 +140,11 @@ public sealed class ModEntry : Mod
         // `Data/mail` so the asset edit re-runs and populates the new key's body before
         // vanilla reads it on the next mailbox open.
         fw.QuestCompleted += OnQuestCompleted;
+        // Phase 9.5d: grant the Tub o' Flowers crafting recipe up-front when the RSV
+        // Gathering quest is accepted, so the player can craft tubs to ship without
+        // hunting down the recipe mid-quest. CSV row 25's "give recipe with quest letter
+        // if not known" requirement.
+        fw.QuestAccepted += OnQuestAccepted;
     }
 
     private void OnQuestCompleted(object? sender, QuestCompletedArgs e)
@@ -147,6 +152,20 @@ public sealed class ModEntry : Mod
         if (e.DefinitionId != "Mining.SkullCavernDeepDive" && e.DefinitionId != "Mining.MinesDeepDive")
             return;
         Helper.GameContent.InvalidateCache("Data/mail");
+    }
+
+    private void OnQuestAccepted(object? sender, QuestAcceptedArgs e)
+    {
+        if (e.DefinitionId != "Festival.RidgesideGatheringDecor")
+            return;
+        string recipe = string.IsNullOrWhiteSpace(Config.RsvTubOFlowersRecipeName)
+            ? "Tub o' Flowers"
+            : Config.RsvTubOFlowersRecipeName;
+        var crafting = Game1.player?.craftingRecipes;
+        if (crafting == null || crafting.ContainsKey(recipe))
+            return;
+        crafting.Add(recipe, 0);
+        Monitor.Log($"Granted '{recipe}' crafting recipe for Ridgeside Gathering quest.", LogLevel.Trace);
     }
 
     private void RegisterContent(IMoreQuestsApi fw)

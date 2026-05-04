@@ -39,6 +39,10 @@ public sealed class AdventureStepState
     public List<string> Items { get; set; } = new();
     public int Count { get; set; } = 1;
     public int MinQuality { get; set; }
+    /// When true on a `Ship` step, vanilla's furniture / decor shipping ban is bypassed
+    /// while the parent quest is in the active log. Read by `AdventureQuest.HasDecorShippingStep`
+    /// so the per-quest flag tracks any opted-in step. See `DecorShippingPatches`.
+    public bool AllowDecorShipping { get; set; }
     public int Progress { get; set; }
     public bool Done { get; set; }
     public string Description { get; set; } = string.Empty;
@@ -61,6 +65,7 @@ internal static class AdventureStepCodec
         sb.Append("|Items=").Append(JoinList(s.Items));
         sb.Append("|Count=").Append(s.Count);
         sb.Append("|MinQuality=").Append(s.MinQuality);
+        sb.Append("|AllowDecor=").Append(s.AllowDecorShipping ? "1" : "0");
         sb.Append("|Progress=").Append(s.Progress);
         sb.Append("|Done=").Append(s.Done ? "1" : "0");
         sb.Append("|Credited=").Append(JoinList(s.CreditedKeys));
@@ -125,6 +130,9 @@ internal static class AdventureStepCodec
                 case "MinQuality":
                     int.TryParse(val, out int q);
                     state.MinQuality = q;
+                    break;
+                case "AllowDecor":
+                    state.AllowDecorShipping = val == "1" || string.Equals(val, "true", StringComparison.OrdinalIgnoreCase);
                     break;
                 case "Progress":
                     int.TryParse(val, out int p);

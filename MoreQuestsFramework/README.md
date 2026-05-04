@@ -173,10 +173,10 @@ Custom `Quest` subclasses must carry a unique `[XmlType("Mods_<owner>_<name>")]`
 
 Multi-step "Adventure" quests carry a `Steps[]` list; each entry has a `Kind` driving how the step advances:
 
-- `Deliver` / `Talk` / `Gift` / `GiftUniqueNpcs` — vanilla `OnItemOfferedToNpc` / `OnNpcSocialized` virtuals. `Targets[]` = NPC names, `Items[]` = accepted item ids (or `$`-prefixed predicates: `$forage`, `$edible-egg`, `$category:N`).
+- `Deliver` / `Talk` / `Gift` / `GiftUniqueNpcs` — vanilla `OnItemOfferedToNpc` / `OnNpcSocialized` virtuals. `Targets[]` = NPC names, `Items[]` = accepted item ids (or `$`-prefixed predicates: `$edible-egg`, `$category:N`, `$tag:<contextTag>`, `$forage` (alias for `$tag:forage_item`)).
 - `Catch` — `OnFishCaught` virtual. `Items[]` = accepted fish ids.
 - `Slay` — `OnMonsterSlain` virtual. `Targets[]` = monster type names.
-- `Ship` — DayEnding shipping-bin observer. `Items[]` filter, `Count` = stack to credit.
+- `Ship` — DayEnding shipping-bin observer. `Items[]` filter, `Count` = stack to credit. Set `AllowDecorShipping: true` on the step to bypass vanilla's furniture / decor shipping ban while the parent quest is in the active log.
 - `ReachLevel` — DayStarted + `Player.Warped` poll of `deepestMineLevel`. `Targets[0]` = `Mine` or `SkullCavern`, `Count` = floor.
 - `Visit` — `Player.Warped` observer. `Targets[0]` = location name. `Items[]` reserved for future "with N following animals" gating (no-op until LivestockFollowsYou exposes a follower API).
 - `Build` — DayStarted diff against the previous day's farm-building snapshot. `Targets[0]` = building type.
@@ -185,6 +185,10 @@ Multi-step "Adventure" quests carry a `Steps[]` list; each entry has a `Kind` dr
 - `ClearDebris` — per-second poll of `location.resourceClumps`. `Targets[0]` = location, `Count` = clumps removed.
 
 Step ordering is enforced by `Requires[]` (other step `Name`s that must be Done before the step becomes active). `$giver` in `Targets[]` rewrites to the resolved giver at quest-creation time. None of the step observers add Harmony patches; every kind rides an existing SMAPI event or a framework-owned tick.
+
+### Decor-shipping bypass
+
+Festival-supply quests often want the player to ship items vanilla refuses to accept (Hay Bales, Wood Lamp-posts, table furniture, custom decor). Set `AllowDecorShipping = true` on a `QuestPosting` (single-step Ship quests) or any `AdventureStep` of `Kind: Ship` (multi-step Adventure quests) and the framework lifts the ban for the duration of the quest. Implemented as a gated postfix on `Object.canBeShipped`, recomputed once a second from the player's quest log; off-quest sessions pay one int compare. The bypass is total — every item becomes shippable while a decor-shipping quest is in the log — so authors should only enable it on quests where that's an acceptable trade-off.
 
 ### Combat-food reward pool
 

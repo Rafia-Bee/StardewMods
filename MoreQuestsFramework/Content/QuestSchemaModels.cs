@@ -152,6 +152,11 @@ public sealed class StepDef
 
     public int Count { get; set; } = 1;
     public int MinQuality { get; set; }
+
+    /// `Ship`-step opt-in to the framework's furniture / decor shipping bypass. While the
+    /// parent quest is in the active log and any step has this flag set, vanilla's
+    /// shipping ban is lifted via a gated Harmony postfix on `Object.canBeShipped`.
+    public bool AllowDecorShipping { get; set; }
 }
 
 public sealed class RewardDef

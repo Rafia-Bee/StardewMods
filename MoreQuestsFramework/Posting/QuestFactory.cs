@@ -89,6 +89,7 @@ public static class QuestFactory
             itemId = { Value = itemId },
             itemWeight = { Value = Math.Max(1, p.ObjectiveItemWeight) },
             numberToShip = { Value = Math.Max(1, p.ObjectiveQuantity) },
+            allowDecorShipping = { Value = p.AllowDecorShipping },
             objectiveItemName = string.IsNullOrEmpty(p.ObjectiveItemName) ? itemId : p.ObjectiveItemName,
             targetMessage = p.TargetMessage
         };
