@@ -332,6 +332,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     {
         if (!TargetMatches(step, npc.Name)) return false;
         if (!ItemMatches(step, item)) return false;
+        if (step.MinQuality > 0 && (item is not StardewValley.Object obj || obj.Quality < step.MinQuality)) return false;
         if (item.Stack < step.Count) return false;
 
         if (probe) return true;

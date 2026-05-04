@@ -2,7 +2,7 @@
 
 A SMAPI content mod for Stardew Valley that ships a curated set of new daily-board, mail, and festival quests on top of the [More Quests Framework](../MoreQuestsFramework/README.md).
 
-> Heavy work in progress. Thirty-nine quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
+> Heavy work in progress. Forty-two quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
 
 ## Dependencies
 
@@ -83,10 +83,10 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Mining | Monster Parts | Daily board | Wizard / Abigail / Lance (SVE) / MarlonFay (SVE) / Mr. Aguar (RSV) / Eli (ESV) / Maryam (VMV) | Deliver 5-10 of one rare monster drop (Bat Wing / Solar Essence / Void Essence / Bug Meat) | One random gem stack scaled to clear GoldIntermediateBase + Tier 1 negative consequence to Krobus / Dwarf / Sen (ESV) | Cooldown 5d, requires deepestMineLevel >= 40 | Implemented (9c) |
 | Farming | Pierre's Stock-Up | Daily board | Pierre | Deliver bulk mixed seasonal crops (3 distinct, qty scales with farming) | ShopDiscount on the matching seeds at Pierre's | Cooldown 7d, requires Farming 4 | Implemented |
 | Foraging | Plant Trees | Daily board | Linus / Dylan / Demetrius / Kimpoi / Aster | Plant X trees at a target location | Friendship (Intermediate) with giver | Cooldown 7d, OnePerGiver | Not started |
-| Farming | Premium Crop Order | Daily board | Any | Deliver X Iridium-quality rare crops | Gold (Advanced) + rare/ancient seeds | Cooldown 5d | Not started |
+| Farming | Premium Crop Order | Daily board | Any | Deliver X Iridium-quality rare crops | Gold (Advanced) + 3x rare/ancient seeds | Cooldown 5d, Farming 7+ | Implemented (9.5b) |
 | Seasonal | Preserves Season | Special Orders board (Fall 1) | Single dispatched villager | Ship a scaling number of jam, pickle, wine, and dried mushroom artisan goods (counts + objective count both scale with Farming) | Gold (above-sell bonus) + Friendship (Basic) to requester | Fall 1, Cooldown 21d, vanilla `Month` window | Implemented (8a) |
-| Farming | Quality Crop Delivery | Daily board | Any | Deliver X Gold-quality seasonal crops | Gold (Basic-Intermediate) + Friendship (Basic) | Cooldown 3d | Not started |
-| Fishing | Quality Fish Delivery | Daily board | Willy | Catch X Gold-quality fish of a specific type | Gold (Basic-Intermediate) + Friendship (Basic) | Cooldown 3d, OnePerGiver | Not started |
+| Farming | Quality Crop Delivery | Daily board | Any | Deliver X Gold-quality seasonal crops | Gold (Basic-Intermediate) + Friendship (Basic) | Cooldown 3d, Farming 4+ | Implemented (9.5b) |
+| Fishing | Quality Fish Delivery | Daily board | Willy | Deliver X Gold-quality fish of a specific type | Gold (Basic-Intermediate) + Friendship (Basic) | Cooldown 3d, Fishing 4+ | Implemented (9.5b) |
 | Festival | Rainbow Platter (Trout Derby) | Summer 20-21 | Gus / Pika / Rosa / Celestine | Catch FestivalFishQty Rainbow Trout | Recipe + shop discount on the dish | DateLocked, OneTimePerYear | Not started |
 | Fishing | Rainy Day Catch | Daily board / mail | Willy / Blair / Carmen | Catch fish that only spawn in rain | Gold (Intermediate) + rare tackle | Cooldown 5d, OnePerGiver | Not started |
 | Foraging | Rare Forage Hunt | Daily board | Any | Gather rare forage items | Gold (Intermediate) + 10x random seasonal seeds | Cooldown 4d, Foraging 5+ | Implemented (9.5a) |

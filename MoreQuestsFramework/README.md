@@ -165,6 +165,10 @@ Lifecycle events:
 
 Custom `Quest` subclasses must carry a unique `[XmlType("Mods_<owner>_<name>")]` attribute and be registered via `RegisterCustomQuestType` so SpaceCore's serializer factory knows about them.
 
+### Quality-aware Deliver
+
+`ObjectiveDef.MinQuality` and `AdventureStep.MinQuality` gate item acceptance on `Object.Quality >= MinQuality` for `MoreQuestsItemDeliveryQuest` and AdventureQuest `Deliver` steps. Quality 0 = base / vanilla behaviour (any quality accepted), 1 = silver, 2 = gold, 4 = iridium (vanilla skips 3). Non-Object items (rings, weapons, etc.) fail any non-zero gate. Quest descriptions render the requirement on the content side; the framework only enforces.
+
 ### Combat-food reward pool
 
 Quests that hand out a random combat-buff food on completion (e.g. More Quests' Monster Hunt) draw from a shared item-id pool the framework owns. The pool starts empty; the content mod seeds vanilla defaults at `RegistrationOpen`, and other mods can append their own combat foods through:

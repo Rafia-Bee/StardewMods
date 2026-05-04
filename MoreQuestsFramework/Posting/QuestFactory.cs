@@ -70,6 +70,7 @@ public static class QuestFactory
             target = { Value = giver },
             ItemId = { Value = itemId },
             number = { Value = Math.Max(1, p.ObjectiveQuantity) },
+            minQuality = { Value = Math.Max(0, p.MinQuality) },
             targetMessage = p.TargetMessage
         };
         foreach (var alt in p.AlternativeObjectiveItemIds)

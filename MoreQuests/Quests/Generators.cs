@@ -62,6 +62,9 @@ internal static class Generators
         fw.RegisterGenerator("RareMaterialRequest", RareMaterialRequest);
         fw.RegisterGenerator("SecretGiftHint", SecretGiftHint);
         fw.RegisterGenerator("WrappingPaper", WrappingPaper);
+        fw.RegisterGenerator("PremiumCropOrder", PremiumCropOrder);
+        fw.RegisterGenerator("QualityCropDelivery", QualityCropDelivery);
+        fw.RegisterGenerator("QualityFishDelivery", QualityFishDelivery);
     }
 
     // -------------------- Farming --------------------
@@ -3081,4 +3084,177 @@ internal static class Generators
         }
         return null;
     }
+
+    // -------------------- Phase 9.5b: Quality-aware delivery quests --------------------
+
+    /// CSV row 58. Daily-board ItemDelivery for Gold-quality (Quality=2) seasonal crops.
+    /// Picks any met NPC as the requester. Reward scales with the crop's sell price
+    /// between `GoldBasicBase` and `GoldIntermediateBase` plus `FriendshipBasic` to the
+    /// requester. Skill-gated to Farming 4 via the JSON `SkillLevel` filter so the quest
+    /// only surfaces once the player can plausibly produce gold-quality crops (gold
+    /// requires the Tiller profession or a high farming level + fertilizer).
+    private static QuestPosting? QualityCropDelivery(QuestContext ctx)
+    {
+        var metNpcs = DispatchRegistry.MetHumanNpcs();
+        if (metNpcs.Count == 0)
+            return null;
+        string giver = metNpcs[Game1.random.Next(metNpcs.Count)];
+
+        var crops = ctx.Items.GetSeasonalCrops(ctx.Season);
+        if (crops.Count == 0)
+            return null;
+        var crop = crops[Game1.random.Next(crops.Count)];
+
+        int qty = Game1.random.Next(3, 7);
+        int basePrice = Math.Max(crop.SellPrice, 30);
+        int gold = Math.Clamp(
+            (int)(basePrice * qty * ctx.Config.RewardMultiplierAboveSell),
+            ctx.Config.GoldBasicBase,
+            ctx.Config.GoldIntermediateBase);
+
+        string qualityName = QualityName(2);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Farming,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.ItemDelivery,
+            QuestGiver = giver,
+            ObjectiveItemId = crop.QualifiedItemId,
+            ObjectiveItemName = crop.DisplayName,
+            ObjectiveQuantity = qty,
+            MinQuality = 2,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards =
+            {
+                new MoneyReward(gold),
+                new FriendshipReward(giver, ctx.Config.FriendshipBasic)
+            },
+            Title = ModEntry.I18n.Get("quest.farming.qualityCrop.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.farming.qualityCrop.description", new { npc = giver, qty, quality = qualityName, item = crop.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.farming.qualityCrop.objective", new { qty, quality = qualityName, item = crop.DisplayName, npc = giver }),
+            TargetMessage = ModEntry.I18n.Get("quest.farming.qualityCrop.targetMessage")
+        };
+    }
+
+    /// CSV row 56. Daily-board ItemDelivery for Iridium-quality (Quality=4) "rare"
+    /// seasonal crops, filtered to a sell-price band so the request feels premium.
+    /// Picks any met NPC as the requester. Reward = `GoldAdvancedBase` plus a small
+    /// stack of one rare/ancient seed. Skill-gated to Farming 7.
+    private static QuestPosting? PremiumCropOrder(QuestContext ctx)
+    {
+        var metNpcs = DispatchRegistry.MetHumanNpcs();
+        if (metNpcs.Count == 0)
+            return null;
+        string giver = metNpcs[Game1.random.Next(metNpcs.Count)];
+
+        var crops = ctx.Items.GetSeasonalCrops(ctx.Season);
+        // Filter to "rare" tier by sell price. Vanilla high-end crops (Starfruit 750,
+        // Ancient Fruit 550, Sweet Gem Berry 3000, Cranberries 75 base...) — the 200g
+        // floor catches all the high-end seasonal crops without including run-of-the-mill
+        // staples like Tomato (60) or Pumpkin (320 — yes, included, intentionally).
+        var rare = crops.Where(c => c.SellPrice >= 200).ToList();
+        if (rare.Count == 0)
+            return null;
+        var crop = rare[Game1.random.Next(rare.Count)];
+
+        int qty = Game1.random.Next(2, 5);
+        int gold = ctx.Config.GoldAdvancedBase;
+
+        var rewards = new List<RewardSpec> { new MoneyReward(gold) };
+        var seedReward = PickRareSeed(ctx);
+        if (seedReward != null)
+            rewards.Add(new ObjectReward(seedReward.QualifiedItemId, 3));
+
+        string qualityName = QualityName(4);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Farming,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.ItemDelivery,
+            QuestGiver = giver,
+            ObjectiveItemId = crop.QualifiedItemId,
+            ObjectiveItemName = crop.DisplayName,
+            ObjectiveQuantity = qty,
+            MinQuality = 4,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.farming.premiumCrop.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.farming.premiumCrop.description", new { npc = giver, qty, quality = qualityName, item = crop.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.farming.premiumCrop.objective", new { qty, quality = qualityName, item = crop.DisplayName, npc = giver }),
+            TargetMessage = ModEntry.I18n.Get("quest.farming.premiumCrop.targetMessage")
+        };
+    }
+
+    /// CSV row 59. Daily-board ItemDelivery for Gold-quality (Quality=2) fish to Willy.
+    /// Implemented as `ItemDelivery` rather than `Fishing` because the player needs to
+    /// hold the gold-quality stack at turn-in time — `MoreQuestsFishingQuest`'s catch
+    /// counter ticks on every catch regardless of quality, which would falsely show
+    /// "5/5 caught" even when the player only had silver fish to deliver. The CSV row
+    /// note explicitly accepts either approach; ItemDelivery is the simpler match for
+    /// quality enforcement.
+    private static QuestPosting? QualityFishDelivery(QuestContext ctx)
+    {
+        const string giver = "Willy";
+
+        var fish = ctx.Config.FishingIgnoresVisitedLocations
+            ? ctx.Items.GetSeasonalFish(ctx.Season)
+            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
+        if (fish.Count == 0)
+            return null;
+        var target = fish[Game1.random.Next(fish.Count)];
+
+        int qty = Game1.random.Next(3, 6);
+        int basePrice = Math.Max(target.SellPrice, 30);
+        int gold = Math.Clamp(
+            (int)(basePrice * qty * ctx.Config.RewardMultiplierAboveSell),
+            ctx.Config.GoldBasicBase,
+            ctx.Config.GoldIntermediateBase);
+
+        string qualityName = QualityName(2);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Fishing,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.ItemDelivery,
+            QuestGiver = giver,
+            ObjectiveItemId = target.QualifiedItemId,
+            ObjectiveItemName = target.DisplayName,
+            ObjectiveQuantity = qty,
+            MinQuality = 2,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards =
+            {
+                new MoneyReward(gold),
+                new FriendshipReward(giver, ctx.Config.FriendshipBasic)
+            },
+            Title = ModEntry.I18n.Get("quest.fishing.qualityFish.title"),
+            Description = ModEntry.I18n.Get("quest.fishing.qualityFish.description", new { qty, quality = qualityName, item = target.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.fishing.qualityFish.objective", new { qty, quality = qualityName, item = target.DisplayName }),
+            TargetMessage = ModEntry.I18n.Get("quest.fishing.qualityFish.targetMessage")
+        };
+    }
+
+    /// Vanilla rare/ancient seeds for the Premium Crop Order reward. Resolved at
+    /// pick-time so a missing modded id falls through to the next entry.
+    private static readonly (string Id, string Name)[] RareSeedPool =
+    {
+        ("(O)499", "Ancient Seeds"),
+        ("(O)347", "Rare Seed")
+    };
+
+    private static ResolvedItem? PickRareSeed(QuestContext ctx) => PickResolved(ctx, RareSeedPool);
+
+    /// Maps a vanilla quality value (0/1/2/4) to its translated display name. Quality 3
+    /// is unused by vanilla; the `_` fallback keeps the helper safe if a future
+    /// definition somehow ships with that value.
+    private static string QualityName(int quality) => quality switch
+    {
+        1 => ModEntry.I18n.Get("quest.quality.silver"),
+        2 => ModEntry.I18n.Get("quest.quality.gold"),
+        4 => ModEntry.I18n.Get("quest.quality.iridium"),
+        _ => ModEntry.I18n.Get("quest.quality.normal")
+    };
 }
