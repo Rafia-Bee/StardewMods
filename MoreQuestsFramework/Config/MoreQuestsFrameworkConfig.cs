@@ -40,6 +40,12 @@ public sealed class MoreQuestsFrameworkConfig
     /// a different NPC than the giver still post normally.
     public bool SkipFriendshipQuestsAtMaxHeart { get; set; } = true;
 
+    /// Days past a consequence dialogue entry's `EarliestFireDay` after which it gets
+    /// silently dropped on `DayStarted`. Stops chained / queued reactions from sitting
+    /// in the queue indefinitely on saves where the player ducks the NPC for weeks —
+    /// an NPC isn't going to bring up an overfishing complaint a year after the fact.
+    public int ConsequenceGraceDays { get; set; } = 7;
+
     // ----- Friendship rewards (raw friendship points; 250 = 1 heart) -----
     public int FriendshipBasic { get; set; } = 30;
     public int FriendshipMid { get; set; } = 80;

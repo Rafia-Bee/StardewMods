@@ -58,6 +58,31 @@ public sealed class ConsequenceEngine
         _handlers[tier] = handler;
     }
 
+    /// Drop pending dialogue entries the player has ducked for too long. Fired from
+    /// `ModEntry.OnDayStarted`. Anything whose `EarliestFireDay` is more than
+    /// `ConsequenceGraceDays` days in the past stops being a plausible reaction —
+    /// an NPC isn't going to bring up an overfishing complaint a year after the fact.
+    /// Stale-drop count is logged at Trace.
+    public void SweepExpired()
+    {
+        int today = StardewValley.Game1.Date?.TotalDays ?? 0;
+        int grace = _config.ConsequenceGraceDays > 0 ? _config.ConsequenceGraceDays : 7;
+        var queue = _state.PendingConsequenceLines;
+        int dropped = 0;
+        for (int i = queue.Count - 1; i >= 0; i--)
+        {
+            if (queue[i].EarliestFireDay + grace < today)
+            {
+                queue.RemoveAt(i);
+                dropped++;
+            }
+        }
+        if (dropped > 0)
+            _monitor.Log(
+                $"ConsequenceEngine: swept {dropped} stale pending dialogue entries (older than {grace} days past their fire day).",
+                LogLevel.Trace);
+    }
+
     /// Fire a consequence on quest completion. Resolves the loved/hated NPC sets via
     /// `Source` + `Subject`, builds the context, and forwards to the registered handler.
     public void Apply(ConsequenceSpec? spec)
@@ -109,31 +134,28 @@ public sealed class ConsequenceEngine
             hated = merged;
         }
 
-        // Sample down to a single representative across the union. Queueing a line
-        // for every loved + every hated NPC produces a fatigue-inducing wall of
-        // reactions over the next in-game week; one randomly-picked NPC tells the
-        // narrative beat without spamming. Tier 3 chains (Static source above) are
-        // exempt — those want every ecology NPC to react over multiple days.
-        return SamplePair(loved, hated);
+        // Sample down to one NPC per side independently. Queueing a line for every
+        // loved + every hated NPC produces a fatigue-inducing wall of reactions over
+        // the next in-game week; sampling per-side keeps the loved + hated narrative
+        // beats both visible (so the player gets to feel the trade-off) without
+        // spamming. Tier 3 chains (Static source above) are exempt — those want every
+        // ecology NPC to react over multiple days.
+        return SampleEachSide(loved, hated);
     }
 
-    /// Picks at most one NPC across (loved ∪ hated). When both pools are non-empty
-    /// the side is chosen 50/50 weighted by pool size (so a quest where only one NPC
-    /// hates and ten NPCs love still leans toward the loved side most days, but the
-    /// hated NPC still surfaces some of the time). Returns a tuple where the chosen
-    /// side has one entry and the other is empty.
-    private static (IReadOnlyList<string> loved, IReadOnlyList<string> hated) SamplePair(IReadOnlyList<string> loved, IReadOnlyList<string> hated)
+    /// Picks at most one NPC from each pool independently. So a quest with both
+    /// loved-by + hated-by NPCs surfaces exactly two reactions (one positive, one
+    /// negative); a quest with only one side populated surfaces just that side.
+    private static (IReadOnlyList<string> loved, IReadOnlyList<string> hated) SampleEachSide(IReadOnlyList<string> loved, IReadOnlyList<string> hated)
     {
-        int totalLoved = loved.Count;
-        int totalHated = hated.Count;
-        if (totalLoved == 0 && totalHated == 0)
-            return (Array.Empty<string>(), Array.Empty<string>());
-
         var rng = StardewValley.Game1.random;
-        int pick = rng.Next(totalLoved + totalHated);
-        if (pick < totalLoved)
-            return (new[] { loved[pick] }, Array.Empty<string>());
-        return (Array.Empty<string>(), new[] { hated[pick - totalLoved] });
+        IReadOnlyList<string> sampledLoved = loved.Count == 0
+            ? Array.Empty<string>()
+            : new[] { loved[rng.Next(loved.Count)] };
+        IReadOnlyList<string> sampledHated = hated.Count == 0
+            ? Array.Empty<string>()
+            : new[] { hated[rng.Next(hated.Count)] };
+        return (sampledLoved, sampledHated);
     }
 
     private static List<string> MetOnly(IReadOnlyList<string> input)

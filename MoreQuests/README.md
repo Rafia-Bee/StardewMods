@@ -118,6 +118,8 @@ Multi-step quests run on the framework's `AdventureQuest` substrate: Check on Ge
 ## Known limitations
 
 - **Mail Services Mod compatibility.** Completing a delivery quest by mailing the item through Mail Services Mod gives the recipient an extra full heart of friendship on top of the configured reward. MSM mimics vanilla's in-person delivery, which always pays a fixed 250-point friendship bump regardless of the quest's declared rewards. Delivering in person produces the correct reward. An upstream compatibility request will be filed once More Quests publishes.
+- **Mail Services Mod and the Forage with Linus quest.** Forage with Linus tracks gifts to unique recipients via vanilla's `Quest.OnItemOfferedToNpc` hook. MSM bypasses that hook because it delivers via the mailbox rather than an in-person interaction, so mailed forage gifts don't tick the quest counter. Hand-deliver the gifts for now. Same fix path as above — once an MSM compatibility hook lands, mailed gifts will count automatically.
+- **Friendship-decay / friendship-clamp mods.** Negative consequences (Massive Harvest, Weekly Specials, Medium Fishing Haul, Seafood Night, Monster Parts) call vanilla's `Game1.player.changeFriendship`. Mods that intercept that call to prevent friendship loss — CJB Cheats Menu's "No friendship decay" option, similar tuning mods — also neutralize the negative side of these consequences. Loved-side friendship gains still land. If you want the full trade-off these quests are designed around, turn that option off in CJB. The friendship deltas are logged at Debug level so you can verify the call fired even if the value didn't change.
 
 ## Notes
 

@@ -116,12 +116,26 @@ public static class RewardApplier
             lines.Add(translation.Get("quest.reward.line.money", new { npc = giver, gold })
                 .Default($"{giver} will give you {gold}g in return").ToString());
 
-        foreach (var r in rewards.OfType<FriendshipReward>())
+        // Collapse the friendship lines when there are 3+ named NPCs — listing every
+        // loved-by villager spoils the consequence pool (the summary doubles as a tip
+        // sheet for who's about to react). For 1-2 NPCs we keep the named lines so
+        // small-cast rewards (single FriendshipReward, e.g. Forage with Linus) read
+        // naturally.
+        var friendshipRewards = rewards.OfType<FriendshipReward>()
+            .Where(f => f.Points > 0 && !string.IsNullOrEmpty(f.Npc))
+            .ToList();
+        if (friendshipRewards.Count >= 3)
         {
-            if (r.Points <= 0 || string.IsNullOrEmpty(r.Npc))
-                continue;
-            lines.Add(translation.Get("quest.reward.line.friendship", new { npc = r.Npc })
-                .Default($"{r.Npc} will like you more").ToString());
+            lines.Add(translation.Get("quest.reward.line.friendship.collapsed")
+                .Default("Word will get around — a few villagers will warm up to you").ToString());
+        }
+        else
+        {
+            foreach (var r in friendshipRewards)
+            {
+                lines.Add(translation.Get("quest.reward.line.friendship", new { npc = r.Npc })
+                    .Default($"{r.Npc} will like you more").ToString());
+            }
         }
 
         foreach (var r in rewards.OfType<ObjectReward>())

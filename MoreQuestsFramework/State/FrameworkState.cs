@@ -71,6 +71,13 @@ public sealed class FrameworkState
     /// `EarliestFireDay` values so one line surfaces per day.
     public List<DialogueQueueEntry> PendingConsequenceLines { get; set; } = new();
 
+    /// NPC name → most recent `Game1.Date.TotalDays` on which the consequence pop
+    /// fired for that NPC. The dialog watcher + Harmony prefix both consult this so
+    /// at most one consequence line surfaces per NPC per day. Without this, a player
+    /// who skips ahead with cheats (or just doesn't talk to the NPC for several days)
+    /// gets every queued line back-to-back on the next chat.
+    public Dictionary<string, int> LastConsequencePoppedDay { get; set; } = new();
+
     /// Active festival-bias rewards waiting to be consumed at their festival's judging
     /// hook (Luau governor reaction, Fair grange judging). One entry per granted reward;
     /// the Luau / Fair patches read and remove the relevant entry once the bias has been
