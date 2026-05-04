@@ -40,6 +40,16 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     /// decoded list per virtual call.
     private List<AdventureStepState>? _decoded;
 
+    /// Per-step transient baseline for `ClearDebris`: the most recently observed
+    /// `ResourceClump` count at the step's target location. Reset on save load (the
+    /// next `PollResourceClumps` poll re-baselines from current world state). Keyed by
+    /// step index. Non-netcoded, non-XML-serialised by virtue of being a private field.
+    private Dictionary<int, int>? _clumpBaselines;
+
+    /// One-time warning gate so a Visit step that specifies `Items[]` (animal-count
+    /// gating) only emits one "deferred" log line per quest, not one per warp.
+    private bool _visitItemsDeferralLogged;
+
     protected override void initNetFields()
     {
         base.initNetFields();
@@ -311,6 +321,168 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             Persist(idx, step);
             reloadObjective();
         }
+    }
+
+    /// Called by the framework when the player warps into a location. Each active `Visit`
+    /// step compares its `Targets[0]` against the entered location name. A Visit step's
+    /// `Items[]` is reserved for "with N following animals" gating tied to the Livestock
+    /// Follows You follower API; that subfield is deferred until LFY exposes a follower
+    /// query, so when `Items[]` is non-empty we log once at Trace and skip credit (the
+    /// step stays open until the framework gains a follower-count adapter).
+    public void ObserveVisit(string locationName)
+    {
+        if (completed.Value || string.IsNullOrEmpty(locationName))
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.Visit) continue;
+            if (!LocationMatches(step, locationName)) continue;
+            if (step.Items.Count > 0)
+            {
+                if (!_visitItemsDeferralLogged)
+                {
+                    _visitItemsDeferralLogged = true;
+                    ModEntry.Instance?.Monitor.Log(
+                        $"AdventureQuest: Visit step '{step.Name}' specifies Items[] (follower-count gating). " +
+                        "That subfield is deferred until LivestockFollowsYou exposes a follower API; " +
+                        "step will not auto-complete on warp.",
+                        StardewModdingAPI.LogLevel.Trace);
+                }
+                continue;
+            }
+            MarkStepDone(i, step);
+        }
+    }
+
+    /// Called by the framework at `DayStarted` with the set of building types newly added
+    /// to the farm since the previous DayStarted snapshot. Each active `Build` step matches
+    /// `Targets[0]` against the new types — first match closes the step.
+    public void ObserveBuild(IReadOnlyCollection<string> newBuildingTypes)
+    {
+        if (completed.Value || newBuildingTypes == null || newBuildingTypes.Count == 0)
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.Build) continue;
+            string target = step.Targets.Count > 0 ? step.Targets[0] : string.Empty;
+            if (string.IsNullOrEmpty(target)) continue;
+            foreach (var type in newBuildingTypes)
+            {
+                if (string.Equals(type, target, StringComparison.OrdinalIgnoreCase))
+                {
+                    MarkStepDone(i, step);
+                    break;
+                }
+            }
+        }
+    }
+
+    /// Called by the framework when one or more trees were added to a location's
+    /// `terrainFeatures` (planted by the player or by the engine following a player
+    /// action). Each active `Plant` step crediting its target location is incremented
+    /// by `delta`.
+    public void ObservePlantedTree(string locationName, int delta)
+    {
+        if (completed.Value || delta <= 0 || string.IsNullOrEmpty(locationName))
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.Plant) continue;
+            if (!LocationMatches(step, locationName)) continue;
+            CreditCount(i, step, delta);
+        }
+    }
+
+    /// Called by the framework when one or more weed `Object`s were removed from a
+    /// location's `objects` net collection. Each active `ClearWeeds` step crediting
+    /// its target location is incremented by `delta`.
+    public void ObserveWeedsCleared(string locationName, int delta)
+    {
+        if (completed.Value || delta <= 0 || string.IsNullOrEmpty(locationName))
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.ClearWeeds) continue;
+            if (!LocationMatches(step, locationName)) continue;
+            CreditCount(i, step, delta);
+        }
+    }
+
+    /// Polls the supplied location's `resourceClumps` count once and credits each active
+    /// `ClearDebris` step targeting that location with the drop since the previous poll.
+    /// On the first poll for a step, the current count is recorded as the baseline (no
+    /// credit yet). Cheap when no ClearDebris step is active — early-returns on the
+    /// per-step kind check before touching `location.resourceClumps`.
+    public void PollResourceClumps(GameLocation? location)
+    {
+        if (completed.Value || location == null)
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.ClearDebris) continue;
+            if (!LocationMatches(step, location.Name)) continue;
+
+            int current = location.resourceClumps?.Count ?? 0;
+            _clumpBaselines ??= new Dictionary<int, int>();
+            if (!_clumpBaselines.TryGetValue(i, out int baseline))
+            {
+                _clumpBaselines[i] = current;
+                continue;
+            }
+            if (current < baseline)
+            {
+                int delta = baseline - current;
+                _clumpBaselines[i] = current;
+                CreditCount(i, step, delta);
+            }
+            else if (current > baseline)
+            {
+                _clumpBaselines[i] = current;
+            }
+        }
+    }
+
+    private void CreditCount(int idx, AdventureStepState step, int delta)
+    {
+        int needed = Math.Max(1, step.Count);
+        int credit = Math.Min(delta, needed - step.Progress);
+        if (credit <= 0)
+            return;
+        step.Progress += credit;
+        if (step.Progress >= needed)
+            MarkStepDone(idx, step);
+        else
+        {
+            Persist(idx, step);
+            reloadObjective();
+        }
+    }
+
+    private static bool LocationMatches(AdventureStepState step, string locationName)
+    {
+        if (step.Targets.Count == 0)
+            return false;
+        foreach (var t in step.Targets)
+        {
+            if (string.Equals(t, locationName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
     }
 
     public override void questComplete()
