@@ -48,14 +48,24 @@ public sealed class QuestPipeline
             if (_registry.EffectiveSource(def) != TriggerSource.DailyBoard || def.Kind != PostingKind.DailyBoard)
                 continue;
             if (!def.IsAvailable(_ctx))
+            {
+                _ctx.Monitor.Log($"DailyBoard pool: '{def.Id}' unavailable today, skipping.", LogLevel.Debug);
                 continue;
+            }
             if (_antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
+            {
+                _ctx.Monitor.Log($"DailyBoard pool: '{def.Id}' on cooldown ({def.CooldownDays}d), skipping.", LogLevel.Debug);
                 continue;
+            }
             int w = weights.TryGetValue(def.Id, out int configured) ? configured : def.DefaultWeight;
             if (w <= 0)
+            {
+                _ctx.Monitor.Log($"DailyBoard pool: '{def.Id}' weight is 0, skipping.", LogLevel.Debug);
                 continue;
+            }
             pool.Add((def, w));
         }
+        _ctx.Monitor.Log($"DailyBoard pool: {pool.Count} eligible definitions after availability/cooldown/weight filters.", LogLevel.Debug);
 
         int initialPoolSize = pool.Count;
         var giversToday = new HashSet<string>();

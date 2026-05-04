@@ -400,6 +400,10 @@ public sealed class ModEntry : Mod
         // player accepted a feast quest months ago and never made it to the festival.
         _festivalBiasWriter?.SweepExpired();
 
+        // Drop pending consequence dialogue lines past their grace window so chained
+        // reactions don't sit in the queue indefinitely if the player ducks the NPC.
+        _consequenceEngine?.SweepExpired();
+
         _api.FireDayRefreshed(daily.Count, triggered.Count);
     }
 
