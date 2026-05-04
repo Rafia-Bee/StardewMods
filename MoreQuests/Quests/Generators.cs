@@ -53,6 +53,15 @@ internal static class Generators
         fw.RegisterGenerator("ForageWithLinus", ForageWithLinus);
         fw.RegisterGenerator("GusFestivalFeastFall", GusFestivalFeastFall);
         fw.RegisterGenerator("GusFestivalFeastSummer", GusFestivalFeastSummer);
+        fw.RegisterGenerator("GiftDelivery", GiftDelivery);
+        fw.RegisterGenerator("HeatWaveRelief", HeatWaveRelief);
+        fw.RegisterGenerator("JellyfishWatchPrep", JellyfishWatchPrep);
+        fw.RegisterGenerator("MerchantUnpacking", MerchantUnpacking);
+        fw.RegisterGenerator("MonsterHunt", MonsterHunt);
+        fw.RegisterGenerator("RareForageHunt", RareForageHunt);
+        fw.RegisterGenerator("RareMaterialRequest", RareMaterialRequest);
+        fw.RegisterGenerator("SecretGiftHint", SecretGiftHint);
+        fw.RegisterGenerator("WrappingPaper", WrappingPaper);
     }
 
     // -------------------- Farming --------------------
@@ -2297,4 +2306,779 @@ internal static class Generators
 
     private static string Sanitise(string s) =>
         new string((s ?? string.Empty).Where(c => char.IsLetterOrDigit(c)).ToArray());
+
+    // -------------------- Phase 9.5a: Declarative quick-wins --------------------
+
+    /// CSV row 28. Daily-board ItemDelivery. Anonymous board posting from one met NPC
+    /// asking the player to deliver a small gift to a different met NPC. Item is picked
+    /// from the recipient's loved or liked list so the gift always lands well. Reward =
+    /// `RewardMultiplierBelowSell` × the item's sell price (the giver "covers the cost
+    /// minus a finder's fee") plus `FriendshipBasic` with the recipient.
+    private static QuestPosting? GiftDelivery(QuestContext ctx)
+    {
+        var metNpcs = DispatchRegistry.MetHumanNpcs();
+        if (metNpcs.Count < 2)
+            return null;
+
+        string giver = metNpcs[Game1.random.Next(metNpcs.Count)];
+        var recipientPool = new List<string>(metNpcs.Count - 1);
+        foreach (var npc in metNpcs)
+            if (!string.Equals(npc, giver, StringComparison.OrdinalIgnoreCase))
+                recipientPool.Add(npc);
+        if (recipientPool.Count == 0)
+            return null;
+        string recipient = recipientPool[Game1.random.Next(recipientPool.Count)];
+
+        var pick = PickLovedOrLikedItem(ctx, recipient);
+        if (pick == null)
+            return null;
+
+        int basePrice = Math.Max(pick.SellPrice, 30);
+        int gold = Math.Max(50, (int)(basePrice * ctx.Config.RewardMultiplierBelowSell));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Social,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.ItemDelivery,
+            QuestGiver = giver,
+            ObjectiveItemId = pick.QualifiedItemId,
+            ObjectiveItemName = pick.DisplayName,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards =
+            {
+                new MoneyReward(gold),
+                new FriendshipReward(recipient, ctx.Config.FriendshipBasic)
+            },
+            Title = ModEntry.I18n.Get("quest.social.giftDelivery.title", new { recipient }),
+            Description = ModEntry.I18n.Get("quest.social.giftDelivery.description", new { giver, recipient, item = pick.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.social.giftDelivery.objective", new { item = pick.DisplayName, recipient }),
+            TargetMessage = ModEntry.I18n.Get("quest.social.giftDelivery.targetMessage")
+        };
+    }
+
+    /// CSV row 37. Summer-only daily-board ItemDelivery. Cold-tag items (vanilla and
+    /// modded) for Harvey or Paula (RSV via the `HeatWaveRelief` dispatch role). Reward =
+    /// a random clinic-themed item from the curated pool — Harvey runs a clinic, not a
+    /// shop, so the "Harvey's shop" reward column is sourced from medicine-adjacent
+    /// vanilla items.
+    private static readonly (string Id, string Name)[] HeatWaveItemPool =
+    {
+        ("(O)253", "Triple Shot Espresso"),
+        ("(O)395", "Coffee"),
+        ("(O)167", "Joja Cola"),
+        ("(O)773", "Life Elixir"),
+        ("(O)772", "Oil of Garlic")
+    };
+
+    private static QuestPosting? HeatWaveRelief(QuestContext ctx)
+    {
+        if (!string.Equals(ctx.Season, "summer", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.HeatWaveRelief);
+        if (giver == null)
+            return null;
+
+        var coldItems = ResolveColdTaggedItems(ctx);
+        if (coldItems.Count == 0)
+            return null;
+        var pick = coldItems[Game1.random.Next(coldItems.Count)];
+
+        int qty = Game1.random.Next(3, 6);
+
+        var rewardItem = PickResolved(ctx, HeatWaveItemPool);
+        var rewards = new List<RewardSpec>
+        {
+            new FriendshipReward(giver, ctx.Config.FriendshipBasic)
+        };
+        if (rewardItem != null)
+            rewards.Add(new ObjectReward(rewardItem.QualifiedItemId));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Seasonal,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.ItemDelivery,
+            QuestGiver = giver,
+            ObjectiveItemId = pick.QualifiedItemId,
+            ObjectiveItemName = pick.DisplayName,
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.seasonal.heatWaveRelief.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.seasonal.heatWaveRelief.description", new { npc = giver, qty, item = pick.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.seasonal.heatWaveRelief.objective", new { qty, item = pick.DisplayName, npc = giver }),
+            TargetMessage = ModEntry.I18n.Get("quest.seasonal.heatWaveRelief.targetMessage")
+        };
+    }
+
+    /// Curated vanilla beach forageables. Mirrors the BeachForage pool used by
+    /// BeachCleanup since both quests target the same kind of items.
+    private static readonly (string Id, string Name)[] OceanForagePool =
+    {
+        ("(O)393", "Coral"),
+        ("(O)397", "Sea Urchin"),
+        ("(O)392", "Nautilus Shell"),
+        ("(O)394", "Rainbow Shell"),
+        ("(O)372", "Clam"),
+        ("(O)718", "Cockle"),
+        ("(O)719", "Mussel"),
+        ("(O)723", "Oyster")
+    };
+
+    /// CSV row 38. Summer-only daily-board ItemDelivery. Picks an ecology-role giver
+    /// (Demetrius / Maddie RSV / Mr. Aguar RSV / Dylan ESV — the existing `EcologyMinded`
+    /// pool already matches the CSV's giver list) and asks for a small haul of one ocean
+    /// forageable. Reward = `FriendshipBasic` plus a randomly-picked loved or liked item
+    /// from the giver's own gift tastes ("they trade you something they'd enjoy").
+    private static QuestPosting? JellyfishWatchPrep(QuestContext ctx)
+    {
+        if (!string.Equals(ctx.Season, "summer", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.EcologyMinded);
+        if (giver == null)
+            return null;
+
+        var pick = PickResolved(ctx, OceanForagePool);
+        if (pick == null)
+            return null;
+        int qty = Game1.random.Next(3, 6);
+
+        var rewards = new List<RewardSpec>
+        {
+            new FriendshipReward(giver, ctx.Config.FriendshipBasic)
+        };
+        var lovedItem = PickLovedOrLikedItem(ctx, giver);
+        if (lovedItem != null)
+            rewards.Add(new ObjectReward(lovedItem.QualifiedItemId));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Seasonal,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.ItemDelivery,
+            QuestGiver = giver,
+            ObjectiveItemId = pick.QualifiedItemId,
+            ObjectiveItemName = pick.DisplayName,
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.seasonal.jellyfishWatch.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.seasonal.jellyfishWatch.description", new { npc = giver, qty, item = pick.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.seasonal.jellyfishWatch.objective", new { qty, item = pick.DisplayName, npc = giver }),
+            TargetMessage = ModEntry.I18n.Get("quest.seasonal.jellyfishWatch.targetMessage")
+        };
+    }
+
+    /// CSV row 50. Winter 13 (Night Market middle day). Picks a met NPC to send the
+    /// player on a non-current-season seed restock. Filter walks `Data/Crops` and keeps
+    /// any seed whose `Seasons` list excludes Winter so the request reads as "stock up
+    /// for next year while the Night Market's Magic Boat is in town". Reward =
+    /// `FriendshipBasic` with the picked NPC.
+    private static QuestPosting? MerchantUnpacking(QuestContext ctx)
+    {
+        var metNpcs = DispatchRegistry.MetHumanNpcs();
+        if (metNpcs.Count == 0)
+            return null;
+        string giver = metNpcs[Game1.random.Next(metNpcs.Count)];
+
+        var seeds = ResolveNonWinterSeeds(ctx);
+        if (seeds.Count == 0)
+            return null;
+        var pick = seeds[Game1.random.Next(seeds.Count)];
+
+        int qty = Game1.random.Next(3, 7);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.Ship,
+            QuestGiver = giver,
+            ObjectiveItemId = pick.QualifiedItemId,
+            ObjectiveItemName = pick.DisplayName,
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipBasic) },
+            Title = ModEntry.I18n.Get("quest.festival.merchantUnpacking.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.festival.merchantUnpacking.description", new { npc = giver, qty, item = pick.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.festival.merchantUnpacking.objective", new { qty, item = pick.DisplayName }),
+            TargetMessage = ModEntry.I18n.Get("quest.festival.merchantUnpacking.targetMessage")
+        };
+    }
+
+    /// CSV row 52. Daily-board SlayMonster (any monster). Marlon dispatches the request
+    /// from the Adventurer's Guild. Reward = `GoldIntermediateBase` + one random item
+    /// from the framework's combat-food pool (seeded by this content mod with vanilla
+    /// combat-buff foods at `RegistrationOpen`; consumer mods can extend through
+    /// `IMoreQuestsApi.RegisterCombatFood`).
+    private static QuestPosting? MonsterHunt(QuestContext ctx)
+    {
+        if (Game1.player.deepestMineLevel < 1)
+            return null;
+
+        const string giver = "Marlon";
+        int qty = ctx.Config.DifficultyScaling
+            ? Math.Max(8, 6 + 2 * Game1.player.CombatLevel)
+            : 12;
+
+        int gold = ctx.Config.GoldIntermediateBase;
+
+        var pool = ModEntry.Framework?.GetCombatFoodPool() ?? Array.Empty<string>();
+        ResolvedItem? rewardFood = null;
+        if (pool.Count > 0)
+        {
+            // Try a few times so a missing modded id doesn't kill the reward.
+            for (int i = 0; i < Math.Min(pool.Count, 5) && rewardFood == null; i++)
+                rewardFood = ctx.Items.TryResolveItem(pool[Game1.random.Next(pool.Count)]);
+        }
+
+        var rewards = new List<RewardSpec> { new MoneyReward(gold) };
+        if (rewardFood != null)
+            rewards.Add(new ObjectReward(rewardFood.QualifiedItemId));
+
+        var quest = new AnyMonsterQuest
+        {
+            target = { Value = giver },
+            monsterName = { Value = "any" },
+            numberToKill = { Value = qty },
+            reward = { Value = gold },
+            targetMessage = ModEntry.I18n.Get("quest.mining.monsterHunt.targetMessage")
+        };
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Mining,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.SlayMonster,
+            QuestGiver = giver,
+            ObjectiveItemId = "any monster",
+            ObjectiveItemName = "any monster",
+            ObjectiveQuantity = qty,
+            TargetMonster = "any",
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.mining.monsterHunt.title"),
+            Description = ModEntry.I18n.Get("quest.mining.monsterHunt.description", new { qty }),
+            CurrentObjective = ModEntry.I18n.Get("quest.mining.monsterHunt.objective", new { qty }),
+            TargetMessage = ModEntry.I18n.Get("quest.mining.monsterHunt.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Vanilla rare forageables. Modded forage gets folded in via the `forage_item`
+    /// context tag so this list is the seed; the resolver appends matching modded ids.
+    private static readonly (string Id, string Name)[] RareForagePool =
+    {
+        ("(O)394", "Rainbow Shell"),
+        ("(O)88", "Cactus Fruit"),
+        ("(O)851", "Magma Cap")
+    };
+
+    /// CSV row 62. Daily-board ItemDelivery. Picks a met NPC to take a small stack of
+    /// rare forage. Reward = `GoldIntermediateBase` + 10 of one current-season seed
+    /// (so the player gets some farming material instead of a random gold lump).
+    private static QuestPosting? RareForageHunt(QuestContext ctx)
+    {
+        var metNpcs = DispatchRegistry.MetHumanNpcs();
+        if (metNpcs.Count == 0)
+            return null;
+        string giver = metNpcs[Game1.random.Next(metNpcs.Count)];
+
+        var pool = ResolveRareForage(ctx);
+        if (pool.Count == 0)
+            return null;
+        var pick = pool[Game1.random.Next(pool.Count)];
+
+        int qty = Game1.random.Next(2, 5);
+        int gold = ctx.Config.GoldIntermediateBase;
+
+        var rewards = new List<RewardSpec> { new MoneyReward(gold) };
+        var seedReward = PickSeasonalSeed(ctx);
+        if (seedReward != null)
+            rewards.Add(new ObjectReward(seedReward.QualifiedItemId, 10));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Foraging,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.ItemDelivery,
+            QuestGiver = giver,
+            ObjectiveItemId = pick.QualifiedItemId,
+            ObjectiveItemName = pick.DisplayName,
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.foraging.rareForage.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.foraging.rareForage.description", new { npc = giver, qty, item = pick.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.foraging.rareForage.objective", new { qty, item = pick.DisplayName, npc = giver }),
+            TargetMessage = ModEntry.I18n.Get("quest.foraging.rareForage.targetMessage")
+        };
+    }
+
+    /// Iridium Bar + vanilla rare gems. The objective rolls one entry; the reward is
+    /// independent and can be either Artifact Troves or a stack of the same gem family.
+    private static readonly (string Id, string Name)[] RareMaterialPool =
+    {
+        ("(O)337", "Iridium Bar"),
+        ("(O)72", "Diamond"),
+        ("(O)64", "Ruby"),
+        ("(O)60", "Emerald"),
+        ("(O)70", "Jade"),
+        ("(O)62", "Aquamarine"),
+        ("(O)68", "Topaz"),
+        ("(O)66", "Amethyst")
+    };
+
+    /// CSV row 63. Daily-board ItemDelivery to Clint. Asks for 1-3 Iridium Bars or 3-5
+    /// rare gems. Reward = `GoldAdvancedBase` + either 3 Artifact Troves or 5 random
+    /// gems (rolled per-fire). Skill gates on Mining 7 so the quest only surfaces when
+    /// the player can plausibly source the requested materials.
+    private static QuestPosting? RareMaterialRequest(QuestContext ctx)
+    {
+        if (Game1.player.MiningLevel < 7)
+            return null;
+
+        const string giver = "Clint";
+        var pick = PickResolved(ctx, RareMaterialPool);
+        if (pick == null)
+            return null;
+
+        bool isBar = pick.QualifiedItemId == "(O)337";
+        int qty = isBar ? Game1.random.Next(1, 4) : Game1.random.Next(3, 6);
+        int gold = ctx.Config.GoldAdvancedBase;
+
+        var rewards = new List<RewardSpec> { new MoneyReward(gold) };
+        if (Game1.random.NextDouble() < 0.5)
+        {
+            // 3 Artifact Troves
+            rewards.Add(new ObjectReward("(O)275", 3));
+        }
+        else
+        {
+            // 5 of one randomly-picked gem (skip the bar entry from the pool)
+            var gem = RareMaterialPool[Game1.random.Next(1, RareMaterialPool.Length)];
+            rewards.Add(new ObjectReward(gem.Id, 5));
+        }
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Mining,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.ItemDelivery,
+            QuestGiver = giver,
+            ObjectiveItemId = pick.QualifiedItemId,
+            ObjectiveItemName = pick.DisplayName,
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.mining.rareMaterial.title"),
+            Description = ModEntry.I18n.Get("quest.mining.rareMaterial.description", new { qty, item = pick.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.mining.rareMaterial.objective", new { qty, item = pick.DisplayName }),
+            TargetMessage = ModEntry.I18n.Get("quest.mining.rareMaterial.targetMessage")
+        };
+    }
+
+    /// CSV row 66. Winter 22 DateLocked. Resolves the player's Winter Star recipient via
+    /// `Utility.GetRandomWinterStarParticipant` (the same deterministic random the game
+    /// uses to assign secret-santa pairings) and embeds a hint about the recipient's
+    /// loved gifts. Player can opt out via `SecretGiftHintEnabled`. Quest is a single
+    /// Talk step targeted at the recipient — the festival event surfaces dialogue with
+    /// them naturally so the quest closes on Winter 25 without bespoke event hooks.
+    private static QuestPosting? SecretGiftHint(QuestContext ctx)
+    {
+        if (!ModEntry.Config.SecretGiftHintEnabled)
+            return null;
+
+        NPC? recipient;
+        try
+        {
+            recipient = StardewValley.Utility.GetRandomWinterStarParticipant();
+        }
+        catch (Exception ex)
+        {
+            ctx.Monitor.Log($"SecretGiftHint: could not resolve Winter Star recipient: {ex.Message}", LogLevel.Trace);
+            return null;
+        }
+        if (recipient == null)
+            return null;
+
+        var lovedNames = ResolveLovedItemNames(ctx, recipient.Name, max: 3);
+        string lovedList = lovedNames.Count > 0
+            ? string.Join(", ", lovedNames)
+            : ModEntry.I18n.Get("quest.festival.secretGiftHint.fallback");
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "DeliverWinterStarGift",
+                Kind = AdventureStepKind.Talk,
+                Targets = new List<string> { recipient.Name },
+                Count = 1,
+                Description = ModEntry.I18n.Get("quest.festival.secretGiftHint.step", new { recipient = recipient.displayName, items = lovedList })
+            }
+        }, giver: "Lewis", completionDialogue: ModEntry.I18n.Get("quest.festival.secretGiftHint.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Special,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = "Lewis",
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Title = ModEntry.I18n.Get("quest.festival.secretGiftHint.title"),
+            Description = ModEntry.I18n.Get("quest.festival.secretGiftHint.description", new { recipient = recipient.displayName, items = lovedList }),
+            TargetMessage = ModEntry.I18n.Get("quest.festival.secretGiftHint.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// CSV row 73. Winter 20 DateLocked, mod-gated on Si.ExtraCraftingMaterials (Nexus
+    /// 25467). Lewis asks the player to ship Paper + Tape so the town can wrap their
+    /// Winter Star gifts. Reward = a Book of Stars from the same mod. Item ids are
+    /// configurable so the quest still works if the source mod renames items.
+    private static QuestPosting? WrappingPaper(QuestContext ctx)
+    {
+        if (!ctx.Helper.ModRegistry.IsLoaded(MoreQuestsFramework.ModCompat.SiExtraCraftingMaterials))
+            return null;
+
+        string paperId = string.IsNullOrWhiteSpace(ModEntry.Config.WrappingPaperPaperId)
+            ? "Si.ECM_Paper"
+            : ModEntry.Config.WrappingPaperPaperId;
+        string tapeId = string.IsNullOrWhiteSpace(ModEntry.Config.WrappingPaperTapeId)
+            ? "Si.ECM_Tape"
+            : ModEntry.Config.WrappingPaperTapeId;
+        string bookId = string.IsNullOrWhiteSpace(ModEntry.Config.WrappingPaperBookOfStarsId)
+            ? "Si.ECM_BookOfStars"
+            : ModEntry.Config.WrappingPaperBookOfStarsId;
+
+        var paper = ctx.Items.TryResolveItem(paperId);
+        var tape = ctx.Items.TryResolveItem(tapeId);
+        if (paper == null || tape == null)
+        {
+            ctx.Monitor.Log($"WrappingPaper: Paper ({paperId}) or Tape ({tapeId}) item not found in registry; skipping. Override item ids in More Quests config if the source mod renamed them.", LogLevel.Trace);
+            return null;
+        }
+
+        const string giver = "Lewis";
+        const int qtyPerItem = 5;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ShipPaper",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { paper.QualifiedItemId },
+                Count = qtyPerItem,
+                Description = ModEntry.I18n.Get("quest.festival.wrappingPaper.step.paper", new { count = qtyPerItem, item = paper.DisplayName })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipTape",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { tape.QualifiedItemId },
+                Count = qtyPerItem,
+                Description = ModEntry.I18n.Get("quest.festival.wrappingPaper.step.tape", new { count = qtyPerItem, item = tape.DisplayName })
+            }
+        }, giver: giver);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards = { new ObjectReward(bookId) },
+            Title = ModEntry.I18n.Get("quest.festival.wrappingPaper.title"),
+            Description = ModEntry.I18n.Get("quest.festival.wrappingPaper.description", new { paper = paper.DisplayName, tape = tape.DisplayName, count = qtyPerItem }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    // -------------------- Phase 9.5a helpers --------------------
+
+    /// Picks a single random loved or liked item id from the NPC's `Data/NPCGiftTastes`
+    /// entry, then resolves it through `ItemResolver`. Skips items that can't be
+    /// resolved (modded id whose source mod isn't loaded, etc.) and falls back through
+    /// the candidate pool until one resolves.
+    private static ResolvedItem? PickLovedOrLikedItem(QuestContext ctx, string npc)
+    {
+        if (!ctx.Data.GiftTastes.TryGetValue(npc, out var tasteData))
+            return null;
+        var fields = tasteData.Split('/');
+        if (fields.Length < 4)
+            return null;
+
+        var candidates = new List<string>();
+        AppendIds(candidates, fields[1]); // loved
+        AppendIds(candidates, fields[3]); // liked
+        if (candidates.Count == 0)
+            return null;
+
+        // Try a handful of candidates so a stale or modded-only id doesn't poison the pick.
+        for (int i = 0; i < 10 && candidates.Count > 0; i++)
+        {
+            int idx = Game1.random.Next(candidates.Count);
+            string id = candidates[idx];
+            candidates.RemoveAt(idx);
+            // Skip negative category tokens — those are "any item in category N" and
+            // can't be resolved to a single item directly.
+            if (int.TryParse(id, out int n) && n < 0)
+                continue;
+            var resolved = ctx.Items.TryResolveItem(id);
+            if (resolved != null)
+                return resolved;
+        }
+        return null;
+    }
+
+    private static void AppendIds(List<string> sink, string raw)
+    {
+        if (string.IsNullOrEmpty(raw))
+            return;
+        foreach (var part in raw.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            sink.Add(part);
+    }
+
+    /// Returns up to `max` display names of items the NPC loves (with liked items
+    /// appended if loved doesn't fill the cap). Used by the Secret Gift Hint
+    /// description so the journal entry actually carries the hint.
+    private static List<string> ResolveLovedItemNames(QuestContext ctx, string npc, int max)
+    {
+        var names = new List<string>(max);
+        if (!ctx.Data.GiftTastes.TryGetValue(npc, out var tasteData))
+            return names;
+        var fields = tasteData.Split('/');
+        if (fields.Length < 4)
+            return names;
+
+        AppendResolvedNames(ctx, fields[1], names, max);
+        if (names.Count < max)
+            AppendResolvedNames(ctx, fields[3], names, max);
+        return names;
+    }
+
+    private static void AppendResolvedNames(QuestContext ctx, string raw, List<string> sink, int max)
+    {
+        if (string.IsNullOrEmpty(raw))
+            return;
+        foreach (var part in raw.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (sink.Count >= max)
+                return;
+            if (int.TryParse(part, out int n) && n < 0)
+                continue;
+            var resolved = ctx.Items.TryResolveItem(part);
+            if (resolved == null)
+                continue;
+            if (sink.Contains(resolved.DisplayName, StringComparer.Ordinal))
+                continue;
+            sink.Add(resolved.DisplayName);
+        }
+    }
+
+    /// Cold-food vanilla pool. Plain melons (vanilla farm) plus Ice Cream (Traveling
+    /// Cart / shop-bought) and Triple Shot Espresso (cold drink). Modded cold items
+    /// get folded in below via the context-tag scan, so a content pack adding a cold
+    /// drink that flags itself with `cold_drink_item` lands in the pool automatically.
+    private static readonly string[] ColdContextTags =
+    {
+        "cold_drink_item",
+        "ice_cream_item"
+    };
+
+    private static readonly string[] VanillaColdItemIds =
+    {
+        "(O)254", // Melon
+        "(O)233", // Ice Cream
+        "(O)253"  // Triple Shot Espresso
+    };
+
+    private static List<ResolvedItem> ResolveColdTaggedItems(QuestContext ctx)
+    {
+        var results = new List<ResolvedItem>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var id in VanillaColdItemIds)
+        {
+            var resolved = ctx.Items.TryResolveItem(id);
+            if (resolved != null && seen.Add(resolved.QualifiedItemId))
+                results.Add(resolved);
+        }
+
+        // Modded cold-drink / ice-cream items via context tag scan.
+        try
+        {
+            foreach (var itemType in StardewValley.ItemRegistry.ItemTypes)
+            {
+                if (itemType.Identifier != "(O)")
+                    continue;
+                foreach (var bareId in itemType.GetAllIds())
+                {
+                    string qualified = itemType.Identifier + bareId;
+                    if (seen.Contains(qualified))
+                        continue;
+                    var data = StardewValley.ItemRegistry.GetData(qualified);
+                    if (data?.RawData is not StardewValley.GameData.Objects.ObjectData obj)
+                        continue;
+                    if (obj.ContextTags == null)
+                        continue;
+                    bool matches = false;
+                    foreach (var tag in obj.ContextTags)
+                    {
+                        for (int i = 0; i < ColdContextTags.Length; i++)
+                        {
+                            if (string.Equals(tag, ColdContextTags[i], StringComparison.OrdinalIgnoreCase))
+                            {
+                                matches = true;
+                                break;
+                            }
+                        }
+                        if (matches)
+                            break;
+                    }
+                    if (!matches)
+                        continue;
+                    var resolved = ctx.Items.TryResolveItem(qualified);
+                    if (resolved != null && seen.Add(resolved.QualifiedItemId))
+                        results.Add(resolved);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ctx.Monitor.Log($"ResolveColdTaggedItems: {ex.Message}", LogLevel.Warn);
+        }
+
+        return results;
+    }
+
+    /// Walks `Data/Crops` for seeds whose Seasons list excludes Winter. Returns the
+    /// resolved seed items so the picker can hand one to the Ship objective.
+    private static List<ResolvedItem> ResolveNonWinterSeeds(QuestContext ctx)
+    {
+        var results = new List<ResolvedItem>();
+        try
+        {
+            foreach (var (seedId, data) in ctx.Data.Crops)
+            {
+                if (data.Seasons == null || data.Seasons.Count == 0)
+                    continue;
+                bool hasWinter = false;
+                foreach (var s in data.Seasons)
+                {
+                    if (string.Equals(s.ToString(), "winter", StringComparison.OrdinalIgnoreCase))
+                    {
+                        hasWinter = true;
+                        break;
+                    }
+                }
+                if (hasWinter)
+                    continue;
+                var seed = ctx.Items.TryResolveItem("(O)" + seedId);
+                if (seed != null)
+                    results.Add(seed);
+            }
+        }
+        catch (Exception ex)
+        {
+            ctx.Monitor.Log($"ResolveNonWinterSeeds: {ex.Message}", LogLevel.Warn);
+        }
+        return results;
+    }
+
+    /// Vanilla rare forage merged with anything carrying the `forage_item` context tag
+    /// AND not an obviously common pick (drops anything tagged `season_<current>` so the
+    /// daily-board posting feels rare, not an expanded SeasonalForaging).
+    private static List<ResolvedItem> ResolveRareForage(QuestContext ctx)
+    {
+        var results = new List<ResolvedItem>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var (id, _) in RareForagePool)
+        {
+            var resolved = ctx.Items.TryResolveItem(id);
+            if (resolved != null && seen.Add(resolved.QualifiedItemId))
+                results.Add(resolved);
+        }
+
+        // Append modded forage that isn't tagged with the current season — current-season
+        // forage is the BasicForaging quest's pool; the rare hunt should feel like an
+        // actual hunt.
+        string currentSeasonTag = "season_" + ctx.Season.ToLowerInvariant();
+        var allForage = ctx.Items.GetForageItems();
+        foreach (var item in allForage)
+        {
+            if (seen.Contains(item.QualifiedItemId))
+                continue;
+            bool inSeason = false;
+            foreach (var tag in item.ContextTags)
+            {
+                if (string.Equals(tag, currentSeasonTag, StringComparison.OrdinalIgnoreCase))
+                {
+                    inSeason = true;
+                    break;
+                }
+            }
+            if (inSeason)
+                continue;
+            seen.Add(item.QualifiedItemId);
+            results.Add(item);
+        }
+        return results;
+    }
+
+    /// Picks a current-season seed via Data/Crops + the existing seed-resolver pattern
+    /// from PierresStockUp. Returns null if no seasonal crops resolve (e.g. on saves
+    /// where every seasonal crop's seed got removed by a content pack).
+    private static ResolvedItem? PickSeasonalSeed(QuestContext ctx)
+    {
+        var crops = ctx.Items.GetSeasonalCrops(ctx.Season);
+        if (crops.Count == 0)
+            return null;
+        // Try a handful of crops so a missing seed entry doesn't kill the reward.
+        var pool = new List<ResolvedItem>(crops);
+        for (int i = 0; i < 10 && pool.Count > 0; i++)
+        {
+            int idx = Game1.random.Next(pool.Count);
+            var crop = pool[idx];
+            pool.RemoveAt(idx);
+            string? seedId = ResolveSeedIdForHarvest(ctx, crop.QualifiedItemId);
+            if (string.IsNullOrEmpty(seedId))
+                continue;
+            var seed = ctx.Items.TryResolveItem(seedId!);
+            if (seed != null)
+                return seed;
+        }
+        return null;
+    }
+
+    private static ResolvedItem? PickResolved(QuestContext ctx, (string Id, string Name)[] pool)
+    {
+        if (pool.Length == 0)
+            return null;
+        // Try a few to skip missing modded ids.
+        var indices = new List<int>(pool.Length);
+        for (int i = 0; i < pool.Length; i++)
+            indices.Add(i);
+        while (indices.Count > 0)
+        {
+            int j = Game1.random.Next(indices.Count);
+            var resolved = ctx.Items.TryResolveItem(pool[indices[j]].Id);
+            indices.RemoveAt(j);
+            if (resolved != null)
+                return resolved;
+        }
+        return null;
+    }
 }

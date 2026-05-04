@@ -51,6 +51,14 @@
     "config.FestivalBiasFairMagnitude": "Fair grange score bonus",
     "config.FestivalBiasFairMagnitude.tooltip": "Flat bonus added to your Fair grange score before judging when you've completed Gus's Fall prep quest. Podium thresholds are 60 / 75 / 90, so 15 lifts most submissions one place up.",
 
+    "config.section.modItemIds": "Modded item IDs (Wrapping Paper quest)",
+    "config.WrappingPaperPaperId": "Paper item ID",
+    "config.WrappingPaperPaperId.tooltip": "Qualified item ID for the Paper item from Si's Extra Crafting Materials. Override here if the source mod renames the item between versions.",
+    "config.WrappingPaperTapeId": "Tape item ID",
+    "config.WrappingPaperTapeId.tooltip": "Qualified item ID for the Tape item from Si's Extra Crafting Materials.",
+    "config.WrappingPaperBookOfStarsId": "Book of Stars item ID",
+    "config.WrappingPaperBookOfStarsId.tooltip": "Qualified item ID for the Book of Stars reward item from Si's Extra Crafting Materials.",
+
     "quest.farming.basic.title": "{{npc}}'s crop request",
     "quest.farming.basic.description": "Any kind farmer has some fresh {{item}}? Please bring by {{qty}} {{item}} to {{npc}} before the deadline.",
     "quest.farming.basic.objective": "Bring {{qty}} {{item}} to {{npc}}.",
@@ -231,5 +239,51 @@
     "quest.festival.gusSummer.title": "Gus's Luau potluck prep",
     "quest.festival.gusSummer.description": "The Luau soup is more than I can prep alone this year. Bring me {{count}} of each: {{ingredients}}. Whatever you contribute makes it into the pot, and the governor's tongue won't forget where the flavour came from.",
     "quest.festival.gusSummer.step.deliver": "Bring {{count}} {{item}} to Gus.",
-    "quest.festival.gusSummer.targetMessage": "That'll do it. Whatever the soup tastes like at the Luau, you're the reason it tastes that way."
+    "quest.festival.gusSummer.targetMessage": "That'll do it. Whatever the soup tastes like at the Luau, you're the reason it tastes that way.",
+
+    "quest.social.giftDelivery.title": "A small gift for {{recipient}}",
+    "quest.social.giftDelivery.description": "{{giver}} here. {{recipient}}'s been on my mind and I thought a small gift might cheer them up. I'd take it over myself but my hands are full this week. Could you bring them a {{item}}? I'll make it worth your while.",
+    "quest.social.giftDelivery.objective": "Deliver a {{item}} to {{recipient}}.",
+    "quest.social.giftDelivery.targetMessage": "Oh! Thank you. That's so thoughtful.",
+
+    "quest.seasonal.heatWaveRelief.title": "{{npc}}'s heat wave relief",
+    "quest.seasonal.heatWaveRelief.description": "The clinic is full of folks half-fainted from the heat. {{npc}} is asking for {{qty}} {{item}} to keep around for anyone who comes in dehydrated. Drop them off when you can and there's something for the trouble.",
+    "quest.seasonal.heatWaveRelief.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.seasonal.heatWaveRelief.targetMessage": "Perfect. That'll keep half the valley upright through the next hot spell.",
+
+    "quest.seasonal.jellyfishWatch.title": "{{npc}}'s jellyfish watch prep",
+    "quest.seasonal.jellyfishWatch.description": "{{npc}} is putting together notes ahead of the Moonlight Jellies and could use a few specimens from the beach. Bring {{qty}} {{item}} when you have a moment, the data set isn't going to fill itself.",
+    "quest.seasonal.jellyfishWatch.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.seasonal.jellyfishWatch.targetMessage": "These are exactly what I needed. Thanks for indulging the field work.",
+
+    "quest.festival.merchantUnpacking.title": "Night Market seeds for {{npc}}",
+    "quest.festival.merchantUnpacking.description": "{{npc}} won't make it down to the Night Market this year, but the Magic Boat's stocking out-of-season seed packets and they don't want to miss the chance. Ship {{qty}} {{item}} through the bin and they'll consider it a personal favour.",
+    "quest.festival.merchantUnpacking.objective": "Ship {{qty}} {{item}}.",
+    "quest.festival.merchantUnpacking.targetMessage": "Got them! That'll save me a trip to the boat. Many thanks.",
+
+    "quest.mining.monsterHunt.title": "Adventurer's Guild bounty",
+    "quest.mining.monsterHunt.description": "Marlon's got a stack of complaints from townsfolk about monsters near the trails. {{qty}} kills should clear the worst of it, type doesn't matter. Stop by the Guild when you've thinned the numbers and there's a hot meal waiting.",
+    "quest.mining.monsterHunt.objective": "Slay {{qty}} monsters, then talk to Marlon.",
+    "quest.mining.monsterHunt.targetMessage": "Good work. Take this with you, you'll need it for the next run.",
+
+    "quest.foraging.rareForage.title": "{{npc}}'s rare forage",
+    "quest.foraging.rareForage.description": "{{npc}} has heard rumours of {{item}} turning up in the area and wants {{qty}} of them. Bring what you can find, no rush. There'll be coin and seed packets in it for the trouble.",
+    "quest.foraging.rareForage.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.foraging.rareForage.targetMessage": "These are the real thing. Thank you for chasing them down.",
+
+    "quest.mining.rareMaterial.title": "Clint's rare material request",
+    "quest.mining.rareMaterial.description": "Clint's working on a custom commission and the order calls for {{qty}} {{item}}. He'll cover the going rate and throw in a sweetener for the inconvenience.",
+    "quest.mining.rareMaterial.objective": "Bring {{qty}} {{item}} to Clint.",
+    "quest.mining.rareMaterial.targetMessage": "These will do nicely. Tell the customer the timeline's back on schedule.",
+
+    "quest.festival.secretGiftHint.title": "A whisper for the Winter Star",
+    "quest.festival.secretGiftHint.description": "Lewis sent a quiet word: this year's Winter Star pairing has you giving to {{recipient}}. They've been overheard saying they'd love {{items}}. Drop in on them at the festival on Winter 25 and they'll know who to thank.",
+    "quest.festival.secretGiftHint.step": "Give your Winter Star gift to {{recipient}}. They'd love {{items}}.",
+    "quest.festival.secretGiftHint.targetMessage": "Oh! Did you draw my name this year? You shouldn't have. Truly. Thank you.",
+    "quest.festival.secretGiftHint.fallback": "something thoughtful",
+
+    "quest.festival.wrappingPaper.title": "Wrapping paper for the festival",
+    "quest.festival.wrappingPaper.description": "Lewis is putting together gift packs for the elder folks who can't make it to the Winter Star and the town's run out of wrapping supplies. Ship {{count}} {{paper}} and {{count}} {{tape}} through the bin and there'll be a Book of Stars in the mail by way of thanks.",
+    "quest.festival.wrappingPaper.step.paper": "Ship {{count}} {{item}}.",
+    "quest.festival.wrappingPaper.step.tape": "Ship {{count}} {{item}}."
 }

@@ -51,6 +51,17 @@ public interface IMoreQuestsApi
     /// `NpcDispatch.MetHumanNpcs()` static helper.
     IReadOnlyList<string> GetMetHumanNpcs();
 
+    /// Adds a qualified item id to the shared combat-buff food pool. Used by reward
+    /// generators (e.g. the content mod's Monster Hunt quest) that hand out a random
+    /// combat-buffing food on completion. The framework ships with no default
+    /// entries; the content mod seeds its vanilla pool at `RegistrationOpen` and
+    /// any other mod can append by calling this. Duplicate ids are ignored.
+    void RegisterCombatFood(string itemId);
+
+    /// Snapshot of every item id currently in the combat-food pool. Returns the
+    /// live list as a read-only view; callers should treat it as a snapshot.
+    IReadOnlyList<string> GetCombatFoodPool();
+
     /// Fired during the framework's `GameLaunched` handler, before content-pack
     /// auto-loading runs. Subscribe to register quests / generators / dispatch entries.
     event EventHandler RegistrationOpen;

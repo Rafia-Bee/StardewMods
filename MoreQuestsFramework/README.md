@@ -165,6 +165,17 @@ Lifecycle events:
 
 Custom `Quest` subclasses must carry a unique `[XmlType("Mods_<owner>_<name>")]` attribute and be registered via `RegisterCustomQuestType` so SpaceCore's serializer factory knows about them.
 
+### Combat-food reward pool
+
+Quests that hand out a random combat-buff food on completion (e.g. More Quests' Monster Hunt) draw from a shared item-id pool the framework owns. The pool starts empty; the content mod seeds vanilla defaults at `RegistrationOpen`, and other mods can append their own combat foods through:
+
+```csharp
+var fw = helper.ModRegistry.GetApi<IMoreQuestsApi>("RafiaBee.MoreQuestsFramework");
+fw.RegisterCombatFood("MyMod.SpicyJerky");
+```
+
+`GetCombatFoodPool()` returns the live snapshot for any quest generator that wants to read the pool directly. Duplicates are deduped by qualified id.
+
 ### Debug
 
 The framework registers an `mq_refresh` SMAPI console command that re-rolls today's daily-board postings without reloading the save.

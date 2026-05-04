@@ -79,8 +79,21 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "FestivalBiasLuauMagnitude", () => ModEntry.Config.FestivalBiasLuauMagnitude, v => ModEntry.Config.FestivalBiasLuauMagnitude = v, 0, 5);
         AddInt(api, manifest, t, "FestivalBiasFairMagnitude", () => ModEntry.Config.FestivalBiasFairMagnitude, v => ModEntry.Config.FestivalBiasFairMagnitude = v, 0, 100);
 
+        api.AddSectionTitle(manifest, () => t.Get("config.section.modItemIds"));
+        AddText(api, manifest, t, "WrappingPaperPaperId", () => ModEntry.Config.WrappingPaperPaperId, v => ModEntry.Config.WrappingPaperPaperId = v);
+        AddText(api, manifest, t, "WrappingPaperTapeId", () => ModEntry.Config.WrappingPaperTapeId, v => ModEntry.Config.WrappingPaperTapeId = v);
+        AddText(api, manifest, t, "WrappingPaperBookOfStarsId", () => ModEntry.Config.WrappingPaperBookOfStarsId, v => ModEntry.Config.WrappingPaperBookOfStarsId = v);
+
         // Per-quest weight overrides (for content-mod quests) live in the framework's GMCM page
         // alongside the vanilla quest weights, since the framework owns the registry view.
+    }
+
+    private static void AddText(IGenericModConfigMenuApi api, IManifest manifest, ITranslationHelper t,
+        string key, System.Func<string> get, System.Action<string> set)
+    {
+        api.AddTextOption(manifest, get, set,
+            () => t.Get($"config.{key}"),
+            () => t.Get($"config.{key}.tooltip"));
     }
 
     private static void AddInt(IGenericModConfigMenuApi api, IManifest manifest, ITranslationHelper t,

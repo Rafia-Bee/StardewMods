@@ -2,7 +2,7 @@
 
 A SMAPI content mod for Stardew Valley that ships a curated set of new daily-board, mail, and festival quests on top of the [More Quests Framework](../MoreQuestsFramework/README.md).
 
-> Heavy work in progress. Twenty-six quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
+> Heavy work in progress. Thirty-nine quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
 
 ## Dependencies
 
@@ -55,7 +55,7 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Festival | Festival Decor: Ridgeside Gathering | Fall 15 | Lenny | Ship Tub o' Flowers, Wood, Tables | Friendship (MultiHeart, RSV NPCs) | DateLocked, OneTimePerYear, requires RSV | Not started |
 | Festival | Festival Decor: Spirit's Eve | Fall 22 | Lewis | Ship Pumpkins, Cloth, Torches | Gold (Intermediate) + Jack o' Lantern | DateLocked, OneTimePerYear | Not started |
 | Foraging | Forage with Linus | Daily board | Linus | Gift loved/liked forage to 5 different villagers | Friendship (Large) with Linus | Cooldown 14d, requires Linus met | Implemented (9d) |
-| Social | Gift Delivery | Daily board | Any | Deliver a gift to the giver's friend | Friendship (sell-price scaled) | Cooldown 4d | Not started |
+| Social | Gift Delivery | Daily board | Any | Deliver a gift to the giver's friend | Gold (sell-price scaled) + Friendship (Basic) | Cooldown 4d | Implemented (9.5a) |
 | Animal | Gunther's Dinosaur Study | First Dinosaur Egg hatched | Gunther | Deliver a spare Dinosaur Egg | Gold (Advanced) + upgraded-quality Dinosaur Egg | OneTime | Not started |
 | Festival | Gus's Feast: Egg Festival | Spring 6 (mail) | Gus | Deliver spring-themed ingredients | Sample of a spring dish | DateLocked, OneTimePerYear | Implemented |
 | Festival | Gus's Feast: Fair | Fall 8 | Gus | Deliver 3 distinct fall ingredients (curated pool) | Sample fall dish + FestivalBias on the Fair grange judging (+15 grange score) | DateLocked, OneTimePerYear | Implemented (9d) |
@@ -64,8 +64,8 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Cooking | Saloon Grand Feast | Special Orders board | Gus / Rosa / Celestine / Pika | Ship aggregated ingredients across 3 complex recipes | Gold (Expert) + Friendship (MultiSmall) to liked-by NPCs + per-dish Tier 2 taste reaction | Cooldown 14d, vanilla `Week` window | Implemented (9b) |
 | Cooking | Weekly Special (Common) | Daily board | Gus / Rosa / Celestine / Pika | Deliver ingredients for a common (≤ 3 ingredient) recipe | Gold (Beginner) + Friendship (MultiSmall) to liked-by NPCs + Tier 1 taste reaction | Cooldown 5d, OnePerGiver | Implemented (9b) |
 | Cooking | Weekly Special (Complex) | Daily board | Gus / Rosa / Celestine / Pika | Deliver ingredients for a complex (≥ 4 ingredient) recipe | Gold (Intermediate) + Friendship (MultiSmall) to liked-by NPCs + Tier 2 taste reaction | Cooldown 7d, OnePerGiver | Implemented (9b) |
-| Seasonal | Heat Wave Relief | Daily board | Harvey / Paula (RSV) | Ship cold drinks, melons, ice cream | Random items from Harvey's shop | Summer only, Cooldown 5d, OnePerGiver | Not started |
-| Seasonal | Jellyfish Watch Prep | Daily board | Demetrius / Maddie / Mr Aguar / Dylan | Deliver beach forageables for study | Friendship (Basic) + a loved item | Summer only, Cooldown 5d, OnePerGiver | Not started |
+| Seasonal | Heat Wave Relief | Daily board | Harvey / Paula (RSV) | Deliver cold drinks, melons, or ice cream | Friendship (Basic) + clinic-themed item | Summer only, Cooldown 5d | Implemented (9.5a) |
+| Seasonal | Jellyfish Watch Prep | Daily board | Demetrius / Maddie / Mr Aguar / Dylan | Deliver ocean forageables for study | Friendship (Basic) + a loved item | Summer only, Cooldown 5d | Implemented (9.5a) |
 | Animal | Krobus's Void Note | First Void Egg + 1 heart Krobus | Krobus | Deliver a Void Egg to Krobus | Void Chicken Statue + Friendship (Mid) | OneTime | Not started |
 | Animal | Leah's Farm Painting | Periodic (high friendship) | Leah | Visit Leah's house with an animal following | Custom animal painting | Cooldown 21d, OnePerGiver, requires Livestock Follows You + single-player | Not started |
 | Fishing | Legendary Fish Quest | Daily board | Willy | Catch a legendary or very rare fish | Unique fish display furniture | Cooldown 21d, OnePerGiver | Not started |
@@ -77,9 +77,9 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Animal | Marnie's Milk Request | After first milk collected | Marnie | Ship 10 Milk | Gold (Basic) + Cheese Press recipe | OneTime | Not started |
 | Farming | Massive Harvest Request | Daily board | Morris / Joja co. | Ship CropMassiveQty+ of a single crop | Gold (sell-price scaled, high) | Cooldown 10d, OnePerGiver | Not started |
 | Fishing | Medium Fishing Haul | Daily board | Morris / MorrisTod (SVE) / Pierre | Catch FishHaulMediumQty+ of a specific seasonal fish | Gold (below-sell scaled) + Tier 2 ecology consequence (Demetrius / Maddie / Mr. Aguar / Dylan) | Cooldown 5d, requires Fishing 5 | Implemented (9c) |
-| Festival | Merchant Unpacking | Winter 13 | Any | Ship out-of-season seeds matching Magic Boat stock | Friendship (Basic) | DateLocked, OneTimePerYear | Not started |
+| Festival | Merchant Unpacking | Winter 13 | Any | Ship out-of-season seeds matching Magic Boat stock | Friendship (Basic) | DateLocked, OneTimePerYear | Implemented (9.5a) |
 | Animal | Moira's Exotic Animal Offer | Player unlocks "Ewes" (VMV) | Moira (VMV) | Bring a modded crop | Discounted Ewe | OneTime, requires VMV | Not started |
-| Mining | Monster Hunt | Daily board | Adventurer's Guild | Slay X of any monsters | Gold (Intermediate) + combat-buff food | Cooldown 3d | Not started |
+| Mining | Monster Hunt | Daily board | Marlon | Slay X monsters of any type | Gold (Intermediate) + combat-buff food | Cooldown 3d | Implemented (9.5a) |
 | Mining | Monster Parts | Daily board | Wizard / Abigail / Lance (SVE) / MarlonFay (SVE) / Mr. Aguar (RSV) / Eli (ESV) / Maryam (VMV) | Deliver 5-10 of one rare monster drop (Bat Wing / Solar Essence / Void Essence / Bug Meat) | One random gem stack scaled to clear GoldIntermediateBase + Tier 1 negative consequence to Krobus / Dwarf / Sen (ESV) | Cooldown 5d, requires deepestMineLevel >= 40 | Implemented (9c) |
 | Farming | Pierre's Stock-Up | Daily board | Pierre | Deliver bulk mixed seasonal crops (3 distinct, qty scales with farming) | ShopDiscount on the matching seeds at Pierre's | Cooldown 7d, requires Farming 4 | Implemented |
 | Foraging | Plant Trees | Daily board | Linus / Dylan / Demetrius / Kimpoi / Aster | Plant X trees at a target location | Friendship (Intermediate) with giver | Cooldown 7d, OnePerGiver | Not started |
@@ -89,17 +89,17 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Fishing | Quality Fish Delivery | Daily board | Willy | Catch X Gold-quality fish of a specific type | Gold (Basic-Intermediate) + Friendship (Basic) | Cooldown 3d, OnePerGiver | Not started |
 | Festival | Rainbow Platter (Trout Derby) | Summer 20-21 | Gus / Pika / Rosa / Celestine | Catch FestivalFishQty Rainbow Trout | Recipe + shop discount on the dish | DateLocked, OneTimePerYear | Not started |
 | Fishing | Rainy Day Catch | Daily board / mail | Willy / Blair / Carmen | Catch fish that only spawn in rain | Gold (Intermediate) + rare tackle | Cooldown 5d, OnePerGiver | Not started |
-| Foraging | Rare Forage Hunt | Daily board | Any | Gather rare forage items | Gold (Intermediate) + 10x random seasonal seeds | Cooldown 4d | Not started |
-| Mining | Rare Material Request | Daily board | Clint | Deliver Iridium Bars or rare gems | Gold (Advanced) + 3x Artifact Trove or 5x gems | Cooldown 7d, OnePerGiver | Not started |
+| Foraging | Rare Forage Hunt | Daily board | Any | Gather rare forage items | Gold (Intermediate) + 10x random seasonal seeds | Cooldown 4d, Foraging 5+ | Implemented (9.5a) |
+| Mining | Rare Material Request | Daily board | Clint | Deliver Iridium Bars or rare gems | Gold (Advanced) + 3x Artifact Trove or 5x gems | Cooldown 7d, Mining 7+ | Implemented (9.5a) |
 | Animal | Robin's Silo Offer | After first Coop/Barn (no Silo) | Robin | Gather one type of build material | Discounted Silo | OneTime | Not started |
 | Fishing | Seafood Night | Daily board | Gus / Pika (RSV) / Rosa (ESV) / Celestine (VMV) | Catch FishHaulLargeQty+ of one edible non-poisonous seasonal fish (Pufferfish excluded) | Gold (fish-premium scaled, very high) + Tier 3 multi-day chain consequence to ecology pool + Linus | Cooldown 10d, requires Fishing 8 | Implemented (9c) |
-| Festival | Secret Gift Hint | Winter 22 | Board | Hint about your assigned Winter Star recipient | Information (preference hint) | DateLocked, OneTimePerYear | Not started |
+| Festival | Secret Gift Hint | Winter 22 | Lewis | Hint about your assigned Winter Star recipient | Information (preference hint) | DateLocked, OneTimePerYear, opt-out via config | Implemented (9.5a) |
 | Mining | Skull Cavern Deep Dive | Adventurer's Guild board | Marlon | Reach floor X in Skull Cavern and deliver an ore/stone haul | Gold (Advanced) + Iridium Bars | Cooldown 14d, requires Skull Cavern unlocked, configurable max floor | Implemented |
 | Mining | Mines Deep Dive | Adventurer's Guild board | Marlon | Reach floor X in The Mines (max 120) and deliver an ore/stone haul | Gold (Intermediate) + bars matching the floor band | Cooldown 14d, requires deepestMineLevel >= 5 | Implemented |
 | Fishing | Size-Specific Overpopulation | Daily board | Demetrius | Catch X fish of a specific size | Gold (Intermediate) + bait | Cooldown 4d, OnePerGiver | Not started |
 | Seasonal | Spring Cleaning | Daily board | Any | Clear weeds around town | Friendship (Basic) | Spring only, Cooldown 5d | Not started |
 | Festival | SquidFest Showcase | Winter 12-13 | Gus / Pika / Rosa / Celestine | Catch FestivalFishQty Squid | Recipe + shop discount on the dish | DateLocked, OneTimePerYear | Not started |
-| Festival | Wrapping Paper | Winter 20 | Lewis | Ship Paper and Tape | Book of Stars | DateLocked, OneTimePerYear, requires Nexus 25467 | Not started |
+| Festival | Wrapping Paper | Winter 20 | Lewis | Ship Paper and Tape | Book of Stars | DateLocked, OneTimePerYear, requires Si.ExtraCraftingMaterials | Implemented (9.5a) |
 | Social | Deep Friendship Quest | Heart-level trigger | Various | NPC-specific requests at higher hearts | Unique per NPC | — | Won't do |
 | Seasonal | Harvest Bounty Competition | Special Orders board | Multiple | NPCs compete for crop donations | Varies | Fall only | Won't do |
 | Seasonal | Holiday Cooking Help | Daily board | Evelyn / Gus | Deliver baking ingredients | Friendship (Basic) + baked goods | Winter only | Won't do |
