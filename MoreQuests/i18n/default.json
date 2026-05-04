@@ -285,5 +285,25 @@
     "quest.festival.wrappingPaper.title": "Wrapping paper for the festival",
     "quest.festival.wrappingPaper.description": "Lewis is putting together gift packs for the elder folks who can't make it to the Winter Star and the town's run out of wrapping supplies. Ship {{count}} {{paper}} and {{count}} {{tape}} through the bin and there'll be a Book of Stars in the mail by way of thanks.",
     "quest.festival.wrappingPaper.step.paper": "Ship {{count}} {{item}}.",
-    "quest.festival.wrappingPaper.step.tape": "Ship {{count}} {{item}}."
+    "quest.festival.wrappingPaper.step.tape": "Ship {{count}} {{item}}.",
+
+    "quest.quality.normal": "regular",
+    "quest.quality.silver": "Silver-quality",
+    "quest.quality.gold": "Gold-quality",
+    "quest.quality.iridium": "Iridium-quality",
+
+    "quest.farming.qualityCrop.title": "{{npc}}'s quality crop order",
+    "quest.farming.qualityCrop.description": "{{npc}} is putting together a particular meal and only the best {{item}} will do. Bring {{qty}} {{quality}} {{item}} when you have them. Anything less than gold won't make the dish.",
+    "quest.farming.qualityCrop.objective": "Bring {{qty}} {{quality}} {{item}} to {{npc}}.",
+    "quest.farming.qualityCrop.targetMessage": "These look perfect. Thank you for taking the extra care.",
+
+    "quest.farming.premiumCrop.title": "{{npc}}'s premium order",
+    "quest.farming.premiumCrop.description": "{{npc}} is willing to pay a premium for {{qty}} {{quality}} {{item}}. They've made it clear nothing short of iridium will land the deal. Bring them by when you have the lot.",
+    "quest.farming.premiumCrop.objective": "Bring {{qty}} {{quality}} {{item}} to {{npc}}.",
+    "quest.farming.premiumCrop.targetMessage": "Spectacular. This is exactly what I needed.",
+
+    "quest.fishing.qualityFish.title": "Willy's quality fish order",
+    "quest.fishing.qualityFish.description": "Willy's running a special and the kitchen wants only the best. Bring him {{qty}} {{quality}} {{item}} when you can land them. The pay reflects the difficulty.",
+    "quest.fishing.qualityFish.objective": "Bring {{qty}} {{quality}} {{item}} to Willy.",
+    "quest.fishing.qualityFish.targetMessage": "Beautiful catch. The chef will be pleased."
 }

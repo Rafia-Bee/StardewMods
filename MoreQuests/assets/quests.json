@@ -430,6 +430,42 @@
                 "Available": { "HasMod": "Si.ExtraCraftingMaterials", "NpcExists": "Lewis" }
             },
             "Generator": "WrappingPaper"
+        },
+        {
+            "Name": "Farming.QualityCropDelivery",
+            "Category": "Farming",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 20,
+                "MaxPerDay": 1,
+                "CooldownDays": 3,
+                "Available": { "SkillLevel": "Farming 4" }
+            },
+            "Generator": "QualityCropDelivery"
+        },
+        {
+            "Name": "Farming.PremiumCropOrder",
+            "Category": "Farming",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 12,
+                "MaxPerDay": 1,
+                "CooldownDays": 5,
+                "Available": { "SkillLevel": "Farming 7" }
+            },
+            "Generator": "PremiumCropOrder"
+        },
+        {
+            "Name": "Fishing.QualityFishDelivery",
+            "Category": "Fishing",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 18,
+                "MaxPerDay": 1,
+                "CooldownDays": 3,
+                "Available": { "SkillLevel": "Fishing 4", "NpcMet": "Willy" }
+            },
+            "Generator": "QualityFishDelivery"
         }
     ]
 }

@@ -21,6 +21,13 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
     /// e.g. a "bring batteries OR coal" quest can satisfy on either id.
     public readonly NetStringList alternativeItemIds = new();
 
+    /// Minimum `Object.Quality` required for a delivered item to count. 0 = base
+    /// (vanilla behaviour, any quality accepted), 1 = silver, 2 = gold, 4 = iridium.
+    /// Quality 3 is unused by vanilla; the matcher is `>=` so silver-or-better at 1,
+    /// gold-or-better at 2, iridium only at 4. Populated from `QuestPosting.MinQuality`
+    /// at posting time; serialized so the gate survives save/load.
+    public readonly NetInt minQuality = new();
+
     public NetStringList SerializedRewards => serializedRewards;
 
     protected override void initNetFields()
@@ -28,7 +35,8 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
         base.initNetFields();
         NetFields
             .AddField(serializedRewards, "serializedRewards")
-            .AddField(alternativeItemIds, "alternativeItemIds");
+            .AddField(alternativeItemIds, "alternativeItemIds")
+            .AddField(minQuality, "minQuality");
     }
 
     /// Fully replaces vanilla's `ItemDeliveryQuest.OnItemOfferedToNpc` so the implicit
@@ -39,6 +47,8 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
         if (completed.Value)
             return false;
         if (!npc.IsVillager || npc.Name != target.Value || !ItemMatchesObjective(item))
+            return false;
+        if (minQuality.Value > 0 && (item is not StardewValley.Object obj || obj.Quality < minQuality.Value))
             return false;
 
         if (item.Stack < number.Value)
