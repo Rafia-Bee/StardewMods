@@ -693,6 +693,62 @@
                 "Available": { "NpcExists": "Robin", "not:BuildingExists": "Silo" }
             },
             "Generator": "RobinSiloOffer"
+        },
+        {
+            "Name": "Farming.CarolineTeaGarden",
+            "Category": "Farming",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 18,
+                "MaxPerDay": 1,
+                "CooldownDays": 7,
+                "Available": { "Season": "fall", "NpcExists": "Caroline", "NpcMet": "Caroline" }
+            },
+            "Generator": "CarolineTeaGarden"
+        },
+        {
+            "Name": "Foraging.ClearDebris",
+            "Category": "Foraging",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 18,
+                "MaxPerDay": 1,
+                "CooldownDays": 5
+            },
+            "Generator": "ClearDebris"
+        },
+        {
+            "Name": "Cooking.DinnerParty",
+            "Category": "Cooking",
+            "Trigger": {
+                "Source": "SpecialOrder",
+                "Duration": "Week",
+                "CooldownDays": 10
+            },
+            "Generator": "DinnerParty"
+        },
+        {
+            "Name": "Foraging.PlantTrees",
+            "Category": "Foraging",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 15,
+                "MaxPerDay": 1,
+                "CooldownDays": 7
+            },
+            "Generator": "PlantTrees"
+        },
+        {
+            "Name": "Seasonal.SpringCleaning",
+            "Category": "Seasonal",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 25,
+                "MaxPerDay": 1,
+                "CooldownDays": 5,
+                "Available": { "Season": "spring" }
+            },
+            "Generator": "SpringCleaning"
         }
     ]
 }

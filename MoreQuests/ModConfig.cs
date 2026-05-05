@@ -183,4 +183,36 @@ public sealed class ModConfig
     public int RobinSiloOfferStoneQty { get; set; } = 100;
     public int RobinSiloOfferClayQty { get; set; } = 10;
     public int RobinSiloOfferCopperBarQty { get; set; } = 5;
+
+    // ----- Phase 9.5g: Multi-step / misc quest tunables -----
+
+    /// Caroline's Tea Garden (CSV row 15). Number of spring flowers Caroline asks for in
+    /// fall, and how many Tea Leaves to grant on completion.
+    public int CarolineTeaGardenFlowerQty { get; set; } = 5;
+    public int CarolineTeaGardenTeaLeavesReward { get; set; } = 10;
+
+    /// Clear Debris (CSV row 17). Location whose `ResourceClumps` the player must remove
+    /// before the quest closes. Defaults to vanilla Pelican Town. Override per-save if a
+    /// modded NPC's home town should host the quest instead.
+    public string ClearDebrisLocation { get; set; } = "Town";
+    /// How many resource clumps the quest asks the player to clear at the target location.
+    public int ClearDebrisCount { get; set; } = 5;
+
+    /// Dinner Party (CSV row 18). Number of distinct dishes the giver requests, picked
+    /// from dishes the giver Loves or Likes per `Data/NPCGiftTastes`. Per-dish quantity
+    /// defaults to 1 to keep the order playable, since each dish has to be cooked.
+    public int DinnerPartyDishCount { get; set; } = 3;
+    public int DinnerPartyPerDishCount { get; set; } = 1;
+
+    /// Plant Trees (CSV row 55). Location where new trees must be planted before the
+    /// step closes. Defaults to vanilla Cindersap Forest; modded conservation NPCs
+    /// (Kimpoi/Dylan/Aster) currently route to the same fallback until their respective
+    /// content packs expose a stable per-NPC location id.
+    public string PlantTreesLocation { get; set; } = "Forest";
+    public int PlantTreesCount { get; set; } = 5;
+
+    /// Spring Cleaning (CSV row 69). Spring-only town weed clear. Location and weed count
+    /// are configurable for parity with the other 9.5g rows.
+    public string SpringCleaningLocation { get; set; } = "Town";
+    public int SpringCleaningCount { get; set; } = 8;
 }
