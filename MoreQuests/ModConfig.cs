@@ -139,4 +139,48 @@ public sealed class ModConfig
     /// Qualified item id for the Gus SquidFest reward dish, used by `ShopDiscountReward`
     /// to discount the dish in the Saloon shop. Defaults to Fried Calamari `(O)227`.
     public string SquidFestDishGus { get; set; } = "(O)227";
+
+    // ----- Phase 9.5f: One-shot triggered animal/farm quests -----
+
+    /// Alex's Protein Shakes (CSV row 14): how many eggs to ask for per chicken on the
+    /// farm, plus a flat base. Final qty = `AlexProteinShakesBaseQty` + chickens *
+    /// `AlexProteinShakesPerChicken`, clamped between Base and 30. Set per-chicken to 0
+    /// to drop the scaling and always ask for exactly Base eggs.
+    public int AlexProteinShakesBaseQty { get; set; } = 5;
+    public int AlexProteinShakesPerChicken { get; set; } = 1;
+
+    /// Gold rebate for Marnie's Chicken Offer (CSV row 43). Vanilla white chicken price
+    /// is 800g; the quest pays the player back this amount on completion to simulate
+    /// "get a deal on a chicken" without patching the animal-shop menu (deferred — the
+    /// framework doesn't currently hook `PurchaseAnimalsMenu`).
+    public int MarnieChickenOfferRebate { get; set; } = 800;
+    /// How many seeds the chicken-offer quest asks the player to deliver. The quest picks
+    /// one current-season seed type and asks for this many.
+    public int MarnieChickenOfferSeedQty { get; set; } = 15;
+
+    /// Gold rebate for Marnie's Cow Offer (CSV row 44). Vanilla cow price is 1500g; same
+    /// rebate-as-proxy approach as the Chicken Offer.
+    public int MarnieCowOfferRebate { get; set; } = 1500;
+    /// How many Hay the cow-offer quest asks the player to deliver. Vanilla hay sells for
+    /// 50g, so 50 hay is a meaningful (but not punishing) ask paired with the cow rebate.
+    public int MarnieCowOfferHayQty { get; set; } = 50;
+
+    /// How many eggs Marnie's Egg Request (CSV row 45) asks the player to ship. Defaults
+    /// to 10 per the CSV. Quest grants the Mayonnaise Machine recipe as part of the reward.
+    public int MarnieEggRequestQty { get; set; } = 10;
+    /// How many milk units Marnie's Milk Request (CSV row 47) asks the player to ship.
+    /// Defaults to 10 per the CSV. Quest grants the Cheese Press recipe as part of the reward.
+    public int MarnieMilkRequestQty { get; set; } = 10;
+
+    /// Gold rebate for Robin's Silo Offer (CSV row 64). Vanilla silo costs 100g + 100
+    /// Stone + 10 Clay + 5 Copper Bar. The rebate covers the gold portion plus a chunk
+    /// toward the materials, since the player still has to pay Robin themselves (the
+    /// "Robin contributes" flavor in the CSV is approximated by the reimbursement).
+    public int RobinSiloOfferRebate { get; set; } = 500;
+    /// Stone quantity Robin asks for in her silo offer letter. The framework picks one of
+    /// stone / clay / copper bar to keep the request varied; see `RobinSiloOfferClayQty` /
+    /// `RobinSiloOfferCopperBarQty` for the alternatives.
+    public int RobinSiloOfferStoneQty { get; set; } = 100;
+    public int RobinSiloOfferClayQty { get; set; } = 10;
+    public int RobinSiloOfferCopperBarQty { get; set; } = 5;
 }
