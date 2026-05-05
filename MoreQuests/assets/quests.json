@@ -609,6 +609,90 @@
                 "RepeatYearly": true
             },
             "Generator": "SquidFestShowcase"
+        },
+        {
+            "Name": "Animal.AlexProteinShakes",
+            "Category": "Animal",
+            "Trigger": {
+                "Source": "Periodic",
+                "EveryDays": 14,
+                "Available": { "NpcExists": "Alex", "NpcMet": "Alex" }
+            },
+            "Generator": "AlexProteinShakes"
+        },
+        {
+            "Name": "Animal.GuntherDinosaurStudy",
+            "Category": "Animal",
+            "Trigger": {
+                "Source": "OneShot",
+                "When": "FirstHeldItem (O)107",
+                "Available": { "NpcExists": "Gunther" }
+            },
+            "Generator": "GuntherDinosaurStudy"
+        },
+        {
+            "Name": "Animal.MarnieChickenOffer",
+            "Category": "Animal",
+            "Trigger": {
+                "Source": "BuildingBuilt",
+                "Building": "Coop",
+                "DayDelay": 1,
+                "Available": { "NpcExists": "Marnie" }
+            },
+            "Generator": "MarnieChickenOffer"
+        },
+        {
+            "Name": "Animal.MarnieCowOffer",
+            "Category": "Animal",
+            "Trigger": {
+                "Source": "BuildingBuilt",
+                "Building": "Barn",
+                "DayDelay": 1,
+                "Available": { "NpcExists": "Marnie" }
+            },
+            "Generator": "MarnieCowOffer"
+        },
+        {
+            "Name": "Animal.MarnieEggRequest",
+            "Category": "Animal",
+            "Trigger": {
+                "Source": "OneShot",
+                "When": "FirstStat chickenEggsLayed >= 1",
+                "Available": { "NpcExists": "Marnie" }
+            },
+            "Generator": "MarnieEggRequest"
+        },
+        {
+            "Name": "Animal.MarnieMilkRequest",
+            "Category": "Animal",
+            "Trigger": {
+                "Source": "OneShot",
+                "When": "FirstStat cowMilkProduced >= 1",
+                "Available": { "NpcExists": "Marnie" }
+            },
+            "Generator": "MarnieMilkRequest"
+        },
+        {
+            "Name": "Animal.RobinSiloOfferCoop",
+            "Category": "Animal",
+            "Trigger": {
+                "Source": "BuildingBuilt",
+                "Building": "Coop",
+                "DayDelay": 2,
+                "Available": { "NpcExists": "Robin", "not:BuildingExists": "Silo" }
+            },
+            "Generator": "RobinSiloOffer"
+        },
+        {
+            "Name": "Animal.RobinSiloOfferBarn",
+            "Category": "Animal",
+            "Trigger": {
+                "Source": "BuildingBuilt",
+                "Building": "Barn",
+                "DayDelay": 2,
+                "Available": { "NpcExists": "Robin", "not:BuildingExists": "Silo" }
+            },
+            "Generator": "RobinSiloOffer"
         }
     ]
 }

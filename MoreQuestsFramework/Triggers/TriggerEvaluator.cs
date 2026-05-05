@@ -240,11 +240,15 @@ public sealed class TriggerEvaluator
         return string.Equals(tomorrow, norm, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// Tiny grammar for `OneShot When:` predicates. Three forms are recognised:
+    /// Tiny grammar for `OneShot When:` predicates. Four forms are recognised:
     ///   "FirstStat <statName> >= <n>"
     ///   "FirstShipped <itemId>"
     ///   "FirstItemOwned <itemId>"  (proxied to basicShipped + recipesCooked because
     ///                                 vanilla doesn't track lifetime inventory)
+    ///   "FirstHeldItem <itemId>"   (true on the first DayStarted the player has the item
+    ///                                 in inventory; complements FirstItemOwned for items
+    ///                                 the player typically incubates / hatches rather than
+    ///                                 ships, e.g. Dinosaur Egg)
     /// Anything else logs once and returns false.
     private bool EvaluateOneShotPredicate(string when)
     {
@@ -272,10 +276,36 @@ public sealed class TriggerEvaluator
                 return Game1.player.basicShipped.ContainsKey(id)
                     || Game1.player.recipesCooked.ContainsKey(id);
 
+            case "firsthelditem":
+                if (parts.Length < 2)
+                    return false;
+                return PlayerInventoryContains(parts[1]);
+
             default:
                 _monitor.Log($"OneShot 'When' clause not recognised: '{when}'.", LogLevel.Warn);
                 return false;
         }
+    }
+
+    /// True when any item in the player's inventory matches `requested` either as a
+    /// qualified id (`(O)107`) or as the bare numeric/string id (`107`). Compares against
+    /// `Item.QualifiedItemId` first and falls through to `ItemId` so authors can write the
+    /// shorter bare form when convenient.
+    private static bool PlayerInventoryContains(string requested)
+    {
+        if (string.IsNullOrWhiteSpace(requested) || Game1.player == null)
+            return false;
+        string qualified = StardewValley.ItemRegistry.QualifyItemId(requested) ?? requested;
+        string bare = StripPrefix(requested);
+        foreach (var entry in Game1.player.Items)
+        {
+            if (entry == null) continue;
+            if (string.Equals(entry.QualifiedItemId, qualified, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (string.Equals(entry.ItemId, bare, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
     }
 
     private static string StripPrefix(string id) =>

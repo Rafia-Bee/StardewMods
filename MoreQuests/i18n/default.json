@@ -382,5 +382,40 @@
     "quest.festival.squidFest.title": "Showcase dish for SquidFest",
     "quest.festival.squidFest.description": "{{npc}} wants a SquidFest showcase plate and needs {{qty}} fresh squid for it. Hand them in and you'll get the {{recipe}} recipe and a discount on the dish.",
     "quest.festival.squidFest.objective": "Catch {{qty}} Squid for {{npc}}.",
-    "quest.festival.squidFest.targetMessage": "Perfect. SquidFest is going to be a hit."
+    "quest.festival.squidFest.targetMessage": "Perfect. SquidFest is going to be a hit.",
+
+    "quest.animal.alexProtein.title": "Protein for the home gym",
+    "quest.animal.alexProtein.description": "Hey, the gridball coach is putting me on a bulk and the local store keeps running out of protein. Bring me {{qty}} eggs and I'll cut you in on whatever supplement bottle I've got open. Cheers.",
+    "quest.animal.alexProtein.objective": "Bring {{qty}} eggs to Alex.",
+    "quest.animal.alexProtein.targetMessage": "Solid. That's the lot. Here, take this with you.",
+
+    "quest.animal.guntherDinosaur.title": "Specimen for the museum",
+    "quest.animal.guntherDinosaur.description": "I heard a rumor a Dinosaur Egg surfaced on your land. Could you bring it by the museum? I'd love a closer look, and I'd return it in better shape than it arrived. There'll be a fair price for the loan.",
+    "quest.animal.guntherDinosaur.objective": "Bring a Dinosaur Egg to Gunther.",
+    "quest.animal.guntherDinosaur.targetMessage": "Incredible. Thank you for trusting the museum with this. Here's your egg back, alongside the agreed sum.",
+
+    "quest.animal.marnieChickenOffer.title": "Marnie's chicken offer",
+    "quest.animal.marnieChickenOffer.description": "Saw the new coop going up. If you bring me {{qty}} {{item}} for the layers, I'll cut you a deal on a chicken to fill it. Drop the seeds by whenever you have them.",
+    "quest.animal.marnieChickenOffer.objective": "Bring {{qty}} {{item}} to Marnie.",
+    "quest.animal.marnieChickenOffer.targetMessage": "Perfect. Stop by the ranch when you're ready to pick out a chicken; the discount is on me.",
+
+    "quest.animal.marnieCowOffer.title": "Marnie's cow offer",
+    "quest.animal.marnieCowOffer.description": "Heard you got a barn up. If you can bring me {{qty}} hay to top off the loft, I'll send you home with a cow at a friendly price. The grass on your pasture will do the rest.",
+    "quest.animal.marnieCowOffer.objective": "Bring {{qty}} hay to Marnie.",
+    "quest.animal.marnieCowOffer.targetMessage": "That'll keep the new arrival fed for the season. Come pick out a cow whenever you're ready.",
+
+    "quest.animal.marnieEgg.title": "First eggs for Marnie",
+    "quest.animal.marnieEgg.description": "Congratulations on your first eggs! If you can spare {{qty}} of them through the shipping bin, I'd love to send a Mayonnaise Machine recipe your way and pay the going rate. The hens will give you plenty more.",
+    "quest.animal.marnieEgg.objective": "Ship {{qty}} eggs.",
+    "quest.animal.marnieEgg.targetMessage": "Lovely. The recipe is on its way.",
+
+    "quest.animal.marnieMilk.title": "First milk for Marnie",
+    "quest.animal.marnieMilk.description": "Your cow's producing! If you can ship me {{qty}} milk through the bin, I'll send back a Cheese Press recipe so you can start turning that milk into something with a longer shelf life. There'll be coin too, of course.",
+    "quest.animal.marnieMilk.objective": "Ship {{qty}} milk.",
+    "quest.animal.marnieMilk.targetMessage": "Wonderful, that's the lot. Cheese press recipe in the post.",
+
+    "quest.animal.robinSilo.title": "Robin's silo offer",
+    "quest.animal.robinSilo.description": "Saw the new building going up. You'll want a silo before that hay starts piling up. If you bring me {{qty}} {{item}} I'll cover the rest of the materials and put one up for you, no charge for the labour. Drop them at the workshop when you have them.",
+    "quest.animal.robinSilo.objective": "Bring {{qty}} {{item}} to Robin.",
+    "quest.animal.robinSilo.targetMessage": "That'll do. Come by the shop when you're ready and we'll break ground."
 }
