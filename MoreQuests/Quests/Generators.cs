@@ -84,6 +84,11 @@ internal static class Generators
         fw.RegisterGenerator("MarnieEggRequest", MarnieEggRequest);
         fw.RegisterGenerator("MarnieMilkRequest", MarnieMilkRequest);
         fw.RegisterGenerator("RobinSiloOffer", RobinSiloOffer);
+        fw.RegisterGenerator("CarolineTeaGarden", CarolineTeaGarden);
+        fw.RegisterGenerator("ClearDebris", ClearDebris);
+        fw.RegisterGenerator("DinnerParty", DinnerParty);
+        fw.RegisterGenerator("PlantTrees", PlantTrees);
+        fw.RegisterGenerator("SpringCleaning", SpringCleaning);
     }
 
     // -------------------- Farming --------------------
@@ -4486,6 +4491,318 @@ internal static class Generators
             Description = ModEntry.I18n.Get("quest.animal.robinSilo.description", new { qty = pick.Qty, item = pick.Name }),
             CurrentObjective = ModEntry.I18n.Get("quest.animal.robinSilo.objective", new { qty = pick.Qty, item = pick.Name }),
             TargetMessage = ModEntry.I18n.Get("quest.animal.robinSilo.targetMessage")
+        };
+    }
+
+    // -------------------- Phase 9.5g: Multi-step / misc --------------------
+
+    /// CSV row 15. Fall-only daily-board ItemDeliveryQuest. Caroline misses spring and
+    /// asks the player to bring her one kind of spring flower so she can brew a fresh
+    /// batch of tea. Reward = `FriendshipMid` to Caroline + `CarolineTeaGardenTeaLeavesReward`
+    /// (default 10) Tea Leaves.
+    private static QuestPosting? CarolineTeaGarden(QuestContext ctx)
+    {
+        if (Game1.getCharacterFromName("Caroline") == null)
+            return null;
+
+        var allFlowers = ctx.Items.GetItemsByCategory(StardewValley.Object.flowersCategory);
+        var springFlowers = allFlowers
+            .Where(f => f.ContextTags.Contains("season_spring"))
+            .ToList();
+        if (springFlowers.Count == 0)
+            return null;
+
+        var pick = springFlowers[Game1.random.Next(springFlowers.Count)];
+        int qty = Math.Max(1, ModEntry.Config.CarolineTeaGardenFlowerQty);
+        int teaCount = Math.Max(1, ModEntry.Config.CarolineTeaGardenTeaLeavesReward);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Farming,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.ItemDelivery,
+            QuestGiver = "Caroline",
+            ObjectiveItemId = pick.QualifiedItemId,
+            ObjectiveItemName = pick.DisplayName,
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards =
+            {
+                new FriendshipReward("Caroline", ctx.Config.FriendshipMid),
+                new ObjectReward("(O)815", teaCount)
+            },
+            Title = ModEntry.I18n.Get("quest.farming.carolineTeaGarden.title"),
+            Description = ModEntry.I18n.Get("quest.farming.carolineTeaGarden.description", new { qty, item = pick.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.farming.carolineTeaGarden.objective", new { qty, item = pick.DisplayName }),
+            TargetMessage = ModEntry.I18n.Get("quest.farming.carolineTeaGarden.targetMessage")
+        };
+    }
+
+    /// CSV row 17. Daily-board single-step `ClearDebris` AdventureQuest. The picked giver
+    /// asks the player to clear `ClearDebrisCount` resource clumps (logs / boulders /
+    /// stumps / weeds clusters) at `ClearDebrisLocation` (default Pelican Town). Reward =
+    /// `FriendshipMid` to the giver. The `ClearDebris` step rides the framework's per-second
+    /// resource-clump poll (Phase 9.5c).
+    private static QuestPosting? ClearDebris(QuestContext ctx)
+    {
+        var npcs = DispatchRegistry.MetHumanNpcs();
+        if (npcs.Count == 0)
+            return null;
+        string giver = npcs[Game1.random.Next(npcs.Count)];
+
+        string location = string.IsNullOrWhiteSpace(ModEntry.Config.ClearDebrisLocation)
+            ? "Town"
+            : ModEntry.Config.ClearDebrisLocation;
+        int count = Math.Max(1, ModEntry.Config.ClearDebrisCount);
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ClearDebris",
+                Kind = AdventureStepKind.ClearDebris,
+                Targets = new List<string> { location },
+                Count = count,
+                Description = ModEntry.I18n.Get("quest.foraging.clearDebris.step", new { count, location })
+            }
+        }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.foraging.clearDebris.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Foraging,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipMid) },
+            Title = ModEntry.I18n.Get("quest.foraging.clearDebris.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.foraging.clearDebris.description", new { npc = giver, count, location }),
+            CurrentObjective = ModEntry.I18n.Get("quest.foraging.clearDebris.objective", new { count, location }),
+            TargetMessage = ModEntry.I18n.Get("quest.foraging.clearDebris.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// CSV row 18. SpecialOrder source. Smaller cousin of the Grand Feast: picks
+    /// `DinnerPartyDishCount` (default 3) distinct dishes the giver Loves or Likes per
+    /// `Data/NPCGiftTastes` and emits one vanilla `Deliver` objective per dish targeted at
+    /// the giver. Reward = sum(dish sell price) * `RewardMultiplierAboveSell` (vanilla
+    /// path so the player gets the standard reward-box UX) + `FriendshipBasic` to the
+    /// giver (framework path, bypasses third-party SpecialOrder reward overrides).
+    ///
+    /// Mirrors `Cooking.GrandFeast`'s JSON shape (no `StartDate`); the trigger evaluator's
+    /// `SpecialOrderReady` requires a `StartDate` for auto-fire, so the order is currently
+    /// reachable through the framework's `mq_reemit_specialorders` debug command. A
+    /// follow-up in §13 should add a cooldown-only SpecialOrder mode so daily-cadence
+    /// special orders fire automatically; that's a framework change tracked separately.
+    private static QuestPosting? DinnerParty(QuestContext ctx)
+    {
+        var npcs = DispatchRegistry.MetHumanNpcs();
+        if (npcs.Count == 0)
+            return null;
+
+        var tastes = ctx.Data.GiftTastes;
+        var allRecipes = ctx.Items.GetAllCookingRecipes();
+        if (allRecipes.Count == 0)
+            return null;
+
+        int wanted = Math.Max(1, ModEntry.Config.DinnerPartyDishCount);
+        int perCount = Math.Max(1, ModEntry.Config.DinnerPartyPerDishCount);
+
+        var shuffled = npcs.OrderBy(_ => Game1.random.Next()).ToList();
+        foreach (var giver in shuffled)
+        {
+            if (!tastes.TryGetValue(giver, out var taste))
+                continue;
+            var fields = taste.Split('/');
+            if (fields.Length < 4)
+                continue;
+            var loved = fields[1].Split(' ').ToHashSet(StringComparer.Ordinal);
+            var liked = fields[3].Split(' ').ToHashSet(StringComparer.Ordinal);
+
+            var pool = new List<CookingRecipeInfo>();
+            foreach (var r in allRecipes)
+            {
+                string bare = StripPrefix(r.OutputItem.QualifiedItemId);
+                if (loved.Contains(bare) || liked.Contains(bare))
+                    pool.Add(r);
+            }
+            if (pool.Count < wanted)
+                continue;
+
+            var picked = new List<CookingRecipeInfo>(wanted);
+            var available = new List<CookingRecipeInfo>(pool);
+            for (int i = 0; i < wanted && available.Count > 0; i++)
+            {
+                int idx = Game1.random.Next(available.Count);
+                picked.Add(available[idx]);
+                available.RemoveAt(idx);
+            }
+
+            var objectives = new List<SpecialOrderObjectiveSpec>(picked.Count);
+            var displayNames = new List<string>(picked.Count);
+            int totalSell = 0;
+            foreach (var dish in picked)
+            {
+                string bare = StripPrefix(dish.OutputItem.QualifiedItemId);
+                string contextTag = "id_o_" + bare.ToLowerInvariant();
+                displayNames.Add(dish.OutputItem.DisplayName);
+                totalSell += Math.Max(0, dish.OutputItem.SellPrice);
+                objectives.Add(new SpecialOrderObjectiveSpec
+                {
+                    Type = "Deliver",
+                    Text = ModEntry.I18n.Get(
+                        "quest.cooking.dinnerParty.objective",
+                        new { count = perCount, item = dish.OutputItem.DisplayName, npc = giver }),
+                    RequiredCount = perCount,
+                    Data =
+                    {
+                        ["AcceptedContextTags"] = contextTag,
+                        ["TargetName"] = giver
+                    }
+                });
+            }
+
+            int gold = (int)(totalSell * perCount * ctx.Config.RewardMultiplierAboveSell);
+            if (gold < 100)
+                gold = 100;
+
+            var vanillaRewards = new List<SpecialOrderRewardSpec>
+            {
+                new()
+                {
+                    Type = "Money",
+                    Data = { ["Amount"] = gold.ToString() }
+                }
+            };
+            var frameworkRewards = new List<RewardSpec>
+            {
+                new FriendshipReward(giver, ctx.Config.FriendshipBasic)
+            };
+
+            string namesList = string.Join(", ", displayNames);
+
+            return new QuestPosting
+            {
+                Category = QuestCategory.Cooking,
+                Tier = DifficultyTier.Advanced,
+                QuestType = BoardQuestType.Custom,
+                Kind = PostingKind.SpecialOrder,
+                QuestGiver = giver,
+                SpecialOrder = new SpecialOrderSpec
+                {
+                    Name = ModEntry.I18n.Get("quest.cooking.dinnerParty.title", new { npc = giver }),
+                    Text = ModEntry.I18n.Get(
+                        "quest.cooking.dinnerParty.text",
+                        new { npc = giver, dishes = namesList }),
+                    Requester = giver,
+                    Duration = "Week",
+                    Objectives = objectives,
+                    Rewards = vanillaRewards,
+                    FrameworkRewards = frameworkRewards
+                }
+            };
+        }
+
+        return null;
+    }
+
+    /// CSV row 55. Daily-board single-step `Plant` AdventureQuest. Quest giver picked
+    /// from the `ConservationGuide` dispatch role (Linus / Demetrius / Kimpoi RSV /
+    /// Dylan ESV / Aster VMV) — exactly the CSV's listed givers. Player must plant
+    /// `PlantTreesCount` trees at `PlantTreesLocation` (default Cindersap Forest).
+    /// Reward = `FriendshipIntermediate` to the giver — pure friendship, no gold per
+    /// the CSV. The `Plant` step rides `World.TerrainFeatureListChanged` filter Tree.
+    private static QuestPosting? PlantTrees(QuestContext ctx)
+    {
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.ConservationGuide);
+        if (giver == null)
+            return null;
+
+        string location = string.IsNullOrWhiteSpace(ModEntry.Config.PlantTreesLocation)
+            ? "Forest"
+            : ModEntry.Config.PlantTreesLocation;
+        int count = Math.Max(1, ModEntry.Config.PlantTreesCount);
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "PlantTrees",
+                Kind = AdventureStepKind.Plant,
+                Targets = new List<string> { location },
+                Count = count,
+                Description = ModEntry.I18n.Get("quest.foraging.plantTrees.step", new { count, location })
+            }
+        }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.foraging.plantTrees.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Foraging,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipIntermediate) },
+            Title = ModEntry.I18n.Get("quest.foraging.plantTrees.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.foraging.plantTrees.description", new { npc = giver, count, location }),
+            CurrentObjective = ModEntry.I18n.Get("quest.foraging.plantTrees.objective", new { count, location }),
+            TargetMessage = ModEntry.I18n.Get("quest.foraging.plantTrees.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// CSV row 69. Spring-only daily-board single-step `ClearWeeds` AdventureQuest. Any
+    /// met human NPC can be the giver; the player clears `SpringCleaningCount` weed
+    /// `Object`s at `SpringCleaningLocation` (default Pelican Town). Reward =
+    /// `FriendshipBasic`. The `ClearWeeds` step rides `World.ObjectListChanged` filtered
+    /// to `Object.IsWeeds()` removals.
+    private static QuestPosting? SpringCleaning(QuestContext ctx)
+    {
+        if (!string.Equals(ctx.Season, "spring", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var npcs = DispatchRegistry.MetHumanNpcs();
+        if (npcs.Count == 0)
+            return null;
+        string giver = npcs[Game1.random.Next(npcs.Count)];
+
+        string location = string.IsNullOrWhiteSpace(ModEntry.Config.SpringCleaningLocation)
+            ? "Town"
+            : ModEntry.Config.SpringCleaningLocation;
+        int count = Math.Max(1, ModEntry.Config.SpringCleaningCount);
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ClearWeeds",
+                Kind = AdventureStepKind.ClearWeeds,
+                Targets = new List<string> { location },
+                Count = count,
+                Description = ModEntry.I18n.Get("quest.seasonal.springCleaning.step", new { count, location })
+            }
+        }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.seasonal.springCleaning.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Seasonal,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipBasic) },
+            Title = ModEntry.I18n.Get("quest.seasonal.springCleaning.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.seasonal.springCleaning.description", new { npc = giver, count, location }),
+            CurrentObjective = ModEntry.I18n.Get("quest.seasonal.springCleaning.objective", new { count, location }),
+            TargetMessage = ModEntry.I18n.Get("quest.seasonal.springCleaning.targetMessage"),
+            PreBuiltQuest = quest
         };
     }
 }
