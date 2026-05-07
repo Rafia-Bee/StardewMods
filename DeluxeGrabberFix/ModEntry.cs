@@ -144,6 +144,16 @@ public class ModEntry : Mod
     internal bool HasDesignatedGrabber() => _grabbers.HasDesignatedGrabber();
     internal void ClearAllDesignations() => _grabbers.ClearAllDesignations();
 
+    // Drains the per-location queues used by Instant-mode draining (audit §1.2, §3.8).
+    // Called on title return (state should not survive a save unload) and when
+    // grabFrequency changes via GMCM (queued locations from a previous mode would
+    // otherwise sit in memory holding GameLocation refs until the user switched back).
+    internal void ClearLocationQueues()
+    {
+        _dirtyLocations.Clear();
+        _machineReadyLocations.Clear();
+    }
+
     internal static void FlagMachineReadyLocation(GameLocation location)
     {
         if (_instance == null || location == null)
@@ -665,6 +675,7 @@ public class ModEntry : Mod
         TownGarbageCanGrabber.ClearCache();
         ConfigManager.OnReturnedToTitle();
         SpecializedGrabberPatches.SpecializedGrabberCount = 0;
+        ClearLocationQueues();
         _gmcm.RebuildConfigMenu();
         RefreshRenderedWorldHook();
     }
@@ -722,6 +733,13 @@ public class ModEntry : Mod
         }
 
         if (IsGrabbing)
+            return;
+
+        // _dirtyLocations is purely an Instant-mode signal for OnUpdateTicked. Hourly and
+        // Daily run their full sweeps from OnHourlyUpdate / day-start instead, so queueing
+        // in those modes used to silently grow the set across the whole session (audit
+        // §2.6) and pin GameLocation refs (audit §3.8).
+        if (Config.grabFrequency != ModConfig.GrabFrequency.Instant)
             return;
 
         _dirtyLocations.Add(e.Location);
@@ -837,65 +855,65 @@ public class ModEntry : Mod
                 if (!_locations.ShouldProcessLocation(location))
                     continue;
 
-                var orePanGrabber = new OrePanGrabber(this, location) { BelongsToType = GrabberType.Scavenger };
-                if (orePanGrabber.CanGrab())
-                {
-                    var beforeInventory = Config.reportYield ? orePanGrabber.GetInventory() : null;
-                    bool result = orePanGrabber.GrabItems();
-
-                    if (result)
-                        LogDebug($"Ore pan at {location.Name}: collected items");
-
-                    if (beforeInventory != null && result)
-                    {
-                        var afterInventory = orePanGrabber.GetInventory();
-                        var sb = new StringBuilder(Helper.Translation.Get("log.ore-panning-yield-header", new { location = location.Name }) + "\n");
-                        bool anyYield = false;
-
-                        foreach (var entry in afterInventory)
-                        {
-                            int newCount = entry.Value;
-                            if (beforeInventory.ContainsKey(entry.Key))
-                                newCount -= beforeInventory[entry.Key];
-
-                            if (newCount > 0)
-                            {
-                                sb.AppendLine(Helper.Translation.Get("log.yield-item", new
-                                {
-                                    name = entry.Key.DisplayName,
-                                    quality = Helper.Translation.Get(entry.Key.QualityKey),
-                                    count = newCount
-                                }));
-                                anyYield = true;
-                            }
-                        }
-
-                        if (anyYield)
-                            Monitor.Log(sb.ToString(), LogLevel.Info);
-                    }
-                }
-
+                // Daily mode opts out of hourly polling for ore pan, forage, and machines.
+                // Pre-fix the ore pan was running unconditionally above the Daily gate
+                // (audit §1.3); now all three live under one gate so the rule is obvious.
                 if (Config.grabFrequency != ModConfig.GrabFrequency.Daily)
+                {
+                    var orePanGrabber = new OrePanGrabber(this, location) { BelongsToType = GrabberType.Scavenger };
+                    if (orePanGrabber.CanGrab())
+                    {
+                        var beforeInventory = Config.reportYield ? orePanGrabber.GetInventory() : null;
+                        bool result = orePanGrabber.GrabItems();
+
+                        if (result)
+                            LogDebug($"Ore pan at {location.Name}: collected items");
+
+                        if (beforeInventory != null && result)
+                        {
+                            var afterInventory = orePanGrabber.GetInventory();
+                            var sb = new StringBuilder(Helper.Translation.Get("log.ore-panning-yield-header", new { location = location.Name }) + "\n");
+                            bool anyYield = false;
+
+                            foreach (var entry in afterInventory)
+                            {
+                                int newCount = entry.Value;
+                                if (beforeInventory.ContainsKey(entry.Key))
+                                    newCount -= beforeInventory[entry.Key];
+
+                                if (newCount > 0)
+                                {
+                                    sb.AppendLine(Helper.Translation.Get("log.yield-item", new
+                                    {
+                                        name = entry.Key.DisplayName,
+                                        quality = Helper.Translation.Get(entry.Key.QualityKey),
+                                        count = newCount
+                                    }));
+                                    anyYield = true;
+                                }
+                            }
+
+                            if (anyYield)
+                                Monitor.Log(sb.ToString(), LogLevel.Info);
+                        }
+                    }
+
                     _grabbers.GrabForageAtLocation(location);
 
-                // Machine outputs don't fire ObjectListChanged when they finish processing,
-                // so poll machines every hour regardless of dirty state for non-Daily modes
-                if (Config.grabFrequency != ModConfig.GrabFrequency.Daily)
+                    // Machine outputs don't fire ObjectListChanged when they finish processing,
+                    // so poll machines every hour regardless of dirty state for non-Daily modes.
                     _grabbers.GrabMachinesAtLocation(location);
 
-                // In Hourly mode, run the full grab for all locations every tick so crops,
-                // fruit trees, bushes, etc. (terrain features that don't trigger ObjectListChanged)
-                // are collected. In Instant mode, only run full grab for dirty locations;
-                // terrain features are handled by the day-start sweep instead.
-                if (Config.grabFrequency == ModConfig.GrabFrequency.Hourly
-                    || (Config.grabFrequency == ModConfig.GrabFrequency.Instant && _dirtyLocations.Contains(location)))
-                {
+                    // Full sweep in both Instant and Hourly. Pre-fix Instant mode gated this on
+                    // _dirtyLocations.Contains(location), so terrain-feature drops (chopped tree
+                    // wood/sap, fruit-tree fruit, bush forage) only got picked up if something
+                    // else mutated location.Objects in the same hour to dirty the location.
+                    // Cutting a tree and walking away in pure Instant mode meant the debris sat
+                    // until the next day-start sweep. Running the full grab unconditionally in
+                    // non-Daily modes mirrors Hourly's behavior and is mostly idempotent.
                     _grabbers.GrabAtLocation(location);
                 }
             }
-
-            if (Config.grabFrequency == ModConfig.GrabFrequency.Hourly)
-                _dirtyLocations.Clear();
         }
         _grabbers.ShowGrabCycleResults(showSummary: false);
     }
