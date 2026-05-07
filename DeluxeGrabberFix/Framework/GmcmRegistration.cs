@@ -354,7 +354,15 @@ internal class GmcmRegistration
          .Bool("config.debug-logging", () => _mod.Config.debugLogging, v => _mod.Config.debugLogging = v)
          .Bool("config.gain-experience", () => _mod.Config.gainExperience, v => _mod.Config.gainExperience = v)
          .Dropdown("config.grab-frequency",
-             () => _mod.Config.grabFrequency, v => _mod.Config.grabFrequency = v,
+             () => _mod.Config.grabFrequency,
+             v =>
+             {
+                 // Clear the Instant-mode queues when frequency changes so locations
+                 // queued under the old mode don't sit in memory (audit §1.2, §3.8).
+                 if (_mod.Config.grabFrequency != v)
+                     _mod.ClearLocationQueues();
+                 _mod.Config.grabFrequency = v;
+             },
              ModConfig.GrabFrequencyDict, ModConfig.GrabFrequencyReverseDict, ModConfig.GrabFrequencyStrings,
              dropdownLabelPrefix: "")
          .Bool("config.exclude-quest-items",
