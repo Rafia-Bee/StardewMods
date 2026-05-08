@@ -66,6 +66,13 @@ internal class IndoorPotGrabber : ObjectsMapGrabber
                 Mod.ReportCropsHarvested(Location);
             }
 
+            // The IndoorPot stays in location.Objects (only its inner crop is
+            // cleared), so mark the tile so subsequent ObjectsMapGrabber-derived
+            // grabbers in the same cycle skip it. Matches GenericObjectGrabber's
+            // convention; without this the skip relies on bigCraftable + null-crop
+            // short-circuits firing in the right order.
+            Mod.GrabbedTiles?.Add(tile);
+
             return true;
         }
         return false;
