@@ -135,6 +135,17 @@ internal class GrabberManager
     /// designated-grabbers cache.
     internal void FireGlobalGrab()
     {
+        // Defense in depth (audit §2.5). Every keybind / deferred caller filters
+        // config upstream, but a stale toggle in the gap (GMCM stays open across
+        // ticks; auto-fire delays 1-5 ticks under Automate) could otherwise run a
+        // global grab the player has just disabled. Skip here so future callers
+        // can't make this mistake silently either.
+        if (!ShouldFireGlobalGrab(_mod.Config, HasDesignatedGrabber()))
+        {
+            _mod.LogDebug("Skipping FireGlobalGrab: current config does not authorize a global fire");
+            return;
+        }
+
         _locations.DiscoverLocations();
         if (_mod.Config.Locations.selectVisitedOnly)
             _locations.ApplyVisitAutoSkip();
@@ -142,6 +153,28 @@ internal class GrabberManager
         _mod.LogDebug("Firing global grab");
         foreach (var location in ModEntry.GetAllLocations())
             GrabAtLocation(location);
+    }
+
+    /// Pure predicate for "is the current config valid for a global fire?"
+    /// Pulled out so callers and tests can reason about it without owning a session.
+    /// Authorized configs:
+    ///   - Specialized + All / Hover  (Off blocks the keybind)
+    ///   - Classic + All with at least one designated grabber
+    ///   - Classic + Hover            (MapGrabber's Hover branch picks up the cursor target)
+    /// Unauthorized: Off (any mode) and Classic + All with no designation.
+    internal static bool ShouldFireGlobalGrab(ModConfig config, bool hasDesignatedGrabber)
+    {
+        if (config.globalGrabber == ModConfig.GlobalGrabberMode.Off)
+            return false;
+
+        if (config.grabberMode == ModConfig.GrabberMode.Classic
+            && config.globalGrabber == ModConfig.GlobalGrabberMode.All
+            && !hasDesignatedGrabber)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     internal void HandleDesignateGrabber()
