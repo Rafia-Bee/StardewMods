@@ -41,7 +41,10 @@ internal class IndoorPotGrabber : ObjectsMapGrabber
         // (the .Count guard, TryAddItem's foreach, and TryAddItem's chest-full
         // report loop). Specialized mode's GetFilteredGrabberPairs adds a Where
         // over a Where, so re-evaluating is non-trivial on big farms.
-        var nearbyGrabbers = Helpers.GetNearbyObjectsToTile(tile, GetFilteredGrabberPairs(), Config.Features.harvestCropsRange, Config.Features.harvestCropsRangeMode).ToList();
+        // Audit §2.10: GetGrabbersInRangeOfTile applies the range filter only to
+        // same-location grabbers in global modes; cross-location grabbers tail the
+        // list as a routing fallback so cache-order doesn't override "local first."
+        var nearbyGrabbers = GetGrabbersInRangeOfTile(tile, Config.Features.harvestCropsRange, Config.Features.harvestCropsRangeMode).ToList();
 
         // No grabber in range to receive the harvest, leave the crop alone rather than
         // destroying it and dropping debris on the ground.

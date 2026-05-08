@@ -37,9 +37,12 @@ internal abstract class MapGrabber
         {
             if (Mod.CachedDesignatedGrabbers != null && Mod.CachedDesignatedGrabbers.Count > 0)
             {
-                GrabberPairs = Mod.CachedDesignatedGrabbers
-                    .Where(pair => IsValidGrabber(pair.Value, pair.Key))
-                    .ToList();
+                // Audit §2.10: partition same-location grabbers ahead of cross-location
+                // ones so TryAddItem prefers a same-map chest when one exists, falling
+                // back to cross-map entries only when the local list is full or absent.
+                GrabberPairs = Helpers.SortSameLocationFirst(
+                    Mod.CachedDesignatedGrabbers.Where(pair => IsValidGrabber(pair.Value, pair.Key)),
+                    IsSameLocationGrabber);
             }
             else
             {
@@ -54,9 +57,11 @@ internal abstract class MapGrabber
             // Global cache populated by GrabSession (Specialized fire/sweep, or Classic
             // with a designated grabber). The All-mode case above wins this branch first;
             // we land here for the Classic-global fallback and the manual-fire paths.
-            GrabberPairs = Mod.CachedDesignatedGrabbers
-                .Where(pair => IsValidGrabber(pair.Value, pair.Key))
-                .ToList();
+            // Audit §2.10: same partition as the All branch -- cache-order alone doesn't
+            // guarantee local-first routing.
+            GrabberPairs = Helpers.SortSameLocationFirst(
+                Mod.CachedDesignatedGrabbers.Where(pair => IsValidGrabber(pair.Value, pair.Key)),
+                IsSameLocationGrabber);
         }
         else if (UseGlobalMode
             && Config.globalGrabber == ModConfig.GlobalGrabberMode.Hover)
@@ -172,6 +177,31 @@ internal abstract class MapGrabber
                 GrabberTypeHelper.GetGrabberType(pair.Value) == BelongsToType);
         }
         return GrabberPairs;
+    }
+
+    // Audit §2.10: in global modes, the cache may contain grabbers from other maps.
+    // A pair belongs to this MapGrabber's Location only if Location.Objects holds the
+    // exact same Object instance at the cached tile. ReferenceEquals avoids any
+    // future Object.Equals override changing this from identity to value semantics.
+    protected bool IsSameLocationGrabber(KeyValuePair<Vector2, Object> pair)
+    {
+        return Location.Objects.TryGetValue(pair.Key, out var existing)
+            && ReferenceEquals(existing, pair.Value);
+    }
+
+    // Audit §2.10: range-aware lookup that respects "local first" in global modes.
+    // Same-location grabbers get the tile-distance filter; cross-location grabbers
+    // skip the filter (their tile coords are in a different map's coordinate space)
+    // and tail the result so they only receive items as a fallback.
+    protected IEnumerable<KeyValuePair<Vector2, Object>> GetGrabbersInRangeOfTile(
+        Vector2 tile, int range, ModConfig.HarvestCropsRangeMode rangeMode)
+    {
+        var pairs = GetFilteredGrabberPairs();
+        if (!UseGlobalMode)
+            return Helpers.GetNearbyObjectsToTile(tile, pairs, range, rangeMode);
+
+        return Helpers.GetGrabbersInRangeOrCrossLocation(
+            tile, pairs, range, rangeMode, IsSameLocationGrabber);
     }
 
     public Dictionary<InventoryEntry, int> GetInventory()

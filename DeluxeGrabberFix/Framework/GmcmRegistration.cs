@@ -108,7 +108,12 @@ internal class GmcmRegistration
         _api.Register(_mod.ModManifest,
             reset: () =>
             {
-                _mod.Config = new ModConfig();
+                // Audit §2.9: SwapActiveConfig fires ActiveConfigChanged so
+                // RefreshRenderedWorldHook + Data/CraftingRecipes invalidation run
+                // automatically. The latter is new for the reset path -- previously
+                // a Specialized -> Classic reset would leave the recipe asset stale
+                // until the next manual save or save-load.
+                _mod.SwapActiveConfig(new ModConfig());
                 if (_locations.SaveData != null)
                 {
                     _locations.SaveData.ManuallyManagedLocations.Clear();
@@ -116,7 +121,6 @@ internal class GmcmRegistration
                     _locations.SaveData.BlacklistedLocations.Clear();
                     _locations.WriteSaveData();
                 }
-                _mod.RefreshRenderedWorldHook();
             },
             save: () =>
             {

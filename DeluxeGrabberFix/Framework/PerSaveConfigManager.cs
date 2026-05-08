@@ -33,12 +33,12 @@ internal class PerSaveConfigManager
 
         if (perSave != null)
         {
-            _mod.Config = perSave;
+            _mod.SwapActiveConfig(perSave);
             _mod.LogDebug($"Loaded per-save config from {path}");
         }
         else
         {
-            _mod.Config = _globalConfig.Clone();
+            _mod.SwapActiveConfig(_globalConfig.Clone());
             SavePerSaveConfig();
             _mod.Monitor.Log($"Created per-save config from global defaults for {_currentSaveFolderName}", LogLevel.Info);
         }
@@ -69,7 +69,7 @@ internal class PerSaveConfigManager
     internal void OnReturnedToTitle()
     {
         _currentSaveFolderName = null;
-        _mod.Config = _globalConfig;
+        _mod.SwapActiveConfig(_globalConfig);
     }
 
     private string GetPerSaveConfigPath()

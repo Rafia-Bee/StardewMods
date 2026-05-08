@@ -145,4 +145,195 @@ public class HelpersTests
             act.Should().Throw<System.Exception>();
         }
     }
+
+    // Audit §2.10: the partition helper used by MapGrabber to keep same-location
+    // grabbers ahead of cross-location ones. Predicate is injected so tests don't
+    // need a real GameLocation to exercise the bucket logic.
+    public class SortSameLocationFirst
+    {
+        [Fact]
+        public void EmptySource_ReturnsEmpty()
+        {
+            var result = Helpers.SortSameLocationFirst(
+                System.Array.Empty<KeyValuePair<Vector2, Object>>(),
+                _ => true);
+
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void AllSameLocation_PreservesInputOrder()
+        {
+            var input = new[] { At(1, 1), At(2, 2), At(3, 3) };
+
+            var result = Helpers.SortSameLocationFirst(input, _ => true);
+
+            result.Select(p => p.Key).Should().ContainInOrder(input.Select(p => p.Key));
+        }
+
+        [Fact]
+        public void AllCrossLocation_PreservesInputOrder()
+        {
+            var input = new[] { At(1, 1), At(2, 2), At(3, 3) };
+
+            var result = Helpers.SortSameLocationFirst(input, _ => false);
+
+            result.Select(p => p.Key).Should().ContainInOrder(input.Select(p => p.Key));
+        }
+
+        [Fact]
+        public void Mixed_SameLocationFirst_RelativeOrderPreservedWithinEachBucket()
+        {
+            // Tiles 1,3,5 are same-location; tiles 2,4 are cross-location. Stable
+            // partition: same first (1,3,5), then cross (2,4) -- not (1,2,3,4,5).
+            var input = new[] { At(1, 1), At(2, 2), At(3, 3), At(4, 4), At(5, 5) };
+            var sameTiles = new HashSet<Vector2> { new(1, 1), new(3, 3), new(5, 5) };
+
+            var result = Helpers.SortSameLocationFirst(input, p => sameTiles.Contains(p.Key));
+
+            result.Select(p => p.Key).Should().ContainInOrder(new[]
+            {
+                new Vector2(1, 1), new Vector2(3, 3), new Vector2(5, 5),
+                new Vector2(2, 2), new Vector2(4, 4)
+            });
+        }
+
+        [Fact]
+        public void Mixed_AllCountsPreserved_NoLossNoDuplication()
+        {
+            var input = new[] { At(1, 1), At(2, 2), At(3, 3), At(4, 4) };
+            var sameTiles = new HashSet<Vector2> { new(1, 1), new(2, 2) };
+
+            var result = Helpers.SortSameLocationFirst(input, p => sameTiles.Contains(p.Key));
+
+            result.Should().HaveCount(input.Length);
+            result.Select(p => p.Key).Should().BeEquivalentTo(input.Select(p => p.Key));
+        }
+    }
+
+    // Audit §2.10: the range-aware lookup that respects "local first" in global
+    // modes. Same-location grabbers get the tile-distance filter; cross-location
+    // grabbers passthrough as a fallback.
+    public class GetGrabbersInRangeOrCrossLocation
+    {
+        [Fact]
+        public void NegativeRange_ReturnsAllSameLocation_ThenAllCrossLocation_Unfiltered()
+        {
+            var input = new[]
+            {
+                At(0, 0),    // same, tile (0,0)
+                At(50, 50),  // cross, far away
+                At(100, 100) // same, far away (would fail any positive range)
+            };
+            var sameTiles = new HashSet<Vector2> { new(0, 0), new(100, 100) };
+
+            var result = Helpers.GetGrabbersInRangeOrCrossLocation(
+                tile: new Vector2(5, 5),
+                grabbers: input,
+                range: -1,
+                rangeMode: ModConfig.HarvestCropsRangeMode.Walk,
+                isSameLocation: p => sameTiles.Contains(p.Key));
+
+            // Negative range = no filter, all same-location first, then cross.
+            result.Select(p => p.Key).Should().ContainInOrder(new[]
+            {
+                new Vector2(0, 0),
+                new Vector2(100, 100),
+                new Vector2(50, 50)
+            });
+        }
+
+        [Fact]
+        public void RangeAppliedToSameLocationOnly_CrossLocationAlwaysPassesThrough()
+        {
+            // Search tile (10,10), range 5 (Walk). Cross-location grabbers' tile
+            // coords are in another map's coordinate space, so they should pass
+            // through unfiltered regardless of how far their numeric key is.
+            //   Same (0,0): manhattan 20 -- EXCLUDED by range filter.
+            //   Same (12,10): manhattan 2 -- INCLUDED.
+            //   Cross (3,3): would pass range numerically but tile coords are
+            //     meaningless across maps, so we expect "always include" semantics
+            //     -- still INCLUDED, but as a cross-location passthrough.
+            //   Cross (500,500): would fail range numerically -- still INCLUDED.
+            var input = new[]
+            {
+                At(0, 0),       // same, OUT
+                At(12, 10),     // same, IN
+                At(3, 3),       // cross, would-pass-range
+                At(500, 500),   // cross, would-fail-range
+            };
+            var sameTiles = new HashSet<Vector2> { new(0, 0), new(12, 10) };
+
+            var result = Helpers.GetGrabbersInRangeOrCrossLocation(
+                tile: new Vector2(10, 10),
+                grabbers: input,
+                range: 5,
+                rangeMode: ModConfig.HarvestCropsRangeMode.Walk,
+                isSameLocation: p => sameTiles.Contains(p.Key));
+
+            // Expected: same-and-in-range first (just (12,10)), then both cross
+            // entries in their original input order.
+            result.Should().HaveCount(3);
+            result[0].Key.Should().Be(new Vector2(12, 10));
+            result[1].Key.Should().Be(new Vector2(3, 3));
+            result[2].Key.Should().Be(new Vector2(500, 500));
+        }
+
+        [Fact]
+        public void NoSameLocationGrabbers_StillReturnsAllCrossLocation()
+        {
+            var input = new[]
+            {
+                At(0, 0),
+                At(1000, 1000),
+            };
+
+            var result = Helpers.GetGrabbersInRangeOrCrossLocation(
+                tile: new Vector2(10, 10),
+                grabbers: input,
+                range: 5,
+                rangeMode: ModConfig.HarvestCropsRangeMode.Walk,
+                isSameLocation: _ => false);
+
+            result.Should().HaveCount(2);
+            result.Select(p => p.Key).Should().ContainInOrder(input.Select(p => p.Key));
+        }
+
+        [Fact]
+        public void NoCrossLocationGrabbers_BehavesLikeNearbyObjectsToTile()
+        {
+            var input = new[]
+            {
+                At(10, 10),  // dist 0
+                At(13, 10),  // dist 3
+                At(20, 20),  // dist 20 (excluded)
+            };
+
+            var result = Helpers.GetGrabbersInRangeOrCrossLocation(
+                tile: new Vector2(10, 10),
+                grabbers: input,
+                range: 5,
+                rangeMode: ModConfig.HarvestCropsRangeMode.Walk,
+                isSameLocation: _ => true);
+
+            result.Select(p => p.Key).Should().BeEquivalentTo(new[]
+            {
+                new Vector2(10, 10),
+                new Vector2(13, 10)
+            });
+        }
+
+        [Fact]
+        public void EmptyInput_ReturnsEmpty()
+        {
+            var result = Helpers.GetGrabbersInRangeOrCrossLocation(
+                tile: Vector2.Zero,
+                grabbers: System.Array.Empty<KeyValuePair<Vector2, Object>>(),
+                range: 5,
+                rangeMode: ModConfig.HarvestCropsRangeMode.Walk,
+                isSameLocation: _ => true);
+
+            result.Should().BeEmpty();
+        }
+    }
 }
