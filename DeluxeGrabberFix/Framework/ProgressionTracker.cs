@@ -42,6 +42,8 @@ internal class ProgressionTracker
         CropRecipe, ForageRecipe, TreeRecipe, ScavengerRecipe, MachineRecipe
     };
 
+    internal static readonly HashSet<string> AllRecipeKeysSet = new(AllRecipeKeys);
+
     public ProgressionTracker(ModEntry mod)
     {
         _mod = mod;
