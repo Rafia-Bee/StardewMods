@@ -60,21 +60,12 @@ internal class GlobalGrabberButton
         if (!_button.containsPoint(x, y))
             return false;
 
+        // The "smallSelect" click feedback is button-only; the keybind path is silent because
+        // it has no menu-click context. Sharing the rest of the toggle (modData mutation,
+        // ClearAllDesignations, HUD message) with HandleDesignateGrabber via
+        // ToggleGrabberDesignation keeps the two entry points from drifting (audit §2.4).
         Game1.playSound("smallSelect");
-
-        if (_isDesignated)
-        {
-            _grabberObject.modData.Remove(ModEntry.GlobalGrabberModDataKey);
-            _isDesignated = false;
-            Game1.addHUDMessage(new HUDMessage(_mod.Helper.Translation.Get("hud.no-longer-global")));
-        }
-        else
-        {
-            _mod.ClearAllDesignations();
-            _grabberObject.modData[ModEntry.GlobalGrabberModDataKey] = "true";
-            _isDesignated = true;
-            Game1.addHUDMessage(new HUDMessage(_mod.Helper.Translation.Get("hud.now-global")));
-        }
+        _isDesignated = _mod.ToggleGrabberDesignation(_grabberObject);
 
         _button.sourceRect = _isDesignated ? GoldStarSource : SilverStarSource;
         _button.hoverText = _isDesignated

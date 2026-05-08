@@ -189,16 +189,28 @@ internal class GrabberManager
             return;
         }
 
-        if (obj.modData.ContainsKey(ModEntry.GlobalGrabberModDataKey))
+        ToggleGrabberDesignation(obj);
+    }
+
+    /// Single source of truth for the "make this grabber the global grabber" / "stop being the
+    /// global grabber" toggle. Both the keybind path (HandleDesignateGrabber) and the in-menu
+    /// button path (GlobalGrabberButton.TryClick) route through this helper so any future
+    /// enhancement (confirm-before-clear, sound effects, audit logging, etc.) lands once for
+    /// both entry points (audit §2.4). Returns the new designation state: true if this grabber
+    /// is now the global grabber, false if it was just unset.
+    internal bool ToggleGrabberDesignation(Object grabber)
+    {
+        if (grabber.modData.ContainsKey(ModEntry.GlobalGrabberModDataKey))
         {
-            obj.modData.Remove(ModEntry.GlobalGrabberModDataKey);
+            grabber.modData.Remove(ModEntry.GlobalGrabberModDataKey);
             Game1.addHUDMessage(new HUDMessage(_mod.Helper.Translation.Get("hud.no-longer-global")));
-            return;
+            return false;
         }
 
         ClearAllDesignations();
-        obj.modData[ModEntry.GlobalGrabberModDataKey] = "true";
+        grabber.modData[ModEntry.GlobalGrabberModDataKey] = "true";
         Game1.addHUDMessage(new HUDMessage(_mod.Helper.Translation.Get("hud.now-global")));
+        return true;
     }
 
     internal void ClearAllDesignations()
