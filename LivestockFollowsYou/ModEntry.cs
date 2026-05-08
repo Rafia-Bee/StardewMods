@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using LivestockFollowsYou.Api;
 using LivestockFollowsYou.Framework;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
@@ -17,6 +18,7 @@ public class ModEntry : Mod
     private NpcReactionManager NpcReactions;
     private GrazingManager GrazingMgr;
     private GrazingBellItem GrazingBell;
+    private LivestockFollowsYouApi Api;
 
     public override void Entry(IModHelper helper)
     {
@@ -26,6 +28,7 @@ public class ModEntry : Mod
         GrazingMgr = new GrazingManager(Monitor, helper, () => Config);
         GrazingBell = new GrazingBellItem(helper);
         GrazingBell.Register();
+        Api = new LivestockFollowsYouApi(FollowManager);
 
         PurchasePatches.Manager = FollowManager;
         PurchasePatches.GetConfig = () => Config;
@@ -43,6 +46,8 @@ public class ModEntry : Mod
         helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
         helper.Events.Input.ButtonPressed += OnButtonPressed;
     }
+
+    public override object GetApi() => Api;
 
     private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
     {
