@@ -28,10 +28,16 @@ internal class SeedTreeGrabber : TerrainFeaturesMapGrabber
         if (items.Count == 0)
             return false;
 
-        if (TryAddItems(items))
-            return true;
+        // tree.shake() has already cleared hasSeed.Value, so the seed is gone
+        // from the tree no matter what. If the chest is full or rejects the
+        // item, drop it on the ground rather than silently losing it.
+        foreach (var item in items)
+        {
+            if (!TryAddItem(item))
+                Game1.createItemDebris(item, new Vector2(tile.X * 64 + 32, tile.Y * 64 + 32), -1, Location);
+        }
 
-        return false;
+        return true;
     }
 
     private bool IsHarvestableSeedTree(Tree tree)
