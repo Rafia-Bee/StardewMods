@@ -21,7 +21,7 @@ internal static class PerfectionPatch
         if (who == null) return;
 
         var allRecipes = CraftingRecipe.craftingRecipes;
-        var dgfKeys = new HashSet<string>(ProgressionTracker.AllRecipeKeys);
+        var dgfKeys = ProgressionTracker.AllRecipeKeysSet;
 
         int dgfTotal = 0;
         foreach (string key in dgfKeys)
@@ -58,7 +58,7 @@ internal static class PerfectionPatch
         if (Game1.player.achievements.Contains(22)) return;
 
         var allRecipes = CraftingRecipe.craftingRecipes;
-        var dgfKeys = new HashSet<string>(ProgressionTracker.AllRecipeKeys);
+        var dgfKeys = ProgressionTracker.AllRecipeKeysSet;
 
         int dgfTotal = 0;
         foreach (string key in dgfKeys)
