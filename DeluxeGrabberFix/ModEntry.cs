@@ -143,6 +143,7 @@ public class ModEntry : Mod
     internal void ShowEveningReplantReminder() => _grabbers.ShowEveningReplantReminder();
     internal bool HasDesignatedGrabber() => _grabbers.HasDesignatedGrabber();
     internal void ClearAllDesignations() => _grabbers.ClearAllDesignations();
+    internal bool ToggleGrabberDesignation(Object grabber) => _grabbers.ToggleGrabberDesignation(grabber);
 
     // Drains the per-location queues used by Instant-mode draining (audit §1.2, §3.8).
     // Called on title return (state should not survive a save unload) and when
