@@ -247,7 +247,10 @@ public class ModEntry : Mod
                     return Path.Combine(dir.FullName, "config.json");
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                LogDebug($"Failed to read manifest at {manifest}: {ex.GetType().Name}: {ex.Message}");
+            }
         }
 
         return null;
