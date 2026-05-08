@@ -23,7 +23,32 @@ namespace DeluxeGrabberFix;
 public class ModEntry : Mod
 {
     internal readonly ModApi Api;
-    internal ModConfig Config { get; set; }
+
+    // Audit §2.9: the active ModConfig reference is swapped at runtime by
+    // PerSaveConfigManager (per-save load + return-to-title) and the GMCM "reset to
+    // defaults" lambda. Direct-access readers (`_mod.Config.foo`) and lazy lambdas
+    // pick up the new instance automatically because Config is a property, but
+    // anyone who caches a local (`var c = _mod.Config; ...`) ends up reading the
+    // orphaned old instance. Setter is private so every swap funnels through
+    // SwapActiveConfig, which fires ActiveConfigChanged for cross-cutting consumers
+    // (RefreshRenderedWorldHook, Data/CraftingRecipes invalidation) instead of each
+    // call site re-implementing the side-effect list.
+    internal ModConfig Config { get; private set; }
+
+    // Fires when the active ModConfig reference has been swapped (per-save load,
+    // return to title, GMCM reset). Does NOT fire on in-place GMCM saves; those keep
+    // their imperative side-effects in the GMCM save lambda because they're scoped
+    // to the user clicking Save and don't change the Config reference.
+    internal event Action ActiveConfigChanged;
+
+    internal void SwapActiveConfig(ModConfig next)
+    {
+        if (next == null)
+            throw new ArgumentNullException(nameof(next));
+        Config = next;
+        ActiveConfigChanged?.Invoke();
+    }
+
     internal bool IsGlobalGrabActive { get; set; }
     internal bool IsForageGrabEnabled { get; set; }
     internal List<KeyValuePair<Vector2, Object>> CachedDesignatedGrabbers { get; set; }
@@ -107,6 +132,12 @@ public class ModEntry : Mod
         helper.Events.GameLoop.DayEnding += OnDayEnding;
         helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
         helper.Events.Player.Warped += OnPlayerWarped;
+
+        // Audit §2.9: side-effects coupled to the active Config reference go here.
+        // Any future feature that reacts to a config swap should subscribe rather
+        // than chase the swap call sites (PerSaveConfigManager, GMCM reset, etc).
+        ActiveConfigChanged += RefreshRenderedWorldHook;
+        ActiveConfigChanged += () => Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
 
         RefreshRenderedWorldHook();
     }
@@ -469,13 +500,12 @@ public class ModEntry : Mod
 
     private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
     {
+        // ConfigManager.OnSaveLoaded swaps to the per-save Config and SwapActiveConfig
+        // fires ActiveConfigChanged (audit §2.9). The subscription wired in Entry()
+        // covers RefreshRenderedWorldHook + Data/CraftingRecipes invalidation -- the
+        // latter handles the 2026-04-30 "Specialized recipes missing from crafting
+        // menu" case where the asset loaded before the per-save config took effect.
         ConfigManager.OnSaveLoaded();
-        RefreshRenderedWorldHook();
-
-        // Per-save config may switch grabberMode after Data/CraftingRecipes has already
-        // loaded with the global config in effect. Invalidate so the recipe asset edit
-        // re-runs and Specialized recipes appear in the crafting menu and Better Crafting.
-        Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
 
         _locations.LoadSaveData();
         TownGarbageCanGrabber.ClearCache();
@@ -677,11 +707,13 @@ public class ModEntry : Mod
     {
         _locations.ClearState();
         TownGarbageCanGrabber.ClearCache();
+        // ConfigManager.OnReturnedToTitle restores the global Config; SwapActiveConfig
+        // fires ActiveConfigChanged so RefreshRenderedWorldHook + Data/CraftingRecipes
+        // invalidation run automatically (audit §2.9).
         ConfigManager.OnReturnedToTitle();
         SpecializedGrabberPatches.SpecializedGrabberCount = 0;
         ClearLocationQueues();
         _gmcm.RebuildConfigMenu();
-        RefreshRenderedWorldHook();
     }
 
     private void OnPlayerWarped(object sender, WarpedEventArgs e)
