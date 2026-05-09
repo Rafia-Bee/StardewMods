@@ -24,6 +24,13 @@ internal class GmcmRegistration
     // opens). Audit §3.5.
     private OptionSetSnapshot _lastRebuildSnapshot;
 
+    // Tracks the grabberMode at the time the recipe asset was last invalidated, so the
+    // GMCM Save callback can skip InvalidateCache("Data/CraftingRecipes") when the user
+    // saved without changing modes. Refreshed on ActiveConfigChanged (per-save swap, GMCM
+    // reset, return-to-title) since those paths invalidate the cache through ModEntry's
+    // own subscriber. Audit §4.14.
+    private ModConfig.GrabberMode _lastInvalidatedGrabberMode;
+
     internal enum LocationBatchAction { EnableAll, DisableAll, SelectVisitedOnly }
 
     private readonly record struct OptionSetSnapshot(bool HasLocations, int Count, int NamesHash);
@@ -42,6 +49,11 @@ internal class GmcmRegistration
 
         RegisterConfigMenu();
         _lastRebuildSnapshot = ComputeOptionSetSnapshot();
+        _lastInvalidatedGrabberMode = _mod.Config.grabberMode;
+        // Config-swap paths (per-save load, return-to-title, GMCM reset) invalidate
+        // the recipe asset via the ActiveConfigChanged subscriber wired in ModEntry.
+        // Mirror that here so the GMCM Save callback's compare stays current.
+        _mod.ActiveConfigChanged += () => _lastInvalidatedGrabberMode = _mod.Config.grabberMode;
         return true;
     }
 
@@ -178,7 +190,17 @@ internal class GmcmRegistration
             save: () =>
             {
                 _mod.ConfigManager.SaveActiveConfig();
-                _mod.Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
+                // Audit §4.14: invalidate Data/CraftingRecipes only when grabberMode
+                // actually changed since the last invalidation. The recipe asset's
+                // contents are mode-driven (Classic hides specialized recipes, Specialized
+                // hides the vanilla one), so a Save that didn't toggle the mode produces
+                // an identical asset and the invalidate is wasted work. ActiveConfigChanged
+                // refreshes the tracker on every config swap.
+                if (_mod.Config.grabberMode != _lastInvalidatedGrabberMode)
+                {
+                    _mod.Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
+                    _lastInvalidatedGrabberMode = _mod.Config.grabberMode;
+                }
                 _mod.Monitor.Log($"GMCM saved. selectVisitedOnly={_mod.Config.Locations.selectVisitedOnly}, IsWorldReady={Context.IsWorldReady}, saveData={((_locations.SaveData != null) ? "loaded" : "null")}", LogLevel.Info);
                 if (_mod.Config.Locations.selectVisitedOnly && Context.IsWorldReady && _locations.SaveData != null)
                 {
