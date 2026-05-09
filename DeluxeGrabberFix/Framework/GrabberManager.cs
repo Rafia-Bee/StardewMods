@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,36 @@ namespace DeluxeGrabberFix.Framework;
 
 internal class GrabberManager
 {
+    // Audit §4.8: the per-location cache scope (UseLocationCache + cached pair lists +
+    // GrabbedTiles set) was duplicated across five Grab*AtLocation methods, each with
+    // its own try/finally pair. The IDisposable below collapses the boilerplate so each
+    // call site becomes `using var _ = new LocationCacheScope(_mod);`. Behavior is
+    // identical to the prior try/finally; the Dispose runs on every exit path
+    // (return, exception, fall-through) just like a finally block.
+    private readonly struct LocationCacheScope : IDisposable
+    {
+        private readonly ModEntry _mod;
+
+        public LocationCacheScope(ModEntry mod)
+        {
+            _mod = mod;
+            _mod.UseLocationCache = true;
+            _mod.CachedGrabberPairs = null;
+            _mod.CachedObjectPairs = null;
+            _mod.CachedFeaturePairs = null;
+            _mod.GrabbedTiles = new HashSet<Vector2>();
+        }
+
+        public void Dispose()
+        {
+            _mod.UseLocationCache = false;
+            _mod.CachedGrabberPairs = null;
+            _mod.CachedObjectPairs = null;
+            _mod.CachedFeaturePairs = null;
+            _mod.GrabbedTiles = null;
+        }
+    }
+
     private readonly ModEntry _mod;
     private readonly LocationManager _locations;
 
@@ -243,169 +274,170 @@ internal class GrabberManager
         if (!_locations.ShouldProcessLocation(location))
             return false;
 
-        _mod.UseLocationCache = true;
-        _mod.CachedGrabberPairs = null;
-        _mod.CachedObjectPairs = null;
-        _mod.CachedFeaturePairs = null;
-        _mod.GrabbedTiles = new HashSet<Vector2>();
+        using var _ = new LocationCacheScope(_mod);
 
-        try
+        var aggregateGrabber = new AggregateDailyGrabber(_mod, location);
+
+        if (!aggregateGrabber.CanGrab())
         {
-            var aggregateGrabber = new AggregateDailyGrabber(_mod, location);
-
-            if (!aggregateGrabber.CanGrab())
-            {
-                _mod.LogDebug($"No valid auto-grabbers at {location.Name}, skipping");
-                return false;
-            }
-
-            aggregateGrabber.CleanupGrabberChests();
-
-            var isSpecialized = _mod.Config.grabberMode == ModConfig.GrabberMode.Specialized;
-            // Always build per-grabber inventory when reportYield is on (not just in
-            // Specialized) so both modes can identify which grabbers actually contributed
-            // to the cycle's yield. Without this, Classic + global modes were dumping
-            // every named grabber in the world cache into the HUD message even when only
-            // one of them got items.
-            var beforeInventory = _mod.Config.reportYield ? aggregateGrabber.GetInventory() : null;
-            var beforePerGrabber = _mod.Config.reportYield
-                ? aggregateGrabber.GetPerGrabberInventory() : null;
-            bool result = aggregateGrabber.GrabItems();
-
-            if (result)
-                _mod.LogDebug($"Grab at {location.Name}: collected items");
-
-            // Audit §3.7: when the grab itself produced nothing, the after-inventory and
-            // per-grabber-inventory snapshots cannot diff to a non-empty yield. Skip both
-            // the second `GetInventory` / `GetPerGrabberInventory` dictionary builds and
-            // the entire formatting walk in that case. Saves the dominant per-location
-            // allocation cost on cycles where machines aren't ready / crops aren't grown
-            // / chest is empty -- which is the typical morning case for most locations.
-            if (beforeInventory != null && result)
-            {
-                var afterInventory = aggregateGrabber.GetInventory();
-                var afterPerGrabber = aggregateGrabber.GetPerGrabberInventory();
-                bool anyYield = false;
-
-                // Identify which grabber display-names actually had yield. Used by both
-                // Specialized (per-section formatting) and Classic (HUD-name filter)
-                // paths so the "X grabber grabbed Y items" HUD only mentions grabbers
-                // that contributed, not every named grabber in the global cache.
-                var contributorDisplayNames = new HashSet<string>();
-
-                if (isSpecialized)
-                {
-                    var sb = new StringBuilder(_mod.Helper.Translation.Get("log.yield-header", new { location = location.Name }) + "\n");
-
-                    foreach (var kvp in afterPerGrabber)
-                    {
-                        string grabberName = kvp.Key;
-                        var afterItems = kvp.Value;
-                        beforePerGrabber.TryGetValue(grabberName, out var beforeItems);
-                        beforeItems ??= new Dictionary<InventoryEntry, int>();
-
-                        bool grabberHasYield = false;
-                        var itemLines = new StringBuilder();
-
-                        foreach (var entry in afterItems)
-                        {
-                            int newCount = entry.Value;
-                            if (beforeItems.ContainsKey(entry.Key))
-                                newCount -= beforeItems[entry.Key];
-
-                            if (newCount > 0)
-                            {
-                                itemLines.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
-                                {
-                                    name = entry.Key.DisplayName,
-                                    quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
-                                    count = newCount
-                                }));
-                                grabberHasYield = true;
-                                _totalItemsGrabbed += newCount;
-                            }
-                        }
-
-                        if (grabberHasYield)
-                        {
-                            sb.AppendLine($"  [{grabberName}]");
-                            sb.Append(itemLines);
-                            anyYield = true;
-                            contributorDisplayNames.Add(grabberName);
-                        }
-                    }
-
-                    if (anyYield)
-                    {
-                        AddContributingCustomNames(aggregateGrabber, contributorDisplayNames);
-                        _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
-                    }
-                }
-                else
-                {
-                    // Classic mode: aggregate diff for the SMAPI log line, but use the
-                    // per-grabber dicts to learn which grabbers contributed for the HUD.
-                    foreach (var kvp in afterPerGrabber)
-                    {
-                        beforePerGrabber.TryGetValue(kvp.Key, out var beforeItems);
-                        beforeItems ??= new Dictionary<InventoryEntry, int>();
-                        foreach (var entry in kvp.Value)
-                        {
-                            int delta = entry.Value - (beforeItems.ContainsKey(entry.Key) ? beforeItems[entry.Key] : 0);
-                            if (delta > 0)
-                            {
-                                contributorDisplayNames.Add(kvp.Key);
-                                break;
-                            }
-                        }
-                    }
-
-                    var grabberNames = aggregateGrabber.GrabberObjects
-                        .Select(g => ModEntry.GetGrabberDisplayName(g))
-                        .Distinct()
-                        .ToList();
-                    string header = grabberNames.Any(n => ModEntry.GetGrabberCustomName(
-                            aggregateGrabber.GrabberObjects.First(g => ModEntry.GetGrabberDisplayName(g) == n)) != null)
-                        ? _mod.Helper.Translation.Get("log.yield-header-named", new { names = string.Join(", ", grabberNames) })
-                        : _mod.Helper.Translation.Get("log.yield-header", new { location = location.Name });
-                    var sb = new StringBuilder(header + "\n");
-
-                    foreach (var entry in afterInventory)
-                    {
-                        int newCount = entry.Value;
-                        if (beforeInventory.ContainsKey(entry.Key))
-                            newCount -= beforeInventory[entry.Key];
-
-                        if (newCount > 0)
-                        {
-                            sb.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
-                            {
-                                name = entry.Key.DisplayName,
-                                quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
-                                count = newCount
-                            }));
-                            anyYield = true;
-                            _totalItemsGrabbed += newCount;
-                        }
-                    }
-
-                    if (anyYield)
-                    {
-                        AddContributingCustomNames(aggregateGrabber, contributorDisplayNames);
-                        _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
-                    }
-                }
-            }
-
-            return result;
+            _mod.LogDebug($"No valid auto-grabbers at {location.Name}, skipping");
+            return false;
         }
-        finally
+
+        aggregateGrabber.CleanupGrabberChests();
+
+        var isSpecialized = _mod.Config.grabberMode == ModConfig.GrabberMode.Specialized;
+        // Always build per-grabber inventory when reportYield is on (not just in
+        // Specialized) so both modes can identify which grabbers actually contributed
+        // to the cycle's yield. Without this, Classic + global modes were dumping
+        // every named grabber in the world cache into the HUD message even when only
+        // one of them got items.
+        var beforeInventory = _mod.Config.reportYield ? aggregateGrabber.GetInventory() : null;
+        var beforePerGrabber = _mod.Config.reportYield
+            ? aggregateGrabber.GetPerGrabberInventory() : null;
+        bool result = aggregateGrabber.GrabItems();
+
+        if (result)
+            _mod.LogDebug($"Grab at {location.Name}: collected items");
+
+        // Audit §3.7: when the grab itself produced nothing, the after-inventory and
+        // per-grabber-inventory snapshots cannot diff to a non-empty yield. Skip both
+        // the second `GetInventory` / `GetPerGrabberInventory` dictionary builds and
+        // the entire formatting walk in that case. Saves the dominant per-location
+        // allocation cost on cycles where machines aren't ready / crops aren't grown
+        // / chest is empty -- which is the typical morning case for most locations.
+        if (beforeInventory != null && result)
         {
-            _mod.UseLocationCache = false;
-            _mod.CachedGrabberPairs = null;
-            _mod.CachedObjectPairs = null;
-            _mod.CachedFeaturePairs = null;
-            _mod.GrabbedTiles = null;
+            var afterInventory = aggregateGrabber.GetInventory();
+            var afterPerGrabber = aggregateGrabber.GetPerGrabberInventory();
+            bool anyYield = false;
+
+            // Identify which grabber display-names actually had yield. Used by both
+            // Specialized (per-section formatting) and Classic (HUD-name filter)
+            // paths so the "X grabber grabbed Y items" HUD only mentions grabbers
+            // that contributed, not every named grabber in the global cache.
+            var contributorDisplayNames = new HashSet<string>();
+
+            if (isSpecialized)
+            {
+                // Specialized stays inline (audit §4.8): the per-grabber sectioned
+                // StringBuilder layout is structurally different from the aggregate
+                // diff used by the four other sites, so the helper would have to grow
+                // a callback. Inline keeps the formatting code adjacent to its sole
+                // caller.
+                var sb = new StringBuilder(_mod.Helper.Translation.Get("log.yield-header", new { location = location.Name }) + "\n");
+
+                foreach (var kvp in afterPerGrabber)
+                {
+                    string grabberName = kvp.Key;
+                    var afterItems = kvp.Value;
+                    beforePerGrabber.TryGetValue(grabberName, out var beforeItems);
+                    beforeItems ??= new Dictionary<InventoryEntry, int>();
+
+                    var itemLines = new StringBuilder();
+                    bool grabberHasYield = DiffAndAppendItems(beforeItems, afterItems, itemLines);
+
+                    if (grabberHasYield)
+                    {
+                        sb.AppendLine($"  [{grabberName}]");
+                        sb.Append(itemLines);
+                        anyYield = true;
+                        contributorDisplayNames.Add(grabberName);
+                    }
+                }
+
+                if (anyYield)
+                {
+                    AddContributingCustomNames(aggregateGrabber, contributorDisplayNames);
+                    _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
+                }
+            }
+            else
+            {
+                // Classic mode: aggregate diff for the SMAPI log line, but use the
+                // per-grabber dicts to learn which grabbers contributed for the HUD.
+                CollectContributors(beforePerGrabber, afterPerGrabber, contributorDisplayNames);
+
+                var grabberNames = aggregateGrabber.GrabberObjects
+                    .Select(g => ModEntry.GetGrabberDisplayName(g))
+                    .Distinct()
+                    .ToList();
+                string header = grabberNames.Any(n => ModEntry.GetGrabberCustomName(
+                        aggregateGrabber.GrabberObjects.First(g => ModEntry.GetGrabberDisplayName(g) == n)) != null)
+                    ? _mod.Helper.Translation.Get("log.yield-header-named", new { names = string.Join(", ", grabberNames) })
+                    : _mod.Helper.Translation.Get("log.yield-header", new { location = location.Name });
+                var sb = new StringBuilder(header + "\n");
+
+                anyYield = DiffAndAppendItems(beforeInventory, afterInventory, sb);
+
+                if (anyYield)
+                {
+                    AddContributingCustomNames(aggregateGrabber, contributorDisplayNames);
+                    _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    // Audit §4.8: the diff-and-format pattern was inlined in five places. Walks
+    // afterInventory, looks up beforeInventory, appends `log.yield-item` lines for
+    // any positive delta, and increments _totalItemsGrabbed. Returns true if any
+    // item delta was positive (caller decides whether to commit the StringBuilder
+    // to the SMAPI log). The Specialized branch in GrabAtLocation diffs per-grabber
+    // sectioned output and stays inline; the other four sites all share this shape.
+    private bool DiffAndAppendItems(
+        Dictionary<InventoryEntry, int> before,
+        Dictionary<InventoryEntry, int> after,
+        StringBuilder sb)
+    {
+        bool anyYield = false;
+        foreach (var entry in after)
+        {
+            int newCount = entry.Value;
+            if (before.ContainsKey(entry.Key))
+                newCount -= before[entry.Key];
+
+            if (newCount > 0)
+            {
+                sb.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
+                {
+                    name = entry.Key.DisplayName,
+                    quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
+                    count = newCount
+                }));
+                anyYield = true;
+                _totalItemsGrabbed += newCount;
+            }
+        }
+        return anyYield;
+    }
+
+    // Audit §4.8: per-grabber contributor identification was inlined in three places
+    // (Classic-aggregate path in GrabAtLocation, GrabOrePanAtLocation, and as part of
+    // the Specialized loop). For each grabber, looks at its before/after dicts and
+    // adds the grabber's display-name to `contributors` if any item delta is positive.
+    // Used by paths that need to filter the HUD summary to grabbers that actually
+    // contributed (vs every named grabber in the global cache).
+    private static void CollectContributors(
+        Dictionary<string, Dictionary<InventoryEntry, int>> beforePer,
+        Dictionary<string, Dictionary<InventoryEntry, int>> afterPer,
+        HashSet<string> contributors)
+    {
+        foreach (var kvp in afterPer)
+        {
+            beforePer.TryGetValue(kvp.Key, out var beforeItems);
+            beforeItems ??= new Dictionary<InventoryEntry, int>();
+            foreach (var entry in kvp.Value)
+            {
+                int delta = entry.Value - (beforeItems.ContainsKey(entry.Key) ? beforeItems[entry.Key] : 0);
+                if (delta > 0)
+                {
+                    contributors.Add(kvp.Key);
+                    break;
+                }
+            }
         }
     }
 
@@ -435,85 +467,39 @@ internal class GrabberManager
         if (!_locations.ShouldProcessLocation(location))
             return false;
 
-        _mod.UseLocationCache = true;
-        _mod.CachedGrabberPairs = null;
-        _mod.CachedObjectPairs = null;
-        _mod.CachedFeaturePairs = null;
-        _mod.GrabbedTiles = new HashSet<Vector2>();
+        using var _ = new LocationCacheScope(_mod);
 
-        try
+        var orePanGrabber = new OrePanGrabber(_mod, location) { BelongsToType = GrabberType.Scavenger };
+        if (!orePanGrabber.CanGrab())
+            return false;
+
+        var beforeInventory = _mod.Config.reportYield ? orePanGrabber.GetInventory() : null;
+        var beforePerGrabber = _mod.Config.reportYield ? orePanGrabber.GetPerGrabberInventory() : null;
+
+        bool result = orePanGrabber.GrabItems();
+
+        if (result)
+            _mod.LogDebug($"Ore pan at {location.Name}: collected items");
+
+        if (beforeInventory != null && result)
         {
-            var orePanGrabber = new OrePanGrabber(_mod, location) { BelongsToType = GrabberType.Scavenger };
-            if (!orePanGrabber.CanGrab())
-                return false;
+            var afterInventory = orePanGrabber.GetInventory();
+            var afterPerGrabber = orePanGrabber.GetPerGrabberInventory();
+            var sb = new StringBuilder(_mod.Helper.Translation.Get("log.ore-panning-yield-header", new { location = location.Name }) + "\n");
 
-            var beforeInventory = _mod.Config.reportYield ? orePanGrabber.GetInventory() : null;
-            var beforePerGrabber = _mod.Config.reportYield ? orePanGrabber.GetPerGrabberInventory() : null;
+            var contributorDisplayNames = new HashSet<string>();
+            CollectContributors(beforePerGrabber, afterPerGrabber, contributorDisplayNames);
 
-            bool result = orePanGrabber.GrabItems();
+            bool anyYield = DiffAndAppendItems(beforeInventory, afterInventory, sb);
 
-            if (result)
-                _mod.LogDebug($"Ore pan at {location.Name}: collected items");
-
-            if (beforeInventory != null && result)
+            if (anyYield)
             {
-                var afterInventory = orePanGrabber.GetInventory();
-                var afterPerGrabber = orePanGrabber.GetPerGrabberInventory();
-                var sb = new StringBuilder(_mod.Helper.Translation.Get("log.ore-panning-yield-header", new { location = location.Name }) + "\n");
-                bool anyYield = false;
-
-                var contributorDisplayNames = new HashSet<string>();
-                foreach (var kvp in afterPerGrabber)
-                {
-                    beforePerGrabber.TryGetValue(kvp.Key, out var beforeItems);
-                    beforeItems ??= new Dictionary<InventoryEntry, int>();
-                    foreach (var entry in kvp.Value)
-                    {
-                        int delta = entry.Value - (beforeItems.ContainsKey(entry.Key) ? beforeItems[entry.Key] : 0);
-                        if (delta > 0)
-                        {
-                            contributorDisplayNames.Add(kvp.Key);
-                            break;
-                        }
-                    }
-                }
-
-                foreach (var entry in afterInventory)
-                {
-                    int newCount = entry.Value;
-                    if (beforeInventory.ContainsKey(entry.Key))
-                        newCount -= beforeInventory[entry.Key];
-
-                    if (newCount > 0)
-                    {
-                        sb.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
-                        {
-                            name = entry.Key.DisplayName,
-                            quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
-                            count = newCount
-                        }));
-                        anyYield = true;
-                        _totalItemsGrabbed += newCount;
-                    }
-                }
-
-                if (anyYield)
-                {
-                    AddContributingCustomNames(orePanGrabber, contributorDisplayNames);
-                    _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
-                }
+                AddContributingCustomNames(orePanGrabber, contributorDisplayNames);
+                _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
             }
+        }
 
-            return result;
-        }
-        finally
-        {
-            _mod.UseLocationCache = false;
-            _mod.CachedGrabberPairs = null;
-            _mod.CachedObjectPairs = null;
-            _mod.CachedFeaturePairs = null;
-            _mod.GrabbedTiles = null;
-        }
+        return result;
     }
 
     internal bool GrabMachinesAtLocation(GameLocation location)
@@ -521,66 +507,31 @@ internal class GrabberManager
         if (!_locations.ShouldProcessLocation(location))
             return false;
 
-        _mod.UseLocationCache = true;
-        _mod.CachedGrabberPairs = null;
-        _mod.CachedObjectPairs = null;
-        _mod.CachedFeaturePairs = null;
-        _mod.GrabbedTiles = new HashSet<Vector2>();
+        using var _ = new LocationCacheScope(_mod);
 
-        try
+        var machineGrabber = new MachineGrabber(_mod, location) { BelongsToType = GrabberType.Machine };
+        if (!machineGrabber.CanGrab())
+            return false;
+
+        machineGrabber.CleanupGrabberChests();
+
+        var beforeInventory = _mod.Config.reportYield ? machineGrabber.GetInventory() : null;
+
+        bool result = machineGrabber.GrabItems();
+
+        if (result)
+            _mod.LogDebug($"Machine grab at {location.Name}: collected items");
+
+        if (beforeInventory != null && result)
         {
-            var machineGrabber = new MachineGrabber(_mod, location) { BelongsToType = GrabberType.Machine };
-            if (!machineGrabber.CanGrab())
-                return false;
-
-            machineGrabber.CleanupGrabberChests();
-
-            var beforeInventory = _mod.Config.reportYield ? machineGrabber.GetInventory() : null;
-
-            bool result = machineGrabber.GrabItems();
-
-            if (result)
-                _mod.LogDebug($"Machine grab at {location.Name}: collected items");
-
-            if (beforeInventory != null && result)
-            {
-                var afterInventory = machineGrabber.GetInventory();
-                var sb = new StringBuilder(_mod.Helper.Translation.Get("log.machine-yield-header", new { location = location.Name }) + "\n");
-                bool anyYield = false;
-
-                foreach (var entry in afterInventory)
-                {
-                    int newCount = entry.Value;
-                    if (beforeInventory.ContainsKey(entry.Key))
-                        newCount -= beforeInventory[entry.Key];
-
-                    if (newCount > 0)
-                    {
-                        sb.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
-                        {
-                            name = entry.Key.DisplayName,
-                            quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
-                            count = newCount
-                        }));
-                        anyYield = true;
-                        _totalItemsGrabbed += newCount;
-                    }
-                }
-
-                if (anyYield)
-                    _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
-            }
-
-            return result;
+            var afterInventory = machineGrabber.GetInventory();
+            var sb = new StringBuilder(_mod.Helper.Translation.Get("log.machine-yield-header", new { location = location.Name }) + "\n");
+            bool anyYield = DiffAndAppendItems(beforeInventory, afterInventory, sb);
+            if (anyYield)
+                _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
         }
-        finally
-        {
-            _mod.UseLocationCache = false;
-            _mod.CachedGrabberPairs = null;
-            _mod.CachedObjectPairs = null;
-            _mod.CachedFeaturePairs = null;
-            _mod.GrabbedTiles = null;
-        }
+
+        return result;
     }
 
     internal bool GrabForageAtLocation(GameLocation location)
@@ -588,68 +539,33 @@ internal class GrabberManager
         if (!_locations.ShouldProcessLocation(location))
             return false;
 
-        _mod.UseLocationCache = true;
-        _mod.CachedGrabberPairs = null;
-        _mod.CachedObjectPairs = null;
-        _mod.CachedFeaturePairs = null;
-        _mod.GrabbedTiles = new HashSet<Vector2>();
+        using var _ = new LocationCacheScope(_mod);
 
-        try
+        var objectGrabber = new GenericObjectGrabber(_mod, location) { BelongsToType = GrabberType.Forage };
+        if (!objectGrabber.CanGrab())
+            return false;
+
+        objectGrabber.CleanupGrabberChests();
+
+        var beforeInventory = _mod.Config.reportYield ? objectGrabber.GetInventory() : null;
+
+        bool result = objectGrabber.GrabItems();
+
+        var featureGrabber = new ForageHoeDirtGrabber(_mod, location) { BelongsToType = GrabberType.Forage };
+        result |= featureGrabber.GrabItems();
+
+        if (result)
+            _mod.LogDebug($"Forage grab at {location.Name}: collected items");
+
+        if (beforeInventory != null && result)
         {
-            var objectGrabber = new GenericObjectGrabber(_mod, location) { BelongsToType = GrabberType.Forage };
-            if (!objectGrabber.CanGrab())
-                return false;
-
-            objectGrabber.CleanupGrabberChests();
-
-            var beforeInventory = _mod.Config.reportYield ? objectGrabber.GetInventory() : null;
-
-            bool result = objectGrabber.GrabItems();
-
-            var featureGrabber = new ForageHoeDirtGrabber(_mod, location) { BelongsToType = GrabberType.Forage };
-            result |= featureGrabber.GrabItems();
-
-            if (result)
-                _mod.LogDebug($"Forage grab at {location.Name}: collected items");
-
-            if (beforeInventory != null && result)
-            {
-                var afterInventory = objectGrabber.GetInventory();
-                var sb = new StringBuilder(_mod.Helper.Translation.Get("log.forage-yield-header", new { location = location.Name }) + "\n");
-                bool anyYield = false;
-
-                foreach (var entry in afterInventory)
-                {
-                    int newCount = entry.Value;
-                    if (beforeInventory.ContainsKey(entry.Key))
-                        newCount -= beforeInventory[entry.Key];
-
-                    if (newCount > 0)
-                    {
-                        sb.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
-                        {
-                            name = entry.Key.DisplayName,
-                            quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
-                            count = newCount
-                        }));
-                        anyYield = true;
-                        _totalItemsGrabbed += newCount;
-                    }
-                }
-
-                if (anyYield)
-                    _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
-            }
-
-            return result;
+            var afterInventory = objectGrabber.GetInventory();
+            var sb = new StringBuilder(_mod.Helper.Translation.Get("log.forage-yield-header", new { location = location.Name }) + "\n");
+            bool anyYield = DiffAndAppendItems(beforeInventory, afterInventory, sb);
+            if (anyYield)
+                _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
         }
-        finally
-        {
-            _mod.UseLocationCache = false;
-            _mod.CachedGrabberPairs = null;
-            _mod.CachedObjectPairs = null;
-            _mod.CachedFeaturePairs = null;
-            _mod.GrabbedTiles = null;
-        }
+
+        return result;
     }
 }
