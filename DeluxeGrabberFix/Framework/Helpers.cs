@@ -31,7 +31,11 @@ internal static class Helpers
                     return tile.X >= key.X - range && tile.X <= key.X + range
                         && tile.Y >= key.Y - range && tile.Y <= key.Y + range;
                 }),
-                _ => throw new Exception($"Unexpected range mode {rangeMode}.")
+                // Audit §5.3: previously threw, which would propagate up the grab cycle
+                // if a new enum value were added without updating this switch. Falls
+                // back to the unfiltered enumerable (same shape as the range == -1
+                // short-circuit above) so a future enum addition degrades gracefully.
+                _ => objects
             };
         }
         return objects;

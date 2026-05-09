@@ -128,21 +128,24 @@ public class HelpersTests
             result.Should().BeEmpty();
         }
 
-        // AUDIT §5.3: today the helper throws on unknown rangeMode. This test
-        // documents the current contract; if/when the audit fix lands (defensive
-        // fallback to the unfiltered enumerable + debug log), update this test.
+        // AUDIT §5.3: previously threw on unknown rangeMode. Fix replaced the
+        // throw with a defensive fallback that returns the unfiltered enumerable
+        // (matches the range == -1 short-circuit). A future enum addition that
+        // forgets to update the switch degrades to no range filter rather than
+        // crashing mid-grab.
         [Fact]
-        public void UnknownRangeMode_ThrowsToday()
+        public void UnknownRangeMode_FallsThroughUnfiltered()
         {
-            var grabbers = new[] { At(0, 0) };
+            var grabbers = new[] { At(0, 0), At(100, 100) };
             var bogusMode = (ModConfig.HarvestCropsRangeMode)999;
 
-            // Materialize via ToList() because the helper returns a lazy IEnumerable
-            // and the throw is inside the deferred Where lambda. (Audit §1.6 also.)
-            System.Action act = () => Helpers.GetNearbyObjectsToTile(
+            var result = Helpers.GetNearbyObjectsToTile(
                 Vector2.Zero, grabbers, range: 5, bogusMode).ToList();
 
-            act.Should().Throw<System.Exception>();
+            // Both entries pass through; (100, 100) would have been filtered out by
+            // either Walk or Square mode at range 5, so its presence pins that the
+            // fallback is genuinely the unfiltered list.
+            result.Should().HaveCount(2);
         }
     }
 
