@@ -262,8 +262,13 @@ internal class GrabberManager
             aggregateGrabber.CleanupGrabberChests();
 
             var isSpecialized = _mod.Config.grabberMode == ModConfig.GrabberMode.Specialized;
+            // Always build per-grabber inventory when reportYield is on (not just in
+            // Specialized) so both modes can identify which grabbers actually contributed
+            // to the cycle's yield. Without this, Classic + global modes were dumping
+            // every named grabber in the world cache into the HUD message even when only
+            // one of them got items.
             var beforeInventory = _mod.Config.reportYield ? aggregateGrabber.GetInventory() : null;
-            var beforePerGrabber = _mod.Config.reportYield && isSpecialized
+            var beforePerGrabber = _mod.Config.reportYield
                 ? aggregateGrabber.GetPerGrabberInventory() : null;
             bool result = aggregateGrabber.GrabItems();
 
@@ -279,11 +284,17 @@ internal class GrabberManager
             if (beforeInventory != null && result)
             {
                 var afterInventory = aggregateGrabber.GetInventory();
+                var afterPerGrabber = aggregateGrabber.GetPerGrabberInventory();
                 bool anyYield = false;
 
-                if (isSpecialized && beforePerGrabber != null)
+                // Identify which grabber display-names actually had yield. Used by both
+                // Specialized (per-section formatting) and Classic (HUD-name filter)
+                // paths so the "X grabber grabbed Y items" HUD only mentions grabbers
+                // that contributed, not every named grabber in the global cache.
+                var contributorDisplayNames = new HashSet<string>();
+
+                if (isSpecialized)
                 {
-                    var afterPerGrabber = aggregateGrabber.GetPerGrabberInventory();
                     var sb = new StringBuilder(_mod.Helper.Translation.Get("log.yield-header", new { location = location.Name }) + "\n");
 
                     foreach (var kvp in afterPerGrabber)
@@ -320,22 +331,35 @@ internal class GrabberManager
                             sb.AppendLine($"  [{grabberName}]");
                             sb.Append(itemLines);
                             anyYield = true;
+                            contributorDisplayNames.Add(grabberName);
                         }
                     }
 
                     if (anyYield)
                     {
-                        foreach (var g in aggregateGrabber.GrabberObjects)
-                        {
-                            var customName = ModEntry.GetGrabberCustomName(g);
-                            if (customName != null)
-                                _activeGrabberNames.Add(customName);
-                        }
+                        AddContributingCustomNames(aggregateGrabber, contributorDisplayNames);
                         _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
                     }
                 }
                 else
                 {
+                    // Classic mode: aggregate diff for the SMAPI log line, but use the
+                    // per-grabber dicts to learn which grabbers contributed for the HUD.
+                    foreach (var kvp in afterPerGrabber)
+                    {
+                        beforePerGrabber.TryGetValue(kvp.Key, out var beforeItems);
+                        beforeItems ??= new Dictionary<InventoryEntry, int>();
+                        foreach (var entry in kvp.Value)
+                        {
+                            int delta = entry.Value - (beforeItems.ContainsKey(entry.Key) ? beforeItems[entry.Key] : 0);
+                            if (delta > 0)
+                            {
+                                contributorDisplayNames.Add(kvp.Key);
+                                break;
+                            }
+                        }
+                    }
+
                     var grabberNames = aggregateGrabber.GrabberObjects
                         .Select(g => ModEntry.GetGrabberDisplayName(g))
                         .Distinct()
@@ -367,14 +391,116 @@ internal class GrabberManager
 
                     if (anyYield)
                     {
-                        foreach (var g in aggregateGrabber.GrabberObjects)
-                        {
-                            var customName = ModEntry.GetGrabberCustomName(g);
-                            if (customName != null)
-                                _activeGrabberNames.Add(customName);
-                        }
+                        AddContributingCustomNames(aggregateGrabber, contributorDisplayNames);
                         _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
                     }
+                }
+            }
+
+            return result;
+        }
+        finally
+        {
+            _mod.UseLocationCache = false;
+            _mod.CachedGrabberPairs = null;
+            _mod.CachedObjectPairs = null;
+            _mod.CachedFeaturePairs = null;
+            _mod.GrabbedTiles = null;
+        }
+    }
+
+    // Adds the custom names of grabbers whose display-name appears in the contributor
+    // set to _activeGrabberNames. The HUD summary then mentions only grabbers that
+    // actually got items, not every named grabber in the global cache.
+    private void AddContributingCustomNames(MapGrabber aggregateGrabber, HashSet<string> contributorDisplayNames)
+    {
+        foreach (var g in aggregateGrabber.GrabberObjects)
+        {
+            var customName = ModEntry.GetGrabberCustomName(g);
+            if (customName == null)
+                continue;
+            // Display-name == custom-name when a custom name is set, so contributor
+            // membership is identity-equivalent to "this grabber contributed."
+            if (contributorDisplayNames.Contains(ModEntry.GetGrabberDisplayName(g)))
+                _activeGrabberNames.Add(customName);
+        }
+    }
+
+    // Ore pan grab moved here from ModEntry.OnHourlyUpdate so it shares the
+    // per-grabber yield diff + _totalItemsGrabbed + _activeGrabberNames plumbing
+    // with the other grab paths. The HUD summary now mentions ore pan grabbers
+    // when they actually contributed (audit covered this as part of the H fix).
+    internal bool GrabOrePanAtLocation(GameLocation location)
+    {
+        if (!_locations.ShouldProcessLocation(location))
+            return false;
+
+        _mod.UseLocationCache = true;
+        _mod.CachedGrabberPairs = null;
+        _mod.CachedObjectPairs = null;
+        _mod.CachedFeaturePairs = null;
+        _mod.GrabbedTiles = new HashSet<Vector2>();
+
+        try
+        {
+            var orePanGrabber = new OrePanGrabber(_mod, location) { BelongsToType = GrabberType.Scavenger };
+            if (!orePanGrabber.CanGrab())
+                return false;
+
+            var beforeInventory = _mod.Config.reportYield ? orePanGrabber.GetInventory() : null;
+            var beforePerGrabber = _mod.Config.reportYield ? orePanGrabber.GetPerGrabberInventory() : null;
+
+            bool result = orePanGrabber.GrabItems();
+
+            if (result)
+                _mod.LogDebug($"Ore pan at {location.Name}: collected items");
+
+            if (beforeInventory != null && result)
+            {
+                var afterInventory = orePanGrabber.GetInventory();
+                var afterPerGrabber = orePanGrabber.GetPerGrabberInventory();
+                var sb = new StringBuilder(_mod.Helper.Translation.Get("log.ore-panning-yield-header", new { location = location.Name }) + "\n");
+                bool anyYield = false;
+
+                var contributorDisplayNames = new HashSet<string>();
+                foreach (var kvp in afterPerGrabber)
+                {
+                    beforePerGrabber.TryGetValue(kvp.Key, out var beforeItems);
+                    beforeItems ??= new Dictionary<InventoryEntry, int>();
+                    foreach (var entry in kvp.Value)
+                    {
+                        int delta = entry.Value - (beforeItems.ContainsKey(entry.Key) ? beforeItems[entry.Key] : 0);
+                        if (delta > 0)
+                        {
+                            contributorDisplayNames.Add(kvp.Key);
+                            break;
+                        }
+                    }
+                }
+
+                foreach (var entry in afterInventory)
+                {
+                    int newCount = entry.Value;
+                    if (beforeInventory.ContainsKey(entry.Key))
+                        newCount -= beforeInventory[entry.Key];
+
+                    if (newCount > 0)
+                    {
+                        sb.AppendLine(_mod.Helper.Translation.Get("log.yield-item", new
+                        {
+                            name = entry.Key.DisplayName,
+                            quality = _mod.Helper.Translation.Get(entry.Key.QualityKey),
+                            count = newCount
+                        }));
+                        anyYield = true;
+                        _totalItemsGrabbed += newCount;
+                    }
+                }
+
+                if (anyYield)
+                {
+                    AddContributingCustomNames(orePanGrabber, contributorDisplayNames);
+                    _mod.Monitor.Log(sb.ToString(), LogLevel.Info);
                 }
             }
 

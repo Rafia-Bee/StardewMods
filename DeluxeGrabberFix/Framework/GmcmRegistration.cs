@@ -45,21 +45,22 @@ internal class GmcmRegistration
         return true;
     }
 
-    internal void RebuildConfigMenu()
+    internal bool RebuildConfigMenu()
     {
         if (_api == null)
-            return;
+            return false;
 
         var current = ComputeOptionSetSnapshot();
         if (current == _lastRebuildSnapshot)
         {
             _mod.LogDebug("GMCM rebuild skipped: option set unchanged since last register");
-            return;
+            return false;
         }
 
         _api.Unregister(_mod.ModManifest);
         RegisterConfigMenu();
         _lastRebuildSnapshot = current;
+        return true;
     }
 
     private OptionSetSnapshot ComputeOptionSetSnapshot()
@@ -96,6 +97,13 @@ internal class GmcmRegistration
         switch (action)
         {
             case LocationBatchAction.EnableAll:
+                // "Enable All" and "Select Visited Only" are contradictory intents:
+                // SVO auto-skips unvisited maps, EnableAll wants every map enabled.
+                // If SVO stays on, the next ApplyVisitAutoSkip (e.g. on the next GMCM
+                // Save while SVO is on, or on save load) re-skips unvisited maps and
+                // silently undoes EnableAll. Force SVO off so the user-visible result
+                // matches the user-visible intent.
+                _mod.Config.Locations.selectVisitedOnly = false;
                 _mod.Config.Locations.SkippedLocations.Clear();
                 if (_locations.SaveData != null)
                 {
@@ -139,8 +147,12 @@ internal class GmcmRegistration
         }
 
         _mod.ConfigManager.SaveActiveConfig();
-        RebuildConfigMenu();
-        _api.OpenModMenu(_mod.ModManifest);
+        // Only re-open the menu when an actual unregister+register happened.
+        // When the option set is unchanged (the common case for batch actions
+        // that only mutate values), the user's current subpage stays valid and
+        // we don't need to surprise them by jumping back to the root page.
+        if (RebuildConfigMenu())
+            _api.OpenModMenu(_mod.ModManifest);
         return true;
     }
 
@@ -462,6 +474,11 @@ internal class GmcmRegistration
 
         if (_locations.DiscoveredLocations != null && _locations.DiscoveredLocations.Count > 0)
         {
+            // setValue lambdas are intentionally empty: GMCM commits every option's
+            // setValue on Save with its cached display value, including stale ones.
+            // Mutation lives in OnFieldChanged below, which only fires on user-initiated
+            // toggle, so a Save commit can never re-apply a stale buffered toggle state
+            // (which is how EnableAll's clear got silently undone before this fix).
             b.Paragraph("config.enabled-locations-paragraph")
              .Bool("config.enable-all",
                  () => _locations.DiscoveredLocations.All(loc => _mod.Config.Locations.SkippedLocations?.Contains(loc.Name) != true),
@@ -483,6 +500,12 @@ internal class GmcmRegistration
                          _pendingBatchAction = LocationBatchAction.SelectVisitedOnly;
                      else
                          _mod.Config.Locations.selectVisitedOnly = false;
+                 }
+                 else if (fieldId != null && fieldId.StartsWith("loc:"))
+                 {
+                     // Per-location toggle. Mutation lives here (not in setValue) so
+                     // GMCM-Save commit's stale-value pass can't undo batch actions.
+                     HandleLocationToggleChanged(fieldId.Substring(4), (bool)value);
                  }
              });
 
@@ -522,8 +545,12 @@ internal class GmcmRegistration
     }
 
     // Per-location toggle uses the location's own display name (not an i18n key)
-    // and a setter that mutates SaveData alongside the SkippedLocations set, so
-    // it sidesteps GmcmBuilder.Bool and calls the api directly.
+    // and a fieldId of "loc:<name>" so OnFieldChanged can route the user-initiated
+    // mutation. setValue is intentionally empty (no-op): GMCM commits ALL options'
+    // setValues on Save with their cached display values, including stale ones --
+    // if we mutated SkippedLocations here, every Save would re-add unvisited maps
+    // that were just cleared by an EnableAll batch action. OnFieldChanged only
+    // fires on user-initiated change, so it's the safe place to mutate.
     private void AddLocationToggle(GmcmBuilder b, string locName, string displayName)
     {
         string capturedName = locName;
@@ -531,36 +558,45 @@ internal class GmcmRegistration
 
         b.Api.AddBoolOption(b.Manifest,
             getValue: () => _mod.Config.Locations.SkippedLocations?.Contains(capturedName) != true,
-            setValue: v =>
-            {
-                _mod.Config.Locations.SkippedLocations ??= new HashSet<string>();
-                bool currentlyEnabled = !_mod.Config.Locations.SkippedLocations.Contains(capturedName);
-
-                if (v == currentlyEnabled)
-                    return;
-
-                if (!v)
-                {
-                    _mod.Config.Locations.SkippedLocations.Add(capturedName);
-                    if (_locations.SaveData != null)
-                    {
-                        _locations.SaveData.BlacklistedLocations.Add(capturedName);
-                        _locations.SaveData.AutoSkippedLocations.Remove(capturedName);
-                        _locations.WriteSaveData();
-                    }
-                }
-                else
-                {
-                    _mod.Config.Locations.SkippedLocations.Remove(capturedName);
-                    if (_locations.SaveData != null)
-                    {
-                        _locations.SaveData.BlacklistedLocations.Remove(capturedName);
-                        _locations.SaveData.AutoSkippedLocations.Remove(capturedName);
-                        _locations.WriteSaveData();
-                    }
-                }
-            },
+            setValue: v => { },
             name: () => capturedDisplay,
-            tooltip: () => capturedName != capturedDisplay ? capturedName : null);
+            tooltip: () => capturedName != capturedDisplay ? capturedName : null,
+            fieldId: $"loc:{capturedName}");
+    }
+
+    // Routed from OnFieldChanged when a per-location toggle is user-initiated.
+    // Mirrors the original per-location setValue logic but only fires on real
+    // toggles, never on the GMCM-Save commit pass that previously caused stale
+    // cached values to re-populate SkippedLocations after EnableAll.
+    private void HandleLocationToggleChanged(string locName, bool enabled)
+    {
+        _mod.Config.Locations.SkippedLocations ??= new HashSet<string>();
+        bool currentlyEnabled = !_mod.Config.Locations.SkippedLocations.Contains(locName);
+        if (enabled == currentlyEnabled)
+            return;
+
+        if (!enabled)
+        {
+            _mod.Config.Locations.SkippedLocations.Add(locName);
+            if (_locations.SaveData != null)
+            {
+                _locations.SaveData.BlacklistedLocations.Add(locName);
+                _locations.SaveData.AutoSkippedLocations.Remove(locName);
+                _locations.WriteSaveData();
+            }
+        }
+        else
+        {
+            _mod.Config.Locations.SkippedLocations.Remove(locName);
+            if (_locations.SaveData != null)
+            {
+                // Pin this location as user-managed so ApplyVisitAutoSkip won't
+                // re-skip it on next save load / GMCM save while SVO is on.
+                _locations.SaveData.ManuallyManagedLocations.Add(locName);
+                _locations.SaveData.BlacklistedLocations.Remove(locName);
+                _locations.SaveData.AutoSkippedLocations.Remove(locName);
+                _locations.WriteSaveData();
+            }
+        }
     }
 }
