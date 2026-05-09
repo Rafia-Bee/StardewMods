@@ -705,11 +705,11 @@ public class ModEntry : Mod
 
     private void OnReturnedToTitle(object sender, ReturnedToTitleEventArgs e)
     {
-        // Audit §3.11: flush deferred per-warp persistence before ClearState wipes
-        // the in-memory copy. Without this, any per-warp un-skips since the last
-        // OnDayEnding would be lost when the player exits to title without sleeping.
-        _locations.FlushDirtyState();
-
+        // Note: intentionally do NOT flush deferred state here. Stardew only persists
+        // a save when the player sleeps, so exiting to title without sleeping should
+        // act exactly like a force-quit -- no in-game changes from the current day
+        // (including DGF auto-skip un-skips) carry over. Flushing here would persist
+        // changes the player implicitly chose not to save by skipping sleep.
         _locations.ClearState();
         TownGarbageCanGrabber.ClearCache();
         // ConfigManager.OnReturnedToTitle restores the global Config; SwapActiveConfig
@@ -905,44 +905,7 @@ public class ModEntry : Mod
                 // (audit §1.3); now all three live under one gate so the rule is obvious.
                 if (Config.grabFrequency != ModConfig.GrabFrequency.Daily)
                 {
-                    var orePanGrabber = new OrePanGrabber(this, location) { BelongsToType = GrabberType.Scavenger };
-                    if (orePanGrabber.CanGrab())
-                    {
-                        var beforeInventory = Config.reportYield ? orePanGrabber.GetInventory() : null;
-                        bool result = orePanGrabber.GrabItems();
-
-                        if (result)
-                            LogDebug($"Ore pan at {location.Name}: collected items");
-
-                        if (beforeInventory != null && result)
-                        {
-                            var afterInventory = orePanGrabber.GetInventory();
-                            var sb = new StringBuilder(Helper.Translation.Get("log.ore-panning-yield-header", new { location = location.Name }) + "\n");
-                            bool anyYield = false;
-
-                            foreach (var entry in afterInventory)
-                            {
-                                int newCount = entry.Value;
-                                if (beforeInventory.ContainsKey(entry.Key))
-                                    newCount -= beforeInventory[entry.Key];
-
-                                if (newCount > 0)
-                                {
-                                    sb.AppendLine(Helper.Translation.Get("log.yield-item", new
-                                    {
-                                        name = entry.Key.DisplayName,
-                                        quality = Helper.Translation.Get(entry.Key.QualityKey),
-                                        count = newCount
-                                    }));
-                                    anyYield = true;
-                                }
-                            }
-
-                            if (anyYield)
-                                Monitor.Log(sb.ToString(), LogLevel.Info);
-                        }
-                    }
-
+                    _grabbers.GrabOrePanAtLocation(location);
                     _grabbers.GrabForageAtLocation(location);
 
                     // Machine outputs don't fire ObjectListChanged when they finish processing,
@@ -960,7 +923,13 @@ public class ModEntry : Mod
                 }
             }
         }
-        _grabbers.ShowGrabCycleResults(showSummary: false);
+        // Show HUD summary for hourly grabs too -- prior to this, hourly grabs
+        // (including ore pan) produced an SMAPI log line but no in-game HUD message,
+        // so a player with reportYield on would see "X grabbed Y items" only on
+        // manual fire / day-start and never on ore pan. The summary still gates
+        // internally on `_totalItemsGrabbed > 0 && reportYield` so silent hourly
+        // ticks (no actual yield) stay silent.
+        _grabbers.ShowGrabCycleResults(showSummary: true);
     }
 
     private void OnDayEnding(object sender, DayEndingEventArgs e)
