@@ -74,6 +74,15 @@ internal class GmcmRegistration
         return new OptionSetSnapshot(true, locs.Count, hash);
     }
 
+    // Audit §3.9: hot-path gate so `OnUpdateTicked` can early-out at the call site
+    // without dispatching into GMCM. The pending action is set by `OnFieldChanged`
+    // (GMCM's own synchronous event), but we can't process it inline -- doing so
+    // would re-enter GMCM via `OpenModMenu` while it's still iterating field changes.
+    // Polling is the only safe pattern; this property keeps the polled check to one
+    // field read per tick when nothing is pending (the common case, every tick that
+    // isn't right after a batch button click).
+    internal bool HasPendingBatchAction => _pendingBatchAction.HasValue;
+
     internal bool ProcessPendingBatchAction()
     {
         if (!_pendingBatchAction.HasValue)

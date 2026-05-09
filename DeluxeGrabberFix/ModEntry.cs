@@ -783,7 +783,11 @@ public class ModEntry : Mod
 
     private void OnUpdateTicked(object sender, UpdateTickedEventArgs e)
     {
-        if (_gmcm.ProcessPendingBatchAction())
+        // Audit §3.9: gate the per-tick GMCM batch-action poll behind an inlinable
+        // field-read property. When nothing is pending (the overwhelming common case
+        // every tick that isn't right after a batch button click), this short-circuits
+        // before dispatching into ProcessPendingBatchAction.
+        if (_gmcm.HasPendingBatchAction && _gmcm.ProcessPendingBatchAction())
             return;
 
         // Deferred day-start grab: waits a few ticks after DayStarted so other mods
