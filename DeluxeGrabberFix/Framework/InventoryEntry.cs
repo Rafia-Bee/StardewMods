@@ -1,3 +1,4 @@
+using System;
 using StardewValley;
 
 namespace DeluxeGrabberFix.Framework;
@@ -42,6 +43,6 @@ internal class InventoryEntry
 
     public override int GetHashCode()
     {
-        return (Quality << 4) ^ (QualifiedItemId?.GetHashCode() ?? 0);
+        return HashCode.Combine(QualifiedItemId, Quality);
     }
 }
