@@ -101,17 +101,12 @@ internal static class Generators
 
         var crop = crops[Game1.random.Next(crops.Count)];
         int skill = Difficulty.GetSkillLevel(QuestCategory.Farming);
-        var tier = Difficulty.TierForSkill(Math.Min(skill, 3));
 
-        int qty = tier switch
-        {
-            DifficultyTier.Beginner => Game1.random.Next(3, 7),
-            DifficultyTier.Intermediate => Game1.random.Next(6, 10),
-            _ => Game1.random.Next(8, 20)
-        };
+        int qty = ctx.Config.DifficultyScaling
+            ? skill + Game1.random.Next(2, 5)
+            : 10;
 
-        int basePrice = Math.Max(crop.SellPrice, 30);
-        int gold = (int)(basePrice * qty * ctx.Config.RewardMultiplierAboveSell);
+        int gold = (int)(crop.SellPrice * qty * ctx.Config.RewardMultiplierBelowSell);
 
         var npcs = DispatchRegistry.MetHumanNpcs();
         if (npcs.Count == 0)
@@ -121,7 +116,7 @@ internal static class Generators
         return new QuestPosting
         {
             Category = QuestCategory.Farming,
-            Tier = tier,
+            Tier = DifficultyTier.Beginner,
             QuestType = BoardQuestType.ItemDelivery,
             QuestGiver = giver,
             ObjectiveItemId = crop.QualifiedItemId,
