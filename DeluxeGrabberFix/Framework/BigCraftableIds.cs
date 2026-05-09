@@ -2,7 +2,8 @@ namespace DeluxeGrabberFix.Framework;
 
 internal static class BigCraftableIds
 {
-    public const string AutoGrabber = "(BC)165";
+    public const string AutoGrabberUnqualified = "165";
+    public const string AutoGrabber = "(BC)" + AutoGrabberUnqualified;
     public const string MushroomBox = "(BC)128";
     public const string BeeHouse = "(BC)10";
     public const string Tapper = "(BC)105";

@@ -595,7 +595,7 @@ public class ModEntry : Mod
 
                 location.Objects.Remove(tile);
 
-                var autoGrabber = new Object(tile, "165");
+                var autoGrabber = new Object(tile, BigCraftableIds.AutoGrabberUnqualified);
                 autoGrabber.heldObject.Value = existingChest ?? new StardewValley.Objects.Chest();
                 autoGrabber.showNextIndex.Value = false;
                 autoGrabber.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
@@ -748,7 +748,7 @@ public class ModEntry : Mod
 
                 e.Location.Objects.Remove(tile);
 
-                var autoGrabber = new Object(tile, "165");
+                var autoGrabber = new Object(tile, BigCraftableIds.AutoGrabberUnqualified);
                 var newChest = new StardewValley.Objects.Chest();
                 newChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
                 autoGrabber.heldObject.Value = newChest;
