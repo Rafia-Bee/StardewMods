@@ -54,22 +54,22 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 54. Daily-board bulk-crop delivery for Pierre's General Store. Picks 3
-    /// distinct seasonal crops; player delivers a per-crop quantity that scales with
-    /// Farming skill. Reward = `ShopDiscount` on Pierre's `SeedShop` for the matching
-    /// seed ids, lasting `SeedShopDiscountDurationDays` in-game days at
-    /// `SeedShopDiscountPercent` off.
+    /// CSV row 54. Daily-board bulk-crop delivery for Pierre's General Store. Picks
+    /// `RequestVariationCount` distinct seasonal crops; player delivers a per-crop
+    /// quantity that scales with Farming skill. Reward = `ShopDiscount` on Pierre's
+    /// `SeedShop` for the matching seed ids, lasting `SeedShopDiscountDurationDays`
+    /// in-game days at `SeedShopDiscountPercent` off.
     private static QuestPosting? PierresStockUp(QuestContext ctx)
     {
+        int variationCount = Math.Clamp(ModEntry.Config.RequestVariationCount, 2, 5);
+
         var crops = ctx.Items.GetSeasonalCrops(ctx.Season);
-        if (crops.Count < 3)
+        if (crops.Count < variationCount)
             return null;
 
-        // Sample 3 distinct seasonal crops; smaller pools fall back to whatever the
-        // season has (we already early-return on Count < 3 above).
         var pool = new List<ResolvedItem>(crops);
-        var picks = new List<ResolvedItem>(3);
-        for (int i = 0; i < 3 && pool.Count > 0; i++)
+        var picks = new List<ResolvedItem>(variationCount);
+        for (int i = 0; i < variationCount && pool.Count > 0; i++)
         {
             int idx = Game1.random.Next(pool.Count);
             picks.Add(pool[idx]);
@@ -123,9 +123,7 @@ internal static partial class Generators
             Description = ModEntry.I18n.Get("quest.farming.pierresStockUp.description", new
             {
                 count = qtyPer,
-                item1 = picks.Count > 0 ? picks[0].DisplayName : string.Empty,
-                item2 = picks.Count > 1 ? picks[1].DisplayName : string.Empty,
-                item3 = picks.Count > 2 ? picks[2].DisplayName : string.Empty
+                items = JoinItemList(picks.Select(p => p.DisplayName))
             }),
             TargetMessage = ModEntry.I18n.Get("quest.farming.pierresStockUp.targetMessage"),
             PreBuiltQuest = quest
@@ -133,12 +131,10 @@ internal static partial class Generators
 
         if (ModEntry.Config.SeedShopDiscountPercent > 0 && ModEntry.Config.SeedShopDiscountDurationDays > 0)
         {
-            // Half the requested haul as the per-visit seed cap on quest-injected
-            // entries. Pierre stocks `qtyPer / 2` per missing seed (minimum 2) so a
-            // 16-crop request lands as 8 seeds at the discount — enough to grow back a
-            // comparable harvest without making the discount window an unlimited
-            // farming press.
-            int guaranteedStock = Math.Max(2, qtyPer / 2);
+            // A third of the requested haul as the per-visit seed cap on quest-injected
+            // entries (minimum 2). Picking qtyPer/3 keeps the discount window from
+            // becoming an unlimited farming press for high-value crops like ancient fruit.
+            int guaranteedStock = Math.Max(2, qtyPer / 3);
             posting.Rewards.Add(new ShopDiscountReward(
                 ShopId: "SeedShop",
                 PercentOff: ModEntry.Config.SeedShopDiscountPercent,

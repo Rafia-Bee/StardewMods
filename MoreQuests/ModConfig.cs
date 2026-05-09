@@ -48,6 +48,11 @@ public sealed class ModConfig
     public int CropMassiveQty { get; set; } = 50;
     public int HaySupplyBaseQty { get; set; } = 10;
 
+    /// Shared knob for "how many distinct item variations does an NPC request" across
+    /// quests that ask for a mixed bag (e.g. Pierre's Stock-Up's seasonal-crop spread).
+    /// Clamped to [2, 5] at read time. Default 3 matches the prior hardcoded value.
+    public int RequestVariationCount { get; set; } = 3;
+
     // ----- Skull Cavern depth cap for Deep Dive quest -----
     public int SkullCavernMaxLevel { get; set; } = 100;
 
