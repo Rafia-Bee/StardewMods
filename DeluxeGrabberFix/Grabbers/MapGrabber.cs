@@ -283,7 +283,11 @@ internal abstract class MapGrabber
             return item;
 
         Item remaining = chest.addItem(item);
-        if (chest.Items.Any(i => i != null))
+        // Audit §5.4: NetField writes are observable in multiplayer (sync message
+        // per write). Only flip to true when the value is actually changing, so a
+        // batch add that lands many items into an already-non-empty chest doesn't
+        // emit one redundant sync per add.
+        if (!grabber.showNextIndex.Value && chest.Items.Any(i => i != null))
             grabber.showNextIndex.Value = true;
 
         return remaining;
