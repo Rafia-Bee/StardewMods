@@ -3,7 +3,6 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using StardewValley;
 using DeluxeGrabberFix.Framework;
-using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 
 namespace DeluxeGrabberFix.Grabbers;

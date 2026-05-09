@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.ItemTypeDefinitions;
-using StardewValley.Objects;
 using StardewValley.Tools;
 
 namespace DeluxeGrabberFix.Framework;

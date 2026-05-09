@@ -5,7 +5,6 @@ using DeluxeGrabberFix.Framework;
 using StardewValley;
 using StardewValley.GameData.Machines;
 using StardewValley.Internal;
-using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 
 namespace DeluxeGrabberFix.Grabbers;

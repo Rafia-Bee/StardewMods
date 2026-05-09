@@ -115,7 +115,7 @@ internal sealed class GrabSession : IDisposable
                 loc.Objects.Pairs
                     .Where(pair => pair.Value != null
                         && GrabberTypeHelper.IsGrabber(pair.Value.QualifiedItemId)
-                        && pair.Value.heldObject.Value is StardewValley.Objects.Chest));
+                        && pair.Value.heldObject.Value is Chest));
         }
         _restoreGlobalCache = true;
         return true;
@@ -196,7 +196,7 @@ internal sealed class GrabSession : IDisposable
         var hoverObj = loc.getObjectAtTile((int)tile.X, (int)tile.Y);
         if (hoverObj != null
             && GrabberTypeHelper.IsGrabber(hoverObj.QualifiedItemId)
-            && hoverObj.heldObject.Value is StardewValley.Objects.Chest)
+            && hoverObj.heldObject.Value is Chest)
         {
             _mod.CachedHoverGrabber = new KeyValuePair<Vector2, Object>(tile, hoverObj);
         }

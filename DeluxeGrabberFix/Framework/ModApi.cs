@@ -69,7 +69,7 @@ public class ModApi : IDeluxeGrabberFixApi
 
         return location.Objects.Pairs.Any(pair =>
             GrabberTypeHelper.IsGrabber(pair.Value.QualifiedItemId)
-            && pair.Value.heldObject.Value is StardewValley.Objects.Chest);
+            && pair.Value.heldObject.Value is Chest);
     }
 
     internal void RaiseOnItemGrabbed(Item item, GameLocation location)

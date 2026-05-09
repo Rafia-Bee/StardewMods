@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using StardewValley;
-using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 
 namespace DeluxeGrabberFix.Framework;

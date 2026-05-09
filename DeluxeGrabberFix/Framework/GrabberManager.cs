@@ -214,7 +214,7 @@ internal class GrabberManager
         var obj = Game1.player.currentLocation.getObjectAtTile((int)cursorTile.X, (int)cursorTile.Y);
 
         if (obj == null || !GrabberTypeHelper.IsGrabber(obj.QualifiedItemId)
-            || obj.heldObject.Value is not StardewValley.Objects.Chest)
+            || obj.heldObject.Value is not Chest)
         {
             Game1.addHUDMessage(new HUDMessage(_mod.Helper.Translation.Get("hud.hover-over-grabber"), HUDMessage.error_type));
             return;
