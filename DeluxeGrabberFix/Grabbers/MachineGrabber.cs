@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using DeluxeGrabberFix.Framework;
@@ -18,6 +19,74 @@ internal class MachineGrabber : ObjectsMapGrabber
     {
         _automateSkipTiles = AutomateSkipTiles.Get(mod, location);
     }
+
+    // Audit §4.9: dispatch table replaces the prior 100-line if/else chain. Adding
+    // a new machine is a one-line entry here (or in MpsMachines if a Machine Progression
+    // System variant exists). The Func<MachineCollection, bool> gate is evaluated against
+    // the live config every dispatch, so per-save config swaps and GMCM toggles are honored
+    // without rebuilding the table.
+    private readonly record struct MachineEntry(Func<ModConfig.MachineSettings, bool> Gate, string Name);
+
+    // Direct QualifiedItemId -> entry. Multiple IDs that share a config flag are listed
+    // individually (Furnace + HeavyFurnace, the three statues, WormBin + DeluxeWormBin).
+    private static readonly Dictionary<string, MachineEntry> StandardMachines = new()
+    {
+        [BigCraftableIds.BeeHouse] = new(c => c.collectBeeHouses, "bee house"),
+        [BigCraftableIds.MushroomLog] = new(c => c.collectMushroomLogs, "mushroom log"),
+        [BigCraftableIds.LeafBasket] = new(c => c.collectLeafBaskets, "leaf basket"),
+        [BigCraftableIds.Keg] = new(c => c.collectKegs, "keg"),
+        [BigCraftableIds.PreservesJar] = new(c => c.collectPreservesJars, "preserves jar"),
+        [BigCraftableIds.CheesePress] = new(c => c.collectCheesePresses, "cheese press"),
+        [BigCraftableIds.MayonnaiseMachine] = new(c => c.collectMayonnaiseMachines, "mayonnaise machine"),
+        [BigCraftableIds.Loom] = new(c => c.collectLooms, "loom"),
+        [BigCraftableIds.OilMaker] = new(c => c.collectOilMakers, "oil maker"),
+        [BigCraftableIds.Furnace] = new(c => c.collectFurnaces, "furnace"),
+        [BigCraftableIds.HeavyFurnace] = new(c => c.collectFurnaces, "furnace"),
+        [BigCraftableIds.CharcoalKiln] = new(c => c.collectCharcoalKilns, "charcoal kiln"),
+        [BigCraftableIds.RecyclingMachine] = new(c => c.collectRecyclingMachines, "recycling machine"),
+        [BigCraftableIds.SeedMaker] = new(c => c.collectSeedMakers, "seed maker"),
+        [BigCraftableIds.BoneMill] = new(c => c.collectBoneMills, "bone mill"),
+        [BigCraftableIds.GeodeCrusher] = new(c => c.collectGeodeCrushers, "geode crusher"),
+        [BigCraftableIds.WoodChipper] = new(c => c.collectWoodChippers, "wood chipper"),
+        [BigCraftableIds.Deconstructor] = new(c => c.collectDeconstructors, "deconstructor"),
+        [BigCraftableIds.FishSmoker] = new(c => c.collectFishSmokers, "fish smoker"),
+        [BigCraftableIds.BaitMaker] = new(c => c.collectBaitMakers, "bait maker"),
+        [BigCraftableIds.Dehydrator] = new(c => c.collectDehydrators, "dehydrator"),
+        [BigCraftableIds.Crystalarium] = new(c => c.collectCrystalariums, "crystalarium"),
+        [BigCraftableIds.LightningRod] = new(c => c.collectLightningRods, "lightning rod"),
+        [BigCraftableIds.WormBin] = new(c => c.collectWormBins, "worm bin"),
+        [BigCraftableIds.DeluxeWormBin] = new(c => c.collectWormBins, "worm bin"),
+        [BigCraftableIds.SolarPanel] = new(c => c.collectSolarPanels, "solar panel"),
+        [BigCraftableIds.SlimeEggPress] = new(c => c.collectSlimeEggPresses, "slime egg-press"),
+        [BigCraftableIds.CoffeeMaker] = new(c => c.collectCoffeeMakers, "coffee maker"),
+        [BigCraftableIds.SodaMachine] = new(c => c.collectSodaMachines, "soda machine"),
+        [BigCraftableIds.StatueOfPerfection] = new(c => c.collectStatues, "statue"),
+        [BigCraftableIds.StatueOfTruePerfection] = new(c => c.collectStatues, "statue"),
+        [BigCraftableIds.StatueOfEndlessFortune] = new(c => c.collectStatues, "statue"),
+    };
+
+    // MPS-prefixed objects (Machine Progression System): match if the QualifiedItemId
+    // contains the fragment. Mirrors the prior IsMps()/IsAnyOf() set: only machines that
+    // had explicit MPS branches in the original chain are listed here. WormBin's
+    // fragment also matches DeluxeWormBin since both share the same gate.
+    private static readonly Dictionary<string, MachineEntry> MpsMachines = new()
+    {
+        ["BeeHouse"] = new(c => c.collectBeeHouses, "bee house"),
+        ["MushroomLog"] = new(c => c.collectMushroomLogs, "mushroom log"),
+        ["Keg"] = new(c => c.collectKegs, "keg"),
+        ["PreservesJar"] = new(c => c.collectPreservesJars, "preserves jar"),
+        ["CheesePress"] = new(c => c.collectCheesePresses, "cheese press"),
+        ["MayonnaiseMachine"] = new(c => c.collectMayonnaiseMachines, "mayonnaise machine"),
+        ["Loom"] = new(c => c.collectLooms, "loom"),
+        ["OilMaker"] = new(c => c.collectOilMakers, "oil maker"),
+        ["RecyclingMachine"] = new(c => c.collectRecyclingMachines, "recycling machine"),
+        ["BoneMill"] = new(c => c.collectBoneMills, "bone mill"),
+        ["FishSmoker"] = new(c => c.collectFishSmokers, "fish smoker"),
+        ["BaitMaker"] = new(c => c.collectBaitMakers, "bait maker"),
+        ["LightningRod"] = new(c => c.collectLightningRods, "lightning rod"),
+        ["WormBin"] = new(c => c.collectWormBins, "worm bin"),
+        ["SolarPanel"] = new(c => c.collectSolarPanels, "solar panel"),
+    };
 
     public override bool GrabObject(Vector2 tile, Object obj)
     {
@@ -40,89 +109,38 @@ internal class MachineGrabber : ObjectsMapGrabber
         if (obj.GetMachineData()?.IsIncubator == true)
             return false;
 
+        // Special grab semantics (clear bait, clear fish-net modData, etc.) -- can't
+        // share the standard GrabStandardMachine restart helper.
         if (IsCrabPot(obj))
             return GrabCrabPot(tile, obj);
-
         if (IsFishNet(obj))
             return GrabFishNet(tile, obj);
 
-        if (IsBeeHouse(obj))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectBeeHouses, "bee house");
-
-        if (IsTapper(obj))
+        // Tapper kept inline (vs the dispatch table) because obj.IsTapper() is the
+        // SDV-side source of truth for "is this a tap-able machine" -- including
+        // modded tappers registered through SDV's machine data, which a hard-coded
+        // dictionary of QualifiedItemId would miss.
+        if (obj.IsTapper())
             return GrabStandardMachine(tile, obj, Config.Machines.collectTappers, "tapper");
 
-        if (IsMushroomLog(obj))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectMushroomLogs, "mushroom log");
+        var qid = obj.QualifiedItemId;
+        if (qid != null)
+        {
+            if (StandardMachines.TryGetValue(qid, out var entry))
+                return GrabStandardMachine(tile, obj, entry.Gate(Config.Machines), entry.Name);
 
-        if (IsLeafBasket(obj))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectLeafBaskets, "leaf basket");
+            if (qid.StartsWith(BigCraftableIds.MpsPrefix))
+            {
+                foreach (var (fragment, mpsEntry) in MpsMachines)
+                {
+                    if (qid.Contains(fragment))
+                        return GrabStandardMachine(tile, obj, mpsEntry.Gate(Config.Machines), mpsEntry.Name);
+                }
+            }
+        }
 
-        // Artisan equipment
-        if (IsAnyOf(obj, BigCraftableIds.Keg, "Keg"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectKegs, "keg");
-        if (IsAnyOf(obj, BigCraftableIds.PreservesJar, "PreservesJar"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectPreservesJars, "preserves jar");
-        if (IsAnyOf(obj, BigCraftableIds.CheesePress, "CheesePress"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectCheesePresses, "cheese press");
-        if (IsAnyOf(obj, BigCraftableIds.MayonnaiseMachine, "MayonnaiseMachine"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectMayonnaiseMachines, "mayonnaise machine");
-        if (IsAnyOf(obj, BigCraftableIds.Loom, "Loom"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectLooms, "loom");
-        if (IsAnyOf(obj, BigCraftableIds.OilMaker, "OilMaker"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectOilMakers, "oil maker");
-
-        // Processing machines
-        if (obj.QualifiedItemId == BigCraftableIds.Furnace || obj.QualifiedItemId == BigCraftableIds.HeavyFurnace)
-            return GrabStandardMachine(tile, obj, Config.Machines.collectFurnaces, "furnace");
-        if (obj.QualifiedItemId == BigCraftableIds.CharcoalKiln)
-            return GrabStandardMachine(tile, obj, Config.Machines.collectCharcoalKilns, "charcoal kiln");
-        if (IsAnyOf(obj, BigCraftableIds.RecyclingMachine, "RecyclingMachine"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectRecyclingMachines, "recycling machine");
-        if (obj.QualifiedItemId == BigCraftableIds.SeedMaker)
-            return GrabStandardMachine(tile, obj, Config.Machines.collectSeedMakers, "seed maker");
-        if (IsAnyOf(obj, BigCraftableIds.BoneMill, "BoneMill"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectBoneMills, "bone mill");
-        if (obj.QualifiedItemId == BigCraftableIds.GeodeCrusher)
-            return GrabStandardMachine(tile, obj, Config.Machines.collectGeodeCrushers, "geode crusher");
-        if (obj.QualifiedItemId == BigCraftableIds.WoodChipper)
-            return GrabStandardMachine(tile, obj, Config.Machines.collectWoodChippers, "wood chipper");
-        if (obj.QualifiedItemId == BigCraftableIds.Deconstructor)
-            return GrabStandardMachine(tile, obj, Config.Machines.collectDeconstructors, "deconstructor");
-
-        // 1.6 machines
-        if (IsAnyOf(obj, BigCraftableIds.FishSmoker, "FishSmoker"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectFishSmokers, "fish smoker");
-        if (IsAnyOf(obj, BigCraftableIds.BaitMaker, "BaitMaker"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectBaitMakers, "bait maker");
-        if (obj.QualifiedItemId == BigCraftableIds.Dehydrator)
-            return GrabStandardMachine(tile, obj, Config.Machines.collectDehydrators, "dehydrator");
-
-        // Passive producers
-        if (obj.QualifiedItemId == BigCraftableIds.Crystalarium)
-            return GrabStandardMachine(tile, obj, Config.Machines.collectCrystalariums, "crystalarium");
-        if (IsAnyOf(obj, BigCraftableIds.LightningRod, "LightningRod"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectLightningRods, "lightning rod");
-        if (obj.QualifiedItemId == BigCraftableIds.WormBin
-            || obj.QualifiedItemId == BigCraftableIds.DeluxeWormBin
-            || IsMps(obj, "WormBin") || IsMps(obj, "DeluxeWormBin"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectWormBins, "worm bin");
-        if (IsAnyOf(obj, BigCraftableIds.SolarPanel, "SolarPanel"))
-            return GrabStandardMachine(tile, obj, Config.Machines.collectSolarPanels, "solar panel");
-        if (obj.QualifiedItemId == BigCraftableIds.SlimeEggPress)
-            return GrabStandardMachine(tile, obj, Config.Machines.collectSlimeEggPresses, "slime egg-press");
-        if (obj.QualifiedItemId == BigCraftableIds.CoffeeMaker)
-            return GrabStandardMachine(tile, obj, Config.Machines.collectCoffeeMakers, "coffee maker");
-        if (obj.QualifiedItemId == BigCraftableIds.SodaMachine)
-            return GrabStandardMachine(tile, obj, Config.Machines.collectSodaMachines, "soda machine");
-
-        // Statues
-        if (obj.QualifiedItemId == BigCraftableIds.StatueOfPerfection
-            || obj.QualifiedItemId == BigCraftableIds.StatueOfTruePerfection
-            || obj.QualifiedItemId == BigCraftableIds.StatueOfEndlessFortune)
-            return GrabStandardMachine(tile, obj, Config.Machines.collectStatues, "statue");
-
-        // Catch-all for any other machine (modded machines, etc.)
+        // Catch-all for any other big-craftable machine (modded machines that don't
+        // declare an MPS prefix or one of the registered IDs above).
         if (obj.bigCraftable.Value)
             return GrabStandardMachine(tile, obj, Config.Machines.collectOtherMachines, obj.Name ?? "unknown machine");
 
@@ -214,27 +232,9 @@ internal class MachineGrabber : ObjectsMapGrabber
     }
 
     private static bool IsCrabPot(Object obj)
-        => obj is CrabPot || IsMps(obj, "CrabPot");
+        => obj is CrabPot
+           || (obj.QualifiedItemId?.StartsWith(BigCraftableIds.MpsPrefix) == true && obj.QualifiedItemId.Contains("CrabPot"));
 
     private static bool IsFishNet(Object obj)
         => obj.QualifiedItemId == ItemIds.FishNet;
-
-    private static bool IsBeeHouse(Object obj)
-        => obj.QualifiedItemId == BigCraftableIds.BeeHouse || IsMps(obj, "BeeHouse");
-
-    private static bool IsTapper(Object obj)
-        => obj.IsTapper();
-
-    private static bool IsLeafBasket(Object obj)
-        => obj.QualifiedItemId == BigCraftableIds.LeafBasket;
-
-    private static bool IsMushroomLog(Object obj)
-        => obj.QualifiedItemId == BigCraftableIds.MushroomLog || IsMps(obj, "MushroomLog");
-
-    private static bool IsMps(Object obj, string machineName)
-        => obj.QualifiedItemId?.StartsWith(BigCraftableIds.MpsPrefix) == true
-           && obj.QualifiedItemId.Contains(machineName);
-
-    private static bool IsAnyOf(Object obj, string vanillaId, string mpsName)
-        => obj.QualifiedItemId == vanillaId || IsMps(obj, mpsName);
 }
