@@ -186,11 +186,6 @@ public sealed class ModConfig
 
     // ----- Phase 9.5g: Multi-step / misc quest tunables -----
 
-    /// Caroline's Tea Garden (CSV row 15). Number of spring flowers Caroline asks for in
-    /// fall, and how many Tea Leaves to grant on completion.
-    public int CarolineTeaGardenFlowerQty { get; set; } = 5;
-    public int CarolineTeaGardenTeaLeavesReward { get; set; } = 10;
-
     /// Clear Debris (CSV row 17). Location whose `ResourceClumps` the player must remove
     /// before the quest closes. Defaults to vanilla Pelican Town. Override per-save if a
     /// modded NPC's home town should host the quest instead.

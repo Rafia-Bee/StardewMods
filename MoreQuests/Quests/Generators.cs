@@ -4491,25 +4491,64 @@ internal static class Generators
 
     // -------------------- Phase 9.5g: Multi-step / misc --------------------
 
-    /// CSV row 15. Fall-only daily-board ItemDeliveryQuest. Caroline misses spring and
-    /// asks the player to bring her one kind of spring flower so she can brew a fresh
-    /// batch of tea. Reward = `FriendshipMid` to Caroline + `CarolineTeaGardenTeaLeavesReward`
-    /// (default 10) Tea Leaves.
+    /// CSV row 15. Daily-board ItemDeliveryQuest. Caroline asks for off-season edible
+    /// forage or flowers she loves or likes (no herbs) so she can brew a new batch of
+    /// tea. Off-season pool: Y1 = seasons that have already passed in the current year
+    /// (so Y1 spring skips), Y2+ = every season except the current one. Quantity scales
+    /// with foraging level when DifficultyScaling is on; flat 5 when off. Reward =
+    /// `FriendshipMid` to Caroline + Tea Leaves equal to twice the requested quantity.
     private static QuestPosting? CarolineTeaGarden(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Caroline") == null)
             return null;
 
-        var allFlowers = ctx.Items.GetItemsByCategory(StardewValley.Object.flowersCategory);
-        var springFlowers = allFlowers
-            .Where(f => f.ContextTags.Contains("season_spring"))
-            .ToList();
-        if (springFlowers.Count == 0)
+        var offSeasons = GetCarolineTeaOffSeasons(ctx.Year, ctx.Season);
+        if (offSeasons.Count == 0)
             return null;
 
-        var pick = springFlowers[Game1.random.Next(springFlowers.Count)];
-        int qty = Math.Max(1, ModEntry.Config.CarolineTeaGardenFlowerQty);
-        int teaCount = Math.Max(1, ModEntry.Config.CarolineTeaGardenTeaLeavesReward);
+        if (!ctx.Data.GiftTastes.TryGetValue("Caroline", out var taste))
+            return null;
+        var fields = taste.Split('/');
+        if (fields.Length < 4)
+            return null;
+        var loved = fields[1].Split(' ', StringSplitOptions.RemoveEmptyEntries).ToHashSet(StringComparer.Ordinal);
+        var liked = fields[3].Split(' ', StringSplitOptions.RemoveEmptyEntries).ToHashSet(StringComparer.Ordinal);
+
+        var pool = new List<ResolvedItem>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var season in offSeasons)
+        {
+            foreach (var f in ctx.Items.GetForageItems(season))
+                if (seen.Add(f.QualifiedItemId))
+                    pool.Add(f);
+        }
+        foreach (var f in ctx.Items.GetItemsByCategory(StardewValley.Object.flowersCategory))
+        {
+            if (!offSeasons.Any(s => f.ContextTags.Contains("season_" + s)))
+                continue;
+            if (seen.Add(f.QualifiedItemId))
+                pool.Add(f);
+        }
+
+        pool = pool.Where(f =>
+        {
+            foreach (var t in f.ContextTags)
+                if (t.IndexOf("herb", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return false;
+            string bare = StripPrefix(f.QualifiedItemId);
+            return loved.Contains(bare) || liked.Contains(bare);
+        }).ToList();
+
+        if (pool.Count == 0)
+            return null;
+
+        var pick = pool[Game1.random.Next(pool.Count)];
+
+        int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
+        int qty = ctx.Config.DifficultyScaling
+            ? Math.Max(1, (int)(foragingLevel * 1.5))
+            : 5;
+        int teaCount = qty * 2;
 
         return new QuestPosting
         {
@@ -4531,6 +4570,18 @@ internal static class Generators
             CurrentObjective = ModEntry.I18n.Get("quest.farming.carolineTeaGarden.objective", new { qty, item = pick.DisplayName }),
             TargetMessage = ModEntry.I18n.Get("quest.farming.carolineTeaGarden.targetMessage")
         };
+    }
+
+    private static List<string> GetCarolineTeaOffSeasons(int year, string currentSeason)
+    {
+        var all = new[] { "spring", "summer", "fall", "winter" };
+        string current = currentSeason?.ToLowerInvariant() ?? "";
+        if (year >= 2)
+            return all.Where(s => s != current).ToList();
+        int idx = Array.IndexOf(all, current);
+        if (idx <= 0)
+            return new List<string>();
+        return all.Take(idx).ToList();
     }
 
     /// CSV row 17. Daily-board single-step `ClearDebris` AdventureQuest. The picked giver

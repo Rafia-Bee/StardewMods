@@ -420,7 +420,7 @@
     "quest.animal.robinSilo.targetMessage": "That'll do. Come by the shop when you're ready and we'll break ground.",
 
     "quest.farming.carolineTeaGarden.title": "Caroline's tea garden",
-    "quest.farming.carolineTeaGarden.description": "Spring's long gone but the tea cabinet's bare. If you happen to have {{qty}} {{item}} stashed away (or know someone selling them), bring them to me and I'll send you home with a fresh batch of tea leaves to brew with.",
+    "quest.farming.carolineTeaGarden.description": "I'm putting together a fresh batch of tea and could really use {{qty}} {{item}}. If you've got some on hand (or know someone who does), drop them off and I'll send you home with plenty of tea leaves to brew with.",
     "quest.farming.carolineTeaGarden.objective": "Bring {{qty}} {{item}} to Caroline.",
     "quest.farming.carolineTeaGarden.targetMessage": "Wonderful! These are going straight in the kettle. Take some tea leaves, you've earned them.",
 
