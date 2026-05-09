@@ -270,7 +270,13 @@ internal class GrabberManager
             if (result)
                 _mod.LogDebug($"Grab at {location.Name}: collected items");
 
-            if (beforeInventory != null)
+            // Audit §3.7: when the grab itself produced nothing, the after-inventory and
+            // per-grabber-inventory snapshots cannot diff to a non-empty yield. Skip both
+            // the second `GetInventory` / `GetPerGrabberInventory` dictionary builds and
+            // the entire formatting walk in that case. Saves the dominant per-location
+            // allocation cost on cycles where machines aren't ready / crops aren't grown
+            // / chest is empty -- which is the typical morning case for most locations.
+            if (beforeInventory != null && result)
             {
                 var afterInventory = aggregateGrabber.GetInventory();
                 bool anyYield = false;
