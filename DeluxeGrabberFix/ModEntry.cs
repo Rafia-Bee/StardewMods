@@ -513,6 +513,10 @@ public class ModEntry : Mod
         if (_customBushApi != null)
             LogDebug("Custom Bush detected -- compatibility mode enabled.");
 
+        SpaceCoreIntegration.Initialize(Helper.ModRegistry, this);
+        if (SpaceCoreIntegration.ArchaeologyLoaded)
+            LogDebug("Archaeology Skill detected -- modded skill XP will be granted from artifact spots and ore pans.");
+
         _gmcm = new GmcmRegistration(this, _locations);
         _gmcm.Initialize();
     }

@@ -208,6 +208,10 @@ internal class ModConfig
         public bool baublesExclusions = true;
         public bool resourceChickensExclusions = true;
         public bool capeStardewExclusions = true;
+        public bool binningSkillStatTracking = true;
+        public bool archaeologySkillIntegration = true;
+        public int archaeologyXpFromArtifactSpot = 20;
+        public int archaeologyXpFromOrePan = 30;
     }
 
     // ---- Static enum lookups (unchanged) ----

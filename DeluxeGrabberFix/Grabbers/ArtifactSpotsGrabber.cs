@@ -45,6 +45,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
         {
             Location.Objects.Remove(tile);
             Mod.GrabbedTiles?.Add(tile);
+            GainArchaeologyExperience(Config.Compatibility.archaeologyXpFromArtifactSpot);
             return true;
         }
         return false;
@@ -60,6 +61,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
         {
             Location.Objects.Remove(tile);
             Mod.GrabbedTiles?.Add(tile);
+            GainArchaeologyExperience(Config.Compatibility.archaeologyXpFromArtifactSpot);
             return true;
         }
         return false;
@@ -85,6 +87,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
         {
             Location.Objects.Remove(tile);
             Mod.GrabbedTiles?.Add(tile);
+            GainArchaeologyExperience(Config.Compatibility.archaeologyXpFromArtifactSpot);
             return true;
         }
         return false;
