@@ -30,10 +30,17 @@ internal abstract class TerrainFeaturesMapGrabber : MapGrabber
 
     public abstract bool GrabFeature(Vector2 tile, TerrainFeature feature);
 
+    // Audit §3.10: foreach replaces Select + Aggregate. Same iteration shape
+    // (every feature processed; GrabFeature has side effects), no delegate
+    // capture or LINQ iterator allocation per call.
     public override bool GrabItems()
     {
-        return Features
-            .Select(pair => GrabFeature(pair.Key, pair.Value))
-            .Aggregate(false, (grabbed, next) => grabbed || next);
+        bool any = false;
+        foreach (var pair in Features)
+        {
+            if (GrabFeature(pair.Key, pair.Value))
+                any = true;
+        }
+        return any;
     }
 }

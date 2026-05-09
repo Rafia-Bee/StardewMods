@@ -26,11 +26,20 @@ internal abstract class ObjectsMapGrabber : MapGrabber
 
     public abstract bool GrabObject(Vector2 tile, Object obj);
 
+    // Audit §3.10: foreach replaces Where + Select + Aggregate (three iterator
+    // allocations + delegate captures per call). Every non-grabbed-tile pair
+    // still gets a GrabObject invocation; we don't short-circuit on `any`
+    // because GrabObject has side effects (item collection, debris cleanup).
     public override bool GrabItems()
     {
-        return Objects
-            .Where(pair => Mod.GrabbedTiles?.Contains(pair.Key) != true)
-            .Select(pair => GrabObject(pair.Key, pair.Value))
-            .Aggregate(false, (grabbed, next) => grabbed || next);
+        bool any = false;
+        foreach (var pair in Objects)
+        {
+            if (Mod.GrabbedTiles?.Contains(pair.Key) == true)
+                continue;
+            if (GrabObject(pair.Key, pair.Value))
+                any = true;
+        }
+        return any;
     }
 }

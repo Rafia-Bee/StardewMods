@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using DeluxeGrabberFix.Framework;
 using StardewValley;
 
@@ -25,8 +24,17 @@ internal class AggregateDailyGrabber : MapGrabber
         };
     }
 
+    // Audit §3.10: foreach + locals replaces a `LINQ Aggregate` over a delegate
+    // capture. Every sub-grabber still runs (no short-circuit on `any`); CanGrab
+    // still gates GrabItems via && short-circuit, matching the prior semantics.
     public override bool GrabItems()
     {
-        return grabbers.Aggregate(false, (grabbed, grabber) => (grabber.CanGrab() && grabber.GrabItems()) || grabbed);
+        bool any = false;
+        foreach (var grabber in grabbers)
+        {
+            if (grabber.CanGrab() && grabber.GrabItems())
+                any = true;
+        }
+        return any;
     }
 }
