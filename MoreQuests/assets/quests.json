@@ -701,8 +701,8 @@
                 "Source": "DailyBoard",
                 "Weight": 18,
                 "MaxPerDay": 1,
-                "CooldownDays": 7,
-                "Available": { "Season": "fall", "NpcExists": "Caroline", "NpcMet": "Caroline" }
+                "CooldownDays": 14,
+                "Available": { "NpcExists": "Caroline", "NpcMet": "Caroline", "SkillLevel": "Foraging 3", "FriendshipLevel": "Caroline 1" }
             },
             "Generator": "CarolineTeaGarden"
         },
