@@ -210,7 +210,7 @@
                 "Source": "DailyBoard",
                 "Weight": 20,
                 "MaxPerDay": 1,
-                "CooldownDays": 7,
+                "CooldownDays": 14,
                 "Available": { "SkillLevel": "Farming 4", "NpcExists": "Pierre" }
             },
             "Generator": "PierresStockUp"

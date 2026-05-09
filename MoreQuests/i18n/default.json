@@ -46,6 +46,8 @@
     "config.CropMassiveQty.tooltip": "Crop count for Massive Harvest order.",
     "config.HaySupplyBaseQty": "Hay supply base quantity",
     "config.HaySupplyBaseQty.tooltip": "Base hay before animal-count scaling for Marnie's hay run.",
+    "config.RequestVariationCount": "Request variation count",
+    "config.RequestVariationCount.tooltip": "How many distinct item variations NPCs ask for in mixed-bag delivery quests like Pierre's Stock-Up. Range 2 to 5. Default 3.",
     "config.SkullCavernMaxLevel": "Skull Cavern max level",
     "config.SkullCavernMaxLevel.tooltip": "Maximum floor target for Skull Cavern Deep Dive quests.",
     "config.WeeklySpecialCommonMaxIngredients": "Weekly Special (Common) max ingredients",
@@ -182,7 +184,7 @@
     "mail.mining.deepDiveReward.body": "Dear farmer,^^Your haul came through clean. The Guild had everything smelted overnight and ran the numbers. Here's your share of the bars - {{count}} {{bar}}, payment in full. There's plenty more work like this if you're up for it.^^  -Marlon",
 
     "quest.farming.pierresStockUp.title": "Pierre's stock-up",
-    "quest.farming.pierresStockUp.description": "Pierre's running low on a few seasonal staples for the store. He's asking for {{count}} each of {{item1}}, {{item2}}, and {{item3}}. Bring them by the shop when you can - he'll knock the price down on the seeds for those crops in return.",
+    "quest.farming.pierresStockUp.description": "Pierre's running low on a few seasonal staples for the store. He's asking for {{count}} each of {{items}}. Bring them by the shop when you can - he'll knock the price down on the seeds for those crops in return.",
     "quest.farming.pierresStockUp.step.deliver": "Bring {{count}} {{item}} to {{npc}}.",
     "quest.farming.pierresStockUp.targetMessage": "Wonderful, that'll keep the shelves stocked. I've marked down the seeds for those crops as a thank-you.",
 

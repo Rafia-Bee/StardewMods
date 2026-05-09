@@ -19,6 +19,21 @@ internal static partial class Generators
     private static string StripPrefix(string id) =>
         id.StartsWith("(O)") ? id[3..] : id;
 
+    /// English-style comma-and join: 1 item → "A", 2 → "A and B", 3+ → "A, B, and C"
+    /// (Oxford comma). Used for description copy that lists a quest's requested item
+    /// variations naturally.
+    private static string JoinItemList(IEnumerable<string> items)
+    {
+        var list = items.ToList();
+        return list.Count switch
+        {
+            0 => string.Empty,
+            1 => list[0],
+            2 => $"{list[0]} and {list[1]}",
+            _ => string.Join(", ", list.Take(list.Count - 1)) + ", and " + list[^1]
+        };
+    }
+
     // -------------------- Festival quests (Phase 7b) --------------------
 
     /// Single-objective Ship quest. Player ships Battery Pack OR Coal into the farm
