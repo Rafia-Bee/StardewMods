@@ -21,6 +21,12 @@ internal static class AutomateSkipTiles
     private static int _cachedTick;
     private static HashSet<Vector2> _cachedSkipTiles;
 
+    // Memoize cleaned-name results so a BFS over a network with N "Crab Pot"s only
+    // pays the LINQ + ToArray + string-ctor cost once. Capped only by the count of
+    // distinct Object.Name values across all machines a player has placed; vanilla
+    // is ~50, modded modlists rarely exceed a few hundred. Audit §3.6.
+    private static readonly Dictionary<string, string> _cleanedNameCache = new();
+
     /// <summary>
     /// Returns the set of tiles Automate is managing for the given location, or null
     /// if Automate isn't installed, compat is off, or there's nothing to skip.
@@ -122,7 +128,47 @@ internal static class AutomateSkipTiles
         if (!location.Objects.TryGetValue(tile, out var obj) || obj.Name == null)
             return false;
 
-        var typeId = new string(obj.Name.Where(char.IsLetterOrDigit).ToArray());
-        return automateDisabledTypes.Contains(typeId);
+        return automateDisabledTypes.Contains(GetCleanedTypeId(obj.Name));
+    }
+
+    /// <summary>
+    /// Returns the alphanumeric-only form of <paramref name="name"/>, allocating the
+    /// cleaned string at most once per distinct input. Returns the source string
+    /// directly when no characters need stripping (no allocation in the common-clean case).
+    /// </summary>
+    internal static string GetCleanedTypeId(string name)
+    {
+        if (_cleanedNameCache.TryGetValue(name, out var cached))
+            return cached;
+
+        bool clean = true;
+        for (int i = 0; i < name.Length; i++)
+        {
+            if (!char.IsLetterOrDigit(name[i]))
+            {
+                clean = false;
+                break;
+            }
+        }
+
+        string result;
+        if (clean)
+        {
+            result = name;
+        }
+        else
+        {
+            var buffer = new char[name.Length];
+            int written = 0;
+            for (int i = 0; i < name.Length; i++)
+            {
+                if (char.IsLetterOrDigit(name[i]))
+                    buffer[written++] = name[i];
+            }
+            result = new string(buffer, 0, written);
+        }
+
+        _cleanedNameCache[name] = result;
+        return result;
     }
 }
