@@ -113,6 +113,16 @@ internal static class Helpers
     private static int _cachedBeeHouseTick;
     private static List<Vector2> _cachedBeeHousePositions;
 
+    // Audit §4.5: called from CacheLifecycle.ResetSessionCaches at OnSaveLoaded and
+    // OnReturnedToTitle so we don't keep a strong reference to the prior session's
+    // GameLocation. Per-tick auto-invalidation already covers the in-session case.
+    public static void ClearBeeHouseCache()
+    {
+        _cachedBeeHouseLocation = null;
+        _cachedBeeHouseTick = 0;
+        _cachedBeeHousePositions = null;
+    }
+
     public static bool IsFlowerNearBeeHouse(GameLocation location, Vector2 flowerTile, int range)
     {
         var positions = GetBeeHousePositions(location);
