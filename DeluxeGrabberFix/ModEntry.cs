@@ -498,23 +498,60 @@ public class ModEntry : Mod
         _gmcm.Initialize();
     }
 
+    // Audit §5.5: phase ordering is load-bearing. Each step's prerequisites are listed
+    // alongside it. Any reorder must preserve these invariants:
+    //   - per-save Config has been swapped before any reader of Config runs
+    //   - SaveData (location enable/skip + schema version) is loaded before any
+    //     reader of it runs
+    //   - per-tick / per-session caches have been reset before any walk that would
+    //     otherwise hit stale entries
+    //   - migrations run after SaveData is loaded (gated on SchemaVersion) but before
+    //     readers that depend on the migrated state (RecountSpecializedGrabbers)
     private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
     {
-        // ConfigManager.OnSaveLoaded swaps to the per-save Config and SwapActiveConfig
-        // fires ActiveConfigChanged (audit §2.9). The subscription wired in Entry()
-        // covers RefreshRenderedWorldHook + Data/CraftingRecipes invalidation -- the
-        // latter handles the 2026-04-30 "Specialized recipes missing from crafting
-        // menu" case where the asset loaded before the per-save config took effect.
+        // 1. Swap to per-save Config. ActiveConfigChanged listeners (wired in Entry)
+        // refresh the RenderedWorld hook + invalidate Data/CraftingRecipes (handles
+        // the 2026-04-30 "Specialized recipes missing from crafting menu" case where
+        // the asset loaded before the per-save config took effect). Audit §2.9.
         ConfigManager.OnSaveLoaded();
 
+        // 2. Load per-save data (location toggles, visit-auto-skip flags, schema
+        // version). Must precede DiscoverLocations / ApplyVisitAutoSkip / migrations.
         _locations.LoadSaveData();
+
+        // 3. Drop caches from any prior session (bee-house cache, Automate skip-tile
+        // cache, etc.). Done after Config swap so the next walks see the new config.
         CacheLifecycle.ResetSessionCaches();
+
+        // 4. Walk the world to populate the location list (consumed by the GMCM
+        // subpage, ApplyVisitAutoSkip, and the grab cycle's "all locations" filter).
+        // Reads SaveData; must come after step 2.
         _locations.DiscoverLocations();
+
+        // 5. Apply visit-auto-skip semantics on top of the discovered set.
         _locations.ApplyVisitAutoSkip();
+
+        // 6. Rebuild GMCM page (the dynamic Enabled Locations section depends on
+        // both the swapped Config and the discovered locations).
         _gmcm.RebuildConfigMenu();
+
+        // 7. One-shot per-save migrations, gated by SchemaVersion. Reads SaveData and
+        // walks Locations; must come after steps 2 and 4. Bumps SchemaVersion when done.
         RunPerSaveMigrations();
+
+        // 8. Recount placed specialized grabbers into ModEntry's static flag (consumed
+        // by the Chest_addItem prefix early-out, audit §3.4). Must come after migrations
+        // so any newly-converted grabbers are included in the count.
         RecountSpecializedGrabbers();
+
+        // 9. Retroactively grant any tier whose milestone was met before the player
+        // installed the mod. Reads Config + SaveData + farmer state. Order-insensitive
+        // versus steps 4-8 but kept here so the unlock mails queue after the menu rebuild
+        // and migrations have settled.
         _progression.RetroactiveCheck();
+
+        // 10. Trace-log the active Config. Last so the trace reflects the final
+        // post-migration state.
         LogConfig();
     }
 
