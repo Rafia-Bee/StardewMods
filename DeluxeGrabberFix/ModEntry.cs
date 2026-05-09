@@ -453,6 +453,15 @@ public class ModEntry : Mod
             original: AccessTools.Method(typeof(Game1), nameof(Game1.createItemDebris)),
             prefix: new HarmonyMethod(typeof(HarvestInterceptor), nameof(HarvestInterceptor.CreateItemDebris_Prefix))
         );
+        // Issue #75.1: Tree.shake's DROP_QI_BEANS branch (and Utility.trySpawnRareObject)
+        // route through createObjectDebris(string id, ...) rather than createItemDebris(Item, ...).
+        // Without this patch, Qi Beans dropped from shaken seed trees fall on the ground
+        // instead of routing into the auto-grabber chest during a SeedTreeGrabber cycle.
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Game1), nameof(Game1.createObjectDebris),
+                new[] { typeof(string), typeof(int), typeof(int), typeof(int), typeof(int), typeof(float), typeof(GameLocation) }),
+            prefix: new HarmonyMethod(typeof(HarvestInterceptor), nameof(HarvestInterceptor.CreateObjectDebris_Prefix))
+        );
         harmony.Patch(
             original: AccessTools.Method(typeof(StardewValley.Menus.ItemGrabMenu), nameof(StardewValley.Menus.ItemGrabMenu.receiveLeftClick)),
             postfix: new HarmonyMethod(typeof(ModEntry), nameof(ItemGrabMenu_ReceiveLeftClick_Postfix))

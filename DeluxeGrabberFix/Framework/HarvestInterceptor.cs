@@ -52,4 +52,27 @@ internal static class HarvestInterceptor
         _interceptedItems.Add(item);
         return false;
     }
+
+    /// Harmony prefix for the terminal Game1.createObjectDebris(string id, int xTile,
+    /// int yTile, int groundLevel, int itemQuality, float velocityMultiplyer, GameLocation
+    /// location) overload. Tree.shake routes the Qi Bean DROP_QI_BEANS drop and a few
+    /// other rare drops through this path (issue #75.1) instead of through
+    /// createItemDebris(Item, ...), so without this prefix those items spawn on the
+    /// ground even mid-intercept. Materializes an Item from the id and routes it through
+    /// the same interception list as createItemDebris.
+    internal static bool CreateObjectDebris_Prefix(string id, int itemQuality)
+    {
+        if (!_intercepting || _interceptedItems == null)
+            return true;
+
+        var item = ItemRegistry.Create(id);
+        if (item == null)
+            return true;
+
+        if (itemQuality > 0 && item is Object obj)
+            obj.Quality = itemQuality;
+
+        _interceptedItems.Add(item);
+        return false;
+    }
 }
