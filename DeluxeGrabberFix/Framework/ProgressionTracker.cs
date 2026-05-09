@@ -104,7 +104,8 @@ internal class ProgressionTracker
                 unlocked++;
             }
 
-            if (!farmer.mailReceived.Contains(HintCropMail))
+            if (!farmer.craftingRecipes.ContainsKey(CropRecipe)
+                && !farmer.mailReceived.Contains(HintCropMail))
                 farmer.mailForTomorrow.Add(HintCropMail);
         }
 
@@ -118,7 +119,8 @@ internal class ProgressionTracker
                 unlocked++;
             }
 
-            if (!farmer.mailReceived.Contains(HintForageMail))
+            if (!farmer.craftingRecipes.ContainsKey(ForageRecipe)
+                && !farmer.mailReceived.Contains(HintForageMail))
                 farmer.mailForTomorrow.Add(HintForageMail);
         }
 
@@ -132,7 +134,8 @@ internal class ProgressionTracker
                 unlocked++;
             }
 
-            if (!farmer.mailReceived.Contains(HintTreeMail))
+            if (!farmer.craftingRecipes.ContainsKey(TreeRecipe)
+                && !farmer.mailReceived.Contains(HintTreeMail))
                 farmer.mailForTomorrow.Add(HintTreeMail);
         }
 
@@ -146,7 +149,8 @@ internal class ProgressionTracker
                 unlocked++;
             }
 
-            if (!farmer.mailReceived.Contains(HintScavengerMail))
+            if (!farmer.craftingRecipes.ContainsKey(ScavengerRecipe)
+                && !farmer.mailReceived.Contains(HintScavengerMail))
                 farmer.mailForTomorrow.Add(HintScavengerMail);
         }
 
@@ -160,7 +164,8 @@ internal class ProgressionTracker
                 unlocked++;
             }
 
-            if (!farmer.mailReceived.Contains(HintMachineMail))
+            if (!farmer.craftingRecipes.ContainsKey(MachineRecipe)
+                && !farmer.mailReceived.Contains(HintMachineMail))
                 farmer.mailForTomorrow.Add(HintMachineMail);
         }
 
