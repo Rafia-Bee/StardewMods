@@ -168,6 +168,16 @@ public class ModEntry : Mod
             Monitor.Log(message, LogLevel.Trace);
     }
 
+    // Audit §5.9: deferred-formatting overload for hot paths or messages whose
+    // construction is expensive (string.Join over collections, reflection, etc.).
+    // The factory is invoked only when debugLogging is on, so the per-call cost
+    // when debug is off is one bool read instead of the full interpolation.
+    public void LogDebug(Func<string> messageFactory)
+    {
+        if (Config.debugLogging)
+            Monitor.Log(messageFactory(), LogLevel.Trace);
+    }
+
     internal void ReportChestFull(Object grabber) => _grabbers.ReportChestFull(grabber);
     internal void ReportCropsHarvested(GameLocation location) => _grabbers.ReportCropsHarvested(location);
     internal void ResetDayTracking() => _grabbers.ResetDayTracking();

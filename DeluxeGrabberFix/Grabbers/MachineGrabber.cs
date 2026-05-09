@@ -101,7 +101,7 @@ internal class MachineGrabber : ObjectsMapGrabber
 
         if (_automateSkipTiles != null && _automateSkipTiles.Contains(tile))
         {
-            Mod.LogDebug($"Skipping {obj.Name} at {Location.Name} [{tile}] (managed by Automate)");
+            Mod.LogDebug(() => $"Skipping {obj.Name} at {Location.Name} [{tile}] (managed by Automate)");
             return false;
         }
 
@@ -154,7 +154,7 @@ internal class MachineGrabber : ObjectsMapGrabber
         var output = obj.heldObject.Value;
         if (TryAddItem(output))
         {
-            Mod.LogDebug($"Collected {output.Name} x{output.Stack} from crab pot at {Location.Name} [{tile}]");
+            Mod.LogDebug(() => $"Collected {output.Name} x{output.Stack} from crab pot at {Location.Name} [{tile}]");
             obj.heldObject.Value = null;
             obj.readyForHarvest.Value = false;
             obj.showNextIndex.Value = false;
@@ -176,7 +176,7 @@ internal class MachineGrabber : ObjectsMapGrabber
         var output = obj.heldObject.Value;
         if (TryAddItem(output))
         {
-            Mod.LogDebug($"Collected {output.Name} x{output.Stack} from fish net at {Location.Name} [{tile}]");
+            Mod.LogDebug(() => $"Collected {output.Name} x{output.Stack} from fish net at {Location.Name} [{tile}]");
             obj.heldObject.Value = null;
             obj.readyForHarvest.Value = false;
             obj.showNextIndex.Value = false;
@@ -198,7 +198,7 @@ internal class MachineGrabber : ObjectsMapGrabber
         var output = obj.heldObject.Value;
         if (TryAddItem(output))
         {
-            Mod.LogDebug($"Collected {output.Name} x{output.Stack} from {machineName} at {Location.Name} [{tile}]");
+            Mod.LogDebug(() => $"Collected {output.Name} x{output.Stack} from {machineName} at {Location.Name} [{tile}]");
             obj.heldObject.Value = null;
             obj.readyForHarvest.Value = false;
             obj.showNextIndex.Value = false;

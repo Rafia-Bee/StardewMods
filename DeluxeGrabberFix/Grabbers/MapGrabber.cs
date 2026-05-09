@@ -93,22 +93,22 @@ internal abstract class MapGrabber
 
         if (Config.Compatibility.excludeQuestItems && item is Object obj && (obj.questItem.Value || obj.Type == "Quest"))
         {
-            Mod.LogDebug($"Quest item excluded: {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+            Mod.LogDebug(() => $"Quest item excluded: {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             return false;
         }
 
         if (Config.IsItemExcluded(item.QualifiedItemId))
         {
             if (Config.Compatibility.visitMtVapiusExclusions && item.QualifiedItemId.Contains("_Node_"))
-                Mod.LogDebug($"VMV exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+                Mod.LogDebug(() => $"VMV exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             else if (Config.Compatibility.baublesExclusions && ModConfig.BaublesExcludedItems.Contains(item.QualifiedItemId))
-                Mod.LogDebug($"Baubles exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+                Mod.LogDebug(() => $"Baubles exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             else if (Config.Compatibility.resourceChickensExclusions && ModConfig.ResourceChickensExcludedItems.Contains(item.QualifiedItemId))
-                Mod.LogDebug($"Resource Chickens exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+                Mod.LogDebug(() => $"Resource Chickens exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             else if (Config.Compatibility.capeStardewExclusions && ModConfig.CapeStardewExcludedItems.Contains(item.QualifiedItemId))
-                Mod.LogDebug($"Cape Stardew exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+                Mod.LogDebug(() => $"Cape Stardew exclusion: skipped {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             else
-                Mod.LogDebug($"Skipping excluded item {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
+                Mod.LogDebug(() => $"Skipping excluded item {item.Name} ({item.QualifiedItemId}) at {Location.Name}");
             return false;
         }
 
@@ -126,7 +126,7 @@ internal abstract class MapGrabber
             }
         }
 
-        Mod.LogDebug($"Failed to add {item.Name} x{item.Stack} — all grabber chests full at {Location.Name}");
+        Mod.LogDebug(() => $"Failed to add {item.Name} x{item.Stack} - all grabber chests full at {Location.Name}");
         foreach (var grabber in grabbers)
             Mod.ReportChestFull(grabber.Value);
         return false;

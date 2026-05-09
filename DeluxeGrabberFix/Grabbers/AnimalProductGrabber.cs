@@ -38,7 +38,7 @@ internal class AnimalProductGrabber : MapGrabber
 
             if (TryAddItem(item))
             {
-                Mod.LogDebug($"Collected {item.Name} x{item.Stack} from {animal.displayName} at {Location.Name}");
+                Mod.LogDebug(() => $"Collected {item.Name} x{item.Stack} from {animal.displayName} at {Location.Name}");
                 animal.HandleStatsOnProduceCollected(item, (uint)item.Stack);
                 animal.currentProduce.Value = null;
                 animal.ReloadTextureIfNeeded();
@@ -63,7 +63,7 @@ internal class AnimalProductGrabber : MapGrabber
 
                 if (TryAddItem(obj))
                 {
-                    Mod.LogDebug($"Collected {obj.Name} x{obj.Stack} from ground at {Location.Name} [{pair.Key}]");
+                    Mod.LogDebug(() => $"Collected {obj.Name} x{obj.Stack} from ground at {Location.Name} [{pair.Key}]");
                     tilesToRemove.Add(pair.Key);
                     GainExperience(0, 5);
                     grabbed = true;
