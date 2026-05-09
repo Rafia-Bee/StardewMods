@@ -705,6 +705,11 @@ public class ModEntry : Mod
 
     private void OnReturnedToTitle(object sender, ReturnedToTitleEventArgs e)
     {
+        // Audit §3.11: flush deferred per-warp persistence before ClearState wipes
+        // the in-memory copy. Without this, any per-warp un-skips since the last
+        // OnDayEnding would be lost when the player exits to title without sleeping.
+        _locations.FlushDirtyState();
+
         _locations.ClearState();
         TownGarbageCanGrabber.ClearCache();
         // ConfigManager.OnReturnedToTitle restores the global Config; SwapActiveConfig
@@ -960,6 +965,11 @@ public class ModEntry : Mod
 
     private void OnDayEnding(object sender, DayEndingEventArgs e)
     {
+        // Audit §3.11: flush deferred per-warp persistence before the day rolls over.
+        // Runs unconditionally (above the forage early-return) so saves still happen
+        // when the player has forage off but has crossed previously-auto-skipped maps.
+        _locations.FlushDirtyState();
+
         if (!Config.Features.forage)
             return;
 
