@@ -44,6 +44,19 @@ internal class ProgressionTracker
 
     internal static readonly HashSet<string> AllRecipeKeysSet = new(AllRecipeKeys);
 
+    // The grabber types that callers of CollectOwnedGrabberTypes ever check via Contains.
+    // Animal -> Crop -> Forage -> Tree -> Scavenger is the prerequisite chain; Machine is
+    // the leaf of the progression and never queried as a prerequisite. Once owned covers
+    // this set, the world walk cannot produce a value any caller will read.
+    internal static readonly HashSet<GrabberType> ProgressionPrerequisiteTypes = new()
+    {
+        GrabberType.Animal,
+        GrabberType.Crop,
+        GrabberType.Forage,
+        GrabberType.Tree,
+        GrabberType.Scavenger,
+    };
+
     public ProgressionTracker(ModEntry mod)
     {
         _mod = mod;
@@ -229,7 +242,7 @@ internal class ProgressionTracker
     /// <summary>
     /// Check if the player owns (placed in world or in inventory) a grabber of the given type.
     /// </summary>
-    private HashSet<GrabberType> CollectOwnedGrabberTypes(Farmer farmer)
+    internal HashSet<GrabberType> CollectOwnedGrabberTypes(Farmer farmer)
     {
         var owned = new HashSet<GrabberType>();
 
@@ -250,6 +263,13 @@ internal class ProgressionTracker
             else if (GrabberTypeHelper.IsSpecializedGrabberItem(item.QualifiedItemId))
                 owned.Add(GrabberTypeHelper.GetGrabberType(item.QualifiedItemId));
         }
+
+        // Skip the world walk if recipe + inventory already cover every prerequisite type
+        // any caller queries. The world walk can only add Animal or a specialized type, all
+        // of which are already represented; iterating every location's Objects.Pairs to
+        // re-add types that won't change Contains() results is wasted work on day start.
+        if (owned.IsSupersetOf(ProgressionPrerequisiteTypes))
+            return owned;
 
         // Check placed in world (single pass through all locations)
         foreach (var location in ModEntry.GetAllLocations())
