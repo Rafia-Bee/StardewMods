@@ -95,6 +95,7 @@ internal class OrePanGrabber : MapGrabber
         if (TryAddItems(items))
         {
             Location.orePanPoint.Value = Point.Zero;
+            GainArchaeologyExperience(Config.Compatibility.archaeologyXpFromOrePan);
             return true;
         }
         return false;

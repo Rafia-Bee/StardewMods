@@ -34,7 +34,14 @@ internal class TownGarbageCanGrabber : MapGrabber
                 continue;
 
             Location.TryGetGarbageItem(canId, Player.DailyLuck, out Item item, out _, out _, null);
-            anyGrabbed = TryAddItem(item) || anyGrabbed;
+            bool grabbed = TryAddItem(item);
+            anyGrabbed = grabbed || anyGrabbed;
+
+            // Increment vanilla stat. Binning Skill listens to this via SpaceCore [StatChanged]
+            // and grants its skill XP automatically. Vanilla also tracks it for hat unlocks etc.
+            // Counted whether or not the item fit, since the can was opened either way.
+            if (Config.Compatibility.binningSkillStatTracking)
+                Game1.stats.Increment("trashCansChecked", 1);
         }
 
         return anyGrabbed;

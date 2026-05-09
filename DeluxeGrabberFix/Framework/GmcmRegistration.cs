@@ -502,6 +502,20 @@ internal class GmcmRegistration
          .Bool("config.automate-compatibility",
              () => _getConfig().Machines.automateCompatibility, v => _getConfig().Machines.automateCompatibility = v);
 
+        b.Section("section.modded-skill-xp")
+         .Bool("config.binning-skill-stat-tracking",
+             () => _getConfig().Compatibility.binningSkillStatTracking, v => _getConfig().Compatibility.binningSkillStatTracking = v)
+         .Bool("config.archaeology-skill-integration",
+             () => _getConfig().Compatibility.archaeologySkillIntegration, v => _getConfig().Compatibility.archaeologySkillIntegration = v)
+         .Number("config.archaeology-xp-from-artifact-spot",
+             () => _getConfig().Compatibility.archaeologyXpFromArtifactSpot,
+             v => _getConfig().Compatibility.archaeologyXpFromArtifactSpot = Math.Clamp(v, 0, 100),
+             min: 0, max: 100, interval: 1)
+         .Number("config.archaeology-xp-from-ore-pan",
+             () => _getConfig().Compatibility.archaeologyXpFromOrePan,
+             v => _getConfig().Compatibility.archaeologyXpFromOrePan = Math.Clamp(v, 0, 100),
+             min: 0, max: 100, interval: 1);
+
         // Enabled Locations page
         b.Page("enabled-locations", "config.enabled-locations-page");
 

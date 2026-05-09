@@ -163,6 +163,20 @@ internal abstract class MapGrabber
             Player.gainExperience(skill, exp);
     }
 
+    // Routes XP to Archaeology Skill (moonslime.ArchaeologySkill via SpaceCore) for grab
+    // sites that would have earned the player Archaeology XP if performed manually
+    // (artifact spots, ore pans). No-ops if SpaceCore or Archaeology Skill aren't loaded.
+    protected void GainArchaeologyExperience(int exp)
+    {
+        if (!Mod.Config.gainExperience || exp <= 0)
+            return;
+        if (!Mod.Config.Compatibility.archaeologySkillIntegration)
+            return;
+        if (!SpaceCoreIntegration.ArchaeologyLoaded)
+            return;
+        SpaceCoreIntegration.AddExperience(Player, SpaceCoreIntegration.ArchaeologySkillId, exp);
+    }
+
     public bool CanGrab()
     {
         return GetFilteredGrabberPairs().Any(pair => IsValidGrabber(pair.Value, pair.Key));
