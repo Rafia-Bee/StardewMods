@@ -508,7 +508,7 @@ public class ModEntry : Mod
         ConfigManager.OnSaveLoaded();
 
         _locations.LoadSaveData();
-        TownGarbageCanGrabber.ClearCache();
+        CacheLifecycle.ResetSessionCaches();
         _locations.DiscoverLocations();
         _locations.ApplyVisitAutoSkip();
         _gmcm.RebuildConfigMenu();
@@ -711,7 +711,7 @@ public class ModEntry : Mod
         // (including DGF auto-skip un-skips) carry over. Flushing here would persist
         // changes the player implicitly chose not to save by skipping sleep.
         _locations.ClearState();
-        TownGarbageCanGrabber.ClearCache();
+        CacheLifecycle.ResetTitleCaches();
         // ConfigManager.OnReturnedToTitle restores the global Config; SwapActiveConfig
         // fires ActiveConfigChanged so RefreshRenderedWorldHook + Data/CraftingRecipes
         // invalidation run automatically (audit §2.9).
