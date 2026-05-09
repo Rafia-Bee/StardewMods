@@ -293,7 +293,7 @@ public class ModEntry : Mod
         if (grabber.modData.TryGetValue(GrabberNameModDataKey, out string name) && !string.IsNullOrWhiteSpace(name))
             return name;
 
-        if (grabber.heldObject.Value is StardewValley.Objects.Chest chest
+        if (grabber.heldObject.Value is Chest chest
             && chest.modData.TryGetValue(ChestsAnywhereNameKey, out string caName)
             && !string.IsNullOrWhiteSpace(caName))
             return caName;
@@ -414,7 +414,7 @@ public class ModEntry : Mod
 
         // The auto-grabber passes itself as 'context', not 'sourceItem'
         if (grabMenu.context is not Object obj || !GrabberTypeHelper.IsGrabber(obj.QualifiedItemId)
-            || obj.heldObject.Value is not StardewValley.Objects.Chest)
+            || obj.heldObject.Value is not Chest)
             return;
 
         _globalGrabberButton = new GlobalGrabberButton(this, obj, grabMenu);
@@ -469,7 +469,7 @@ public class ModEntry : Mod
 
         // Block external mods from adding items to wrong specialized grabber type
         harmony.Patch(
-            original: AccessTools.Method(typeof(StardewValley.Objects.Chest), nameof(StardewValley.Objects.Chest.addItem)),
+            original: AccessTools.Method(typeof(Chest), nameof(Chest.addItem)),
             prefix: new HarmonyMethod(typeof(SpecializedGrabberPatches), nameof(SpecializedGrabberPatches.Chest_addItem_Prefix))
         );
 
@@ -597,15 +597,15 @@ public class ModEntry : Mod
                 if (pair.Value.QualifiedItemId == BigCraftableIds.AutoGrabber
                     && pair.Value.modData.TryGetValue(SpecializedGrabberPatches.ModDataGrabberType, out string existingType))
                 {
-                    if (pair.Value.heldObject.Value is not StardewValley.Objects.Chest)
+                    if (pair.Value.heldObject.Value is not Chest)
                     {
-                        pair.Value.heldObject.Value = new StardewValley.Objects.Chest();
+                        pair.Value.heldObject.Value = new Chest();
                         pair.Value.showNextIndex.Value = false;
                         initialized++;
                     }
-                    else if (pair.Value.heldObject.Value is StardewValley.Objects.Chest oldChest && oldChest.playerChest.Value)
+                    else if (pair.Value.heldObject.Value is Chest oldChest && oldChest.playerChest.Value)
                     {
-                        var replacement = new StardewValley.Objects.Chest();
+                        var replacement = new Chest();
                         foreach (var item in oldChest.Items)
                         {
                             if (item != null)
@@ -615,7 +615,7 @@ public class ModEntry : Mod
                         pair.Value.showNextIndex.Value = replacement.Items.Count > 0;
                         initialized++;
                     }
-                    if (pair.Value.heldObject.Value is StardewValley.Objects.Chest existingHeldChest)
+                    if (pair.Value.heldObject.Value is Chest existingHeldChest)
                         existingHeldChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = existingType;
                 }
             }
@@ -628,16 +628,16 @@ public class ModEntry : Mod
                 string originalId = obj.QualifiedItemId;
 
                 // Preserve existing chest contents if any
-                StardewValley.Objects.Chest existingChest = obj.heldObject.Value as StardewValley.Objects.Chest;
+                Chest existingChest = obj.heldObject.Value as Chest;
 
                 location.Objects.Remove(tile);
 
                 var autoGrabber = new Object(tile, BigCraftableIds.AutoGrabberUnqualified);
-                autoGrabber.heldObject.Value = existingChest ?? new StardewValley.Objects.Chest();
+                autoGrabber.heldObject.Value = existingChest ?? new Chest();
                 autoGrabber.showNextIndex.Value = false;
                 autoGrabber.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
                 autoGrabber.modData[SpecializedGrabberPatches.ModDataOriginalId] = originalId;
-                if (autoGrabber.heldObject.Value is StardewValley.Objects.Chest migChest)
+                if (autoGrabber.heldObject.Value is Chest migChest)
                     migChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
                 location.Objects.Add(tile, autoGrabber);
                 converted++;
@@ -786,7 +786,7 @@ public class ModEntry : Mod
                 e.Location.Objects.Remove(tile);
 
                 var autoGrabber = new Object(tile, BigCraftableIds.AutoGrabberUnqualified);
-                var newChest = new StardewValley.Objects.Chest();
+                var newChest = new Chest();
                 newChest.modData[SpecializedGrabberPatches.ModDataGrabberType] = grabberType.ToString();
                 autoGrabber.heldObject.Value = newChest;
                 autoGrabber.showNextIndex.Value = false;

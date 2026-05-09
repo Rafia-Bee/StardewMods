@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using DeluxeGrabberFix.Framework;
 using StardewValley;
 using StardewValley.Locations;
-using StardewValley.Objects;
 
 namespace DeluxeGrabberFix.Grabbers;
 
