@@ -15,7 +15,18 @@ internal class GmcmRegistration
     private IGenericModConfigMenuApi _api;
     private LocationBatchAction? _pendingBatchAction;
 
+    // Snapshot of the GMCM-relevant inputs that determine the SET of registered options.
+    // The static option set never changes, so the only signal is the Enabled Locations
+    // page contents -- driven by `LocationManager.DiscoveredLocations` (null vs populated,
+    // count, and the names themselves). When this snapshot is unchanged from the last
+    // rebuild, RebuildConfigMenu can skip the ~150 API calls without observable difference
+    // in the menu (option values are read live via getValue lambdas every time the menu
+    // opens). Audit §3.5.
+    private OptionSetSnapshot _lastRebuildSnapshot;
+
     internal enum LocationBatchAction { EnableAll, DisableAll, SelectVisitedOnly }
+
+    private readonly record struct OptionSetSnapshot(bool HasLocations, int Count, int NamesHash);
 
     public GmcmRegistration(ModEntry mod, LocationManager locations)
     {
@@ -30,6 +41,7 @@ internal class GmcmRegistration
             return false;
 
         RegisterConfigMenu();
+        _lastRebuildSnapshot = ComputeOptionSetSnapshot();
         return true;
     }
 
@@ -38,8 +50,28 @@ internal class GmcmRegistration
         if (_api == null)
             return;
 
+        var current = ComputeOptionSetSnapshot();
+        if (current == _lastRebuildSnapshot)
+        {
+            _mod.LogDebug("GMCM rebuild skipped: option set unchanged since last register");
+            return;
+        }
+
         _api.Unregister(_mod.ModManifest);
         RegisterConfigMenu();
+        _lastRebuildSnapshot = current;
+    }
+
+    private OptionSetSnapshot ComputeOptionSetSnapshot()
+    {
+        var locs = _locations.DiscoveredLocations;
+        if (locs == null)
+            return new OptionSetSnapshot(false, 0, 0);
+
+        int hash = 0;
+        foreach (var (name, _) in locs)
+            hash = HashCode.Combine(hash, name);
+        return new OptionSetSnapshot(true, locs.Count, hash);
     }
 
     internal bool ProcessPendingBatchAction()
