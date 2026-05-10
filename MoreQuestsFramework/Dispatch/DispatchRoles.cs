@@ -29,4 +29,10 @@ public static class DispatchRoles
     /// (CSV row 53). Distinct from `CombatVendor` because the latter includes Lewis,
     /// who narratively isn't in the market for bat wings or solar essence.
     public const string MonsterPartsBuyer = "MonsterPartsBuyer";
+
+    /// Fishermen / fishing-adjacent villagers who'd realistically commission a quality
+    /// fish haul. Used by Quality Fish Delivery (CSV row 59). Pool stays Willy-anchored
+    /// in vanilla saves and picks up modded fishermen (RSV's Carmen / Blair, Arumi,
+    /// Gunnar) when their content packs are loaded.
+    public const string FishermenNpcs = "FishermenNpcs";
 }

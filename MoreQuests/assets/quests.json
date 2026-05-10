@@ -463,7 +463,7 @@
                 "Weight": 18,
                 "MaxPerDay": 1,
                 "CooldownTier": "Short",
-                "Available": { "SkillLevel": "Fishing 4", "NpcMet": "Willy" }
+                "Available": { "SkillLevel": "Fishing 4" }
             },
             "Generator": "QualityFishDelivery"
         },

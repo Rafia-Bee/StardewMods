@@ -16,6 +16,12 @@ public static class ModCompat
     public const string StardewValleyExpanded = "FlashShifter.SVECode";
     public const string EliAndDylan = "Devilduke.EliandDylan";
     public const string LurkingInTheDark = "drbirbdev.LurkingInTheDark";
+    /// Aikawa Asakai content pack ships the modded NPC Arumi, a Pelican-Town-adjacent
+    /// fisherman the FishermenNpcs dispatch pool routes to when present.
+    public const string AikawaAsakaiCP = "NassiLove.AikawaAsakaiCP";
+    /// HashtagBearFam adds Gunnar, an avid fisherman who'd plausibly broker a quality
+    /// fish run alongside Willy.
+    public const string HashtagBearFamGunnar = "MadDog.HashtagBearFam.Gunnar";
     public const string SiExtraCraftingMaterials = "Si.ExtraCraftingMaterials";
     public const string GenericModConfigMenu = "spacechase0.GenericModConfigMenu";
     public const string SpaceCore = "spacechase0.SpaceCore";
