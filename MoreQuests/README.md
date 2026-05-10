@@ -16,6 +16,7 @@ A SMAPI content mod for Stardew Valley that ships a curated set of new daily-boa
 - **Ridgeside Village**, **East Scarp**, **Visit Mount Vapius**, **Stardew Valley Expanded** — adds modded NPCs to the framework's dispatch pools (saloon chefs, ecology-minded, conservation guides, etc.) so quest givers expand to match the installed roster.
 - **Livestock Follows You** by RafiaBee — required for Marnie's Cow Offer, Marnie's Livestock Show, and Leah's Farm Painting.
 - **Si's Extra Crafting Materials** — required for the Winter Star Wrapping Paper quest.
+- **[Catch of the Day](https://www.nexusmods.com/stardewvalley/mods/30297)** — pairs especially well with Simple Fishing Request and other catch-X-fish quests, since it surfaces which fish are actually biting at the spot you're standing on.
 
 ## Configuration
 
