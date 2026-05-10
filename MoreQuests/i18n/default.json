@@ -322,10 +322,11 @@
     "quest.farming.premiumCrop.objective": "Bring {{qty}} {{quality}} {{item}} to {{npc}}.",
     "quest.farming.premiumCrop.targetMessage": "Spectacular. This is exactly what I needed.",
 
-    "quest.fishing.qualityFish.title": "Willy's quality fish order",
-    "quest.fishing.qualityFish.description": "Willy's running a special and the kitchen wants only the best. Bring him {{qty}} {{quality}} {{item}} when you can land them. The pay reflects the difficulty.",
-    "quest.fishing.qualityFish.objective": "Bring {{qty}} {{quality}} {{item}} to Willy.",
-    "quest.fishing.qualityFish.targetMessage": "Beautiful catch. The chef will be pleased.",
+    "quest.fishing.qualityFish.title": "{{npc}}'s quality fish order",
+    "quest.fishing.qualityFish.description": "{{npc}} has a buyer lined up and the kitchen wants only the best. Land {{qty}} {{quality}} {{item}} and bring them by when you've got the lot. The pay reflects the difficulty.",
+    "quest.fishing.qualityFish.step.catch": "Catch {{qty}} {{item}}.",
+    "quest.fishing.qualityFish.step.deliver": "Bring {{qty}} {{quality}} {{item}} to {{npc}}.",
+    "quest.fishing.qualityFish.targetMessage": "Beautiful catch. This is exactly what was wanted.",
 
     "quest.festival.moonlightJellies.title": "Lights for the Moonlight Jellies",
     "quest.festival.moonlightJellies.description": "Lewis is decking the pier out for the Dance of the Moonlight Jellies and could use a hand. Ship {{torches}} torches and {{wood}} wood through the bin and he'll see something nice gets sent your way.",

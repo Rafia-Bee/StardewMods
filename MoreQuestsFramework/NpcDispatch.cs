@@ -92,5 +92,17 @@ public static class NpcDispatch
         registry.Register(DispatchRoles.MonsterPartsBuyer, "Mr. Aguar", ModCompat.RidgesideVillage);
         registry.Register(DispatchRoles.MonsterPartsBuyer, "Eli", ModCompat.EastScarp);
         registry.Register(DispatchRoles.MonsterPartsBuyer, "Maryam", ModCompat.VisitMountVapius);
+
+        // FishermenNpcs: Quality Fish Delivery (CSV row 59) brokers. Willy is the anchor
+        // (always present); Pam and Elliott round out vanilla; RSV's Carmen and Blair join
+        // when RSV is loaded; Arumi (AikawaAsakaiCP) and Gunnar (HashtagBearFamGunnar) add
+        // modded coverage. The picker silently drops entries whose source mod isn't loaded.
+        registry.Register(DispatchRoles.FishermenNpcs, "Willy");
+        registry.Register(DispatchRoles.FishermenNpcs, "Pam");
+        registry.Register(DispatchRoles.FishermenNpcs, "Elliott");
+        registry.Register(DispatchRoles.FishermenNpcs, "Carmen", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.FishermenNpcs, "Blair", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.FishermenNpcs, "Arumi", ModCompat.AikawaAsakaiCP);
+        registry.Register(DispatchRoles.FishermenNpcs, "Gunnar", ModCompat.HashtagBearFamGunnar);
     }
 }

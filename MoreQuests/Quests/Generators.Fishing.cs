@@ -294,16 +294,18 @@ internal static partial class Generators
     /// silently drop out. We still pre-filter by `getCharacterFromName` so we never queue
     /// a line for an NPC whose mod isn't loaded.
 
-    /// CSV row 59. Daily-board ItemDelivery for Gold-quality (Quality=2) fish to Willy.
-    /// Implemented as `ItemDelivery` rather than `Fishing` because the player needs to
-    /// hold the gold-quality stack at turn-in time — `MoreQuestsFishingQuest`'s catch
-    /// counter ticks on every catch regardless of quality, which would falsely show
-    /// "5/5 caught" even when the player only had silver fish to deliver. The CSV row
-    /// note explicitly accepts either approach; ItemDelivery is the simpler match for
-    /// quality enforcement.
+    /// CSV row 59. Daily-board two-step Adventure quest. Giver is dispatched from the
+    /// `FishermenNpcs` pool (Willy / Pam / Elliott vanilla, plus Carmen / Blair RSV and
+    /// modded fishermen Arumi + Gunnar when their packs are loaded). The player catches
+    /// X of a seasonal fish first, then delivers the gold-quality stack to the giver.
+    /// Quality enforcement lives on the Deliver step (`MinQuality = 2`) since vanilla's
+    /// fish-caught event doesn't expose quality, so the Catch step only counts catches.
+    /// Reward is unclamped sell-price * qty * `RewardMultiplierBelowSell` (no 30g floor).
     private static QuestPosting? QualityFishDelivery(QuestContext ctx)
     {
-        const string giver = "Willy";
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.FishermenNpcs);
+        if (giver == null)
+            return null;
 
         var fish = ctx.Config.FishingIgnoresVisitedLocations
             ? ctx.Items.GetSeasonalFish(ctx.Season)
@@ -312,35 +314,56 @@ internal static partial class Generators
             return null;
         var target = fish[Game1.random.Next(fish.Count)];
 
-        int qty = Game1.random.Next(3, 6);
-        int basePrice = Math.Max(target.SellPrice, 30);
-        int gold = Math.Clamp(
-            (int)(basePrice * qty * ctx.Config.RewardMultiplierAboveSell),
-            ctx.Config.GoldBasicBase,
-            ctx.Config.GoldIntermediateBase);
+        int qty = ctx.Config.DifficultyScaling
+            ? Math.Max(1, Game1.player.FishingLevel) * Game1.random.Next(1, 5)
+            : Game1.random.Next(2, 8);
+        qty = Math.Max(1, qty);
+
+        int gold = (int)(target.SellPrice * qty * ctx.Config.RewardMultiplierBelowSell);
 
         string qualityName = QualityName(2);
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "Catch",
+                Kind = AdventureStepKind.Catch,
+                Items = new List<string> { target.QualifiedItemId },
+                Count = qty,
+                Description = ModEntry.I18n.Get("quest.fishing.qualityFish.step.catch", new { qty, item = target.DisplayName })
+            },
+            new AdventureStepState
+            {
+                Name = "Deliver",
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { giver },
+                Items = new List<string> { target.QualifiedItemId },
+                Count = qty,
+                MinQuality = 2,
+                Requires = new List<string> { "Catch" },
+                Description = ModEntry.I18n.Get("quest.fishing.qualityFish.step.deliver", new { qty, quality = qualityName, item = target.DisplayName, npc = giver })
+            }
+        }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.fishing.qualityFish.targetMessage"));
 
         return new QuestPosting
         {
             Category = QuestCategory.Fishing,
             Tier = DifficultyTier.Intermediate,
-            QuestType = BoardQuestType.ItemDelivery,
+            QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
-            ObjectiveItemId = target.QualifiedItemId,
-            ObjectiveItemName = target.DisplayName,
-            ObjectiveQuantity = qty,
-            MinQuality = 2,
+            ObjectiveQuantity = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
             Rewards =
             {
                 new MoneyReward(gold),
                 new FriendshipReward(giver, ctx.Config.FriendshipBasic)
             },
-            Title = ModEntry.I18n.Get("quest.fishing.qualityFish.title"),
-            Description = ModEntry.I18n.Get("quest.fishing.qualityFish.description", new { qty, quality = qualityName, item = target.DisplayName }),
-            CurrentObjective = ModEntry.I18n.Get("quest.fishing.qualityFish.objective", new { qty, quality = qualityName, item = target.DisplayName }),
-            TargetMessage = ModEntry.I18n.Get("quest.fishing.qualityFish.targetMessage")
+            Title = ModEntry.I18n.Get("quest.fishing.qualityFish.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.fishing.qualityFish.description", new { npc = giver, qty, quality = qualityName, item = target.DisplayName }),
+            TargetMessage = ModEntry.I18n.Get("quest.fishing.qualityFish.targetMessage"),
+            PreBuiltQuest = quest
         };
     }
 
