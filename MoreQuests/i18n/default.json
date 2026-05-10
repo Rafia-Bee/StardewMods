@@ -305,7 +305,7 @@
     "quest.quality.iridium": "Iridium-quality",
 
     "quest.farming.qualityCrop.title": "{{npc}}'s quality crop order",
-    "quest.farming.qualityCrop.description": "{{npc}} is putting together a particular meal and only the best {{item}} will do. Bring {{qty}} {{quality}} {{item}} when you have them. Anything less than gold won't make the dish.",
+    "quest.farming.qualityCrop.description": "{{npc}} is putting together a particular meal and only the best {{item}} will do. Bring {{qty}} {{quality}} {{item}} when you have them. Anything less and it just won't taste right.",
     "quest.farming.qualityCrop.objective": "Bring {{qty}} {{quality}} {{item}} to {{npc}}.",
     "quest.farming.qualityCrop.targetMessage": "These look perfect. Thank you for taking the extra care.",
 
