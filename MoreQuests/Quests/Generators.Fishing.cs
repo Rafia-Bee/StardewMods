@@ -360,28 +360,18 @@ internal static partial class Generators
         ("(O)877", "Curiosity Lure")
     };
 
-    /// Vanilla Challenge Bait — high-attract bait used as a 10-pack reward for the
-    /// location overpopulation quest. Modded saves keep the same id; if a content pack
-    /// removes the item the resolver returns null and the reward gracefully no-ops.
-
-    /// Vanilla Challenge Bait — high-attract bait used as a 10-pack reward for the
-    /// location overpopulation quest. Modded saves keep the same id; if a content pack
-    /// removes the item the resolver returns null and the reward gracefully no-ops.
+    /// Vanilla Challenge Bait, high-attract bait used as the location-overpopulation
+    /// quest reward (qty * 2 per quest). Modded saves keep the same id; if a content
+    /// pack removes the item the resolver returns null and the reward no-ops.
     private const string ChallengeBaitId = "(O)910";
 
     private const string BaitId = "(O)685";
 
-    /// Row 13 — `<Location>` fish overpopulation. Daily-board FishingQuest gated on a
+    /// Row 13, `<Location>` fish overpopulation. Daily-board FishingQuest gated on a
     /// specific location: pick a fish from the player's visited-location pool, then read
     /// its first eligible spawn location from the visited set so the quest description
-    /// can ground the request in a real spot. Reward = `GoldIntermediateBase` + 10x
-    /// Challenge Bait. Giver is dispatched via `EcologyMinded`.
-
-    /// Row 13 — `<Location>` fish overpopulation. Daily-board FishingQuest gated on a
-    /// specific location: pick a fish from the player's visited-location pool, then read
-    /// its first eligible spawn location from the visited set so the quest description
-    /// can ground the request in a real spot. Reward = `GoldIntermediateBase` + 10x
-    /// Challenge Bait. Giver is dispatched via `EcologyMinded`.
+    /// can ground the request in a real spot. Reward = `GoldIntermediateBase` + Challenge
+    /// Bait at 2x the requested fish quantity. Giver is dispatched via `EcologyMinded`.
     private static QuestPosting? LocationFishOverpopulation(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.EcologyMinded);
@@ -424,7 +414,7 @@ internal static partial class Generators
         var rewards = new List<RewardSpec> { new MoneyReward(gold) };
         var bait = ctx.Items.TryResolveItem(ChallengeBaitId);
         if (bait != null)
-            rewards.Add(new ObjectReward(ChallengeBaitId, 10));
+            rewards.Add(new ObjectReward(ChallengeBaitId, qty * 2));
 
         return new QuestPosting
         {
