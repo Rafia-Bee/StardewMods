@@ -18,17 +18,33 @@ internal class ForageHoeDirtGrabber : TerrainFeaturesMapGrabber
         if (!Config.Features.forage || !Mod.IsForageGrabEnabled || feature is not HoeDirt dirt || !IsForageableHoeDirt(feature))
             return false;
 
-        // Try crop.harvest() first (handles spring onions and any modded forage crops)
+        // Try crop.harvest() first (handles spring onions and any modded forage crops).
+        // try/finally so a thrown harvest/hitWithHoe doesn't leave
+        // HarvestInterceptor._intercepting=true and trip audit 4.6's reentry throw.
+        bool shouldDestroy;
+        List<Item> items;
         HarvestInterceptor.BeginIntercept();
-        bool shouldDestroy = dirt.crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);
-        List<Item> items = HarvestInterceptor.EndIntercept();
+        try
+        {
+            shouldDestroy = dirt.crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);
+        }
+        finally
+        {
+            items = HarvestInterceptor.EndIntercept();
+        }
 
         // If harvest() didn't produce anything, try hitWithHoe() (handles ginger)
         if (items.Count == 0)
         {
             HarvestInterceptor.BeginIntercept();
-            shouldDestroy = dirt.crop.hitWithHoe((int)tile.X, (int)tile.Y, Location, dirt);
-            items = HarvestInterceptor.EndIntercept();
+            try
+            {
+                shouldDestroy = dirt.crop.hitWithHoe((int)tile.X, (int)tile.Y, Location, dirt);
+            }
+            finally
+            {
+                items = HarvestInterceptor.EndIntercept();
+            }
         }
 
         if (items.Count > 0)
