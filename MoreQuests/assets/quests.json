@@ -591,6 +591,18 @@
             "Generator": "SizeFishOverpopulation"
         },
         {
+            "Name": "Fishing.LegendaryFish",
+            "Category": "Fishing",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 4,
+                "MaxPerDay": 1,
+                "CooldownDays": 21,
+                "Available": { "SkillLevel": "Fishing 6", "NpcMet": "Willy" }
+            },
+            "Generator": "LegendaryFishQuest"
+        },
+        {
             "Name": "Festival.RainbowPlatter",
             "Category": "Festival",
             "Trigger": {

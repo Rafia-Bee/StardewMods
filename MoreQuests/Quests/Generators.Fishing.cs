@@ -582,6 +582,58 @@ internal static partial class Generators
         };
     }
 
+    /// Row 41 - Legendary Fish Quest. Daily-board FishingQuest restricted to legendary /
+    /// boss fish (anything flagged `IsBossFish = true` in Data/Locations: vanilla Crimsonfish
+    /// / Angler / Legend / Glacierfish / Mutant Carp + their family variants, plus modded
+    /// equivalents like RSV's Deep Ridge Angler / Waterfall Snakehead / Sockeye Salmon).
+    /// Quest is skipped when no legendary in the current season can be caught. Reward
+    /// placeholder = `GoldExpertBase` + 50 Challenge Bait until per-fish display furniture
+    /// assets are ready (CSV's "unique fish display furniture per fish" reward).
+    private const int LegendaryChallengeBaitQty = 50;
+
+    private static QuestPosting? LegendaryFishQuest(QuestContext ctx)
+    {
+        const string giver = "Willy";
+
+        var bosses = ctx.Items.GetBossFish();
+        if (bosses.Count == 0)
+            return null;
+
+        var seasonal = ctx.Items.GetSeasonalFish(ctx.Season);
+        if (seasonal.Count == 0)
+            return null;
+
+        var seasonalIds = new HashSet<string>(seasonal.Select(f => f.QualifiedItemId), StringComparer.OrdinalIgnoreCase);
+        var pool = bosses.Where(f => seasonalIds.Contains(f.QualifiedItemId)).ToList();
+        if (pool.Count == 0)
+            return null;
+
+        var target = pool[Game1.random.Next(pool.Count)];
+
+        int gold = ctx.Config.GoldExpertBase;
+        var rewards = new List<RewardSpec> { new MoneyReward(gold) };
+        var bait = ctx.Items.TryResolveItem(ChallengeBaitId);
+        if (bait != null)
+            rewards.Add(new ObjectReward(ChallengeBaitId, LegendaryChallengeBaitQty));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Fishing,
+            Tier = DifficultyTier.Expert,
+            QuestType = BoardQuestType.Fishing,
+            QuestGiver = giver,
+            ObjectiveItemId = target.QualifiedItemId,
+            ObjectiveItemName = target.DisplayName,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.fishing.legendary.title"),
+            Description = ModEntry.I18n.Get("quest.fishing.legendary.description", new { item = target.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.fishing.legendary.objective", new { item = target.DisplayName }),
+            TargetMessage = ModEntry.I18n.Get("quest.fishing.legendary.targetMessage")
+        };
+    }
+
     /// Row 60 — Rainbow Platter (Trout Derby, Summer 20-21). DateLocked yearly DailyBoard
     /// posting on Summer 20: catch `FestivalFishQty` Rainbow Trout (O)138. Giver dispatched
     /// via `SaloonChef`; reward = recipe (per-giver) + `ShopDiscountReward` on the dish for

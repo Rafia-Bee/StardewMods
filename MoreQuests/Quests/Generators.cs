@@ -75,6 +75,7 @@ internal static partial class Generators
         fw.RegisterGenerator("LocationFishOverpopulation", LocationFishOverpopulation);
         fw.RegisterGenerator("RainyDayCatch", RainyDayCatch);
         fw.RegisterGenerator("SizeFishOverpopulation", SizeFishOverpopulation);
+        fw.RegisterGenerator("LegendaryFishQuest", LegendaryFishQuest);
         fw.RegisterGenerator("RainbowPlatter", RainbowPlatter);
         fw.RegisterGenerator("SquidFestShowcase", SquidFestShowcase);
         fw.RegisterGenerator("AlexProteinShakes", AlexProteinShakes);
