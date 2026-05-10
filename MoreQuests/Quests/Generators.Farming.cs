@@ -274,15 +274,11 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 56. Daily-board ItemDelivery for Iridium-quality (Quality=4) "rare"
-    /// seasonal crops, filtered to a sell-price band so the request feels premium.
-    /// Picks any met NPC as the requester. Reward = `GoldAdvancedBase` plus a small
-    /// stack of one rare/ancient seed. Skill-gated to Farming 7.
-
-    /// CSV row 56. Daily-board ItemDelivery for Iridium-quality (Quality=4) "rare"
-    /// seasonal crops, filtered to a sell-price band so the request feels premium.
-    /// Picks any met NPC as the requester. Reward = `GoldAdvancedBase` plus a small
-    /// stack of one rare/ancient seed. Skill-gated to Farming 7.
+    /// CSV row 56. Daily-board ItemDelivery for Iridium-quality (Quality=4) seasonal
+    /// crops. Iridium is the only gating constraint, no sell-price filter. Picks any
+    /// met NPC as the requester. Quantity scales with Farming skill when difficulty
+    /// scaling is on, otherwise rolls a flat band. Reward = `GoldAdvancedBase` plus
+    /// a stack of rare/ancient seeds equal to qty/3. Skill-gated to Farming 7.
     private static QuestPosting? PremiumCropOrder(QuestContext ctx)
     {
         var metNpcs = DispatchRegistry.MetHumanNpcs();
@@ -291,22 +287,20 @@ internal static partial class Generators
         string giver = metNpcs[Game1.random.Next(metNpcs.Count)];
 
         var crops = ctx.Items.GetSeasonalCrops(ctx.Season);
-        // Filter to "rare" tier by sell price. Vanilla high-end crops (Starfruit 750,
-        // Ancient Fruit 550, Sweet Gem Berry 3000, Cranberries 75 base...) — the 200g
-        // floor catches all the high-end seasonal crops without including run-of-the-mill
-        // staples like Tomato (60) or Pumpkin (320 — yes, included, intentionally).
-        var rare = crops.Where(c => c.SellPrice >= 200).ToList();
-        if (rare.Count == 0)
+        if (crops.Count == 0)
             return null;
-        var crop = rare[Game1.random.Next(rare.Count)];
+        var crop = crops[Game1.random.Next(crops.Count)];
 
-        int qty = Game1.random.Next(2, 5);
+        int farmingLevel = Difficulty.GetSkillLevel(QuestCategory.Farming);
+        int qty = ctx.Config.DifficultyScaling
+            ? farmingLevel * 3 + Game1.random.Next(1, 11)
+            : 10 + Game1.random.Next(1, 11);
         int gold = ctx.Config.GoldAdvancedBase;
 
         var rewards = new List<RewardSpec> { new MoneyReward(gold) };
         var seedReward = PickRareSeed(ctx);
         if (seedReward != null)
-            rewards.Add(new ObjectReward(seedReward.QualifiedItemId, 3));
+            rewards.Add(new ObjectReward(seedReward.QualifiedItemId, qty / 3));
 
         string qualityName = QualityName(4);
 

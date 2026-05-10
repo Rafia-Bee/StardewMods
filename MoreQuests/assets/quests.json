@@ -450,7 +450,7 @@
                 "Source": "DailyBoard",
                 "Weight": 12,
                 "MaxPerDay": 1,
-                "CooldownDays": 5,
+                "CooldownDays": 14,
                 "Available": { "SkillLevel": "Farming 7" }
             },
             "Generator": "PremiumCropOrder"
