@@ -41,6 +41,8 @@
     "config.difficultyScaling.tooltip": "When on, harder quest variants unlock based on your skill levels.",
     "config.fishingIgnoresVisitedLocations": "Fishing ignores visited locations",
     "config.fishingIgnoresVisitedLocations.tooltip": "When off (default), fishing quests only request fish that spawn somewhere you've been. Turn on if you want quests to potentially send you somewhere new.",
+    "config.foragingIgnoresVisitedLocations": "Foraging ignores visited locations",
+    "config.foragingIgnoresVisitedLocations.tooltip": "When off (default), foraging quests (seasonal forage, rare hunt, Caroline's tea, Winter Star feast) only request items that spawn somewhere you've been. Turn on if you want quests to potentially send you somewhere new.",
     "config.allowDuplicateGiverPerDay": "Same NPC can give multiple quests",
     "config.allowDuplicateGiverPerDay.tooltip": "When on, the same villager can post multiple different item delivery or fishing quests in the same day. Default off.",
     "config.skipFriendshipQuestsAtMaxHeart": "Skip friendship quests at max hearts",

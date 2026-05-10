@@ -372,7 +372,10 @@ internal static partial class Generators
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var season in offSeasons)
         {
-            foreach (var f in ctx.Items.GetForageItems(season))
+            var forage = ctx.Config.ForagingIgnoresVisitedLocations
+                ? ctx.Items.GetForageItems(season)
+                : ctx.Items.GetForageItemsInVisitedLocations(season);
+            foreach (var f in forage)
                 if (seen.Add(f.QualifiedItemId))
                     pool.Add(f);
         }

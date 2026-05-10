@@ -31,6 +31,13 @@ public sealed class MoreQuestsFrameworkConfig
     /// filtered to fish whose spawn locations the player has visited at least once.
     public bool FishingIgnoresVisitedLocations { get; set; } = false;
 
+    /// When true, foraging-flavoured quests (seasonal forage, rare-forage hunt, Caroline's
+    /// off-season tea, the Winter Star feast) can request items spawning in locations the
+    /// player has not visited. When false (default), the candidate pool is filtered to
+    /// forage whose Data/Locations spawn entries match a visited location. Falls back to
+    /// the full pool on a fresh save (player has only been to the farm).
+    public bool ForagingIgnoresVisitedLocations { get; set; } = false;
+
     /// When true, the same NPC may give multiple different ItemDelivery / Fishing quests
     /// in the same day. When false (default), the pipeline enforces one quest per giver.
     public bool AllowDuplicateGiverPerDay { get; set; } = false;
