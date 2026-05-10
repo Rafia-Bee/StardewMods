@@ -376,6 +376,11 @@
     "quest.fishing.sizeOverpop.objective": "Catch {{qty}} fish at least {{minSize}} inches long.",
     "quest.fishing.sizeOverpop.targetMessage": "Good. The numbers should settle now.",
 
+    "quest.fishing.legendary.title": "Tale of the {{item}}",
+    "quest.fishing.legendary.description": "Hear me out, friend. Old fisher's tale says a {{item}} has been spotted again, and not many folks alive have ever held one. If you've got the patience and the gear, see if you can land one and bring it back to me. There's a worthy haul of bait waiting if you do.",
+    "quest.fishing.legendary.objective": "Catch the {{item}}.",
+    "quest.fishing.legendary.targetMessage": "I knew you had it in you. That's a story worth telling.",
+
     "quest.festival.rainbowPlatter.title": "Rainbow Platter for the Trout Derby",
     "quest.festival.rainbowPlatter.description": "{{npc}} is running a Trout Derby tasting. Bring in {{qty}} Rainbow Trout for the kitchen and you'll walk away with the {{recipe}} recipe and a discount on the dish.",
     "quest.festival.rainbowPlatter.objective": "Catch {{qty}} Rainbow Trout for {{npc}}.",

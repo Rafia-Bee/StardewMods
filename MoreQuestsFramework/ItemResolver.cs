@@ -126,6 +126,51 @@ public sealed class ItemResolver
         return filtered.Count > 0 ? filtered : seasonal;
     }
 
+    /// Boss/legendary fish for the current save. Walks `Data/Locations` and collects every
+    /// `SpawnFishData.ItemId` whose entry sets `IsBossFish = true`. Picks up vanilla
+    /// (Crimsonfish, Angler, Legend, Glacierfish, Mutant Carp, plus the family variants)
+    /// and any modded fish that follow the same convention (Ridgeside Village's Deep Ridge
+    /// Angler / Waterfall Snakehead / Sockeye Salmon, SVE / ESV / VMV equivalents). The
+    /// returned items carry their `Difficulty` from `Data/Fish` when available so callers
+    /// can sort or filter on it.
+    public List<ResolvedItem> GetBossFish()
+    {
+        var results = new List<ResolvedItem>();
+        try
+        {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (_, data) in _cache.Locations)
+            {
+                if (data.Fish == null)
+                    continue;
+                foreach (var spawn in data.Fish)
+                {
+                    if (spawn?.ItemId == null || !spawn.IsBossFish)
+                        continue;
+                    string qualified = ItemRegistry.QualifyItemId(spawn.ItemId) ?? spawn.ItemId;
+                    if (!seen.Add(qualified))
+                        continue;
+                    var item = TryResolveItem(qualified);
+                    if (item == null)
+                        continue;
+                    string fishKey = qualified.StartsWith("(O)") ? qualified.Substring(3) : qualified;
+                    if (_cache.Fish.TryGetValue(fishKey, out var rawData))
+                    {
+                        var fields = rawData.Split('/');
+                        if (fields.Length >= 2 && int.TryParse(fields[1], out int difficulty))
+                            item.Difficulty = difficulty;
+                    }
+                    results.Add(item);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _monitor.Log($"GetBossFish: {ex.Message}", LogLevel.Warn);
+        }
+        return results;
+    }
+
     private HashSet<string>? TryGetSpawnableFishIdsForVisitedLocations(string season)
     {
         try
