@@ -77,7 +77,7 @@
     "quest.farming.basic.targetMessage": "These look great. Thank you!",
 
     "quest.fishing.simple.title": "Fresh catch needed",
-    "quest.fishing.simple.description": "{{npc}} here. I saw some {{item}} splashing around the other day but I couldn't catch any! Could someone catch some for me?",
+    "quest.fishing.simple.description": "{{npc}} here. I saw some {{item}} splashing around the other day when I was going through {{location}}, but I couldn't catch any. Could someone bring me {{qty}}? I'd really appreciate it.",
     "quest.fishing.simple.objective": "Catch {{qty}} {{item}} for {{npc}}.",
     "quest.fishing.simple.targetMessage": "Thank you! They look fresh.",
 

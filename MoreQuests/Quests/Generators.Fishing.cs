@@ -16,19 +16,57 @@ namespace MoreQuests.Quests;
 
 internal static partial class Generators
 {
+    /// CSV row 12. Daily-board fishing quest. Giver is any met adult human who has at
+    /// least one fish in their loved/liked gift-taste pool, so the request reads as the
+    /// NPC asking for a fish they'd actually want. Common-fish filter = Difficulty < 60.
+    /// Time gate: with `DifficultyScaling` on the time field is unconstrained; with it
+    /// off the fish must be catchable for the entire vanilla day (600 to 2600), so the
+    /// player isn't cornered into fishing at a narrow window. Description grounds the
+    /// catch in a visited spawn location; if no visited location for the picked fish
+    /// resolves the candidate is dropped and another is tried.
     private static QuestPosting? SimpleFishingRequest(QuestContext ctx)
     {
+        var givers = MetAdultHumanFishLovers(ctx);
+        if (givers.Count == 0)
+            return null;
+
+        bool scaling = ctx.Config.DifficultyScaling;
+
         var fish = ctx.Config.FishingIgnoresVisitedLocations
             ? ctx.Items.GetSeasonalFish(ctx.Season)
             : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
         if (fish.Count == 0)
             return null;
 
-        fish.Sort((a, b) => a.Difficulty.CompareTo(b.Difficulty));
-        var pool = fish.GetRange(0, Math.Min(fish.Count, Math.Max(3, fish.Count / 2)));
-        var target = pool[Game1.random.Next(pool.Count)];
+        var pool = fish.Where(f => f.Difficulty < 60).ToList();
+        if (!scaling)
+            pool = pool.Where(f => IsAllDayFish(ctx, f.QualifiedItemId)).ToList();
+        if (pool.Count == 0)
+            return null;
 
-        int qty = Game1.random.Next(1, 4);
+        ResolvedItem? target = null;
+        string? targetLocation = null;
+        for (int i = 0; i < 8 && pool.Count > 0; i++)
+        {
+            int idx = Game1.random.Next(pool.Count);
+            var candidate = pool[idx];
+            pool.RemoveAt(idx);
+            string? loc = ResolveVisitedSpawnLocation(ctx, candidate.QualifiedItemId);
+            if (loc != null)
+            {
+                target = candidate;
+                targetLocation = loc;
+                break;
+            }
+        }
+        if (target == null || targetLocation == null)
+            return null;
+
+        int qtyMax = scaling
+            ? Math.Max(2, (int)Math.Floor(Game1.player.FishingLevel * 1.5))
+            : 5;
+        int qty = Game1.random.Next(2, qtyMax + 1);
+        string giver = givers[Game1.random.Next(givers.Count)];
         int gold = (int)(target.SellPrice * qty * ctx.Config.RewardMultiplierAboveSell);
 
         return new QuestPosting
@@ -36,14 +74,20 @@ internal static partial class Generators
             Category = QuestCategory.Fishing,
             Tier = DifficultyTier.Beginner,
             QuestType = BoardQuestType.Fishing,
-            QuestGiver = "Willy",
+            QuestGiver = giver,
             ObjectiveItemId = target.QualifiedItemId,
             ObjectiveItemName = target.DisplayName,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             Rewards = { new MoneyReward(gold) },
             Title = ModEntry.I18n.Get("quest.fishing.simple.title"),
-            Description = ModEntry.I18n.Get("quest.fishing.simple.description", new { npc = "Willy", qty, item = target.DisplayName }),
+            Description = ModEntry.I18n.Get("quest.fishing.simple.description", new
+            {
+                npc = giver,
+                qty,
+                item = target.DisplayName,
+                location = LocationDisplayName(targetLocation)
+            }),
             CurrentObjective = ModEntry.I18n.Get("quest.fishing.simple.objective", new { qty, item = target.DisplayName }),
             TargetMessage = ModEntry.I18n.Get("quest.fishing.simple.targetMessage")
         };

@@ -11,6 +11,7 @@ using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Rewards;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.GameData.Characters;
 
 namespace MoreQuests.Quests;
 
@@ -235,4 +236,120 @@ internal static partial class Generators
     /// Vanilla Big-Craftable / Furniture ids picked for thematic fit (lights, decor).
     /// Unknown ids silently no-op via `RewardApplier`, so over-listing is safe across
     /// game versions.
+
+    // -------------------- Adult-human giver pools --------------------
+
+    /// Met villagers narrowed to adult humans who can plausibly receive a quest gift.
+    /// Programmatic filters: not a child (NPC.Age != Child), not Dwarvish-speaking
+    /// (catches Dwarf and Dwarvish modded NPCs), can socialize per Data/Characters,
+    /// has a Data/NPCGiftTastes row, and CanReceiveGifts() returns true. These
+    /// collectively keep modded animals/monsters out of the pool without naming them.
+    /// Krobus is excluded by name as the canonical "non-human exception": he passes
+    /// every other filter (speaks Default, can socialize, accepts gifts), so vanilla
+    /// data offers no programmatic marker. Quests that explicitly involve Krobus
+    /// should bypass this helper and reference him directly.
+    private static List<string> MetAdultHumanGiftReceivers()
+    {
+        var results = new List<string>();
+        foreach (var name in DispatchRegistry.MetHumanNpcs())
+        {
+            if (string.Equals(name, "Krobus", StringComparison.OrdinalIgnoreCase))
+                continue;
+            var npc = Game1.getCharacterFromName(name);
+            if (npc == null)
+                continue;
+            if (npc.Age == 2)
+                continue;
+            var data = npc.GetData();
+            if (data == null)
+                continue;
+            if (data.Language == NpcLanguage.Dwarvish)
+                continue;
+            if (!npc.CanReceiveGifts())
+                continue;
+            results.Add(name);
+        }
+        return results;
+    }
+
+    /// Subset of `MetAdultHumanGiftReceivers` whose loved+liked Data/NPCGiftTastes pool
+    /// contains at least one item with object category Fish (-4) or the fish category
+    /// sentinel. Used by fishing quests where the giver narratively wants the fish for
+    /// themselves; an NPC who doesn't enjoy any fish wouldn't ask for one.
+    private static List<string> MetAdultHumanFishLovers(QuestContext ctx)
+    {
+        var results = new List<string>();
+        foreach (var name in MetAdultHumanGiftReceivers())
+        {
+            if (NpcLikesAnyFish(ctx, name))
+                results.Add(name);
+        }
+        return results;
+    }
+
+    private static bool NpcLikesAnyFish(QuestContext ctx, string npc)
+    {
+        if (!ctx.Data.GiftTastes.TryGetValue(npc, out var raw))
+            return false;
+        var fields = raw.Split('/');
+        if (fields.Length < 4)
+            return false;
+        return TasteContainsFish(fields[1]) || TasteContainsFish(fields[3]);
+    }
+
+    private static bool TasteContainsFish(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return false;
+        foreach (var token in raw.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (int.TryParse(token, out int n) && n < 0)
+            {
+                if (n == StardewValley.Object.FishCategory)
+                    return true;
+                continue;
+            }
+            string id = token.StartsWith("(", StringComparison.Ordinal) ? token : "(O)" + token;
+            var data = StardewValley.ItemRegistry.GetData(id);
+            if (data?.Category == StardewValley.Object.FishCategory)
+                return true;
+        }
+        return false;
+    }
+
+    /// Returns true when the fish's Data/Fish time-window pairs union covers the full
+    /// vanilla 600-2600 day. Used for the difficulty-scaling-off branch of quests
+    /// that want fish catchable any time of day.
+    private static bool IsAllDayFish(QuestContext ctx, string fishQualifiedId)
+    {
+        string bare = fishQualifiedId.StartsWith("(O)", StringComparison.Ordinal)
+            ? fishQualifiedId.Substring(3)
+            : fishQualifiedId;
+        if (!ctx.Data.Fish.TryGetValue(bare, out var raw))
+            return false;
+        var fields = raw.Split('/');
+        if (fields.Length < 6 || fields[1] == "trap")
+            return false;
+        var tokens = fields[5].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (tokens.Length < 2 || tokens.Length % 2 != 0)
+            return false;
+        var pairs = new List<(int Start, int End)>(tokens.Length / 2);
+        for (int i = 0; i + 1 < tokens.Length; i += 2)
+        {
+            if (!int.TryParse(tokens[i], out int s) || !int.TryParse(tokens[i + 1], out int e))
+                return false;
+            pairs.Add((s, e));
+        }
+        pairs.Sort((a, b) => a.Start.CompareTo(b.Start));
+        int reach = pairs[0].End;
+        if (pairs[0].Start > 600)
+            return false;
+        for (int i = 1; i < pairs.Count; i++)
+        {
+            if (pairs[i].Start > reach)
+                return false;
+            reach = Math.Max(reach, pairs[i].End);
+        }
+        return reach >= 2600;
+    }
 }
