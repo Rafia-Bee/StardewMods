@@ -66,8 +66,14 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
 
     public void LoadContentPack(IContentPack pack) => _loader.LoadContentPack(pack);
 
+    public void LoadContentPack(IContentPack pack, Func<string, int?> cooldownTierResolver)
+        => _loader.LoadContentPack(pack, cooldownTierResolver);
+
     public void LoadQuestsFromMod(IModHelper helper, string relativePath)
         => _loader.LoadFromMod(helper, Owner, relativePath);
+
+    public void LoadQuestsFromMod(IModHelper helper, string relativePath, Func<string, int?> cooldownTierResolver)
+        => _loader.LoadFromMod(helper, Owner, relativePath, cooldownTierResolver);
 
     public void RegisterDispatchNpc(string role, string npcName, string? requiredModUniqueId = null)
         => _dispatch.Register(role, npcName, requiredModUniqueId);

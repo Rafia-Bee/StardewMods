@@ -24,8 +24,10 @@ public sealed class QuestPackLoader
 
     /// Loads from a SMAPI `IContentPack`. The pack's translation helper resolves
     /// `{i18n:...}` tokens. Used by third-party content packs that declare
-    /// `ContentPackFor: RafiaBee.MoreQuestsFramework`.
-    public void LoadContentPack(IContentPack pack)
+    /// `ContentPackFor: RafiaBee.MoreQuestsFramework`. The optional `cooldownTierResolver`
+    /// maps `Trigger.CooldownTier` strings to in-game day counts at trigger evaluation time;
+    /// returning null falls back to the JSON's `CooldownDays` literal.
+    public void LoadContentPack(IContentPack pack, Func<string, int?>? cooldownTierResolver = null)
     {
         QuestPackDocument? doc;
         try
@@ -34,7 +36,7 @@ public sealed class QuestPackLoader
         }
         catch (Exception ex)
         {
-            _monitor.Log($"Content pack '{pack.Manifest.UniqueID}': failed to read quests.json — {ex.Message}", LogLevel.Error);
+            _monitor.Log($"Content pack '{pack.Manifest.UniqueID}': failed to read quests.json, {ex.Message}", LogLevel.Error);
             return;
         }
         if (doc == null)
@@ -42,13 +44,13 @@ public sealed class QuestPackLoader
             _monitor.Log($"Content pack '{pack.Manifest.UniqueID}': no quests.json found.", LogLevel.Warn);
             return;
         }
-        Apply(doc, pack.Manifest.UniqueID, pack.Translation);
+        Apply(doc, pack.Manifest.UniqueID, pack.Translation, cooldownTierResolver);
     }
 
     /// Loads from a JSON file bundled inside a regular C# mod's folder. Used by
     /// our own `RafiaBee.MoreQuests` content mod which ships `assets/quests.json`
     /// alongside generators registered in C#.
-    public void LoadFromMod(IModHelper helper, IManifest manifest, string relativePath)
+    public void LoadFromMod(IModHelper helper, IManifest manifest, string relativePath, Func<string, int?>? cooldownTierResolver = null)
     {
         QuestPackDocument? doc;
         try
@@ -57,7 +59,7 @@ public sealed class QuestPackLoader
         }
         catch (Exception ex)
         {
-            _monitor.Log($"Mod '{manifest.UniqueID}': failed to read '{relativePath}' — {ex.Message}", LogLevel.Error);
+            _monitor.Log($"Mod '{manifest.UniqueID}': failed to read '{relativePath}', {ex.Message}", LogLevel.Error);
             return;
         }
         if (doc == null)
@@ -66,10 +68,10 @@ public sealed class QuestPackLoader
             _monitor.Log($"Mod '{manifest.UniqueID}': '{relativePath}' not found at '{fullPath}'.", LogLevel.Warn);
             return;
         }
-        Apply(doc, manifest.UniqueID, helper.Translation);
+        Apply(doc, manifest.UniqueID, helper.Translation, cooldownTierResolver);
     }
 
-    private void Apply(QuestPackDocument doc, string ownerUniqueId, ITranslationHelper translation)
+    private void Apply(QuestPackDocument doc, string ownerUniqueId, ITranslationHelper translation, Func<string, int?>? cooldownTierResolver)
     {
         if (!string.Equals(doc.Schema, "1.0", StringComparison.OrdinalIgnoreCase))
         {
@@ -83,7 +85,7 @@ public sealed class QuestPackLoader
             if (!Validate(def, ownerUniqueId, seen))
                 continue;
 
-            var jdef = new JsonQuestDefinition(def, ownerUniqueId, translation, _generators, _monitor);
+            var jdef = new JsonQuestDefinition(def, ownerUniqueId, translation, _generators, _monitor, cooldownTierResolver);
             _registry.Register(jdef);
             registered++;
         }

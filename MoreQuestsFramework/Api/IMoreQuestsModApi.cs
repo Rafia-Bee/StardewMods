@@ -29,9 +29,20 @@ public interface IMoreQuestsModApi
     /// Reads a `quests.json` from a SMAPI content pack and registers each entry.
     void LoadContentPack(IContentPack pack);
 
+    /// Variant of `LoadContentPack` that wires a cooldown-tier resolver into every quest the
+    /// pack registers. The resolver is called at trigger evaluation time with the quest's
+    /// `Trigger.CooldownTier` string and should return the in-game day count for that tier.
+    /// Returning null falls back to the JSON's `CooldownDays` literal. Lets a content mod
+    /// surface a small set of shared cooldown buckets in GMCM and have edits apply live.
+    void LoadContentPack(IContentPack pack, Func<string, int?> cooldownTierResolver);
+
     /// Reads a `quests.json` bundled inside this mod's folder (relative to the mod
     /// directory) and registers each entry.
     void LoadQuestsFromMod(IModHelper helper, string relativePath);
+
+    /// Variant of `LoadQuestsFromMod` that wires a cooldown-tier resolver. See the
+    /// `LoadContentPack` overload above for the resolver contract.
+    void LoadQuestsFromMod(IModHelper helper, string relativePath, Func<string, int?> cooldownTierResolver);
 
     /// Adds an NPC to the named dispatch role. Optional `requiredModUniqueId` filters
     /// the entry out unless that mod is loaded — used to scope modded NPCs to their

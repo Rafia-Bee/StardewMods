@@ -114,8 +114,7 @@ internal static partial class Generators
 
         var target = fish[Game1.random.Next(fish.Count)];
         int qty = Math.Max(1, ModEntry.Config.FishHaulMediumQty);
-        int basePrice = Math.Max(target.SellPrice, 30);
-        int gold = (int)(basePrice * qty * ctx.Config.RewardMultiplierBelowSell);
+        int gold = (int)(target.SellPrice * qty * ctx.Config.RewardMultiplierBelowSell);
 
         ConsequenceSpec? consequence = null;
         if (ModEntry.Config.ConsequencesEnabled)

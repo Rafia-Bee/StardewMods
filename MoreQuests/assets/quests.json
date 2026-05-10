@@ -4,13 +4,13 @@
         {
             "Name": "Farming.BasicCropDelivery",
             "Category": "Farming",
-            "Trigger": { "Source": "DailyBoard", "Weight": 60, "MaxPerDay": 4, "CooldownDays": 7 },
+            "Trigger": { "Source": "DailyBoard", "Weight": 60, "MaxPerDay": 4, "CooldownTier": "Medium" },
             "Generator": "BasicCropDelivery"
         },
         {
             "Name": "Fishing.SimpleRequest",
             "Category": "Fishing",
-            "Trigger": { "Source": "DailyBoard", "Weight": 50, "MaxPerDay": 1, "CooldownDays": 2 },
+            "Trigger": { "Source": "DailyBoard", "Weight": 50, "MaxPerDay": 1, "CooldownTier": "Short" },
             "Generator": "SimpleFishingRequest"
         },
         {
@@ -20,7 +20,7 @@
                 "Source": "DailyBoard",
                 "Weight": 50,
                 "MaxPerDay": 1,
-                "CooldownDays": 7,
+                "CooldownTier": "Medium",
                 "Available": { "MinDeepestMineLevel": "1" }
             },
             "Generator": "BasicSlimeClearing"
@@ -32,7 +32,7 @@
                 "Source": "DailyBoard",
                 "Weight": 35,
                 "MaxPerDay": 1,
-                "CooldownDays": 5,
+                "CooldownTier": "Medium",
                 "Available": { "SkillLevel": "Mining 1", "MinDeepestMineLevel": "40" }
             },
             "Generator": "BarDelivery"
@@ -40,7 +40,7 @@
         {
             "Name": "Foraging.Seasonal",
             "Category": "Foraging",
-            "Trigger": { "Source": "DailyBoard", "Weight": 50, "MaxPerDay": 3, "CooldownDays": 2 },
+            "Trigger": { "Source": "DailyBoard", "Weight": 50, "MaxPerDay": 3, "CooldownTier": "Short" },
             "Generator": "SeasonalForaging"
         },
         {
@@ -50,7 +50,7 @@
                 "Source": "DailyBoard",
                 "Weight": 25,
                 "MaxPerDay": 1,
-                "CooldownDays": 7,
+                "CooldownTier": "Medium",
                 "Available": { "NpcExists": "Elliott", "NpcMet": "Elliott" }
             },
             "Generator": "ElliottPoemInspiration"
@@ -62,7 +62,7 @@
                 "Source": "DailyBoard",
                 "Weight": 25,
                 "MaxPerDay": 1,
-                "CooldownDays": 21,
+                "CooldownTier": "Long",
                 "Available": { "NpcExists": "George Evelyn" }
             },
             "Generator": "CheckOnGeorge"
@@ -80,7 +80,7 @@
                 "Source": "DailyBoard",
                 "Weight": 30,
                 "MaxPerDay": 1,
-                "CooldownDays": 7,
+                "CooldownTier": "Medium",
                 "Available": { "Season": "summer" }
             },
             "Generator": "BeachCleanup"
@@ -92,7 +92,7 @@
                 "Source": "DailyBoard",
                 "Weight": 40,
                 "MaxPerDay": 1,
-                "CooldownDays": 8,
+                "CooldownTier": "Medium",
                 "Available": { "Season": "fall" }
             },
             "Generator": "SpringTea"
@@ -100,7 +100,7 @@
         {
             "Name": "Cooking.CravingDish",
             "Category": "Cooking",
-            "Trigger": { "Source": "DailyBoard", "Weight": 30, "MaxPerDay": 3, "CooldownDays": 2 },
+            "Trigger": { "Source": "DailyBoard", "Weight": 30, "MaxPerDay": 3, "CooldownTier": "Short" },
             "Generator": "CravingDish"
         },
         {
@@ -142,7 +142,7 @@
                 "Source": "DailyBoard",
                 "Weight": 20,
                 "MaxPerDay": 1,
-                "CooldownDays": 7
+                "CooldownTier": "Medium"
             },
             "Generator": "CheckOnFriends"
         },
@@ -175,7 +175,7 @@
                 "Source": "SpecialOrder",
                 "StartDate": "fall 1",
                 "Duration": "Month",
-                "CooldownDays": 21
+                "CooldownTier": "Long"
             },
             "Generator": "PreservesSeason"
         },
@@ -186,7 +186,7 @@
                 "Source": "CustomBoard",
                 "Weight": 30,
                 "MaxPerDay": 1,
-                "CooldownDays": 14,
+                "CooldownTier": "Long",
                 "Available": { "MinDeepestMineLevel": "121" }
             },
             "Generator": "SkullCavernDeepDive"
@@ -198,7 +198,7 @@
                 "Source": "CustomBoard",
                 "Weight": 40,
                 "MaxPerDay": 1,
-                "CooldownDays": 14,
+                "CooldownTier": "Long",
                 "Available": { "MinDeepestMineLevel": "5" }
             },
             "Generator": "MinesDeepDive"
@@ -210,7 +210,7 @@
                 "Source": "DailyBoard",
                 "Weight": 20,
                 "MaxPerDay": 1,
-                "CooldownDays": 14,
+                "CooldownTier": "Long",
                 "Available": { "SkillLevel": "Farming 4", "NpcExists": "Pierre" }
             },
             "Generator": "PierresStockUp"
@@ -222,7 +222,7 @@
                 "Source": "DailyBoard",
                 "Weight": 15,
                 "MaxPerDay": 1,
-                "CooldownDays": 10,
+                "CooldownTier": "Long",
                 "Available": { "SkillLevel": "Farming 7" }
             },
             "Generator": "MassiveHarvestRequest"
@@ -234,7 +234,7 @@
                 "Source": "DailyBoard",
                 "Weight": 25,
                 "MaxPerDay": 1,
-                "CooldownDays": 5
+                "CooldownTier": "Medium"
             },
             "Generator": "WeeklySpecialCommon"
         },
@@ -245,7 +245,7 @@
                 "Source": "DailyBoard",
                 "Weight": 15,
                 "MaxPerDay": 1,
-                "CooldownDays": 7
+                "CooldownTier": "Medium"
             },
             "Generator": "WeeklySpecialComplex"
         },
@@ -255,7 +255,7 @@
             "Trigger": {
                 "Source": "SpecialOrder",
                 "Duration": "Week",
-                "CooldownDays": 14
+                "CooldownTier": "Long"
             },
             "Generator": "GrandFeast"
         },
@@ -266,7 +266,7 @@
                 "Source": "DailyBoard",
                 "Weight": 15,
                 "MaxPerDay": 1,
-                "CooldownDays": 5,
+                "CooldownTier": "Medium",
                 "Available": { "SkillLevel": "Fishing 5" }
             },
             "Generator": "MediumFishingHaul"
@@ -278,7 +278,7 @@
                 "Source": "DailyBoard",
                 "Weight": 10,
                 "MaxPerDay": 1,
-                "CooldownDays": 10,
+                "CooldownTier": "Long",
                 "Available": { "SkillLevel": "Fishing 8" }
             },
             "Generator": "SeafoodNight"
@@ -290,7 +290,7 @@
                 "Source": "DailyBoard",
                 "Weight": 20,
                 "MaxPerDay": 1,
-                "CooldownDays": 5,
+                "CooldownTier": "Medium",
                 "Available": { "MinDeepestMineLevel": "40" }
             },
             "Generator": "MonsterParts"
@@ -302,7 +302,7 @@
                 "Source": "DailyBoard",
                 "Weight": 20,
                 "MaxPerDay": 1,
-                "CooldownDays": 14,
+                "CooldownTier": "Long",
                 "Available": { "NpcExists": "Linus", "NpcMet": "Linus" }
             },
             "Generator": "ForageWithLinus"
@@ -336,7 +336,7 @@
                 "Source": "DailyBoard",
                 "Weight": 25,
                 "MaxPerDay": 1,
-                "CooldownDays": 4
+                "CooldownTier": "Medium"
             },
             "Generator": "GiftDelivery"
         },
@@ -347,7 +347,7 @@
                 "Source": "DailyBoard",
                 "Weight": 20,
                 "MaxPerDay": 1,
-                "CooldownDays": 5,
+                "CooldownTier": "Medium",
                 "Available": { "Season": "summer" }
             },
             "Generator": "HeatWaveRelief"
@@ -359,7 +359,7 @@
                 "Source": "DailyBoard",
                 "Weight": 20,
                 "MaxPerDay": 1,
-                "CooldownDays": 5,
+                "CooldownTier": "Medium",
                 "Available": { "Season": "summer" }
             },
             "Generator": "JellyfishWatchPrep"
@@ -381,7 +381,7 @@
                 "Source": "DailyBoard",
                 "Weight": 25,
                 "MaxPerDay": 1,
-                "CooldownDays": 3,
+                "CooldownTier": "Short",
                 "Available": { "MinDeepestMineLevel": "1" }
             },
             "Generator": "MonsterHunt"
@@ -393,7 +393,7 @@
                 "Source": "DailyBoard",
                 "Weight": 15,
                 "MaxPerDay": 1,
-                "CooldownDays": 4,
+                "CooldownTier": "Medium",
                 "Available": { "SkillLevel": "Foraging 5" }
             },
             "Generator": "RareForageHunt"
@@ -405,7 +405,7 @@
                 "Source": "DailyBoard",
                 "Weight": 15,
                 "MaxPerDay": 1,
-                "CooldownDays": 7,
+                "CooldownTier": "Medium",
                 "Available": { "SkillLevel": "Mining 7", "NpcExists": "Clint" }
             },
             "Generator": "RareMaterialRequest"
@@ -438,7 +438,7 @@
                 "Source": "DailyBoard",
                 "Weight": 20,
                 "MaxPerDay": 1,
-                "CooldownDays": 3,
+                "CooldownTier": "Short",
                 "Available": { "SkillLevel": "Farming 2" }
             },
             "Generator": "QualityCropDelivery"
@@ -450,7 +450,7 @@
                 "Source": "DailyBoard",
                 "Weight": 12,
                 "MaxPerDay": 1,
-                "CooldownDays": 14,
+                "CooldownTier": "Long",
                 "Available": { "SkillLevel": "Farming 7" }
             },
             "Generator": "PremiumCropOrder"
@@ -462,7 +462,7 @@
                 "Source": "DailyBoard",
                 "Weight": 18,
                 "MaxPerDay": 1,
-                "CooldownDays": 3,
+                "CooldownTier": "Short",
                 "Available": { "SkillLevel": "Fishing 4", "NpcMet": "Willy" }
             },
             "Generator": "QualityFishDelivery"
@@ -551,7 +551,7 @@
                 "Source": "DailyBoard",
                 "Weight": 22,
                 "MaxPerDay": 1,
-                "CooldownDays": 4,
+                "CooldownTier": "Medium",
                 "Available": { "SkillLevel": "Fishing 2" }
             },
             "Generator": "LocationFishOverpopulation"
@@ -563,7 +563,7 @@
                 "Source": "DailyBoard",
                 "Weight": 18,
                 "MaxPerDay": 1,
-                "CooldownDays": 5,
+                "CooldownTier": "Medium",
                 "Available": { "SkillLevel": "Fishing 3", "Weather": "Rain" }
             },
             "Generator": "RainyDayCatch"
@@ -585,7 +585,7 @@
                 "Source": "DailyBoard",
                 "Weight": 18,
                 "MaxPerDay": 1,
-                "CooldownDays": 4,
+                "CooldownTier": "Medium",
                 "Available": { "SkillLevel": "Fishing 3", "NpcMet": "Demetrius" }
             },
             "Generator": "SizeFishOverpopulation"
@@ -597,7 +597,7 @@
                 "Source": "DailyBoard",
                 "Weight": 4,
                 "MaxPerDay": 1,
-                "CooldownDays": 21,
+                "CooldownTier": "Long",
                 "Available": { "SkillLevel": "Fishing 6", "NpcMet": "Willy" }
             },
             "Generator": "LegendaryFishQuest"
@@ -713,7 +713,7 @@
                 "Source": "DailyBoard",
                 "Weight": 18,
                 "MaxPerDay": 1,
-                "CooldownDays": 14,
+                "CooldownTier": "Long",
                 "Available": { "NpcExists": "Caroline", "NpcMet": "Caroline", "SkillLevel": "Foraging 3", "FriendshipLevel": "Caroline 1" }
             },
             "Generator": "CarolineTeaGarden"
@@ -725,7 +725,7 @@
                 "Source": "DailyBoard",
                 "Weight": 18,
                 "MaxPerDay": 1,
-                "CooldownDays": 5
+                "CooldownTier": "Medium"
             },
             "Generator": "ClearDebris"
         },
@@ -735,7 +735,7 @@
             "Trigger": {
                 "Source": "SpecialOrder",
                 "Duration": "Week",
-                "CooldownDays": 10
+                "CooldownTier": "Long"
             },
             "Generator": "DinnerParty"
         },
@@ -746,7 +746,7 @@
                 "Source": "DailyBoard",
                 "Weight": 15,
                 "MaxPerDay": 1,
-                "CooldownDays": 7
+                "CooldownTier": "Medium"
             },
             "Generator": "PlantTrees"
         },
@@ -757,7 +757,7 @@
                 "Source": "DailyBoard",
                 "Weight": 25,
                 "MaxPerDay": 1,
-                "CooldownDays": 5,
+                "CooldownTier": "Medium",
                 "Available": { "Season": "spring" }
             },
             "Generator": "SpringCleaning"

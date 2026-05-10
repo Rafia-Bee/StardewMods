@@ -55,6 +55,15 @@ public sealed class TriggerDef
     public int? Weight { get; set; }
     public int? MaxPerDay { get; set; }
     public int? CooldownDays { get; set; }
+
+    /// Optional named cooldown bucket. When set, the framework asks the consumer mod's
+    /// registered cooldown-tier resolver (see `IMoreQuestsModApi.LoadQuestsFromMod` overload)
+    /// for the day count at trigger-evaluation time instead of using `CooldownDays`. This lets
+    /// a content mod surface a small set of shared "short / medium / long" knobs in GMCM and
+    /// have edits apply live. Tier names are author-defined; the consumer mod's resolver picks
+    /// the mapping. If the resolver returns null (unknown tier name or no resolver registered),
+    /// the framework falls back to `CooldownDays`.
+    public string? CooldownTier { get; set; }
     public Dictionary<string, string>? Available { get; set; }
 
     /// Optional override of the delivery channel. Defaults vary by source: DailyBoard

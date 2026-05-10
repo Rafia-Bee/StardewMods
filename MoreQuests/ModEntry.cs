@@ -201,8 +201,11 @@ public sealed class ModEntry : Mod
         // Register every C# generator referenced by assets/quests.json.
         Generators.RegisterAll(scope);
 
-        // Load the JSON quest pack. Each entry references a generator above.
-        scope.LoadQuestsFromMod(Helper, "assets/quests.json");
+        // Load the JSON quest pack. Each entry references a generator above. The cooldown
+        // tier resolver maps the named buckets in quests.json (Short / Medium / Long) to the
+        // current ModConfig values, so GMCM edits to those knobs apply on the next trigger
+        // evaluation without re-loading the pack.
+        scope.LoadQuestsFromMod(Helper, "assets/quests.json", ResolveCooldownTier);
 
         // Adventurer's Guild board (Phase 8b/8c). When the player keeps it enabled, the
         // guild board renders at the mine entrance and the mining/monster quests route
@@ -212,6 +215,20 @@ public sealed class ModEntry : Mod
         ApplyGuildBoardRouting(scope);
 
         GmcmRegistration.Register(Helper, ModManifest);
+    }
+
+    /// Maps a `Trigger.CooldownTier` name from `assets/quests.json` to the current ModConfig
+    /// day count. Tier names are case-insensitive. Unknown tier names log a one-time warning
+    /// and fall back to the JSON's `CooldownDays` literal.
+    private int? ResolveCooldownTier(string tier)
+    {
+        return tier?.Trim().ToLowerInvariant() switch
+        {
+            "short" => Config.QuestCooldownShortDays,
+            "medium" => Config.QuestCooldownMediumDays,
+            "long" => Config.QuestCooldownLongDays,
+            _ => null
+        };
     }
 
     /// Vanilla combat-buff foods used as the default Monster Hunt reward pool. Mirrors
