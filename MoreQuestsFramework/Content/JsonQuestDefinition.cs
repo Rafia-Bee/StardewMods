@@ -25,19 +25,23 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     private readonly ITranslationHelper _translation;
     private readonly GeneratorRegistry _generators;
     private readonly IMonitor _monitor;
+    private readonly Func<string, int?>? _cooldownTierResolver;
+    private readonly int _cooldownDaysFallback;
 
     public JsonQuestDefinition(
         QuestDef def,
         string ownerUniqueId,
         ITranslationHelper translation,
         GeneratorRegistry generators,
-        IMonitor monitor)
+        IMonitor monitor,
+        Func<string, int?>? cooldownTierResolver = null)
     {
         _def = def;
         _ownerUniqueId = ownerUniqueId;
         _translation = translation;
         _generators = generators;
         _monitor = monitor;
+        _cooldownTierResolver = cooldownTierResolver;
 
         // Use the JSON Name verbatim as the registry ID. Authors must pick
         // names that won't collide with other packs (e.g. "MyMod.QuestX").
@@ -55,7 +59,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         Trigger = BuildTriggerInfo(def.Trigger);
         DefaultWeight = def.Trigger?.Weight ?? 0;
         MaxPerDay = def.Trigger?.MaxPerDay ?? 1;
-        CooldownDays = def.Trigger?.CooldownDays ?? 0;
+        _cooldownDaysFallback = def.Trigger?.CooldownDays ?? 0;
     }
 
     public string Id { get; }
@@ -65,7 +69,24 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     public TriggerInfo Trigger { get; }
     public int DefaultWeight { get; }
     public int MaxPerDay { get; }
-    public int CooldownDays { get; }
+
+    /// Evaluated on each access so live GMCM edits to a tiered cooldown apply without
+    /// re-loading the quest pack. Resolver-returned null (unknown tier) falls back to the
+    /// `CooldownDays` literal in the JSON.
+    public int CooldownDays
+    {
+        get
+        {
+            string? tier = _def.Trigger?.CooldownTier;
+            if (!string.IsNullOrEmpty(tier) && _cooldownTierResolver != null)
+            {
+                int? resolved = _cooldownTierResolver(tier);
+                if (resolved.HasValue)
+                    return resolved.Value;
+            }
+            return _cooldownDaysFallback;
+        }
+    }
     public string OwnerUniqueId => _ownerUniqueId;
 
     public bool IsAvailable(QuestContext ctx)
