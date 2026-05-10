@@ -87,6 +87,13 @@ internal sealed class GrabSession : IDisposable
         }
 
         _mod.IsGrabbing = false;
+
+        // Belt-and-suspenders against a leaked HarvestInterceptor._intercepting from a
+        // grabber call site that escaped its try/finally (e.g. a future patch that
+        // forgets the protection). Without this, one stray exception during a harvest
+        // call left interception "on" forever and bricked every subsequent grab via the
+        // audit 4.6 reentry throw. A no-op when the call sites behaved correctly.
+        HarvestInterceptor.ForceReset();
     }
 
     private void EnableForageGrab()

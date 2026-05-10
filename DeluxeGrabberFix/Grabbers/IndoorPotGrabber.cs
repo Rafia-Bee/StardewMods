@@ -50,9 +50,19 @@ internal class IndoorPotGrabber : ObjectsMapGrabber
         if (nearbyGrabbers.Count == 0)
             return false;
 
+        // try/finally so a thrown harvest doesn't leave HarvestInterceptor._intercepting=true
+        // and trip audit 4.6's reentry throw on every subsequent grab.
+        bool shouldDestroy;
+        List<Item> items;
         HarvestInterceptor.BeginIntercept();
-        bool shouldDestroy = dirt.crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);
-        List<Item> items = HarvestInterceptor.EndIntercept();
+        try
+        {
+            shouldDestroy = dirt.crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);
+        }
+        finally
+        {
+            items = HarvestInterceptor.EndIntercept();
+        }
 
         if (items.Count > 0)
         {

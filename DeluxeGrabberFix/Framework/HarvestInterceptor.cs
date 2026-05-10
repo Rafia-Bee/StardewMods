@@ -40,6 +40,18 @@ internal static class HarvestInterceptor
         return items ?? new List<Item>();
     }
 
+    // Belt-and-suspenders cleanup. Every grabber call site already wraps Begin/End in
+    // try/finally, but if a future caller forgets, GrabSession.Dispose calls this so a
+    // leaked _intercepting flag never survives past one grab cycle. Without this, a
+    // single uncaught exception inside an intercepted harvest left _intercepting=true
+    // forever, and the next BeginIntercept threw the audit 4.6 reentry check, which
+    // bricked every subsequent grab in the session.
+    internal static void ForceReset()
+    {
+        _intercepting = false;
+        _interceptedItems = null;
+    }
+
     /// <summary>
     /// Harmony prefix for Game1.createItemDebris. When intercepting, captures items
     /// instead of spawning debris on the ground.

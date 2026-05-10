@@ -99,9 +99,18 @@ internal class WildflowersGrabber : TerrainFeaturesMapGrabber
         var dirt = new HoeDirt(1, crop);
         dirt.modData[AedenthornWildflowerKey] = "T";
 
+        // try/finally so a thrown harvest doesn't leave HarvestInterceptor._intercepting=true
+        // and trip audit 4.6's reentry throw on every subsequent grab.
+        List<Item> items;
         HarvestInterceptor.BeginIntercept();
-        crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);
-        List<Item> items = HarvestInterceptor.EndIntercept();
+        try
+        {
+            crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);
+        }
+        finally
+        {
+            items = HarvestInterceptor.EndIntercept();
+        }
 
         if (items.Count == 0)
             return false;
@@ -126,9 +135,19 @@ internal class WildflowersGrabber : TerrainFeaturesMapGrabber
 
         var dirt = new HoeDirt(1, crop);
 
+        // try/finally so a thrown harvest doesn't leave HarvestInterceptor._intercepting=true
+        // and trip audit 4.6's reentry throw on every subsequent grab.
+        bool shouldDestroy;
+        List<Item> items;
         HarvestInterceptor.BeginIntercept();
-        bool shouldDestroy = crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);
-        List<Item> items = HarvestInterceptor.EndIntercept();
+        try
+        {
+            shouldDestroy = crop.harvest((int)tile.X, (int)tile.Y, dirt, isForcedScytheHarvest: true);
+        }
+        finally
+        {
+            items = HarvestInterceptor.EndIntercept();
+        }
 
         if (items.Count == 0)
             return false;

@@ -21,9 +21,19 @@ internal class SeedTreeGrabber : TerrainFeaturesMapGrabber
         if (feature is not Tree tree || !IsHarvestableSeedTree(tree))
             return false;
 
+        // try/finally so a thrown shake (third-party Harmony patch on Tree.shake, etc.)
+        // doesn't leave HarvestInterceptor._intercepting=true and trip audit 4.6's
+        // reentry throw on every subsequent grab.
+        List<Item> items;
         HarvestInterceptor.BeginIntercept();
-        tree.shake(tile, doEvenIfStillShaking: true);
-        List<Item> items = HarvestInterceptor.EndIntercept();
+        try
+        {
+            tree.shake(tile, doEvenIfStillShaking: true);
+        }
+        finally
+        {
+            items = HarvestInterceptor.EndIntercept();
+        }
 
         if (items.Count == 0)
             return false;
