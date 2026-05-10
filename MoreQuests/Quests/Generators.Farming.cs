@@ -224,12 +224,12 @@ internal static partial class Generators
     /// rule in `ConsequenceEngine` keeps the fanfare to one randomly-picked NPC across the
     /// loved + hated union.
 
-    /// CSV row 58. Daily-board ItemDelivery for Gold-quality (Quality=2) seasonal crops.
-    /// Picks any met NPC as the requester. Reward scales with the crop's sell price
-    /// between `GoldBasicBase` and `GoldIntermediateBase` plus `FriendshipBasic` to the
-    /// requester. Skill-gated to Farming 4 via the JSON `SkillLevel` filter so the quest
-    /// only surfaces once the player can plausibly produce gold-quality crops (gold
-    /// requires the Tiller profession or a high farming level + fertilizer).
+    /// CSV row 58. Daily-board ItemDelivery for Silver-or-better (Quality>=1) seasonal
+    /// crops. Picks any met NPC as the requester. Reward scales with the crop's sell
+    /// price between `GoldBasicBase` and `GoldIntermediateBase` plus
+    /// `FriendshipIntermediate` to the requester. Skill-gated to Farming 2 so the quest
+    /// surfaces once the player has a few seasons under their belt and silver crops
+    /// start showing up reliably.
     private static QuestPosting? QualityCropDelivery(QuestContext ctx)
     {
         var metNpcs = DispatchRegistry.MetHumanNpcs();
@@ -242,14 +242,14 @@ internal static partial class Generators
             return null;
         var crop = crops[Game1.random.Next(crops.Count)];
 
-        int qty = Game1.random.Next(3, 7);
+        int qty = Game1.random.Next(3, 11);
         int basePrice = Math.Max(crop.SellPrice, 30);
         int gold = Math.Clamp(
             (int)(basePrice * qty * ctx.Config.RewardMultiplierAboveSell),
             ctx.Config.GoldBasicBase,
             ctx.Config.GoldIntermediateBase);
 
-        string qualityName = QualityName(2);
+        string qualityName = QualityName(1);
 
         return new QuestPosting
         {
@@ -260,12 +260,12 @@ internal static partial class Generators
             ObjectiveItemId = crop.QualifiedItemId,
             ObjectiveItemName = crop.DisplayName,
             ObjectiveQuantity = qty,
-            MinQuality = 2,
+            MinQuality = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
             Rewards =
             {
                 new MoneyReward(gold),
-                new FriendshipReward(giver, ctx.Config.FriendshipBasic)
+                new FriendshipReward(giver, ctx.Config.FriendshipIntermediate)
             },
             Title = ModEntry.I18n.Get("quest.farming.qualityCrop.title", new { npc = giver }),
             Description = ModEntry.I18n.Get("quest.farming.qualityCrop.description", new { npc = giver, qty, quality = qualityName, item = crop.DisplayName }),

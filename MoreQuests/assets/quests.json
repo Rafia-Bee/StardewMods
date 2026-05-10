@@ -439,7 +439,7 @@
                 "Weight": 20,
                 "MaxPerDay": 1,
                 "CooldownDays": 3,
-                "Available": { "SkillLevel": "Farming 4" }
+                "Available": { "SkillLevel": "Farming 2" }
             },
             "Generator": "QualityCropDelivery"
         },
