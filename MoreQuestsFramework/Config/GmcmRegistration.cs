@@ -63,6 +63,11 @@ internal static class GmcmRegistration
             () => t.Get("config.fishingIgnoresVisitedLocations"),
             () => t.Get("config.fishingIgnoresVisitedLocations.tooltip"));
         api.AddBoolOption(manifest,
+            () => ModEntry.Config.ForagingIgnoresVisitedLocations,
+            v => ModEntry.Config.ForagingIgnoresVisitedLocations = v,
+            () => t.Get("config.foragingIgnoresVisitedLocations"),
+            () => t.Get("config.foragingIgnoresVisitedLocations.tooltip"));
+        api.AddBoolOption(manifest,
             () => ModEntry.Config.AllowDuplicateGiverPerDay,
             v => ModEntry.Config.AllowDuplicateGiverPerDay = v,
             () => t.Get("config.allowDuplicateGiverPerDay"),

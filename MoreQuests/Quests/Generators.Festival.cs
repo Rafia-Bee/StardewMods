@@ -262,7 +262,9 @@ internal static partial class Generators
         if (!ModEntry.Config.FestivalQuestsEnabled)
             return null;
 
-        var winterForage = ctx.Items.GetForageItems("winter");
+        var winterForage = ctx.Config.ForagingIgnoresVisitedLocations
+            ? ctx.Items.GetForageItems("winter")
+            : ctx.Items.GetForageItemsInVisitedLocations("winter");
         if (winterForage.Count < 3)
             return null;
 

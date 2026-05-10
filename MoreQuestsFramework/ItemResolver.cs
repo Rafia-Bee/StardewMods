@@ -268,6 +268,61 @@ public sealed class ItemResolver
         return results;
     }
 
+    /// Subset of `GetForageItems` filtered to items whose Data/Locations Forage spawn
+    /// entries match a location the player has visited at least once. Falls back to the
+    /// full forage pool if the filter would produce nothing (so quests still post on a
+    /// fresh save where the player has only been to the farm).
+    public List<ResolvedItem> GetForageItemsInVisitedLocations(string? season = null)
+    {
+        var pool = GetForageItems(season);
+        if (pool.Count == 0)
+            return pool;
+
+        HashSet<string>? allowed = TryGetSpawnableForageIdsForVisitedLocations();
+        if (allowed == null || allowed.Count == 0)
+            return pool;
+
+        var filtered = pool.Where(f => allowed.Contains(f.QualifiedItemId)).ToList();
+        return filtered.Count > 0 ? filtered : pool;
+    }
+
+    private HashSet<string>? TryGetSpawnableForageIdsForVisitedLocations()
+    {
+        try
+        {
+            var visited = Game1.player.locationsVisited;
+            if (visited == null || visited.Count == 0)
+                return null;
+
+            var visitedSet = new HashSet<string>(visited, StringComparer.OrdinalIgnoreCase);
+            var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var (locName, data) in _cache.Locations)
+            {
+                bool isDefault = locName.Equals("Default", StringComparison.OrdinalIgnoreCase);
+                bool isVisited = visitedSet.Contains(locName);
+                if (!isDefault && !isVisited)
+                    continue;
+                if (data.Forage == null || data.Forage.Count == 0)
+                    continue;
+
+                foreach (var spawn in data.Forage)
+                {
+                    if (spawn?.ItemId == null)
+                        continue;
+                    string qualified = ItemRegistry.QualifyItemId(spawn.ItemId) ?? spawn.ItemId;
+                    ids.Add(qualified);
+                }
+            }
+            return ids;
+        }
+        catch (Exception ex)
+        {
+            _monitor.Log($"TryGetSpawnableForageIdsForVisitedLocations: {ex.Message}", LogLevel.Warn);
+            return null;
+        }
+    }
+
     /// Items tagged `forage_item` (and optionally `season_<season>`) in their context tags.
     /// Returns vanilla and modded forage in one list.
     public List<ResolvedItem> GetForageItems(string? season = null)

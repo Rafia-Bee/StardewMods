@@ -18,7 +18,9 @@ internal static partial class Generators
 {
     private static QuestPosting? SeasonalForaging(QuestContext ctx)
     {
-        var pool = ctx.Items.GetForageItems(ctx.Season);
+        var pool = ctx.Config.ForagingIgnoresVisitedLocations
+            ? ctx.Items.GetForageItems(ctx.Season)
+            : ctx.Items.GetForageItemsInVisitedLocations(ctx.Season);
         if (pool.Count == 0)
             return null;
 
@@ -173,7 +175,9 @@ internal static partial class Generators
         // forage is the BasicForaging quest's pool; the rare hunt should feel like an
         // actual hunt.
         string currentSeasonTag = "season_" + ctx.Season.ToLowerInvariant();
-        var allForage = ctx.Items.GetForageItems();
+        var allForage = ctx.Config.ForagingIgnoresVisitedLocations
+            ? ctx.Items.GetForageItems()
+            : ctx.Items.GetForageItemsInVisitedLocations();
         foreach (var item in allForage)
         {
             if (seen.Contains(item.QualifiedItemId))
