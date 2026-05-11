@@ -557,18 +557,6 @@
             "Generator": "LocationFishOverpopulation"
         },
         {
-            "Name": "Fishing.RainyDayCatch",
-            "Category": "Fishing",
-            "Trigger": {
-                "Source": "DailyBoard",
-                "Weight": 18,
-                "MaxPerDay": 1,
-                "CooldownTier": "Medium",
-                "Available": { "SkillLevel": "Fishing 3", "Weather": "Rain" }
-            },
-            "Generator": "RainyDayCatch"
-        },
-        {
             "Name": "Fishing.RainyDayCatchMail",
             "Category": "Fishing",
             "Trigger": {

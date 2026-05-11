@@ -85,6 +85,7 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "QuestCooldownLongDays", () => ModEntry.Config.QuestCooldownLongDays, v => ModEntry.Config.QuestCooldownLongDays = v, 1, 28);
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.quantities"));
+        AddInt(api, manifest, t, "RainyDayCatchMailChancePercent", () => ModEntry.Config.RainyDayCatchMailChancePercent, v => ModEntry.Config.RainyDayCatchMailChancePercent = v, 0, 100);
         AddInt(api, manifest, t, "FishHaulMediumQty", () => ModEntry.Config.FishHaulMediumQty, v => ModEntry.Config.FishHaulMediumQty = v, 1, 200);
         AddInt(api, manifest, t, "FishHaulLargeQty", () => ModEntry.Config.FishHaulLargeQty, v => ModEntry.Config.FishHaulLargeQty = v, 1, 500);
         AddInt(api, manifest, t, "FestivalFishQty", () => ModEntry.Config.FestivalFishQty, v => ModEntry.Config.FestivalFishQty = v, 1, 100);

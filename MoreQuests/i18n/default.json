@@ -44,6 +44,8 @@
     "config.QuestCooldownLongDays.tooltip": "In-game days a quest in the 'long' cooldown bucket waits before re-rolling.",
 
     "config.section.quantities": "Quantity tunables",
+    "config.RainyDayCatchMailChancePercent": "Rainy Day Catch mail chance %",
+    "config.RainyDayCatchMailChancePercent.tooltip": "Probability (0 to 100) that the Rainy Day Catch quest mail arrives on a day where tomorrow is forecast as rain. 100 = always when rain is forecast, 0 disables the quest.",
     "config.FishHaulMediumQty": "Medium fish haul quantity",
     "config.FishHaulMediumQty.tooltip": "Catch count for medium-tier fishing hauls.",
     "config.FishHaulLargeQty": "Large fish haul quantity",
@@ -373,9 +375,9 @@
     "quest.fishing.locationOverpop.targetMessage": "Thanks. The numbers should settle now.",
 
     "quest.fishing.rainyDay.title": "Catches that hide in the rain",
-    "quest.fishing.rainyDay.description": "{{npc}} only sees these on rainy days, and there's a stretch coming. Bring back {{qty}} {{item}} caught in the rain and the kit's yours.",
+    "quest.fishing.rainyDay.description": "These ones only bite when it's pouring, and the forecast's finally on our side. If you can land {{qty}} {{item}} while the rain's coming down, I'll thank you with a tackle I found the other day.",
     "quest.fishing.rainyDay.objective": "Catch {{qty}} {{item}} while it's raining.",
-    "quest.fishing.rainyDay.targetMessage": "Lovely catch. Rain or shine, you've got the touch.",
+    "quest.fishing.rainyDay.targetMessage": "Lovely catch. Rain or shine, you've got the touch!",
 
     "quest.fishing.sizeOverpop.bucket.small": "small",
     "quest.fishing.sizeOverpop.bucket.medium": "medium-sized",

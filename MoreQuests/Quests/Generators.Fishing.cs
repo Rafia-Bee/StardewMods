@@ -468,24 +468,23 @@ internal static partial class Generators
         };
     }
 
-    /// Row 61 — Rainy Day Catch. Daily-board FishingQuest filtered to fish whose
-    /// `Data/Fish` weather field includes "rainy", with a runtime gate that the player is
-    /// fishing in actual rain (Rain or Storm). Giver dispatched via `RainyDayFishing`.
-    /// Reward = `GoldIntermediateBase` + one rare tackle.
-
-    /// Row 61 — Rainy Day Catch. Daily-board FishingQuest filtered to fish whose
-    /// `Data/Fish` weather field includes "rainy", with a runtime gate that the player is
-    /// fishing in actual rain (Rain or Storm). Giver dispatched via `RainyDayFishing`.
-    /// Reward = `GoldIntermediateBase` + one rare tackle.
+    /// Row 61. Mail-delivered rainy-weather fishing quest. Fires through `WeatherForecast`
+    /// when tomorrow is forecast as rain. A configurable `RainyDayCatchMailChancePercent`
+    /// roll gates each qualifying day (default 100 = always). Giver is dispatched from
+    /// the shared `FishermenNpcs` pool. Filters to fish whose `Data/Fish` weather field
+    /// includes "rainy" with a runtime gate that the player is fishing in actual rain.
+    /// Reward = `GoldIntermediateBase` + one rare tackle. Deadline = Short so the quest
+    /// stays within the rainy window.
     private static QuestPosting? RainyDayCatch(QuestContext ctx)
     {
-        string? giver = ctx.Dispatch.Pick(DispatchRoles.RainyDayFishing);
+        int chance = Math.Clamp(ModEntry.Config.RainyDayCatchMailChancePercent, 0, 100);
+        if (chance <= 0 || Game1.random.Next(100) >= chance)
+            return null;
+
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.FishermenNpcs);
         if (giver == null)
             return null;
 
-        // GetSeasonalFish accepts a weather filter that intersects against `Data/Fish`'s
-        // weather field. "rainy" = vanilla token used for rain-only fish (Eel, Catfish,
-        // Lingcod, etc.).
         var fish = ctx.Config.FishingIgnoresVisitedLocations
             ? ctx.Items.GetSeasonalFish(ctx.Season, "rainy")
             : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season, "rainy");
@@ -493,7 +492,9 @@ internal static partial class Generators
             return null;
         var target = fish[Game1.random.Next(fish.Count)];
 
-        int qty = Game1.random.Next(1, 4);
+        int qty = ctx.Config.DifficultyScaling
+            ? Math.Max(1, Game1.player.FishingLevel + Game1.random.Next(1, 5))
+            : Game1.random.Next(1, 5);
         int gold = ctx.Config.GoldIntermediateBase;
 
         var rewards = new List<RewardSpec> { new MoneyReward(gold) };
@@ -511,10 +512,10 @@ internal static partial class Generators
             ObjectiveItemName = target.DisplayName,
             ObjectiveQuantity = qty,
             CatchWeather = "Rain",
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.fishing.rainyDay.title"),
-            Description = ModEntry.I18n.Get("quest.fishing.rainyDay.description", new { npc = giver, qty, item = target.DisplayName }),
+            Description = ModEntry.I18n.Get("quest.fishing.rainyDay.description", new { qty, item = target.DisplayName }),
             CurrentObjective = ModEntry.I18n.Get("quest.fishing.rainyDay.objective", new { qty, item = target.DisplayName }),
             TargetMessage = ModEntry.I18n.Get("quest.fishing.rainyDay.targetMessage")
         };
