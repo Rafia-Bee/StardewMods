@@ -382,10 +382,11 @@ internal static partial class Generators
         ("(O)877", "Curiosity Lure")
     };
 
-    /// Vanilla Challenge Bait, high-attract bait used as the location-overpopulation
-    /// quest reward (qty * 2 per quest). Modded saves keep the same id; if a content
-    /// pack removes the item the resolver returns null and the reward no-ops.
-    private const string ChallengeBaitId = "(O)910";
+    /// Vanilla 1.6 Challenge Bait, high-attract bait used as the location-overpopulation
+    /// quest reward (qty * 2 per quest). String-id item, so the qualified form is
+    /// `(O)ChallengeBait`. If a content pack removes the item the resolver returns null
+    /// and the reward no-ops.
+    private const string ChallengeBaitId = "(O)ChallengeBait";
 
     private const string BaitId = "(O)685";
 
