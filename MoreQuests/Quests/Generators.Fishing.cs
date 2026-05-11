@@ -16,6 +16,32 @@ namespace MoreQuests.Quests;
 
 internal static partial class Generators
 {
+    /// Seasonal fish pool minus anything flagged `IsBossFish` in `Data/Locations`. Used
+    /// by every non-Legendary fishing generator so quests never ask for vanilla Crimsonfish
+    /// / Angler / Legend / Glacierfish / Mutant Carp or the Extended-Family variants
+    /// (Son of Crimsonfish, Ms. Angler, Legend II, Glacierfish Jr., Radioactive Carp) that
+    /// only spawn during Mr. Qi's Extended Family special order. Modded fish that follow
+    /// the same `IsBossFish` convention are stripped too. `ignoresVisited` overrides the
+    /// `FishingIgnoresVisitedLocations` config when a quest deliberately wants one or the
+    /// other (LocationFishOverpopulation always wants visited-only since it grounds the
+    /// quest in a real spot).
+    private static List<ResolvedItem> GetSeasonalNonBossFish(QuestContext ctx, string? weatherFilter = null, bool? ignoresVisited = null)
+    {
+        bool useFullPool = ignoresVisited ?? ctx.Config.FishingIgnoresVisitedLocations;
+        var seasonal = useFullPool
+            ? ctx.Items.GetSeasonalFish(ctx.Season, weatherFilter)
+            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season, weatherFilter);
+        if (seasonal.Count == 0)
+            return seasonal;
+
+        var bossIds = new HashSet<string>(
+            ctx.Items.GetBossFish().Select(f => f.QualifiedItemId),
+            StringComparer.OrdinalIgnoreCase);
+        if (bossIds.Count == 0)
+            return seasonal;
+        return seasonal.Where(f => !bossIds.Contains(f.QualifiedItemId)).ToList();
+    }
+
     /// CSV row 12. Daily-board fishing quest. Giver is any met adult human who has at
     /// least one fish in their loved/liked gift-taste pool, so the request reads as the
     /// NPC asking for a fish they'd actually want. Common-fish filter = Difficulty < 60.
@@ -32,9 +58,7 @@ internal static partial class Generators
 
         bool scaling = ctx.Config.DifficultyScaling;
 
-        var fish = ctx.Config.FishingIgnoresVisitedLocations
-            ? ctx.Items.GetSeasonalFish(ctx.Season)
-            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
+        var fish = GetSeasonalNonBossFish(ctx);
         if (fish.Count == 0)
             return null;
 
@@ -106,9 +130,7 @@ internal static partial class Generators
         if (giver == null)
             return null;
 
-        var fish = ctx.Config.FishingIgnoresVisitedLocations
-            ? ctx.Items.GetSeasonalFish(ctx.Season)
-            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
+        var fish = GetSeasonalNonBossFish(ctx);
         if (fish.Count == 0)
             return null;
 
@@ -178,9 +200,7 @@ internal static partial class Generators
         if (giver == null)
             return null;
 
-        var fish = ctx.Config.FishingIgnoresVisitedLocations
-            ? ctx.Items.GetSeasonalFish(ctx.Season)
-            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
+        var fish = GetSeasonalNonBossFish(ctx);
         var pool = fish.Where(IsEdibleNonPoisonous).ToList();
         if (pool.Count == 0)
             return null;
@@ -307,9 +327,7 @@ internal static partial class Generators
         if (giver == null)
             return null;
 
-        var fish = ctx.Config.FishingIgnoresVisitedLocations
-            ? ctx.Items.GetSeasonalFish(ctx.Season)
-            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
+        var fish = GetSeasonalNonBossFish(ctx);
         if (fish.Count == 0)
             return null;
         var target = fish[Game1.random.Next(fish.Count)];
@@ -402,10 +420,10 @@ internal static partial class Generators
             return null;
 
         // The CSV's "fish for a specific fish at a specific spot" only makes sense if the
-        // player has actually visited a spawn location for the fish. Use the visited-only
-        // helper so quests target reachable water; the helper falls back to the full pool
-        // only if the visited set is empty (fresh save).
-        var fish = ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
+        // player has actually visited a spawn location for the fish. Force the visited-only
+        // pool regardless of the global `FishingIgnoresVisitedLocations` config; the helper
+        // strips boss/legendary fish so we never ask for one-per-save targets.
+        var fish = GetSeasonalNonBossFish(ctx, ignoresVisited: false);
         if (fish.Count == 0)
             return null;
 
@@ -486,11 +504,10 @@ internal static partial class Generators
         if (giver == null)
             return null;
 
-        var fish = ctx.Config.FishingIgnoresVisitedLocations
-            ? ctx.Items.GetSeasonalFish(ctx.Season, "rainy")
-            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season, "rainy");
+        var fish = GetSeasonalNonBossFish(ctx, weatherFilter: "rainy");
         if (fish.Count == 0)
             return null;
+
         var target = fish[Game1.random.Next(fish.Count)];
 
         int qty = ctx.Config.DifficultyScaling
@@ -555,13 +572,12 @@ internal static partial class Generators
             _ => "large"
         };
 
-        // Pick a representative fish for the description — any seasonal fish; we don't
-        // strictly require its max size to match the bucket because the quest accepts any
-        // catch above the threshold. The ObjectiveItemId is set to this fish for vanilla
-        // FishingQuest's counter, but the size gate is what actually bounds completion.
-        var fish = ctx.Config.FishingIgnoresVisitedLocations
-            ? ctx.Items.GetSeasonalFish(ctx.Season)
-            : ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season);
+        // Pick a representative fish for the description. Any seasonal non-boss fish works;
+        // we don't strictly require its max size to match the bucket because the quest
+        // accepts any catch above the threshold. The ObjectiveItemId is set to this fish
+        // for vanilla FishingQuest's counter, but the size gate is what actually bounds
+        // completion.
+        var fish = GetSeasonalNonBossFish(ctx);
         if (fish.Count == 0)
             return null;
         var target = fish[Game1.random.Next(fish.Count)];
