@@ -127,6 +127,12 @@ public sealed class ModConfig
     /// boundary (carp, salmon, etc.).
     public int SizeBucketMediumMaxInches { get; set; } = 24;
 
+    /// Probability (0 to 100) that the Rainy Day Catch mail lands on a day where tomorrow
+    /// is forecast as rain. The quest no longer has a daily-board variant; this knob is
+    /// the only spawn gate apart from the Fishing 3 skill requirement. 100 = always mails
+    /// when rain is forecast (legacy behavior), 0 disables the quest entirely.
+    public int RainyDayCatchMailChancePercent { get; set; } = 100;
+
     /// Trout Derby (Rainbow Platter) recipe granted to Gus / vanilla saloon-chef saves.
     /// Vanilla cooking recipes that use Rainbow Trout: "Trout Soup". Authors can override
     /// to "Maki Roll" or any other recipe name. RecipeKind defaults to Cooking.

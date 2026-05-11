@@ -11,7 +11,6 @@ public static class DispatchRoles
     public const string CombatVendor = "CombatVendor";
     public const string SaloonFestival = "SaloonFestival";
     public const string BeachCleanup = "BeachCleanup";
-    public const string RainyDayFishing = "RainyDayFishing";
     public const string HeatWaveRelief = "HeatWaveRelief";
     public const string TownFestival = "TownFestival";
 

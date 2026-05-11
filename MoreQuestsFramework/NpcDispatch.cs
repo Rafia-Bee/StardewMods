@@ -59,10 +59,6 @@ public static class NpcDispatch
         registry.Register(DispatchRoles.BeachCleanup, "Willy");
         registry.Register(DispatchRoles.BeachCleanup, "Dylan", ModCompat.EastScarp);
 
-        registry.Register(DispatchRoles.RainyDayFishing, "Willy");
-        registry.Register(DispatchRoles.RainyDayFishing, "Blair", ModCompat.RidgesideVillage);
-        registry.Register(DispatchRoles.RainyDayFishing, "Carmen", ModCompat.RidgesideVillage);
-
         registry.Register(DispatchRoles.HeatWaveRelief, "Harvey");
         registry.Register(DispatchRoles.HeatWaveRelief, "Paula", ModCompat.RidgesideVillage);
 
