@@ -231,6 +231,7 @@
 
     "quest.cooking.weeklySpecial.complex.title": "{{npc}}'s grand weekly special",
     "quest.cooking.weeklySpecial.complex.description": "{{npc}} is putting up an ambitious special this week - {{dish}} - and the prep list isn't small. Drop everything off at the saloon: {{ingredients}}. Bigger payday, but the kitchen needs it all by the deadline.",
+    "quest.cooking.weeklySpecial.complex.description.noDish": "{{npc}} is workshopping something ambitious at the saloon this week and the prep list is a real grab bag. Bring everything on it - {{ingredients}} - and there'll be a fat stack of gold waiting.",
     "quest.cooking.weeklySpecial.complex.consequence.loved": "{{npc}} had {{dish}} on special. Made my week.",
     "quest.cooking.weeklySpecial.complex.consequence.hated": "The saloon reeked of {{dish}} all week. I'm still trying to forget it.",
 

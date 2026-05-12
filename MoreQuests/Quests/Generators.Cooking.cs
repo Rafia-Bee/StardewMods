@@ -123,128 +123,43 @@ internal static partial class Generators
     /// fallback runs and both the consequence and crowd-friendship reward are skipped.
     private static QuestPosting? WeeklySpecialCommon(QuestContext ctx)
     {
-        return BuildAttainableWeeklySpecial(ctx);
+        return BuildAttainableWeeklySpecial(
+            ctx,
+            tier: DifficultyTier.Beginner,
+            consequenceTier: ConsequenceTier.Tier1,
+            goldBase: ctx.Config.GoldBeginnerBase,
+            deadlineKind: DeadlineKind.Medium,
+            allSeasons: false,
+            saloonCrowdMagnitude: ctx.Config.FriendshipMultiSmall,
+            titleKey: "quest.cooking.weeklySpecial.common.title",
+            descriptionKey: "quest.cooking.weeklySpecial.common.description",
+            descriptionNoDishKey: "quest.cooking.weeklySpecial.common.description.noDish",
+            consequenceLovedKey: "quest.cooking.weeklySpecial.common.consequence.loved",
+            consequenceHatedKey: "quest.cooking.weeklySpecial.common.consequence.hated");
     }
 
-    /// CSV row 36. Same shape as the Common variant but the recipe pool is filtered to
-    /// `WeeklySpecialComplexMinIngredients`+ distinct ingredients, the gold base steps up
-    /// to `GoldIntermediateBase`, the deadline grows to `Medium`, and the consequence
-    /// jumps to Tier 2 — loved NPCs get `+FriendshipBasic`, hated NPCs get the Tier 2
-    /// default negative delta (mid between `FriendshipBasic` and `FriendshipMid`).
-
-    /// CSV row 36. Same shape as the Common variant but the recipe pool is filtered to
-    /// `WeeklySpecialComplexMinIngredients`+ distinct ingredients, the gold base steps up
-    /// to `GoldIntermediateBase`, the deadline grows to `Medium`, and the consequence
-    /// jumps to Tier 2 — loved NPCs get `+FriendshipBasic`, hated NPCs get the Tier 2
-    /// default negative delta (mid between `FriendshipBasic` and `FriendshipMid`).
+    /// CSV row 36. Same attainable-ingredient flow as the Common variant, but the pool
+    /// is built across all four seasons (Row 36 verdict: "Same ingredient formula as
+    /// common weekly special but remove seasonal restrictions"). Gold steps up to
+    /// `GoldIntermediateBase`, deadline to `Long`, consequence to Tier 2, and the
+    /// per-NPC saloon-crowd friendship bumps from `FriendshipMultiSmall` to
+    /// `FriendshipIntermediate`. Skill gate (`Cooking 4|Farming 5`) is enforced by the
+    /// quests.json `Available` block.
     private static QuestPosting? WeeklySpecialComplex(QuestContext ctx)
     {
-        return BuildWeeklySpecial(
+        return BuildAttainableWeeklySpecial(
             ctx,
             tier: DifficultyTier.Advanced,
             consequenceTier: ConsequenceTier.Tier2,
             goldBase: ctx.Config.GoldIntermediateBase,
-            deadlineKind: DeadlineKind.Medium,
-            minIngredients: ModEntry.Config.WeeklySpecialComplexMinIngredients,
-            maxIngredients: int.MaxValue,
+            deadlineKind: DeadlineKind.Long,
+            allSeasons: true,
+            saloonCrowdMagnitude: ctx.Config.FriendshipIntermediate,
             titleKey: "quest.cooking.weeklySpecial.complex.title",
             descriptionKey: "quest.cooking.weeklySpecial.complex.description",
+            descriptionNoDishKey: "quest.cooking.weeklySpecial.complex.description.noDish",
             consequenceLovedKey: "quest.cooking.weeklySpecial.complex.consequence.loved",
             consequenceHatedKey: "quest.cooking.weeklySpecial.complex.consequence.hated");
-    }
-
-    private static QuestPosting? BuildWeeklySpecial(
-        QuestContext ctx,
-        DifficultyTier tier,
-        ConsequenceTier consequenceTier,
-        int goldBase,
-        DeadlineKind deadlineKind,
-        int minIngredients,
-        int maxIngredients,
-        string titleKey,
-        string descriptionKey,
-        string consequenceLovedKey,
-        string consequenceHatedKey)
-    {
-        string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
-        if (giver == null)
-            return null;
-
-        var pool = ctx.Items.GetAllCookingRecipes()
-            .Where(r => r.Ingredients.Count >= minIngredients && r.Ingredients.Count <= maxIngredients)
-            .ToList();
-        if (pool.Count == 0)
-            return null;
-
-        var pick = pool[Game1.random.Next(pool.Count)];
-
-        var steps = new List<AdventureStepState>(pick.Ingredients.Count);
-        foreach (var ing in pick.Ingredients)
-        {
-            string token = ing.IsCategoryToken ? ing.Item.QualifiedItemId : ing.Item.QualifiedItemId;
-            steps.Add(new AdventureStepState
-            {
-                Name = "Deliver_" + Sanitise(ing.Item.DisplayName),
-                Kind = AdventureStepKind.Deliver,
-                Targets = new List<string> { giver },
-                Items = new List<string> { token },
-                Count = ing.Count,
-                Description = ModEntry.I18n.Get(
-                    "quest.cooking.weeklySpecial.step.deliver",
-                    new { count = ing.Count, item = ing.Item.DisplayName, npc = giver })
-            });
-        }
-
-        var quest = new AdventureQuest();
-        quest.Initialize(
-            steps,
-            giver: giver,
-            completionDialogue: ModEntry.I18n.Get(
-                "quest.cooking.weeklySpecial.targetMessage",
-                new { dish = pick.OutputItem.DisplayName }));
-
-        var rewards = new List<RewardSpec> { new MoneyReward(goldBase) };
-        AddSaloonCrowdFriendship(ctx, pick.OutputItem.QualifiedItemId, rewards);
-
-        ConsequenceSpec? consequence = null;
-        if (ModEntry.Config.ConsequencesEnabled)
-        {
-            consequence = new ConsequenceSpec
-            {
-                Tier = consequenceTier,
-                Source = ConsequenceSource.GiftTastes,
-                Subject = pick.OutputItem.QualifiedItemId,
-                LovedLine = ModEntry.I18n.Get(
-                    consequenceLovedKey,
-                    new { dish = pick.OutputItem.DisplayName, npc = giver }),
-                HatedLine = ModEntry.I18n.Get(
-                    consequenceHatedKey,
-                    new { dish = pick.OutputItem.DisplayName, npc = giver })
-            };
-        }
-
-        string ingredientsList = string.Join(", ", pick.Ingredients
-            .Select(i => i.Count + " " + i.Item.DisplayName));
-
-        return new QuestPosting
-        {
-            Category = QuestCategory.Cooking,
-            Tier = tier,
-            QuestType = BoardQuestType.Adventure,
-            QuestGiver = giver,
-            ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(deadlineKind, ctx.Config),
-            Rewards = rewards,
-            Consequence = consequence,
-            Title = ModEntry.I18n.Get(titleKey, new { npc = giver }),
-            Description = ModEntry.I18n.Get(
-                descriptionKey,
-                new { npc = giver, dish = pick.OutputItem.DisplayName, ingredients = ingredientsList }),
-            TargetMessage = ModEntry.I18n.Get(
-                "quest.cooking.weeklySpecial.targetMessage",
-                new { dish = pick.OutputItem.DisplayName }),
-            PreBuiltQuest = quest
-        };
     }
 
     /// Note 218 implementation for WeeklySpecialCommon. Replaces the old recipe-driven flow
@@ -255,13 +170,28 @@ internal static partial class Generators
     /// wins, ties broken randomly). When no recipe scores at least 1, the no-dish i18n
     /// fallback runs and both the GiftTastes consequence and the saloon-crowd friendship
     /// reward are dropped (gold still pays out so the player isn't penalised).
-    private static QuestPosting? BuildAttainableWeeklySpecial(QuestContext ctx)
+    /// Parameterised so the Complex variant can reuse the same pipeline with an
+    /// all-seasons pool and tier-appropriate gold / deadline / consequence / friendship
+    /// magnitudes (CSV row 36).
+    private static QuestPosting? BuildAttainableWeeklySpecial(
+        QuestContext ctx,
+        DifficultyTier tier,
+        ConsequenceTier consequenceTier,
+        int goldBase,
+        DeadlineKind deadlineKind,
+        bool allSeasons,
+        int saloonCrowdMagnitude,
+        string titleKey,
+        string descriptionKey,
+        string descriptionNoDishKey,
+        string consequenceLovedKey,
+        string consequenceHatedKey)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
         if (giver == null)
             return null;
 
-        var pool = BuildAttainableIngredientPool(ctx);
+        var pool = BuildAttainableIngredientPool(ctx, allSeasons);
         if (pool.Count == 0)
             return null;
 
@@ -313,23 +243,23 @@ internal static partial class Generators
         var quest = new AdventureQuest();
         quest.Initialize(steps, giver: giver, completionDialogue: completionDialogue);
 
-        var rewards = new List<RewardSpec> { new MoneyReward(ctx.Config.GoldBeginnerBase) };
+        var rewards = new List<RewardSpec> { new MoneyReward(goldBase) };
         if (dish != null)
-            AddSaloonCrowdFriendship(ctx, dish.QualifiedItemId, rewards);
+            AddSaloonCrowdFriendship(ctx, dish.QualifiedItemId, rewards, saloonCrowdMagnitude);
 
         ConsequenceSpec? consequence = null;
         if (dish != null && ModEntry.Config.ConsequencesEnabled)
         {
             consequence = new ConsequenceSpec
             {
-                Tier = ConsequenceTier.Tier1,
+                Tier = consequenceTier,
                 Source = ConsequenceSource.GiftTastes,
                 Subject = dish.QualifiedItemId,
                 LovedLine = ModEntry.I18n.Get(
-                    "quest.cooking.weeklySpecial.common.consequence.loved",
+                    consequenceLovedKey,
                     new { dish = dish.DisplayName, npc = giver }),
                 HatedLine = ModEntry.I18n.Get(
-                    "quest.cooking.weeklySpecial.common.consequence.hated",
+                    consequenceHatedKey,
                     new { dish = dish.DisplayName, npc = giver })
             };
         }
@@ -338,23 +268,23 @@ internal static partial class Generators
 
         string description = dish != null
             ? ModEntry.I18n.Get(
-                "quest.cooking.weeklySpecial.common.description",
+                descriptionKey,
                 new { npc = giver, dish = dish.DisplayName, ingredients = ingredientsList })
             : ModEntry.I18n.Get(
-                "quest.cooking.weeklySpecial.common.description.noDish",
+                descriptionNoDishKey,
                 new { npc = giver, ingredients = ingredientsList });
 
         return new QuestPosting
         {
             Category = QuestCategory.Cooking,
-            Tier = DifficultyTier.Beginner,
+            Tier = tier,
             QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            DeadlineDays = Difficulty.Deadline(deadlineKind, ctx.Config),
             Rewards = rewards,
             Consequence = consequence,
-            Title = ModEntry.I18n.Get("quest.cooking.weeklySpecial.common.title", new { npc = giver }),
+            Title = ModEntry.I18n.Get(titleKey, new { npc = giver }),
             Description = description,
             TargetMessage = completionDialogue,
             PreBuiltQuest = quest
@@ -377,7 +307,9 @@ internal static partial class Generators
         public string MatcherToken { get; init; } = string.Empty;
     }
 
-    private static List<AttainableIngredient> BuildAttainableIngredientPool(QuestContext ctx)
+    private static readonly string[] AllSeasons = { "spring", "summer", "fall", "winter" };
+
+    private static List<AttainableIngredient> BuildAttainableIngredientPool(QuestContext ctx, bool allSeasons = false)
     {
         var result = new List<AttainableIngredient>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -388,29 +320,33 @@ internal static partial class Generators
                 result.Add(ing);
         }
 
-        foreach (var c in ctx.Items.GetSeasonalCrops(ctx.Season))
-            Add(new AttainableIngredient
-            {
-                QualifiedItemId = c.QualifiedItemId,
-                DisplayName = c.DisplayName,
-                Category = c.Category,
-                MatcherToken = c.QualifiedItemId
-            });
-        foreach (var f in ctx.Items.GetForageItemsInVisitedLocations(ctx.Season))
+        var seasons = allSeasons ? AllSeasons : new[] { ctx.Season };
+        foreach (var season in seasons)
+        {
+            foreach (var c in ctx.Items.GetSeasonalCrops(season))
+                Add(new AttainableIngredient
+                {
+                    QualifiedItemId = c.QualifiedItemId,
+                    DisplayName = c.DisplayName,
+                    Category = c.Category,
+                    MatcherToken = c.QualifiedItemId
+                });
+            foreach (var fi in ctx.Items.GetSeasonalFishInVisitedLocations(season))
+                Add(new AttainableIngredient
+                {
+                    QualifiedItemId = fi.QualifiedItemId,
+                    DisplayName = fi.DisplayName,
+                    Category = fi.Category,
+                    MatcherToken = fi.QualifiedItemId
+                });
+        }
+        foreach (var f in ctx.Items.GetForageItemsInVisitedLocations(allSeasons ? null : ctx.Season))
             Add(new AttainableIngredient
             {
                 QualifiedItemId = f.QualifiedItemId,
                 DisplayName = f.DisplayName,
                 Category = f.Category,
                 MatcherToken = f.QualifiedItemId
-            });
-        foreach (var fi in ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season))
-            Add(new AttainableIngredient
-            {
-                QualifiedItemId = fi.QualifiedItemId,
-                DisplayName = fi.DisplayName,
-                Category = fi.Category,
-                MatcherToken = fi.QualifiedItemId
             });
 
         var categoryTokens = new (int Cat, string I18nLeaf)[]
@@ -525,8 +461,9 @@ internal static partial class Generators
     /// regulars who'd enjoy that week's dish appreciate the help. NPCs who hate the
     /// dish or are indifferent are skipped on the reward side; the consequence layer
     /// handles the loved-or-hated reactions separately.
-    private static void AddSaloonCrowdFriendship(QuestContext ctx, string dishQualifiedId, List<RewardSpec> rewards)
+    private static void AddSaloonCrowdFriendship(QuestContext ctx, string dishQualifiedId, List<RewardSpec> rewards, int? perNpcMagnitude = null)
     {
+        int magnitude = perNpcMagnitude ?? ctx.Config.FriendshipMultiSmall;
         string bareDish = dishQualifiedId.StartsWith("(O)") ? dishQualifiedId[3..] : dishQualifiedId;
         var tastes = ctx.Data.GiftTastes;
         foreach (var (npcName, _) in Game1.player.friendshipData.Pairs)
@@ -545,7 +482,7 @@ internal static partial class Generators
                         || liked.Contains(bareDish, StringComparer.Ordinal);
             if (!likes)
                 continue;
-            rewards.Add(new FriendshipReward(npcName, ctx.Config.FriendshipMultiSmall));
+            rewards.Add(new FriendshipReward(npcName, magnitude));
         }
     }
 
