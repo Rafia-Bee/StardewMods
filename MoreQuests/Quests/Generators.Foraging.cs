@@ -25,7 +25,17 @@ internal static partial class Generators
             return null;
 
         var pick = pool[Game1.random.Next(pool.Count)];
-        int qty = Game1.random.Next(3, 8);
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
+            int upper = Math.Max(3, (int)(foragingLevel * 1.5));
+            qty = Game1.random.Next(3, upper + 1);
+        }
+        else
+        {
+            qty = Game1.random.Next(2, 8);
+        }
         int gold = ctx.Config.GoldBeginnerBase;
 
         var npcs = DispatchRegistry.MetHumanNpcs();
