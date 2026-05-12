@@ -302,31 +302,28 @@ internal static partial class Generators
     /// who loves or likes any of the chosen dishes (framework path, bypasses third-party
     /// SpecialOrder reward overrides).
 
-    /// CSV row 34. SpecialOrder source. Picks `GrandFeastRecipeCount` distinct complex-
-    /// tier recipes (same pool as the Complex Weekly Special); aggregates their
-    /// ingredients into one Ship objective per unique ingredient (using vanilla
-    /// `id_o_<id>` context tags so the shipping bin counts modded items too); seeds one
-    /// Tier 2 consequence per dish so each sampled NPC reacts to a different dish across
-    /// the post-completion week. Reward = `GoldExpertBase` (vanilla path so the player
-    /// gets the standard reward-box UX) + `FriendshipMultiSmall` to every met villager
-    /// who loves or likes any of the chosen dishes (framework path, bypasses third-party
-    /// SpecialOrder reward overrides).
+    /// CSV row 34. SpecialOrder source. Picks a scaled number of distinct complex-tier
+    /// recipes (same pool as the Complex Weekly Special), now including ones whose
+    /// ingredients reference category tokens since the per-ingredient `category_<N>`
+    /// context tag path handles them at Ship time. Aggregates ingredients across dishes
+    /// into one Ship objective per unique entry, seeds a Tier 2 consequence per dish
+    /// (FriendshipIntermediate magnitude on the hated side). Reward = `GoldExpertBase`
+    /// (vanilla path so the player gets the standard reward-box UX) + `FriendshipMultiSmall`
+    /// to every met villager who loves or likes any of the chosen dishes (framework path,
+    /// bypasses third-party SpecialOrder reward overrides).
     private static QuestPosting? GrandFeast(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
         if (giver == null)
             return null;
 
-        int wanted = Math.Max(1, ModEntry.Config.GrandFeastRecipeCount);
-        // Grand Feast translates each ingredient into a vanilla SpecialOrder Ship objective
-        // keyed off the auto-generated `id_o_<id>` context tag. Category-token ingredients
-        // (negative ids like -5 = egg, -6 = milk) don't have a single literal context tag
-        // we can ship-match against, so recipes containing one are dropped from this pool —
-        // they remain eligible for the AdventureQuest-based Weekly Special variants where
-        // the `$category:N` token resolves at gift/deliver time.
+        int wanted = ResolveGrandFeastRecipeCount(ctx);
+        // Recipes with category-token ingredients (e.g. "any egg" = -5) stay in the pool
+        // now; the per-ingredient SpecialOrder Ship objective code path already emits a
+        // `category_<N>` context tag for them, so the shipping bin can match modded items
+        // that carry the right category.
         var pool = ctx.Items.GetAllCookingRecipes()
             .Where(r => r.Ingredients.Count >= ModEntry.Config.WeeklySpecialComplexMinIngredients)
-            .Where(r => r.Ingredients.All(i => !i.IsCategoryToken))
             .ToList();
         if (pool.Count < wanted)
             return null;
@@ -406,6 +403,7 @@ internal static partial class Generators
                     Tier = ConsequenceTier.Tier2,
                     Source = ConsequenceSource.GiftTastes,
                     Subject = dish.OutputItem.QualifiedItemId,
+                    FriendshipOverride = -ctx.Config.FriendshipIntermediate,
                     LovedLine = ModEntry.I18n.Get(
                         "quest.cooking.grandFeast.consequence.loved",
                         new { dish = dish.OutputItem.DisplayName, npc = giver }),
@@ -437,6 +435,22 @@ internal static partial class Generators
                 Consequences = consequences
             }
         };
+    }
+
+    /// Note 207 scaling. With DifficultyScaling on + a Cooking Skill mod installed:
+    /// `cookingLevel * 3 / 2` (floored). With DifficultyScaling on but no Cooking Skill
+    /// mod: small random 3..14. With DifficultyScaling off: small random 2..6.
+    /// Min-clamped to 1 so the pool-availability check stays sane on brand-new saves.
+    private static int ResolveGrandFeastRecipeCount(QuestContext ctx)
+    {
+        if (!ctx.Config.DifficultyScaling)
+            return Game1.random.Next(2, 7);
+        if (ModCompat.HasCookingSkill(ctx.Helper.ModRegistry))
+        {
+            int level = SpaceCoreSkills.GetLevel(Game1.player, "spacechase0.Cooking");
+            return Math.Max(1, level * 3 / 2);
+        }
+        return Game1.random.Next(3, 15);
     }
 
     // -------------------- Phase 9c: Fishing ecology + Monster Parts --------------------

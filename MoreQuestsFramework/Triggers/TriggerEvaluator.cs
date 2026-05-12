@@ -104,7 +104,7 @@ public sealed class TriggerEvaluator
             TriggerSource.MailReceived => MailTriggered(defId, info),
             TriggerSource.WeatherForecast => WeatherForecastMatches(info.Weather),
             TriggerSource.NpcDialogue => false, // queued at registration, fired by watcher
-            TriggerSource.SpecialOrder => SpecialOrderReady(defId, info.StartDate, cooldownDays),
+            TriggerSource.SpecialOrder => SpecialOrderReady(defId, info.StartDate, cooldownDays, info.Weight ?? 0),
             _ => false
         };
 
@@ -204,23 +204,39 @@ public sealed class TriggerEvaluator
         return true;
     }
 
-    /// SpecialOrder triggers fire when today matches `StartDate` (interpreted as a
-    /// `<season> <day>` tuple, same grammar as `DateLocked`) AND the cooldown since the
-    /// last fire has elapsed. Re-fires every year when the date comes round again, so
-    /// authors don't have to re-spec the cooldown to also enforce yearly cadence.
-    private bool SpecialOrderReady(string defId, string? startDate, int cooldownDays)
+    /// SpecialOrder triggers fire in one of two modes:
+    /// 1. **Date-locked**: `StartDate` is set. Fires on that `<season> <day>` AND when the
+    ///    cooldown since the last fire has elapsed. Re-fires every year when the date comes
+    ///    round again.
+    /// 2. **Cooldown-only**: `StartDate` is absent and `weight > 0`. Mirrors vanilla's
+    ///    weekly SpecialOrder refresh: checks every Sunday after the cooldown elapses and
+    ///    rolls a `weight`/100 chance to post. Lets authors blend a recurring order into
+    ///    the natural special-orders board rhythm without pinning a calendar date.
+    /// When neither condition holds, returns false (legacy "needs StartDate" behavior is
+    /// preserved for any author who set StartDate-less + Weight-less SpecialOrders).
+    private bool SpecialOrderReady(string defId, string? startDate, int cooldownDays, int weight)
     {
-        if (string.IsNullOrWhiteSpace(startDate))
+        if (!string.IsNullOrWhiteSpace(startDate))
+        {
+            if (!ParseDate(startDate, out string season, out int day))
+                return false;
+            if (Game1.dayOfMonth != day || !string.Equals(Game1.currentSeason, season, StringComparison.OrdinalIgnoreCase))
+                return false;
+            if (!_state.LastFiredDay.TryGetValue(defId, out int last))
+                return true;
+            if (cooldownDays <= 0)
+                return true;
+            return Game1.Date.TotalDays - last >= cooldownDays;
+        }
+
+        if (weight <= 0)
             return false;
-        if (!ParseDate(startDate, out string season, out int day))
+        if (Game1.Date.DayOfWeek != System.DayOfWeek.Sunday)
             return false;
-        if (Game1.dayOfMonth != day || !string.Equals(Game1.currentSeason, season, StringComparison.OrdinalIgnoreCase))
+        if (cooldownDays > 0 && _state.LastFiredDay.TryGetValue(defId, out int lastFired)
+            && Game1.Date.TotalDays - lastFired < cooldownDays)
             return false;
-        if (!_state.LastFiredDay.TryGetValue(defId, out int last))
-            return true;
-        if (cooldownDays <= 0)
-            return true;
-        return Game1.Date.TotalDays - last >= cooldownDays;
+        return Game1.random.Next(100) < weight;
     }
 
     private static bool WeatherForecastMatches(string? weather)

@@ -79,9 +79,6 @@ public sealed class ModConfig
     public int WeeklySpecialCommonMaxIngredients { get; set; } = 3;
     /// Recipes with at least this many distinct ingredient lines qualify for the Complex pool.
     public int WeeklySpecialComplexMinIngredients { get; set; } = 4;
-    /// Number of distinct recipes a Grand Feast SpecialOrder asks for.
-    public int GrandFeastRecipeCount { get; set; } = 3;
-
     // ----- Phase 9.5a: Wrapping Paper (mod-gated on Si.ExtraCraftingMaterials) -----
     /// Qualified item id for the Paper item from Si's Extra Crafting Materials. Override
     /// here if the source mod renames the item between versions.

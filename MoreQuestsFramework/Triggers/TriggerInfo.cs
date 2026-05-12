@@ -17,7 +17,12 @@ public sealed record TriggerInfo(
     string? Weather = null,
     string? Npc = null,
     string? StartDate = null,
-    string? Duration = null)
+    string? Duration = null,
+    /// SpecialOrder cooldown-only mode chance (0..100). When `StartDate` is absent and
+    /// `Weight > 0`, the order fires on a Sunday whose cooldown has elapsed with this
+    /// percentage chance. Lets cooldown-only SpecialOrders blend into the natural weekly
+    /// refresh rhythm without needing a hard-coded calendar date.
+    int? Weight = null)
 {
     public static readonly TriggerInfo Default = new();
 }
