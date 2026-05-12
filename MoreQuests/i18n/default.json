@@ -284,7 +284,7 @@
     "quest.festival.gusSummer.targetMessage": "That'll do it. Whatever the soup tastes like at the Luau, you're the reason it tastes that way.",
 
     "quest.social.giftDelivery.title": "A small gift for {{recipient}}",
-    "quest.social.giftDelivery.description": "{{giver}} here. {{recipient}}'s been on my mind and I thought a small gift might cheer them up. I'd take it over myself but my hands are full this week. Could you bring them a {{item}}? I'll make it worth your while.",
+    "quest.social.giftDelivery.description": "I overheard {{recipient}} craving some {{item}} the other day. Maybe you could get them one and make their day?",
     "quest.social.giftDelivery.objective": "Deliver a {{item}} to {{recipient}}.",
     "quest.social.giftDelivery.targetMessage": "Oh! Thank you. That's so thoughtful.",
 

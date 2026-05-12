@@ -51,6 +51,13 @@ public sealed class QuestPosting
     public BoardQuestType QuestType { get; set; }
     public string QuestGiver { get; set; } = "";
 
+    /// `BoardQuestType.ItemDelivery` / `ResourceCollection` only. Internal NPC name of the
+    /// villager who actually receives the item, when that differs from `QuestGiver` (e.g.
+    /// `GiftDelivery`: the giver posts the request anonymously, but the player hands the
+    /// gift to a third villager). Empty string falls back to `QuestGiver`, which is the
+    /// vanilla behaviour where the requester and the delivery target are the same NPC.
+    public string DeliveryTarget { get; set; } = "";
+
     public string ObjectiveItemId { get; set; } = "";
     public string ObjectiveItemName { get; set; } = "";
     /// Optional OR-alternative item ids accepted in place of `ObjectiveItemId`. Used by the

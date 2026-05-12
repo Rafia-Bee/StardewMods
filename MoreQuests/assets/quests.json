@@ -339,7 +339,7 @@
                 "Source": "DailyBoard",
                 "Weight": 25,
                 "MaxPerDay": 1,
-                "CooldownTier": "Medium"
+                "CooldownTier": "Long"
             },
             "Generator": "GiftDelivery"
         },

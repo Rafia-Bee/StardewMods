@@ -173,11 +173,11 @@ internal static partial class Generators
     /// reward. CSV row 30. Reward kind = `Dish` only (no Festival Bonus), so no
     /// dependency on the Phase 9 `FestivalBias` reward kind.
 
-    /// CSV row 28. Daily-board ItemDelivery. Anonymous board posting from one met NPC
-    /// asking the player to deliver a small gift to a different met NPC. Item is picked
-    /// from the recipient's loved or liked list so the gift always lands well. Reward =
-    /// `RewardMultiplierBelowSell` × the item's sell price (the giver "covers the cost
-    /// minus a finder's fee") plus `FriendshipBasic` with the recipient.
+    /// CSV row 28. Daily-board ItemDelivery. Anonymous board posting picks a met NPC as
+    /// the secret giver and a different met NPC as the recipient. Item is picked from the
+    /// recipient's loved or liked list so the gift always lands well. Reward =
+    /// `RewardMultiplierBelowSell` × the item's sell price plus `FriendshipBasic` to both
+    /// the giver and the recipient.
     private static QuestPosting? GiftDelivery(QuestContext ctx)
     {
         var metNpcs = DispatchRegistry.MetHumanNpcs();
@@ -197,8 +197,13 @@ internal static partial class Generators
         if (pick == null)
             return null;
 
-        int basePrice = Math.Max(pick.SellPrice, 30);
-        int gold = Math.Max(50, (int)(basePrice * ctx.Config.RewardMultiplierBelowSell));
+        int gold = Math.Max(50, (int)(pick.SellPrice * ctx.Config.RewardMultiplierBelowSell));
+
+        // Modded NPCs sometimes use namespaced internal names (e.g. "Nova.Eli" for Eli from
+        // "Eli & Dylan"). Player-facing text reads from the NPC's DisplayName so the journal
+        // shows "Eli" rather than the raw prefix. Falls back to the internal name when the
+        // villager can't be resolved (very unlikely for met NPCs).
+        string recipientDisplay = Game1.getCharacterFromName(recipient)?.displayName ?? recipient;
 
         return new QuestPosting
         {
@@ -206,6 +211,7 @@ internal static partial class Generators
             Tier = DifficultyTier.Beginner,
             QuestType = BoardQuestType.ItemDelivery,
             QuestGiver = giver,
+            DeliveryTarget = recipient,
             ObjectiveItemId = pick.QualifiedItemId,
             ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = 1,
@@ -213,11 +219,12 @@ internal static partial class Generators
             Rewards =
             {
                 new MoneyReward(gold),
+                new FriendshipReward(giver, ctx.Config.FriendshipBasic),
                 new FriendshipReward(recipient, ctx.Config.FriendshipBasic)
             },
-            Title = ModEntry.I18n.Get("quest.social.giftDelivery.title", new { recipient }),
-            Description = ModEntry.I18n.Get("quest.social.giftDelivery.description", new { giver, recipient, item = pick.DisplayName }),
-            CurrentObjective = ModEntry.I18n.Get("quest.social.giftDelivery.objective", new { item = pick.DisplayName, recipient }),
+            Title = ModEntry.I18n.Get("quest.social.giftDelivery.title", new { recipient = recipientDisplay }),
+            Description = ModEntry.I18n.Get("quest.social.giftDelivery.description", new { recipient = recipientDisplay, item = pick.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.social.giftDelivery.objective", new { item = pick.DisplayName, recipient = recipientDisplay }),
             TargetMessage = ModEntry.I18n.Get("quest.social.giftDelivery.targetMessage")
         };
     }
