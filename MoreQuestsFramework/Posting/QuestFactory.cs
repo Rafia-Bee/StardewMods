@@ -23,10 +23,17 @@ public static class QuestFactory
         // breaks completion for both vanilla and modded items.
         string itemId = ItemRegistry.QualifyItemId(p.ObjectiveItemId) ?? p.ObjectiveItemId;
         string giver = string.IsNullOrEmpty(p.QuestGiver) ? "Lewis" : p.QuestGiver;
+        // For ItemDelivery/ResourceCollection, the runtime `target.Value` drives both the
+        // completion gate (`npc.Name == target.Value` in OnItemOfferedToNpc) and what MH
+        // Quest Manager surfaces as "deliver to" in its overlay. Most quests have the
+        // giver receiving their own item, so `DeliveryTarget` is empty and we fall back
+        // to `giver`. GiftDelivery sets `DeliveryTarget` to the recipient so the hand-off
+        // lands on the right villager.
+        string deliveryTarget = string.IsNullOrEmpty(p.DeliveryTarget) ? giver : p.DeliveryTarget;
 
         Quest? quest = p.QuestType switch
         {
-            BoardQuestType.ItemDelivery or BoardQuestType.ResourceCollection => BuildItemDeliveryQuest(p, itemId, giver),
+            BoardQuestType.ItemDelivery or BoardQuestType.ResourceCollection => BuildItemDeliveryQuest(p, itemId, deliveryTarget),
             BoardQuestType.Fishing => new MoreQuestsFishingQuest
             {
                 target = { Value = giver },
@@ -68,11 +75,11 @@ public static class QuestFactory
         return quest;
     }
 
-    private static MoreQuestsItemDeliveryQuest BuildItemDeliveryQuest(QuestPosting p, string itemId, string giver)
+    private static MoreQuestsItemDeliveryQuest BuildItemDeliveryQuest(QuestPosting p, string itemId, string deliveryTarget)
     {
         var quest = new MoreQuestsItemDeliveryQuest
         {
-            target = { Value = giver },
+            target = { Value = deliveryTarget },
             ItemId = { Value = itemId },
             number = { Value = Math.Max(1, p.ObjectiveQuantity) },
             minQuality = { Value = Math.Max(0, p.MinQuality) },
