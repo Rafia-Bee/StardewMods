@@ -182,9 +182,9 @@
     "quest.fall.preservesSeason.category.driedMushroom": "Dried Mushrooms",
 
     "quest.mining.skullCavernDeepDive.title": "Skull Cavern deep dive",
-    "quest.mining.skullCavernDeepDive.description": "The Guild's posted a bounty for anyone willing to push deep into the Skull Cavern. Reach floor {{floor}} and ship {{count}} ore (any kind, stone counts too) through your shipping bin. Payment shows up the day after the haul lands.",
+    "quest.mining.skullCavernDeepDive.description": "The ores found beyond the deeper floors of the Skull Cavern are apparently exceptional. The Guild would like to investigate further. Reach floor {{floor}} and ship {{count}} ore (any type) through your shipping bin. We'll be in touch the morning after the haul lands.",
     "quest.mining.skullCavernDeepDive.step.reach": "Reach floor {{floor}} of the Skull Cavern.",
-    "quest.mining.skullCavernDeepDive.step.ship": "Ship {{count}} ore or stone through the bin.",
+    "quest.mining.skullCavernDeepDive.step.ship": "Ship {{count}} ore through the bin.",
 
     "quest.mining.minesDeepDive.title": "Mines deep dive",
     "quest.mining.minesDeepDive.description": "The Adventurer's Guild is paying for a deep dive into the mines. Reach floor {{floor}} and ship {{count}} ore or stone through your shipping bin. Reward comes with the morning after the haul lands.",
@@ -192,6 +192,7 @@
     "quest.mining.minesDeepDive.step.ship": "Ship {{count}} ore or stone through the bin.",
 
     "mail.mining.deepDiveReward.body": "Dear farmer,^^Your haul came through clean. The Guild had everything smelted overnight and ran the numbers. Here's your share of the bars - {{count}} {{bar}}, payment in full. There's plenty more work like this if you're up for it.^^  -Marlon",
+    "mail.mining.deepDiveReward.skullCavern.body": "Dear farmer,^^Thanks for the ores. While smelting them, we got a few of these weird looking bars - {{count}} {{bar}} to be exact. Maybe you can find some use for them.^^  -Marlon",
 
     "quest.farming.pierresStockUp.title": "Pierre's stock-up",
     "quest.farming.pierresStockUp.description": "Pierre's running low on a few seasonal staples for the store. He's asking for {{count}} each of {{items}}. Bring them by the shop when you can - he'll knock the price down on the seeds for those crops in return.",

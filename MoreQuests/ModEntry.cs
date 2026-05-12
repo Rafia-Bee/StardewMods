@@ -123,7 +123,13 @@ public sealed class ModEntry : Mod
                 barName = barId;
             }
 
-            string body = I18n.Get("mail.mining.deepDiveReward.body", new { count, bar = barName }).ToString();
+            // Skull Cavern Deep Dive (Row 67) pays in Radioactive Bars and uses a
+            // distinct "unexpected smelting byproduct" flavour. Mines Deep Dive
+            // (Row 78) keeps the standard Marlon-flavoured payout body.
+            string bodyKey = barId == "910"
+                ? "mail.mining.deepDiveReward.skullCavern.body"
+                : "mail.mining.deepDiveReward.body";
+            string body = I18n.Get(bodyKey, new { count, bar = barName }).ToString();
             mail[key] = body + $"%item object {barId} {count} %%";
         }
     }
