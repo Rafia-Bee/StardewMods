@@ -259,10 +259,15 @@ public sealed class TriggerEvaluator
         switch (parts[0].ToLowerInvariant())
         {
             case "firststat":
-                // FirstStat <name> >= <n>
+                // FirstStat <name>[|<name>...] >= <n>. Pipe-separated stat names short-circuit
+                // on the first one that crosses `min` (OR across stats — e.g. a "first milk
+                // collected" trigger that accepts either `cowMilkProduced` or `goatMilkProduced`).
                 if (parts.Length < 4 || parts[2] != ">=" || !uint.TryParse(parts[3], out uint min))
                     return false;
-                return Game1.stats.Get(parts[1]) >= min;
+                foreach (var statName in parts[1].Split('|', StringSplitOptions.RemoveEmptyEntries))
+                    if (Game1.stats.Get(statName.Trim()) >= min)
+                        return true;
+                return false;
 
             case "firstshipped":
                 if (parts.Length < 2)

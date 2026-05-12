@@ -698,7 +698,7 @@
             "Category": "Animal",
             "Trigger": {
                 "Source": "OneShot",
-                "When": "FirstStat cowMilkProduced >= 1",
+                "When": "FirstStat cowMilkProduced|goatMilkProduced >= 1",
                 "Available": { "NpcExists": "Marnie" }
             },
             "Generator": "MarnieMilkRequest"

@@ -542,15 +542,13 @@ internal static partial class Generators
         }
     }
 
-    /// CSV row 47. Same shape as the Egg Request but for milk. Triggered on
-    /// `cowMilkProduced >= 1` (covers vanilla white + brown cows; `goatMilkProduced` is
-    /// a separate stat and intentionally not unioned in — goat milk is a separate
-    /// progression beat). Reward = `GoldBasicBase` plus the Cheese Press crafting recipe.
-
-    /// CSV row 47. Same shape as the Egg Request but for milk. Triggered on
-    /// `cowMilkProduced >= 1` (covers vanilla white + brown cows; `goatMilkProduced` is
-    /// a separate stat and intentionally not unioned in — goat milk is a separate
-    /// progression beat). Reward = `GoldBasicBase` plus the Cheese Press crafting recipe.
+    /// CSV row 47. Mail+Ship 10 milk through the bin. Now widened beyond vanilla cow
+    /// milk: `AlternativeObjectiveItemIds` is populated from a live scan of
+    /// `Game1.farmAnimalData` for every animal whose `HarvestTool == "Milk Pail"` — picks
+    /// up vanilla cow + goat milks plus any modded milking animal (Buffalo / Llama /
+    /// content-pack additions). Reward = `GoldBasicBase` plus the Cheese Press —
+    /// `RecipeReward` when not known, falls back to a direct `(BC)16` `ObjectReward`
+    /// when the player already learned the recipe (Farming 6 / Mr. Qi etc).
     private static QuestPosting? MarnieMilkRequest(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Marnie") == null)
@@ -559,7 +557,12 @@ internal static partial class Generators
         int qty = Math.Max(1, ModEntry.Config.MarnieMilkRequestQty);
         int gold = ctx.Config.GoldBasicBase;
 
-        return new QuestPosting
+        bool knowsCheesePress = Game1.player?.craftingRecipes?.ContainsKey("Cheese Press") ?? false;
+        RewardSpec cheesePressReward = knowsCheesePress
+            ? new ObjectReward("(BC)16")
+            : new RecipeReward("Cheese Press", RecipeKind.Crafting);
+
+        var posting = new QuestPosting
         {
             Category = QuestCategory.Animal,
             Tier = DifficultyTier.Beginner,
@@ -572,7 +575,7 @@ internal static partial class Generators
             Rewards =
             {
                 new MoneyReward(gold),
-                new RecipeReward("Cheese Press", RecipeKind.Crafting),
+                cheesePressReward,
                 new FriendshipReward("Marnie", ctx.Config.FriendshipBasic)
             },
             Title = ModEntry.I18n.Get("quest.animal.marnieMilk.title"),
@@ -580,6 +583,47 @@ internal static partial class Generators
             CurrentObjective = ModEntry.I18n.Get("quest.animal.marnieMilk.objective", new { qty }),
             TargetMessage = ModEntry.I18n.Get("quest.animal.marnieMilk.targetMessage")
         };
+
+        foreach (var altId in EnumerateMilkProduceIds())
+        {
+            if (altId == "(O)184") continue;
+            posting.AlternativeObjectiveItemIds.Add(altId);
+            posting.AlternativeObjectiveItemWeights.Add(1);
+        }
+
+        return posting;
+    }
+
+    /// Yields every produce id (qualified `(O)<id>`) from every `Data/FarmAnimals` entry
+    /// whose `HarvestTool == "Milk Pail"`. Picks up vanilla cow / goat milks (both
+    /// regular and Large variants via `DeluxeProduceItemIds`) plus modded milking
+    /// animals registered via content-pack edits.
+    private static IEnumerable<string> EnumerateMilkProduceIds()
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var pair in Game1.farmAnimalData)
+        {
+            var animalData = pair.Value;
+            if (animalData == null) continue;
+            if (!string.Equals(animalData.HarvestTool, "Milk Pail", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            CollectIds(animalData.ProduceItemIds, seen);
+            CollectIds(animalData.DeluxeProduceItemIds, seen);
+        }
+        foreach (var id in seen)
+            yield return id;
+    }
+
+    private static void CollectIds(List<StardewValley.GameData.FarmAnimals.FarmAnimalProduce>? produce, HashSet<string> seen)
+    {
+        if (produce == null) return;
+        foreach (var p in produce)
+        {
+            if (p == null || string.IsNullOrEmpty(p.ItemId)) continue;
+            string qualified = p.ItemId.StartsWith("(") ? p.ItemId : "(O)" + p.ItemId;
+            seen.Add(qualified);
+        }
     }
 
     /// CSV row 64. Two JSON entries (one for Coop, one for Barn) gate this generator on
