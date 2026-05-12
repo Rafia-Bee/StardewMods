@@ -217,11 +217,40 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 43. BuildingBuilt(Coop)+1 day. Mail+ItemDelivery for a stack of one
-    /// current-season seed type to Marnie. Reward = a gold rebate (`MarnieChickenOfferRebate`,
-    /// default 800g — vanilla white chicken price) as a proxy for the "deal on a chicken"
-    /// the CSV calls out. A real shop discount would need a `PurchaseAnimalsMenu` patch
-    /// (deferred — the framework doesn't currently hook the animal-shop menu).
+    /// CSV row 39. OneShot triggered when the player first holds a Void Egg `(O)305`,
+    /// gated on Krobus heart-1. Mail+ItemDelivery for one Void Egg to Krobus. Reward =
+    /// FriendshipMid for Krobus + a Monster Compendium book (`(O)Book_Void`) as a
+    /// placeholder for the CSV's Void Chicken Statue (asset deferred until Rafia
+    /// produces the sprite).
+    private static QuestPosting? KrobusVoidNote(QuestContext ctx)
+    {
+        if (Game1.getCharacterFromName("Krobus") == null)
+            return null;
+
+        const string giver = "Krobus";
+        const string voidEggId = "(O)305";
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Animal,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.ItemDelivery,
+            QuestGiver = giver,
+            ObjectiveItemId = voidEggId,
+            ObjectiveItemName = "Void Egg",
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards =
+            {
+                new FriendshipReward(giver, ctx.Config.FriendshipMid),
+                new ObjectReward("(O)Book_Void")
+            },
+            Title = ModEntry.I18n.Get("quest.animal.krobusVoidNote.title"),
+            Description = ModEntry.I18n.Get("quest.animal.krobusVoidNote.description"),
+            CurrentObjective = ModEntry.I18n.Get("quest.animal.krobusVoidNote.objective"),
+            TargetMessage = ModEntry.I18n.Get("quest.animal.krobusVoidNote.targetMessage")
+        };
+    }
 
     /// CSV row 43. BuildingBuilt(Coop)+1 day. Mail+ItemDelivery for a stack of one
     /// current-season seed type to Marnie. Reward = a gold rebate (`MarnieChickenOfferRebate`,
