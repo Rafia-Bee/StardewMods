@@ -62,7 +62,7 @@
                 "Source": "DailyBoard",
                 "Weight": 25,
                 "MaxPerDay": 1,
-                "CooldownTier": "Long",
+                "CooldownDays": 21,
                 "Available": { "NpcExists": "George Evelyn" }
             },
             "Generator": "CheckOnGeorge"
