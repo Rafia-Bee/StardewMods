@@ -138,10 +138,10 @@
     "quest.seasonal.beach.objective": "Collect {{qty}} {{item}} and talk to {{npc}}.",
     "quest.seasonal.beach.targetMessage": "Thanks for clearing those out. Fun to look at but not so fun to step on!",
 
-    "quest.seasonal.springtea.title": "{{npc}}'s spring tea",
-    "quest.seasonal.springtea.description": "{{npc}} is asking for {{qty}} {{item}} to make some tea.",
-    "quest.seasonal.springtea.objective": "Bring {{qty}} {{item}} to {{npc}}.",
-    "quest.seasonal.springtea.targetMessage": "Lovely, thank you.",
+    "quest.seasonal.floraltea.title": "Floral tea for {{npc}}",
+    "quest.seasonal.floraltea.description": "I'd love to brew some floral tea this week. Could you bring me {{qty}} {{item}}?",
+    "quest.seasonal.floraltea.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.seasonal.floraltea.targetMessage": "Lovely, thank you.",
 
     "quest.cooking.craving.title": "{{npc}} is craving a meal",
     "quest.cooking.craving.description": "I really really REALLY want some {{item}}. Can someone make some for me?",
