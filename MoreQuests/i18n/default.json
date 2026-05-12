@@ -162,7 +162,7 @@
     "mail.festival.wizardsRitualReward.body": "Dear farmer,^^The working held. The valley sleeps a little easier tonight - though few will know to thank you for it. As payment, an old volume from my study. I have read it more times than I care to admit, and you may yet find a use for it that escaped me.^^  -M. Rasmodius",
 
     "quest.festival.holidayCookies.title": "Holiday cookies",
-    "quest.festival.holidayCookies.description": "I'm baking holiday cookies for the festival and my pantry is bare. Could you spare {{count}} Flour, {{count}} Sugar, and {{count}} Egg? Any kind of egg from your coop will do, fresh from the henhouse. Bring them by when you can - there will be a warm batch waiting.",
+    "quest.festival.holidayCookies.description": "I'm baking holiday cookies for the festival and my pantry is bare. Could you spare {{count}} Flour, {{count}} Sugar, and {{count}} Egg? Any kind of egg will do. Bring them by when you can, there will be a warm batch waiting.",
     "quest.festival.holidayCookies.step.flour": "Bring {{count}} Flour to Evelyn.",
     "quest.festival.holidayCookies.step.sugar": "Bring {{count}} Sugar to Evelyn.",
     "quest.festival.holidayCookies.step.eggs": "Bring {{count}} Egg to Evelyn.",
