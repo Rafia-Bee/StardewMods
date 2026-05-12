@@ -234,7 +234,8 @@
                 "Source": "DailyBoard",
                 "Weight": 25,
                 "MaxPerDay": 1,
-                "CooldownTier": "Medium"
+                "CooldownTier": "Medium",
+                "Available": { "SkillLevel": "Cooking 2|Farming 3" }
             },
             "Generator": "WeeklySpecialCommon"
         },

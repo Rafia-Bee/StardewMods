@@ -589,8 +589,26 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             npc.CurrentDialogue.Push(new Dialogue(npc, null, completionMessage.Value));
             Game1.drawDialogue(npc);
         }
+        if (HasMultipleDeliverSteps())
+            Game1.playSound("give_gift");
         MarkStepDone(idx, step);
         return true;
+    }
+
+    /// True when the quest's step list has at least two `Deliver` steps. Used to gate the
+    /// per-step delivery sound cue: single-step Deliver quests get vanilla's quest-complete
+    /// fanfare and don't need extra confirmation, but multi-ingredient asks benefit from a
+    /// "that one landed" cue between handoffs so players know the step registered.
+    private bool HasMultipleDeliverSteps()
+    {
+        var steps = Steps;
+        int count = 0;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            if (steps[i].Kind == AdventureStepKind.Deliver && ++count > 1)
+                return true;
+        }
+        return false;
     }
 
     /// Gift step: matches an offered item that the recipient loves, likes, OR Stardrop Tea

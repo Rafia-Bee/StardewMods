@@ -75,8 +75,6 @@ public sealed class ModConfig
     public int SkullCavernMaxLevel { get; set; } = 100;
 
     // ----- Saloon weekly special / Grand Feast tunables -----
-    /// Recipes with at most this many distinct ingredient lines qualify for the Common pool.
-    public int WeeklySpecialCommonMaxIngredients { get; set; } = 3;
     /// Recipes with at least this many distinct ingredient lines qualify for the Complex pool.
     public int WeeklySpecialComplexMinIngredients { get; set; } = 4;
     // ----- Phase 9.5a: Wrapping Paper (mod-gated on Si.ExtraCraftingMaterials) -----
