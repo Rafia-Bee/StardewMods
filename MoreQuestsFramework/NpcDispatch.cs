@@ -42,18 +42,20 @@ public static class NpcDispatch
         registry.Register(DispatchRoles.ConservationGuide, "Dylan", ModCompat.EastScarp);
         registry.Register(DispatchRoles.ConservationGuide, "Aster", ModCompat.VisitMountVapius);
 
-        // Vanilla Marlon isn't friendable and right-clicking him opens the Adventure
-        // Guild shop instead of dialogue, so OnNpcSocialized never fires. SVE replaces
-        // him with the friendable "MarlonFay"; everywhere else we route slime/combat
-        // quests to Wizard or Lewis.
-        registry.Register(DispatchRoles.CombatVendor, "Wizard");
-        registry.Register(DispatchRoles.CombatVendor, "Lewis");
-        registry.Register(DispatchRoles.CombatVendor, "Abigail");
-        registry.Register(DispatchRoles.CombatVendor, "MarlonFay", ModCompat.StardewValleyExpanded);
-        registry.Register(DispatchRoles.CombatVendor, "Lance", ModCompat.StardewValleyExpanded);
-        registry.Register(DispatchRoles.CombatVendor, "Mr. Aguar", ModCompat.RidgesideVillage);
-        registry.Register(DispatchRoles.CombatVendor, "Eli", ModCompat.EastScarp);
-        registry.Register(DispatchRoles.CombatVendor, "Maryam", ModCompat.VisitMountVapius);
+        // CombatNpcs: combat-flavoured villagers who commission slime / monster work
+        // (CSV row 4 — Basic Slime Clearing). Vanilla Marlon isn't friendable and
+        // right-clicking him opens the Adventure Guild shop instead of dialogue, so
+        // social-flow handlers never fire on him. Wizard is the vanilla anchor; SVE
+        // adds Lance + MarlonFay; RSV adds Mr. Aguar / Jio / Daia; EliAndDylan adds
+        // Eli; VMV adds Maryam.
+        registry.Register(DispatchRoles.CombatNpcs, "Wizard");
+        registry.Register(DispatchRoles.CombatNpcs, "MarlonFay", ModCompat.StardewValleyExpanded);
+        registry.Register(DispatchRoles.CombatNpcs, "Lance", ModCompat.StardewValleyExpanded);
+        registry.Register(DispatchRoles.CombatNpcs, "Mr. Aguar", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.CombatNpcs, "Jio", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.CombatNpcs, "Daia", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.CombatNpcs, "Eli", ModCompat.EliAndDylan);
+        registry.Register(DispatchRoles.CombatNpcs, "Maryam", ModCompat.VisitMountVapius);
 
         registry.Register(DispatchRoles.BeachCleanup, "Elliott");
         registry.Register(DispatchRoles.BeachCleanup, "Willy");

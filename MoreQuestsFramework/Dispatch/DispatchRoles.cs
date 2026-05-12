@@ -8,7 +8,7 @@ public static class DispatchRoles
     public const string SaloonChef = "SaloonChef";
     public const string EcologyMinded = "EcologyMinded";
     public const string ConservationGuide = "ConservationGuide";
-    public const string CombatVendor = "CombatVendor";
+    public const string CombatNpcs = "CombatNpcs";
     public const string SaloonFestival = "SaloonFestival";
     public const string BeachCleanup = "BeachCleanup";
     public const string HeatWaveRelief = "HeatWaveRelief";
@@ -25,8 +25,9 @@ public static class DispatchRoles
     public const string BulkFishBuyer = "BulkFishBuyer";
 
     /// Adventurers / mages who'd pay for rare monster drops. Used by Monster Parts
-    /// (CSV row 53). Distinct from `CombatVendor` because the latter includes Lewis,
-    /// who narratively isn't in the market for bat wings or solar essence.
+    /// (CSV row 53). Overlaps heavily with `CombatNpcs` but kept separate so future
+    /// edits to one pool (e.g. adding a vendor-only NPC) don't accidentally pull in
+    /// or push out the other.
     public const string MonsterPartsBuyer = "MonsterPartsBuyer";
 
     /// Fishermen / fishing-adjacent villagers who'd realistically commission a quality
