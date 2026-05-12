@@ -63,7 +63,10 @@ public static class NpcDispatch
         registry.Register(DispatchRoles.BeachCleanup, "Arumi", ModCompat.AikawaAsakaiCP);
 
         registry.Register(DispatchRoles.HeatWaveRelief, "Harvey");
+        registry.Register(DispatchRoles.HeatWaveRelief, "Maru");
         registry.Register(DispatchRoles.HeatWaveRelief, "Paula", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.HeatWaveRelief, "Philip", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.HeatWaveRelief, "Jacob", ModCompat.EastScarp);
 
         registry.Register(DispatchRoles.TownFestival, "Lewis");
 
