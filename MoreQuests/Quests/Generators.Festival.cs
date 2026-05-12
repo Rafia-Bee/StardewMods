@@ -1333,15 +1333,8 @@ internal static partial class Generators
 
     /// Row 25 — Ridgeside Gathering Decor Supply (Lenny, Fall 15). Mod-gated on Ridgeside
     /// Village. Three-step Ship Adventure: Tub o' Flowers + Wood + any table furniture
-    /// (matched via `$tag:furniture_table` so vanilla AND modded tables count). Reward =
-    /// `FriendshipMultiHeart` to each named RSV festival NPC. The Tub o' Flowers crafting
-    /// recipe is granted at quest-accept by `MoreQuests.ModEntry.OnQuestAccepted` if the
-    /// player doesn't already know it (so they can craft tubs without scrambling for the
-    /// vanilla recipe).
-
-    /// Row 25 — Ridgeside Gathering Decor Supply (Lenny, Fall 15). Mod-gated on Ridgeside
-    /// Village. Three-step Ship Adventure: Tub o' Flowers + Wood + any table furniture
-    /// (matched via `$tag:furniture_table` so vanilla AND modded tables count). Reward =
+    /// (matched via `$tag:furniture_table` so vanilla AND modded tables count).
+    /// Quantities scale with Farming / Foraging when `DifficultyScaling` is on. Reward =
     /// `FriendshipMultiHeart` to each named RSV festival NPC. The Tub o' Flowers crafting
     /// recipe is granted at quest-accept by `MoreQuests.ModEntry.OnQuestAccepted` if the
     /// player doesn't already know it (so they can craft tubs without scrambling for the
@@ -1351,12 +1344,27 @@ internal static partial class Generators
         if (!MoreQuestsFramework.ModCompat.HasRsv(ctx.Helper.ModRegistry))
             return null;
         const string giver = "Lenny";
-        const int tubCount = 1;
-        const int woodCount = 20;
-        const int tableCount = 1;
+
+        int tubCount;
+        int woodCount;
+        int tableCount;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int farming = Difficulty.GetSkillLevel(QuestCategory.Farming);
+            int foraging = Difficulty.GetSkillLevel(QuestCategory.Foraging);
+            tubCount = 2 + Game1.random.Next(1, Math.Max(1, farming / 2) + 1);
+            woodCount = Game1.random.Next(20, Math.Max(20, foraging * 5) + 1);
+            tableCount = 1 + Game1.random.Next(1, 6);
+        }
+        else
+        {
+            tubCount = 2;
+            woodCount = 20;
+            tableCount = 2;
+        }
 
         string tubId = string.IsNullOrWhiteSpace(ModEntry.Config.RsvTubOFlowersId)
-            ? "(BC)272"
+            ? "(BC)108"
             : ModEntry.Config.RsvTubOFlowersId;
 
         var quest = new AdventureQuest();
@@ -1395,6 +1403,8 @@ internal static partial class Generators
         foreach (var npc in SplitNpcList(ModEntry.Config.RidgesideFestivalNpcs))
             rewards.Add(new FriendshipReward(npc, ctx.Config.FriendshipMultiHeart));
 
+        string farmerName = Game1.player?.Name ?? "Farmer";
+
         return new QuestPosting
         {
             Category = QuestCategory.Festival,
@@ -1406,7 +1416,7 @@ internal static partial class Generators
             AllowDecorShipping = true,
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.festival.rsvGathering.title"),
-            Description = ModEntry.I18n.Get("quest.festival.rsvGathering.description", new { wood = woodCount }),
+            Description = ModEntry.I18n.Get("quest.festival.rsvGathering.description", new { farmer = farmerName, tubs = tubCount, wood = woodCount, tables = tableCount }),
             PreBuiltQuest = quest
         };
     }

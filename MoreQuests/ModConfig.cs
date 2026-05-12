@@ -123,9 +123,9 @@ public sealed class ModConfig
     public string RidgesideFestivalNpcs { get; set; } = "Pika, Lenny, Mr. Aguar, Pam, Blair, Kimpoi, Hugo";
 
     /// Qualified item id for Tub o' Flowers, the RSV Gathering quest's primary ship item.
-    /// Defaults to vanilla Stardew's Tub o' Flowers `(BC)272`. RSV ships its own variant
+    /// Defaults to vanilla Stardew's Tub o' Flowers `(BC)108`. RSV ships its own variant
     /// via a different id; override here if your save uses the RSV-namespaced item.
-    public string RsvTubOFlowersId { get; set; } = "(BC)272";
+    public string RsvTubOFlowersId { get; set; } = "(BC)108";
     /// Crafting recipe name for Tub o' Flowers. Granted via `Player.craftingRecipes.Add`
     /// at quest-accept if the player doesn't already know it. Defaults to vanilla "Tub o' Flowers".
     public string RsvTubOFlowersRecipeName { get; set; } = "Tub o' Flowers";

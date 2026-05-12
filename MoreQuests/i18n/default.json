@@ -401,10 +401,10 @@
     "quest.festival.esvSpiritsEve.step.stone": "Ship {{count}} stone.",
 
     "quest.festival.rsvGathering.title": "Ridgeside Gathering setup",
-    "quest.festival.rsvGathering.description": "Lenny is putting together the Ridgeside Gathering and needs the village square dressed up. Ship a Tub o' Flowers, {{wood}} wood, and any one table. The recipe for the Tub is included with this letter if you don't already know it.",
+    "quest.festival.rsvGathering.description": "{{farmer}}! I need to dress up the town square for the upcoming gathering and ran short of some stuff. Could you ship {{tubs}} Tub o' Flowers, {{wood}} wood, and {{tables}} tables before the gathering? I'll give you due credit and I'm sure everyone would appreciate you more for helping out. P.S. I snagged this instruction manual for the tubs from Pierre the other day.",
     "quest.festival.rsvGathering.step.tub": "Ship {{count}} Tub o' Flowers.",
     "quest.festival.rsvGathering.step.wood": "Ship {{count}} wood.",
-    "quest.festival.rsvGathering.step.table": "Ship {{count}} table (any kind).",
+    "quest.festival.rsvGathering.step.table": "Ship {{count}} tables (any kind).",
 
     "quest.fishing.locationOverpop.title": "Trouble at {{location}}",
     "quest.fishing.locationOverpop.description": "{{npc}} here. The population of {{item}} at {{location}} is way past balanced and the rest of the food web is feeling it. Pull {{qty}} from there and we'll be in better shape.",
