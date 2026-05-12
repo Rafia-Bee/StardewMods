@@ -631,6 +631,16 @@
             "Generator": "GuntherDinosaurStudy"
         },
         {
+            "Name": "Animal.KrobusVoidNote",
+            "Category": "Animal",
+            "Trigger": {
+                "Source": "OneShot",
+                "When": "FirstHeldItem (O)305",
+                "Available": { "NpcExists": "Krobus", "NpcMet": "Krobus", "FriendshipLevel": "Krobus 1" }
+            },
+            "Generator": "KrobusVoidNote"
+        },
+        {
             "Name": "Animal.MarnieChickenOffer",
             "Category": "Animal",
             "Trigger": {

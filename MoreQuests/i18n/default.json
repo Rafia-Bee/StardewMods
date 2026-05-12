@@ -427,6 +427,11 @@
     "quest.animal.guntherDinosaur.objective": "Bring a Dinosaur Egg to Gunther.",
     "quest.animal.guntherDinosaur.targetMessage": "Farmer, thanks for letting me examine this incredible specimen. It turned out to be even better quality than I originally thought! Returning it to you with my thanks.",
 
+    "quest.animal.krobusVoidNote.title": "A note from the sewers",
+    "quest.animal.krobusVoidNote.description": "Friend. A void egg has found you. The little ones of the dark do not come to just anyone. Bring it to me at the sewers. I have something for you in return, something worth more than the egg.",
+    "quest.animal.krobusVoidNote.objective": "Bring a Void Egg to Krobus.",
+    "quest.animal.krobusVoidNote.targetMessage": "Yes. Yes, this one is healthy. Take this book. It will help you understand what walks beneath the valley.",
+
     "quest.animal.marnieChickenOffer.title": "Marnie's chicken offer",
     "quest.animal.marnieChickenOffer.description": "Saw the new coop going up. If you bring me {{qty}} {{item}} for the layers, I'll cut you a deal on a chicken to fill it. Drop the seeds by whenever you have them.",
     "quest.animal.marnieChickenOffer.objective": "Bring {{qty}} {{item}} to Marnie.",
