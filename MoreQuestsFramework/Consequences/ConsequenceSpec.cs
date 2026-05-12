@@ -60,8 +60,17 @@ public sealed class ConsequenceSpec
 
     /// Optional override of the per-NPC friendship delta. Zero = use the tier's default
     /// (`+/- FriendshipBasic` for Tier 1, `-FriendshipBasic..-FriendshipMid` for Tier 2,
-    /// `-FriendshipLarge` for Tier 3).
+    /// `-FriendshipLarge` for Tier 3). For Tier 3, this is the TOTAL loss spread across
+    /// `ChainDays`. Set `FriendshipPerDay` instead if you want the value to apply per day.
     public int FriendshipOverride { get; set; }
+
+    /// Tier 3 only. Per-chain-day friendship delta. When non-zero, the handler applies
+    /// this exact value on each of the `ChainDays` consecutive days, with no division.
+    /// e.g. `FriendshipPerDay = -FriendshipMid` over `ChainDays = 3` removes
+    /// `FriendshipMid` per day for three days (total = `-3 * FriendshipMid`). When zero,
+    /// the handler falls back to splitting `FriendshipOverride` (or the tier default
+    /// `-FriendshipLarge`) across `ChainDays`, preserving legacy behaviour.
+    public int FriendshipPerDay { get; set; }
 
     /// Number of days a Tier 3 chained dialogue runs. One line per day for `ChainDays`
     /// consecutive days starting the day after completion. Defaults to 3 if zero.

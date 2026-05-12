@@ -49,18 +49,33 @@ internal sealed class Tier2Handler : IConsequenceHandler
     }
 }
 
-/// Tier 3 — significant. Multi-day chained dialogue with a `-FriendshipLarge`-class hit
-/// to ecology NPCs. Friendship loss is split across the chain (`/ChainDays` per day) so
-/// the relationship erodes gradually rather than crashing on day 1. Lines come from
-/// `Spec.ChainLines`; one line per day per NPC, stamped with stepping `EarliestFireDay`
-/// so the watcher only pops them after each successive day starts.
+/// Tier 3 — significant. Multi-day chained dialogue. Friendship loss is applied per day
+/// on each of `ChainDays` consecutive days, stamped with stepping `EarliestFireDay` so
+/// the watcher only pops a line after each successive day starts. Lines come from
+/// `Spec.ChainLines`; one line per day per NPC.
+///
+/// The per-day friendship delta is picked in this order:
+/// 1. `Spec.FriendshipPerDay` if non-zero. Used verbatim per day (no division). Caller
+///    is responsible for sign and magnitude. e.g. `FriendshipPerDay = -FriendshipMid`
+///    with `ChainDays = 3` ⇒ -FriendshipMid each day, total = -3 * FriendshipMid.
+/// 2. `Spec.FriendshipOverride / ChainDays` if `FriendshipOverride` is non-zero. Legacy
+///    "total loss spread across the chain" semantics.
+/// 3. `-FriendshipLarge / ChainDays` as the tier default. Same legacy semantics.
 internal sealed class Tier3Handler : IConsequenceHandler
 {
     public void Apply(ConsequenceContext ctx)
     {
         int chainDays = ctx.Spec.ChainDays > 0 ? ctx.Spec.ChainDays : 3;
-        int totalLoss = ctx.Spec.FriendshipOverride != 0 ? ctx.Spec.FriendshipOverride : -ctx.Config.FriendshipLarge;
-        int perDay = totalLoss / chainDays;
+        int perDay;
+        if (ctx.Spec.FriendshipPerDay != 0)
+        {
+            perDay = ctx.Spec.FriendshipPerDay;
+        }
+        else
+        {
+            int totalLoss = ctx.Spec.FriendshipOverride != 0 ? ctx.Spec.FriendshipOverride : -ctx.Config.FriendshipLarge;
+            perDay = totalLoss / chainDays;
+        }
         int today = Game1.Date?.TotalDays ?? 0;
         var lines = ctx.Spec.ChainLines;
 
