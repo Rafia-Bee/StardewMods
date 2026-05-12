@@ -827,10 +827,4 @@ internal static partial class Generators
         return Math.Max(1, cookingLevel / 2);
     }
 
-    /// CSV row 55. Daily-board single-step `Plant` AdventureQuest. Quest giver picked
-    /// from the `ConservationGuide` dispatch role (Linus / Demetrius / Kimpoi RSV /
-    /// Dylan ESV / Aster VMV) — exactly the CSV's listed givers. Player must plant
-    /// `PlantTreesCount` trees at `PlantTreesLocation` (default Cindersap Forest).
-    /// Reward = `FriendshipIntermediate` to the giver — pure friendship, no gold per
-    /// the CSV. The `Plant` step rides `World.TerrainFeatureListChanged` filter Tree.
 }

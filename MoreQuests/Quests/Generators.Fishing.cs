@@ -717,22 +717,33 @@ internal static partial class Generators
     /// Maps the common keys back to their in-game labels; unknown keys (modded) pass
     /// through verbatim, which is usually what the player sees on the map anyway.
 
-    /// Lightweight pretty-printer for vanilla location keys used in quest descriptions.
-    /// Maps the common keys back to their in-game labels; unknown keys (modded) pass
-    /// through verbatim, which is usually what the player sees on the map anyway.
-    private static string LocationDisplayName(string key) => key?.ToLowerInvariant() switch
+    /// Lightweight pretty-printer for location keys used in quest descriptions. Maps
+    /// common vanilla keys back to their in-game labels. Unknown keys fall back to the
+    /// runtime location's `DisplayName` (which picks up modded translations), and finally
+    /// to the raw key if no live location matches.
+    private static string LocationDisplayName(string key)
     {
-        "town" => "Pelican Town",
-        "beach" => "the beach",
-        "mountain" => "the mountain lake",
-        "forest" => "Cindersap Forest",
-        "woods" => "the Secret Woods",
-        "backwoods" => "the Backwoods",
-        "desert" => "the Calico Desert",
-        "submarine" => "the Night Market submarine",
-        "islandsouth" or "islandnorth" or "islandwest" or "islandeast" or "islandsoutheast" => "Ginger Island",
-        _ => key ?? string.Empty
-    };
+        string label = key?.ToLowerInvariant() switch
+        {
+            "town" => "Pelican Town",
+            "beach" => "the beach",
+            "mountain" => "the mountain",
+            "forest" => "Cindersap Forest",
+            "woods" => "the Secret Woods",
+            "backwoods" => "the Backwoods",
+            "desert" => "the Calico Desert",
+            "submarine" => "the Night Market submarine",
+            "islandsouth" or "islandnorth" or "islandwest" or "islandeast" or "islandsoutheast" => "Ginger Island",
+            _ => string.Empty
+        };
+        if (!string.IsNullOrEmpty(label))
+            return label;
+        var loc = Game1.getLocationFromName(key);
+        string? display = loc?.DisplayName;
+        if (!string.IsNullOrWhiteSpace(display))
+            return display;
+        return key ?? string.Empty;
+    }
 
     // -------------------- Phase 9.5f: One-shot triggered animal/farm rows --------------------
 
