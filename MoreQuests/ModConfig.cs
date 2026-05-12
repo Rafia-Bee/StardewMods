@@ -207,12 +207,6 @@ public sealed class ModConfig
     /// How many resource clumps the quest asks the player to clear at the target location.
     public int ClearDebrisCount { get; set; } = 5;
 
-    /// Dinner Party (CSV row 18). Number of distinct dishes the giver requests, picked
-    /// from dishes the giver Loves or Likes per `Data/NPCGiftTastes`. Per-dish quantity
-    /// defaults to 1 to keep the order playable, since each dish has to be cooked.
-    public int DinnerPartyDishCount { get; set; } = 3;
-    public int DinnerPartyPerDishCount { get; set; } = 1;
-
     /// Plant Trees (CSV row 55). Location where new trees must be planted before the
     /// step closes. Defaults to vanilla Cindersap Forest; modded conservation NPCs
     /// (Kimpoi/Dylan/Aster) currently route to the same fallback until their respective

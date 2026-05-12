@@ -752,8 +752,9 @@
             "Name": "Cooking.DinnerParty",
             "Category": "Cooking",
             "Trigger": {
-                "Source": "SpecialOrder",
-                "Duration": "Week",
+                "Source": "DailyBoard",
+                "Weight": 10,
+                "MaxPerDay": 1,
                 "CooldownTier": "Long"
             },
             "Generator": "DinnerParty"
