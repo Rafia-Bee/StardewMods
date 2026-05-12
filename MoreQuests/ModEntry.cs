@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 using MoreQuests.Quests;
 using MoreQuestsFramework.Api;
+using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -199,9 +200,31 @@ public sealed class ModEntry : Mod
     {
         if (e.DefinitionId == "Animal.HaySupplyRun")
             Helper.GameContent.InvalidateCache("Data/Shops");
+        if (e.DefinitionId == "Animal.GuntherDinosaurStudy")
+            GrantUpgradedDinosaurEgg(e.Quest);
         if (e.DefinitionId != "Mining.SkullCavernDeepDive" && e.DefinitionId != "Mining.MinesDeepDive")
             return;
         Helper.GameContent.InvalidateCache("Data/mail");
+    }
+
+    /// Returns a Dinosaur Egg whose Quality is one tier above whatever the player
+    /// delivered. Vanilla quality ladder: 0 regular → 1 silver → 2 gold → 4 iridium
+    /// (3 is skipped per vanilla). Iridium stays iridium. Reads the captured quality
+    /// from the framework's `MoreQuestsItemDeliveryQuest.deliveredQuality` field.
+    private void GrantUpgradedDinosaurEgg(StardewValley.Quests.Quest quest)
+    {
+        int delivered = quest is MoreQuestsItemDeliveryQuest idq ? idq.deliveredQuality.Value : 0;
+        int upgraded = delivered switch
+        {
+            <= 0 => 1, // regular → silver
+            1 => 2,    // silver → gold
+            2 => 4,    // gold → iridium
+            _ => 4     // iridium / unknown → iridium
+        };
+
+        var egg = new StardewValley.Object("107", 1) { Quality = upgraded };
+        if (!Game1.player.addItemToInventoryBool(egg))
+            Game1.createItemDebris(egg, Game1.player.getStandingPosition(), 2);
     }
 
     private void OnQuestAccepted(object? sender, QuestAcceptedArgs e)
