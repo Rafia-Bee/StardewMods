@@ -39,6 +39,7 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded_ScanCombatFoods;
         helper.Events.Content.AssetRequested += OnAssetRequested;
+        helper.Events.World.BuildingListChanged += OnBuildingListChanged;
     }
 
     internal const string AdventureBoardAssetRoot = "Mods/RafiaBee.MoreQuests/AdventureBoard";
@@ -86,6 +87,24 @@ public sealed class ModEntry : Mod
                     if (IsHayItemId(entry.ItemId))
                         animalShop.Items.RemoveAt(i);
                 }
+            }, AssetEditPriority.Late);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo("Data/Buildings"))
+        {
+            if (Game1.player == null)
+                return;
+            if (!Game1.player.modData.TryGetValue(FreeSiloCreditModDataKey, out string? flag) || flag != "true")
+                return;
+            e.Edit(asset =>
+            {
+                var buildings = asset.AsDictionary<string, StardewValley.GameData.Buildings.BuildingData>().Data;
+                if (!buildings.TryGetValue("Silo", out var silo) || silo == null)
+                    return;
+                silo.BuildCost = 0;
+                if (silo.BuildMaterials != null)
+                    silo.BuildMaterials.Clear();
             }, AssetEditPriority.Late);
             return;
         }
@@ -346,70 +365,60 @@ public sealed class ModEntry : Mod
         return type.IndexOf("Barn", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    /// Constructs a Silo on the farm via `Farm.buildStructure` with magical construction
-    /// (instant, no day delay) on completion of Robin's Silo Offer. Scans the farm map for
-    /// the first tile that passes vanilla's `isBuildable` safety checks so the silo lands
-    /// somewhere clear. Falls back to `RobinSiloOfferRebate` gold when no spot is found or
-    /// a silo already exists (e.g. the player built one mid-quest).
+    /// Player ModData key that flags Robin's free-silo voucher. Set on completion of
+    /// Robin's Silo Offer and cleared when the player builds any Silo on the farm. While
+    /// the flag is set, `OnAssetRequested` zeroes the Silo entry's BuildCost and
+    /// BuildMaterials in `Data/Buildings` so the build shows up free in Robin's menu.
+    internal const string FreeSiloCreditModDataKey = "RafiaBee.MoreQuests.FreeSiloCredit";
+
+    /// Sets the free-silo voucher flag on the local player and invalidates `Data/Buildings`
+    /// so Robin's carpenter menu picks up the zeroed Silo entry on next open. The player
+    /// still chooses when and where to place the silo through Robin's shop; nothing is
+    /// auto-built. Skipped if a Silo already exists on the farm at completion time (the
+    /// generator's safety check should have already nulled the posting, but this guards
+    /// against edge cases where a silo was built mid-quest).
     private void GrantFreeSilo()
     {
         var farm = Game1.getFarm();
-        if (farm == null)
+        if (farm != null)
         {
-            FallbackSiloRebate();
-            return;
+            foreach (var b in farm.buildings)
+            {
+                if (string.Equals(b.buildingType.Value, "Silo", StringComparison.OrdinalIgnoreCase))
+                {
+                    Monitor.Log("Player already has a Silo by quest completion; skipping free-silo voucher.", LogLevel.Trace);
+                    return;
+                }
+            }
         }
 
-        foreach (var b in farm.buildings)
+        Game1.player.modData[FreeSiloCreditModDataKey] = "true";
+        Helper.GameContent.InvalidateCache("Data/Buildings");
+        Game1.addHUDMessage(new StardewValley.HUDMessage(I18n.Get("quest.animal.robinSilo.voucher").ToString(), 1));
+        Monitor.Log("Set the Robin free-silo voucher; Silo in Robin's carpenter menu will cost 0g and no materials until built.", LogLevel.Trace);
+    }
+
+    /// Cleared on `World.BuildingListChanged` when a Silo is added to the farm and the
+    /// voucher flag is set. Subsequent silos pay the normal cost — the voucher is one-shot
+    /// per quest completion. Demolishing a silo never re-grants the voucher.
+    private void OnBuildingListChanged(object? sender, StardewModdingAPI.Events.BuildingListChangedEventArgs e)
+    {
+        if (Game1.player == null)
+            return;
+        if (!Game1.player.modData.TryGetValue(FreeSiloCreditModDataKey, out string? flag) || flag != "true")
+            return;
+        if (e.Location is not StardewValley.Farm)
+            return;
+        foreach (var b in e.Added)
         {
             if (string.Equals(b.buildingType.Value, "Silo", StringComparison.OrdinalIgnoreCase))
             {
-                Monitor.Log("Player already has a Silo by quest completion; skipping free-build.", LogLevel.Trace);
+                Game1.player.modData.Remove(FreeSiloCreditModDataKey);
+                Helper.GameContent.InvalidateCache("Data/Buildings");
+                Monitor.Log("Player built the Silo; clearing the Robin free-silo voucher and reverting Data/Buildings.", LogLevel.Trace);
                 return;
             }
         }
-
-        if (TryPlaceFreeSilo(farm))
-        {
-            Game1.addHUDMessage(new StardewValley.HUDMessage(I18n.Get("quest.animal.robinSilo.siloPlaced").ToString(), 1));
-            Monitor.Log("Placed a free Silo on the farm for Robin's Silo Offer.", LogLevel.Trace);
-            return;
-        }
-
-        FallbackSiloRebate();
-    }
-
-    /// Sweeps the farm map for the first tile where `Farm.buildStructure("Silo", ...)`
-    /// succeeds with vanilla safety checks enabled. Uses `magicalConstruction: true` so the
-    /// silo is finished the moment it lands (no `daysOfConstructionLeft` countdown), matching
-    /// the quest flavor that Robin already "covered the rest of the materials and labour."
-    private bool TryPlaceFreeSilo(StardewValley.Farm farm)
-    {
-        var map = farm.Map;
-        if (map?.Layers == null || map.Layers.Count == 0)
-            return false;
-        int width = map.Layers[0].LayerWidth;
-        int height = map.Layers[0].LayerHeight;
-        for (int y = 0; y < height - 3; y++)
-        {
-            for (int x = 0; x < width - 3; x++)
-            {
-                var tile = new Microsoft.Xna.Framework.Vector2(x, y);
-                if (farm.buildStructure("Silo", tile, Game1.player, out _, magicalConstruction: true))
-                    return true;
-            }
-        }
-        return false;
-    }
-
-    private void FallbackSiloRebate()
-    {
-        int rebate = Math.Max(0, Config.RobinSiloOfferRebate);
-        if (rebate <= 0)
-            return;
-        Game1.player.Money += rebate;
-        Game1.addHUDMessage(new StardewValley.HUDMessage(I18n.Get("quest.animal.robinSilo.siloFullFallback").ToString(), 1));
-        Monitor.Log("Could not place a free Silo on the farm; paid out the Robin silo rebate instead.", LogLevel.Trace);
     }
 
     /// Returns a Dinosaur Egg whose Quality is one tier above whatever the player

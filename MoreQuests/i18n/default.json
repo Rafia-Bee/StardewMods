@@ -465,11 +465,10 @@
     "quest.animal.marnieMilk.targetMessage": "Wonderful, that's the lot. Cheese press recipe in the post.",
 
     "quest.animal.robinSilo.title": "Robin's silo offer",
-    "quest.animal.robinSilo.description": "Now that I've got your new building squared away, I was thinking you really ought to have a silo to go with it before that hay starts piling up. The recipe needs {{stoneQty}} stone, {{clayQty}} clay, and {{copperQty}} copper bars. Here's the deal: if you can bring me any one of those, I'll comp the rest myself and put the silo up for you, no labour charge. So just stone, just clay, or just the copper bars. Whichever's easiest for you. Drop them at the workshop when you have them.",
+    "quest.animal.robinSilo.description": "Now that I've got your new building squared away, I was thinking you really ought to have a silo to go with it before that hay starts piling up. The recipe needs {{stoneQty}} stone, {{clayQty}} clay, and {{copperQty}} copper bars. Here's the deal: if you can bring me any one of those, I'll comp the rest of the materials and the labor myself. Just bring me a stack of stone, or a stack of clay, or the copper bars, whichever's easiest for you. Then swing by the shop whenever you're ready and you can put a silo up wherever you like on the farm, on the house.",
     "quest.animal.robinSilo.objective": "Bring Robin {{stoneQty}} Stone, {{clayQty}} Clay, or {{copperQty}} Copper Bars.",
-    "quest.animal.robinSilo.targetMessage": "Perfect. I'll round up the rest from the shop. Head back to the farm and the silo will be waiting for you.",
-    "quest.animal.robinSilo.siloPlaced": "Robin put up your new silo.",
-    "quest.animal.robinSilo.siloFullFallback": "Robin couldn't find a spot for the silo. She refunded the materials cost instead.",
+    "quest.animal.robinSilo.targetMessage": "Perfect. Come by the shop whenever you're ready to pick out a spot. The silo's on the house.",
+    "quest.animal.robinSilo.voucher": "Robin is offering a free silo build. Visit the carpenter shop.",
 
     "quest.farming.carolineTeaGarden.title": "Caroline's tea garden",
     "quest.farming.carolineTeaGarden.description": "I'm putting together a fresh batch of tea and could really use {{qty}} {{item}}. If you've got some on hand (or know someone who does), drop them off and I'll send you home with plenty of tea leaves to brew with.",
