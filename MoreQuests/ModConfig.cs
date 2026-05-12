@@ -195,9 +195,10 @@ public sealed class ModConfig
 
     // ----- Phase 9.5g: Multi-step / misc quest tunables -----
 
-    /// Spring Cleaning (CSV row 69). Spring-only town weed clear. Location and weed count
-    /// are configurable for parity with the other 9.5g rows.
-    public string SpringCleaningLocation { get; set; } = "Town";
+    /// Spring Cleaning (CSV row 69). Spring-only weed clear (anywhere except the farm,
+    /// `'*', '!Farm'` target set). `SpringCleaningCount` is the number of weeds to clear
+    /// per posting. The old per-location config was dropped in 9.5g when the targeting
+    /// switched to wildcard to avoid "this location has no weeds today" dead-ends.
     public int SpringCleaningCount { get; set; } = 8;
 
     /// Check on Friends (CSV row 16). How many distinct NPCs the player must talk to
