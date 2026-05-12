@@ -283,9 +283,9 @@
     "quest.festival.merchantUnpacking.objective": "Ship {{qty}} {{item}}.",
     "quest.festival.merchantUnpacking.targetMessage": "Got them! That'll save me a trip to the boat. Many thanks.",
 
-    "quest.mining.monsterHunt.title": "Adventurer's Guild bounty",
-    "quest.mining.monsterHunt.description": "Marlon's got a stack of complaints from townsfolk about monsters near the trails. {{qty}} kills should clear the worst of it, type doesn't matter. Stop by the Guild when you've thinned the numbers and there's a hot meal waiting.",
-    "quest.mining.monsterHunt.objective": "Slay {{qty}} monsters, then talk to Marlon.",
+    "quest.mining.monsterHunt.title": "Monster bounty",
+    "quest.mining.monsterHunt.description": "{{npc}} here. I've got a stack of complaints from townsfolk about monsters near the trails. {{qty}} kills should clear the worst of it, type doesn't matter. Stop by when you've thinned the numbers and there's a hot meal waiting.",
+    "quest.mining.monsterHunt.objective": "Slay {{qty}} monsters, then talk to {{npc}}.",
     "quest.mining.monsterHunt.targetMessage": "Good work. Take this with you, you'll need it for the next run.",
 
     "quest.foraging.rareForage.title": "{{npc}}'s rare forage",

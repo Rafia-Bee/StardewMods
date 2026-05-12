@@ -381,7 +381,7 @@
                 "Source": "DailyBoard",
                 "Weight": 25,
                 "MaxPerDay": 1,
-                "CooldownTier": "Short",
+                "CooldownTier": "Medium",
                 "Available": { "MinDeepestMineLevel": "1" }
             },
             "Generator": "MonsterHunt"

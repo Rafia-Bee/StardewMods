@@ -482,30 +482,59 @@ internal static partial class Generators
     /// Quest gates on Linus being met (no point posting a "deliver gifts on Linus's behalf"
     /// quest before the player has met Linus).
 
-    /// CSV row 52. Daily-board SlayMonster (any monster). Marlon dispatches the request
-    /// from the Adventurer's Guild. Reward = `GoldIntermediateBase` + one random item
-    /// from the framework's combat-food pool (seeded by this content mod with vanilla
-    /// combat-buff foods at `RegistrationOpen`; consumer mods can extend through
-    /// `IMoreQuestsApi.RegisterCombatFood`).
+    /// CSV row 52. Daily-board SlayMonster (any monster). Routed through the
+    /// `CombatNpcs` dispatch pool (Wizard / Lance / MarlonFay / Mr. Aguar / Jio /
+    /// Daia / Eli / Maryam, mod-gated). Reward = `GoldIntermediateBase` + one combat
+    /// food sized to the rolled magnitude bucket: +1 when DifficultyScaling is off,
+    /// or a random +1 / +2 / +3 when it's on. The combat-food pool is auto-scanned
+    /// at save load from every edible item in `Data/Objects` whose `Buffs` grant a
+    /// non-zero Attack or Defense; magnitude is `max(Attack, Defense)`.
     private static QuestPosting? MonsterHunt(QuestContext ctx)
     {
         if (Game1.player.deepestMineLevel < 1)
             return null;
 
-        const string giver = "Marlon";
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.CombatNpcs);
+        if (giver == null)
+            return null;
+
         int qty = ctx.Config.DifficultyScaling
             ? Math.Max(8, 6 + 2 * Game1.player.CombatLevel)
-            : 12;
+            : Game1.random.Next(3, 13);
 
         int gold = ctx.Config.GoldIntermediateBase;
 
+        int targetMagnitude = ctx.Config.DifficultyScaling ? Game1.random.Next(1, 4) : 1;
+
         var pool = ModEntry.Framework?.GetCombatFoodPool() ?? Array.Empty<string>();
-        ResolvedItem? rewardFood = null;
-        if (pool.Count > 0)
+        var bucket = new List<string>();
+        foreach (string id in pool)
         {
-            // Try a few times so a missing modded id doesn't kill the reward.
-            for (int i = 0; i < Math.Min(pool.Count, 5) && rewardFood == null; i++)
-                rewardFood = ctx.Items.TryResolveItem(pool[Game1.random.Next(pool.Count)]);
+            int? m = ModEntry.GetCombatFoodMagnitude(id);
+            if (m.HasValue && m.Value == targetMagnitude)
+                bucket.Add(id);
+        }
+        // Fallback: if the rolled bucket is empty (e.g. no +3 foods in this save's
+        // content), drop to the next-lower magnitude that does have entries. Keeps
+        // the reward non-null while still honouring the magnitude direction.
+        if (bucket.Count == 0)
+        {
+            for (int m = targetMagnitude - 1; m >= 1 && bucket.Count == 0; m--)
+            {
+                foreach (string id in pool)
+                {
+                    int? mag = ModEntry.GetCombatFoodMagnitude(id);
+                    if (mag.HasValue && mag.Value == m)
+                        bucket.Add(id);
+                }
+            }
+        }
+
+        ResolvedItem? rewardFood = null;
+        if (bucket.Count > 0)
+        {
+            for (int i = 0; i < Math.Min(bucket.Count, 5) && rewardFood == null; i++)
+                rewardFood = ctx.Items.TryResolveItem(bucket[Game1.random.Next(bucket.Count)]);
         }
 
         var rewards = new List<RewardSpec> { new MoneyReward(gold) };
@@ -534,8 +563,8 @@ internal static partial class Generators
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.mining.monsterHunt.title"),
-            Description = ModEntry.I18n.Get("quest.mining.monsterHunt.description", new { qty }),
-            CurrentObjective = ModEntry.I18n.Get("quest.mining.monsterHunt.objective", new { qty }),
+            Description = ModEntry.I18n.Get("quest.mining.monsterHunt.description", new { qty, npc = giver }),
+            CurrentObjective = ModEntry.I18n.Get("quest.mining.monsterHunt.objective", new { qty, npc = giver }),
             TargetMessage = ModEntry.I18n.Get("quest.mining.monsterHunt.targetMessage"),
             PreBuiltQuest = quest
         };
