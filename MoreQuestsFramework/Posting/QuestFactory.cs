@@ -78,10 +78,15 @@ public static class QuestFactory
             minQuality = { Value = Math.Max(0, p.MinQuality) },
             targetMessage = p.TargetMessage
         };
-        foreach (var alt in p.AlternativeObjectiveItemIds)
+        for (int i = 0; i < p.AlternativeObjectiveItemIds.Count; i++)
         {
+            string alt = p.AlternativeObjectiveItemIds[i];
             string qualified = ItemRegistry.QualifyItemId(alt) ?? alt;
             quest.alternativeItemIds.Add(qualified);
+            int qty = i < p.AlternativeObjectiveItemQuantities.Count
+                ? Math.Max(0, p.AlternativeObjectiveItemQuantities[i])
+                : 0;
+            quest.alternativeItemQuantities.Add(qty);
         }
         return quest;
     }

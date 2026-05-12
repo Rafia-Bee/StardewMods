@@ -64,6 +64,11 @@ public sealed class QuestPosting
     public int ObjectiveItemWeight { get; set; } = 1;
     /// Parallel to `AlternativeObjectiveItemIds`. Missing entries default to 1.
     public List<int> AlternativeObjectiveItemWeights { get; set; } = new();
+    /// `BoardQuestType.ItemDelivery` only. Parallel to `AlternativeObjectiveItemIds`: the
+    /// required stack size when that alternative is offered to the NPC. Lets one posting
+    /// accept a different quantity per material (e.g. Robin's Silo: 100 Stone OR 10 Clay
+    /// OR 5 Copper Bars). Missing or non-positive entries fall back to `ObjectiveQuantity`.
+    public List<int> AlternativeObjectiveItemQuantities { get; set; } = new();
     public int ObjectiveQuantity { get; set; } = 1;
     public string? TargetMonster { get; set; }
     public string? TargetLocation { get; set; }

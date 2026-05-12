@@ -465,9 +465,11 @@
     "quest.animal.marnieMilk.targetMessage": "Wonderful, that's the lot. Cheese press recipe in the post.",
 
     "quest.animal.robinSilo.title": "Robin's silo offer",
-    "quest.animal.robinSilo.description": "Saw the new building going up. You'll want a silo before that hay starts piling up. If you bring me {{qty}} {{item}} I'll cover the rest of the materials and put one up for you, no charge for the labour. Drop them at the workshop when you have them.",
-    "quest.animal.robinSilo.objective": "Bring {{qty}} {{item}} to Robin.",
-    "quest.animal.robinSilo.targetMessage": "That'll do. Come by the shop when you're ready and we'll break ground.",
+    "quest.animal.robinSilo.description": "Now that I've got your new building squared away, I was thinking you really ought to have a silo to go with it before that hay starts piling up. The recipe needs {{stoneQty}} stone, {{clayQty}} clay, and {{copperQty}} copper bars. Here's the deal: if you can bring me any one of those, I'll comp the rest myself and put the silo up for you, no labour charge. So just stone, just clay, or just the copper bars. Whichever's easiest for you. Drop them at the workshop when you have them.",
+    "quest.animal.robinSilo.objective": "Bring Robin {{stoneQty}} Stone, {{clayQty}} Clay, or {{copperQty}} Copper Bars.",
+    "quest.animal.robinSilo.targetMessage": "Perfect. I'll round up the rest from the shop. Head back to the farm and the silo will be waiting for you.",
+    "quest.animal.robinSilo.siloPlaced": "Robin put up your new silo.",
+    "quest.animal.robinSilo.siloFullFallback": "Robin couldn't find a spot for the silo. She refunded the materials cost instead.",
 
     "quest.farming.carolineTeaGarden.title": "Caroline's tea garden",
     "quest.farming.carolineTeaGarden.description": "I'm putting together a fresh batch of tea and could really use {{qty}} {{item}}. If you've got some on hand (or know someone who does), drop them off and I'll send you home with plenty of tea leaves to brew with.",
