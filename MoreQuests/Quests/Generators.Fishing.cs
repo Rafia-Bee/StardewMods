@@ -182,18 +182,14 @@ internal static partial class Generators
     /// CSV row 65. Daily-board fishing quest. SaloonChef-pool giver (Gus / Pika RSV /
     /// Rosa ESV / Celestine VMV) asks for a large haul of one edible non-poisonous fish;
     /// reward is `RewardMultiplierFishPremium` of the fish's price × qty. Tier 3 ecology
-    /// chain consequence: every ecology NPC present on the save plus Linus loses
-    /// `FriendshipLarge` worth of friendship spread evenly over `ChainDays` days, with
-    /// one chained dialogue line per day. Static source so the engine pushes a chain to
-    /// every target rather than sampling a single NPC.
-
-    /// CSV row 65. Daily-board fishing quest. SaloonChef-pool giver (Gus / Pika RSV /
-    /// Rosa ESV / Celestine VMV) asks for a large haul of one edible non-poisonous fish;
-    /// reward is `RewardMultiplierFishPremium` of the fish's price × qty. Tier 3 ecology
-    /// chain consequence: every ecology NPC present on the save plus Linus loses
-    /// `FriendshipLarge` worth of friendship spread evenly over `ChainDays` days, with
-    /// one chained dialogue line per day. Static source so the engine pushes a chain to
-    /// every target rather than sampling a single NPC.
+    /// chain consequence: every ecology NPC present on the save plus Linus gets one
+    /// chained dialogue line and a `-FriendshipMid` friendship hit on each of `ChainDays`
+    /// consecutive days (per-day, no division). Static source so the engine pushes a
+    /// chain to every target rather than sampling a single NPC.
+    /// Legendary / boss fish are excluded upstream by `GetSeasonalNonBossFish`, which
+    /// strips anything flagged `IsBossFish` in `Data/Locations` (vanilla legendaries +
+    /// modded fish following the same convention). Sell-price floor was dropped, the
+    /// multiplier + quantity already do the reward scaling work.
     private static QuestPosting? SeafoodNight(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
@@ -207,8 +203,7 @@ internal static partial class Generators
 
         var target = pool[Game1.random.Next(pool.Count)];
         int qty = Math.Max(1, ModEntry.Config.FishHaulLargeQty);
-        int basePrice = Math.Max(target.SellPrice, 30);
-        int gold = (int)(basePrice * qty * ctx.Config.RewardMultiplierFishPremium);
+        int gold = (int)(target.SellPrice * qty * ctx.Config.RewardMultiplierFishPremium);
 
         ConsequenceSpec? consequence = null;
         if (ModEntry.Config.ConsequencesEnabled)
@@ -222,6 +217,7 @@ internal static partial class Generators
                     Source = ConsequenceSource.Static,
                     Targets = ecology,
                     ChainDays = 3,
+                    FriendshipPerDay = -ctx.Config.FriendshipMid,
                     ChainLines = new List<string>
                     {
                         ModEntry.I18n.Get("quest.fishing.seafoodNight.consequence.chain.day1", new { item = target.DisplayName, npc = giver }),
