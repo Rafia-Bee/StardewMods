@@ -345,9 +345,10 @@ internal static partial class Generators
 
     /// CSV row 69. Spring-only daily-board single-step `ClearWeeds` AdventureQuest. Any
     /// met human NPC can be the giver; the player clears `SpringCleaningCount` weed
-    /// `Object`s at `SpringCleaningLocation` (default Pelican Town). Reward =
-    /// `FriendshipBasic`. The `ClearWeeds` step rides `World.ObjectListChanged` filtered
-    /// to `Object.IsWeeds()` removals.
+    /// `Object`s anywhere except the farm (modded locations included), matching the
+    /// ClearDebris pattern so a "Town has no weeds today" roll doesn't dead-end the quest.
+    /// Reward = `FriendshipBasic`. The `ClearWeeds` step rides `World.ObjectListChanged`
+    /// filtered to `Object.IsWeeds()` removals.
     private static QuestPosting? SpringCleaning(QuestContext ctx)
     {
         if (!string.Equals(ctx.Season, "spring", StringComparison.OrdinalIgnoreCase))
@@ -358,9 +359,6 @@ internal static partial class Generators
             return null;
         string giver = npcs[Game1.random.Next(npcs.Count)];
 
-        string location = string.IsNullOrWhiteSpace(ModEntry.Config.SpringCleaningLocation)
-            ? "Town"
-            : ModEntry.Config.SpringCleaningLocation;
         int count = Math.Max(1, ModEntry.Config.SpringCleaningCount);
 
         var quest = new AdventureQuest();
@@ -370,9 +368,9 @@ internal static partial class Generators
             {
                 Name = "ClearWeeds",
                 Kind = AdventureStepKind.ClearWeeds,
-                Targets = new List<string> { location },
+                Targets = new List<string> { "*", "!Farm" },
                 Count = count,
-                Description = ModEntry.I18n.Get("quest.seasonal.springCleaning.step", new { count, location })
+                Description = ModEntry.I18n.Get("quest.seasonal.springCleaning.step", new { count })
             }
         }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.seasonal.springCleaning.targetMessage"));
 
@@ -386,8 +384,8 @@ internal static partial class Generators
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipBasic) },
             Title = ModEntry.I18n.Get("quest.seasonal.springCleaning.title", new { npc = giver }),
-            Description = ModEntry.I18n.Get("quest.seasonal.springCleaning.description", new { npc = giver, count, location }),
-            CurrentObjective = ModEntry.I18n.Get("quest.seasonal.springCleaning.objective", new { count, location }),
+            Description = ModEntry.I18n.Get("quest.seasonal.springCleaning.description", new { npc = giver, count }),
+            CurrentObjective = ModEntry.I18n.Get("quest.seasonal.springCleaning.objective", new { count }),
             TargetMessage = ModEntry.I18n.Get("quest.seasonal.springCleaning.targetMessage"),
             PreBuiltQuest = quest
         };

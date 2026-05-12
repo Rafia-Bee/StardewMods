@@ -358,11 +358,4 @@ internal static partial class Generators
 
         return home;
     }
-
-
-    /// CSV row 69. Spring-only daily-board single-step `ClearWeeds` AdventureQuest. Any
-    /// met human NPC can be the giver; the player clears `SpringCleaningCount` weed
-    /// `Object`s at `SpringCleaningLocation` (default Pelican Town). Reward =
-    /// `FriendshipBasic`. The `ClearWeeds` step rides `World.ObjectListChanged` filtered
-    /// to `Object.IsWeeds()` removals.
 }
