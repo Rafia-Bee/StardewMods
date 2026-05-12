@@ -1188,33 +1188,45 @@ internal static partial class Generators
         };
     }
 
-    /// Row 26 — Spirit's Eve Decor Supply (Lewis, Fall 22). Three-step Ship Adventure:
-    /// Pumpkins + Cloth + Torches. Reward = GoldIntermediateBase + Jack o' Lantern.
-    /// Decor bypass enabled mostly for parity; vanilla ships all three objective items
-    /// without help.
-
-    /// Row 26 — Spirit's Eve Decor Supply (Lewis, Fall 22). Three-step Ship Adventure:
-    /// Pumpkins + Cloth + Torches. Reward = GoldIntermediateBase + Jack o' Lantern.
-    /// Decor bypass enabled mostly for parity; vanilla ships all three objective items
-    /// without help.
+    /// Row 26 — Spirit's Eve Decor Supply (Wizard, Fall 22, 5 days before Spirit's Eve
+    /// on Fall 27). Three-step Ship Adventure: Pumpkin Seeds + Cloth + Torches. Pumpkin
+    /// seeds (not pumpkins) match the audit verdict — the Wizard is building atmosphere,
+    /// not stocking a bake-off. Quantities scale with Farming / Foraging when
+    /// `DifficultyScaling` is on. Reward = `GoldIntermediateBase` + five Jack o' Lanterns
+    /// `(BC)126`. Explicit 4-day deadline so the quest auto-fails the morning of Fall 26
+    /// (one day before Spirit's Eve) regardless of GMCM `DeadlineShort`.
     private static QuestPosting? SpiritsEveDecor(QuestContext ctx)
     {
-        const string giver = "Lewis";
-        const int pumpkinCount = 5;
-        const int clothCount = 3;
-        const int torchCount = 5;
+        const string giver = "Wizard";
+
+        int pumpkinSeedCount;
+        int clothCount;
+        int torchCount;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int farming = Difficulty.GetSkillLevel(QuestCategory.Farming);
+            pumpkinSeedCount = Game1.random.Next(5, Math.Max(5, (int)(farming * 1.5)) + 1);
+            clothCount = Game1.random.Next(3, 11);
+            torchCount = Game1.random.Next(5, 21);
+        }
+        else
+        {
+            pumpkinSeedCount = 5;
+            clothCount = 3;
+            torchCount = 5;
+        }
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
         {
             new AdventureStepState
             {
-                Name = "ShipPumpkins",
+                Name = "ShipPumpkinSeeds",
                 Kind = AdventureStepKind.Ship,
-                Items = new List<string> { "(O)276" },
-                Count = pumpkinCount,
+                Items = new List<string> { "(O)490" },
+                Count = pumpkinSeedCount,
                 AllowDecorShipping = true,
-                Description = ModEntry.I18n.Get("quest.festival.spiritsEveDecor.step.pumpkins", new { count = pumpkinCount })
+                Description = ModEntry.I18n.Get("quest.festival.spiritsEveDecor.step.pumpkinSeeds", new { count = pumpkinSeedCount })
             },
             new AdventureStepState
             {
@@ -1243,15 +1255,15 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = 4,
             AllowDecorShipping = true,
             Rewards =
             {
                 new MoneyReward(ctx.Config.GoldIntermediateBase),
-                new ObjectReward("(BC)126")
+                new ObjectReward("(BC)126", 5)
             },
             Title = ModEntry.I18n.Get("quest.festival.spiritsEveDecor.title"),
-            Description = ModEntry.I18n.Get("quest.festival.spiritsEveDecor.description", new { pumpkins = pumpkinCount, cloth = clothCount, torches = torchCount }),
+            Description = ModEntry.I18n.Get("quest.festival.spiritsEveDecor.description", new { pumpkinSeeds = pumpkinSeedCount, cloth = clothCount, torches = torchCount }),
             PreBuiltQuest = quest
         };
     }

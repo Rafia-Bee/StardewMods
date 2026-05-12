@@ -389,8 +389,8 @@
     "quest.festival.luauDecor.step.lampPost": "Ship {{count}} wood lamp-posts.",
 
     "quest.festival.spiritsEveDecor.title": "Spirit's Eve atmosphere",
-    "quest.festival.spiritsEveDecor.description": "Spirit's Eve is around the corner and Lewis wants the maze proper this year. Ship {{pumpkins}} pumpkins, {{cloth}} cloth, and {{torches}} torches; there'll be a Jack o' Lantern waiting for you when the festival rolls round.",
-    "quest.festival.spiritsEveDecor.step.pumpkins": "Ship {{count}} pumpkins.",
+    "quest.festival.spiritsEveDecor.description": "Farmer. Spirit's Eve approaches, and the maze this year asks for a deeper touch than the Mayor's usual fare. Send me {{pumpkinSeeds}} pumpkin seeds for the patch I'm coaxing along the edges, {{cloth}} cloth for the shrouds, and {{torches}} torches to mark the path. I have set aside a few Jack o' Lanterns for you in return.",
+    "quest.festival.spiritsEveDecor.step.pumpkinSeeds": "Ship {{count}} pumpkin seeds.",
     "quest.festival.spiritsEveDecor.step.cloth": "Ship {{count}} cloth.",
     "quest.festival.spiritsEveDecor.step.torches": "Ship {{count}} torches.",
 
