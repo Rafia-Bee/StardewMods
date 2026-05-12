@@ -1197,11 +1197,14 @@ internal static partial class Generators
     /// `FriendshipMultiHeart` to each named ESV festival NPC; the reward summary collapses
     /// 3+ named friendships into one generic line so the loved-by pool isn't spoiled.
 
-    /// Row 21 — East Scarp Spirit's Eve Decor Supply (Rosa, Fall 24). Mod-gated on the
-    /// East Scarp / Eli & Dylan / Lurking in the Dark modset (any of the three lights up
-    /// the role). Three-step Ship Adventure: purple-dye items + slime + stone. Reward =
-    /// `FriendshipMultiHeart` to each named ESV festival NPC; the reward summary collapses
-    /// 3+ named friendships into one generic line so the loved-by pool isn't spoiled.
+    /// Row 21 — East Scarp Spirit's Eve Decor Supply (Rosa, Fall 24, 3 days before
+    /// Spirit's Eve on Fall 27). Mod-gated on the East Scarp / Eli & Dylan / Lurking in
+    /// the Dark modset (any of the three lights up the role). Three-step Ship Adventure:
+    /// purple-dye items + slime + stone. Reward = `FriendshipMultiHeart` to each named
+    /// ESV festival NPC; the reward summary collapses 3+ named friendships into one
+    /// generic line so the loved-by pool isn't spoiled. Explicit 3-day deadline so the
+    /// quest expires the morning of Fall 27 (festival day) regardless of the GMCM
+    /// `DeadlineShort` knob.
     private static QuestPosting? EastScarpSpiritsEveDecor(QuestContext ctx)
     {
         if (!MoreQuestsFramework.ModCompat.HasEs(ctx.Helper.ModRegistry))
@@ -1254,7 +1257,7 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = 3,
             AllowDecorShipping = true,
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.festival.esvSpiritsEve.title"),
