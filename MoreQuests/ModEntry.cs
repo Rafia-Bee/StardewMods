@@ -35,6 +35,7 @@ public sealed class ModEntry : Mod
         Config = helper.ReadConfig<ModConfig>();
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
+        helper.Events.GameLoop.SaveLoaded += OnSaveLoaded_ScanCombatFoods;
         helper.Events.Content.AssetRequested += OnAssetRequested;
     }
 
@@ -194,9 +195,10 @@ public sealed class ModEntry : Mod
         scope.RegisterCustomQuestType(typeof(AnyMonsterQuest));
         scope.RegisterCustomQuestType(typeof(CollectAndReportQuest));
 
-        // Seed the framework's combat-food pool with the vanilla combat-buff foods used
-        // by Monster Hunt. Other mods can extend the pool through `IMoreQuestsApi.RegisterCombatFood`.
-        SeedCombatFoodPool(fw);
+        // Combat-food pool is auto-populated at SaveLoaded by `OnSaveLoaded_ScanCombatFoods`
+        // (which reads buff data straight from `Data/Objects`, so modded foods that grant
+        // Attack/Defense get picked up automatically). The legacy `RegisterCombatFood`
+        // API is still live for consumer mods that want to add foods the scan misses.
 
         // Register every C# generator referenced by assets/quests.json.
         Generators.RegisterAll(scope);
@@ -231,23 +233,58 @@ public sealed class ModEntry : Mod
         };
     }
 
-    /// Vanilla combat-buff foods used as the default Monster Hunt reward pool. Mirrors
-    /// the curated list in plan.md §9.5a row 52: Crab Cakes / Pepper Poppers / Eggplant
-    /// Parmesan / Spicy Eel / Tom Kha Soup. Other mods can extend the pool through
-    /// `IMoreQuestsApi.RegisterCombatFood`.
-    private static readonly string[] VanillaCombatFoods =
-    {
-        "(O)220", // Crab Cakes
-        "(O)215", // Pepper Poppers
-        "(O)218", // Eggplant Parmesan
-        "(O)226", // Spicy Eel
-        "(O)730"  // Tom Kha Soup
-    };
+    /// Combat-food magnitude lookup populated by `OnSaveLoaded_ScanCombatFoods`. Maps
+    /// qualified item id to `max(Attack, Defense)` rounded down from the buff's
+    /// `CustomAttributes`. Used by `MonsterHunt` to filter the reward pool by the
+    /// rolled target magnitude (+1 / +2 / +3). Foods registered via
+    /// `IMoreQuestsApi.RegisterCombatFood` that the scan didn't see won't appear here
+    /// and so won't be eligible as a magnitude-bucketed reward (they still show up in
+    /// the framework's flat `GetCombatFoodPool` for any future generic consumer).
+    private static readonly Dictionary<string, int> CombatFoodMagnitudes =
+        new(StringComparer.OrdinalIgnoreCase);
 
-    private void SeedCombatFoodPool(IMoreQuestsApi fw)
+    internal static int? GetCombatFoodMagnitude(string qualifiedItemId)
+        => CombatFoodMagnitudes.TryGetValue(qualifiedItemId, out int m) ? m : null;
+
+    /// Walks `Data/Objects` after the save loads (so every content-pack edit is live)
+    /// and registers every edible food whose `Buffs` grant a non-zero Attack or
+    /// Defense as a combat-buff food. Magnitude = `max(Attack, Defense)` floored to
+    /// the nearest int. Re-runs on each load so configs that swap content packs
+    /// between sessions pick up the right pool. Old entries are cleared first.
+    private void OnSaveLoaded_ScanCombatFoods(object? sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
     {
-        foreach (string id in VanillaCombatFoods)
-            fw.RegisterCombatFood(id);
+        if (Framework == null)
+            return;
+
+        CombatFoodMagnitudes.Clear();
+
+        var data = Helper.GameContent.Load<Dictionary<string, StardewValley.GameData.Objects.ObjectData>>("Data/Objects");
+        int registered = 0;
+        foreach (var (rawId, obj) in data)
+        {
+            if (obj == null || obj.Edibility <= 0 || obj.Buffs == null)
+                continue;
+
+            int magnitude = 0;
+            foreach (var buff in obj.Buffs)
+            {
+                var attrs = buff?.CustomAttributes;
+                if (attrs == null)
+                    continue;
+                int level = (int)Math.Floor(Math.Max(attrs.Attack, attrs.Defense));
+                if (level > magnitude)
+                    magnitude = level;
+            }
+            if (magnitude <= 0)
+                continue;
+
+            string qualified = "(O)" + rawId;
+            CombatFoodMagnitudes[qualified] = magnitude;
+            Framework.RegisterCombatFood(qualified);
+            registered++;
+        }
+
+        Monitor.Log($"Scanned Data/Objects: registered {registered} combat-buff food(s).", LogLevel.Trace);
     }
 
     /// Wires up the routing for the Adventurer's Guild board based on
