@@ -53,10 +53,6 @@ public static class ConditionEvaluator
     public static bool NpcExists(string name) => Game1.getCharacterFromName(name) != null;
     public static bool NpcMet(string name) => Game1.player.friendshipData.ContainsKey(name);
 
-    // -------- Recipes / inventory --------
-
-    public static bool KnowsAnyCookingRecipe() => Game1.player.cookingRecipes.Length > 0;
-
     // -------- Dictionary-driven evaluation --------
 
     /// Evaluates a flat condition dictionary. Top-level keys are AND-combined; a key
