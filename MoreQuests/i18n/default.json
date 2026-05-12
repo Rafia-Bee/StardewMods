@@ -425,7 +425,7 @@
     "quest.animal.guntherDinosaur.title": "Specimen for the museum",
     "quest.animal.guntherDinosaur.description": "I heard a rumor a Dinosaur Egg surfaced on your land. Could you bring it by the museum? I'd love a closer look, and I'd return it in better shape than it arrived. There'll be a fair price for the loan.",
     "quest.animal.guntherDinosaur.objective": "Bring a Dinosaur Egg to Gunther.",
-    "quest.animal.guntherDinosaur.targetMessage": "Incredible. Thank you for trusting the museum with this. Here's your egg back, alongside the agreed sum.",
+    "quest.animal.guntherDinosaur.targetMessage": "Farmer, thanks for letting me examine this incredible specimen. It turned out to be even better quality than I originally thought! Returning it to you with my thanks.",
 
     "quest.animal.marnieChickenOffer.title": "Marnie's chicken offer",
     "quest.animal.marnieChickenOffer.description": "Saw the new coop going up. If you bring me {{qty}} {{item}} for the layers, I'll cut you a deal on a chicken to fill it. Drop the seeds by whenever you have them.",

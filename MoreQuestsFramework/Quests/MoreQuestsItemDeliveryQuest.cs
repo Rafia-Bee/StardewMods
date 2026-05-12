@@ -28,6 +28,12 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
     /// at posting time; serialized so the gate survives save/load.
     public readonly NetInt minQuality = new();
 
+    /// Quality of the item the player actually delivered. Captured in
+    /// `OnItemOfferedToNpc` before the stack is consumed so a `QuestCompleted` listener
+    /// can read it and return a quality-tier-upgraded item (e.g. Gunther's Dinosaur
+    /// Study returns a one-tier-higher Dinosaur Egg). 0 if never offered.
+    public readonly NetInt deliveredQuality = new();
+
     public NetStringList SerializedRewards => serializedRewards;
 
     protected override void initNetFields()
@@ -36,7 +42,8 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
         NetFields
             .AddField(serializedRewards, "serializedRewards")
             .AddField(alternativeItemIds, "alternativeItemIds")
-            .AddField(minQuality, "minQuality");
+            .AddField(minQuality, "minQuality")
+            .AddField(deliveredQuality, "deliveredQuality");
     }
 
     /// Fully replaces vanilla's `ItemDeliveryQuest.OnItemOfferedToNpc` so the implicit
@@ -64,6 +71,7 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
         if (probe)
             return true;
 
+        deliveredQuality.Value = (item as StardewValley.Object)?.Quality ?? 0;
         Game1.player.Items.Reduce(item, number.Value);
         reloadDescription();
         npc.CurrentDialogue.Push(new Dialogue(npc, null, targetMessage));

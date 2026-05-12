@@ -180,16 +180,13 @@ internal static partial class Generators
     /// CSV row 29. OneShot triggered when the player first holds a Dinosaur Egg `(O)107`
     /// (framework `FirstHeldItem` predicate). Mail+ItemDelivery to Gunther for one
     /// Dinosaur Egg. Reward = `GoldAdvancedBase` plus one Dinosaur Egg returned via
-    /// `ObjectReward`. The "one quality tier higher" gimmick from the CSV (silver in →
-    /// gold out) is deferred — the framework's `ObjectReward` doesn't carry a quality
-    /// field, and adding one is more invasive than the row warrants on its own.
-
     /// CSV row 29. OneShot triggered when the player first holds a Dinosaur Egg `(O)107`
     /// (framework `FirstHeldItem` predicate). Mail+ItemDelivery to Gunther for one
-    /// Dinosaur Egg. Reward = `GoldAdvancedBase` plus one Dinosaur Egg returned via
-    /// `ObjectReward`. The "one quality tier higher" gimmick from the CSV (silver in →
-    /// gold out) is deferred — the framework's `ObjectReward` doesn't carry a quality
-    /// field, and adding one is more invasive than the row warrants on its own.
+    /// Dinosaur Egg. Reward = `GoldAdvancedBase` + a Dinosaur Egg returned one quality
+    /// tier higher than the delivered one (regular → silver, silver → gold, gold →
+    /// iridium, iridium stays iridium). The quality bump is granted via a
+    /// `QuestCompleted` listener in `MoreQuests.ModEntry` that reads the framework's
+    /// `MoreQuestsItemDeliveryQuest.deliveredQuality` field.
     private static QuestPosting? GuntherDinosaurStudy(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Gunther") == null)
@@ -211,8 +208,7 @@ internal static partial class Generators
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Extended, ctx.Config),
             Rewards =
             {
-                new MoneyReward(gold),
-                new ObjectReward(dinosaurEggId)
+                new MoneyReward(gold)
             },
             Title = ModEntry.I18n.Get("quest.animal.guntherDinosaur.title"),
             Description = ModEntry.I18n.Get("quest.animal.guntherDinosaur.description"),
