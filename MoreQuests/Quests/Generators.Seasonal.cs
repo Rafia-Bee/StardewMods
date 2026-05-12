@@ -278,8 +278,8 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 38. DateLocked mail quest fired on Summer 4 (7 days before the Dance of
-    /// the Moonlight Jellies on Summer 11), with a 6-day deadline so the player must
+    /// CSV row 38. DateLocked mail quest fired on Summer 21 (7 days before the Dance of
+    /// the Moonlight Jellies on Summer 28), with a 6-day deadline so the player must
     /// finish at least one day before the festival. Picks an ecology-role giver
     /// (Demetrius vanilla, Maddie + Mr. Aguar RSV, Dylan East Scarp) who wants
     /// data on local marine life before the dance. Forage pool reuses `GetBeachForageItems`

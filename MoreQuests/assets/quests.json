@@ -383,7 +383,7 @@
             "Category": "Festival",
             "Trigger": {
                 "Source": "DateLocked",
-                "Date": "summer 4",
+                "Date": "summer 21",
                 "RepeatYearly": true
             },
             "Generator": "JellyfishWatchPrep"
@@ -496,7 +496,7 @@
             "Category": "Festival",
             "Trigger": {
                 "Source": "DateLocked",
-                "Date": "summer 24",
+                "Date": "summer 21",
                 "RepeatYearly": true,
                 "Available": { "NpcExists": "Lewis" }
             },
