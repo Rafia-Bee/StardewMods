@@ -80,7 +80,7 @@ internal static partial class Generators
     };
 
     /// CSV row 2. Daily-board bar order routed through the blacksmith pool (Clint
-    /// vanilla; MarlonFay SVE, Eli ED, Maryam VMV, Lola/Jio/Daia RSV). Bar tier expands
+    /// vanilla; MarlonFay SVE, Eli ED, Mariam VMV, Lola/Jio/Daia RSV). Bar tier expands
     /// with mine depth: Copper from the start, Iron at floor 40, Gold at 80, Iridium
     /// once Skull Cavern is unlocked, and Radioactive + (mod-gated) Prismatic once the
     /// player is on Ginger Island. Quantity scales with Mining when DifficultyScaling
@@ -356,43 +356,72 @@ internal static partial class Generators
     /// seed ids, lasting `SeedShopDiscountDurationDays` in-game days at
     /// `SeedShopDiscountPercent` off.
 
-    /// CSV row 53. Daily-board item delivery. Picks a buyer from the `MonsterPartsBuyer`
-    /// dispatch pool (Wizard + Abigail vanilla; Lance + MarlonFay SVE; Mr. Aguar RSV;
-    /// Eli ESV; Maryam VMV) and asks for a quantity of one rare monster drop (Bat Wing
-    /// / Solar Essence / Void Essence / Bug Meat). Reward = a stack of one random gem
-    /// scaled to clear `GoldIntermediateBase`. Tier 1 negative consequence routed via
-    /// `Source: Static` to Krobus / Sen (East Scarp) / Dwarf — friends of the underground
-    /// don't appreciate the trade.
+    /// 1 heart of friendship in vanilla = 250 points. Used as the threshold for
+    /// whether an "underground" NPC reacts to the monster-parts trade: at zero
+    /// hearts a freshly-met villager is too distant for the consequence dialog to
+    /// land without breaking immersion, so we gate on a real relationship existing.
+    private const int FriendshipPointsPerHeart = 250;
+
+    /// CSV row 53. Daily-board item delivery. Routed through the `CombatNpcs` pool
+    /// (Wizard / Lance / MarlonFay / Mr. Aguar / Jio / Daia / Eli / Mariam) and
+    /// asks for a Combat-scaled quantity of one rare monster drop. Reward = one
+    /// random gem or artifact, pulled live from `Data/Objects` (Category -2 or
+    /// Type "Arch"), with a stack count sized so the headline value clears
+    /// `GoldIntermediateBase`. Tier 1 negative consequence routed via `Source:
+    /// Static` to Krobus / Dwarf / Sen — but only those at >= 1 heart, and the
+    /// quest itself refuses to post if none of the three qualify.
     private static QuestPosting? MonsterParts(QuestContext ctx)
     {
-        string? giver = ctx.Dispatch.Pick(DispatchRoles.MonsterPartsBuyer);
+        if (Game1.player.CombatLevel < 2)
+            return null;
+
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.CombatNpcs);
         if (giver == null)
             return null;
 
+        // Quest refuses to post unless at least one underground NPC is at >= 1
+        // heart. Re-checked below to build the consequence target list (giver
+        // excluded), so the two stay in sync.
+        var underground = ResolveUndergroundTargets(exclude: giver);
+        if (underground.Count == 0)
+            return null;
+
+        // TODO: vanilla monster drops only. Modded drops aren't enumerable without
+        // per-mod data, so the pool stays vanilla. Add modded drops manually here
+        // when extending mod-pack coverage (e.g. RSV / ESV / SVE custom monsters).
         var drop = MonsterDropPool[Game1.random.Next(MonsterDropPool.Length)];
         var resolved = ctx.Items.TryResolveItem(drop.Id);
         if (resolved == null)
             return null;
-        int qty = Game1.random.Next(5, 11);
 
-        var gem = MonsterPartsGemRewards[Game1.random.Next(MonsterPartsGemRewards.Length)];
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int upper = Math.Max(6, Game1.player.CombatLevel * 2 + 1);
+            qty = Game1.random.Next(5, upper);
+        }
+        else
+        {
+            qty = Game1.random.Next(3, 12);
+        }
+
+        var rewardOpt = PickGemOrArtifactReward(ctx);
+        if (rewardOpt == null)
+            return null;
+        var reward = rewardOpt.Value;
 
         ConsequenceSpec? consequence = null;
         if (ModEntry.Config.ConsequencesEnabled)
         {
-            var underground = ResolveUndergroundTargets(exclude: giver);
-            if (underground.Count > 0)
+            consequence = new ConsequenceSpec
             {
-                consequence = new ConsequenceSpec
-                {
-                    Tier = ConsequenceTier.Tier1,
-                    Source = ConsequenceSource.Static,
-                    Targets = underground,
-                    HatedLine = ModEntry.I18n.Get(
-                        "quest.mining.monsterParts.consequence.hated",
-                        new { item = resolved.DisplayName, npc = giver })
-                };
-            }
+                Tier = ConsequenceTier.Tier1,
+                Source = ConsequenceSource.Static,
+                Targets = underground,
+                HatedLine = ModEntry.I18n.Get(
+                    "quest.mining.monsterParts.consequence.hated",
+                    new { item = resolved.DisplayName, npc = giver })
+            };
         }
 
         return new QuestPosting
@@ -405,13 +434,47 @@ internal static partial class Generators
             ObjectiveItemName = resolved.DisplayName,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
-            Rewards = { new ObjectReward(gem.Id, gem.Count) },
+            Rewards = { new ObjectReward(reward.QualifiedItemId, reward.Count) },
             Consequence = consequence,
             Title = ModEntry.I18n.Get("quest.mining.monsterParts.title", new { npc = giver }),
             Description = ModEntry.I18n.Get("quest.mining.monsterParts.description", new { qty, item = resolved.DisplayName, npc = giver }),
             CurrentObjective = ModEntry.I18n.Get("quest.mining.monsterParts.objective", new { qty, item = resolved.DisplayName, npc = giver }),
             TargetMessage = ModEntry.I18n.Get("quest.mining.monsterParts.targetMessage")
         };
+    }
+
+    /// Walks `Data/Objects` once and returns a single random (id, count) reward
+    /// where `id` is either a gem (Category `Object.GemCategory == -2`) or an
+    /// artifact (Type `Arch`), and `count` is sized so `count * sellPrice` clears
+    /// `GoldIntermediateBase`. Picks up modded gems and artifacts automatically.
+    private static (string QualifiedItemId, int Count)? PickGemOrArtifactReward(QuestContext ctx)
+    {
+        var data = ctx.Helper.GameContent.Load<Dictionary<string, StardewValley.GameData.Objects.ObjectData>>("Data/Objects");
+        var pool = new List<(string Id, int Price)>(data.Count);
+        foreach (var (rawId, obj) in data)
+        {
+            if (obj == null || obj.Price <= 0)
+                continue;
+            bool isGem = obj.Category == StardewValley.Object.GemCategory;
+            bool isArtifact = string.Equals(obj.Type, "Arch", StringComparison.OrdinalIgnoreCase);
+            if (!isGem && !isArtifact)
+                continue;
+            pool.Add(("(O)" + rawId, obj.Price));
+        }
+        if (pool.Count == 0)
+            return null;
+
+        int floor = ctx.Config.GoldIntermediateBase;
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            var pick = pool[Game1.random.Next(pool.Count)];
+            var resolved = ctx.Items.TryResolveItem(pick.Id);
+            if (resolved == null)
+                continue;
+            int count = Math.Max(1, (int)Math.Ceiling(floor / (double)pick.Price));
+            return (resolved.QualifiedItemId, count);
+        }
+        return null;
     }
 
     /// Vanilla "rare" monster drops. Modded drops aren't enumerable without per-mod data,
@@ -429,35 +492,16 @@ internal static partial class Generators
         ("(O)684", "Bug Meat")
     };
 
-    /// Gem reward pool sized so the headline value clears `GoldIntermediateBase` (~500g).
-    /// Vanilla sell prices: Diamond 750, Ruby 250 (×3 = 750), Emerald 250 (×3 = 750),
-    /// Topaz 80 (×7 = 560), Jade 200 (×3 = 600), Aquamarine 180 (×3 = 540), Amethyst 100
-    /// (×6 = 600). All comfortably above the GoldIntermediateBase floor.
-
-    /// Gem reward pool sized so the headline value clears `GoldIntermediateBase` (~500g).
-    /// Vanilla sell prices: Diamond 750, Ruby 250 (×3 = 750), Emerald 250 (×3 = 750),
-    /// Topaz 80 (×7 = 560), Jade 200 (×3 = 600), Aquamarine 180 (×3 = 540), Amethyst 100
-    /// (×6 = 600). All comfortably above the GoldIntermediateBase floor.
-    private static readonly (string Id, int Count)[] MonsterPartsGemRewards =
-    {
-        ("(O)72", 1),  // Diamond
-        ("(O)64", 3),  // Ruby
-        ("(O)60", 3),  // Emerald
-        ("(O)68", 7),  // Topaz
-        ("(O)70", 3),  // Jade
-        ("(O)62", 3),  // Aquamarine
-        ("(O)66", 6)   // Amethyst
-    };
 
     /// Pufferfish carries the Nausea status effect when eaten — the only vanilla "fish"
     /// any reasonable cook would call poisonous. Filtered out of the Seafood Night pool
     /// so the CSV's "edible non-poisonous" framing holds. Modded fish stay in as long as
     /// their Edibility is positive.
 
-    /// Krobus + Dwarf are vanilla; Sen ships with East Scarp. The list is the literal
-    /// CSV row 53 set; the engine filters to met villagers downstream so unknown NPCs
-    /// silently drop out. We still pre-filter by `getCharacterFromName` so we never queue
-    /// a line for an NPC whose mod isn't loaded.
+    /// Krobus + Dwarf are vanilla; Sen ships with East Scarp. Filters to met NPCs
+    /// at >= 1 heart of friendship so the consequence dialog reads as a reaction
+    /// from someone the player actually knows. Met-at-0-hearts and never-met both
+    /// drop out; missing characters (mod not loaded) also drop out.
     private static List<string> ResolveUndergroundTargets(string exclude)
     {
         string[] candidates = { "Krobus", "Dwarf", "Sen" };
@@ -467,6 +511,10 @@ internal static partial class Generators
             if (string.Equals(npc, exclude, StringComparison.OrdinalIgnoreCase))
                 continue;
             if (Game1.getCharacterFromName(npc) == null)
+                continue;
+            if (!Game1.player.friendshipData.TryGetValue(npc, out var friendship))
+                continue;
+            if (friendship == null || friendship.Points < FriendshipPointsPerHeart)
                 continue;
             targets.Add(npc);
         }
@@ -484,7 +532,7 @@ internal static partial class Generators
 
     /// CSV row 52. Daily-board SlayMonster (any monster). Routed through the
     /// `CombatNpcs` dispatch pool (Wizard / Lance / MarlonFay / Mr. Aguar / Jio /
-    /// Daia / Eli / Maryam, mod-gated). Reward = `GoldIntermediateBase` + one combat
+    /// Daia / Eli / Mariam, mod-gated). Reward = `GoldIntermediateBase` + one combat
     /// food sized to the rolled magnitude bucket: +1 when DifficultyScaling is off,
     /// or a random +1 / +2 / +3 when it's on. The combat-food pool is auto-scanned
     /// at save load from every edible item in `Data/Objects` whose `Buffs` grant a
