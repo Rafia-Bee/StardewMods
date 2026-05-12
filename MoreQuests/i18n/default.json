@@ -96,9 +96,9 @@
     "quest.mining.slime.objective": "Slay {{qty}} slimes, then talk to {{npc}}.",
     "quest.mining.slime.targetMessage": "That'll keep the mine quiet for a while. Thanks.",
 
-    "quest.mining.bar.title": "Clint needs bars",
-    "quest.mining.bar.description": "Clint needs {{qty}} {{item}} for an order he's working on.",
-    "quest.mining.bar.objective": "Bring {{qty}} {{item}} to Clint.",
+    "quest.mining.bar.title": "{{npc}} needs bars",
+    "quest.mining.bar.description": "{{npc}} here. I've got an order on the bench and I'm short on stock. Could someone bring me {{qty}} {{item}} before the deadline? I'll make it worth your while.",
+    "quest.mining.bar.objective": "Bring {{qty}} {{item}} to {{npc}}.",
     "quest.mining.bar.targetMessage": "These are perfect, thanks for getting them so fast.",
 
     "quest.foraging.seasonal.title": "{{npc}}'s foraging request",

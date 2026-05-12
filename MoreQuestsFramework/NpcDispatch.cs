@@ -100,5 +100,18 @@ public static class NpcDispatch
         registry.Register(DispatchRoles.FishermenNpcs, "Blair", ModCompat.RidgesideVillage);
         registry.Register(DispatchRoles.FishermenNpcs, "Arumi", ModCompat.AikawaAsakaiCP);
         registry.Register(DispatchRoles.FishermenNpcs, "Gunnar", ModCompat.HashtagBearFamGunnar);
+
+        // BlacksmithNpcs: Bar Delivery (CSV row 2) brokers. Clint anchors vanilla. SVE
+        // adds MarlonFay (acts as the smithy/adventurer on that route). EliAndDylan
+        // adds Eli (RSV's blacksmith stand-in is shared with the smithy NPCs Lola /
+        // Jio / Daia; VMV adds Maryam). The picker silently drops entries whose source
+        // mod isn't loaded.
+        registry.Register(DispatchRoles.BlacksmithNpcs, "Clint");
+        registry.Register(DispatchRoles.BlacksmithNpcs, "MarlonFay", ModCompat.StardewValleyExpanded);
+        registry.Register(DispatchRoles.BlacksmithNpcs, "Eli", ModCompat.EliAndDylan);
+        registry.Register(DispatchRoles.BlacksmithNpcs, "Maryam", ModCompat.VisitMountVapius);
+        registry.Register(DispatchRoles.BlacksmithNpcs, "Lola", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.BlacksmithNpcs, "Jio", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.BlacksmithNpcs, "Daia", ModCompat.RidgesideVillage);
     }
 }
