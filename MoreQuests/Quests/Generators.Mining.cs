@@ -256,40 +256,40 @@ internal static partial class Generators
     }
 
     /// CSV row 78. Sibling of `SkullCavernDeepDive` for the regular Mines (capped at 120).
-    /// Floor target rolls in a band that scales with Mining skill so a fresh save isn't
-    /// asked to reach floor 120 immediately. Bar type reward matches the floor band:
-    /// Copper at 1-79, Iron at 80-99, Gold at 100-120. Ship step at DayEnding closes the
-    /// quest without requiring an NPC turn-in (vanilla Marlon isn't a giftable villager).
-
-    /// CSV row 78. Sibling of `SkullCavernDeepDive` for the regular Mines (capped at 120).
-    /// Floor target rolls in a band that scales with Mining skill so a fresh save isn't
-    /// asked to reach floor 120 immediately. Bar type reward matches the floor band:
-    /// Copper at 1-79, Iron at 80-99, Gold at 100-120. Ship step at DayEnding closes the
-    /// quest without requiring an NPC turn-in (vanilla Marlon isn't a giftable villager).
+    /// With DifficultyScaling on the ceiling is the full 120; off, it tracks the player's
+    /// deepest Mines progress so the quest never demands floors they haven't already
+    /// proven they can reach. Bar reward type matches the floor band the quest targets,
+    /// using the same depth thresholds as `BarDelivery` (Copper <40, Iron 40-79, Gold
+    /// 80-119, Iridium 120). Ship step at DayEnding closes the quest without requiring
+    /// an NPC turn-in (vanilla Marlon isn't a giftable villager).
     private static QuestPosting? MinesDeepDive(QuestContext ctx)
     {
-        int currentDeepest = Math.Min(120, Game1.player.deepestMineLevel);
-        if (currentDeepest < 5)
-            return null; // need at least a few floors of progress before asking for more
+        int deepest = Math.Min(120, Game1.player.deepestMineLevel);
+        if (deepest < 5)
+            return null;
 
-        // Target a floor band slightly past where the player has already been so the
-        // quest demands genuine progress without being unreachable. Cap at 120.
-        int low = Math.Max(20, currentDeepest - 30);
-        int high = Math.Min(120, currentDeepest + 30);
-        if (high <= low)
-            high = low + 1;
-        int targetFloor = Game1.random.Next(low, high + 1);
+        int maxLevel = ctx.Config.DifficultyScaling
+            ? 120
+            : deepest;
+        int low = Math.Min(10, maxLevel);
+        int targetFloor = Game1.random.Next(low, maxLevel + 1);
 
-        int haul = ctx.Config.DifficultyScaling
-            ? Math.Max(8, 6 + Game1.player.MiningLevel)
-            : 15;
+        int haul;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int upper = 5 + Game1.player.MiningLevel * 3 + 1;
+            haul = Game1.random.Next(5, Math.Max(upper, 6));
+        }
+        else
+        {
+            haul = Game1.random.Next(5, 17);
+        }
 
-        // Bar reward type matches the floor band the quest targets — the Guild scales the
-        // payout to whatever's plausible at that depth.
         (string barId, int barCount) = targetFloor switch
         {
-            >= 100 => ("336", Math.Max(1, haul / 5)), // Gold Bar
-            >= 80 => ("335", Math.Max(1, haul / 5)),  // Iron Bar
+            >= 120 => ("337", Math.Max(1, haul / 5)), // Iridium Bar
+            >= 80 => ("336", Math.Max(1, haul / 5)),  // Gold Bar
+            >= 40 => ("335", Math.Max(1, haul / 5)),  // Iron Bar
             _ => ("334", Math.Max(1, haul / 5))        // Copper Bar
         };
         int gold = ctx.Config.GoldIntermediateBase;
