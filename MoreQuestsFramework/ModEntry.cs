@@ -101,6 +101,7 @@ public sealed class ModEntry : Mod
         BoardCollisionPatches.Apply(harmony, _boards);
         MailQuestPatches.Apply(harmony, _mailQuests, _api, Monitor);
         AdventureQuestPatches.Apply(harmony);
+        PlantTreesPatches.Apply(harmony, helper.ModRegistry);
         SpecialOrdersBoardPatches.Apply(harmony, Monitor, _specialOrderWriter);
         ConsequenceDialoguePatches.Apply(harmony, Monitor);
         FestivalBiasPatches.Apply(harmony, Monitor);

@@ -269,20 +269,34 @@ internal static partial class Generators
 
     /// CSV row 55. Daily-board single-step `Plant` AdventureQuest. Quest giver picked
     /// from the `ConservationGuide` dispatch role (Linus / Demetrius / Kimpoi RSV /
-    /// Dylan ESV / Aster VMV) — exactly the CSV's listed givers. Player must plant
-    /// `PlantTreesCount` trees at `PlantTreesLocation` (default Cindersap Forest).
-    /// Reward = `FriendshipIntermediate` to the giver — pure friendship, no gold per
-    /// the CSV. The `Plant` step rides `World.TerrainFeatureListChanged` filter Tree.
+    /// Dylan ESV / Aster VMV). Player must plant a scaled number of trees in a location
+    /// adjacent to the giver's home (Linus / Demetrius hardcoded to Mountain; modded
+    /// givers read `NPC.DefaultMap`, with Beach routing back to Pelican Town since
+    /// trees can't grow on sand). Reward = `FriendshipIntermediate` to the giver. The
+    /// framework's `PlantTreesPatches` opts the target location into vanilla's
+    /// `CanPlantTreesHere` gate while the quest is active so the player can plant
+    /// wild-tree seeds there even if the location otherwise refuses.
     private static QuestPosting? PlantTrees(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.ConservationGuide);
         if (giver == null)
             return null;
 
-        string location = string.IsNullOrWhiteSpace(ModEntry.Config.PlantTreesLocation)
-            ? "Forest"
-            : ModEntry.Config.PlantTreesLocation;
-        int count = Math.Max(1, ModEntry.Config.PlantTreesCount);
+        string location = ResolvePlantTreesLocation(giver);
+
+        int count;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
+            int upper = Math.Max(3, foragingLevel);
+            count = Game1.random.Next(3, upper + 1);
+        }
+        else
+        {
+            count = Game1.random.Next(2, 7);
+        }
+
+        string locationLabel = LocationDisplayName(location);
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -293,7 +307,7 @@ internal static partial class Generators
                 Kind = AdventureStepKind.Plant,
                 Targets = new List<string> { location },
                 Count = count,
-                Description = ModEntry.I18n.Get("quest.foraging.plantTrees.step", new { count, location })
+                Description = ModEntry.I18n.Get("quest.foraging.plantTrees.step", new { count, location = locationLabel })
             }
         }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.foraging.plantTrees.targetMessage"));
 
@@ -307,12 +321,35 @@ internal static partial class Generators
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipIntermediate) },
             Title = ModEntry.I18n.Get("quest.foraging.plantTrees.title", new { npc = giver }),
-            Description = ModEntry.I18n.Get("quest.foraging.plantTrees.description", new { npc = giver, count, location }),
-            CurrentObjective = ModEntry.I18n.Get("quest.foraging.plantTrees.objective", new { count, location }),
+            Description = ModEntry.I18n.Get("quest.foraging.plantTrees.description", new { npc = giver, count, location = locationLabel }),
+            CurrentObjective = ModEntry.I18n.Get("quest.foraging.plantTrees.objective", new { count, location = locationLabel }),
             TargetMessage = ModEntry.I18n.Get("quest.foraging.plantTrees.targetMessage"),
             PreBuiltQuest = quest
         };
     }
+
+    private static string ResolvePlantTreesLocation(string giver)
+    {
+        // Vanilla givers: hardcoded so the narrative reads right (Linus's tent and the
+        // Science House both sit on the Mountain proper, not the Forest map id).
+        if (string.Equals(giver, "Linus", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(giver, "Demetrius", StringComparison.OrdinalIgnoreCase))
+            return "Mountain";
+
+        var npc = Game1.getCharacterFromName(giver);
+        string? home = npc?.DefaultMap;
+        if (string.IsNullOrEmpty(home))
+            return "Town";
+
+        // Beach maps can't grow trees (sand, not dirt), so a beach-living modded NPC
+        // routes the quest back to town and relies on PlantTreesPatches to open the gate.
+        if (string.Equals(home, "Beach", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(home, "BeachNightMarket", StringComparison.OrdinalIgnoreCase))
+            return "Town";
+
+        return home;
+    }
+
 
     /// CSV row 69. Spring-only daily-board single-step `ClearWeeds` AdventureQuest. Any
     /// met human NPC can be the giver; the player clears `SpringCleaningCount` weed

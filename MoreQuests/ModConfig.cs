@@ -195,13 +195,6 @@ public sealed class ModConfig
 
     // ----- Phase 9.5g: Multi-step / misc quest tunables -----
 
-    /// Plant Trees (CSV row 55). Location where new trees must be planted before the
-    /// step closes. Defaults to vanilla Cindersap Forest; modded conservation NPCs
-    /// (Kimpoi/Dylan/Aster) currently route to the same fallback until their respective
-    /// content packs expose a stable per-NPC location id.
-    public string PlantTreesLocation { get; set; } = "Forest";
-    public int PlantTreesCount { get; set; } = 5;
-
     /// Spring Cleaning (CSV row 69). Spring-only town weed clear. Location and weed count
     /// are configurable for parity with the other 9.5g rows.
     public string SpringCleaningLocation { get; set; } = "Town";

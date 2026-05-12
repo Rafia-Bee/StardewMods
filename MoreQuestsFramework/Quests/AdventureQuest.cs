@@ -116,6 +116,26 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             _decoded[index] = state;
     }
 
+    /// True when this quest has at least one not-Done step of the given kind whose `Targets`
+    /// list matches the supplied location name (reuses the same wildcard/exclusion semantics
+    /// as the step polls). Used by the framework's wild-tree-seed planting patch so a PlantTrees
+    /// quest can opt the quest-target location into the vanilla CanPlantTreesHere gate.
+    public bool HasActiveStepTargeting(AdventureStepKind kind, string locationName)
+    {
+        if (completed.Value || string.IsNullOrEmpty(locationName))
+            return false;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done) continue;
+            if (step.Kind != kind) continue;
+            if (LocationMatches(step, locationName))
+                return true;
+        }
+        return false;
+    }
+
     /// First not-Done step whose `Requires[]` are all Done. Returns -1 when every step is
     /// done (the quest will complete on the next state change) or when no step is currently
     /// reachable (shouldn't happen with well-formed Requires graphs).

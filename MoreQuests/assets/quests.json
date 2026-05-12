@@ -769,7 +769,7 @@
                 "Source": "DailyBoard",
                 "Weight": 15,
                 "MaxPerDay": 1,
-                "CooldownTier": "Medium"
+                "CooldownTier": "Long"
             },
             "Generator": "PlantTrees"
         },
