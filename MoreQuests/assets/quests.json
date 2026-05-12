@@ -641,6 +641,16 @@
             "Generator": "KrobusVoidNote"
         },
         {
+            "Name": "Animal.LeahFarmPainting",
+            "Category": "Animal",
+            "Trigger": {
+                "Source": "Periodic",
+                "EveryDays": 21,
+                "Available": { "NpcExists": "Leah", "NpcMet": "Leah", "FriendshipLevel": "Leah 2" }
+            },
+            "Generator": "LeahFarmPainting"
+        },
+        {
             "Name": "Animal.MarnieChickenOffer",
             "Category": "Animal",
             "Trigger": {

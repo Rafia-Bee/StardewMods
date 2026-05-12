@@ -432,6 +432,11 @@
     "quest.animal.krobusVoidNote.objective": "Bring a Void Egg to Krobus.",
     "quest.animal.krobusVoidNote.targetMessage": "Yes. Yes, this one is healthy. Take this book. It will help you understand what walks beneath the valley.",
 
+    "quest.animal.leahFarmPainting.title": "Leah wants to paint your animals",
+    "quest.animal.leahFarmPainting.description": "I've been itching to paint something with a bit more life in it than a still bowl of fruit. Bring one of your animals over to my place sometime soon, would you? I'll sketch them from a chair on the porch, and there's a little something on the easel for you in return.",
+    "quest.animal.leahFarmPainting.step.visit": "Walk into Leah's house with at least one animal following you.",
+    "quest.animal.leahFarmPainting.targetMessage": "Look at that face. Thank you. Take this for the house, it'll keep something living in the corner of every room.",
+
     "quest.animal.marnieChickenOffer.title": "Marnie's chicken offer",
     "quest.animal.marnieChickenOffer.description": "Saw the new coop going up. If you bring me {{qty}} {{item}} for the layers, I'll cut you a deal on a chicken to fill it. Drop the seeds by whenever you have them.",
     "quest.animal.marnieChickenOffer.objective": "Bring {{qty}} {{item}} to Marnie.",

@@ -252,6 +252,92 @@ internal static partial class Generators
         };
     }
 
+    /// CSV row 40. Periodic mail-delivered Adventure quest gated on LivestockFollowsYou
+    /// being installed, single-player, and 2+ hearts with Leah. AdventureQuest holds a
+    /// single `Visit` step on LeahHouse with a `$follower-count:1` gate — the quest only
+    /// closes when the player walks into Leah's house with at least one animal in tow.
+    /// Reward is a random in-game `Data/Furniture` houseplant entry (CSV's bespoke animal
+    /// painting deferred until Rafia ships the sprite pack).
+    private static QuestPosting? LeahFarmPainting(QuestContext ctx)
+    {
+        if (Game1.IsMultiplayer)
+            return null;
+        if (!ctx.Helper.ModRegistry.IsLoaded(MoreQuestsFramework.ModCompat.LivestockFollowsYou))
+            return null;
+        if (Game1.getCharacterFromName("Leah") == null)
+            return null;
+        if (!Game1.player.friendshipData.TryGetValue("Leah", out var leahFriendship) || leahFriendship.Points < 2 * 250)
+            return null;
+
+        string? houseplantId = PickRandomHouseplantFurnitureId(ctx);
+        if (houseplantId == null)
+            return null;
+
+        const string giver = "Leah";
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "VisitLeah",
+                Kind = AdventureStepKind.Visit,
+                Targets = new List<string> { "LeahHouse" },
+                Items = new List<string> { "$follower-count:1" },
+                Description = ModEntry.I18n.Get("quest.animal.leahFarmPainting.step.visit")
+            }
+        }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.animal.leahFarmPainting.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Animal,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards =
+            {
+                new FriendshipReward(giver, ctx.Config.FriendshipBasic),
+                new ObjectReward(houseplantId)
+            },
+            Title = ModEntry.I18n.Get("quest.animal.leahFarmPainting.title"),
+            Description = ModEntry.I18n.Get("quest.animal.leahFarmPainting.description"),
+            TargetMessage = ModEntry.I18n.Get("quest.animal.leahFarmPainting.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Returns a randomly-chosen `(F)<id>` furniture id whose name in `Data/Furniture`
+    /// starts with "House Plant". Scans the live asset dictionary at posting time so
+    /// modded houseplants surface automatically alongside vanilla ones. Null when no
+    /// houseplant rows are present (vanilla ships ~15, so realistically only triggers
+    /// in a heavily-pared content config).
+    private static string? PickRandomHouseplantFurnitureId(QuestContext ctx)
+    {
+        try
+        {
+            var furniture = ctx.Helper.GameContent.Load<System.Collections.Generic.Dictionary<string, string>>("Data/Furniture");
+            var matches = new List<string>();
+            foreach (var pair in furniture)
+            {
+                if (pair.Value == null) continue;
+                int slash = pair.Value.IndexOf('/');
+                if (slash <= 0) continue;
+                string name = pair.Value.Substring(0, slash);
+                if (name.StartsWith("House Plant", StringComparison.OrdinalIgnoreCase))
+                    matches.Add(pair.Key);
+            }
+            if (matches.Count == 0)
+                return null;
+            return "(F)" + matches[Game1.random.Next(matches.Count)];
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     /// CSV row 43. BuildingBuilt(Coop)+1 day. Mail+ItemDelivery for a stack of one
     /// current-season seed type to Marnie. Reward = a gold rebate (`MarnieChickenOfferRebate`,
     /// default 800g — vanilla white chicken price) as a proxy for the "deal on a chicken"
