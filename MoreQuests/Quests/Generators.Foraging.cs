@@ -147,13 +147,22 @@ internal static partial class Generators
             return null;
         var pick = pool[Game1.random.Next(pool.Count)];
 
-        int qty = Game1.random.Next(2, 5);
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
+            qty = 2 + (foragingLevel / 2);
+        }
+        else
+        {
+            qty = Game1.random.Next(1, 5);
+        }
         int gold = ctx.Config.GoldIntermediateBase;
 
         var rewards = new List<RewardSpec> { new MoneyReward(gold) };
         var seedReward = PickSeasonalSeed(ctx);
         if (seedReward != null)
-            rewards.Add(new ObjectReward(seedReward.QualifiedItemId, 10));
+            rewards.Add(new ObjectReward(seedReward.QualifiedItemId, 2 * qty));
 
         return new QuestPosting
         {
