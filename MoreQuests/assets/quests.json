@@ -397,7 +397,7 @@
                 "Weight": 15,
                 "MaxPerDay": 1,
                 "CooldownTier": "Medium",
-                "Available": { "SkillLevel": "Foraging 5" }
+                "Available": { "SkillLevel": "Foraging 1" }
             },
             "Generator": "RareForageHunt"
         },
