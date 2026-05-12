@@ -195,13 +195,6 @@ public sealed class ModConfig
 
     // ----- Phase 9.5g: Multi-step / misc quest tunables -----
 
-    /// Clear Debris (CSV row 17). Location whose `ResourceClumps` the player must remove
-    /// before the quest closes. Defaults to vanilla Pelican Town. Override per-save if a
-    /// modded NPC's home town should host the quest instead.
-    public string ClearDebrisLocation { get; set; } = "Town";
-    /// How many resource clumps the quest asks the player to clear at the target location.
-    public int ClearDebrisCount { get; set; } = 5;
-
     /// Plant Trees (CSV row 55). Location where new trees must be planted before the
     /// step closes. Defaults to vanilla Cindersap Forest; modded conservation NPCs
     /// (Kimpoi/Dylan/Aster) currently route to the same fallback until their respective
