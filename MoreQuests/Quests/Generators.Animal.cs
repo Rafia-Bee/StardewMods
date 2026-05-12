@@ -18,8 +18,6 @@ internal static partial class Generators
 {
     private static QuestPosting? HaySupplyRun(QuestContext ctx)
     {
-        if (!ModEntry.Config.AnimalQuestsEnabled)
-            return null;
         int animals = CountAnimals();
         if (animals < 4)
             return null;
@@ -128,8 +126,6 @@ internal static partial class Generators
 
     private static QuestPosting? AlexProteinShakes(QuestContext ctx)
     {
-        if (!ModEntry.Config.AnimalQuestsEnabled)
-            return null;
         if (Game1.getCharacterFromName("Alex") == null)
             return null;
 
@@ -150,19 +146,32 @@ internal static partial class Generators
         if (rewardItem != null)
             rewards.Add(new ObjectReward(rewardItem.QualifiedItemId));
 
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "DeliverEggs",
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { "Alex" },
+                Items = new List<string> { "$edible-egg" },
+                Count = qty,
+                Description = ModEntry.I18n.Get("quest.animal.alexProtein.objective", new { qty })
+            }
+        }, giver: "Alex", completionDialogue: ModEntry.I18n.Get("quest.animal.alexProtein.targetMessage"));
+
         return new QuestPosting
         {
             Category = QuestCategory.Animal,
             Tier = DifficultyTier.Beginner,
-            QuestType = BoardQuestType.ItemDelivery,
+            QuestType = BoardQuestType.Adventure,
             QuestGiver = "Alex",
-            ObjectiveItemId = "(O)176",
-            ObjectiveItemName = "Egg",
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.animal.alexProtein.title"),
             Description = ModEntry.I18n.Get("quest.animal.alexProtein.description", new { qty }),
+            PreBuiltQuest = quest,
             CurrentObjective = ModEntry.I18n.Get("quest.animal.alexProtein.objective", new { qty }),
             TargetMessage = ModEntry.I18n.Get("quest.animal.alexProtein.targetMessage")
         };
@@ -183,8 +192,6 @@ internal static partial class Generators
     /// field, and adding one is more invasive than the row warrants on its own.
     private static QuestPosting? GuntherDinosaurStudy(QuestContext ctx)
     {
-        if (!ModEntry.Config.AnimalQuestsEnabled)
-            return null;
         if (Game1.getCharacterFromName("Gunther") == null)
             return null;
 
@@ -227,8 +234,6 @@ internal static partial class Generators
     /// (deferred — the framework doesn't currently hook the animal-shop menu).
     private static QuestPosting? MarnieChickenOffer(QuestContext ctx)
     {
-        if (!ModEntry.Config.AnimalQuestsEnabled)
-            return null;
         if (Game1.getCharacterFromName("Marnie") == null)
             return null;
 
@@ -276,8 +281,6 @@ internal static partial class Generators
     /// the framework can't grant a real animal-shop discount without patching the menu.
     private static QuestPosting? MarnieCowOffer(QuestContext ctx)
     {
-        if (!ModEntry.Config.AnimalQuestsEnabled)
-            return null;
         if (Game1.getCharacterFromName("Marnie") == null)
             return null;
 
@@ -317,8 +320,6 @@ internal static partial class Generators
     /// recipes).
     private static QuestPosting? MarnieEggRequest(QuestContext ctx)
     {
-        if (!ModEntry.Config.AnimalQuestsEnabled)
-            return null;
         if (Game1.getCharacterFromName("Marnie") == null)
             return null;
 
@@ -359,8 +360,6 @@ internal static partial class Generators
     /// progression beat). Reward = `GoldBasicBase` plus the Cheese Press crafting recipe.
     private static QuestPosting? MarnieMilkRequest(QuestContext ctx)
     {
-        if (!ModEntry.Config.AnimalQuestsEnabled)
-            return null;
         if (Game1.getCharacterFromName("Marnie") == null)
             return null;
 
@@ -413,8 +412,6 @@ internal static partial class Generators
     /// for the 9.5 sweep).
     private static QuestPosting? RobinSiloOffer(QuestContext ctx)
     {
-        if (!ModEntry.Config.AnimalQuestsEnabled)
-            return null;
         if (Game1.getCharacterFromName("Robin") == null)
             return null;
 
