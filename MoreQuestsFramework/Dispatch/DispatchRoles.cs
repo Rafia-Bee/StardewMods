@@ -34,4 +34,9 @@ public static class DispatchRoles
     /// in vanilla saves and picks up modded fishermen (RSV's Carmen / Blair, Arumi,
     /// Gunnar) when their content packs are loaded.
     public const string FishermenNpcs = "FishermenNpcs";
+
+    /// Blacksmiths / smelter shopkeepers who'd commission a bar order. Used by Bar
+    /// Delivery (CSV row 2). Clint anchors vanilla; MarlonFay (SVE), Eli (EliAndDylan),
+    /// Maryam (VMV), and Lola / Jio / Daia (RSV) join the pool when their mods are loaded.
+    public const string BlacksmithNpcs = "BlacksmithNpcs";
 }

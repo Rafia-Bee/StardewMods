@@ -54,46 +54,87 @@ internal static partial class Generators
         };
     }
 
-    private static readonly (string Id, string Name)[] BarPool =
+    /// Prismatic Bar comes from `Si.ExtraCraftingMaterials`. Only used as a bar pool
+    /// entry when the mod is loaded AND the player has reached the Ginger Island tier.
+    private const string PrismaticBarItemId = "Si.ECM_PrismaticBar";
+
+    /// Geodes + Artifact Trove that can roll as a side reward alongside the gold payout.
+    /// Picking one type and stacking `qty / 2` of it keeps the reward tidy in the mail
+    /// (a single object stack rather than a hand-of-mixed-geodes).
+    private static readonly string[] BarDeliveryGeodeRewards =
     {
-        ("(O)334", "Copper Bar"),
-        ("(O)335", "Iron Bar"),
-        ("(O)336", "Gold Bar"),
-        ("(O)337", "Iridium Bar")
+        "(O)535", // Geode
+        "(O)536", // Frozen Geode
+        "(O)537", // Magma Geode
+        "(O)749", // Omni Geode
+        "(O)275"  // Artifact Trove
     };
 
+    /// CSV row 2. Daily-board bar order routed through the blacksmith pool (Clint
+    /// vanilla; MarlonFay SVE, Eli ED, Maryam VMV, Lola/Jio/Daia RSV). Bar tier expands
+    /// with mine depth: Copper from the start, Iron at floor 40, Gold at 80, Iridium
+    /// once Skull Cavern is unlocked, and Radioactive + (mod-gated) Prismatic once the
+    /// player is on Ginger Island. Quantity scales with Mining when DifficultyScaling
+    /// is on. Reward = `GoldIntermediateBase` + `qty/2` of one random geode (Geode /
+    /// Frozen / Magma / Omni / Artifact Trove). Skill gate: Mining 3.
     private static QuestPosting? BarDelivery(QuestContext ctx)
     {
-        int level = Game1.player.MiningLevel;
-        bool skullCavernUnlocked = Game1.player.deepestMineLevel > 120;
+        if (Game1.player.MiningLevel < 3)
+            return null;
 
-        int maxIdxExclusive = skullCavernUnlocked ? 4 : 3;
-        int barIdx = level switch
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.BlacksmithNpcs);
+        if (giver == null)
+            return null;
+
+        int deepest = Game1.player.deepestMineLevel;
+        bool skullCavernUnlocked = deepest > 120;
+        bool gingerIslandUnlocked = Game1.player.hasOrWillReceiveMail("Visit_Island");
+        bool hasEcm = ctx.Helper.ModRegistry.IsLoaded(ModCompat.SiExtraCraftingMaterials);
+
+        var pool = new List<string> { "(O)334" }; // Copper
+        if (deepest >= 40) pool.Add("(O)335");    // Iron
+        if (deepest >= 80) pool.Add("(O)336");    // Gold
+        if (skullCavernUnlocked) pool.Add("(O)337"); // Iridium
+        if (skullCavernUnlocked && gingerIslandUnlocked)
         {
-            >= 8 => Game1.random.Next(2, maxIdxExclusive),
-            >= 4 => Game1.random.Next(1, Math.Min(3, maxIdxExclusive)),
-            _ => 0
-        };
-        var bar = BarPool[barIdx];
+            pool.Add("(O)910"); // Radioactive
+            if (hasEcm)
+                pool.Add(PrismaticBarItemId);
+        }
 
-        int qty = Game1.random.Next(2, 5);
+        var pick = ctx.Items.TryResolveItem(pool[Game1.random.Next(pool.Count)]);
+        if (pick == null)
+            return null;
+
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int upper = Math.Max(3, (int)Math.Floor(Game1.player.MiningLevel * 1.5));
+            qty = Game1.random.Next(2, upper + 1);
+        }
+        else
+        {
+            qty = Game1.random.Next(2, 7);
+        }
+
         int gold = ctx.Config.GoldIntermediateBase;
+        string geodeId = BarDeliveryGeodeRewards[Game1.random.Next(BarDeliveryGeodeRewards.Length)];
+        int geodeCount = Math.Max(1, qty / 2);
 
         return new QuestPosting
         {
             Category = QuestCategory.Mining,
             Tier = DifficultyTier.Intermediate,
             QuestType = BoardQuestType.ItemDelivery,
-            QuestGiver = "Clint",
-            ObjectiveItemId = bar.Id,
-            ObjectiveItemName = bar.Name,
+            QuestGiver = giver,
+            ObjectiveItemId = pick.QualifiedItemId,
+            ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            // TODO: reward should be gold + a geode or gem.
-            Rewards = { new MoneyReward(gold) },
-            Title = ModEntry.I18n.Get("quest.mining.bar.title"),
-            Description = ModEntry.I18n.Get("quest.mining.bar.description", new { qty, item = bar.Name }),
-            CurrentObjective = ModEntry.I18n.Get("quest.mining.bar.objective", new { qty, item = bar.Name }),
+            Rewards = { new MoneyReward(gold), new ObjectReward(geodeId, geodeCount) },
+            Title = ModEntry.I18n.Get("quest.mining.bar.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.mining.bar.description", new { qty, item = pick.DisplayName, npc = giver }),
+            CurrentObjective = ModEntry.I18n.Get("quest.mining.bar.objective", new { qty, item = pick.DisplayName, npc = giver }),
             TargetMessage = ModEntry.I18n.Get("quest.mining.bar.targetMessage")
         };
     }
