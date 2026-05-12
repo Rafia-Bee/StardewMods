@@ -293,8 +293,8 @@
     "quest.seasonal.heatWaveRelief.objective": "Bring {{qty}} {{item}} to {{npc}}.",
     "quest.seasonal.heatWaveRelief.targetMessage": "Perfect. That'll keep half the valley upright through the next hot spell.",
 
-    "quest.seasonal.jellyfishWatch.title": "{{npc}}'s jellyfish watch prep",
-    "quest.seasonal.jellyfishWatch.description": "{{npc}} is putting together notes ahead of the Moonlight Jellies and could use a few specimens from the beach. Bring {{qty}} {{item}} when you have a moment, the data set isn't going to fill itself.",
+    "quest.seasonal.jellyfishWatch.title": "Notes for the Moonlight Jellies",
+    "quest.seasonal.jellyfishWatch.description": "I'm pulling together some field notes ahead of the Dance of the Moonlight Jellies and could use a few specimens from the beach. Could you bring me {{qty}} {{item}} sometime in the next few days? The dance is coming up fast and the data set isn't going to fill itself.",
     "quest.seasonal.jellyfishWatch.objective": "Bring {{qty}} {{item}} to {{npc}}.",
     "quest.seasonal.jellyfishWatch.targetMessage": "These are exactly what I needed. Thanks for indulging the field work.",
 

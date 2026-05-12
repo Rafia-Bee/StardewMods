@@ -354,14 +354,12 @@
             "Generator": "HeatWaveRelief"
         },
         {
-            "Name": "Seasonal.JellyfishWatchPrep",
-            "Category": "Seasonal",
+            "Name": "Festival.JellyfishWatchPrep",
+            "Category": "Festival",
             "Trigger": {
-                "Source": "DailyBoard",
-                "Weight": 20,
-                "MaxPerDay": 1,
-                "CooldownTier": "Medium",
-                "Available": { "Season": "summer" }
+                "Source": "DateLocked",
+                "Date": "summer 4",
+                "RepeatYearly": true
             },
             "Generator": "JellyfishWatchPrep"
         },
