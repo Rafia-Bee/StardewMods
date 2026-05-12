@@ -438,9 +438,10 @@
     "quest.animal.leahFarmPainting.targetMessage": "Look at that face. Thank you. Take this for the house, it'll keep something living in the corner of every room.",
 
     "quest.animal.marnieChickenOffer.title": "Marnie's chicken offer",
-    "quest.animal.marnieChickenOffer.description": "Saw the new coop going up. If you bring me {{qty}} {{item}} for the layers, I'll cut you a deal on a chicken to fill it. Drop the seeds by whenever you have them.",
-    "quest.animal.marnieChickenOffer.objective": "Bring {{qty}} {{item}} to Marnie.",
-    "quest.animal.marnieChickenOffer.targetMessage": "Perfect. Stop by the ranch when you're ready to pick out a chicken; the discount is on me.",
+    "quest.animal.marnieChickenOffer.description": "Saw the new coop going up. If you bring me {{qty}} Mixed Seeds for the layers, I'll send a chicken home with you to fill it. Drop the seeds by whenever you have them.",
+    "quest.animal.marnieChickenOffer.objective": "Bring {{qty}} Mixed Seeds to Marnie.",
+    "quest.animal.marnieChickenOffer.targetMessage": "Perfect. Head back to the coop and your new layer will be settling in already.",
+    "quest.animal.marnieChickenOffer.coopFullFallback": "All your coops are full. Marnie sent the chicken back with a refund instead.",
 
     "quest.animal.marnieCowOffer.title": "Marnie's cow offer",
     "quest.animal.marnieCowOffer.description": "Heard you got a barn up. If you can bring me {{qty}} hay to top off the loft, I'll send you home with a cow at a friendly price. The grass on your pasture will do the rest.",

@@ -338,22 +338,18 @@ internal static partial class Generators
         }
     }
 
-    /// CSV row 43. BuildingBuilt(Coop)+1 day. Mail+ItemDelivery for a stack of one
-    /// current-season seed type to Marnie. Reward = a gold rebate (`MarnieChickenOfferRebate`,
-    /// default 800g — vanilla white chicken price) as a proxy for the "deal on a chicken"
-    /// the CSV calls out. A real shop discount would need a `PurchaseAnimalsMenu` patch
-    /// (deferred — the framework doesn't currently hook the animal-shop menu).
+    /// CSV row 43. BuildingBuilt(Coop)+1 day. Mail+ItemDelivery to Marnie asking for a
+    /// stack of Mixed Seeds (per CSV's "15 mixed seeds" wording, which the wiki resolves
+    /// to the vanilla `(O)770` item). Reward = a free White Chicken adopted directly into
+    /// the player's coop on completion (see `MoreQuests.ModEntry.GrantFreeChicken`) plus a
+    /// FriendshipBasic bump for Marnie. The `MarnieChickenOfferRebate` config still ships
+    /// as a fallback paid out when the player has no coop slot free.
     private static QuestPosting? MarnieChickenOffer(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Marnie") == null)
             return null;
 
-        var seed = PickSeasonalSeed(ctx);
-        if (seed == null)
-            return null;
-
         int qty = Math.Max(1, ModEntry.Config.MarnieChickenOfferSeedQty);
-        int rebate = Math.Max(0, ModEntry.Config.MarnieChickenOfferRebate);
 
         return new QuestPosting
         {
@@ -361,18 +357,17 @@ internal static partial class Generators
             Tier = DifficultyTier.Beginner,
             QuestType = BoardQuestType.ItemDelivery,
             QuestGiver = "Marnie",
-            ObjectiveItemId = seed.QualifiedItemId,
-            ObjectiveItemName = seed.DisplayName,
+            ObjectiveItemId = "(O)770",
+            ObjectiveItemName = "Mixed Seeds",
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
             Rewards =
             {
-                new MoneyReward(rebate),
                 new FriendshipReward("Marnie", ctx.Config.FriendshipBasic)
             },
             Title = ModEntry.I18n.Get("quest.animal.marnieChickenOffer.title"),
-            Description = ModEntry.I18n.Get("quest.animal.marnieChickenOffer.description", new { qty, item = seed.DisplayName }),
-            CurrentObjective = ModEntry.I18n.Get("quest.animal.marnieChickenOffer.objective", new { qty, item = seed.DisplayName }),
+            Description = ModEntry.I18n.Get("quest.animal.marnieChickenOffer.description", new { qty }),
+            CurrentObjective = ModEntry.I18n.Get("quest.animal.marnieChickenOffer.objective", new { qty }),
             TargetMessage = ModEntry.I18n.Get("quest.animal.marnieChickenOffer.targetMessage")
         };
     }

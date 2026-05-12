@@ -232,9 +232,60 @@ public sealed class ModEntry : Mod
             Helper.GameContent.InvalidateCache("Data/Shops");
         if (e.DefinitionId == "Animal.GuntherDinosaurStudy")
             GrantUpgradedDinosaurEgg(e.Quest);
+        if (e.DefinitionId == "Animal.MarnieChickenOffer")
+            GrantFreeChicken();
         if (e.DefinitionId != "Mining.SkullCavernDeepDive" && e.DefinitionId != "Mining.MinesDeepDive")
             return;
         Helper.GameContent.InvalidateCache("Data/mail");
+    }
+
+    /// Adopts a vanilla White Chicken directly into the first Coop on the player's farm
+    /// that has a free animal slot. Bypasses `PurchaseAnimalsMenu` entirely (so Livestock
+    /// Bazaar compatibility is automatic — both menus only sit on top of the same
+    /// `AnimalHouse.adoptAnimal` placement path). Falls back to a gold rebate via
+    /// `MarnieChickenOfferRebate` when no coop has space, so the player isn't left empty
+    /// handed if their coops are full at completion time.
+    private void GrantFreeChicken()
+    {
+        var farm = Game1.getFarm();
+        if (farm == null)
+        {
+            FallbackChickenRebate();
+            return;
+        }
+
+        foreach (var building in farm.buildings)
+        {
+            if (building?.GetIndoors() is not StardewValley.AnimalHouse animalHouse)
+                continue;
+            if (animalHouse.isFull())
+                continue;
+            if (!IsCoop(building))
+                continue;
+
+            var chicken = new StardewValley.FarmAnimal("White Chicken", Game1.Multiplayer.getNewID(), Game1.player.UniqueMultiplayerID);
+            animalHouse.adoptAnimal(chicken);
+            Monitor.Log($"Adopted a free White Chicken into '{building.buildingType.Value}' for Marnie's Chicken Offer.", LogLevel.Trace);
+            return;
+        }
+
+        FallbackChickenRebate();
+    }
+
+    private void FallbackChickenRebate()
+    {
+        int rebate = Math.Max(0, Config.MarnieChickenOfferRebate);
+        if (rebate <= 0)
+            return;
+        Game1.player.Money += rebate;
+        Game1.addHUDMessage(new StardewValley.HUDMessage(I18n.Get("quest.animal.marnieChickenOffer.coopFullFallback").ToString(), 1));
+        Monitor.Log("No empty coop slot at quest completion; paid out the Marnie chicken rebate instead.", LogLevel.Trace);
+    }
+
+    private static bool IsCoop(StardewValley.Buildings.Building building)
+    {
+        string type = building.buildingType.Value ?? string.Empty;
+        return type.IndexOf("Coop", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     /// Returns a Dinosaur Egg whose Quality is one tier above whatever the player
