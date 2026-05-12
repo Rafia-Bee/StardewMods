@@ -24,9 +24,9 @@ public static class ModCompat
     /// Spacechase0's original Cooking Skill mod. Adds a SpaceCore custom skill with id
     /// `spacechase0.Cooking`.
     public const string CookingSkillSpacechase0 = "spacechase0.CookingSkill";
-    /// Pet-Slime's Cooking Skill Redux fork. Continues the original mod and keeps the
+    /// Moonslime's Cooking Skill Redux fork. Continues the original mod and keeps the
     /// same SpaceCore skill id (`spacechase0.Cooking`) so save data stays compatible.
-    public const string CookingSkillRedux = "Pet-Slime.CookingSkill";
+    public const string CookingSkillRedux = "moonslime.CookingSkill";
 
     public static bool IsLoaded(IModRegistry registry, string uniqueId) => registry.IsLoaded(uniqueId);
 
