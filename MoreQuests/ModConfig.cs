@@ -58,7 +58,6 @@ public sealed class ModConfig
     public int FishHaulLargeQty { get; set; } = 30;
     public int FestivalFishQty { get; set; } = 5;
     public int CropMassiveQty { get; set; } = 50;
-    public int HaySupplyBaseQty { get; set; } = 10;
 
     /// Shared knob for "how many distinct item variations does an NPC request" across
     /// quests that ask for a mixed bag (e.g. Pierre's Stock-Up's seasonal-crop spread).

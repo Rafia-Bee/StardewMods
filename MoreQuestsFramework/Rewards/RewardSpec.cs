@@ -35,6 +35,18 @@ public sealed record ShopDiscountReward(
     System.Collections.Generic.List<string>? AppliesTo = null,
     int GuaranteedStock = 0) : RewardSpec;
 
+/// Temporarily reduces every `Data/FarmAnimals` entry's `PurchasePrice` by `PercentOff`
+/// for `DurationDays` in-game days starting the day the quest completes. Routes through
+/// the same asset-edit path as `ShopDiscountReward`, just on a different asset (so the
+/// vanilla `PurchaseAnimalsMenu` and any third-party menu rewrite, e.g. Livestock Bazaar,
+/// pick up the discounted price without a per-menu patch). Persisted to
+/// `FrameworkState.ActiveAnimalPurchaseDiscounts` and re-applied each time
+/// `Data/FarmAnimals` is requested. Discount is global across animal types — no
+/// per-species filter today.
+public sealed record AnimalPurchaseDiscountReward(
+    int PercentOff,
+    int DurationDays) : RewardSpec;
+
 /// One-shot judging-time bias on a vanilla festival outcome. Currently supports the Luau
 /// (bumps the governor's reaction tier up by `Magnitude`, capped at the "loved it" tier
 /// shy of the Mayor's Shorts gag) and the Stardew Valley Fair (adds `Magnitude` flat

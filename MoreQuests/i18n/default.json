@@ -54,8 +54,6 @@
     "config.FestivalFishQty.tooltip": "Catch count for SquidFest and Trout Derby.",
     "config.CropMassiveQty": "Massive crop quantity",
     "config.CropMassiveQty.tooltip": "Crop count for Massive Harvest order.",
-    "config.HaySupplyBaseQty": "Hay supply base quantity",
-    "config.HaySupplyBaseQty.tooltip": "Base hay before animal-count scaling for Marnie's hay run.",
     "config.RequestVariationCount": "Request variation count",
     "config.RequestVariationCount.tooltip": "How many distinct item variations NPCs ask for in mixed-bag delivery quests like Pierre's Stock-Up. Range 2 to 5. Default 3.",
     "config.SkullCavernMaxLevel": "Skull Cavern max level",

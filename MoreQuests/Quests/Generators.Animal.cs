@@ -24,10 +24,19 @@ internal static partial class Generators
         if (animals < 4)
             return null;
 
-        int qty = Math.Max(ModEntry.Config.HaySupplyBaseQty, animals * 3);
-        int gold = (int)(qty * 50 * 0.8);
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            qty = Game1.player.FarmingLevel * 3 + animals * 2;
+        }
+        else
+        {
+            int upper = Math.Max(6, animals * 5 + 1);
+            qty = Game1.random.Next(5, upper);
+        }
+        qty = Math.Max(5, qty);
 
-        return new QuestPosting
+        var posting = new QuestPosting
         {
             Category = QuestCategory.Animal,
             Tier = DifficultyTier.Intermediate,
@@ -37,12 +46,20 @@ internal static partial class Generators
             ObjectiveItemName = "Hay",
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
-            Rewards = { new MoneyReward(gold) },
             Title = ModEntry.I18n.Get("quest.animal.hay.title"),
             Description = ModEntry.I18n.Get("quest.animal.hay.description", new { qty }),
             CurrentObjective = ModEntry.I18n.Get("quest.animal.hay.objective", new { qty }),
             TargetMessage = ModEntry.I18n.Get("quest.animal.hay.targetMessage")
         };
+
+        if (ModEntry.Config.ShopDiscountPercent > 0 && ModEntry.Config.ShopDiscountDurationDays > 0)
+        {
+            posting.Rewards.Add(new AnimalPurchaseDiscountReward(
+                PercentOff: ModEntry.Config.ShopDiscountPercent,
+                DurationDays: ModEntry.Config.ShopDiscountDurationDays));
+        }
+
+        return posting;
     }
 
     private static int CountAnimals()

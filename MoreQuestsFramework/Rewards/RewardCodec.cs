@@ -63,6 +63,7 @@ public static class RewardCodec
         RecipeReward r => $"Recipe|Name={r.RecipeName}|Kind={r.Kind}",
         MailReward ml => $"Mail|Letter={ml.LetterKey}|When={ml.When}",
         ShopDiscountReward s => $"ShopDiscount|ShopId={s.ShopId}|Percent={s.PercentOff}|Days={s.DurationDays}|Items={JoinAppliesTo(s.AppliesTo)}|Stock={s.GuaranteedStock}",
+        AnimalPurchaseDiscountReward a => $"AnimalPurchaseDiscount|Percent={a.PercentOff}|Days={a.DurationDays}",
         FestivalBiasReward fb => $"FestivalBias|Festival={fb.Festival}|Magnitude={fb.Magnitude}",
         _ => throw new ArgumentException($"Unknown reward spec: {spec.GetType()}")
     };
@@ -163,6 +164,14 @@ public static class RewardCodec
                     if (fields.TryGetValue("Stock", out var stk))
                         int.TryParse(stk, out stock);
                     return new ShopDiscountReward(shopId, percent, days, SplitAppliesTo(itemsRaw ?? string.Empty), stock);
+                }
+                return null;
+
+            case "AnimalPurchaseDiscount":
+                if (fields.TryGetValue("Percent", out var apdPct) && int.TryParse(apdPct, out int apdPercent)
+                    && fields.TryGetValue("Days", out var apdDys) && int.TryParse(apdDys, out int apdDays))
+                {
+                    return new AnimalPurchaseDiscountReward(apdPercent, apdDays);
                 }
                 return null;
 
