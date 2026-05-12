@@ -542,7 +542,7 @@
                 "Source": "DateLocked",
                 "Date": "fall 22",
                 "RepeatYearly": true,
-                "Available": { "NpcExists": "Lewis" }
+                "Available": { "NpcExists": "Wizard" }
             },
             "Generator": "SpiritsEveDecor"
         },
