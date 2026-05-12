@@ -188,6 +188,36 @@ public sealed class ModEntry : Mod
         // if not known" requirement.
         fw.QuestAccepted += OnQuestAccepted;
         fw.QuestRemoved += OnQuestRemoved;
+
+        WireLivestockFollowsYou();
+    }
+
+    /// Fetches the LivestockFollowsYou API (duck-typed via the local `ILfyApi`) and
+    /// pipes its follower-count read into the framework's `FollowerApiBridge`, which is
+    /// what `AdventureQuest`'s Visit step's `$follower-count:N` gate consults. No-op
+    /// when LFY isn't installed — Visit-step follower gates evaluate to 0 in that case
+    /// and the matching quests just stay incomplete on warp.
+    private void WireLivestockFollowsYou()
+    {
+        if (!Helper.ModRegistry.IsLoaded(MoreQuestsFramework.ModCompat.LivestockFollowsYou))
+            return;
+        var api = Helper.ModRegistry.GetApi<ILfyApi>(MoreQuestsFramework.ModCompat.LivestockFollowsYou);
+        if (api == null)
+        {
+            Monitor.Log("LivestockFollowsYou is installed but its API didn't resolve; follower-count gated quests won't auto-complete.", LogLevel.Warn);
+            return;
+        }
+        MoreQuestsFramework.FollowerApiBridge.AnimalFollowerCount = () => api.FollowingAnimalCount;
+        Monitor.Log("Wired LivestockFollowsYou follower count into the framework's FollowerApiBridge.", LogLevel.Trace);
+    }
+
+    /// Duck-typed mirror of LivestockFollowsYou's `ILivestockFollowsYouApi`. Only declares
+    /// the members we actually consume so the surface area is minimal. SMAPI's
+    /// `GetApi<T>` matches by member shape, so the duck-typed interface lets us avoid an
+    /// assembly reference back to LFY.
+    private interface ILfyApi
+    {
+        int FollowingAnimalCount { get; }
     }
 
     private void OnQuestRemoved(object? sender, QuestRemovedArgs e)

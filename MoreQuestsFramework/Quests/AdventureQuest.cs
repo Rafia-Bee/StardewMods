@@ -46,10 +46,6 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     /// step index. Non-netcoded, non-XML-serialised by virtue of being a private field.
     private Dictionary<int, int>? _clumpBaselines;
 
-    /// One-time warning gate so a Visit step that specifies `Items[]` (animal-count
-    /// gating) only emits one "deferred" log line per quest, not one per warp.
-    private bool _visitItemsDeferralLogged;
-
     /// True when any step of this quest opts into decor-shipping. Read by the framework's
     /// per-tick log diff to decide whether this quest contributes to the
     /// `Object.canBeShipped` patch's active-quest count. Cheap — the decoded list is
@@ -358,19 +354,8 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             if (step.Done || !RequiresMet(steps, step)) continue;
             if (step.Kind != AdventureStepKind.Visit) continue;
             if (!LocationMatches(step, locationName)) continue;
-            if (step.Items.Count > 0)
-            {
-                if (!_visitItemsDeferralLogged)
-                {
-                    _visitItemsDeferralLogged = true;
-                    ModEntry.Instance?.Monitor.Log(
-                        $"AdventureQuest: Visit step '{step.Name}' specifies Items[] (follower-count gating). " +
-                        "That subfield is deferred until LivestockFollowsYou exposes a follower API; " +
-                        "step will not auto-complete on warp.",
-                        StardewModdingAPI.LogLevel.Trace);
-                }
+            if (step.Items.Count > 0 && !VisitGatesMet(step))
                 continue;
-            }
             MarkStepDone(i, step);
         }
     }
@@ -544,6 +529,33 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
                 return true;
         }
         return false;
+    }
+
+    /// Evaluates the `$`-prefixed gate tokens on a Visit step's `Items[]`. Today the only
+    /// recognised token is `$follower-count:N` (consults `FollowerApiBridge` for the
+    /// LivestockFollowsYou follower count). Unknown tokens are treated as failed gates so
+    /// a future-token authored by content doesn't auto-complete on saves where the gate
+    /// isn't yet implemented.
+    private static bool VisitGatesMet(AdventureStepState step)
+    {
+        foreach (var entry in step.Items)
+        {
+            if (string.IsNullOrWhiteSpace(entry))
+                continue;
+            if (entry.StartsWith("$follower-count:", StringComparison.OrdinalIgnoreCase))
+            {
+                string suffix = entry.Substring("$follower-count:".Length).Trim();
+                if (!int.TryParse(suffix, out int required))
+                    return false;
+                if (FollowerApiBridge.CurrentCount() < required)
+                    return false;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     public override void questComplete()
