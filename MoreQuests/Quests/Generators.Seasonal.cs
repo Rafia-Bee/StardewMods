@@ -400,47 +400,35 @@ internal static partial class Generators
         };
     }
 
-    /// Curated vanilla beach forageables. Mirrors the BeachForage pool used by
-    /// BeachCleanup since both quests target the same kind of items.
-
-    /// Curated vanilla beach forageables. Mirrors the BeachForage pool used by
-    /// BeachCleanup since both quests target the same kind of items.
-    private static readonly (string Id, string Name)[] OceanForagePool =
-    {
-        ("(O)393", "Coral"),
-        ("(O)397", "Sea Urchin"),
-        ("(O)392", "Nautilus Shell"),
-        ("(O)394", "Rainbow Shell"),
-        ("(O)372", "Clam"),
-        ("(O)718", "Cockle"),
-        ("(O)719", "Mussel"),
-        ("(O)723", "Oyster")
-    };
-
-    /// CSV row 38. Summer-only daily-board ItemDelivery. Picks an ecology-role giver
-    /// (Demetrius / Maddie RSV / Mr. Aguar RSV / Dylan ESV — the existing `EcologyMinded`
-    /// pool already matches the CSV's giver list) and asks for a small haul of one ocean
-    /// forageable. Reward = `FriendshipBasic` plus a randomly-picked loved or liked item
-    /// from the giver's own gift tastes ("they trade you something they'd enjoy").
-
-    /// CSV row 38. Summer-only daily-board ItemDelivery. Picks an ecology-role giver
-    /// (Demetrius / Maddie RSV / Mr. Aguar RSV / Dylan ESV — the existing `EcologyMinded`
-    /// pool already matches the CSV's giver list) and asks for a small haul of one ocean
-    /// forageable. Reward = `FriendshipBasic` plus a randomly-picked loved or liked item
-    /// from the giver's own gift tastes ("they trade you something they'd enjoy").
+    /// CSV row 38. DateLocked mail quest fired on Summer 4 (7 days before the Dance of
+    /// the Moonlight Jellies on Summer 11), with a 6-day deadline so the player must
+    /// finish at least one day before the festival. Picks an ecology-role giver
+    /// (Demetrius vanilla, Maddie + Mr. Aguar RSV, Dylan East Scarp) who wants
+    /// data on local marine life before the dance. Forage pool reuses `GetBeachForageItems`
+    /// so vanilla shells AND mod-added beach forage are eligible. Qty scales with Foraging
+    /// when DifficultyScaling is on, otherwise rolls a small flat range. Reward =
+    /// `FriendshipBasic` plus a random loved or liked item from the giver's own gift tastes.
     private static QuestPosting? JellyfishWatchPrep(QuestContext ctx)
     {
-        if (!string.Equals(ctx.Season, "summer", StringComparison.OrdinalIgnoreCase))
-            return null;
-
         string? giver = ctx.Dispatch.Pick(DispatchRoles.EcologyMinded);
         if (giver == null)
             return null;
 
-        var pick = PickResolved(ctx, OceanForagePool);
-        if (pick == null)
+        var pool = ctx.Items.GetBeachForageItems();
+        if (pool.Count == 0)
             return null;
-        int qty = Game1.random.Next(3, 6);
+        var pick = pool[Game1.random.Next(pool.Count)];
+
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
+            qty = 2 + (foragingLevel / 2);
+        }
+        else
+        {
+            qty = Game1.random.Next(1, 5);
+        }
 
         var rewards = new List<RewardSpec>
         {
@@ -459,10 +447,10 @@ internal static partial class Generators
             ObjectiveItemId = pick.QualifiedItemId,
             ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = qty,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = 6,
             Rewards = rewards,
-            Title = ModEntry.I18n.Get("quest.seasonal.jellyfishWatch.title", new { npc = giver }),
-            Description = ModEntry.I18n.Get("quest.seasonal.jellyfishWatch.description", new { npc = giver, qty, item = pick.DisplayName }),
+            Title = ModEntry.I18n.Get("quest.seasonal.jellyfishWatch.title"),
+            Description = ModEntry.I18n.Get("quest.seasonal.jellyfishWatch.description", new { qty, item = pick.DisplayName }),
             CurrentObjective = ModEntry.I18n.Get("quest.seasonal.jellyfishWatch.objective", new { qty, item = pick.DisplayName, npc = giver }),
             TargetMessage = ModEntry.I18n.Get("quest.seasonal.jellyfishWatch.targetMessage")
         };
