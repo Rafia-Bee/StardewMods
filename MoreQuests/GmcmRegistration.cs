@@ -57,6 +57,41 @@ internal static class GmcmRegistration
             () => t.Get("config.animalQuests"),
             () => t.Get("config.animalQuests.tooltip"));
         api.AddBoolOption(manifest,
+            () => ModEntry.Config.FarmingQuestsEnabled,
+            v => ModEntry.Config.FarmingQuestsEnabled = v,
+            () => t.Get("config.farmingQuests"),
+            () => t.Get("config.farmingQuests.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.FishingQuestsEnabled,
+            v => ModEntry.Config.FishingQuestsEnabled = v,
+            () => t.Get("config.fishingQuests"),
+            () => t.Get("config.fishingQuests.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.MiningQuestsEnabled,
+            v => ModEntry.Config.MiningQuestsEnabled = v,
+            () => t.Get("config.miningQuests"),
+            () => t.Get("config.miningQuests.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.ForagingQuestsEnabled,
+            v => ModEntry.Config.ForagingQuestsEnabled = v,
+            () => t.Get("config.foragingQuests"),
+            () => t.Get("config.foragingQuests.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.CookingQuestsEnabled,
+            v => ModEntry.Config.CookingQuestsEnabled = v,
+            () => t.Get("config.cookingQuests"),
+            () => t.Get("config.cookingQuests.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.SocialQuestsEnabled,
+            v => ModEntry.Config.SocialQuestsEnabled = v,
+            () => t.Get("config.socialQuests"),
+            () => t.Get("config.socialQuests.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.SeasonalQuestsEnabled,
+            v => ModEntry.Config.SeasonalQuestsEnabled = v,
+            () => t.Get("config.seasonalQuests"),
+            () => t.Get("config.seasonalQuests.tooltip"));
+        api.AddBoolOption(manifest,
             () => ModEntry.Config.SecretGiftHintEnabled,
             v => ModEntry.Config.SecretGiftHintEnabled = v,
             () => t.Get("config.secretGiftHint"),

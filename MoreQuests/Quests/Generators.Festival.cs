@@ -204,8 +204,6 @@ internal static partial class Generators
     /// dependency on the Phase 9 `FestivalBias` reward kind.
     private static QuestPosting? GusFestivalFeastSpring(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
 
         var ingredient = PickSpringIngredient(ctx);
         if (ingredient == null)
@@ -259,8 +257,6 @@ internal static partial class Generators
     /// per met villager — get applied at completion via the existing reward pipeline.
     private static QuestPosting? GusFestivalFeastWinter(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
 
         var winterForage = ctx.Config.ForagingIgnoresVisitedLocations
             ? ctx.Items.GetForageItems("winter")
@@ -443,8 +439,6 @@ internal static partial class Generators
     /// player's grange score on Fall 16. Tier = Intermediate per the CSV.
     private static QuestPosting? GusFestivalFeastFall(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
         if (Game1.getCharacterFromName("Gus") == null)
             return null;
 
@@ -510,8 +504,6 @@ internal static partial class Generators
     /// reward kind (a higher base potluck score). Tier = Intermediate.
     private static QuestPosting? GusFestivalFeastSummer(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
         if (Game1.getCharacterFromName("Gus") == null)
             return null;
 
@@ -869,8 +861,6 @@ internal static partial class Generators
     /// any of the modded extension items in the pool wouldn't normally ship.
     private static QuestPosting? MoonlightJelliesFestivalDecor(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
         const string giver = "Lewis";
         const int torchCount = 5;
         const int woodCount = 10;
@@ -928,8 +918,6 @@ internal static partial class Generators
     /// Reward = GoldBeginnerBase + one random decor from a curated Egg-Festival pool.
     private static QuestPosting? EggFestivalDecor(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
         const string giver = "Lewis";
         const int hayBaleCount = 5;
 
@@ -979,8 +967,6 @@ internal static partial class Generators
     /// grange judging bumps in the player's favour. Wood Signs need the decor bypass.
     private static QuestPosting? FairFestivalDecor(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
         const string giver = "Lewis";
         const int woodCount = 10;
         const int signCount = 3;
@@ -1049,8 +1035,6 @@ internal static partial class Generators
     /// need the decor-shipping bypass.
     private static QuestPosting? LuauFestivalDecor(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
         const string giver = "Lewis";
         const int fiberCount = 10;
         const int logCount = 1;
@@ -1120,8 +1104,6 @@ internal static partial class Generators
     /// without help.
     private static QuestPosting? SpiritsEveDecor(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
         const string giver = "Lewis";
         const int pumpkinCount = 5;
         const int clothCount = 3;
@@ -1192,8 +1174,6 @@ internal static partial class Generators
     /// 3+ named friendships into one generic line so the loved-by pool isn't spoiled.
     private static QuestPosting? EastScarpSpiritsEveDecor(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
         if (!MoreQuestsFramework.ModCompat.HasEs(ctx.Helper.ModRegistry))
             return null;
         const string giver = "Rosa";
@@ -1270,8 +1250,6 @@ internal static partial class Generators
     /// vanilla recipe).
     private static QuestPosting? RidgesideGatheringDecor(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
         if (!MoreQuestsFramework.ModCompat.HasRsv(ctx.Helper.ModRegistry))
             return null;
         const string giver = "Lenny";
@@ -1347,8 +1325,6 @@ internal static partial class Generators
     /// vanilla Gus saves only (the framework's discount writer needs a known shop id).
     private static QuestPosting? RainbowPlatter(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
         string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
         if (giver == null)
             return null;
@@ -1399,8 +1375,6 @@ internal static partial class Generators
     /// giver, recipe reward per giver, ShopDiscountReward on the dish for vanilla Gus.
     private static QuestPosting? SquidFestShowcase(QuestContext ctx)
     {
-        if (!ModEntry.Config.FestivalQuestsEnabled)
-            return null;
         string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
         if (giver == null)
             return null;
