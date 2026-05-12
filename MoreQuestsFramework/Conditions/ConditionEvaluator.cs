@@ -293,7 +293,12 @@ public static class ConditionEvaluator
         return string.Equals(actual, norm, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// `"Farming 5"` - skill name + minimum level.
+    /// `"Farming 5"` - skill name + minimum level. The `cooking` skill name reads the
+    /// SpaceCore `spacechase0.Cooking` custom skill (used by both the Spacechase0 Cooking
+    /// Skill mod and Moonslime's Redux fork). When neither mod is installed, the bridge
+    /// returns 0 so a `"Cooking N"` requirement (N >= 1) fails closed; pair it with an
+    /// alternative via the `|` OR combinator (e.g. `"Cooking 2|Farming 3"`) to fall back
+    /// to a vanilla skill when the cooking mod is absent.
     private static bool MatchesSkillLevel(string value)
     {
         var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -306,6 +311,7 @@ public static class ConditionEvaluator
             "mining" => MiningLevel,
             "foraging" => ForagingLevel,
             "combat" => CombatLevel,
+            "cooking" => SpaceCoreSkills.GetLevel(Game1.player, "spacechase0.Cooking"),
             _ => -1
         };
         return actual >= min;

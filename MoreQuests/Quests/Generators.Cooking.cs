@@ -111,27 +111,19 @@ internal static partial class Generators
     }
 
     /// CSV row 35. Daily-board AdventureQuest. The picked saloon NPC asks the player to
-    /// bring the ingredients for one randomly-chosen common-tier recipe (≤
-    /// `WeeklySpecialCommonMaxIngredients` distinct ingredients). One Deliver step per
-    /// ingredient. Reward = `GoldBeginnerBase` + `FriendshipMultiSmall` to every met
-    /// villager who loves or likes the cooked dish (the saloon-going crowd who'd actually
-    /// eat the special). Tier 1 consequence keys to the dish output id — the Sample-One
-    /// rule in `ConsequenceEngine` keeps the fanfare to one randomly-picked NPC across the
-    /// loved + hated union.
+    /// bring a small set of in-season "attainable" ingredients (seasonal crops, forage
+    /// catchable in already-visited locations, fish in visited locations, plus a handful
+    /// of cooking category tokens like any-egg / any-milk). The ingredient count scales
+    /// off DifficultyScaling + Cooking Skill mod presence (`BuildAttainableIngredientCount`).
+    /// One `Deliver` step per ingredient; category tokens become `$category:N` matchers so
+    /// the player can hand over any qualifying item. The framework picks an overlap-best
+    /// recipe from the picks to use as the "dish" for flavour text, Tier 1 GiftTastes
+    /// consequence, and per-NPC `FriendshipMultiSmall` to met saloon-crowd villagers who
+    /// love or like that dish. When no recipe overlaps the picks, the no-dish i18n
+    /// fallback runs and both the consequence and crowd-friendship reward are skipped.
     private static QuestPosting? WeeklySpecialCommon(QuestContext ctx)
     {
-        return BuildWeeklySpecial(
-            ctx,
-            tier: DifficultyTier.Beginner,
-            consequenceTier: ConsequenceTier.Tier1,
-            goldBase: ctx.Config.GoldBeginnerBase,
-            deadlineKind: DeadlineKind.Short,
-            minIngredients: 1,
-            maxIngredients: ModEntry.Config.WeeklySpecialCommonMaxIngredients,
-            titleKey: "quest.cooking.weeklySpecial.common.title",
-            descriptionKey: "quest.cooking.weeklySpecial.common.description",
-            consequenceLovedKey: "quest.cooking.weeklySpecial.common.consequence.loved",
-            consequenceHatedKey: "quest.cooking.weeklySpecial.common.consequence.hated");
+        return BuildAttainableWeeklySpecial(ctx);
     }
 
     /// CSV row 36. Same shape as the Common variant but the recipe pool is filtered to
@@ -253,6 +245,271 @@ internal static partial class Generators
                 new { dish = pick.OutputItem.DisplayName }),
             PreBuiltQuest = quest
         };
+    }
+
+    /// Note 218 implementation for WeeklySpecialCommon. Replaces the old recipe-driven flow
+    /// with a freeform "attainable ingredients" pick: seasonal crops + visited-location
+    /// forage + visited-location fish + a small curated set of cooking category tokens
+    /// (any-egg / any-milk / any-fish / any-vegetable / any-fruit / any-flower). The dish
+    /// is then derived by scoring recipes against the picks (highest ingredient overlap
+    /// wins, ties broken randomly). When no recipe scores at least 1, the no-dish i18n
+    /// fallback runs and both the GiftTastes consequence and the saloon-crowd friendship
+    /// reward are dropped (gold still pays out so the player isn't penalised).
+    private static QuestPosting? BuildAttainableWeeklySpecial(QuestContext ctx)
+    {
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
+        if (giver == null)
+            return null;
+
+        var pool = BuildAttainableIngredientPool(ctx);
+        if (pool.Count == 0)
+            return null;
+
+        int wanted = ResolveWeeklySpecialCommonIngredientCount(ctx);
+        int take = Math.Min(wanted, pool.Count);
+
+        var available = new List<AttainableIngredient>(pool);
+        var picks = new List<AttainableIngredient>(take);
+        for (int i = 0; i < take; i++)
+        {
+            int idx = Game1.random.Next(available.Count);
+            picks.Add(available[idx]);
+            available.RemoveAt(idx);
+        }
+
+        var requests = new List<(AttainableIngredient Ing, int Qty)>(picks.Count);
+        foreach (var p in picks)
+        {
+            // Category tokens cap at 2 so "Bring 5 of any milk" doesn't sandbag early-game
+            // saves; concrete in-season items get up to 3 since they're usually farmable.
+            int qty = p.IsCategoryToken
+                ? Game1.random.Next(1, 3)
+                : Game1.random.Next(1, 4);
+            requests.Add((p, qty));
+        }
+
+        var steps = new List<AdventureStepState>(requests.Count);
+        foreach (var (ing, qty) in requests)
+        {
+            steps.Add(new AdventureStepState
+            {
+                Name = "Deliver_" + Sanitise(ing.DisplayName),
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { giver },
+                Items = new List<string> { ing.MatcherToken },
+                Count = qty,
+                Description = ModEntry.I18n.Get(
+                    "quest.cooking.weeklySpecial.step.deliver",
+                    new { count = qty, item = ing.DisplayName, npc = giver })
+            });
+        }
+
+        var dish = PickOverlapDish(ctx, picks);
+
+        string completionDialogue = dish != null
+            ? ModEntry.I18n.Get("quest.cooking.weeklySpecial.targetMessage", new { dish = dish.DisplayName })
+            : ModEntry.I18n.Get("quest.cooking.weeklySpecial.common.targetMessage.noDish");
+
+        var quest = new AdventureQuest();
+        quest.Initialize(steps, giver: giver, completionDialogue: completionDialogue);
+
+        var rewards = new List<RewardSpec> { new MoneyReward(ctx.Config.GoldBeginnerBase) };
+        if (dish != null)
+            AddSaloonCrowdFriendship(ctx, dish.QualifiedItemId, rewards);
+
+        ConsequenceSpec? consequence = null;
+        if (dish != null && ModEntry.Config.ConsequencesEnabled)
+        {
+            consequence = new ConsequenceSpec
+            {
+                Tier = ConsequenceTier.Tier1,
+                Source = ConsequenceSource.GiftTastes,
+                Subject = dish.QualifiedItemId,
+                LovedLine = ModEntry.I18n.Get(
+                    "quest.cooking.weeklySpecial.common.consequence.loved",
+                    new { dish = dish.DisplayName, npc = giver }),
+                HatedLine = ModEntry.I18n.Get(
+                    "quest.cooking.weeklySpecial.common.consequence.hated",
+                    new { dish = dish.DisplayName, npc = giver })
+            };
+        }
+
+        string ingredientsList = string.Join(", ", requests.Select(r => r.Qty + " " + r.Ing.DisplayName));
+
+        string description = dish != null
+            ? ModEntry.I18n.Get(
+                "quest.cooking.weeklySpecial.common.description",
+                new { npc = giver, dish = dish.DisplayName, ingredients = ingredientsList })
+            : ModEntry.I18n.Get(
+                "quest.cooking.weeklySpecial.common.description.noDish",
+                new { npc = giver, ingredients = ingredientsList });
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Cooking,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards = rewards,
+            Consequence = consequence,
+            Title = ModEntry.I18n.Get("quest.cooking.weeklySpecial.common.title", new { npc = giver }),
+            Description = description,
+            TargetMessage = completionDialogue,
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// One entry in the WeeklySpecialCommon ingredient pool. Wraps either a concrete
+    /// ResolvedItem (literal seasonal crop / forage / fish) or a curated cooking category
+    /// sentinel (`CategoryId != 0`, e.g. -5 for any-egg). `MatcherToken` is what the
+    /// Deliver step's `Items[]` carries: a qualified id for literals, a `$category:N`
+    /// matcher for sentinels (the existing `AdventureQuest.TokenMatches` path handles
+    /// both forms).
+    private sealed class AttainableIngredient
+    {
+        public string QualifiedItemId { get; init; } = string.Empty;
+        public string DisplayName { get; init; } = string.Empty;
+        public int Category { get; init; }
+        public int CategoryId { get; init; }
+        public bool IsCategoryToken => CategoryId != 0;
+        public string MatcherToken { get; init; } = string.Empty;
+    }
+
+    private static List<AttainableIngredient> BuildAttainableIngredientPool(QuestContext ctx)
+    {
+        var result = new List<AttainableIngredient>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        void Add(AttainableIngredient ing)
+        {
+            if (!string.IsNullOrEmpty(ing.MatcherToken) && seen.Add(ing.MatcherToken))
+                result.Add(ing);
+        }
+
+        foreach (var c in ctx.Items.GetSeasonalCrops(ctx.Season))
+            Add(new AttainableIngredient
+            {
+                QualifiedItemId = c.QualifiedItemId,
+                DisplayName = c.DisplayName,
+                Category = c.Category,
+                MatcherToken = c.QualifiedItemId
+            });
+        foreach (var f in ctx.Items.GetForageItemsInVisitedLocations(ctx.Season))
+            Add(new AttainableIngredient
+            {
+                QualifiedItemId = f.QualifiedItemId,
+                DisplayName = f.DisplayName,
+                Category = f.Category,
+                MatcherToken = f.QualifiedItemId
+            });
+        foreach (var fi in ctx.Items.GetSeasonalFishInVisitedLocations(ctx.Season))
+            Add(new AttainableIngredient
+            {
+                QualifiedItemId = fi.QualifiedItemId,
+                DisplayName = fi.DisplayName,
+                Category = fi.Category,
+                MatcherToken = fi.QualifiedItemId
+            });
+
+        var categoryTokens = new (int Cat, string I18nLeaf)[]
+        {
+            (-5, "egg"),
+            (-6, "milk"),
+            (-4, "fish"),
+            (-75, "vegetable"),
+            (-79, "fruit"),
+            (-80, "flower"),
+        };
+        foreach (var (cat, leaf) in categoryTokens)
+        {
+            string token = "$category:" + cat;
+            Add(new AttainableIngredient
+            {
+                QualifiedItemId = token,
+                DisplayName = ModEntry.I18n.Get("quest.cooking.weeklySpecial.common.category." + leaf),
+                CategoryId = cat,
+                MatcherToken = token
+            });
+        }
+
+        return result;
+    }
+
+    /// Note 218 count rules. DifficultyScaling off: 1..4. DifficultyScaling on with a
+    /// Cooking Skill mod loaded: 2..max(2, cookingLevel/2). DifficultyScaling on without
+    /// the Cooking Skill mod: 2..5.
+    private static int ResolveWeeklySpecialCommonIngredientCount(QuestContext ctx)
+    {
+        if (!ctx.Config.DifficultyScaling)
+            return Game1.random.Next(1, 5);
+        if (ModCompat.HasCookingSkill(ctx.Helper.ModRegistry))
+        {
+            int level = SpaceCoreSkills.GetLevel(Game1.player, "spacechase0.Cooking");
+            int upper = Math.Max(2, level / 2);
+            return Game1.random.Next(2, upper + 1);
+        }
+        return Game1.random.Next(2, 6);
+    }
+
+    /// Scores every cooking recipe by how many of its ingredients overlap with the picks
+    /// (literal-id match for concrete picks, category-id match for category-sentinel picks
+    /// and for picks whose item category matches a recipe's category sentinel). Highest
+    /// score wins, ties broken at random. Returns null when no recipe scores at least 1
+    /// (no shared ingredients) so the caller can drop the dish-keyed flavour text.
+    private static ResolvedItem? PickOverlapDish(QuestContext ctx, List<AttainableIngredient> picks)
+    {
+        var pickedCats = new HashSet<int>();
+        foreach (var p in picks)
+        {
+            if (p.IsCategoryToken)
+                pickedCats.Add(p.CategoryId);
+            else if (p.Category != 0)
+                pickedCats.Add(p.Category);
+        }
+        var pickedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var p in picks)
+        {
+            if (!p.IsCategoryToken && !string.IsNullOrEmpty(p.QualifiedItemId))
+                pickedIds.Add(p.QualifiedItemId);
+        }
+
+        int bestScore = 0;
+        var bestRecipes = new List<CookingRecipeInfo>();
+        foreach (var recipe in ctx.Items.GetAllCookingRecipes())
+        {
+            int score = 0;
+            foreach (var ing in recipe.Ingredients)
+            {
+                if (ing.IsCategoryToken)
+                {
+                    if (pickedCats.Contains(ing.CategoryId))
+                        score++;
+                }
+                else
+                {
+                    if (pickedIds.Contains(ing.Item.QualifiedItemId))
+                        score++;
+                }
+            }
+            if (score <= 0)
+                continue;
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestRecipes.Clear();
+                bestRecipes.Add(recipe);
+            }
+            else if (score == bestScore)
+            {
+                bestRecipes.Add(recipe);
+            }
+        }
+
+        if (bestRecipes.Count == 0)
+            return null;
+        return bestRecipes[Game1.random.Next(bestRecipes.Count)].OutputItem;
     }
 
     /// Adds a per-NPC `FriendshipMultiSmall` reward for every met human villager whose

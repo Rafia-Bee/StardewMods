@@ -213,17 +213,6 @@ internal static partial class Generators
         };
     }
 
-    // -------------------- Phase 9b: saloon weekly specials + Grand Feast --------------------
-
-    /// CSV row 35. Daily-board AdventureQuest. The picked saloon NPC asks the player to
-    /// bring the ingredients for one randomly-chosen common-tier recipe (≤
-    /// `WeeklySpecialCommonMaxIngredients` distinct ingredients). One Deliver step per
-    /// ingredient. Reward = `GoldBeginnerBase` + `FriendshipMultiSmall` to every met
-    /// villager who loves or likes the cooked dish (the saloon-going crowd who'd actually
-    /// eat the special). Tier 1 consequence keys to the dish output id — the Sample-One
-    /// rule in `ConsequenceEngine` keeps the fanfare to one randomly-picked NPC across the
-    /// loved + hated union.
-
     /// CSV row 58. Daily-board ItemDelivery for Silver-or-better (Quality>=1) seasonal
     /// crops. Picks any met NPC as the requester. Reward scales with the crop's sell
     /// price between `GoldBasicBase` and `GoldIntermediateBase` plus
