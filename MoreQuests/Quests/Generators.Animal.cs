@@ -418,15 +418,13 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 45. OneShot on `chickenEggsLayed >= 1`. Mail+Ship 10 eggs through the bin.
-    /// Reward = `GoldBasicBase` plus the Mayonnaise Machine crafting recipe (granted only
-    /// if the player doesn't already know it; `RewardApplier` no-ops on duplicate
-    /// recipes).
-
-    /// CSV row 45. OneShot on `chickenEggsLayed >= 1`. Mail+Ship 10 eggs through the bin.
-    /// Reward = `GoldBasicBase` plus the Mayonnaise Machine crafting recipe (granted only
-    /// if the player doesn't already know it; `RewardApplier` no-ops on duplicate
-    /// recipes).
+    /// CSV row 45. OneShot on `chickenEggsLayed >= 1`. Mail+Ship 10 eggs through the bin
+    /// with `AlternativeObjectiveItemIds` populated from a live scan of `Game1.objectData`
+    /// (every edible-egg entry: Category -5, Edibility != -300) so brown / large / Void /
+    /// Golden / Ostrich / Duck / modded eggs all count toward the haul. Reward =
+    /// `GoldBasicBase` plus the Mayonnaise Machine — as a `RecipeReward` when the player
+    /// doesn't know the recipe yet, or as a direct `(BC)24` `ObjectReward` when they do
+    /// (so the quest doesn't silently no-op the reward on a re-roll save).
     private static QuestPosting? MarnieEggRequest(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Marnie") == null)
@@ -435,7 +433,12 @@ internal static partial class Generators
         int qty = Math.Max(1, ModEntry.Config.MarnieEggRequestQty);
         int gold = ctx.Config.GoldBasicBase;
 
-        return new QuestPosting
+        bool knowsMayoRecipe = Game1.player?.craftingRecipes?.ContainsKey("Mayonnaise Machine") ?? false;
+        RewardSpec mayoReward = knowsMayoRecipe
+            ? new ObjectReward("(BC)24")
+            : new RecipeReward("Mayonnaise Machine", RecipeKind.Crafting);
+
+        var posting = new QuestPosting
         {
             Category = QuestCategory.Animal,
             Tier = DifficultyTier.Beginner,
@@ -448,7 +451,7 @@ internal static partial class Generators
             Rewards =
             {
                 new MoneyReward(gold),
-                new RecipeReward("Mayonnaise Machine", RecipeKind.Crafting),
+                mayoReward,
                 new FriendshipReward("Marnie", ctx.Config.FriendshipBasic)
             },
             Title = ModEntry.I18n.Get("quest.animal.marnieEgg.title"),
@@ -456,6 +459,34 @@ internal static partial class Generators
             CurrentObjective = ModEntry.I18n.Get("quest.animal.marnieEgg.objective", new { qty }),
             TargetMessage = ModEntry.I18n.Get("quest.animal.marnieEgg.targetMessage")
         };
+
+        foreach (var altId in EnumerateEdibleEggIds())
+        {
+            if (altId == "(O)176") continue;
+            posting.AlternativeObjectiveItemIds.Add(altId);
+            posting.AlternativeObjectiveItemWeights.Add(1);
+        }
+
+        return posting;
+    }
+
+    /// Yields every `(O)<id>` Object whose `Data/Objects` row has Category -5 (egg) and
+    /// `Edibility != -300` (inedible — excludes the Dinosaur Egg). Scans the live
+    /// `Game1.objectData` so modded eggs registered via content-pack edits surface
+    /// alongside vanilla ones. Used by `MarnieEggRequest` to widen its Ship-bin matcher
+    /// beyond the vanilla white egg.
+    private static IEnumerable<string> EnumerateEdibleEggIds()
+    {
+        const int eggCategory = -5;
+        const int inedible = -300;
+        foreach (var pair in Game1.objectData)
+        {
+            var data = pair.Value;
+            if (data == null) continue;
+            if (data.Category != eggCategory) continue;
+            if (data.Edibility == inedible) continue;
+            yield return "(O)" + pair.Key;
+        }
     }
 
     /// CSV row 47. Same shape as the Egg Request but for milk. Triggered on
