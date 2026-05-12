@@ -37,7 +37,7 @@ internal static partial class Generators
             ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            Rewards = { new FriendshipReward("Elliott", ctx.Config.FriendshipBasic) },
+            Rewards = { new FriendshipReward("Elliott", ctx.Config.FriendshipLarge) },
             Title = ModEntry.I18n.Get("quest.social.elliott.title"),
             Description = ModEntry.I18n.Get("quest.social.elliott.description", new { item = pick.DisplayName }),
             CurrentObjective = ModEntry.I18n.Get("quest.social.elliott.objective", new { item = pick.DisplayName }),
