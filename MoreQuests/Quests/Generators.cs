@@ -82,6 +82,7 @@ internal static partial class Generators
         Reg(fw, "GuntherDinosaurStudy", GuntherDinosaurStudy);
         Reg(fw, "KrobusVoidNote", KrobusVoidNote);
         Reg(fw, "LeahFarmPainting", LeahFarmPainting);
+        Reg(fw, "MarnieLivestockShow", MarnieLivestockShow);
         Reg(fw, "MarnieChickenOffer", MarnieChickenOffer);
         Reg(fw, "MarnieCowOffer", MarnieCowOffer);
         Reg(fw, "MarnieEggRequest", MarnieEggRequest);

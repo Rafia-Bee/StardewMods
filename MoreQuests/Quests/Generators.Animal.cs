@@ -338,6 +338,59 @@ internal static partial class Generators
         }
     }
 
+    /// CSV row 46. OneShot (post-Deluxe-Barn upgrade) mail-delivered Adventure quest.
+    /// Marnie asks the player to walk their animals into Town to show them off. Gates:
+    /// LivestockFollowsYou installed, single-player, Marnie present, season != Winter,
+    /// and at least 2 animals on the farm. Completion = entering Town with at least 2
+    /// animals in tow (`$follower-count:2` Visit-step gate). Reward = FriendshipLarge
+    /// for Marnie.
+    private static QuestPosting? MarnieLivestockShow(QuestContext ctx)
+    {
+        if (Game1.IsMultiplayer)
+            return null;
+        if (!ctx.Helper.ModRegistry.IsLoaded(MoreQuestsFramework.ModCompat.LivestockFollowsYou))
+            return null;
+        if (Game1.getCharacterFromName("Marnie") == null)
+            return null;
+        if (string.Equals(Game1.currentSeason, "winter", StringComparison.OrdinalIgnoreCase))
+            return null;
+        if (CountAnimals() < 2)
+            return null;
+
+        const string giver = "Marnie";
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "WalkToTown",
+                Kind = AdventureStepKind.Visit,
+                Targets = new List<string> { "Town" },
+                Items = new List<string> { "$follower-count:2" },
+                Description = ModEntry.I18n.Get("quest.animal.marnieLivestockShow.step.walk")
+            }
+        }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.animal.marnieLivestockShow.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Animal,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards =
+            {
+                new FriendshipReward(giver, ctx.Config.FriendshipLarge)
+            },
+            Title = ModEntry.I18n.Get("quest.animal.marnieLivestockShow.title"),
+            Description = ModEntry.I18n.Get("quest.animal.marnieLivestockShow.description"),
+            TargetMessage = ModEntry.I18n.Get("quest.animal.marnieLivestockShow.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
     /// CSV row 43. BuildingBuilt(Coop)+1 day. Mail+ItemDelivery to Marnie asking for a
     /// stack of Mixed Seeds (per CSV's "15 mixed seeds" wording, which the wiki resolves
     /// to the vanilla `(O)770` item). Reward = a free White Chicken adopted directly into
