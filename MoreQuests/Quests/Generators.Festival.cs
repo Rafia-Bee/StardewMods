@@ -803,15 +803,35 @@ internal static partial class Generators
     /// AND not an obviously common pick (drops anything tagged `season_<current>` so the
     /// daily-board posting feels rare, not an expanded SeasonalForaging).
 
-    /// Curated decor pool for the Dance of the Moonlight Jellies festival reward.
-    /// Vanilla Big-Craftable / Furniture ids picked for thematic fit (lights, decor).
-    /// Unknown ids silently no-op via `RewardApplier`, so over-listing is safe across
-    /// game versions.
-    private static readonly string[] MoonlightJelliesDecorPool = { "(BC)21", "(BC)74", "(BC)272" };
-
     private static readonly string[] EggFestivalDecorPool = { "(BC)272", "(BC)143", "(BC)74" };
 
     private static readonly string[] LuauDecorPool = { "(BC)73", "(BC)74", "(BC)272" };
+
+    /// Item ids that should never land as a decor reward even if they appear in the
+    /// festival shop's stock. Stardrop is the canonical one (unique permanent boost,
+    /// would feel game-breaking to hand out for finishing a board quest). Extend as
+    /// needed if a shop turns up additional non-decor specials.
+    private static readonly HashSet<string> FestivalShopRewardExclusions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "(O)434" // Stardrop
+    };
+
+    private static ResolvedItem? PickFestivalShopReward(QuestContext ctx, string shopId)
+    {
+        var pool = ctx.Items.GetShopItems(shopId);
+        if (pool.Count == 0)
+            return null;
+        var filtered = new List<ResolvedItem>(pool.Count);
+        foreach (var item in pool)
+        {
+            if (FestivalShopRewardExclusions.Contains(item.QualifiedItemId))
+                continue;
+            filtered.Add(item);
+        }
+        if (filtered.Count == 0)
+            return null;
+        return filtered[Game1.random.Next(filtered.Count)];
+    }
 
     /// Picks one item id from a curated decor pool. Returns the id verbatim — any
     /// resolution / instantiation happens later in `RewardApplier.ApplyOne` via
@@ -850,20 +870,30 @@ internal static partial class Generators
         return result;
     }
 
-    /// Row 20 — Dance of the Moonlight Jellies Festival Decor Supply (Lewis, Summer 24).
-    /// Two-step Ship Adventure: Torches + Wood. Reward = GoldBasicBase + one random decor
-    /// item from a curated Moonlight-Jellies pool. Decor-shipping bypass enabled in case
-    /// any of the modded extension items in the pool wouldn't normally ship.
-
-    /// Row 20 — Dance of the Moonlight Jellies Festival Decor Supply (Lewis, Summer 24).
-    /// Two-step Ship Adventure: Torches + Wood. Reward = GoldBasicBase + one random decor
-    /// item from a curated Moonlight-Jellies pool. Decor-shipping bypass enabled in case
-    /// any of the modded extension items in the pool wouldn't normally ship.
+    /// Row 20 — Dance of the Moonlight Jellies Festival Decor Supply (Lewis, Summer 21,
+    /// 7 days before the festival on Summer 28). Two-step Ship Adventure: Torches + Wood.
+    /// Reward = `GoldBasicBase` + one random non-Stardrop entry from Pierre's festival
+    /// shop (`Festival_DanceOfTheMoonlightJellies_Pierre`), so modded decor in that stock
+    /// is eligible. Quantities scale with Foraging when DifficultyScaling is on. Deadline
+    /// is an explicit 6 days so the quest expires the morning of Summer 28 regardless of
+    /// what the player has set `DeadlineShort` to in GMCM (the festival itself blocks any
+    /// completion-day turn-in).
     private static QuestPosting? MoonlightJelliesFestivalDecor(QuestContext ctx)
     {
         const string giver = "Lewis";
-        const int torchCount = 5;
-        const int woodCount = 10;
+        int torchCount;
+        int woodCount;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int foraging = Difficulty.GetSkillLevel(QuestCategory.Foraging);
+            torchCount = Game1.random.Next(5, Math.Max(5, (int)(foraging * 1.5)) + 1);
+            woodCount = Game1.random.Next(10, Math.Max(10, foraging * 5) + 1);
+        }
+        else
+        {
+            torchCount = 5;
+            woodCount = 10;
+        }
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -889,9 +919,9 @@ internal static partial class Generators
         }, giver: giver);
 
         var rewards = new List<RewardSpec> { new MoneyReward(ctx.Config.GoldBasicBase) };
-        var decor = PickDecor(MoonlightJelliesDecorPool);
-        if (!string.IsNullOrEmpty(decor))
-            rewards.Add(new ObjectReward(decor));
+        var decor = PickFestivalShopReward(ctx, "Festival_DanceOfTheMoonlightJellies_Pierre");
+        if (decor != null)
+            rewards.Add(new ObjectReward(decor.QualifiedItemId));
 
         return new QuestPosting
         {
@@ -900,7 +930,7 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = 6,
             AllowDecorShipping = true,
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.festival.moonlightJellies.title"),
