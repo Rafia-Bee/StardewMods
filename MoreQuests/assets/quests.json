@@ -80,8 +80,7 @@
                 "Source": "DailyBoard",
                 "Weight": 30,
                 "MaxPerDay": 1,
-                "CooldownTier": "Medium",
-                "Available": { "Season": "summer" }
+                "CooldownTier": "Long"
             },
             "Generator": "BeachCleanup"
         },

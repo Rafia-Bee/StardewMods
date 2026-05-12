@@ -16,22 +16,24 @@ namespace MoreQuests.Quests;
 
 internal static partial class Generators
 {
-    private static readonly (string Id, string Name)[] BeachForage =
-    {
-        ("(O)393", "Coral"),
-        ("(O)397", "Sea Urchin"),
-        ("(O)392", "Nautilus Shell"),
-        ("(O)394", "Rainbow Shell"),
-        ("(O)372", "Clam"),
-        ("(O)718", "Cockle"),
-        ("(O)719", "Mussel"),
-        ("(O)723", "Oyster")
-    };
-
     private static QuestPosting? BeachCleanup(QuestContext ctx)
     {
-        var pick = BeachForage[Game1.random.Next(BeachForage.Length)];
-        int qty = Game1.random.Next(2, 6);
+        var pool = ctx.Items.GetBeachForageItems();
+        if (pool.Count == 0)
+            return null;
+        var pick = pool[Game1.random.Next(pool.Count)];
+
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
+            int upper = Math.Max(2, (int)(foragingLevel * 1.5));
+            qty = Game1.random.Next(2, upper + 1);
+        }
+        else
+        {
+            qty = Game1.random.Next(2, 7);
+        }
 
         string? giver = ctx.Dispatch.Pick(DispatchRoles.BeachCleanup);
         if (giver == null)
@@ -43,7 +45,7 @@ internal static partial class Generators
             requiredCount = { Value = qty },
             reportMessage = { Value = ModEntry.I18n.Get("quest.seasonal.beach.targetMessage") }
         };
-        quest.itemIds.Add(pick.Id);
+        quest.itemIds.Add(pick.QualifiedItemId);
 
         return new QuestPosting
         {
@@ -51,14 +53,14 @@ internal static partial class Generators
             Tier = DifficultyTier.Beginner,
             QuestType = BoardQuestType.ResourceCollection,
             QuestGiver = giver,
-            ObjectiveItemId = pick.Id,
-            ObjectiveItemName = pick.Name,
+            ObjectiveItemId = pick.QualifiedItemId,
+            ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
-            Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipBasic) },
+            Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipMid) },
             Title = ModEntry.I18n.Get("quest.seasonal.beach.title", new { npc = giver }),
-            Description = ModEntry.I18n.Get("quest.seasonal.beach.description", new { npc = giver, qty, item = pick.Name }),
-            CurrentObjective = ModEntry.I18n.Get("quest.seasonal.beach.objective", new { qty, item = pick.Name, npc = giver }),
+            Description = ModEntry.I18n.Get("quest.seasonal.beach.description", new { npc = giver, qty, item = pick.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.seasonal.beach.objective", new { qty, item = pick.DisplayName, npc = giver }),
             TargetMessage = ModEntry.I18n.Get("quest.seasonal.beach.targetMessage"),
             PreBuiltQuest = quest
         };

@@ -368,6 +368,61 @@ public sealed class ItemResolver
         }
     }
 
+    /// Returns the union of (a) the vanilla beach forage roster (Coral, Sea Urchin, Nautilus
+    /// Shell, Rainbow Shell, Clam, Cockle, Mussel, Oyster) and (b) any item whose `Data/Locations`
+    /// Forage spawn entry sits on a location whose key contains `beach` (case-insensitive).
+    /// The location filter is intentionally substring-based so modded beach locations are
+    /// picked up automatically without an explicit allowlist (vanilla `Beach`, the festival
+    /// `BeachNightMarket`, and modded keys like `Custom_BeachWest`, `EsBeach`, etc. all
+    /// match). The vanilla roster is seeded directly because vanilla beach forage spawns
+    /// via `Beach.SpawnObjects()` rather than `Data/Locations`, so a pure location-scan
+    /// would miss every vanilla shell.
+    public List<ResolvedItem> GetBeachForageItems()
+    {
+        var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "(O)393", // Coral
+            "(O)397", // Sea Urchin
+            "(O)392", // Nautilus Shell
+            "(O)394", // Rainbow Shell
+            "(O)372", // Clam
+            "(O)718", // Cockle
+            "(O)719", // Mussel
+            "(O)723"  // Oyster
+        };
+
+        try
+        {
+            foreach (var (locName, data) in _cache.Locations)
+            {
+                if (locName.IndexOf("beach", StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+                if (data.Forage == null || data.Forage.Count == 0)
+                    continue;
+                foreach (var spawn in data.Forage)
+                {
+                    if (spawn?.ItemId == null)
+                        continue;
+                    string qualified = ItemRegistry.QualifyItemId(spawn.ItemId) ?? spawn.ItemId;
+                    ids.Add(qualified);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _monitor.Log($"GetBeachForageItems: {ex.Message}", LogLevel.Warn);
+        }
+
+        var results = new List<ResolvedItem>();
+        foreach (var id in ids)
+        {
+            var item = TryResolveItem(id);
+            if (item != null)
+                results.Add(item);
+        }
+        return results;
+    }
+
     /// Items tagged `forage_item` (and optionally `season_<season>`) in their context tags.
     /// Returns vanilla and modded forage in one list.
     public List<ResolvedItem> GetForageItems(string? season = null)

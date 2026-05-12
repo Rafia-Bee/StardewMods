@@ -31,7 +31,6 @@
     "config.weight.Cooking.CravingDish.constraints": "You know at least one cooking recipe.",
     "config.weight.Social.ElliottPoem.constraints": "You've met Elliott.",
     "config.weight.Social.CheckOnGeorge.constraints": "You've met George and Evelyn.",
-    "config.weight.Seasonal.BeachCleanup.constraints": "Summer only.",
     "config.weight.Seasonal.SpringTea.constraints": "Fall only.",
     "config.weight.Animal.HaySupplyRun.constraints": "Animal quests toggle is on and you own at least 4 animals.",
     "config.weight.Social.CheckOnFriends.constraints": "You've met at least 4 villagers.",
