@@ -7,6 +7,7 @@ using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.GameData.Shops;
 
 namespace MoreQuests;
 
@@ -65,6 +66,26 @@ public sealed class ModEntry : Mod
         if (e.NameWithoutLocale.IsEquivalentTo(AdventureBoardBackgroundAssetRoot))
         {
             e.LoadFromModFile<Texture2D>("assets/AdventureBoardBackground.png", AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
+        {
+            if (!IsHaySupplyRunActive())
+                return;
+            e.Edit(asset =>
+            {
+                var shops = asset.AsDictionary<string, ShopData>().Data;
+                if (!shops.TryGetValue("AnimalShop", out var animalShop) || animalShop?.Items == null)
+                    return;
+                for (int i = animalShop.Items.Count - 1; i >= 0; i--)
+                {
+                    var entry = animalShop.Items[i];
+                    if (entry == null) continue;
+                    if (IsHayItemId(entry.ItemId))
+                        animalShop.Items.RemoveAt(i);
+                }
+            }, AssetEditPriority.Late);
             return;
         }
 
@@ -165,10 +186,19 @@ public sealed class ModEntry : Mod
         // hunting down the recipe mid-quest. CSV row 25's "give recipe with quest letter
         // if not known" requirement.
         fw.QuestAccepted += OnQuestAccepted;
+        fw.QuestRemoved += OnQuestRemoved;
+    }
+
+    private void OnQuestRemoved(object? sender, QuestRemovedArgs e)
+    {
+        if (e.DefinitionId == "Animal.HaySupplyRun")
+            Helper.GameContent.InvalidateCache("Data/Shops");
     }
 
     private void OnQuestCompleted(object? sender, QuestCompletedArgs e)
     {
+        if (e.DefinitionId == "Animal.HaySupplyRun")
+            Helper.GameContent.InvalidateCache("Data/Shops");
         if (e.DefinitionId != "Mining.SkullCavernDeepDive" && e.DefinitionId != "Mining.MinesDeepDive")
             return;
         Helper.GameContent.InvalidateCache("Data/mail");
@@ -176,6 +206,11 @@ public sealed class ModEntry : Mod
 
     private void OnQuestAccepted(object? sender, QuestAcceptedArgs e)
     {
+        if (e.DefinitionId == "Animal.HaySupplyRun")
+        {
+            Helper.GameContent.InvalidateCache("Data/Shops");
+            return;
+        }
         if (e.DefinitionId != "Festival.RidgesideGatheringDecor")
             return;
         string recipe = string.IsNullOrWhiteSpace(Config.RsvTubOFlowersRecipeName)
@@ -186,6 +221,34 @@ public sealed class ModEntry : Mod
             return;
         crafting.Add(recipe, 0);
         Monitor.Log($"Granted '{recipe}' crafting recipe for Ridgeside Gathering quest.", LogLevel.Trace);
+    }
+
+    /// True when the player has an active Marnie hay-delivery quest in their journal.
+    /// Matched by title rather than item id since other Animal quests (Marnie's Cow Offer)
+    /// also ask for Hay (O)178; the hay-supply title is distinct.
+    private bool IsHaySupplyRunActive()
+    {
+        var log = Game1.player?.questLog;
+        if (log == null || log.Count == 0)
+            return false;
+        string hayTitle = I18n.Get("quest.animal.hay.title").ToString();
+        if (string.IsNullOrEmpty(hayTitle))
+            return false;
+        foreach (var q in log)
+        {
+            if (q == null || q.completed.Value)
+                continue;
+            if (string.Equals(q.questTitle, hayTitle, StringComparison.Ordinal))
+                return true;
+        }
+        return false;
+    }
+
+    private static bool IsHayItemId(string? itemId)
+    {
+        if (string.IsNullOrEmpty(itemId))
+            return false;
+        return itemId == "178" || itemId == "(O)178";
     }
 
     private void RegisterContent(IMoreQuestsApi fw)

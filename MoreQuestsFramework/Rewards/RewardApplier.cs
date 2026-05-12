@@ -33,6 +33,10 @@ public static class RewardApplier
     /// without each reward record knowing about it. Null when no save is loaded.
     public static System.Action<FestivalBiasReward>? OnFestivalBiasGranted { get; set; }
 
+    /// Same shape as `OnShopDiscountGranted` for `AnimalPurchaseDiscountReward`. Wired by
+    /// `AnimalPurchaseDiscountWriter` at save-load.
+    public static System.Action<AnimalPurchaseDiscountReward>? OnAnimalPurchaseDiscountGranted { get; set; }
+
     /// Applies every reward in the encoded list to the active player. Designed for
     /// `Quest.questComplete()` overrides on our custom subclasses. Consequence-spec
     /// lines (`Consequence|...`) are ignored here — they're forwarded to the
@@ -173,6 +177,14 @@ public static class RewardApplier
                 .Default($"{giver} will mark down their shop {r.PercentOff}% for {r.DurationDays} day(s)").ToString());
         }
 
+        foreach (var r in rewards.OfType<AnimalPurchaseDiscountReward>())
+        {
+            if (r.PercentOff <= 0 || r.DurationDays <= 0)
+                continue;
+            lines.Add(translation.Get("quest.reward.line.animalPurchaseDiscount", new { percent = r.PercentOff, days = r.DurationDays, npc = giver })
+                .Default($"{giver} will mark down livestock {r.PercentOff}% for {r.DurationDays} day(s)").ToString());
+        }
+
         foreach (var r in rewards.OfType<FestivalBiasReward>())
         {
             if (r.Magnitude <= 0)
@@ -231,6 +243,12 @@ public static class RewardApplier
                 if (string.IsNullOrEmpty(sd.ShopId) || sd.PercentOff <= 0 || sd.DurationDays <= 0)
                     return;
                 OnShopDiscountGranted?.Invoke(sd);
+                break;
+
+            case AnimalPurchaseDiscountReward apd:
+                if (apd.PercentOff <= 0 || apd.DurationDays <= 0)
+                    return;
+                OnAnimalPurchaseDiscountGranted?.Invoke(apd);
                 break;
 
             case FestivalBiasReward fb:

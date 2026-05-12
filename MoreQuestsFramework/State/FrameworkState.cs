@@ -65,6 +65,11 @@ public sealed class FrameworkState
     /// once the in-game day passes `ExpiresAfterDay`.
     public List<ActiveShopDiscount> ActiveShopDiscounts { get; set; } = new();
 
+    /// Active animal-purchase discounts granted by `AnimalPurchaseDiscountReward`. Each
+    /// entry lowers every `Data/FarmAnimals` `PurchasePrice` by `PercentOff` until the
+    /// in-game day passes `ExpiresAfterDay`, swept on `DayStarted`.
+    public List<ActiveAnimalPurchaseDiscount> ActiveAnimalPurchaseDiscounts { get; set; } = new();
+
     /// Pending consequence dialogue lines, queued by `ConsequenceEngine.Apply` on quest
     /// completion and popped by `ConsequenceDialogueWatcher` the next time the player
     /// chats with the named NPC. Tier 3 chains span multiple entries with stepping
@@ -116,6 +121,14 @@ public sealed class ActiveShopDiscount
     /// When > 0, items in `AppliesTo` that the shop doesn't already sell are added as
     /// temporary entries with this per-visit stock count at the discounted price.
     public int GuaranteedStock { get; set; }
+}
+
+/// One in-flight animal-purchase discount. Persisted so the price reduction survives
+/// save/reload across the full duration window.
+public sealed class ActiveAnimalPurchaseDiscount
+{
+    public int PercentOff { get; set; }
+    public int ExpiresAfterDay { get; set; }
 }
 
 /// One SpecialOrder entry the framework has injected into `Data/SpecialOrders`. The

@@ -90,7 +90,6 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "FishHaulLargeQty", () => ModEntry.Config.FishHaulLargeQty, v => ModEntry.Config.FishHaulLargeQty = v, 1, 500);
         AddInt(api, manifest, t, "FestivalFishQty", () => ModEntry.Config.FestivalFishQty, v => ModEntry.Config.FestivalFishQty = v, 1, 100);
         AddInt(api, manifest, t, "CropMassiveQty", () => ModEntry.Config.CropMassiveQty, v => ModEntry.Config.CropMassiveQty = v, 1, 500);
-        AddInt(api, manifest, t, "HaySupplyBaseQty", () => ModEntry.Config.HaySupplyBaseQty, v => ModEntry.Config.HaySupplyBaseQty = v, 1, 100);
         AddInt(api, manifest, t, "RequestVariationCount", () => ModEntry.Config.RequestVariationCount, v => ModEntry.Config.RequestVariationCount = v, 2, 5);
         AddInt(api, manifest, t, "SkullCavernMaxLevel", () => ModEntry.Config.SkullCavernMaxLevel, v => ModEntry.Config.SkullCavernMaxLevel = v, 5, 500);
         AddInt(api, manifest, t, "WeeklySpecialCommonMaxIngredients", () => ModEntry.Config.WeeklySpecialCommonMaxIngredients, v => ModEntry.Config.WeeklySpecialCommonMaxIngredients = v, 1, 10);

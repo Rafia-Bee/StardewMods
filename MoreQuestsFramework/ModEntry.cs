@@ -49,6 +49,7 @@ public sealed class ModEntry : Mod
     private MailQuestRegistry _mailQuests = null!;
     private SpecialOrderWriter? _specialOrderWriter;
     private ShopDiscountWriter? _shopDiscountWriter;
+    private AnimalPurchaseDiscountWriter? _animalPurchaseDiscountWriter;
     private FestivalBiasWriter? _festivalBiasWriter;
     private ConsequenceEngine? _consequenceEngine;
     private ConsequenceDialogueWatcher? _consequenceWatcher;
@@ -87,6 +88,9 @@ public sealed class ModEntry : Mod
 
         _shopDiscountWriter = new ShopDiscountWriter(helper, Monitor);
         _shopDiscountWriter.Register();
+
+        _animalPurchaseDiscountWriter = new AnimalPurchaseDiscountWriter(helper, Monitor);
+        _animalPurchaseDiscountWriter.Register();
 
         _festivalBiasWriter = new FestivalBiasWriter(Monitor);
 
@@ -230,6 +234,7 @@ public sealed class ModEntry : Mod
         _poster!.WireMailDelivery(_mailQuests, _stateStore.State);
         _specialOrderWriter?.WireState(_stateStore.State);
         _shopDiscountWriter?.WireState(_stateStore.State);
+        _animalPurchaseDiscountWriter?.WireState(_stateStore.State);
         _festivalBiasWriter?.WireState(_stateStore.State);
         // Always invalidate the shop cache after wiring state — discounts loaded from the
         // save would otherwise sit dormant until something else triggers the next read.
@@ -407,6 +412,7 @@ public sealed class ModEntry : Mod
         // Sweep expired ShopDiscount entries; invalidate the shop cache when something
         // dropped off so the asset edit picks up the smaller list.
         SweepShopDiscounts();
+        _animalPurchaseDiscountWriter?.SweepExpired();
 
         // Sweep expired FestivalBias entries so the patches stay fast on saves where the
         // player accepted a feast quest months ago and never made it to the festival.
