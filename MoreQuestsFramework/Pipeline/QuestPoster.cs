@@ -159,7 +159,7 @@ public sealed class QuestPoster
             return;
         }
 
-        ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: Math.Max(1, posting.DeadlineDays));
+        ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: ResolveMailDaysLeft(posting));
 
         string mailKey = MailPrefix + posting.DefinitionId.Replace('.', '_') + "_" + Game1.Date.TotalDays;
         // Use the mailKey as the Quest's id so the `%item quest <mailKey> 1 %%`
@@ -287,7 +287,7 @@ public sealed class QuestPoster
         var quest = QuestFactory.Build(posting);
         if (quest == null)
             return null;
-        ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: Math.Max(1, posting.DeadlineDays));
+        ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: ResolveMailDaysLeft(posting));
         quest.id.Value = stash.MailKey;
         _pendingMail[stash.MailKey] = stash.MailBody;
         return quest;
@@ -339,6 +339,19 @@ public sealed class QuestPoster
         // `^` doesn't work for quest descriptions (it's a mail-asset convention), and
         // showed up rendered as `~~` glyphs.
         return $"{description}\n\n{summary}";
+    }
+
+    /// `DeadlineDays == 0` is the explicit "no deadline" opt-in: the quest enters the
+    /// journal with `daysLeft = 0` AND `dailyQuest = false`, matching the vanilla "Meet
+    /// the Townsfolk" shape — `Quest.IsTimedQuest()` returns false when both are zero, so
+    /// `dayUpdate` never decrements and the quest never auto-expires. Positive values
+    /// produce a normal countdown; negative values are clamped to 1 to guard against
+    /// bad JSON. Used by mail-delivered recipe-unlock quests (PreservesJarRequest, etc.).
+    private static int ResolveMailDaysLeft(QuestPosting posting)
+    {
+        if (posting.DeadlineDays == 0)
+            return 0;
+        return Math.Max(1, posting.DeadlineDays);
     }
 
     private static string BuildDefaultMailBody(QuestPosting p)

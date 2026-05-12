@@ -16,6 +16,114 @@ namespace MoreQuests.Quests;
 
 internal static partial class Generators
 {
+    // -------------------- Phase 10: Recipe-unlock mail quests --------------------
+
+    /// CSV row 57 (rewritten 9.5g). One-time mail from a random met adult villager the first
+    /// day after the player learns the Preserves Jar crafting recipe. Asks for `qty` jams or
+    /// pickles (OR-alternatives, ship to the farm shipping bin). Qty scales with Farming when
+    /// DifficultyScaling is on, otherwise rolls a small flat range. No deadline (matches the
+    /// vanilla "Meet the Townsfolk" shape via `DeadlineDays = 0`). Reward = 500 friendship pts
+    /// (2 hearts) to the giver. TODO: revisit reward magnitude / type once the broader
+    /// recipe-unlock-quest economy lands.
+    private static QuestPosting? PreservesJarRequest(QuestContext ctx)
+    {
+        return BuildFarmingShipRequest(
+            ctx,
+            primaryItemId: "(O)342",
+            alternativeItemIds: new[] { "(O)344" },
+            titleKey: "quest.farming.preservesJarRequest.title",
+            descriptionKey: "quest.farming.preservesJarRequest.description",
+            objectiveKey: "quest.farming.preservesJarRequest.objective",
+            targetMessageKey: "quest.farming.preservesJarRequest.targetMessage");
+    }
+
+    /// CSV row 57 (rewritten 9.5g). One-time mail when the player learns the Keg recipe.
+    /// Asks for `qty` of any keg output: wine (vanilla 348), juice (350), mead (459),
+    /// beer (346), or pale ale (303). Same qty scaling as PreservesJarRequest.
+    private static QuestPosting? KegRequest(QuestContext ctx)
+    {
+        return BuildFarmingShipRequest(
+            ctx,
+            primaryItemId: "(O)348",
+            alternativeItemIds: new[] { "(O)350", "(O)459", "(O)346", "(O)303" },
+            titleKey: "quest.farming.kegRequest.title",
+            descriptionKey: "quest.farming.kegRequest.description",
+            objectiveKey: "quest.farming.kegRequest.objective",
+            targetMessageKey: "quest.farming.kegRequest.targetMessage");
+    }
+
+    /// CSV row 57 (rewritten 9.5g). One-time mail when the player learns the Dehydrator
+    /// recipe (bought from Pierre's shop). Asks for `qty` of any dehydrator output:
+    /// `DriedMushrooms` or `DriedFruit` (which covers raisins and every other dried fruit
+    /// since the parent id is shared across flavors).
+    private static QuestPosting? DehydratorRequest(QuestContext ctx)
+    {
+        return BuildFarmingShipRequest(
+            ctx,
+            primaryItemId: "(O)DriedMushrooms",
+            alternativeItemIds: new[] { "(O)DriedFruit" },
+            titleKey: "quest.farming.dehydratorRequest.title",
+            descriptionKey: "quest.farming.dehydratorRequest.description",
+            objectiveKey: "quest.farming.dehydratorRequest.objective",
+            targetMessageKey: "quest.farming.dehydratorRequest.targetMessage");
+    }
+
+    /// Shared scaffolding for the Farming-scaled recipe-unlock Ship quests. Picks a random
+    /// adult-human met giver, sets the OR-alternative item list, rolls a Farming-scaled qty,
+    /// and assembles the QuestPosting with `DeadlineDays = 0` so the framework treats the
+    /// quest as un-timed. All four parallel quests (Preserves Jar / Keg / Dehydrator share
+    /// this path; Fish Smoker rolls its own qty from Fishing) feed through here.
+    private static QuestPosting? BuildFarmingShipRequest(
+        QuestContext ctx,
+        string primaryItemId,
+        IReadOnlyList<string> alternativeItemIds,
+        string titleKey,
+        string descriptionKey,
+        string objectiveKey,
+        string targetMessageKey)
+    {
+        var candidates = MetAdultHumanGiftReceivers();
+        if (candidates.Count == 0)
+            return null;
+        string giver = candidates[Game1.random.Next(candidates.Count)];
+
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int farming = Game1.player.FarmingLevel;
+            int upper = Math.Max(5, farming * 3);
+            qty = Game1.random.Next(5, upper + 1);
+        }
+        else
+        {
+            qty = Game1.random.Next(2, 11);
+        }
+
+        var posting = new QuestPosting
+        {
+            Category = QuestCategory.Farming,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Ship,
+            QuestGiver = giver,
+            ObjectiveItemId = primaryItemId,
+            ObjectiveItemName = string.Empty,
+            ObjectiveQuantity = qty,
+            ObjectiveItemWeight = 1,
+            DeadlineDays = 0,
+            Rewards = { new FriendshipReward(giver, 500) },
+            Title = ModEntry.I18n.Get(titleKey),
+            Description = ModEntry.I18n.Get(descriptionKey, new { qty }),
+            CurrentObjective = ModEntry.I18n.Get(objectiveKey, new { qty }),
+            TargetMessage = ModEntry.I18n.Get(targetMessageKey)
+        };
+        foreach (var alt in alternativeItemIds)
+        {
+            posting.AlternativeObjectiveItemIds.Add(alt);
+            posting.AlternativeObjectiveItemWeights.Add(1);
+        }
+        return posting;
+    }
+
     private static QuestPosting? BasicCropDelivery(QuestContext ctx)
     {
         var crops = ctx.Items.GetSeasonalCrops(ctx.Season);

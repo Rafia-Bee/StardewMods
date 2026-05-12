@@ -183,13 +183,25 @@
     "quest.festival.gusWinter.description": "The Winter Star spread won't cook itself and the pantry's looking thin. Ship {{count}} of each: {{item1}}, {{item2}}, {{item3}}. The whole town will appreciate the effort once they hear who pulled it together.",
     "quest.festival.gusWinter.step.ship": "Ship {{count}} {{item}}.",
 
-    "quest.fall.preservesSeason.title": "{{npc}}'s preserves stockpile",
-    "quest.fall.preservesSeason.text": "Winter's coming and {{npc}} is putting up the pantry early this year. They asked around town to see if anyone could spare {{count}} each of: {{items}}. Drop them in the shipping bin like always; the bookkeeping is already sorted.",
-    "quest.fall.preservesSeason.objective": "Ship {{count}} {{item}}.",
-    "quest.fall.preservesSeason.category.jam": "any jelly or jam",
-    "quest.fall.preservesSeason.category.pickle": "any pickled vegetable",
-    "quest.fall.preservesSeason.category.wine": "any wine",
-    "quest.fall.preservesSeason.category.driedMushroom": "Dried Mushrooms",
+    "quest.farming.preservesJarRequest.title": "Help break in the preserves jar",
+    "quest.farming.preservesJarRequest.description": "Heard you finally got a Preserves Jar going. I've been wanting to stock the pantry but I never got around to making my own. Could you ship me {{qty}} pickles or jams (any kind, ship them through the bin and I'll grab them on my end)? No rush, the pantry has all year.",
+    "quest.farming.preservesJarRequest.objective": "Ship {{qty}} pickles or jams to the shipping bin.",
+    "quest.farming.preservesJarRequest.targetMessage": "Got the haul. Pantry's finally stocked, thank you.",
+
+    "quest.farming.kegRequest.title": "Kegs are running, care to share?",
+    "quest.farming.kegRequest.description": "I heard you got a Keg working at the farm. I'd love to taste-test whatever's coming out of it. Could you ship me {{qty}} wines, juices, mead, beer, or pale ale (any combination)? Drop them in the shipping bin when you're ready, no deadline.",
+    "quest.farming.kegRequest.objective": "Ship {{qty}} fermented drinks to the shipping bin.",
+    "quest.farming.kegRequest.targetMessage": "Cheers, this'll keep me happy for weeks.",
+
+    "quest.farming.dehydratorRequest.title": "Got a Dehydrator going?",
+    "quest.farming.dehydratorRequest.description": "I noticed you picked up the Dehydrator recipe. Mind making me a batch? Ship {{qty}} dried mushrooms or dried fruit (raisins, etc.) through the bin whenever you can. No rush.",
+    "quest.farming.dehydratorRequest.objective": "Ship {{qty}} dried mushrooms or dried fruit to the shipping bin.",
+    "quest.farming.dehydratorRequest.targetMessage": "These will last forever. Thanks for the batch.",
+
+    "quest.fishing.fishSmokerRequest.title": "Smoked fish for the pantry",
+    "quest.fishing.fishSmokerRequest.description": "Willy told me you have a Fish Smoker running now. I haven't had smoked fish in ages, would you mind shipping me {{qty}} (any kind of smoked fish)? Whenever you have time, no rush.",
+    "quest.fishing.fishSmokerRequest.objective": "Ship {{qty}} smoked fish to the shipping bin.",
+    "quest.fishing.fishSmokerRequest.targetMessage": "Perfect. I'll be eating well for weeks.",
 
     "quest.mining.skullCavernDeepDive.title": "Skull Cavern deep dive",
     "quest.mining.skullCavernDeepDive.description": "The ores found beyond the deeper floors of the Skull Cavern are apparently exceptional. The Guild would like to investigate further. Reach floor {{floor}} and ship {{count}} ore (any type) through your shipping bin. We'll be in touch the morning after the haul lands.",

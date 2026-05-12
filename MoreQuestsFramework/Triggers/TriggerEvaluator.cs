@@ -302,6 +302,23 @@ public sealed class TriggerEvaluator
                     return false;
                 return PlayerInventoryContains(parts[1]);
 
+            case "firstcraftingrecipe":
+                // `FirstCraftingRecipe <Name>` — fires the first day the named entry appears in
+                // `Game1.player.craftingRecipes`. Joins every token after the keyword so multi-word
+                // recipe names (e.g. `Preserves Jar`, `Fish Smoker`) don't need quoting in JSON.
+                if (parts.Length < 2)
+                    return false;
+                string craftingName = string.Join(' ', parts, 1, parts.Length - 1);
+                return Game1.player.craftingRecipes.ContainsKey(craftingName);
+
+            case "firstcookingrecipe":
+                // Parallel to FirstCraftingRecipe but against `Game1.player.cookingRecipes`. Lets
+                // cooking-skill or chef-quest-style content gate on a learned dish.
+                if (parts.Length < 2)
+                    return false;
+                string cookingName = string.Join(' ', parts, 1, parts.Length - 1);
+                return Game1.player.cookingRecipes.ContainsKey(cookingName);
+
             default:
                 _monitor.Log($"OneShot 'When' clause not recognised: '{when}'.", LogLevel.Warn);
                 return false;

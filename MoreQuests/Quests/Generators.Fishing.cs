@@ -16,6 +16,52 @@ namespace MoreQuests.Quests;
 
 internal static partial class Generators
 {
+    /// CSV row 57 piece (rewritten 9.5g). One-time mail from a random met adult villager
+    /// the first day after the player learns the Fish Smoker crafting recipe (vanilla path
+    /// is Willy's mail / shop after a fishing-friendship gate). Asks for `qty` of any
+    /// `SmokedFish` output. Since vanilla rolls every smoked-fish stack with the same
+    /// parent id (`(O)SmokedFish`) and varies only the `preservedParentSheetIndex`, the
+    /// Ship-quest matcher accepts any smoked fish for the count. Qty scales with Fishing
+    /// when DifficultyScaling is on (`rand(5, max(5, fishing*2))`), otherwise rolls
+    /// `rand(2, 6)`. No deadline. Reward = 500 friendship pts (2 hearts).
+    private static QuestPosting? FishSmokerRequest(QuestContext ctx)
+    {
+        var candidates = MetAdultHumanGiftReceivers();
+        if (candidates.Count == 0)
+            return null;
+        string giver = candidates[Game1.random.Next(candidates.Count)];
+
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int fishing = Game1.player.FishingLevel;
+            int upper = Math.Max(5, fishing * 2);
+            qty = Game1.random.Next(5, upper + 1);
+        }
+        else
+        {
+            qty = Game1.random.Next(2, 7);
+        }
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Fishing,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Ship,
+            QuestGiver = giver,
+            ObjectiveItemId = "(O)SmokedFish",
+            ObjectiveItemName = string.Empty,
+            ObjectiveQuantity = qty,
+            ObjectiveItemWeight = 1,
+            DeadlineDays = 0,
+            Rewards = { new FriendshipReward(giver, 500) },
+            Title = ModEntry.I18n.Get("quest.fishing.fishSmokerRequest.title"),
+            Description = ModEntry.I18n.Get("quest.fishing.fishSmokerRequest.description", new { qty }),
+            CurrentObjective = ModEntry.I18n.Get("quest.fishing.fishSmokerRequest.objective", new { qty }),
+            TargetMessage = ModEntry.I18n.Get("quest.fishing.fishSmokerRequest.targetMessage")
+        };
+    }
+
     /// Seasonal fish pool minus anything flagged `IsBossFish` in `Data/Locations`. Used
     /// by every non-Legendary fishing generator so quests never ask for vanilla Crimsonfish
     /// / Angler / Legend / Glacierfish / Mutant Carp or the Extended-Family variants
