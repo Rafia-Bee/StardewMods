@@ -755,8 +755,8 @@ internal static partial class Generators
     /// CSV row 18. Daily-board AdventureQuest with one `Deliver` step per requested dish
     /// (each step gates on `TargetName: <giver>` so the dishes have to land with one host,
     /// not the saloon crowd). Dish count and per-dish quantity scale off the player's
-    /// Cooking Skill level when the Cooking Skill mod (spacechase0.CookingSkill or
-    /// Pet-Slime.CookingSkill) is installed, off the vanilla Farming level when it isn't
+    /// Cooking Skill level when Moonslime's Cooking Skill Redux mod (moonslime.CookingSkill)
+    /// is installed, off the vanilla Farming level when it isn't
     /// and DifficultyScaling is on, and roll a small random when scaling is off entirely.
     /// Dish pool widens to loved + liked + neutral so even prickly hosts have a workable
     /// menu. Reward = vanilla money proportional to dish sell prices (kept from the old
