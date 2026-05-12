@@ -437,6 +437,11 @@
     "quest.animal.leahFarmPainting.step.visit": "Walk into Leah's house with at least one animal following you.",
     "quest.animal.leahFarmPainting.targetMessage": "Look at that face. Thank you. Take this for the house, it'll keep something living in the corner of every room.",
 
+    "quest.animal.marnieLivestockShow.title": "Show your animals around town",
+    "quest.animal.marnieLivestockShow.description": "That deluxe barn of yours looks ready for a proper showing. Take a couple of your animals on a walk into Pelican Town when the weather's nice. The neighbors love seeing healthy livestock around the square, and I'd love hearing back about it.",
+    "quest.animal.marnieLivestockShow.step.walk": "Walk into Pelican Town with at least two animals following you.",
+    "quest.animal.marnieLivestockShow.targetMessage": "Look at them, parading around like champions. Everyone's been talking about it. I owe you for that.",
+
     "quest.animal.marnieChickenOffer.title": "Marnie's chicken offer",
     "quest.animal.marnieChickenOffer.description": "Saw the new coop going up. If you bring me {{qty}} Mixed Seeds for the layers, I'll send a chicken home with you to fill it. Drop the seeds by whenever you have them.",
     "quest.animal.marnieChickenOffer.objective": "Bring {{qty}} Mixed Seeds to Marnie.",

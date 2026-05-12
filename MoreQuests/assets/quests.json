@@ -651,6 +651,17 @@
             "Generator": "LeahFarmPainting"
         },
         {
+            "Name": "Animal.MarnieLivestockShow",
+            "Category": "Animal",
+            "Trigger": {
+                "Source": "BuildingBuilt",
+                "Building": "Deluxe Barn",
+                "DayDelay": 1,
+                "Available": { "NpcExists": "Marnie", "Season": "spring|summer|fall" }
+            },
+            "Generator": "MarnieLivestockShow"
+        },
+        {
             "Name": "Animal.MarnieChickenOffer",
             "Category": "Animal",
             "Trigger": {
