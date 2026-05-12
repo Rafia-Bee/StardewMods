@@ -85,16 +85,15 @@
             "Generator": "BeachCleanup"
         },
         {
-            "Name": "Seasonal.SpringTea",
+            "Name": "Seasonal.FloralTea",
             "Category": "Seasonal",
             "Trigger": {
                 "Source": "DailyBoard",
                 "Weight": 40,
                 "MaxPerDay": 1,
-                "CooldownTier": "Medium",
-                "Available": { "Season": "fall" }
+                "CooldownTier": "Medium"
             },
-            "Generator": "SpringTea"
+            "Generator": "FloralTea"
         },
         {
             "Name": "Cooking.CravingDish",

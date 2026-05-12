@@ -31,7 +31,7 @@ internal static partial class Generators
         Reg(fw, "CheckOnGeorge", CheckOnGeorge);
         Reg(fw, "HaySupplyRun", HaySupplyRun);
         Reg(fw, "BeachCleanup", BeachCleanup);
-        Reg(fw, "SpringTea", SpringTea);
+        Reg(fw, "FloralTea", FloralTea);
         Reg(fw, "CravingDish", CravingDishGenerator);
         Reg(fw, "SubmarineFuel", SubmarineFuel);
         Reg(fw, "WizardsRitualMaterials", WizardsRitualMaterials);

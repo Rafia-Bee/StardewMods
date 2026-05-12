@@ -36,7 +36,7 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Cooking | Craving a Meal | Daily board | Any | Deliver a dish the giver loves/likes | Friendship + a random dish | Cooldown 2d | Implemented |
 | Social | Elliott's Poem Inspiration | Periodic / Daily board | Elliott | Bring Elliott a flower or gem | Friendship (Basic) | Cooldown 7d, OnePerGiver | Implemented |
 | Animal | Hay Supply Run | Periodic (mail, monthly) | Marnie | Deliver hay scaled to animal count | Gold scaled to amount | Cooldown 28d, OnePerGiver | Implemented |
-| Seasonal | Spring Tea | Daily board | Any | Ship spring flowers | Friendship (Basic) | Fall only, Cooldown 3d | Implemented |
+| Seasonal | Floral Tea | Daily board | Any adult human (who doesn't dislike tea) | Deliver an in-season flower the giver loves or likes | Friendship (Basic) | Year-round, Cooldown 7d | Implemented |
 | Foraging | Seasonal Foraging | Daily board | Any | Gather and ship X seasonal forage | Gold (Beginner) | Cooldown 2d | Implemented |
 | Fishing | Simple Fishing Request | Daily board | Any | Catch X common fish | Gold scaled by sell price | Cooldown 2d | Implemented |
 | Festival | Submarine Fuel | Winter 12 (mail) | Captain | Ship Battery Pack or Coal (weighted alternatives) | Pearl via NextDay mail | DateLocked, OneTimePerYear | Implemented |
