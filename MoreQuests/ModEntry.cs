@@ -243,6 +243,8 @@ public sealed class ModEntry : Mod
             GrantFreeChicken();
         if (e.DefinitionId == "Animal.MarnieCowOffer")
             GrantFreeCow();
+        if (e.DefinitionId == "Animal.RobinSiloOfferCoop" || e.DefinitionId == "Animal.RobinSiloOfferBarn")
+            GrantFreeSilo();
         if (e.DefinitionId != "Mining.SkullCavernDeepDive" && e.DefinitionId != "Mining.MinesDeepDive")
             return;
         Helper.GameContent.InvalidateCache("Data/mail");
@@ -342,6 +344,72 @@ public sealed class ModEntry : Mod
     {
         string type = building.buildingType.Value ?? string.Empty;
         return type.IndexOf("Barn", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    /// Constructs a Silo on the farm via `Farm.buildStructure` with magical construction
+    /// (instant, no day delay) on completion of Robin's Silo Offer. Scans the farm map for
+    /// the first tile that passes vanilla's `isBuildable` safety checks so the silo lands
+    /// somewhere clear. Falls back to `RobinSiloOfferRebate` gold when no spot is found or
+    /// a silo already exists (e.g. the player built one mid-quest).
+    private void GrantFreeSilo()
+    {
+        var farm = Game1.getFarm();
+        if (farm == null)
+        {
+            FallbackSiloRebate();
+            return;
+        }
+
+        foreach (var b in farm.buildings)
+        {
+            if (string.Equals(b.buildingType.Value, "Silo", StringComparison.OrdinalIgnoreCase))
+            {
+                Monitor.Log("Player already has a Silo by quest completion; skipping free-build.", LogLevel.Trace);
+                return;
+            }
+        }
+
+        if (TryPlaceFreeSilo(farm))
+        {
+            Game1.addHUDMessage(new StardewValley.HUDMessage(I18n.Get("quest.animal.robinSilo.siloPlaced").ToString(), 1));
+            Monitor.Log("Placed a free Silo on the farm for Robin's Silo Offer.", LogLevel.Trace);
+            return;
+        }
+
+        FallbackSiloRebate();
+    }
+
+    /// Sweeps the farm map for the first tile where `Farm.buildStructure("Silo", ...)`
+    /// succeeds with vanilla safety checks enabled. Uses `magicalConstruction: true` so the
+    /// silo is finished the moment it lands (no `daysOfConstructionLeft` countdown), matching
+    /// the quest flavor that Robin already "covered the rest of the materials and labour."
+    private bool TryPlaceFreeSilo(StardewValley.Farm farm)
+    {
+        var map = farm.Map;
+        if (map?.Layers == null || map.Layers.Count == 0)
+            return false;
+        int width = map.Layers[0].LayerWidth;
+        int height = map.Layers[0].LayerHeight;
+        for (int y = 0; y < height - 3; y++)
+        {
+            for (int x = 0; x < width - 3; x++)
+            {
+                var tile = new Microsoft.Xna.Framework.Vector2(x, y);
+                if (farm.buildStructure("Silo", tile, Game1.player, out _, magicalConstruction: true))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private void FallbackSiloRebate()
+    {
+        int rebate = Math.Max(0, Config.RobinSiloOfferRebate);
+        if (rebate <= 0)
+            return;
+        Game1.player.Money += rebate;
+        Game1.addHUDMessage(new StardewValley.HUDMessage(I18n.Get("quest.animal.robinSilo.siloFullFallback").ToString(), 1));
+        Monitor.Log("Could not place a free Silo on the farm; paid out the Robin silo rebate instead.", LogLevel.Trace);
     }
 
     /// Returns a Dinosaur Egg whose Quality is one tier above whatever the player

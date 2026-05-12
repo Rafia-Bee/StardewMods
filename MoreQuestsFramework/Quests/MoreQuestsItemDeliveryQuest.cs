@@ -21,6 +21,13 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
     /// e.g. a "bring batteries OR coal" quest can satisfy on either id.
     public readonly NetStringList alternativeItemIds = new();
 
+    /// Per-alternative required stack size, parallel to `alternativeItemIds`. When an
+    /// alternative matches, the player must offer a stack of at least its quantity (instead
+    /// of `number.Value`). Used by Robin's Silo Offer so 100 Stone OR 10 Clay OR 5 Copper
+    /// Bars all satisfy the same posting. Entries missing or non-positive fall back to
+    /// `number.Value` (vanilla ItemDelivery behaviour).
+    public readonly NetIntList alternativeItemQuantities = new();
+
     /// Minimum `Object.Quality` required for a delivered item to count. 0 = base
     /// (vanilla behaviour, any quality accepted), 1 = silver, 2 = gold, 4 = iridium.
     /// Quality 3 is unused by vanilla; the matcher is `>=` so silver-or-better at 1,
@@ -42,6 +49,7 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
         NetFields
             .AddField(serializedRewards, "serializedRewards")
             .AddField(alternativeItemIds, "alternativeItemIds")
+            .AddField(alternativeItemQuantities, "alternativeItemQuantities")
             .AddField(minQuality, "minQuality")
             .AddField(deliveredQuality, "deliveredQuality");
     }
@@ -53,16 +61,18 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
     {
         if (completed.Value)
             return false;
-        if (!npc.IsVillager || npc.Name != target.Value || !ItemMatchesObjective(item))
+        if (!npc.IsVillager || npc.Name != target.Value)
+            return false;
+        if (!TryMatchObjective(item, out int requiredQty))
             return false;
         if (minQuality.Value > 0 && (item is not StardewValley.Object obj || obj.Quality < minQuality.Value))
             return false;
 
-        if (item.Stack < number.Value)
+        if (item.Stack < requiredQty)
         {
             if (!probe)
             {
-                npc.CurrentDialogue.Push(Dialogue.FromTranslation(npc, "Strings\\StringsFromCSFiles:ItemDeliveryQuest.cs.13615", number.Value));
+                npc.CurrentDialogue.Push(Dialogue.FromTranslation(npc, "Strings\\StringsFromCSFiles:ItemDeliveryQuest.cs.13615", requiredQty));
                 Game1.drawDialogue(npc);
             }
             return false;
@@ -72,7 +82,7 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
             return true;
 
         deliveredQuality.Value = (item as StardewValley.Object)?.Quality ?? 0;
-        Game1.player.Items.Reduce(item, number.Value);
+        Game1.player.Items.Reduce(item, requiredQty);
         reloadDescription();
         npc.CurrentDialogue.Push(new Dialogue(npc, null, targetMessage));
         Game1.drawDialogue(npc);
@@ -81,17 +91,24 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
     }
 
     /// Compare offered item against `ItemId` plus any `alternativeItemIds`. Both qualified
-    /// and bare ids are tolerated so author input can use either form.
-    private bool ItemMatchesObjective(Item item)
+    /// and bare ids are tolerated so author input can use either form. Emits the required
+    /// stack size for the matched id (primary uses `number.Value`, alternatives use the
+    /// parallel `alternativeItemQuantities` entry when present, otherwise fall back to
+    /// `number.Value`).
+    private bool TryMatchObjective(Item item, out int requiredQty)
     {
+        requiredQty = number.Value;
         if (item == null)
             return false;
         if (Match(item, ItemId.Value))
             return true;
         for (int i = 0; i < alternativeItemIds.Count; i++)
         {
-            if (Match(item, alternativeItemIds[i]))
-                return true;
+            if (!Match(item, alternativeItemIds[i]))
+                continue;
+            if (i < alternativeItemQuantities.Count && alternativeItemQuantities[i] > 0)
+                requiredQty = alternativeItemQuantities[i];
+            return true;
         }
         return false;
     }

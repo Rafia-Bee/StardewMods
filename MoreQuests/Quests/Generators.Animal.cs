@@ -629,24 +629,10 @@ internal static partial class Generators
     /// CSV row 64. Two JSON entries (one for Coop, one for Barn) gate this generator on
     /// `BuildingBuilt` + `not:BuildingExists Silo`, so the offer fires the first time the
     /// player builds either an animal house without already owning a silo. Mail+ItemDelivery
-    /// for one randomly-picked silo material — Stone, Clay, or a Copper Bar in the
-    /// quantities the silo recipe actually consumes (100 / 10 / 5 respectively). Reward =
-    /// a `RobinSiloOfferRebate` gold rebate to cover the silo's gold cost plus a chunk of
-    /// the leftover materials. The "free silo build" flavor in the CSV is approximated
-    /// by the rebate; a real Robin-build-menu hook is deferred (the framework would need
-    /// to patch `CarpenterMenu` to grant a discounted/free silo, which is out of scope
-    /// for the 9.5 sweep).
-
-    /// CSV row 64. Two JSON entries (one for Coop, one for Barn) gate this generator on
-    /// `BuildingBuilt` + `not:BuildingExists Silo`, so the offer fires the first time the
-    /// player builds either an animal house without already owning a silo. Mail+ItemDelivery
-    /// for one randomly-picked silo material — Stone, Clay, or a Copper Bar in the
-    /// quantities the silo recipe actually consumes (100 / 10 / 5 respectively). Reward =
-    /// a `RobinSiloOfferRebate` gold rebate to cover the silo's gold cost plus a chunk of
-    /// the leftover materials. The "free silo build" flavor in the CSV is approximated
-    /// by the rebate; a real Robin-build-menu hook is deferred (the framework would need
-    /// to patch `CarpenterMenu` to grant a discounted/free silo, which is out of scope
-    /// for the 9.5 sweep).
+    /// where the player can satisfy the posting with EITHER 100 Stone, 10 Clay, or 5 Copper
+    /// Bars (the actual silo recipe inputs). Reward = a real free Silo placed on the farm
+    /// via `ModEntry.GrantFreeSilo` on completion, with `RobinSiloOfferRebate` gold as the
+    /// fallback when no farm tile can be found.
     private static QuestPosting? RobinSiloOffer(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Robin") == null)
@@ -664,39 +650,32 @@ internal static partial class Generators
                     return null;
         }
 
-        // Roll one of the three silo materials. Stone / Clay / Copper Bar are the actual
-        // build inputs vanilla consumes from `Data/Buildings`'s Silo entry, so picking from
-        // them keeps the request grounded in the recipe.
-        var materials = new (string Id, string Name, int Qty)[]
-        {
-            ("(O)390", "Stone", Math.Max(1, ModEntry.Config.RobinSiloOfferStoneQty)),
-            ("(O)330", "Clay", Math.Max(1, ModEntry.Config.RobinSiloOfferClayQty)),
-            ("(O)334", "Copper Bar", Math.Max(1, ModEntry.Config.RobinSiloOfferCopperBarQty))
-        };
-        var pick = materials[Game1.random.Next(materials.Length)];
+        int stoneQty = Math.Max(1, ModEntry.Config.RobinSiloOfferStoneQty);
+        int clayQty = Math.Max(1, ModEntry.Config.RobinSiloOfferClayQty);
+        int copperQty = Math.Max(1, ModEntry.Config.RobinSiloOfferCopperBarQty);
 
-        int rebate = Math.Max(0, ModEntry.Config.RobinSiloOfferRebate);
-
-        return new QuestPosting
+        var posting = new QuestPosting
         {
             Category = QuestCategory.Animal,
             Tier = DifficultyTier.Intermediate,
             QuestType = BoardQuestType.ItemDelivery,
             QuestGiver = "Robin",
-            ObjectiveItemId = pick.Id,
-            ObjectiveItemName = pick.Name,
-            ObjectiveQuantity = pick.Qty,
+            ObjectiveItemId = "(O)390",
+            ObjectiveItemName = "Stone",
+            ObjectiveQuantity = stoneQty,
+            AlternativeObjectiveItemIds = { "(O)330", "(O)334" },
+            AlternativeObjectiveItemQuantities = { clayQty, copperQty },
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
             Rewards =
             {
-                new MoneyReward(rebate),
                 new FriendshipReward("Robin", ctx.Config.FriendshipBasic)
             },
             Title = ModEntry.I18n.Get("quest.animal.robinSilo.title"),
-            Description = ModEntry.I18n.Get("quest.animal.robinSilo.description", new { qty = pick.Qty, item = pick.Name }),
-            CurrentObjective = ModEntry.I18n.Get("quest.animal.robinSilo.objective", new { qty = pick.Qty, item = pick.Name }),
+            Description = ModEntry.I18n.Get("quest.animal.robinSilo.description", new { stoneQty, clayQty, copperQty }),
+            CurrentObjective = ModEntry.I18n.Get("quest.animal.robinSilo.objective", new { stoneQty, clayQty, copperQty }),
             TargetMessage = ModEntry.I18n.Get("quest.animal.robinSilo.targetMessage")
         };
+        return posting;
     }
 
     // -------------------- Phase 9.5g: Multi-step / misc --------------------
