@@ -78,7 +78,11 @@ public sealed class DispatchRegistry
             if (Game1.player.friendshipData.ContainsKey(built[i]))
                 met.Add(built[i]);
         }
-        return met.Count > 0 ? met : built;
+        // Intentionally no fallback to `built`: if the player has met none of the
+        // role's NPCs, the picker returns an empty pool and the quest silently
+        // refuses to post. Posting to an unmet NPC reads as a bug (the player has
+        // no way to recognise the giver) and obscures the social-progression gate.
+        return met;
     }
 
     /// Snapshot of every villager the player has met (has friendship data for).

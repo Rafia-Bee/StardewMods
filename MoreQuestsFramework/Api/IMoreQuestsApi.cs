@@ -39,8 +39,9 @@ public interface IMoreQuestsApi
     /// the built-ins have no privileged route.
     void RegisterDispatchNpc(string role, string npcName, string? requiredModUniqueId = null);
 
-    /// Picks the best NPC for a dispatch role (e.g. `DispatchRoles.CombatVendor`).
-    /// Prefers NPCs the player has met. Returns null if the role has no live entries.
+    /// Picks the best NPC for a dispatch role (e.g. `DispatchRoles.CombatNpcs`).
+    /// Restricted to NPCs the player has met; returns null if no met NPC is in the
+    /// pool or the role has no live entries.
     string? PickDispatchNpc(string role);
 
     /// All NPCs currently eligible for the role (after met/exists filtering).

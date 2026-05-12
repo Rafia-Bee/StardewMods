@@ -18,12 +18,21 @@ internal static partial class Generators
 {
     private static QuestPosting? BasicSlimeClearing(QuestContext ctx)
     {
-        string? giver = ctx.Dispatch.Pick(DispatchRoles.CombatVendor);
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.CombatNpcs);
         if (giver == null)
             return null;
 
-        int qty = Game1.random.Next(8, 16);
-        int gold = ctx.Config.GoldBeginnerBase + Game1.random.Next(0, 100);
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int upper = Math.Max(6, Game1.player.CombatLevel * 3 + 1);
+            qty = Game1.random.Next(5, upper);
+        }
+        else
+        {
+            qty = Game1.random.Next(3, 13);
+        }
+        int gold = ctx.Config.GoldBeginnerBase * Math.Max(1, qty / 2);
 
         var quest = new AnySlimeQuest
         {
@@ -44,7 +53,7 @@ internal static partial class Generators
             ObjectiveItemName = "Green Slime",
             ObjectiveQuantity = qty,
             TargetMonster = "Green Slime",
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
             Rewards = { new MoneyReward(gold) },
             Title = ModEntry.I18n.Get("quest.mining.slime.title"),
             Description = ModEntry.I18n.Get("quest.mining.slime.description", new { qty, npc = giver }),
