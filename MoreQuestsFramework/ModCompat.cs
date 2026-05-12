@@ -21,6 +21,12 @@ public static class ModCompat
     public const string SiExtraCraftingMaterials = "Si.ExtraCraftingMaterials";
     public const string GenericModConfigMenu = "spacechase0.GenericModConfigMenu";
     public const string SpaceCore = "spacechase0.SpaceCore";
+    /// Spacechase0's original Cooking Skill mod. Adds a SpaceCore custom skill with id
+    /// `spacechase0.Cooking`.
+    public const string CookingSkillSpacechase0 = "spacechase0.CookingSkill";
+    /// Pet-Slime's Cooking Skill Redux fork. Continues the original mod and keeps the
+    /// same SpaceCore skill id (`spacechase0.Cooking`) so save data stays compatible.
+    public const string CookingSkillRedux = "Pet-Slime.CookingSkill";
 
     public static bool IsLoaded(IModRegistry registry, string uniqueId) => registry.IsLoaded(uniqueId);
 
@@ -29,4 +35,5 @@ public static class ModCompat
     public static bool HasVmv(IModRegistry registry) => registry.IsLoaded(VisitMountVapius);
     public static bool HasSve(IModRegistry registry) => registry.IsLoaded(StardewValleyExpanded);
     public static bool HasLfy(IModRegistry registry) => registry.IsLoaded(LivestockFollowsYou);
+    public static bool HasCookingSkill(IModRegistry registry) => registry.IsLoaded(CookingSkillSpacechase0) || registry.IsLoaded(CookingSkillRedux);
 }

@@ -482,8 +482,9 @@
     "quest.foraging.clearDebris.targetMessage": "Looks much better already. Thanks for pitching in.",
 
     "quest.cooking.dinnerParty.title": "{{npc}}'s dinner party",
-    "quest.cooking.dinnerParty.text": "{{npc}} is hosting a small dinner party and wants the night catered. Cook {{dishes}} and bring each one over before the week is out.",
+    "quest.cooking.dinnerParty.description": "{{npc}} is hosting a small dinner party and wants the night catered. Cook {{count}} of each of these and bring them over: {{dishes}}.",
     "quest.cooking.dinnerParty.objective": "Deliver {{count}} {{item}} to {{npc}}.",
+    "quest.cooking.dinnerParty.targetMessage": "These look incredible. {{npc}}'s guests are going to be thrilled. Here's a little something for your trouble.",
 
     "quest.foraging.plantTrees.title": "Plant some trees",
     "quest.foraging.plantTrees.description": "{{npc}} wants the canopy thicker around {{location}}. Plant {{count}} new trees there and they'll be in your debt.",

@@ -481,18 +481,16 @@ internal static partial class Generators
     /// `RewardMultiplierBelowSell` × the item's sell price (the giver "covers the cost
     /// minus a finder's fee") plus `FriendshipBasic` with the recipient.
 
-    /// CSV row 18. SpecialOrder source. Smaller cousin of the Grand Feast: picks
-    /// `DinnerPartyDishCount` (default 3) distinct dishes the giver Loves or Likes per
-    /// `Data/NPCGiftTastes` and emits one vanilla `Deliver` objective per dish targeted at
-    /// the giver. Reward = sum(dish sell price) * `RewardMultiplierAboveSell` (vanilla
-    /// path so the player gets the standard reward-box UX) + `FriendshipBasic` to the
-    /// giver (framework path, bypasses third-party SpecialOrder reward overrides).
-    ///
-    /// Mirrors `Cooking.GrandFeast`'s JSON shape (no `StartDate`); the trigger evaluator's
-    /// `SpecialOrderReady` requires a `StartDate` for auto-fire, so the order is currently
-    /// reachable through the framework's `mq_reemit_specialorders` debug command. A
-    /// follow-up in §13 should add a cooldown-only SpecialOrder mode so daily-cadence
-    /// special orders fire automatically; that's a framework change tracked separately.
+    /// CSV row 18. Daily-board AdventureQuest with one `Deliver` step per requested dish
+    /// (each step gates on `TargetName: <giver>` so the dishes have to land with one host,
+    /// not the saloon crowd). Dish count and per-dish quantity scale off the player's
+    /// Cooking Skill level when the Cooking Skill mod (spacechase0.CookingSkill or
+    /// Pet-Slime.CookingSkill) is installed, off the vanilla Farming level when it isn't
+    /// and DifficultyScaling is on, and roll a small random when scaling is off entirely.
+    /// Dish pool widens to loved + liked + neutral so even prickly hosts have a workable
+    /// menu. Reward = vanilla money proportional to dish sell prices (kept from the old
+    /// SpecialOrder path) + `FriendshipMid` to the giver. Completion dialogue replaces
+    /// the silent vanilla close so the host actually thanks the player.
     private static QuestPosting? DinnerParty(QuestContext ctx)
     {
         var npcs = DispatchRegistry.MetHumanNpcs();
@@ -504,8 +502,13 @@ internal static partial class Generators
         if (allRecipes.Count == 0)
             return null;
 
-        int wanted = Math.Max(1, ModEntry.Config.DinnerPartyDishCount);
-        int perCount = Math.Max(1, ModEntry.Config.DinnerPartyPerDishCount);
+        bool cookingSkillLoaded = ModCompat.HasCookingSkill(ctx.Helper.ModRegistry);
+        int cookingLevel = cookingSkillLoaded
+            ? SpaceCoreSkills.GetLevel(Game1.player, "spacechase0.Cooking")
+            : 0;
+
+        int wanted = ResolveDinnerPartyDishCount(ctx, cookingSkillLoaded, cookingLevel);
+        int perCount = ResolveDinnerPartyPerDishCount(cookingSkillLoaded, cookingLevel);
 
         var shuffled = npcs.OrderBy(_ => Game1.random.Next()).ToList();
         foreach (var giver in shuffled)
@@ -513,16 +516,17 @@ internal static partial class Generators
             if (!tastes.TryGetValue(giver, out var taste))
                 continue;
             var fields = taste.Split('/');
-            if (fields.Length < 4)
+            if (fields.Length < 10)
                 continue;
             var loved = fields[1].Split(' ').ToHashSet(StringComparer.Ordinal);
             var liked = fields[3].Split(' ').ToHashSet(StringComparer.Ordinal);
+            var neutral = fields[9].Split(' ').ToHashSet(StringComparer.Ordinal);
 
             var pool = new List<CookingRecipeInfo>();
             foreach (var r in allRecipes)
             {
                 string bare = StripPrefix(r.OutputItem.QualifiedItemId);
-                if (loved.Contains(bare) || liked.Contains(bare))
+                if (loved.Contains(bare) || liked.Contains(bare) || neutral.Contains(bare))
                     pool.Add(r);
             }
             if (pool.Count < wanted)
@@ -537,27 +541,23 @@ internal static partial class Generators
                 available.RemoveAt(idx);
             }
 
-            var objectives = new List<SpecialOrderObjectiveSpec>(picked.Count);
+            var steps = new List<AdventureStepState>(picked.Count);
             var displayNames = new List<string>(picked.Count);
             int totalSell = 0;
             foreach (var dish in picked)
             {
-                string bare = StripPrefix(dish.OutputItem.QualifiedItemId);
-                string contextTag = "id_o_" + bare.ToLowerInvariant();
                 displayNames.Add(dish.OutputItem.DisplayName);
                 totalSell += Math.Max(0, dish.OutputItem.SellPrice);
-                objectives.Add(new SpecialOrderObjectiveSpec
+                steps.Add(new AdventureStepState
                 {
-                    Type = "Deliver",
-                    Text = ModEntry.I18n.Get(
+                    Name = "Deliver" + StripPrefix(dish.OutputItem.QualifiedItemId),
+                    Kind = AdventureStepKind.Deliver,
+                    Targets = new List<string> { giver },
+                    Items = new List<string> { dish.OutputItem.QualifiedItemId },
+                    Count = perCount,
+                    Description = ModEntry.I18n.Get(
                         "quest.cooking.dinnerParty.objective",
-                        new { count = perCount, item = dish.OutputItem.DisplayName, npc = giver }),
-                    RequiredCount = perCount,
-                    Data =
-                    {
-                        ["AcceptedContextTags"] = contextTag,
-                        ["TargetName"] = giver
-                    }
+                        new { count = perCount, item = dish.OutputItem.DisplayName, npc = giver })
                 });
             }
 
@@ -565,44 +565,58 @@ internal static partial class Generators
             if (gold < 100)
                 gold = 100;
 
-            var vanillaRewards = new List<SpecialOrderRewardSpec>
-            {
-                new()
-                {
-                    Type = "Money",
-                    Data = { ["Amount"] = gold.ToString() }
-                }
-            };
-            var frameworkRewards = new List<RewardSpec>
-            {
-                new FriendshipReward(giver, ctx.Config.FriendshipBasic)
-            };
-
             string namesList = string.Join(", ", displayNames);
+            string thanksDialogue = ModEntry.I18n.Get(
+                "quest.cooking.dinnerParty.targetMessage",
+                new { npc = giver }).ToString();
+
+            var quest = new AdventureQuest();
+            quest.Initialize(steps, giver: giver, completionDialogue: thanksDialogue);
 
             return new QuestPosting
             {
                 Category = QuestCategory.Cooking,
                 Tier = DifficultyTier.Advanced,
-                QuestType = BoardQuestType.Custom,
-                Kind = PostingKind.SpecialOrder,
+                QuestType = BoardQuestType.Adventure,
                 QuestGiver = giver,
-                SpecialOrder = new SpecialOrderSpec
+                ObjectiveQuantity = 1,
+                DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+                Rewards =
                 {
-                    Name = ModEntry.I18n.Get("quest.cooking.dinnerParty.title", new { npc = giver }),
-                    Text = ModEntry.I18n.Get(
-                        "quest.cooking.dinnerParty.text",
-                        new { npc = giver, dishes = namesList }),
-                    Requester = giver,
-                    Duration = "Week",
-                    Objectives = objectives,
-                    Rewards = vanillaRewards,
-                    FrameworkRewards = frameworkRewards
-                }
+                    new MoneyReward(gold),
+                    new FriendshipReward(giver, ctx.Config.FriendshipMid)
+                },
+                Title = ModEntry.I18n.Get("quest.cooking.dinnerParty.title", new { npc = giver }),
+                Description = ModEntry.I18n.Get(
+                    "quest.cooking.dinnerParty.description",
+                    new { npc = giver, dishes = namesList, count = perCount }),
+                TargetMessage = thanksDialogue,
+                PreBuiltQuest = quest
             };
         }
 
         return null;
+    }
+
+    /// Note 196 scaling. With DifficultyScaling on: 2 + cookingLevel/2 when a Cooking
+    /// Skill mod is installed, else 2 + farmingLevel/2 as a vanilla-only fallback. With
+    /// DifficultyScaling off: small random 1..3 inclusive.
+    private static int ResolveDinnerPartyDishCount(QuestContext ctx, bool cookingSkillLoaded, int cookingLevel)
+    {
+        if (!ctx.Config.DifficultyScaling)
+            return Game1.random.Next(1, 4);
+        int level = cookingSkillLoaded ? cookingLevel : Game1.player.FarmingLevel;
+        return Math.Max(1, 2 + level / 2);
+    }
+
+    /// Note 195 scaling. With a Cooking Skill mod installed: cookingLevel/2 (clamped to
+    /// at least 1 so a brand-new save still has a deliverable count). Otherwise small
+    /// random 1..3 inclusive.
+    private static int ResolveDinnerPartyPerDishCount(bool cookingSkillLoaded, int cookingLevel)
+    {
+        if (!cookingSkillLoaded)
+            return Game1.random.Next(1, 4);
+        return Math.Max(1, cookingLevel / 2);
     }
 
     /// CSV row 55. Daily-board single-step `Plant` AdventureQuest. Quest giver picked

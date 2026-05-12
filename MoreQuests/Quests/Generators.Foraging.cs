@@ -250,19 +250,6 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 18. SpecialOrder source. Smaller cousin of the Grand Feast: picks
-    /// `DinnerPartyDishCount` (default 3) distinct dishes the giver Loves or Likes per
-    /// `Data/NPCGiftTastes` and emits one vanilla `Deliver` objective per dish targeted at
-    /// the giver. Reward = sum(dish sell price) * `RewardMultiplierAboveSell` (vanilla
-    /// path so the player gets the standard reward-box UX) + `FriendshipBasic` to the
-    /// giver (framework path, bypasses third-party SpecialOrder reward overrides).
-    ///
-    /// Mirrors `Cooking.GrandFeast`'s JSON shape (no `StartDate`); the trigger evaluator's
-    /// `SpecialOrderReady` requires a `StartDate` for auto-fire, so the order is currently
-    /// reachable through the framework's `mq_reemit_specialorders` debug command. A
-    /// follow-up in §13 should add a cooldown-only SpecialOrder mode so daily-cadence
-    /// special orders fire automatically; that's a framework change tracked separately.
-
     /// CSV row 55. Daily-board single-step `Plant` AdventureQuest. Quest giver picked
     /// from the `ConservationGuide` dispatch role (Linus / Demetrius / Kimpoi RSV /
     /// Dylan ESV / Aster VMV) — exactly the CSV's listed givers. Player must plant
