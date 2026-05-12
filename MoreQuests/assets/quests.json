@@ -167,15 +167,40 @@
             "Generator": "GusFestivalFeastWinter"
         },
         {
-            "Name": "Seasonal.PreservesSeason",
-            "Category": "Seasonal",
+            "Name": "Farming.PreservesJarRequest",
+            "Category": "Farming",
             "Trigger": {
-                "Source": "SpecialOrder",
-                "StartDate": "fall 1",
-                "Duration": "Month",
-                "CooldownTier": "Long"
+                "Source": "OneShot",
+                "When": "FirstCraftingRecipe Preserves Jar"
             },
-            "Generator": "PreservesSeason"
+            "Generator": "PreservesJarRequest"
+        },
+        {
+            "Name": "Farming.KegRequest",
+            "Category": "Farming",
+            "Trigger": {
+                "Source": "OneShot",
+                "When": "FirstCraftingRecipe Keg"
+            },
+            "Generator": "KegRequest"
+        },
+        {
+            "Name": "Farming.DehydratorRequest",
+            "Category": "Farming",
+            "Trigger": {
+                "Source": "OneShot",
+                "When": "FirstCraftingRecipe Dehydrator"
+            },
+            "Generator": "DehydratorRequest"
+        },
+        {
+            "Name": "Fishing.FishSmokerRequest",
+            "Category": "Fishing",
+            "Trigger": {
+                "Source": "OneShot",
+                "When": "FirstCraftingRecipe Fish Smoker"
+            },
+            "Generator": "FishSmokerRequest"
         },
         {
             "Name": "Mining.SkullCavernDeepDive",

@@ -39,7 +39,10 @@ internal static partial class Generators
         Reg(fw, "CheckOnFriends", CheckOnFriends);
         Reg(fw, "GusFestivalFeastSpring", GusFestivalFeastSpring);
         Reg(fw, "GusFestivalFeastWinter", GusFestivalFeastWinter);
-        Reg(fw, "PreservesSeason", PreservesSeason);
+        Reg(fw, "PreservesJarRequest", PreservesJarRequest);
+        Reg(fw, "KegRequest", KegRequest);
+        Reg(fw, "DehydratorRequest", DehydratorRequest);
+        Reg(fw, "FishSmokerRequest", FishSmokerRequest);
         Reg(fw, "SkullCavernDeepDive", SkullCavernDeepDive);
         Reg(fw, "MinesDeepDive", MinesDeepDive);
         Reg(fw, "PierresStockUp", PierresStockUp);
