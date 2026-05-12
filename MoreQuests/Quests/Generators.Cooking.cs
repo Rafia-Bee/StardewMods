@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using MoreQuestsFramework;
 using MoreQuestsFramework.Api;
-using MoreQuestsFramework.Conditions;
 using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Dispatch;
 using MoreQuestsFramework.Pipeline;
@@ -18,9 +17,6 @@ internal static partial class Generators
 {
     private static QuestPosting? CravingDishGenerator(QuestContext ctx)
     {
-        if (!ConditionEvaluator.KnowsAnyCookingRecipe())
-            return null;
-
         var npcs = DispatchRegistry.MetHumanNpcs();
         if (npcs.Count == 0)
             return null;
