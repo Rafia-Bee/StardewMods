@@ -199,4 +199,8 @@ public sealed class ModConfig
     /// are configurable for parity with the other 9.5g rows.
     public string SpringCleaningLocation { get; set; } = "Town";
     public int SpringCleaningCount { get; set; } = 8;
+
+    /// Check on Friends (CSV row 16). How many distinct NPCs the player must talk to
+    /// before reporting back to the giver. Defaults to 3.
+    public int CheckOnFriendsCount { get; set; } = 3;
 }

@@ -105,8 +105,8 @@ internal static partial class Generators
     /// quest expects). Reward = FriendshipIntermediate to the giver only.
     private static QuestPosting? CheckOnFriends(QuestContext ctx)
     {
-        const int n = 3;
-        var metNpcs = DispatchRegistry.MetHumanNpcs();
+        int n = Math.Max(1, ModEntry.Config.CheckOnFriendsCount);
+        var metNpcs = MetAdultHumanGiftReceivers();
         if (metNpcs.Count < n + 1)
             return null;
 

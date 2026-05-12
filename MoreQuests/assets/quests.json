@@ -142,7 +142,7 @@
                 "Source": "DailyBoard",
                 "Weight": 20,
                 "MaxPerDay": 1,
-                "CooldownTier": "Medium"
+                "CooldownDays": 30
             },
             "Generator": "CheckOnFriends"
         },
