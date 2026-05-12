@@ -50,7 +50,7 @@
                 "Source": "DailyBoard",
                 "Weight": 25,
                 "MaxPerDay": 1,
-                "CooldownTier": "Medium",
+                "CooldownTier": "Long",
                 "Available": { "NpcExists": "Elliott", "NpcMet": "Elliott" }
             },
             "Generator": "ElliottPoemInspiration"
