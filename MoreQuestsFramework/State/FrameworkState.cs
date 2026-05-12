@@ -88,6 +88,12 @@ public sealed class FrameworkState
     /// the Luau / Fair patches read and remove the relevant entry once the bias has been
     /// applied. Expired entries get swept on `DayStarted`.
     public List<ActiveFestivalBias> ActiveFestivalBiases { get; set; } = new();
+
+    /// Pending Stardew Valley Fair star-token grants from `FairStarTokensReward`. Each
+    /// entry stamps a flat bonus that gets added to `Game1.player.festivalScore` once
+    /// the Fair event is live on Fall 16. Consumed on first apply; expired entries
+    /// swept on `DayStarted` like the festival biases above.
+    public List<ActiveFairStarTokens> ActiveFairStarTokens { get; set; } = new();
 }
 
 /// One in-flight festival bias granted by a `FestivalBiasReward`. Persisted to per-save
@@ -106,6 +112,14 @@ public sealed class ActiveFestivalBias
     /// `Game1.Date.TotalDays` after which the bias gets dropped on the next sweep.
     /// Set generously to the festival day plus a small grace so a save loaded mid-festival
     /// still has the entry available.
+    public int ExpiresAfterDay { get; set; }
+}
+
+/// One in-flight Fair star-token grant. Persisted so the bonus survives save/reload
+/// between quest completion and Fall 16. Consumed on the Fair start tick.
+public sealed class ActiveFairStarTokens
+{
+    public int Amount { get; set; }
     public int ExpiresAfterDay { get; set; }
 }
 

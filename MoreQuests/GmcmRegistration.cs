@@ -132,6 +132,13 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "GusFestivalFeastIngredientCount", () => ModEntry.Config.GusFestivalFeastIngredientCount, v => ModEntry.Config.GusFestivalFeastIngredientCount = v, 1, 6);
         AddInt(api, manifest, t, "FestivalBiasLuauMagnitude", () => ModEntry.Config.FestivalBiasLuauMagnitude, v => ModEntry.Config.FestivalBiasLuauMagnitude = v, 0, 5);
         AddInt(api, manifest, t, "FestivalBiasFairMagnitude", () => ModEntry.Config.FestivalBiasFairMagnitude, v => ModEntry.Config.FestivalBiasFairMagnitude = v, 0, 100);
+        api.AddTextOption(manifest,
+            getValue: () => ModEntry.Config.FairFestivalRewardKind,
+            setValue: v => ModEntry.Config.FairFestivalRewardKind = v,
+            name: () => t.Get("config.FairFestivalRewardKind"),
+            tooltip: () => t.Get("config.FairFestivalRewardKind.tooltip"),
+            allowedValues: new[] { "GrangeScoreBonus", "StarTokens" });
+        AddInt(api, manifest, t, "FairStarTokensAmount", () => ModEntry.Config.FairStarTokensAmount, v => ModEntry.Config.FairStarTokensAmount = v, 0, 1000);
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.modItemIds"));
         AddText(api, manifest, t, "WrappingPaperPaperId", () => ModEntry.Config.WrappingPaperPaperId, v => ModEntry.Config.WrappingPaperPaperId = v);
