@@ -74,6 +74,8 @@
     "config.SkullCavernMaxLevel.tooltip": "Maximum floor target for Skull Cavern Deep Dive quests.",
     "config.WeeklySpecialComplexMinIngredients": "Weekly Special (Complex) min ingredients",
     "config.WeeklySpecialComplexMinIngredients.tooltip": "Recipes with at least this many distinct ingredient lines qualify for the Complex saloon weekly special and Grand Feast pools.",
+    "config.CheckOnFriendsCount": "Check on Friends NPC count",
+    "config.CheckOnFriendsCount.tooltip": "How many distinct villagers the Check on Friends quest asks you to talk to before reporting back to the giver.",
     "config.GusFestivalFeastIngredientCount": "Gus's festival feast ingredient count",
     "config.GusFestivalFeastIngredientCount.tooltip": "Number of distinct ingredient kinds Gus's Fall and Summer festival feasts ask for.",
     "config.FestivalBiasLuauMagnitude": "Luau bias tier bump",
