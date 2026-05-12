@@ -190,14 +190,10 @@ public sealed class ModConfig
     /// Defaults to 10 per the CSV. Quest grants the Cheese Press recipe as part of the reward.
     public int MarnieMilkRequestQty { get; set; } = 10;
 
-    /// Gold rebate for Robin's Silo Offer (CSV row 64). Vanilla silo costs 100g + 100
-    /// Stone + 10 Clay + 5 Copper Bar. The rebate covers the gold portion plus a chunk
-    /// toward the materials, since the player still has to pay Robin themselves (the
-    /// "Robin contributes" flavor in the CSV is approximated by the reimbursement).
-    public int RobinSiloOfferRebate { get; set; } = 500;
-    /// Stone quantity Robin asks for in her silo offer letter. The framework picks one of
-    /// stone / clay / copper bar to keep the request varied; see `RobinSiloOfferClayQty` /
-    /// `RobinSiloOfferCopperBarQty` for the alternatives.
+    /// Stone quantity Robin asks for in her silo offer letter (CSV row 64). The player can
+    /// satisfy the posting with any one of stone, clay, or copper bars; see
+    /// `RobinSiloOfferClayQty` and `RobinSiloOfferCopperBarQty` for the alternatives.
+    /// Defaults match the vanilla silo recipe (100 stone OR 10 clay OR 5 copper bars).
     public int RobinSiloOfferStoneQty { get; set; } = 100;
     public int RobinSiloOfferClayQty { get; set; } = 10;
     public int RobinSiloOfferCopperBarQty { get; set; } = 5;

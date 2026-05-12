@@ -630,9 +630,11 @@ internal static partial class Generators
     /// `BuildingBuilt` + `not:BuildingExists Silo`, so the offer fires the first time the
     /// player builds either an animal house without already owning a silo. Mail+ItemDelivery
     /// where the player can satisfy the posting with EITHER 100 Stone, 10 Clay, or 5 Copper
-    /// Bars (the actual silo recipe inputs). Reward = a real free Silo placed on the farm
-    /// via `ModEntry.GrantFreeSilo` on completion, with `RobinSiloOfferRebate` gold as the
-    /// fallback when no farm tile can be found.
+    /// Bars (the actual silo recipe inputs). Reward = a free Silo *credit* on Robin's
+    /// carpenter menu — `ModEntry.GrantFreeSilo` flips a player ModData flag that the
+    /// `Data/Buildings` asset edit reads to zero the Silo entry's BuildCost and
+    /// BuildMaterials. The player still chooses when and where to place the silo through
+    /// Robin's shop; the credit is cleared on `BuildingListChanged` when a Silo is built.
     private static QuestPosting? RobinSiloOffer(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Robin") == null)
