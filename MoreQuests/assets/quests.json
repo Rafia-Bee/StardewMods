@@ -291,7 +291,7 @@
                 "Weight": 20,
                 "MaxPerDay": 1,
                 "CooldownTier": "Medium",
-                "Available": { "MinDeepestMineLevel": "40" }
+                "Available": { "SkillLevel": "Combat 2", "MinDeepestMineLevel": "40" }
             },
             "Generator": "MonsterParts"
         },

@@ -47,7 +47,7 @@ public static class NpcDispatch
         // right-clicking him opens the Adventure Guild shop instead of dialogue, so
         // social-flow handlers never fire on him. Wizard is the vanilla anchor; SVE
         // adds Lance + MarlonFay; RSV adds Mr. Aguar / Jio / Daia; EliAndDylan adds
-        // Eli; VMV adds Maryam.
+        // Eli; VMV adds Mariam.
         registry.Register(DispatchRoles.CombatNpcs, "Wizard");
         registry.Register(DispatchRoles.CombatNpcs, "MarlonFay", ModCompat.StardewValleyExpanded);
         registry.Register(DispatchRoles.CombatNpcs, "Lance", ModCompat.StardewValleyExpanded);
@@ -55,7 +55,7 @@ public static class NpcDispatch
         registry.Register(DispatchRoles.CombatNpcs, "Jio", ModCompat.RidgesideVillage);
         registry.Register(DispatchRoles.CombatNpcs, "Daia", ModCompat.RidgesideVillage);
         registry.Register(DispatchRoles.CombatNpcs, "Eli", ModCompat.EliAndDylan);
-        registry.Register(DispatchRoles.CombatNpcs, "Maryam", ModCompat.VisitMountVapius);
+        registry.Register(DispatchRoles.CombatNpcs, "Mariam", ModCompat.VisitMountVapius);
 
         registry.Register(DispatchRoles.BeachCleanup, "Elliott");
         registry.Register(DispatchRoles.BeachCleanup, "Willy");
@@ -80,17 +80,6 @@ public static class NpcDispatch
         registry.Register(DispatchRoles.BulkFishBuyer, "Morris");
         registry.Register(DispatchRoles.BulkFishBuyer, "MorrisTod", ModCompat.StardewValleyExpanded);
 
-        // MonsterPartsBuyer: matches CSV row 53 verbatim. Wizard always available;
-        // SVE adds Lance + MarlonFay (vanilla Marlon isn't friendable so we never
-        // route social quests to him); Mr. Aguar (RSV); Eli (East Scarp); Maryam (VMV).
-        registry.Register(DispatchRoles.MonsterPartsBuyer, "Wizard");
-        registry.Register(DispatchRoles.MonsterPartsBuyer, "Abigail");
-        registry.Register(DispatchRoles.MonsterPartsBuyer, "Lance", ModCompat.StardewValleyExpanded);
-        registry.Register(DispatchRoles.MonsterPartsBuyer, "MarlonFay", ModCompat.StardewValleyExpanded);
-        registry.Register(DispatchRoles.MonsterPartsBuyer, "Mr. Aguar", ModCompat.RidgesideVillage);
-        registry.Register(DispatchRoles.MonsterPartsBuyer, "Eli", ModCompat.EastScarp);
-        registry.Register(DispatchRoles.MonsterPartsBuyer, "Maryam", ModCompat.VisitMountVapius);
-
         // FishermenNpcs: Quality Fish Delivery (CSV row 59) brokers. Willy is the anchor
         // (always present); Pam and Elliott round out vanilla; RSV's Carmen and Blair join
         // when RSV is loaded; Arumi (AikawaAsakaiCP) and Gunnar (HashtagBearFamGunnar) add
@@ -106,12 +95,12 @@ public static class NpcDispatch
         // BlacksmithNpcs: Bar Delivery (CSV row 2) brokers. Clint anchors vanilla. SVE
         // adds MarlonFay (acts as the smithy/adventurer on that route). EliAndDylan
         // adds Eli (RSV's blacksmith stand-in is shared with the smithy NPCs Lola /
-        // Jio / Daia; VMV adds Maryam). The picker silently drops entries whose source
+        // Jio / Daia; VMV adds Mariam). The picker silently drops entries whose source
         // mod isn't loaded.
         registry.Register(DispatchRoles.BlacksmithNpcs, "Clint");
         registry.Register(DispatchRoles.BlacksmithNpcs, "MarlonFay", ModCompat.StardewValleyExpanded);
         registry.Register(DispatchRoles.BlacksmithNpcs, "Eli", ModCompat.EliAndDylan);
-        registry.Register(DispatchRoles.BlacksmithNpcs, "Maryam", ModCompat.VisitMountVapius);
+        registry.Register(DispatchRoles.BlacksmithNpcs, "Mariam", ModCompat.VisitMountVapius);
         registry.Register(DispatchRoles.BlacksmithNpcs, "Lola", ModCompat.RidgesideVillage);
         registry.Register(DispatchRoles.BlacksmithNpcs, "Jio", ModCompat.RidgesideVillage);
         registry.Register(DispatchRoles.BlacksmithNpcs, "Daia", ModCompat.RidgesideVillage);

@@ -247,14 +247,6 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 53. Daily-board item delivery. Picks a buyer from the `MonsterPartsBuyer`
-    /// dispatch pool (Wizard + Abigail vanilla; Lance + MarlonFay SVE; Mr. Aguar RSV;
-    /// Eli ESV; Maryam VMV) and asks for a quantity of one rare monster drop (Bat Wing
-    /// / Solar Essence / Void Essence / Bug Meat). Reward = a stack of one random gem
-    /// scaled to clear `GoldIntermediateBase`. Tier 1 negative consequence routed via
-    /// `Source: Static` to Krobus / Sen (East Scarp) / Dwarf — friends of the underground
-    /// don't appreciate the trade.
-
     /// Pufferfish carries the Nausea status effect when eaten — the only vanilla "fish"
     /// any reasonable cook would call poisonous. Filtered out of the Seafood Night pool
     /// so the CSV's "edible non-poisonous" framing holds. Modded fish stay in as long as

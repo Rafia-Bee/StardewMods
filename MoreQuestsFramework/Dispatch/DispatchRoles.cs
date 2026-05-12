@@ -24,12 +24,6 @@ public static class DispatchRoles
     /// where Morris was lost to the Community Center route still get Pierre.
     public const string BulkFishBuyer = "BulkFishBuyer";
 
-    /// Adventurers / mages who'd pay for rare monster drops. Used by Monster Parts
-    /// (CSV row 53). Overlaps heavily with `CombatNpcs` but kept separate so future
-    /// edits to one pool (e.g. adding a vendor-only NPC) don't accidentally pull in
-    /// or push out the other.
-    public const string MonsterPartsBuyer = "MonsterPartsBuyer";
-
     /// Fishermen / fishing-adjacent villagers who'd realistically commission a quality
     /// fish haul. Used by Quality Fish Delivery (CSV row 59). Pool stays Willy-anchored
     /// in vanilla saves and picks up modded fishermen (RSV's Carmen / Blair, Arumi,
@@ -38,6 +32,6 @@ public static class DispatchRoles
 
     /// Blacksmiths / smelter shopkeepers who'd commission a bar order. Used by Bar
     /// Delivery (CSV row 2). Clint anchors vanilla; MarlonFay (SVE), Eli (EliAndDylan),
-    /// Maryam (VMV), and Lola / Jio / Daia (RSV) join the pool when their mods are loaded.
+    /// Mariam (VMV), and Lola / Jio / Daia (RSV) join the pool when their mods are loaded.
     public const string BlacksmithNpcs = "BlacksmithNpcs";
 }
