@@ -2,7 +2,7 @@
 
 A SMAPI content mod for Stardew Valley that ships a curated set of new daily-board, mail, and festival quests on top of the [More Quests Framework](../MoreQuestsFramework/README.md).
 
-> Heavy work in progress. Forty-two quests are live; the remaining concepts in [this google sheet](https://docs.google.com/spreadsheets/d/13HQDEAYTcmi-x9Hp7R6lq2STRFtO5rUA3JxVOgitoDM/edit?usp=sharing) will be added across later phases.
+> Heavy work in progress. Sixty-plus quests are live; the remaining concepts will be added across later phases.
 
 ## Dependencies
 
@@ -31,7 +31,7 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Mining | Bar Delivery | Daily board | Clint | Deliver X metal bars | Gold (Intermediate) + geode/gem | Cooldown 5d, OnePerGiver | Implemented |
 | Farming | Basic Crop Delivery | Daily board | Any | Deliver X of a seasonal crop (any quality) | Gold scaled by sell price | Cooldown 7d | Implemented |
 | Mining | Basic Slime Clearing | Daily board | Adventurer's Guild | Slay X slimes in the mines | Gold (Beginner) | Cooldown 7d | Implemented |
-| Seasonal | Beach Cleanup | Daily board | Elliott / Willy / Dylan (ES) | Collect beach forageables | Friendship with giver | Summer only, Cooldown 7d, OnePerGiver | Implemented |
+| Seasonal | Beach Cleanup | Daily board | Elliott / Willy / Dylan (ES) | Collect beach forageables (vanilla beach roster + modded `season_*` matches) | Friendship (Mid) with giver | Year-round, Cooldown Long | Implemented |
 | Social | Check on George | Daily board | Evelyn | Gift George, talk to him, report to Evelyn | Friendship (Mid) with both | Cooldown 21d, OnePerGiver | Implemented |
 | Cooking | Craving a Meal | Daily board | Any | Deliver a dish the giver loves/likes | Friendship + a random dish | Cooldown 2d | Implemented |
 | Social | Elliott's Poem Inspiration | Periodic / Daily board | Elliott | Bring Elliott a flower or gem | Friendship (Basic) | Cooldown 7d, OnePerGiver | Implemented |
@@ -48,13 +48,13 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Social | Check on Friends | Daily board | Any met villager | Talk to 3 randomly-picked met villagers, then report back | Friendship (Intermediate) with the giver | Cooldown 7d | Implemented |
 | Foraging | Clear Debris | Daily board | Any | Clear debris around town | Friendship (Mid) | Cooldown 5d | Implemented (9.5g) |
 | Cooking | Dinner Party | Special Orders board | Any human NPC | Deliver multiple loved/liked dishes | Gold (sell-price scaled) + Friendship (Basic) | Cooldown 10d; auto-fire deferred (StartDate-only SpecialOrder eval), reachable via `mq_reemit_specialorders` | Implemented (9.5g) |
-| Festival | Festival Decor: Moonlight Jellies | Summer 24 | Lewis | Ship Torches and Wood | Gold (Basic) + random Pierre Moonlight Jellies decor | DateLocked, OneTimePerYear | Not started |
-| Festival | Festival Decor: ES Spirit's Eve | Fall 24 | Rosa | Ship purple-dye items, slime, stone | Friendship (MultiHeart, ES NPCs) | DateLocked, OneTimePerYear | Not started |
-| Festival | Festival Decor: Egg Festival | Spring 10 | Lewis | Ship hay bales | Gold (Beginner) + random Pierre Egg Festival decor | DateLocked, OneTimePerYear | Not started |
-| Festival | Festival Decor: Fair | Fall 12 | Lewis | Ship Wood, Wood Signs, Flowers | Bonus Star Tokens at the Fair | DateLocked, OneTimePerYear | Not started |
-| Festival | Festival Decor: Luau | Summer 6 | Lewis | Ship Fiber, Basic Log, Wood Lamp-post | Gold (Intermediate) + random Pierre Luau decor | DateLocked, OneTimePerYear | Not started |
-| Festival | Festival Decor: Ridgeside Gathering | Fall 15 | Lenny | Ship Tub o' Flowers, Wood, Tables | Friendship (MultiHeart, RSV NPCs) | DateLocked, OneTimePerYear, requires RSV | Not started |
-| Festival | Festival Decor: Spirit's Eve | Fall 22 | Lewis | Ship Pumpkins, Cloth, Torches | Gold (Intermediate) + Jack o' Lantern | DateLocked, OneTimePerYear | Not started |
+| Festival | Festival Decor: Moonlight Jellies | Summer 21 | Lewis | Ship Torches and Wood (qty scales with Foraging) | Gold (Basic) + random Pierre Moonlight Jellies stall decor | DateLocked, OneTimePerYear, 6-day deadline | Implemented |
+| Festival | Festival Decor: ES Spirit's Eve | Fall 24 | Rosa | Ship purple-dye items, slime, stone | Friendship (MultiHeart, ES NPCs) | DateLocked, OneTimePerYear, 3-day deadline, requires ES/EliAndDylan/LurkingInTheDark | Implemented |
+| Festival | Festival Decor: Egg Festival | Spring 10 | Lewis | Ship hay bales | Gold (Beginner) + random Pierre Egg Festival stall decor | DateLocked, OneTimePerYear, 3-day deadline | Implemented |
+| Festival | Festival Decor: Fair | Fall 12 | Lewis | Ship fall flowers, Wood, any sign (Wood/Stone/Dark); quantities scale with Farming/Foraging | Grange-score bump OR bonus Fair star tokens (GMCM toggle) | DateLocked, OneTimePerYear, 3-day deadline | Implemented |
+| Festival | Festival Decor: Luau | Summer 6 | Lewis | Ship Fiber, Hardwood, Wood Lamp-posts (qty scales with Foraging) | Gold (Intermediate) + random Pierre Luau stall decor | DateLocked, OneTimePerYear, 4-day deadline | Implemented |
+| Festival | Festival Decor: Ridgeside Gathering | Fall 15 | Lenny | Ship Tub o' Flowers, Wood, any tables (qty scales with Farming/Foraging) | Friendship (MultiHeart, RSV NPCs) + Tub o' Flowers recipe at quest-accept | DateLocked, OneTimePerYear, requires RSV | Implemented |
+| Festival | Festival Decor: Spirit's Eve | Fall 22 | Wizard | Ship Pumpkin Seeds, Cloth, Torches (qty scales with Farming) | Gold (Intermediate) + 5x Jack o' Lantern | DateLocked, OneTimePerYear, 4-day deadline | Implemented |
 | Foraging | Forage with Linus | Daily board | Linus | Gift loved/liked forage to 5 different villagers | Friendship (Large) with Linus | Cooldown 14d, requires Linus met | Implemented (9d) |
 | Social | Gift Delivery | Daily board | Any | Deliver a gift to the giver's friend | Gold (sell-price scaled) + Friendship (Basic) | Cooldown 4d | Implemented (9.5a) |
 | Animal | Gunther's Dinosaur Study | First Dinosaur Egg held (mail) | Gunther | Deliver a spare Dinosaur Egg | Gold (Advanced) + Dinosaur Egg returned | OneTime, quality-tier-up reward deferred (plain regular-quality return) | Implemented (9.5f) |
@@ -67,16 +67,16 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Cooking | Weekly Special (Complex) | Daily board | Gus / Rosa / Celestine / Pika | Deliver ingredients for a complex (≥ 4 ingredient) recipe | Gold (Intermediate) + Friendship (MultiSmall) to liked-by NPCs + Tier 2 taste reaction | Cooldown 7d, OnePerGiver | Implemented (9b) |
 | Seasonal | Heat Wave Relief | Daily board | Harvey / Paula (RSV) | Deliver cold drinks, melons, or ice cream | Friendship (Basic) + clinic-themed item | Summer only, Cooldown 5d | Implemented (9.5a) |
 | Festival | Jellyfish Watch Prep | Summer 4 (mail) | Demetrius / Maddie / Mr Aguar / Dylan | Deliver ocean forageables for Moonlight Jellies notes | Friendship (Basic) + a loved item | DateLocked, 6-day deadline, OneTimePerYear | Implemented |
-| Animal | Krobus's Void Note | First Void Egg + 1 heart Krobus | Krobus | Deliver a Void Egg to Krobus | Void Chicken Statue + Friendship (Mid) | OneTime | Not started |
-| Animal | Leah's Farm Painting | Periodic (high friendship) | Leah | Visit Leah's house with an animal following | Custom animal painting | Cooldown 21d, OnePerGiver, requires Livestock Follows You + single-player | Not started |
+| Animal | Krobus's Void Note | First Void Egg held (mail) | Krobus | Deliver a Void Egg to Krobus | Friendship (Mid) + Book of the Void | OneTime, requires Krobus present | Implemented (9.5f) |
+| Animal | Leah's Farm Painting | Periodic (high friendship, mail) | Leah | Visit Leah's house with an animal in tow | Random houseplant furniture (placeholder until bespoke animal painting sprite ships) + Friendship (Basic) | Cooldown Long, OnePerGiver, requires Livestock Follows You + single-player | Implemented (9.5f, placeholder reward) |
 | Fishing | Legendary Fish Quest | Daily board | Willy | Catch a legendary / boss fish in season (vanilla + any modded fish flagged `IsBossFish` in Data/Locations, e.g. RSV's Deep Ridge Angler / Waterfall Snakehead / Sockeye Salmon) | GoldExpertBase + 50 Challenge Bait (placeholder until per-fish display furniture lands) | Cooldown 21d, requires Fishing 6 | Implemented (placeholder reward) |
 | Festival | Lewis's Easter Eggs | Spring 8 | Lewis | Ship dye materials | Egg Basket (custom asset) | DateLocked, OneTimePerYear | Not started |
 | Animal | Marnie's Chicken Offer | Day after building Coop (mail) | Marnie | Bring 15 of one current-season seed type | Gold rebate (≈ chicken price) + Friendship (Basic) | OneTime; real animal-shop discount deferred | Implemented (9.5f) |
 | Animal | Marnie's Cow Offer | Day after building Barn (mail) | Marnie | Bring 50 hay | Gold rebate (≈ cow price) + Friendship (Basic) | OneTime; Grazing Bell variant + real animal-shop discount deferred | Implemented (9.5f) |
 | Animal | Marnie's Egg Request | After first egg laid (mail) | Marnie | Ship 10 Eggs through the bin | Gold (Basic) + Mayonnaise Machine recipe + Friendship (Basic) | OneTime | Implemented (9.5f) |
-| Animal | Marnie's Livestock Show | After Deluxe Barn (with 2+ animals) | Marnie | Walk animals around town | Friendship (Large) with Marnie | OneTime, requires Livestock Follows You + single-player; deferred until LFY exposes a follower API | Not started |
+| Animal | Marnie's Livestock Show | After Deluxe Barn (with 2+ animals, mail) | Marnie | Walk into Town with 2+ animals in tow | Friendship (Large) with Marnie | OneTime, requires Livestock Follows You + single-player + non-winter season | Implemented (9.5f) |
 | Animal | Marnie's Milk Request | After first milk produced (mail) | Marnie | Ship 10 Milk through the bin | Gold (Basic) + Cheese Press recipe + Friendship (Basic) | OneTime | Implemented (9.5f) |
-| Farming | Massive Harvest Request | Daily board | Morris / Joja co. | Ship CropMassiveQty+ of a single crop | Gold (sell-price scaled, high) | Cooldown 10d, OnePerGiver | Not started |
+| Farming | Massive Harvest Request | Daily board | Morris / MorrisTod (SVE) | Ship a Farming-scaled stack of one seasonal crop | Gold (below-sell scaled, high) + Tier 1 consequence on the requested crop's loved-by NPCs | Cooldown Long, requires Farming 7+ | Implemented (9c) |
 | Fishing | Medium Fishing Haul | Daily board | Morris / MorrisTod (SVE) / Pierre | Catch FishHaulMediumQty+ of a specific seasonal fish | Gold (below-sell scaled) + Tier 2 ecology consequence (Demetrius / Maddie / Mr. Aguar / Dylan) | Cooldown 5d, requires Fishing 5 | Implemented (9c) |
 | Festival | Merchant Unpacking | Winter 13 | Any | Ship out-of-season seeds matching Magic Boat stock | Friendship (Basic) | DateLocked, OneTimePerYear | Implemented (9.5a) |
 | Animal | Moira's Exotic Animal Offer | Player unlocks "Ewes" (VMV) | Moira (VMV) | Bring a modded crop | Discounted Ewe | OneTime, requires VMV; deferred (VMV ewes-unlock mail flag unknown + animal-shop discount infra missing) | Not started |
