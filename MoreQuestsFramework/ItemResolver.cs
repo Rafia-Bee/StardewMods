@@ -5,6 +5,7 @@ using MoreQuestsFramework.Cache;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.GameData.Objects;
+using StardewValley.GameData.Shops;
 using StardewValley.ItemTypeDefinitions;
 
 namespace MoreQuestsFramework;
@@ -366,6 +367,48 @@ public sealed class ItemResolver
             _monitor.Log($"TryGetSpawnableForageIdsForVisitedLocations: {ex.Message}", LogLevel.Warn);
             return null;
         }
+    }
+
+    /// Resolves every plain-id item entry under `Data/Shops[<shopId>]` into the deduped
+    /// `ResolvedItem` list (qualified-id keyed). Skips entries whose `ItemId` is an
+    /// `ItemQuery` token (anything with whitespace), since those need `ItemQueryResolver`
+    /// + a runtime farmer context that callers may not want to build. Callers that need
+    /// query-driven items (RANDOM_ITEMS, FLAVORED_ITEM, etc.) should pull those through
+    /// the vanilla path; this helper is for "pull the basic stock list of shop X".
+    public List<ResolvedItem> GetShopItems(string shopId)
+    {
+        var results = new List<ResolvedItem>();
+        if (string.IsNullOrEmpty(shopId))
+            return results;
+
+        Dictionary<string, ShopData>? shops;
+        try
+        {
+            shops = Game1.content.Load<Dictionary<string, ShopData>>("Data/Shops");
+        }
+        catch (Exception ex)
+        {
+            _monitor.Log($"GetShopItems({shopId}): could not load Data/Shops ({ex.Message}).", LogLevel.Warn);
+            return results;
+        }
+        if (shops == null || !shops.TryGetValue(shopId, out var shop) || shop?.Items == null)
+            return results;
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in shop.Items)
+        {
+            if (entry == null || string.IsNullOrWhiteSpace(entry.ItemId))
+                continue;
+            if (entry.ItemId.IndexOf(' ') >= 0)
+                continue;
+            string qualified = ItemRegistry.QualifyItemId(entry.ItemId) ?? entry.ItemId;
+            if (!seen.Add(qualified))
+                continue;
+            var resolved = TryResolveItem(qualified);
+            if (resolved != null)
+                results.Add(resolved);
+        }
+        return results;
     }
 
     /// Returns the union of (a) the vanilla beach forage roster (Coral, Sea Urchin, Nautilus

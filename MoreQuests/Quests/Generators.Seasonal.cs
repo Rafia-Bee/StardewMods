@@ -328,18 +328,17 @@ internal static partial class Generators
     /// about what fills the crate, the bar reward is fixed by quest difficulty rather
     /// than the player's specific haul.
 
-    /// CSV row 37. Summer-only daily-board ItemDelivery. Cold-tag items (vanilla and
-    /// modded) for Harvey or Paula (RSV via the `HeatWaveRelief` dispatch role). Reward =
-    /// a random clinic-themed item from the curated pool — Harvey runs a clinic, not a
-    /// shop, so the "Harvey's shop" reward column is sourced from medicine-adjacent
-    /// vanilla items.
-    private static readonly (string Id, string Name)[] HeatWaveItemPool =
+    /// CSV row 37. Summer-only daily-board ItemDelivery. Asks for a cold-food vanilla
+    /// staple (Ice Cream, Melon, or Juice) for a HeatWaveRelief-role giver (Harvey + Maru
+    /// vanilla, Paula + Philip RSV, Jacob East Scarp). Reward = `FriendshipBasic` plus one
+    /// random item pulled from Harvey's clinic shop (`Data/Shops["Hospital"]`); if the
+    /// shop scan returns nothing (e.g. a content pack wiped the entry) the friendship
+    /// reward stands alone.
+    private static readonly string[] HeatWaveColdItemIds =
     {
-        ("(O)253", "Triple Shot Espresso"),
-        ("(O)395", "Coffee"),
-        ("(O)167", "Joja Cola"),
-        ("(O)773", "Life Elixir"),
-        ("(O)772", "Oil of Garlic")
+        "(O)233", // Ice Cream
+        "(O)254", // Melon
+        "(O)350"  // Juice
     };
 
     private static QuestPosting? HeatWaveRelief(QuestContext ctx)
@@ -351,20 +350,37 @@ internal static partial class Generators
         if (giver == null)
             return null;
 
-        var coldItems = ResolveColdTaggedItems(ctx);
+        var coldItems = new List<ResolvedItem>(HeatWaveColdItemIds.Length);
+        foreach (var id in HeatWaveColdItemIds)
+        {
+            var resolved = ctx.Items.TryResolveItem(id);
+            if (resolved != null)
+                coldItems.Add(resolved);
+        }
         if (coldItems.Count == 0)
             return null;
         var pick = coldItems[Game1.random.Next(coldItems.Count)];
 
-        int qty = Game1.random.Next(3, 6);
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            qty = Game1.random.Next(3, 11);
+        }
+        else
+        {
+            qty = Game1.random.Next(1, 6);
+        }
 
-        var rewardItem = PickResolved(ctx, HeatWaveItemPool);
         var rewards = new List<RewardSpec>
         {
             new FriendshipReward(giver, ctx.Config.FriendshipBasic)
         };
-        if (rewardItem != null)
+        var shopItems = ctx.Items.GetShopItems("Hospital");
+        if (shopItems.Count > 0)
+        {
+            var rewardItem = shopItems[Game1.random.Next(shopItems.Count)];
             rewards.Add(new ObjectReward(rewardItem.QualifiedItemId));
+        }
 
         return new QuestPosting
         {
@@ -375,7 +391,7 @@ internal static partial class Generators
             ObjectiveItemId = pick.QualifiedItemId,
             ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = qty,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.seasonal.heatWaveRelief.title", new { npc = giver }),
             Description = ModEntry.I18n.Get("quest.seasonal.heatWaveRelief.description", new { npc = giver, qty, item = pick.DisplayName }),
@@ -457,82 +473,6 @@ internal static partial class Generators
     /// any seed whose `Seasons` list excludes Winter so the request reads as "stock up
     /// for next year while the Night Market's Magic Boat is in town". Reward =
     /// `FriendshipBasic` with the picked NPC.
-
-    /// Cold-food vanilla pool. Plain melons (vanilla farm) plus Ice Cream (Traveling
-    /// Cart / shop-bought) and Triple Shot Espresso (cold drink). Modded cold items
-    /// get folded in below via the context-tag scan, so a content pack adding a cold
-    /// drink that flags itself with `cold_drink_item` lands in the pool automatically.
-    private static readonly string[] ColdContextTags =
-    {
-        "cold_drink_item",
-        "ice_cream_item"
-    };
-
-    private static readonly string[] VanillaColdItemIds =
-    {
-        "(O)254", // Melon
-        "(O)233", // Ice Cream
-        "(O)253"  // Triple Shot Espresso
-    };
-
-    private static List<ResolvedItem> ResolveColdTaggedItems(QuestContext ctx)
-    {
-        var results = new List<ResolvedItem>();
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var id in VanillaColdItemIds)
-        {
-            var resolved = ctx.Items.TryResolveItem(id);
-            if (resolved != null && seen.Add(resolved.QualifiedItemId))
-                results.Add(resolved);
-        }
-
-        // Modded cold-drink / ice-cream items via context tag scan.
-        try
-        {
-            foreach (var itemType in StardewValley.ItemRegistry.ItemTypes)
-            {
-                if (itemType.Identifier != "(O)")
-                    continue;
-                foreach (var bareId in itemType.GetAllIds())
-                {
-                    string qualified = itemType.Identifier + bareId;
-                    if (seen.Contains(qualified))
-                        continue;
-                    var data = StardewValley.ItemRegistry.GetData(qualified);
-                    if (data?.RawData is not StardewValley.GameData.Objects.ObjectData obj)
-                        continue;
-                    if (obj.ContextTags == null)
-                        continue;
-                    bool matches = false;
-                    foreach (var tag in obj.ContextTags)
-                    {
-                        for (int i = 0; i < ColdContextTags.Length; i++)
-                        {
-                            if (string.Equals(tag, ColdContextTags[i], StringComparison.OrdinalIgnoreCase))
-                            {
-                                matches = true;
-                                break;
-                            }
-                        }
-                        if (matches)
-                            break;
-                    }
-                    if (!matches)
-                        continue;
-                    var resolved = ctx.Items.TryResolveItem(qualified);
-                    if (resolved != null && seen.Add(resolved.QualifiedItemId))
-                        results.Add(resolved);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            ctx.Monitor.Log($"ResolveColdTaggedItems: {ex.Message}", LogLevel.Warn);
-        }
-
-        return results;
-    }
 
     /// Walks `Data/Crops` for seeds whose Seasons list excludes Winter. Returns the
     /// resolved seed items so the picker can hand one to the Ship objective.
