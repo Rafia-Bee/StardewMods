@@ -293,9 +293,9 @@
     "quest.foraging.rareForage.objective": "Bring {{qty}} {{item}} to {{npc}}.",
     "quest.foraging.rareForage.targetMessage": "These are the real thing. Thank you for chasing them down.",
 
-    "quest.mining.rareMaterial.title": "Clint's rare material request",
-    "quest.mining.rareMaterial.description": "Clint's working on a custom commission and the order calls for {{qty}} {{item}}. He'll cover the going rate and throw in a sweetener for the inconvenience.",
-    "quest.mining.rareMaterial.objective": "Bring {{qty}} {{item}} to Clint.",
+    "quest.mining.rareMaterial.title": "{{npc}}'s rare material request",
+    "quest.mining.rareMaterial.description": "{{npc}} here. I'm working on a custom commission and the order calls for {{qty}} {{item}}. I'll cover the going rate and throw in a sweetener for the inconvenience.",
+    "quest.mining.rareMaterial.objective": "Bring {{qty}} {{item}} to {{npc}}.",
     "quest.mining.rareMaterial.targetMessage": "These will do nicely. Tell the customer the timeline's back on schedule.",
 
     "quest.festival.secretGiftHint.title": "A whisper for the Winter Star",
