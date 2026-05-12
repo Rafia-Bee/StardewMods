@@ -80,6 +80,19 @@ public sealed class QuestPosting
     /// pond catches that report size -1 always fail this gate.
     public int CatchMinSize { get; set; }
 
+    /// `BoardQuestType.Fishing` filter: when > 0, the catch only counts when its size (in
+    /// inches) is ≤ the threshold. Paired with `CatchMinSize` to bound a size bucket. 0
+    /// disables the upper bound. Note -1 catches (Squid / Octopus / pond returns) fail
+    /// the min gate before they reach this one.
+    public int CatchMaxSize { get; set; }
+
+    /// `BoardQuestType.Fishing` flag: when true, the quest counts any caught fish that
+    /// passes the size / location / weather filters, regardless of `ObjectiveItemId`.
+    /// Turn-in only requires the catch counter to be full, no specific stack is needed
+    /// in inventory and no fish are consumed. Used by Size Overpopulation. Default false
+    /// preserves single-species quest semantics.
+    public bool CatchAnyFish { get; set; }
+
     /// `BoardQuestType.Fishing` filter: when set, the catch only counts when the runtime
     /// weather at the player's current location matches. Accepts `Sun` / `Rain` / `Storm` /
     /// `Snow` / `Wind` plus the `sunny` / `rainy` / ... aliases. `Rain` matches both Rain

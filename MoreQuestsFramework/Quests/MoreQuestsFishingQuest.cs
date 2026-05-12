@@ -31,7 +31,16 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
     /// quest with none of these set behaves exactly like base `FishingQuest`.
     public readonly NetString catchLocationName = new();
     public readonly NetInt catchMinSize = new();
+    public readonly NetInt catchMaxSize = new();
     public readonly NetString catchWeather = new();
+
+    /// When true, the quest counts ANY caught fish that passes the size / location /
+    /// weather filters, regardless of `ItemId.Value`. Turn-in then only requires the
+    /// catch counter to be full — no specific fish stack is needed in inventory and no
+    /// fish are consumed. Used by the Size Overpopulation quest (and any future "any
+    /// fish in bucket X" content). Defaults to false so single-species quests keep the
+    /// vanilla item-id gate + the existing consume-on-turn-in semantics.
+    public readonly NetBool catchAnyFish = new();
 
     public NetStringList SerializedRewards => serializedRewards;
 
@@ -42,7 +51,9 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
             .AddField(serializedRewards, "serializedRewards")
             .AddField(catchLocationName, "catchLocationName")
             .AddField(catchMinSize, "catchMinSize")
-            .AddField(catchWeather, "catchWeather");
+            .AddField(catchMaxSize, "catchMaxSize")
+            .AddField(catchWeather, "catchWeather")
+            .AddField(catchAnyFish, "catchAnyFish");
     }
 
     /// Apply the Phase 9.5e Catch filters before letting the base `FishingQuest`
@@ -53,6 +64,29 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
     {
         if (!CatchFiltersPass(fishId, size))
             return false;
+        if (catchAnyFish.Value)
+        {
+            // Bypass base.OnFishCaught's `fishId == ItemId.Value` gate. Any caught fish
+            // that passes the filters counts. Mirror the increment + completion-cue path
+            // that base FishingQuest.OnFishCaught walks for a matched fish.
+            if (numberFished.Value >= numberToFish.Value)
+                return false;
+            if (probe)
+                return true;
+            numberFished.Value = Math.Min(numberToFish.Value, numberFished.Value + numberCaught);
+            Game1.dayTimeMoneyBox.pingQuest(this);
+            if (numberFished.Value >= numberToFish.Value)
+            {
+                if (target.Value == null)
+                    target.Value = "Willy";
+                NPC characterFromName = Game1.getCharacterFromName(target.Value);
+                objective.Value = new DescriptionElement(
+                    "Strings\\Quests:ObjectiveReturnToNPC",
+                    characterFromName);
+                Game1.playSound("jingle1");
+            }
+            return true;
+        }
         return base.OnFishCaught(fishId, numberCaught, size, probe);
     }
 
@@ -65,6 +99,8 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
                 return false;
         }
         if (catchMinSize.Value > 0 && size < catchMinSize.Value)
+            return false;
+        if (catchMaxSize.Value > 0 && size > catchMaxSize.Value)
             return false;
         if (!string.IsNullOrEmpty(catchWeather.Value))
         {
@@ -120,13 +156,16 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
             return false;
 
         int needed = numberToFish.Value;
-        if (CountInInventory(ItemId.Value) < needed)
+        // Fish-agnostic quests (Size Overpopulation, etc) only require the catch counter
+        // to be full. No specific fish is held back for turn-in and no stack is consumed.
+        if (!catchAnyFish.Value && CountInInventory(ItemId.Value) < needed)
             return false;
 
         if (probe)
             return true;
 
-        ConsumeFish(ItemId.Value, needed);
+        if (!catchAnyFish.Value)
+            ConsumeFish(ItemId.Value, needed);
         npc.CurrentDialogue.Push(new Dialogue(npc, null, targetMessage));
         moneyReward.Value = reward.Value;
         questComplete();
@@ -138,8 +177,12 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
     /// `FishingQuest` doesn't override this so it would fall through to the gift
     /// flow, donating one fish as a gift. Intercept the same way `CollectAndReportQuest`
     /// does, but consume the requested count rather than treat it as a gift.
+    /// `catchAnyFish` quests don't use this path (no specific item required), so the
+    /// override no-ops for them and right-click falls back to vanilla's gift behaviour.
     public override bool OnItemOfferedToNpc(NPC npc, Item item, bool probe = false)
     {
+        if (catchAnyFish.Value)
+            return false;
         if (!IsReportableTo(npc))
             return false;
         if (item == null || !ItemIdMatches(item, ItemId.Value))

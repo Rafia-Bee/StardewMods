@@ -535,31 +535,34 @@ internal static partial class Generators
         };
     }
 
-    /// Row 68 — Small/Medium/Large fish overpopulation. Daily-board FishingQuest filtered
-    /// by a size threshold (the catch's reported size in inches must clear the bucket
-    /// floor). Bucket is sampled per-quest; description embeds the bucket label and one
-    /// representative fish for flavour. Giver = Demetrius. Reward = `GoldIntermediateBase`
-    /// + bait.
+    /// Row 68 — Small/Medium/Large fish overpopulation. Daily-board fish-agnostic
+    /// FishingQuest filtered by a hardcoded size bucket: Small (1-24 inches), Medium
+    /// (25-49), Large (50+). Any caught fish whose reported size in inches lands in the
+    /// active bucket counts (`CatchAnyFish` + `CatchMinSize` + `CatchMaxSize`). Quest
+    /// names neither a fish nor a location, only the size category and its inch range.
+    /// Giver dispatched from `EcologyMindedNpcs` (Demetrius vanilla, plus Maddie /
+    /// Mr. Aguar RSV, Dylan East Scarp). Reward = `GoldIntermediateBase` + `qty * 3`
+    /// Magic Bait. Boss / legendary fish are excluded upstream by `GetSeasonalNonBossFish`
+    /// (their `IsBossFish` flag suppresses them across the whole fishing track).
+    private const string MagicBaitId = "(O)908";
 
-    /// Row 68 — Small/Medium/Large fish overpopulation. Daily-board FishingQuest filtered
-    /// by a size threshold (the catch's reported size in inches must clear the bucket
-    /// floor). Bucket is sampled per-quest; description embeds the bucket label and one
-    /// representative fish for flavour. Giver = Demetrius. Reward = `GoldIntermediateBase`
-    /// + bait.
+    private const int SizeBucketSmallMaxInches = 24;
+    private const int SizeBucketMediumMaxInches = 49;
+
     private static QuestPosting? SizeFishOverpopulation(QuestContext ctx)
     {
-        const string giver = "Demetrius";
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.EcologyMinded);
+        if (giver == null)
+            return null;
 
-        // Pick a bucket. Mapping bucket → minimum-size threshold (inches). Floor of the
-        // bucket is what the runtime gate compares against `OnFishCaught(size)`.
+        // Pick a bucket. Mapping bucket → (min, max) inches. Max = 0 means no upper
+        // bound (Large catches all fish ≥ 50 inches).
         int bucket = Game1.random.Next(3); // 0=Small, 1=Medium, 2=Large
-        int smallMax = Math.Max(1, ModEntry.Config.SizeBucketSmallMaxInches);
-        int mediumMax = Math.Max(smallMax + 1, ModEntry.Config.SizeBucketMediumMaxInches);
-        int minSize = bucket switch
+        (int minSize, int maxSize) = bucket switch
         {
-            0 => 1,
-            1 => smallMax + 1,
-            _ => mediumMax + 1
+            0 => (1, SizeBucketSmallMaxInches),
+            1 => (SizeBucketSmallMaxInches + 1, SizeBucketMediumMaxInches),
+            _ => (SizeBucketMediumMaxInches + 1, 0)
         };
         string bucketKey = bucket switch
         {
@@ -568,25 +571,29 @@ internal static partial class Generators
             _ => "large"
         };
 
-        // Pick a representative fish for the description. Any seasonal non-boss fish works;
-        // we don't strictly require its max size to match the bucket because the quest
-        // accepts any catch above the threshold. The ObjectiveItemId is set to this fish
-        // for vanilla FishingQuest's counter, but the size gate is what actually bounds
-        // completion.
+        // Pick any seasonal non-boss fish for the underlying ItemId. The catch counter
+        // doesn't gate on this (CatchAnyFish bypasses the id check), but vanilla
+        // FishingQuest.loadQuestInfo only short-circuits when both target and ItemId are
+        // set, so we always supply a non-null fish.
         var fish = GetSeasonalNonBossFish(ctx);
         if (fish.Count == 0)
             return null;
-        var target = fish[Game1.random.Next(fish.Count)];
+        var placeholder = fish[Game1.random.Next(fish.Count)];
 
         int qty = Math.Max(2, Math.Min(5, 2 + Game1.player.FishingLevel / 3));
         int gold = ctx.Config.GoldIntermediateBase;
 
         var rewards = new List<RewardSpec> { new MoneyReward(gold) };
-        var bait = ctx.Items.TryResolveItem(BaitId);
-        if (bait != null)
-            rewards.Add(new ObjectReward(BaitId, 25));
+        var magicBait = ctx.Items.TryResolveItem(MagicBaitId);
+        if (magicBait != null)
+            rewards.Add(new ObjectReward(MagicBaitId, qty * 3));
 
         string bucketLabel = ModEntry.I18n.Get($"quest.fishing.sizeOverpop.bucket.{bucketKey}");
+        string flavour = ModEntry.I18n.Get(
+            bucketKey == "small"
+                ? "quest.fishing.sizeOverpop.description.small"
+                : "quest.fishing.sizeOverpop.description.predator",
+            new { qty, bucket = bucketLabel, minSize, maxSize, npc = giver });
 
         return new QuestPosting
         {
@@ -594,26 +601,25 @@ internal static partial class Generators
             Tier = DifficultyTier.Intermediate,
             QuestType = BoardQuestType.Fishing,
             QuestGiver = giver,
-            ObjectiveItemId = target.QualifiedItemId,
-            ObjectiveItemName = target.DisplayName,
+            ObjectiveItemId = placeholder.QualifiedItemId,
+            ObjectiveItemName = placeholder.DisplayName,
             ObjectiveQuantity = qty,
             CatchMinSize = minSize,
+            CatchMaxSize = maxSize,
+            CatchAnyFish = true,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.fishing.sizeOverpop.title", new { bucket = bucketLabel }),
-            Description = ModEntry.I18n.Get("quest.fishing.sizeOverpop.description", new
-            {
-                qty,
-                item = target.DisplayName,
-                bucket = bucketLabel,
-                minSize
-            }),
-            CurrentObjective = ModEntry.I18n.Get("quest.fishing.sizeOverpop.objective", new
-            {
-                qty,
-                item = target.DisplayName,
-                minSize
-            }),
+            Description = flavour,
+            CurrentObjective = ModEntry.I18n.Get(
+                maxSize > 0 ? "quest.fishing.sizeOverpop.objective.bounded" : "quest.fishing.sizeOverpop.objective.large",
+                new
+                {
+                    qty,
+                    bucket = bucketLabel,
+                    minSize,
+                    maxSize
+                }),
             TargetMessage = ModEntry.I18n.Get("quest.fishing.sizeOverpop.targetMessage")
         };
     }

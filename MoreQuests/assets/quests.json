@@ -574,7 +574,7 @@
                 "Weight": 18,
                 "MaxPerDay": 1,
                 "CooldownTier": "Medium",
-                "Available": { "SkillLevel": "Fishing 3", "NpcMet": "Demetrius" }
+                "Available": { "SkillLevel": "Fishing 3" }
             },
             "Generator": "SizeFishOverpopulation"
         },
