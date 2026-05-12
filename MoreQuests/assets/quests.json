@@ -406,7 +406,7 @@
                 "Weight": 15,
                 "MaxPerDay": 1,
                 "CooldownTier": "Medium",
-                "Available": { "SkillLevel": "Mining 7", "NpcExists": "Clint" }
+                "Available": { "SkillLevel": "Mining 7" }
             },
             "Generator": "RareMaterialRequest"
         },

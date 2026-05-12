@@ -621,55 +621,42 @@ internal static partial class Generators
     /// Vanilla rare forageables. Modded forage gets folded in via the `forage_item`
     /// context tag so this list is the seed; the resolver appends matching modded ids.
 
-    /// Iridium Bar + vanilla rare gems. The objective rolls one entry; the reward is
-    /// independent and can be either Artifact Troves or a stack of the same gem family.
-    private static readonly (string Id, string Name)[] RareMaterialPool =
-    {
-        ("(O)337", "Iridium Bar"),
-        ("(O)72", "Diamond"),
-        ("(O)64", "Ruby"),
-        ("(O)60", "Emerald"),
-        ("(O)70", "Jade"),
-        ("(O)62", "Aquamarine"),
-        ("(O)68", "Topaz"),
-        ("(O)66", "Amethyst")
-    };
-
-    /// CSV row 63. Daily-board ItemDelivery to Clint. Asks for 1-3 Iridium Bars or 3-5
-    /// rare gems. Reward = `GoldAdvancedBase` + either 3 Artifact Troves or 5 random
-    /// gems (rolled per-fire). Skill gates on Mining 7 so the quest only surfaces when
-    /// the player can plausibly source the requested materials.
-
-    /// CSV row 63. Daily-board ItemDelivery to Clint. Asks for 1-3 Iridium Bars or 3-5
-    /// rare gems. Reward = `GoldAdvancedBase` + either 3 Artifact Troves or 5 random
-    /// gems (rolled per-fire). Skill gates on Mining 7 so the quest only surfaces when
-    /// the player can plausibly source the requested materials.
+    /// CSV row 63. Daily-board ItemDelivery commissioned by a blacksmith. Asks for a
+    /// Mining-scaled quantity of one random gem (live `Data/Objects` scan, Category
+    /// `Object.GemCategory == -2`, modded gems included automatically). Reward =
+    /// `GoldAdvancedBase` + Artifact Troves at 1:1 with the requested gem count.
+    /// Skill gates on Mining 7 so the quest only surfaces when the player can
+    /// plausibly source the asked materials.
     private static QuestPosting? RareMaterialRequest(QuestContext ctx)
     {
         if (Game1.player.MiningLevel < 7)
             return null;
 
-        const string giver = "Clint";
-        var pick = PickResolved(ctx, RareMaterialPool);
-        if (pick == null)
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.BlacksmithNpcs);
+        if (giver == null)
             return null;
 
-        bool isBar = pick.QualifiedItemId == "(O)337";
-        int qty = isBar ? Game1.random.Next(1, 4) : Game1.random.Next(3, 6);
-        int gold = ctx.Config.GoldAdvancedBase;
+        var gem = PickRandomGem(ctx);
+        if (gem == null)
+            return null;
 
-        var rewards = new List<RewardSpec> { new MoneyReward(gold) };
-        if (Game1.random.NextDouble() < 0.5)
+        int qty;
+        if (ctx.Config.DifficultyScaling)
         {
-            // 3 Artifact Troves
-            rewards.Add(new ObjectReward("(O)275", 3));
+            int upper = 2 + Game1.player.MiningLevel / 2;
+            qty = Game1.random.Next(1, upper + 1);
         }
         else
         {
-            // 5 of one randomly-picked gem (skip the bar entry from the pool)
-            var gem = RareMaterialPool[Game1.random.Next(1, RareMaterialPool.Length)];
-            rewards.Add(new ObjectReward(gem.Id, 5));
+            qty = Game1.random.Next(1, 5);
         }
+
+        int gold = ctx.Config.GoldAdvancedBase;
+        var rewards = new List<RewardSpec>
+        {
+            new MoneyReward(gold),
+            new ObjectReward("(O)275", qty) // Artifact Trove x qty
+        };
 
         return new QuestPosting
         {
@@ -677,16 +664,42 @@ internal static partial class Generators
             Tier = DifficultyTier.Advanced,
             QuestType = BoardQuestType.ItemDelivery,
             QuestGiver = giver,
-            ObjectiveItemId = pick.QualifiedItemId,
-            ObjectiveItemName = pick.DisplayName,
+            ObjectiveItemId = gem.QualifiedItemId,
+            ObjectiveItemName = gem.DisplayName,
             ObjectiveQuantity = qty,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
             Rewards = rewards,
-            Title = ModEntry.I18n.Get("quest.mining.rareMaterial.title"),
-            Description = ModEntry.I18n.Get("quest.mining.rareMaterial.description", new { qty, item = pick.DisplayName }),
-            CurrentObjective = ModEntry.I18n.Get("quest.mining.rareMaterial.objective", new { qty, item = pick.DisplayName }),
+            Title = ModEntry.I18n.Get("quest.mining.rareMaterial.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.mining.rareMaterial.description", new { qty, item = gem.DisplayName, npc = giver }),
+            CurrentObjective = ModEntry.I18n.Get("quest.mining.rareMaterial.objective", new { qty, item = gem.DisplayName, npc = giver }),
             TargetMessage = ModEntry.I18n.Get("quest.mining.rareMaterial.targetMessage")
         };
+    }
+
+    /// Walks `Data/Objects` and returns a randomly-chosen gem (Category
+    /// `Object.GemCategory == -2`, Price > 0). Vanilla gems and any modded
+    /// content-pack additions surface together.
+    private static ResolvedItem? PickRandomGem(QuestContext ctx)
+    {
+        var data = ctx.Helper.GameContent.Load<Dictionary<string, StardewValley.GameData.Objects.ObjectData>>("Data/Objects");
+        var ids = new List<string>();
+        foreach (var (rawId, obj) in data)
+        {
+            if (obj == null || obj.Price <= 0)
+                continue;
+            if (obj.Category != StardewValley.Object.GemCategory)
+                continue;
+            ids.Add("(O)" + rawId);
+        }
+        if (ids.Count == 0)
+            return null;
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            var resolved = ctx.Items.TryResolveItem(ids[Game1.random.Next(ids.Count)]);
+            if (resolved != null)
+                return resolved;
+        }
+        return null;
     }
 
     /// CSV row 66. Winter 22 DateLocked. Resolves the player's Winter Star recipient via
