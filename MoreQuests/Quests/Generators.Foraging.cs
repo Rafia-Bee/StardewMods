@@ -72,7 +72,17 @@ internal static partial class Generators
         if (Game1.getCharacterFromName("Linus") == null)
             return null;
 
-        const int recipientCount = 5;
+        int recipientCount;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
+            int upper = Math.Max(3, foragingLevel);
+            recipientCount = Game1.random.Next(3, upper + 1);
+        }
+        else
+        {
+            recipientCount = Game1.random.Next(2, 7);
+        }
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
