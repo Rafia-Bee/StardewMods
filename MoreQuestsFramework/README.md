@@ -218,24 +218,10 @@ The framework's gift-step quests (`Gift`, `GiftUniqueNpcs` in `AdventureQuest`, 
 
 If your mod delivers items to NPCs outside the in-person flow, call `quest.OnItemOfferedToNpc(npc, item, probe: false)` on each in-progress quest in `Game1.player.questLog` after the delivery succeeds. The framework's quest subclasses respond to the call — gift steps tick, friendship rewards land, the consequence (if any) fires on completion. Probe-mode (`probe: true`) returns whether the quest accepts the item without consuming it, which mirrors vanilla's accept-check pattern.
 
-## Project layout
+## Credits
 
-```
-MoreQuestsFramework/
-  ModEntry.cs                         // hooks events, builds the API, runs the daily pipeline
-  Api/                                // public framework + per-mod scope handles
-  Registry/QuestRegistry.cs           // runtime registry with Register/WithKind/Freeze/Clear
-  Pipeline/                           // daily + triggered generation orchestrator and poster
-  Posting/QuestFactory.cs             // builds the vanilla Quest subclass for a posting
-  Conditions/ConditionEvaluator.cs    // dictionary-driven IsAvailable helpers
-  Cache/GameDataCache.cs              // per-day cache of Data/Crops, Data/Fish, etc.
-  Rewards/                            // RewardSpec/Codec/Applier + IRewardedQuest marker
-  Patches/BillboardPatches.cs         // Harmony patches that reroute the vanilla billboard
-  MoreQuestsBillboard.cs              // custom multi-slot billboard UI
-  Quests/                             // MoreQuests* subclasses + Vanilla/ wrappers
-  Dispatch/                           // role -> NPC entries with public registration
-  Config/MoreQuestsFrameworkConfig.cs // engine tunables
-  i18n/                               // engine config + reward summary + per-quest weight labels
-  assets/                             // pad + pin textures
-  manifest.json
-```
+- **ConcernedApe** for Stardew Valley.
+- **Pathoschild** for SMAPI.
+- **spacechase0** for Generic Mod Config Menu.
+- **aedenthorn** for [Help Wanted](https://www.nexusmods.com/stardewvalley/mods/9089) — the inspiration for this framework's vanilla quest tuning, and the source the pad and pin sprites were retextured from.
+- **The Stardew Valley modding community** for tuning feedback on the custom quests and for the modded-NPC info that seeds the framework's NPC dispatch pools.
