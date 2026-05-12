@@ -519,16 +519,30 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return string.Equals(actual, norm, StringComparison.OrdinalIgnoreCase);
     }
 
+    /// `*` wildcard matches any location; `!Name` excludes that location. A step passes when
+    /// at least one positive target matches AND no `!`-prefixed exclusion matches. Lets a
+    /// step say "anywhere except the Farm" via `Targets = ["*", "!Farm"]`.
     private static bool LocationMatches(AdventureStepState step, string locationName)
     {
         if (step.Targets.Count == 0)
             return false;
+        bool anyPositive = false;
+        bool positiveMatched = false;
         foreach (var t in step.Targets)
         {
-            if (string.Equals(t, locationName, StringComparison.OrdinalIgnoreCase))
-                return true;
+            if (string.IsNullOrEmpty(t))
+                continue;
+            if (t.StartsWith("!", StringComparison.Ordinal))
+            {
+                if (string.Equals(t.Substring(1), locationName, StringComparison.OrdinalIgnoreCase))
+                    return false;
+                continue;
+            }
+            anyPositive = true;
+            if (t == "*" || string.Equals(t, locationName, StringComparison.OrdinalIgnoreCase))
+                positiveMatched = true;
         }
-        return false;
+        return anyPositive && positiveMatched;
     }
 
     /// Evaluates the `$`-prefixed gate tokens on a Visit step's `Items[]`. Today the only

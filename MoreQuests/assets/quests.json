@@ -747,7 +747,7 @@
                 "Source": "DailyBoard",
                 "Weight": 18,
                 "MaxPerDay": 1,
-                "CooldownTier": "Medium"
+                "CooldownTier": "Long"
             },
             "Generator": "ClearDebris"
         },

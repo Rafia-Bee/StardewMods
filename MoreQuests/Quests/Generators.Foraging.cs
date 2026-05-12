@@ -213,22 +213,19 @@ internal static partial class Generators
     /// from PierresStockUp. Returns null if no seasonal crops resolve (e.g. on saves
     /// where every seasonal crop's seed got removed by a content pack).
 
-    /// CSV row 17. Daily-board single-step `ClearDebris` AdventureQuest. The picked giver
-    /// asks the player to clear `ClearDebrisCount` resource clumps (logs / boulders /
-    /// stumps / weeds clusters) at `ClearDebrisLocation` (default Pelican Town). Reward =
-    /// `FriendshipMid` to the giver. The `ClearDebris` step rides the framework's per-second
-    /// resource-clump poll (Phase 9.5c).
+    /// CSV row 17. Daily-board single-step `ClearDebris` AdventureQuest. The picked human
+    /// adult giver asks the player to clear `Random.Next(5, 21)` resource clumps (5..20)
+    /// anywhere except the farm (modded locations included). Reward = `FriendshipMid` to
+    /// the giver. The `ClearDebris` step rides the framework's per-second resource-clump
+    /// poll with `Targets = ["*", "!Farm"]` semantics.
     private static QuestPosting? ClearDebris(QuestContext ctx)
     {
-        var npcs = DispatchRegistry.MetHumanNpcs();
+        var npcs = MetAdultHumanGiftReceivers();
         if (npcs.Count == 0)
             return null;
         string giver = npcs[Game1.random.Next(npcs.Count)];
 
-        string location = string.IsNullOrWhiteSpace(ModEntry.Config.ClearDebrisLocation)
-            ? "Town"
-            : ModEntry.Config.ClearDebrisLocation;
-        int count = Math.Max(1, ModEntry.Config.ClearDebrisCount);
+        int count = Game1.random.Next(5, 21);
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -237,9 +234,9 @@ internal static partial class Generators
             {
                 Name = "ClearDebris",
                 Kind = AdventureStepKind.ClearDebris,
-                Targets = new List<string> { location },
+                Targets = new List<string> { "*", "!Farm" },
                 Count = count,
-                Description = ModEntry.I18n.Get("quest.foraging.clearDebris.step", new { count, location })
+                Description = ModEntry.I18n.Get("quest.foraging.clearDebris.step", new { count })
             }
         }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.foraging.clearDebris.targetMessage"));
 
@@ -253,8 +250,8 @@ internal static partial class Generators
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipMid) },
             Title = ModEntry.I18n.Get("quest.foraging.clearDebris.title", new { npc = giver }),
-            Description = ModEntry.I18n.Get("quest.foraging.clearDebris.description", new { npc = giver, count, location }),
-            CurrentObjective = ModEntry.I18n.Get("quest.foraging.clearDebris.objective", new { count, location }),
+            Description = ModEntry.I18n.Get("quest.foraging.clearDebris.description", new { npc = giver, count }),
+            CurrentObjective = ModEntry.I18n.Get("quest.foraging.clearDebris.objective", new { count }),
             TargetMessage = ModEntry.I18n.Get("quest.foraging.clearDebris.targetMessage"),
             PreBuiltQuest = quest
         };

@@ -481,9 +481,9 @@
     "quest.farming.carolineTeaGarden.targetMessage": "Wonderful! These are going straight in the kettle. Take some tea leaves, you've earned them.",
 
     "quest.foraging.clearDebris.title": "Help clear the debris",
-    "quest.foraging.clearDebris.description": "{{npc}} would appreciate a hand tidying up. Could you clear {{count}} of the bigger logs, boulders, or stumps cluttering up {{location}}? It'd really help.",
-    "quest.foraging.clearDebris.objective": "Clear {{count}} debris around {{location}}.",
-    "quest.foraging.clearDebris.step": "Clear {{count}} debris around {{location}}.",
+    "quest.foraging.clearDebris.description": "{{npc}} would appreciate a hand tidying up around the valley. Could you clear out {{count}} of the bigger logs, boulders, or stumps? Anywhere off the farm is fair game, it all helps.",
+    "quest.foraging.clearDebris.objective": "Clear {{count}} debris anywhere off the farm.",
+    "quest.foraging.clearDebris.step": "Clear {{count}} debris anywhere off the farm.",
     "quest.foraging.clearDebris.targetMessage": "Looks much better already. Thanks for pitching in.",
 
     "quest.cooking.dinnerParty.title": "{{npc}}'s dinner party",

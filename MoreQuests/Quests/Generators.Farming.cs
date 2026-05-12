@@ -430,9 +430,4 @@ internal static partial class Generators
         return all.Take(idx).ToList();
     }
 
-    /// CSV row 17. Daily-board single-step `ClearDebris` AdventureQuest. The picked giver
-    /// asks the player to clear `ClearDebrisCount` resource clumps (logs / boulders /
-    /// stumps / weeds clusters) at `ClearDebrisLocation` (default Pelican Town). Reward =
-    /// `FriendshipMid` to the giver. The `ClearDebris` step rides the framework's per-second
-    /// resource-clump poll (Phase 9.5c).
 }
