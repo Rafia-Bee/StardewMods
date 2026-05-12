@@ -76,8 +76,6 @@
     "config.WeeklySpecialCommonMaxIngredients.tooltip": "Recipes with at most this many distinct ingredient lines qualify for the Common saloon weekly special pool.",
     "config.WeeklySpecialComplexMinIngredients": "Weekly Special (Complex) min ingredients",
     "config.WeeklySpecialComplexMinIngredients.tooltip": "Recipes with at least this many distinct ingredient lines qualify for the Complex saloon weekly special and Grand Feast pools.",
-    "config.GrandFeastRecipeCount": "Grand Feast recipe count",
-    "config.GrandFeastRecipeCount.tooltip": "Number of distinct recipes a Grand Feast SpecialOrder asks for.",
     "config.GusFestivalFeastIngredientCount": "Gus's festival feast ingredient count",
     "config.GusFestivalFeastIngredientCount.tooltip": "Number of distinct ingredient kinds Gus's Fall and Summer festival feasts ask for.",
     "config.FestivalBiasLuauMagnitude": "Luau bias tier bump",

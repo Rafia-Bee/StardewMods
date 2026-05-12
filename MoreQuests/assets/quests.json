@@ -255,7 +255,8 @@
             "Trigger": {
                 "Source": "SpecialOrder",
                 "Duration": "Week",
-                "CooldownTier": "Long"
+                "CooldownTier": "Long",
+                "Weight": 50
             },
             "Generator": "GrandFeast"
         },
