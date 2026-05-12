@@ -198,8 +198,8 @@
                 "Source": "CustomBoard",
                 "Weight": 40,
                 "MaxPerDay": 1,
-                "CooldownTier": "Long",
-                "Available": { "MinDeepestMineLevel": "5" }
+                "CooldownTier": "Short",
+                "Available": { "MinDeepestMineLevel": "5", "SkillLevel": "Mining 1" }
             },
             "Generator": "MinesDeepDive"
         },
