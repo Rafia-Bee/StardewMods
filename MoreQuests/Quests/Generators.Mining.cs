@@ -148,7 +148,7 @@ internal static partial class Generators
         };
     }
 
-    /// Vanilla ore + stone ids accepted by both deep-dive quests' Deliver step. Stone is
+    /// Vanilla ore + stone ids accepted by Mines Deep Dive (CSV row 78). Stone is
     /// included per the CSV row's "(any type of ore)/stone" wording — Marlon's not picky
     /// about what fills the crate, the bar reward is fixed by quest difficulty rather
     /// than the player's specific haul.
@@ -161,29 +161,27 @@ internal static partial class Generators
         "(O)390"  // Stone
     };
 
-    /// CSV row 67. Daily-board posting on the Adventurer's Guild custom board. Two-step
-    /// Adventure: ReachLevel a target floor in Skull Cavern → ship the ore/stone haul via
-    /// the farm shipping bin. Floor target rolls in [50, Config.SkullCavernMaxLevel]; haul
-    /// size scales with Mining skill when DifficultyScaling is on. Reward = `GoldAdvancedBase`
-    /// + an iridium-bar count proportional to the haul (5 ores ≈ 1 bar, vanilla smelt ratio),
-    /// granted directly into inventory + money on quest completion.
-    ///
-    /// Shipping-step framing keeps the quest playable on vanilla saves: Marlon is only a
-    /// shopkeeper sprite without SVE, so `OnItemOfferedToNpc` never fires for him. The
-    /// shipping-bin observer (`AdventureQuest.ObserveShippingBin` at DayEnding) doesn't
-    /// require an NPC at all.
+    /// Vanilla ore-only ids accepted by Skull Cavern Deep Dive (CSV row 67). Stone is
+    /// intentionally excluded — the quest's pitch is investigating "exceptional" ores
+    /// found beyond the target floor, so plain stone doesn't fit the framing.
+    private static readonly string[] AnyOreNoStone =
+    {
+        "(O)378", // Copper Ore
+        "(O)380", // Iron Ore
+        "(O)384", // Gold Ore
+        "(O)386" // Iridium Ore
+    };
 
-    /// CSV row 67. Daily-board posting on the Adventurer's Guild custom board. Two-step
-    /// Adventure: ReachLevel a target floor in Skull Cavern → ship the ore/stone haul via
-    /// the farm shipping bin. Floor target rolls in [50, Config.SkullCavernMaxLevel]; haul
-    /// size scales with Mining skill when DifficultyScaling is on. Reward = `GoldAdvancedBase`
-    /// + an iridium-bar count proportional to the haul (5 ores ≈ 1 bar, vanilla smelt ratio),
-    /// granted directly into inventory + money on quest completion.
-    ///
-    /// Shipping-step framing keeps the quest playable on vanilla saves: Marlon is only a
-    /// shopkeeper sprite without SVE, so `OnItemOfferedToNpc` never fires for him. The
-    /// shipping-bin observer (`AdventureQuest.ObserveShippingBin` at DayEnding) doesn't
-    /// require an NPC at all.
+    /// CSV row 67. Adventurer's Guild board posting (falls back to the help-wanted
+    /// daily board when the guild board is disabled, via `ApplyGuildBoardRouting`).
+    /// Two-step Adventure: ReachLevel a target floor in Skull Cavern → ship an
+    /// ore-only haul through the farm shipping bin. Floor target rolls in
+    /// `[10, SkullCavernMaxLevel]`; haul size scales with Mining skill when
+    /// DifficultyScaling is on. Reward = a parameterised mail-delivered Radioactive
+    /// Bar stack the morning after completion (no gold component: the player already
+    /// realises the shipping value of the ores). The mail body's flavour treats the
+    /// bars as an unexpected smelting byproduct from the "exceptional" deep-floor
+    /// ores rather than a flat payout.
     private static QuestPosting? SkullCavernDeepDive(QuestContext ctx)
     {
         // Gate on Skull Cavern access. Vanilla unlocks the Cavern after the first iridium
@@ -192,24 +190,30 @@ internal static partial class Generators
         if (Game1.player.deepestMineLevel <= 120)
             return null;
 
-        int maxFloor = Math.Max(20, ModEntry.Config.SkullCavernMaxLevel);
-        int targetFloor = Game1.random.Next(50, maxFloor + 1);
+        int maxFloor = Math.Max(11, ModEntry.Config.SkullCavernMaxLevel + 1);
+        int targetFloor = Game1.random.Next(10, maxFloor);
 
-        int haul = ctx.Config.DifficultyScaling
-            ? Math.Max(15, 10 + 2 * Game1.player.MiningLevel)
-            : 25;
+        int haul;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int upper = Math.Max(16, Game1.player.MiningLevel * 5 + 1);
+            haul = Game1.random.Next(15, upper);
+        }
+        else
+        {
+            haul = Game1.random.Next(5, 26);
+        }
 
         int bars = Math.Max(2, haul / 5);
-        int gold = ctx.Config.GoldAdvancedBase;
 
         // Marlon is the in-character "giver" the journal references, but no NPC turn-in
         // happens — the Ship step closes the quest on its own at DayEnding. The bar
         // reward arrives the morning after via a parameterised mail key so the player
         // doesn't get items mysteriously appearing in inventory while sleeping.
         const string giver = "Marlon";
-        const string barId = "337"; // Iridium Bar (bare id; the mail token uses bare ids)
+        const string barId = "910"; // Radioactive Bar
         string letterKey = BuildDeepDiveRewardLetterKey(barId, bars);
-        var oreIds = new List<string>(AnyOreOrStone);
+        var oreIds = new List<string>(AnyOreNoStone);
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -243,7 +247,6 @@ internal static partial class Generators
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
             Rewards =
             {
-                new MoneyReward(gold),
                 new MailReward(letterKey, MailWhen.Tomorrow)
             },
             Title = ModEntry.I18n.Get("quest.mining.skullCavernDeepDive.title"),
