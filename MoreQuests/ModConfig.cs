@@ -116,17 +116,6 @@ public sealed class ModConfig
     public string RsvTubOFlowersRecipeName { get; set; } = "Tub o' Flowers";
 
     // ----- Phase 9.5e: Fishing-track tunables -----
-    /// Inches threshold for the "Small" bucket of the Size Fish Overpopulation quest.
-    /// A catch with reported size in `[1, SizeBucketSmallMaxInches]` counts toward the
-    /// Small bucket. Defaults match vanilla Data/Fish max sizes for small species (perch /
-    /// chub / smallmouth bass land at 12-16 inches).
-    public int SizeBucketSmallMaxInches { get; set; } = 12;
-    /// Inches threshold separating Medium from Large. Catches in
-    /// `(SizeBucketSmallMaxInches, SizeBucketMediumMaxInches]` count Medium; above counts
-    /// Large. Vanilla Data/Fish max sizes cluster around 24-30 inches at the medium-large
-    /// boundary (carp, salmon, etc.).
-    public int SizeBucketMediumMaxInches { get; set; } = 24;
-
     /// Probability (0 to 100) that the Rainy Day Catch mail lands on a day where tomorrow
     /// is forecast as rain. The quest no longer has a daily-board variant; this knob is
     /// the only spawn gate apart from the Fishing 3 skill requirement. 100 = always mails

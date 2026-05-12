@@ -383,8 +383,10 @@
     "quest.fishing.sizeOverpop.bucket.medium": "medium-sized",
     "quest.fishing.sizeOverpop.bucket.large": "large",
     "quest.fishing.sizeOverpop.title": "Thinning the {{bucket}} catches",
-    "quest.fishing.sizeOverpop.description": "I'm trying to balance the food web. The {{bucket}} fish around here are crowding out the smaller stock, so pull {{qty}} catches that measure at least {{minSize}} inches. Anything that size counts, even if it's a {{item}}.",
-    "quest.fishing.sizeOverpop.objective": "Catch {{qty}} fish at least {{minSize}} inches long.",
+    "quest.fishing.sizeOverpop.description.small": "The smaller fishes have been growing in alarming numbers and eating away at the algae and growth along the stream bed. Reduce their numbers before they cause any more harm. Bring back {{qty}} catches under {{maxSize}} inches.",
+    "quest.fishing.sizeOverpop.description.predator": "The number of {{bucket}} fish have been growing in alarming numbers lately and the smaller fish are struggling to survive. Reduce their numbers before the ecosystem collapses. Pull {{qty}} catches measuring at least {{minSize}} inches.",
+    "quest.fishing.sizeOverpop.objective.bounded": "Catch {{qty}} {{bucket}} fish ({{minSize}}-{{maxSize}} inches).",
+    "quest.fishing.sizeOverpop.objective.large": "Catch {{qty}} {{bucket}} fish ({{minSize}}+ inches).",
     "quest.fishing.sizeOverpop.targetMessage": "Good. The numbers should settle now.",
 
     "quest.fishing.legendary.title": "Tale of the {{item}}",
