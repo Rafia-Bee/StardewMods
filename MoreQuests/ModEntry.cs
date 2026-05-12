@@ -192,6 +192,11 @@ public sealed class ModEntry : Mod
         WireLivestockFollowsYou();
     }
 
+    /// Cached LivestockFollowsYou API (duck-typed). Null until `WireLivestockFollowsYou`
+    /// resolves it from the registry, and null forever on saves where LFY isn't installed.
+    /// Generators read this lazily (e.g. `MarnieCowOffer` checks for the Grazing Bell id).
+    internal static ILfyApi? Lfy { get; private set; }
+
     /// Fetches the LivestockFollowsYou API (duck-typed via the local `ILfyApi`) and
     /// pipes its follower-count read into the framework's `FollowerApiBridge`, which is
     /// what `AdventureQuest`'s Visit step's `$follower-count:N` gate consults. No-op
@@ -207,6 +212,7 @@ public sealed class ModEntry : Mod
             Monitor.Log("LivestockFollowsYou is installed but its API didn't resolve; follower-count gated quests won't auto-complete.", LogLevel.Warn);
             return;
         }
+        Lfy = api;
         MoreQuestsFramework.FollowerApiBridge.AnimalFollowerCount = () => api.FollowingAnimalCount;
         Monitor.Log("Wired LivestockFollowsYou follower count into the framework's FollowerApiBridge.", LogLevel.Trace);
     }
@@ -215,9 +221,10 @@ public sealed class ModEntry : Mod
     /// the members we actually consume so the surface area is minimal. SMAPI's
     /// `GetApi<T>` matches by member shape, so the duck-typed interface lets us avoid an
     /// assembly reference back to LFY.
-    private interface ILfyApi
+    internal interface ILfyApi
     {
         int FollowingAnimalCount { get; }
+        string GrazingBellQualifiedItemId { get; }
     }
 
     private void OnQuestRemoved(object? sender, QuestRemovedArgs e)
@@ -234,6 +241,8 @@ public sealed class ModEntry : Mod
             GrantUpgradedDinosaurEgg(e.Quest);
         if (e.DefinitionId == "Animal.MarnieChickenOffer")
             GrantFreeChicken();
+        if (e.DefinitionId == "Animal.MarnieCowOffer")
+            GrantFreeCow();
         if (e.DefinitionId != "Mining.SkullCavernDeepDive" && e.DefinitionId != "Mining.MinesDeepDive")
             return;
         Helper.GameContent.InvalidateCache("Data/mail");
@@ -286,6 +295,53 @@ public sealed class ModEntry : Mod
     {
         string type = building.buildingType.Value ?? string.Empty;
         return type.IndexOf("Coop", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    /// Adopts a free Dairy Cow (random White / Brown) directly into the first Barn on the
+    /// player's farm with a free animal slot. Mirrors `GrantFreeChicken` for Row 44.
+    /// Falls back to `MarnieCowOfferRebate` gold when every barn is full.
+    private void GrantFreeCow()
+    {
+        var farm = Game1.getFarm();
+        if (farm == null)
+        {
+            FallbackCowRebate();
+            return;
+        }
+
+        string cowType = Game1.random.NextDouble() < 0.5 ? "White Cow" : "Brown Cow";
+        foreach (var building in farm.buildings)
+        {
+            if (building?.GetIndoors() is not StardewValley.AnimalHouse animalHouse)
+                continue;
+            if (animalHouse.isFull())
+                continue;
+            if (!IsBarn(building))
+                continue;
+
+            var cow = new StardewValley.FarmAnimal(cowType, Game1.Multiplayer.getNewID(), Game1.player.UniqueMultiplayerID);
+            animalHouse.adoptAnimal(cow);
+            Monitor.Log($"Adopted a free {cowType} into '{building.buildingType.Value}' for Marnie's Cow Offer.", LogLevel.Trace);
+            return;
+        }
+
+        FallbackCowRebate();
+    }
+
+    private void FallbackCowRebate()
+    {
+        int rebate = Math.Max(0, Config.MarnieCowOfferRebate);
+        if (rebate <= 0)
+            return;
+        Game1.player.Money += rebate;
+        Game1.addHUDMessage(new StardewValley.HUDMessage(I18n.Get("quest.animal.marnieCowOffer.barnFullFallback").ToString(), 1));
+        Monitor.Log("No empty barn slot at quest completion; paid out the Marnie cow rebate instead.", LogLevel.Trace);
+    }
+
+    private static bool IsBarn(StardewValley.Buildings.Building building)
+    {
+        string type = building.buildingType.Value ?? string.Empty;
+        return type.IndexOf("Barn", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     /// Returns a Dinosaur Egg whose Quality is one tier above whatever the player

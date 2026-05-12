@@ -372,26 +372,30 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 44. BuildingBuilt(Barn)+1 day. Mail+ItemDelivery for hay to Marnie. Reward
-    /// = a gold rebate (`MarnieCowOfferRebate`, default 1500g — vanilla cow price) as a
-    /// proxy for the "deal on a cow" the CSV calls out. Same rebate-as-proxy approach as
-    /// the Chicken Offer; the Grazing Bell variant in the CSV (LFY-gated) is deferred —
-    /// LFY doesn't currently expose its Grazing Bell item id through a stable API, and
-    /// the framework can't grant a real animal-shop discount without patching the menu.
-
-    /// CSV row 44. BuildingBuilt(Barn)+1 day. Mail+ItemDelivery for hay to Marnie. Reward
-    /// = a gold rebate (`MarnieCowOfferRebate`, default 1500g — vanilla cow price) as a
-    /// proxy for the "deal on a cow" the CSV calls out. Same rebate-as-proxy approach as
-    /// the Chicken Offer; the Grazing Bell variant in the CSV (LFY-gated) is deferred —
-    /// LFY doesn't currently expose its Grazing Bell item id through a stable API, and
-    /// the framework can't grant a real animal-shop discount without patching the menu.
+    /// CSV row 44. BuildingBuilt(Barn)+1 day. Mail+ItemDelivery whose ask flips based on
+    /// whether LivestockFollowsYou is installed: with LFY, Marnie wants the player to show
+    /// up with a Grazing Bell (queried from LFY's API); without LFY, she asks for a Milk
+    /// Pail. Reward = a free Dairy Cow adopted directly into the player's barn on
+    /// completion (see `MoreQuests.ModEntry.GrantFreeCow`). `MarnieCowOfferRebate` stays
+    /// as the fallback paid when every barn is full at completion time.
     private static QuestPosting? MarnieCowOffer(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Marnie") == null)
             return null;
 
-        int qty = Math.Max(1, ModEntry.Config.MarnieCowOfferHayQty);
-        int rebate = Math.Max(0, ModEntry.Config.MarnieCowOfferRebate);
+        bool lfyLoaded = ctx.Helper.ModRegistry.IsLoaded(MoreQuestsFramework.ModCompat.LivestockFollowsYou);
+        string objectiveId;
+        string objectiveName;
+        if (lfyLoaded && !string.IsNullOrEmpty(ModEntry.Lfy?.GrazingBellQualifiedItemId))
+        {
+            objectiveId = ModEntry.Lfy!.GrazingBellQualifiedItemId;
+            objectiveName = "Grazing Bell";
+        }
+        else
+        {
+            objectiveId = "(T)MilkPail";
+            objectiveName = "Milk Pail";
+        }
 
         return new QuestPosting
         {
@@ -399,18 +403,17 @@ internal static partial class Generators
             Tier = DifficultyTier.Beginner,
             QuestType = BoardQuestType.ItemDelivery,
             QuestGiver = "Marnie",
-            ObjectiveItemId = "(O)178",
-            ObjectiveItemName = "Hay",
-            ObjectiveQuantity = qty,
+            ObjectiveItemId = objectiveId,
+            ObjectiveItemName = objectiveName,
+            ObjectiveQuantity = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
             Rewards =
             {
-                new MoneyReward(rebate),
                 new FriendshipReward("Marnie", ctx.Config.FriendshipBasic)
             },
             Title = ModEntry.I18n.Get("quest.animal.marnieCowOffer.title"),
-            Description = ModEntry.I18n.Get("quest.animal.marnieCowOffer.description", new { qty }),
-            CurrentObjective = ModEntry.I18n.Get("quest.animal.marnieCowOffer.objective", new { qty }),
+            Description = ModEntry.I18n.Get("quest.animal.marnieCowOffer.description", new { item = objectiveName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.animal.marnieCowOffer.objective", new { item = objectiveName }),
             TargetMessage = ModEntry.I18n.Get("quest.animal.marnieCowOffer.targetMessage")
         };
     }
