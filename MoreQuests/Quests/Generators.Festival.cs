@@ -803,8 +803,6 @@ internal static partial class Generators
     /// AND not an obviously common pick (drops anything tagged `season_<current>` so the
     /// daily-board posting feels rare, not an expanded SeasonalForaging).
 
-    private static readonly string[] EggFestivalDecorPool = { "(BC)272", "(BC)143", "(BC)74" };
-
     private static readonly string[] LuauDecorPool = { "(BC)73", "(BC)74", "(BC)272" };
 
     /// Item ids that should never land as a decor reward even if they appear in the
@@ -939,13 +937,12 @@ internal static partial class Generators
         };
     }
 
-    /// Row 22 — Egg Festival Decor Supply (Lewis, Spring 10). Single-step Ship Adventure
-    /// for Hay Bales (a Big-Craftable that vanilla won't ship without the bypass).
-    /// Reward = GoldBeginnerBase + one random decor from a curated Egg-Festival pool.
-
-    /// Row 22 — Egg Festival Decor Supply (Lewis, Spring 10). Single-step Ship Adventure
-    /// for Hay Bales (a Big-Craftable that vanilla won't ship without the bypass).
-    /// Reward = GoldBeginnerBase + one random decor from a curated Egg-Festival pool.
+    /// Row 22 — Egg Festival Decor Supply (Lewis, Spring 10, 3 days before the Egg Festival
+    /// on Spring 13). Single-step Ship Adventure for Hay Bales (a Big-Craftable that vanilla
+    /// won't ship without the bypass). Reward = `GoldBeginnerBase` + one random non-Stardrop
+    /// entry from Pierre's Egg-Festival shop (`Festival_EggFestival_Pierre`), so modded
+    /// decor in that stock is eligible. Explicit 3-day deadline so the quest expires the
+    /// morning of Spring 13 regardless of GMCM `DeadlineShort`.
     private static QuestPosting? EggFestivalDecor(QuestContext ctx)
     {
         const string giver = "Lewis";
@@ -966,9 +963,9 @@ internal static partial class Generators
         }, giver: giver);
 
         var rewards = new List<RewardSpec> { new MoneyReward(ctx.Config.GoldBeginnerBase) };
-        var decor = PickDecor(EggFestivalDecorPool);
-        if (!string.IsNullOrEmpty(decor))
-            rewards.Add(new ObjectReward(decor));
+        var decor = PickFestivalShopReward(ctx, "Festival_EggFestival_Pierre");
+        if (decor != null)
+            rewards.Add(new ObjectReward(decor.QualifiedItemId));
 
         return new QuestPosting
         {
@@ -977,7 +974,7 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = 3,
             AllowDecorShipping = true,
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.festival.eggFestivalDecor.title"),

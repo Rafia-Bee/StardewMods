@@ -368,7 +368,7 @@
     "quest.festival.moonlightJellies.step.wood": "Ship {{count}} wood.",
 
     "quest.festival.eggFestivalDecor.title": "Hay for the Egg Festival",
-    "quest.festival.eggFestivalDecor.description": "The town square needs hay bales for the children to hide eggs around. Lewis asks if you can spare {{count}} from the barn loft. Ship them through the bin a few days before the festival.",
+    "quest.festival.eggFestivalDecor.description": "Farmer, I need your help decorating the town for the upcoming Egg festival. The rest of the townsfolk have helped out a ton, I just need a few haybales to complete the look. Ship me {{count}} when you can.",
     "quest.festival.eggFestivalDecor.step.hayBales": "Ship {{count}} hay bales.",
 
     "quest.festival.fairDecor.title": "Fair grounds preparation",
