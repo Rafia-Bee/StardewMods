@@ -51,6 +51,8 @@ public sealed class ModEntry : Mod
     private ShopDiscountWriter? _shopDiscountWriter;
     private AnimalPurchaseDiscountWriter? _animalPurchaseDiscountWriter;
     private FestivalBiasWriter? _festivalBiasWriter;
+    private FairStarTokensWriter? _fairStarTokensWriter;
+    private bool _fairTokensAppliedThisSession;
     private ConsequenceEngine? _consequenceEngine;
     private ConsequenceDialogueWatcher? _consequenceWatcher;
 
@@ -93,6 +95,7 @@ public sealed class ModEntry : Mod
         _animalPurchaseDiscountWriter.Register();
 
         _festivalBiasWriter = new FestivalBiasWriter(Monitor);
+        _fairStarTokensWriter = new FairStarTokensWriter(Monitor);
 
         _mailQuests = new MailQuestRegistry();
 
@@ -237,6 +240,7 @@ public sealed class ModEntry : Mod
         _shopDiscountWriter?.WireState(_stateStore.State);
         _animalPurchaseDiscountWriter?.WireState(_stateStore.State);
         _festivalBiasWriter?.WireState(_stateStore.State);
+        _fairStarTokensWriter?.WireState(_stateStore.State);
         // Always invalidate the shop cache after wiring state — discounts loaded from the
         // save would otherwise sit dormant until something else triggers the next read.
         if (_stateStore.State.ActiveShopDiscounts.Count > 0)
@@ -418,6 +422,8 @@ public sealed class ModEntry : Mod
         // Sweep expired FestivalBias entries so the patches stay fast on saves where the
         // player accepted a feast quest months ago and never made it to the festival.
         _festivalBiasWriter?.SweepExpired();
+        _fairStarTokensWriter?.SweepExpired();
+        _fairTokensAppliedThisSession = false;
 
         // Drop pending consequence dialogue lines past their grace window so chained
         // reactions don't sit in the queue indefinitely if the player ducks the NPC.
@@ -551,6 +557,30 @@ public sealed class ModEntry : Mod
                 count++;
         }
         Patches.DecorShippingPatches.ActiveCount = count;
+    }
+
+    /// Fires any pending `FairStarTokensReward` grants into `Game1.player.festivalScore`
+    /// the first time the Fair festival is active on Fall 16. Idempotent across the
+    /// festival session via `_fairTokensAppliedThisSession`; the writer's `Consume` also
+    /// drops the pending entries so a re-entry into the festival event same day can't
+    /// double-grant.
+    private void ApplyFairStarTokensIfFairActive()
+    {
+        if (_fairTokensAppliedThisSession)
+            return;
+        if (_fairStarTokensWriter == null || Game1.player == null)
+            return;
+        if (!Game1.isFestival())
+            return;
+        if (!string.Equals(Game1.currentSeason, "fall", StringComparison.OrdinalIgnoreCase) || Game1.dayOfMonth != 16)
+            return;
+        int amount = _fairStarTokensWriter.PeekAmount();
+        if (amount <= 0)
+            return;
+        Game1.player.festivalScore += amount;
+        _fairStarTokensWriter.Consume();
+        _fairTokensAppliedThisSession = true;
+        Monitor.Log($"FairStarTokens applied: +{amount} festivalScore.", LogLevel.Trace);
     }
 
     /// Walks the active quest log once a second and lets every `AdventureQuest` with an
@@ -687,6 +717,7 @@ public sealed class ModEntry : Mod
         _consequenceWatcher?.Tick();
         PollClumpsOnQuestLog();
         RecomputeDecorShippingCount();
+        ApplyFairStarTokensIfFairActive();
         // Grant FrameworkRewards for any framework-emitted SpecialOrder that completed
         // this tick. Bypasses vanilla's Data/SpecialOrders Rewards array entirely so
         // third-party content packs that mutate that array can't intercept the grant.

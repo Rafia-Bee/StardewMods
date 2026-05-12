@@ -37,6 +37,10 @@ public static class RewardApplier
     /// `AnimalPurchaseDiscountWriter` at save-load.
     public static System.Action<AnimalPurchaseDiscountReward>? OnAnimalPurchaseDiscountGranted { get; set; }
 
+    /// Same shape as `OnFestivalBiasGranted` for `FairStarTokensReward`. Wired by the
+    /// `FairStarTokensWriter` at save-load.
+    public static System.Action<FairStarTokensReward>? OnFairStarTokensGranted { get; set; }
+
     /// Applies every reward in the encoded list to the active player. Designed for
     /// `Quest.questComplete()` overrides on our custom subclasses. Consequence-spec
     /// lines (`Consequence|...`) are ignored here — they're forwarded to the
@@ -194,6 +198,14 @@ public static class RewardApplier
                 .Default($"{giver}'s help will tilt the {festivalKey} judging in your favour").ToString());
         }
 
+        foreach (var r in rewards.OfType<FairStarTokensReward>())
+        {
+            if (r.Amount <= 0)
+                continue;
+            lines.Add(translation.Get("quest.reward.line.fairStarTokens", new { amount = r.Amount, npc = giver })
+                .Default($"{giver} will tip you {r.Amount} extra star tokens on Fair day").ToString());
+        }
+
         if (lines.Count == 0)
             return string.Empty;
 
@@ -255,6 +267,12 @@ public static class RewardApplier
                 if (fb.Magnitude <= 0)
                     return;
                 OnFestivalBiasGranted?.Invoke(fb);
+                break;
+
+            case FairStarTokensReward fst:
+                if (fst.Amount <= 0)
+                    return;
+                OnFairStarTokensGranted?.Invoke(fst);
                 break;
 
             case MailReward ml:

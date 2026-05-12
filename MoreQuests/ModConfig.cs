@@ -94,8 +94,22 @@ public sealed class ModConfig
     public int FestivalBiasLuauMagnitude { get; set; } = 1;
     /// Flat bonus added to the player's Stardew Valley Fair grange score before Lewis
     /// judges. The pass-the-test threshold is 60 / podium tiers at 75 + 90, so 15 nudges
-    /// most submissions one podium step up without forcing a guaranteed first.
+    /// most submissions one podium step up without forcing a guaranteed first. Only
+    /// applied when `FairFestivalRewardKind` is `GrangeScoreBonus`.
     public int FestivalBiasFairMagnitude { get; set; } = 15;
+
+    /// Picks how the Fair decor supply quest pays out. `GrangeScoreBonus` adds
+    /// `FestivalBiasFairMagnitude` flat points to the player's grange display score
+    /// before Lewis judges (default, preserves the prior behaviour). `StarTokens` skips
+    /// the grange bias and instead injects `FairStarTokensAmount` extra star tokens
+    /// into `Game1.player.festivalScore` once the Fair is live, so the player can
+    /// spend them at the Fair shop. Values: GrangeScoreBonus, StarTokens.
+    public string FairFestivalRewardKind { get; set; } = "GrangeScoreBonus";
+
+    /// Bonus star tokens granted at the start of the Fair when `FairFestivalRewardKind`
+    /// is set to `StarTokens`. Default 100 is one mid-priced shop item. Ignored when
+    /// the reward kind is the grange bonus.
+    public int FairStarTokensAmount { get; set; } = 100;
 
     // ----- Phase 9.5d: Festival decor-supply quests -----
     /// Comma-separated list of East Scarp NPC names that get a `FriendshipMultiHeart` bump

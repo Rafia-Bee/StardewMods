@@ -803,8 +803,6 @@ internal static partial class Generators
     /// AND not an obviously common pick (drops anything tagged `season_<current>` so the
     /// daily-board posting feels rare, not an expanded SeasonalForaging).
 
-    private static readonly string[] LuauDecorPool = { "(BC)73", "(BC)74", "(BC)272" };
-
     /// Item ids that should never land as a decor reward even if they appear in the
     /// festival shop's stock. Stardrop is the canonical one (unique permanent boost,
     /// would feel game-breaking to hand out for finishing a board quest). Extend as
@@ -983,22 +981,42 @@ internal static partial class Generators
         };
     }
 
-    /// Row 23 — Stardew Valley Fair Decor Supply (Lewis, Fall 12). Three-step Ship
-    /// Adventure: Wood + Wood Signs + flowers (any vanilla flower-category Object).
-    /// Reward = `FestivalBiasReward(Fair, FestivalBiasFairMagnitude)` so the Fair-day
-    /// grange judging bumps in the player's favour. Wood Signs need the decor bypass.
-
-    /// Row 23 — Stardew Valley Fair Decor Supply (Lewis, Fall 12). Three-step Ship
-    /// Adventure: Wood + Wood Signs + flowers (any vanilla flower-category Object).
-    /// Reward = `FestivalBiasReward(Fair, FestivalBiasFairMagnitude)` so the Fair-day
-    /// grange judging bumps in the player's favour. Wood Signs need the decor bypass.
+    /// Row 23 — Stardew Valley Fair Decor Supply (Lewis, Fall 12, 4 days before the Fair
+    /// on Fall 16). Three-step Ship Adventure: Wood + any sign Big-Craftable (Wood / Stone
+    /// / Dark Sign) + fall-themed flowers. The flower list is scanned from `Data/Crops`
+    /// for any flower-category harvest item whose season list contains Fall, so modded
+    /// fall flowers ride along automatically; the explicit Wood Sign filter has been
+    /// widened to accept all three vanilla signs. Quantities scale with Farming /
+    /// Foraging when `DifficultyScaling` is on. Reward depends on
+    /// `FairFestivalRewardKind`: `GrangeScoreBonus` keeps the prior `FestivalBiasReward`
+    /// path (flat add to `grangeScore` before Lewis judges), `StarTokens` swaps to a
+    /// `FairStarTokensReward` that drops `FairStarTokensAmount` extra star tokens into
+    /// `Game1.player.festivalScore` once the Fair event is live so the player can spend
+    /// them at the festival stalls. Explicit 3-day deadline so the quest auto-fails the
+    /// morning of Fall 15 (one day before the Fair) regardless of GMCM `DeadlineShort`.
     private static QuestPosting? FairFestivalDecor(QuestContext ctx)
     {
         const string giver = "Lewis";
-        const int woodCount = 10;
-        const int signCount = 3;
-        const int flowerCount = 5;
-        const int flowerCategory = -80;
+
+        int woodCount;
+        int signCount;
+        int flowerCount;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int farming = Difficulty.GetSkillLevel(QuestCategory.Farming);
+            int foraging = Difficulty.GetSkillLevel(QuestCategory.Foraging);
+            flowerCount = Game1.random.Next(5, Math.Max(5, (int)(farming * 1.5)) + 1);
+            woodCount = Game1.random.Next(10, Math.Max(10, foraging * 3) + 1);
+            signCount = Game1.random.Next(3, 11);
+        }
+        else
+        {
+            woodCount = 10;
+            signCount = 3;
+            flowerCount = 5;
+        }
+
+        var flowerItems = GetFallFlowerItemIds(ctx);
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -1016,7 +1034,7 @@ internal static partial class Generators
             {
                 Name = "ShipSigns",
                 Kind = AdventureStepKind.Ship,
-                Items = new List<string> { "(BC)37" },
+                Items = new List<string> { "(BC)37", "(BC)38", "(BC)39" },
                 Count = signCount,
                 AllowDecorShipping = true,
                 Description = ModEntry.I18n.Get("quest.festival.fairDecor.step.signs", new { count = signCount })
@@ -1025,12 +1043,27 @@ internal static partial class Generators
             {
                 Name = "ShipFlowers",
                 Kind = AdventureStepKind.Ship,
-                Items = new List<string> { $"$category:{flowerCategory}" },
+                Items = flowerItems,
                 Count = flowerCount,
                 AllowDecorShipping = true,
                 Description = ModEntry.I18n.Get("quest.festival.fairDecor.step.flowers", new { count = flowerCount })
             }
         }, giver: giver);
+
+        var rewards = new List<RewardSpec>();
+        bool starTokens = string.Equals(ModEntry.Config.FairFestivalRewardKind, "StarTokens", StringComparison.OrdinalIgnoreCase);
+        if (starTokens)
+        {
+            int amount = Math.Max(0, ModEntry.Config.FairStarTokensAmount);
+            if (amount > 0)
+                rewards.Add(new FairStarTokensReward(amount));
+        }
+        else
+        {
+            int magnitude = Math.Max(0, ModEntry.Config.FestivalBiasFairMagnitude);
+            if (magnitude > 0)
+                rewards.Add(new FestivalBiasReward(FestivalKind.Fair, magnitude));
+        }
 
         return new QuestPosting
         {
@@ -1039,33 +1072,68 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = 3,
             AllowDecorShipping = true,
-            Rewards =
-            {
-                new FestivalBiasReward(FestivalKind.Fair, Math.Max(1, ModEntry.Config.FestivalBiasFairMagnitude))
-            },
+            Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.festival.fairDecor.title"),
             Description = ModEntry.I18n.Get("quest.festival.fairDecor.description", new { wood = woodCount, signs = signCount, flowers = flowerCount }),
             PreBuiltQuest = quest
         };
     }
 
-    /// Row 24 — Luau Decor Supply (Lewis, Summer 6). Three-step Ship Adventure: Fiber +
-    /// Log Section ("Basic Log" furniture) + Wood Lamp-post. Reward = GoldIntermediateBase
-    /// + one random decor from a curated Luau pool. Both furniture / Big-Craftable steps
-    /// need the decor-shipping bypass.
+    /// Returns every flower-category (Category == -80) crop harvest id whose `Data/Crops`
+    /// season list contains Fall. Picks up modded fall flowers automatically. Falls back
+    /// to the vanilla pair (Sunflower + Fairy Rose) if a content pack wipes the crop
+    /// table — the quest still needs *something* to accept.
+    private static List<string> GetFallFlowerItemIds(QuestContext ctx)
+    {
+        var ids = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var crop in ctx.Items.GetSeasonalCrops("fall"))
+        {
+            if (crop.Category != -80)
+                continue;
+            if (seen.Add(crop.QualifiedItemId))
+                ids.Add(crop.QualifiedItemId);
+        }
+        if (ids.Count == 0)
+        {
+            ids.Add("(O)421"); // Sunflower (also summer)
+            ids.Add("(O)595"); // Fairy Rose
+        }
+        return ids;
+    }
 
-    /// Row 24 — Luau Decor Supply (Lewis, Summer 6). Three-step Ship Adventure: Fiber +
-    /// Log Section ("Basic Log" furniture) + Wood Lamp-post. Reward = GoldIntermediateBase
-    /// + one random decor from a curated Luau pool. Both furniture / Big-Craftable steps
-    /// need the decor-shipping bypass.
+    /// Row 24 — Luau Decor Supply (Lewis, Summer 6, 5 days before the Luau on Summer 11).
+    /// Three-step Ship Adventure: Fiber + Hardwood + Wood Lamp-post `(BC)152`. The prior
+    /// Basic Log furniture step and the `(BC)21` lamp id (actually Crystalarium) were
+    /// both broken, so the log step was swapped for Hardwood per the note and the lamp
+    /// id corrected to vanilla's actual Wood Lamp-post. Quantities scale with Foraging
+    /// when `DifficultyScaling` is on. Reward = `GoldIntermediateBase` + one random
+    /// non-Stardrop entry from Pierre's Luau festival shop (`Festival_Luau_Pierre`), so
+    /// modded decor injected into that shop is eligible. Explicit 4-day deadline so the
+    /// quest auto-fails the morning of Summer 10 (one day before the Luau) regardless of
+    /// GMCM `DeadlineMedium`.
     private static QuestPosting? LuauFestivalDecor(QuestContext ctx)
     {
         const string giver = "Lewis";
-        const int fiberCount = 10;
-        const int logCount = 1;
-        const int lampCount = 1;
+
+        int fiberCount;
+        int hardwoodCount;
+        int lampCount;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int foraging = Difficulty.GetSkillLevel(QuestCategory.Foraging);
+            fiberCount = Game1.random.Next(10, Math.Max(10, foraging * 5) + 1);
+            hardwoodCount = Game1.random.Next(3, Math.Max(3, (int)(foraging * 1.5)) + 1);
+            lampCount = Game1.random.Next(3, 16);
+        }
+        else
+        {
+            fiberCount = 10;
+            hardwoodCount = 5;
+            lampCount = 4;
+        }
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -1081,18 +1149,18 @@ internal static partial class Generators
             },
             new AdventureStepState
             {
-                Name = "ShipBasicLog",
+                Name = "ShipHardwood",
                 Kind = AdventureStepKind.Ship,
-                Items = new List<string> { "(F)1376" },
-                Count = logCount,
+                Items = new List<string> { "(O)709" },
+                Count = hardwoodCount,
                 AllowDecorShipping = true,
-                Description = ModEntry.I18n.Get("quest.festival.luauDecor.step.basicLog", new { count = logCount })
+                Description = ModEntry.I18n.Get("quest.festival.luauDecor.step.hardwood", new { count = hardwoodCount })
             },
             new AdventureStepState
             {
                 Name = "ShipLampPost",
                 Kind = AdventureStepKind.Ship,
-                Items = new List<string> { "(BC)21" },
+                Items = new List<string> { "(BC)152" },
                 Count = lampCount,
                 AllowDecorShipping = true,
                 Description = ModEntry.I18n.Get("quest.festival.luauDecor.step.lampPost", new { count = lampCount })
@@ -1100,9 +1168,9 @@ internal static partial class Generators
         }, giver: giver);
 
         var rewards = new List<RewardSpec> { new MoneyReward(ctx.Config.GoldIntermediateBase) };
-        var decor = PickDecor(LuauDecorPool);
-        if (!string.IsNullOrEmpty(decor))
-            rewards.Add(new ObjectReward(decor));
+        var decor = PickFestivalShopReward(ctx, "Festival_Luau_Pierre");
+        if (decor != null)
+            rewards.Add(new ObjectReward(decor.QualifiedItemId));
 
         return new QuestPosting
         {
@@ -1111,11 +1179,11 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            DeadlineDays = 4,
             AllowDecorShipping = true,
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.festival.luauDecor.title"),
-            Description = ModEntry.I18n.Get("quest.festival.luauDecor.description", new { fiber = fiberCount, log = logCount, lamp = lampCount }),
+            Description = ModEntry.I18n.Get("quest.festival.luauDecor.description", new { fiber = fiberCount, hardwood = hardwoodCount, lamps = lampCount }),
             PreBuiltQuest = quest
         };
     }

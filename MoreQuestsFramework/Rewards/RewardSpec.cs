@@ -54,6 +54,12 @@ public sealed record AnimalPurchaseDiscountReward(
 /// stored on per-save state and consumed at the festival's judging hook.
 public sealed record FestivalBiasReward(FestivalKind Festival, int Magnitude) : RewardSpec;
 
+/// Adds `Amount` to the player's `festivalScore` (Stardew Valley Fair star tokens) at
+/// the start of the Fair event. Persisted to per-save state so a quest completed days
+/// before the Fair still injects the bonus on Fall 16. Consumed at the festival's
+/// start hook so a re-judging in the same session doesn't re-grant.
+public sealed record FairStarTokensReward(int Amount) : RewardSpec;
+
 public enum RecipeKind { Cooking, Crafting }
 
 public enum MailWhen { Today, Tomorrow }
