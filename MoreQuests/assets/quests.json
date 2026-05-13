@@ -641,7 +641,7 @@
             "Category": "Festival",
             "Trigger": {
                 "Source": "DateLocked",
-                "Date": "winter 12",
+                "Date": "winter 11",
                 "RepeatYearly": true
             },
             "Generator": "SquidFestShowcase"

@@ -102,7 +102,7 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Mining | Mines Deep Dive | Adventurer's Guild board | Marlon | Reach floor X in The Mines (max 120) and deliver an ore/stone haul | Gold (Intermediate) + bars matching the floor band | Cooldown 14d, requires deepestMineLevel >= 5 | Implemented |
 | Fishing | Size-Specific Overpopulation | Daily board | Demetrius | Catch X fish at or above a size threshold (Small/Medium/Large bucket) | Gold (Intermediate) + 25x Bait | Cooldown 4d, OnePerGiver, requires Fishing 3 | Implemented (9.5e) |
 | Seasonal | Spring Cleaning | Daily board | Any | Clear weeds around town | Friendship (Basic) | Spring only, Cooldown 5d | Implemented (9.5g) |
-| Festival | SquidFest Showcase | Winter 12 | Gus / Pika / Rosa / Celestine | Catch FestivalFishQty Squid | Recipe + shop discount on the dish (Gus saves only) | DateLocked, OneTimePerYear | Implemented (9.5e) |
+| Festival | SquidFest Showcase | Winter 11 | Gus / Pika / Rosa / Celestine | Catch Squid during the festival (qty scales with Fishing) | Recipe + shop discount on the dish in the giver's saloon shop | DateLocked, OneTimePerYear, deadline Winter 14 | Implemented |
 | Festival | Wrapping Paper | Winter 20 | Lewis | Ship Paper and Tape | Book of Stars | DateLocked, OneTimePerYear, requires Si.ExtraCraftingMaterials | Implemented (9.5a) |
 | Social | Deep Friendship Quest | Heart-level trigger | Various | NPC-specific requests at higher hearts | Unique per NPC | — | Won't do |
 | Seasonal | Harvest Bounty Competition | Special Orders board | Multiple | NPCs compete for crop donations | Varies | Fall only | Won't do |
