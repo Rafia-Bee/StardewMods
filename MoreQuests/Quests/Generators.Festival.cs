@@ -757,10 +757,16 @@ internal static partial class Generators
         };
     }
 
-    /// Winter 22 DateLocked. Resolves the player's Winter Star recipient via
-    /// Utility.GetRandomWinterStarParticipant and embeds a hint about their loved gifts.
-    /// Single Talk step targeted at the recipient; the festival event surfaces dialogue
-    /// naturally so the quest closes on Winter 25 without bespoke event hooks.
+    /// Posted when the player speaks to Lewis on Winter 22-25 (NpcDialogue source +
+    /// date gate). Resolves the player's secret-friend recipient via
+    /// Utility.GetRandomWinterStarParticipant and embeds one loved item as a hint.
+    /// Single Gift step targeting the recipient with an empty Items list, so any
+    /// loved/liked item passes (the framework's WinterStarGiftPatch forwards the
+    /// festival's secret-santa exchange into OnItemOfferedToNpc so the step ticks
+    /// at the festival even though `chooseSecretSantaGift` bypasses
+    /// `tryToReceiveActiveObject`). Skipping the festival or handing over a
+    /// disliked / neutral / hated item leaves the quest open until it auto-fails
+    /// the morning after Winter 25. Reward: FriendshipMid to the recipient.
     private static QuestPosting? SecretGiftHint(QuestContext ctx)
     {
         if (!ModEntry.Config.SecretGiftHintEnabled)
@@ -779,9 +785,9 @@ internal static partial class Generators
         if (recipient == null)
             return null;
 
-        var lovedNames = ResolveLovedItemNames(ctx, recipient.Name, max: 3);
-        string lovedList = lovedNames.Count > 0
-            ? string.Join(", ", lovedNames)
+        var lovedNames = ResolveLovedItemNames(ctx, recipient.Name, max: 1);
+        string lovedItem = lovedNames.Count > 0
+            ? lovedNames[0]
             : ModEntry.I18n.Get("quest.festival.secretGiftHint.fallback");
 
         var quest = new AdventureQuest();
@@ -789,13 +795,13 @@ internal static partial class Generators
         {
             new AdventureStepState
             {
-                Name = "DeliverWinterStarGift",
-                Kind = AdventureStepKind.Talk,
+                Name = "GiveSecretSantaGift",
+                Kind = AdventureStepKind.Gift,
                 Targets = new List<string> { recipient.Name },
                 Count = 1,
-                Description = ModEntry.I18n.Get("quest.festival.secretGiftHint.step", new { recipient = recipient.displayName, items = lovedList })
+                Description = ModEntry.I18n.Get("quest.festival.secretGiftHint.step", new { recipient = recipient.displayName, item = lovedItem })
             }
-        }, giver: "Lewis", completionDialogue: ModEntry.I18n.Get("quest.festival.secretGiftHint.targetMessage"));
+        }, giver: "Lewis");
 
         return new QuestPosting
         {
@@ -804,10 +810,10 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = "Lewis",
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = 4,
+            Rewards = { new FriendshipReward(recipient.Name, ctx.Config.FriendshipMid) },
             Title = ModEntry.I18n.Get("quest.festival.secretGiftHint.title"),
-            Description = ModEntry.I18n.Get("quest.festival.secretGiftHint.description", new { recipient = recipient.displayName, items = lovedList }),
-            TargetMessage = ModEntry.I18n.Get("quest.festival.secretGiftHint.targetMessage"),
+            Description = ModEntry.I18n.Get("quest.festival.secretGiftHint.description", new { recipient = recipient.displayName, item = lovedItem }),
             PreBuiltQuest = quest
         };
     }

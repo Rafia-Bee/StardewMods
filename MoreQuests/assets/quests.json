@@ -438,9 +438,10 @@
             "Name": "Festival.SecretGiftHint",
             "Category": "Festival",
             "Trigger": {
-                "Source": "DateLocked",
-                "Date": "winter 22",
-                "RepeatYearly": true
+                "Source": "NpcDialogue",
+                "Npc": "Lewis",
+                "CooldownDays": 100,
+                "Available": { "Date": "winter 22-25", "NpcExists": "Lewis" }
             },
             "Generator": "SecretGiftHint"
         },
