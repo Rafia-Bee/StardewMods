@@ -1476,8 +1476,12 @@ internal static partial class Generators
         };
     }
 
-    /// Rainbow Platter (Trout Derby, Summer 20): catch Rainbow Trout for a SaloonChef-pool
-    /// giver. Reward: recipe (per-giver) + ShopDiscountReward on the dish for Gus.
+    /// Rainbow Platter (Trout Derby, posted Summer 19 so the player has 19 + 20-21 +
+    /// auto-fail Summer 22, one day after the Derby ends): catch Rainbow Trout for a
+    /// SaloonChef-pool giver. Quantity scales with Fishing (on: 2 + fishing/2; off:
+    /// Random.Next(1, 5) for 1-4 inclusive). Reward: recipe (per-giver) + per-giver
+    /// ShopDiscountReward on the dish, looked up via ModConfig so RSV / ES / VMV
+    /// saloons all get the discount even though they use different shop ids.
     private static QuestPosting? RainbowPlatter(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
@@ -1485,21 +1489,26 @@ internal static partial class Generators
             return null;
 
         const string rainbowTroutId = "(O)138";
-        int qty = Math.Max(1, ModEntry.Config.FestivalFishQty);
+
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+            qty = Math.Max(1, 2 + Game1.player.FishingLevel / 2);
+        else
+            qty = Game1.random.Next(1, 5);
 
         string recipeName = ResolveTroutDerbyRecipe(giver);
         var rewards = new List<RewardSpec>
         {
             new RecipeReward(recipeName)
         };
-        // Only Gus has a known vanilla shop. Modded givers get just the recipe.
-        if (string.Equals(giver, "Gus", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(ModEntry.Config.TroutDerbyDishGus))
+        var (shopId, dishId) = ResolveTroutDerbyDiscount(giver);
+        if (!string.IsNullOrEmpty(shopId) && !string.IsNullOrEmpty(dishId))
         {
             rewards.Add(new ShopDiscountReward(
-                ShopId: "Saloon",
+                ShopId: shopId,
                 PercentOff: ModEntry.Config.ShopDiscountPercent,
                 DurationDays: ModEntry.Config.ShopDiscountDurationDays,
-                AppliesTo: new List<string> { ModEntry.Config.TroutDerbyDishGus },
+                AppliesTo: new List<string> { dishId },
                 GuaranteedStock: 5));
         }
 
@@ -1512,14 +1521,22 @@ internal static partial class Generators
             ObjectiveItemId = rainbowTroutId,
             ObjectiveItemName = "Rainbow Trout",
             ObjectiveQuantity = qty,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = 3,
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.festival.rainbowPlatter.title"),
-            Description = ModEntry.I18n.Get("quest.festival.rainbowPlatter.description", new { npc = giver, qty, recipe = recipeName }),
-            CurrentObjective = ModEntry.I18n.Get("quest.festival.rainbowPlatter.objective", new { qty, npc = giver }),
+            Description = ModEntry.I18n.Get("quest.festival.rainbowPlatter.description", new { qty, dish = recipeName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.festival.rainbowPlatter.objective", new { qty }),
             TargetMessage = ModEntry.I18n.Get("quest.festival.rainbowPlatter.targetMessage")
         };
     }
+
+    private static (string shopId, string dishId) ResolveTroutDerbyDiscount(string giver) => giver switch
+    {
+        "Pika" => (ModEntry.Config.TroutDerbyShopPika, ModEntry.Config.TroutDerbyDishPika),
+        "Celestine" => (ModEntry.Config.TroutDerbyShopCelestine, ModEntry.Config.TroutDerbyDishCelestine),
+        "Rosa" => (ModEntry.Config.TroutDerbyShopRosa, ModEntry.Config.TroutDerbyDishRosa),
+        _ => (ModEntry.Config.TroutDerbyShopGus, ModEntry.Config.TroutDerbyDishGus)
+    };
 
     /// SquidFest Showcase (Winter 12): catch Squid. Same shape as RainbowPlatter.
     private static QuestPosting? SquidFestShowcase(QuestContext ctx)

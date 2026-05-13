@@ -119,8 +119,21 @@ public sealed class ModConfig
     public string TroutDerbyRecipeCelestine { get; set; } = "Toast and Trout";
     /// Trout Derby recipe for Rosa (East Scarp). Falls back to vanilla Trout Soup.
     public string TroutDerbyRecipeRosa { get; set; } = "Trout Soup";
-    /// Gus Trout Derby dish id. Used by ShopDiscountReward to discount the dish in the Saloon shop.
+
+    /// Shop ids used by the Trout Derby ShopDiscountReward per giver. Empty value
+    /// skips the discount for that giver but still grants the recipe.
+    public string TroutDerbyShopGus { get; set; } = "Saloon";
+    public string TroutDerbyShopPika { get; set; } = "RSVPikaShop";
+    public string TroutDerbyShopRosa { get; set; } = "Lemurkat.EastScarp_InnShop";
+    public string TroutDerbyShopCelestine { get; set; } = "Saloon";
+
+    /// Qualified item id of the discounted dish per giver. Defaults reference the
+    /// vanilla / RSV / VMV dishes that ship with the matching recipe; override to
+    /// match your modded recipe pack. Empty value skips the discount.
     public string TroutDerbyDishGus { get; set; } = "(O)219";
+    public string TroutDerbyDishPika { get; set; } = "(O)Rafseazz.RSVCP_Highland_Ice_Cream";
+    public string TroutDerbyDishRosa { get; set; } = "(O)219";
+    public string TroutDerbyDishCelestine { get; set; } = "(O)Lumisteria.MtVapius_Cooking_TroutAndToast";
 
     /// SquidFest recipe for Gus / vanilla saloon.
     public string SquidFestRecipeGus { get; set; } = "Fried Calamari";
