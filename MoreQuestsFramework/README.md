@@ -252,17 +252,6 @@ Step ordering is enforced by `Requires[]` (other step `Name`s that must be Done 
 This is mainly for peeps who don't use [Ship Anything](https://www.nexusmods.com/stardewvalley/mods/3782) mod.
 My festival supply quests often want the player to ship items vanilla refuses to accept (Hay Bales, Wood Lamp-posts, table furniture, custom decor). Set `AllowDecorShipping = true` on a `QuestPosting` (single-step Ship quests) or any `AdventureStep` of `Kind: Ship` (multi-step Adventure quests) and the framework lifts the ban for as long as the quest is active. Implemented as a gated postfix on `Object.canBeShipped`, recomputed once a second from the player's quest log. Off-quest sessions pay one int compare. The bypass is total, every item becomes shippable while a decor-shipping quest is in the log, so authors should only enable it on quests where that trade-off is acceptable.
 
-### Combat-food reward pool
-
-Quests that hand out a random combat-buff food on completion (e.g. More Quests' Monster Hunt) draw from a shared item-id pool the framework owns. The pool starts empty. The content mod seeds vanilla defaults at `RegistrationOpen`, and other mods can append their own combat foods through:
-
-```csharp
-var fw = helper.ModRegistry.GetApi<IMoreQuestsApi>("RafiaBee.MoreQuestsFramework");
-fw.RegisterCombatFood("MyMod.SpicyJerky");
-```
-
-`GetCombatFoodPool()` returns the live snapshot for any quest generator that wants to read the pool directly. Duplicates are deduped by qualified id.
-
 ### Debug
 
 The framework registers an `mq_refresh` SMAPI console command that re-rolls today's daily-board postings without reloading the save.

@@ -226,6 +226,8 @@ public sealed class ModEntry : Mod
         _dataCache = new GameDataCache(Monitor);
         _dataCache.Refresh();
 
+        CombatFood.RunDataScan(Helper.GameContent);
+
         var items = new ItemResolver(Monitor, _dataCache);
         var ctx = new QuestContext(Helper, Monitor, Config, items, _dataCache, Dispatch);
         _antiRepetition = new AntiRepetition();

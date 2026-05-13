@@ -85,9 +85,11 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
 
     public IReadOnlyList<string> GetMetHumanNpcs() => DispatchRegistry.MetHumanNpcs();
 
-    public void RegisterCombatFood(string itemId) => _combatFood.Register(itemId);
+    public void RegisterCombatFood(string itemId, int? magnitude = null) => _combatFood.Register(itemId, magnitude);
 
     public IReadOnlyList<string> GetCombatFoodPool() => _combatFood.Pool;
+
+    public int? GetCombatFoodMagnitude(string qualifiedItemId) => _combatFood.GetMagnitude(qualifiedItemId);
 
     // --- Internal hooks called by framework code ---
 
