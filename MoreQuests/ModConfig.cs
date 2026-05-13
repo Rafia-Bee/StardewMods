@@ -185,6 +185,11 @@ public sealed class ModConfig
     /// "this location has no weeds today" dead-ends).
     public int SpringCleaningCount { get; set; } = 8;
 
+    /// Frame style the player wants on Leah's farm-animal painting reward.
+    /// Allowed values: "Wood", "Burgandy", "Night". The animal in the painting is
+    /// always random; only the frame is player-controlled.
+    public string LeahPaintingFrame { get; set; } = "Wood";
+
     /// Check on Friends: how many distinct NPCs to talk to before reporting back.
     public int CheckOnFriendsCount { get; set; } = 3;
 }

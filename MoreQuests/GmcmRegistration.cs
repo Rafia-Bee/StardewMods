@@ -156,6 +156,13 @@ internal static class GmcmRegistration
             v => ModEntry.Config.AnimalQuestsEnabled = v,
             () => t.Get("config.animalQuests"),
             () => t.Get("config.animalQuests.tooltip"));
+        api.AddSectionTitle(manifest, () => t.Get("config.section.leahPainting"));
+        api.AddTextOption(manifest,
+            getValue: () => ModEntry.Config.LeahPaintingFrame,
+            setValue: v => ModEntry.Config.LeahPaintingFrame = v,
+            name: () => t.Get("config.LeahPaintingFrame"),
+            tooltip: () => t.Get("config.LeahPaintingFrame.tooltip"),
+            allowedValues: ModEntry.LeahPaintingFrameOptions);
 
         // ----- Festival -----
         api.AddPage(manifest, PageFestival, () => t.Get("config.page.festival"));

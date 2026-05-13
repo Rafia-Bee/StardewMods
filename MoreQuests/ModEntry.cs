@@ -51,6 +51,47 @@ public sealed class ModEntry : Mod
     /// body and attachment without needing per-quest persistence.
     internal const string DeepDiveRewardKeyPrefix = "RafiaBee.MoreQuests.DeepDiveReward.";
 
+    /// Mail key prefix for Leah's painting reward. Suffix is `<animal>.<frame>` (e.g.
+    /// `...LeahPaintingReward.BabyBlueChicken.wood`). The asset edit reads the suffix and
+    /// builds a body + furniture attachment matching the painting the player earned.
+    internal const string LeahPaintingRewardKeyPrefix = "RafiaBee.MoreQuests.LeahPaintingReward.";
+
+    /// Unqualified furniture id prefix for Leah's paintings. Full id is
+    /// `<prefix><animal>.<frame>`; qualified is `(F)<prefix><animal>.<frame>`.
+    internal const string LeahPaintingFurnitureIdPrefix = "RafiaBee.MoreQuests.LeahPainting.";
+
+    /// Asset name root for painting textures. Full path is `<root>/<animal>_<frame>`.
+    internal const string LeahPaintingTextureRoot = "Mods/RafiaBee.MoreQuests/LeahPainting";
+
+    /// File-system folder (relative to the mod) holding the 51 painting PNGs.
+    internal const string LeahPaintingAssetFolder = "assets/leahPaintings";
+
+    /// Animal sprite names. Matches the filename stem in assets/leahPaintings.
+    internal static readonly string[] LeahPaintingAnimals =
+    {
+        "BabyBlueChicken", "BabyBrownChicken", "BabyBrownCow", "BabyGoat",
+        "BabyGoldenChicken", "BabyOstrich", "BabyPig", "BabyRabbit", "BabySheep",
+        "BabyVoidChicken", "BabyWhiteChicken", "BabyWhiteCow",
+        "BlueChicken", "BrownChicken", "BrownCow", "Dinosaur", "Duck"
+    };
+
+    /// Lowercase frame keys. Matches the filename suffix and the GMCM-stored config value
+    /// (stored title-cased; we lowercase before encoding into the key/path).
+    internal static readonly string[] LeahPaintingFrames = { "burgandy", "night", "wood" };
+
+    /// Title-cased frame options shown in GMCM. Stored values are case-insensitive.
+    internal static readonly string[] LeahPaintingFrameOptions = { "Wood", "Burgandy", "Night" };
+
+    internal static string NormalizeLeahPaintingFrame(string? configValue)
+    {
+        if (string.IsNullOrWhiteSpace(configValue))
+            return "wood";
+        string lower = configValue.Trim().ToLowerInvariant();
+        foreach (var f in LeahPaintingFrames)
+            if (lower == f) return f;
+        return "wood";
+    }
+
     /// Asset edits and loads owned by the content mod: Data/mail reward letters, the
     /// AdventureBoard wall sprite, and its menu background.
     private void OnAssetRequested(object? sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
@@ -82,6 +123,37 @@ public sealed class ModEntry : Mod
         if (e.NameWithoutLocale.IsEquivalentTo(EggBasketRusticTexture))
         {
             e.LoadFromModFile<Texture2D>("assets/EggBasketRustic.png", AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.StartsWith(LeahPaintingTextureRoot + "/"))
+        {
+            string stem = e.NameWithoutLocale.BaseName.Substring(LeahPaintingTextureRoot.Length + 1);
+            if (IsValidLeahPaintingStem(stem))
+            {
+                e.LoadFromModFile<Texture2D>($"{LeahPaintingAssetFolder}/{stem}.png", AssetLoadPriority.Low);
+                return;
+            }
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo("Data/Furniture"))
+        {
+            e.Edit(asset =>
+            {
+                var data = asset.AsDictionary<string, string>().Data;
+                foreach (var animal in LeahPaintingAnimals)
+                {
+                    foreach (var frame in LeahPaintingFrames)
+                    {
+                        string id = $"{LeahPaintingFurnitureIdPrefix}{animal}.{frame}";
+                        string displayName = I18n.Get($"item.leahPainting.{animal}.name", new { frame = I18n.Get($"item.leahPainting.frame.{frame}").ToString() }).ToString();
+                        string texture = $"{LeahPaintingTextureRoot}/{animal}_{frame}";
+                        // Format: name/type/tilesheetSize/boundingBox/rotations/price/placement/displayName/spriteIndex/texture
+                        // tilesheetSize -1 = default 2x2 for paintings, boundingBox -1 = default 2x2, indoors-only via placement 0.
+                        data[id] = $"{displayName}/painting/-1/-1/1/0/0/{displayName}/0/{texture}";
+                    }
+                }
+            }, AssetEditPriority.Default);
             return;
         }
 
@@ -158,7 +230,53 @@ public sealed class ModEntry : Mod
             mail["RafiaBee.MoreQuests.WizardsRitualReward"] = wizardBody + "%item object Book_Mystery 1 %%";
 
             PopulateDeepDiveRewardLetters(mail);
+            PopulateLeahPaintingRewardLetters(mail);
         });
+    }
+
+    private static bool IsValidLeahPaintingStem(string stem)
+    {
+        int sep = stem.LastIndexOf('_');
+        if (sep <= 0 || sep == stem.Length - 1)
+            return false;
+        string animal = stem.Substring(0, sep);
+        string frame = stem.Substring(sep + 1);
+        bool animalOk = false;
+        foreach (var a in LeahPaintingAnimals) if (a == animal) { animalOk = true; break; }
+        if (!animalOk) return false;
+        foreach (var f in LeahPaintingFrames) if (f == frame) return true;
+        return false;
+    }
+
+    /// Walks the player's mail for Leah painting reward keys and writes one body per key.
+    /// Key suffix is `<animal>.<frame>`; the body uses the animal's display name and attaches
+    /// the matching `(F)<furnitureId>`.
+    private void PopulateLeahPaintingRewardLetters(IDictionary<string, string> mail)
+    {
+        if (Game1.player == null)
+            return;
+
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        CollectKeys(Game1.player.mailForTomorrow, seen);
+        CollectKeys(Game1.player.mailbox, seen);
+        CollectKeys(Game1.player.mailReceived, seen);
+
+        foreach (var key in seen)
+        {
+            if (!key.StartsWith(LeahPaintingRewardKeyPrefix, StringComparison.Ordinal))
+                continue;
+            string suffix = key.Substring(LeahPaintingRewardKeyPrefix.Length);
+            int sep = suffix.LastIndexOf('.');
+            if (sep <= 0 || sep == suffix.Length - 1)
+                continue;
+            string animal = suffix.Substring(0, sep);
+            string frame = suffix.Substring(sep + 1);
+
+            string animalDisplay = I18n.Get($"item.leahPainting.animal.{animal}").ToString();
+            string body = I18n.Get("mail.animal.leahFarmPainting.body", new { animal = animalDisplay }).ToString();
+            string furnitureId = $"{LeahPaintingFurnitureIdPrefix}{animal}.{frame}";
+            mail[key] = body + $"%item id (F){furnitureId} %%";
+        }
     }
 
     /// Scans the player's mail for deep-dive reward keys and authors a body + bar attachment for each.
@@ -278,6 +396,11 @@ public sealed class ModEntry : Mod
             GrantFreeCow();
         if (e.DefinitionId == "Animal.RobinSiloOfferCoop" || e.DefinitionId == "Animal.RobinSiloOfferBarn")
             GrantFreeSilo();
+        if (e.DefinitionId == "Animal.LeahFarmPainting")
+        {
+            Helper.GameContent.InvalidateCache("Data/mail");
+            return;
+        }
         if (e.DefinitionId != "Mining.SkullCavernDeepDive" && e.DefinitionId != "Mining.MinesDeepDive")
             return;
         Helper.GameContent.InvalidateCache("Data/mail");

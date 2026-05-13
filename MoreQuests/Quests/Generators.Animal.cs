@@ -230,8 +230,8 @@ internal static partial class Generators
 
     /// Periodic AdventureQuest gated on LFY + single-player + Leah heart-2. One Visit step
     /// on LeahHouse with `$follower-count:1`. Closes when the player walks into Leah's house
-    /// with at least one animal in tow. Reward is a random Data/Furniture houseplant (the
-    /// bespoke animal painting is deferred until the sprite pack ships).
+    /// with at least one animal in tow. Reward letter lands tomorrow with a painting of one
+    /// of the player's farm animals (picked at posting time) in the frame style set in GMCM.
     private static QuestPosting? LeahFarmPainting(QuestContext ctx)
     {
         if (Game1.IsMultiplayer)
@@ -243,9 +243,9 @@ internal static partial class Generators
         if (!Game1.player.friendshipData.TryGetValue("Leah", out var leahFriendship) || leahFriendship.Points < 2 * 250)
             return null;
 
-        string? houseplantId = PickRandomHouseplantFurnitureId(ctx);
-        if (houseplantId == null)
-            return null;
+        string animal = ModEntry.LeahPaintingAnimals[Game1.random.Next(ModEntry.LeahPaintingAnimals.Length)];
+        string frame = ModEntry.NormalizeLeahPaintingFrame(ModEntry.Config.LeahPaintingFrame);
+        string letterKey = $"{ModEntry.LeahPaintingRewardKeyPrefix}{animal}.{frame}";
 
         const string giver = "Leah";
 
@@ -273,40 +273,13 @@ internal static partial class Generators
             Rewards =
             {
                 new FriendshipReward(giver, ctx.Config.FriendshipBasic),
-                new ObjectReward(houseplantId)
+                new MailReward(letterKey, MailWhen.Tomorrow)
             },
             Title = ModEntry.I18n.Get("quest.animal.leahFarmPainting.title"),
             Description = ModEntry.I18n.Get("quest.animal.leahFarmPainting.description"),
             TargetMessage = ModEntry.I18n.Get("quest.animal.leahFarmPainting.targetMessage"),
             PreBuiltQuest = quest
         };
-    }
-
-    /// Random `(F)&lt;id&gt;` furniture id whose Data/Furniture name starts with "House Plant".
-    /// Scans live so modded houseplants surface automatically.
-    private static string? PickRandomHouseplantFurnitureId(QuestContext ctx)
-    {
-        try
-        {
-            var furniture = ctx.Helper.GameContent.Load<System.Collections.Generic.Dictionary<string, string>>("Data/Furniture");
-            var matches = new List<string>();
-            foreach (var pair in furniture)
-            {
-                if (pair.Value == null) continue;
-                int slash = pair.Value.IndexOf('/');
-                if (slash <= 0) continue;
-                string name = pair.Value.Substring(0, slash);
-                if (name.StartsWith("House Plant", StringComparison.OrdinalIgnoreCase))
-                    matches.Add(pair.Key);
-            }
-            if (matches.Count == 0)
-                return null;
-            return "(F)" + matches[Game1.random.Next(matches.Count)];
-        }
-        catch
-        {
-            return null;
-        }
     }
 
     /// OneShot post-Deluxe-Barn AdventureQuest. Marnie asks the player to walk animals into
