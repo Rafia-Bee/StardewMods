@@ -261,14 +261,6 @@ public sealed class ModEntry : Mod
         Monitor.Log("Wired LivestockFollowsYou follower count into the framework's FollowerApiBridge.", LogLevel.Trace);
     }
 
-    /// Duck-typed mirror of LFY's ILivestockFollowsYouApi. Only the members we consume,
-    /// so we don't need an assembly reference back to LFY.
-    internal interface ILfyApi
-    {
-        int FollowingAnimalCount { get; }
-        string GrazingBellQualifiedItemId { get; }
-    }
-
     private void OnQuestRemoved(object? sender, QuestRemovedArgs e)
     {
         if (e.DefinitionId == "Animal.HaySupplyRun")
