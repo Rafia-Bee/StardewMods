@@ -77,7 +77,8 @@ internal static partial class Generators
     }
 
     /// Ship Void Essence + Bat Wings + Solar Essence in any order. Scaling on: 2*CombatLevel
-    /// per item. Off: 3 each. Reward: Book of Mysteries.
+    /// per item. Off: 3 each. Reward: Book of Mysteries. Letter arrives Fall 24 (DateLocked),
+    /// deadline hardcoded to Fall 28 (5 active days), auto-fails Winter 1 morning.
     private static QuestPosting? WizardsRitualMaterials(QuestContext ctx)
     {
         int countPer = ctx.Config.DifficultyScaling
@@ -120,7 +121,7 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = "M. Rasmodius",
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = 5,
             Rewards =
             {
                 new MailReward("RafiaBee.MoreQuests.WizardsRitualReward", MailWhen.Tomorrow)
