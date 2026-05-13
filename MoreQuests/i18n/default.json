@@ -483,8 +483,8 @@
     "quest.fishing.legendary.targetMessage": "I knew you had it in you. That's a story worth telling.",
 
     "quest.festival.rainbowPlatter.title": "Rainbow Platter for the Trout Derby",
-    "quest.festival.rainbowPlatter.description": "{{npc}} is running a Trout Derby tasting. Bring in {{qty}} Rainbow Trout for the kitchen and you'll walk away with the {{recipe}} recipe and a discount on the dish.",
-    "quest.festival.rainbowPlatter.objective": "Catch {{qty}} Rainbow Trout for {{npc}}.",
+    "quest.festival.rainbowPlatter.description": "Farmer! The annual trout derby is coming up and I want to put out some specials at the saloon. Bring in {{qty}} Rainbow Trouts while the event is ongoing and I'll cut you in on the recipe for {{dish}} and a discount!",
+    "quest.festival.rainbowPlatter.objective": "Catch {{qty}} Rainbow Trout during the Trout Derby.",
     "quest.festival.rainbowPlatter.targetMessage": "Beautiful catch. The platter's going to look incredible.",
 
     "quest.festival.squidFest.title": "Showcase dish for SquidFest",

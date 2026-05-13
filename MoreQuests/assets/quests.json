@@ -630,7 +630,7 @@
             "Category": "Festival",
             "Trigger": {
                 "Source": "DateLocked",
-                "Date": "summer 20",
+                "Date": "summer 19",
                 "RepeatYearly": true
             },
             "Generator": "RainbowPlatter"
