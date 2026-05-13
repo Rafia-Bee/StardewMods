@@ -39,7 +39,7 @@ public sealed class QuestPoster
     }
 
     /// Wires the mail-quest registry + persisted state. Called from `ModEntry.OnSaveLoaded`
-    /// once the per-save state is available. Safe to call multiple times — the latest
+    /// once the per-save state is available. Safe to call multiple times, the latest
     /// references win.
     public void WireMailDelivery(MailQuestRegistry registry, FrameworkState state)
     {
@@ -104,7 +104,7 @@ public sealed class QuestPoster
 
     /// Builds + stamps a Quest from a CustomBoard-source posting and registers it with the
     /// API (so QuestAccepted/QuestCompleted events attribute back to the owning mod). The
-    /// caller then stuffs the Quest into the per-board `CustomBoardSlots` for display —
+    /// caller then stuffs the Quest into the per-board `CustomBoardSlots` for display,
     /// no help-wanted billboard plumbing involved. Returns null when the QuestType isn't
     /// constructable from posting fields.
     public Quest? PrepareCustomBoardQuest(QuestPosting posting)
@@ -167,7 +167,7 @@ public sealed class QuestPoster
         quest.id.Value = mailKey;
 
         // Embed the standard vanilla mail-quest token. The trailing `1` is the
-        // "addImmediately" flag — vanilla `LetterViewerMenu` calls
+        // "addImmediately" flag, vanilla `LetterViewerMenu` calls
         // `Game1.player.addQuest(mailKey)` at letter-open time, which routes
         // through `getQuestFromId` (and our prefix), pushes the prepared Quest
         // into `questLog`, and trips Quest Helper / similar tracker hooks via
@@ -192,7 +192,7 @@ public sealed class QuestPoster
     }
 
     /// Appends `%item quest <id> 1 %%` to the letter body unless one is already
-    /// present. The trailing `1` is vanilla's `addImmediately` flag — quest enters
+    /// present. The trailing `1` is vanilla's `addImmediately` flag, quest enters
     /// the journal at letter-open with no Accept button.
     private static string AppendQuestToken(string body, string mailKey)
     {
@@ -343,7 +343,7 @@ public sealed class QuestPoster
 
     /// `DeadlineDays == 0` is the explicit "no deadline" opt-in: the quest enters the
     /// journal with `daysLeft = 0` AND `dailyQuest = false`, matching the vanilla "Meet
-    /// the Townsfolk" shape — `Quest.IsTimedQuest()` returns false when both are zero, so
+    /// the Townsfolk" shape, `Quest.IsTimedQuest()` returns false when both are zero, so
     /// `dayUpdate` never decrements and the quest never auto-expires. Positive values
     /// produce a normal countdown; negative values are clamped to 1 to guard against
     /// bad JSON. Used by mail-delivered recipe-unlock quests (PreservesJarRequest, etc.).

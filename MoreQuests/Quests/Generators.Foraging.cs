@@ -61,12 +61,8 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 27. Daily-board, Linus giver, single-step `GiftUniqueNpcs` objective: gift a
-    /// forage-category item that the recipient loves or likes to 5 distinct NPCs. Reward is
-    /// `FriendshipLarge` with Linus only — no consequence engine wiring needed since the
-    /// gift recipients already get the standard friendship boost from vanilla's gift flow.
-    /// Quest gates on Linus being met (no point posting a "deliver gifts on Linus's behalf"
-    /// quest before the player has met Linus).
+    /// Linus asks the player to gift forage to a few distinct NPCs (who love/like it).
+    /// Reward: FriendshipLarge with Linus. Recipients get the standard vanilla gift bump.
     private static QuestPosting? ForageWithLinus(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Linus") == null)
@@ -91,8 +87,8 @@ internal static partial class Generators
             {
                 Name = "GiftForage",
                 Kind = AdventureStepKind.GiftUniqueNpcs,
-                // Empty Targets = any villager qualifies. The handler enforces the
-                // "loved or liked by recipient" + "$forage tagged item" filter at gift-time.
+                // Empty Targets = any villager. Handler enforces "loved/liked by recipient"
+                // + "$forage tagged item" at gift-time.
                 Items = new List<string> { "$forage" },
                 Count = recipientCount,
                 Description = ModEntry.I18n.Get("quest.foraging.forageWithLinus.step.gift", new { count = recipientCount })
@@ -114,13 +110,7 @@ internal static partial class Generators
         };
     }
 
-    // -------------------- Phase 9d: Gus's Festival Feasts (Fall + Summer) --------------------
-
-    /// Curated vanilla fall ingredients. CSV row 31 calls for a "large" delivery; we keep
-    /// the pool focused on items the player can plausibly produce or forage by Fall 8.
-
-    /// Vanilla rare forageables. Modded forage gets folded in via the `forage_item`
-    /// context tag so this list is the seed; the resolver appends matching modded ids.
+    /// Vanilla rare forageables. Modded forage gets appended via the `forage_item` tag.
     private static readonly (string Id, string Name)[] RareForagePool =
     {
         ("(O)394", "Rainbow Shell"),
@@ -128,13 +118,8 @@ internal static partial class Generators
         ("(O)851", "Magma Cap")
     };
 
-    /// CSV row 62. Daily-board ItemDelivery. Picks a met NPC to take a small stack of
-    /// rare forage. Reward = `GoldIntermediateBase` + 10 of one current-season seed
-    /// (so the player gets some farming material instead of a random gold lump).
-
-    /// CSV row 62. Daily-board ItemDelivery. Picks a met NPC to take a small stack of
-    /// rare forage. Reward = `GoldIntermediateBase` + 10 of one current-season seed
-    /// (so the player gets some farming material instead of a random gold lump).
+    /// ItemDelivery: a met NPC asks for a small stack of rare forage.
+    /// Reward: GoldIntermediateBase + 10 of one current-season seed.
     private static QuestPosting? RareForageHunt(QuestContext ctx)
     {
         var metNpcs = DispatchRegistry.MetHumanNpcs();
@@ -182,12 +167,8 @@ internal static partial class Generators
         };
     }
 
-    /// Iridium Bar + vanilla rare gems. The objective rolls one entry; the reward is
-    /// independent and can be either Artifact Troves or a stack of the same gem family.
-
-    /// Vanilla rare forage merged with anything carrying the `forage_item` context tag
-    /// AND not an obviously common pick (drops anything tagged `season_<current>` so the
-    /// daily-board posting feels rare, not an expanded SeasonalForaging).
+    /// Vanilla rare forage + items tagged `forage_item` and NOT `season_&lt;current&gt;`
+    /// (so the posting feels rare, not just an expanded SeasonalForaging).
     private static List<ResolvedItem> ResolveRareForage(QuestContext ctx)
     {
         var results = new List<ResolvedItem>();
@@ -200,9 +181,8 @@ internal static partial class Generators
                 results.Add(resolved);
         }
 
-        // Append modded forage that isn't tagged with the current season — current-season
-        // forage is the BasicForaging quest's pool; the rare hunt should feel like an
-        // actual hunt.
+        // Append modded forage that isn't tagged with the current season. Current-season
+        // forage belongs to BasicForaging; the rare hunt should actually feel rare.
         string currentSeasonTag = "season_" + ctx.Season.ToLowerInvariant();
         var allForage = ctx.Config.ForagingIgnoresVisitedLocations
             ? ctx.Items.GetForageItems()
@@ -228,15 +208,8 @@ internal static partial class Generators
         return results;
     }
 
-    /// Picks a current-season seed via Data/Crops + the existing seed-resolver pattern
-    /// from PierresStockUp. Returns null if no seasonal crops resolve (e.g. on saves
-    /// where every seasonal crop's seed got removed by a content pack).
-
-    /// CSV row 17. Daily-board single-step `ClearDebris` AdventureQuest. The picked human
-    /// adult giver asks the player to clear `Random.Next(5, 21)` resource clumps (5..20)
-    /// anywhere except the farm (modded locations included). Reward = `FriendshipMid` to
-    /// the giver. The `ClearDebris` step rides the framework's per-second resource-clump
-    /// poll with `Targets = ["*", "!Farm"]` semantics.
+    /// Single-step ClearDebris AdventureQuest: an adult human asks the player to clear
+    /// 5..20 resource clumps anywhere except the farm. Reward: FriendshipMid.
     private static QuestPosting? ClearDebris(QuestContext ctx)
     {
         var npcs = MetAdultHumanGiftReceivers();
@@ -276,15 +249,11 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 55. Daily-board single-step `Plant` AdventureQuest. Quest giver picked
-    /// from the `ConservationGuide` dispatch role (Linus / Demetrius / Kimpoi RSV /
-    /// Dylan ESV / Aster VMV). Player must plant a scaled number of trees in a location
-    /// adjacent to the giver's home (Linus / Demetrius hardcoded to Mountain; modded
-    /// givers read `NPC.DefaultMap`, with Beach routing back to Pelican Town since
-    /// trees can't grow on sand). Reward = `FriendshipIntermediate` to the giver. The
-    /// framework's `PlantTreesPatches` opts the target location into vanilla's
-    /// `CanPlantTreesHere` gate while the quest is active so the player can plant
-    /// wild-tree seeds there even if the location otherwise refuses.
+    /// Single-step Plant AdventureQuest from a ConservationGuide role NPC. Player plants a
+    /// scaled number of trees near the giver's home (Linus/Demetrius hardcoded to Mountain;
+    /// modded givers use NPC.DefaultMap, Beach routes back to Town since trees can't grow on
+    /// sand). Reward: FriendshipIntermediate. PlantTreesPatches opens the location's
+    /// CanPlantTreesHere gate while the quest is active.
     private static QuestPosting? PlantTrees(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.ConservationGuide);
@@ -339,8 +308,8 @@ internal static partial class Generators
 
     private static string ResolvePlantTreesLocation(string giver)
     {
-        // Vanilla givers: hardcoded so the narrative reads right (Linus's tent and the
-        // Science House both sit on the Mountain proper, not the Forest map id).
+        // Vanilla givers hardcoded for narrative: Linus's tent and the Science House sit on
+        // the Mountain proper, not the Forest map id.
         if (string.Equals(giver, "Linus", StringComparison.OrdinalIgnoreCase)
             || string.Equals(giver, "Demetrius", StringComparison.OrdinalIgnoreCase))
             return "Mountain";
@@ -350,8 +319,8 @@ internal static partial class Generators
         if (string.IsNullOrEmpty(home))
             return "Town";
 
-        // Beach maps can't grow trees (sand, not dirt), so a beach-living modded NPC
-        // routes the quest back to town and relies on PlantTreesPatches to open the gate.
+        // Beach maps can't grow trees (sand, not dirt). Beach-living modded NPCs route the
+        // quest back to Town and rely on PlantTreesPatches to open the gate.
         if (string.Equals(home, "Beach", StringComparison.OrdinalIgnoreCase)
             || string.Equals(home, "BeachNightMarket", StringComparison.OrdinalIgnoreCase))
             return "Town";

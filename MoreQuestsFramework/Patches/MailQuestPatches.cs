@@ -8,14 +8,14 @@ namespace MoreQuestsFramework.Patches;
 
 /// Harmony prefix on `Quest.getQuestFromId(string)` so the standard
 /// `%item quest <id> 1 %%` mail token can return our framework Quest subclasses.
-/// Vanilla's lookup is a hard-coded switch on quest type strings — without this
+/// Vanilla's lookup is a hard-coded switch on quest type strings, without this
 /// patch our `MoreQuestsItemDeliveryQuest` (and its `serializedRewards` NetField)
 /// would be replaced by a vanilla `ItemDeliveryQuest` and our declarative reward
 /// payout would silently break.
 ///
 /// Patch is **gated**: when the registry has no pending entries (the common case),
 /// the prefix is one dictionary lookup that returns true and lets vanilla run.
-/// Aligns with §8.1 — "every patch returns immediately if no active quest needs it".
+/// Aligns with §8.1, "every patch returns immediately if no active quest needs it".
 internal static class MailQuestPatches
 {
     private static MailQuestRegistry _registry = null!;
@@ -36,7 +36,7 @@ internal static class MailQuestPatches
     /// True (continue to vanilla) when no entry matches; false (skip vanilla)
     /// when we have a prepared Quest for this id. Sets `showNew = true` on the
     /// returned Quest to match what `Quest.getQuestFromId` does on its own
-    /// vanilla path — that's the field the vanilla "!" indicator and most
+    /// vanilla path, that's the field the vanilla "!" indicator and most
     /// quest-tracking mods key off. Also tracks the Quest with the public API
     /// so `QuestAccepted` / `QuestCompleted` / `QuestRemoved` fire correctly.
     public static bool GetQuestFromId_Prefix(string id, ref Quest __result)
@@ -51,7 +51,7 @@ internal static class MailQuestPatches
         quest.showNew.Value = true;
         _api.TrackPosted(quest, entry.OwnerUniqueId, entry.DefinitionId);
         __result = quest;
-        // Removed from the registry once handed off — `Farmer.addQuest` adds
+        // Removed from the registry once handed off, `Farmer.addQuest` adds
         // the returned Quest to `questLog` immediately after, so the framework
         // no longer needs the prepared instance.
         _registry.Remove(id);

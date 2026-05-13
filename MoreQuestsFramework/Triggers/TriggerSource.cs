@@ -3,7 +3,7 @@ namespace MoreQuestsFramework.Triggers;
 /// What event causes a quest definition to attempt to fire today. Phase 6 covers
 /// every source from plan.md §5.4 except `SpecialOrder` (Phase 8) and `CustomBoard`
 /// (Phase 8). The trigger source is independent of the delivery channel
-/// (`PostingKind`) — a `DateLocked` quest can be delivered by mail, by NPC dialogue,
+/// (`PostingKind`), a `DateLocked` quest can be delivered by mail, by NPC dialogue,
 /// or written into the special-orders board, and the JSON `Delivery` field on the
 /// trigger picks the channel.
 public enum TriggerSource

@@ -117,7 +117,7 @@ public sealed class FestivalBiasWriter
         RewardApplier.OnFestivalBiasGranted = null;
     }
 
-    /// Days from grant to bias expiry. Generous on purpose — a quest completed early in
+    /// Days from grant to bias expiry. Generous on purpose, a quest completed early in
     /// the season needs the bias to survive every intervening day plus the festival day.
     /// Year-wraparound is handled by the totaldays count being monotonic.
     private static int LookaheadDaysFor(FestivalKind festival) => festival switch

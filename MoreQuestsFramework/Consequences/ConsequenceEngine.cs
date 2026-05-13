@@ -8,7 +8,7 @@ using StardewModdingAPI;
 namespace MoreQuestsFramework.Consequences;
 
 /// Routes every `ConsequenceSpec` to the matching `IConsequenceHandler`. One singleton
-/// per save load — wired in `ModEntry.OnSaveLoaded` after the state store and gift-tastes
+/// per save load, wired in `ModEntry.OnSaveLoaded` after the state store and gift-tastes
 /// scanner are ready. Handler registration is open from `RegistrationOpen` until the
 /// registration window closes; built-in handlers seed first so consumer mods can replace
 /// them by name.
@@ -24,7 +24,7 @@ public sealed class ConsequenceEngine
     /// Set by `ModEntry.OnSaveLoaded` to the live engine instance. Static so quest
     /// subclasses (`MoreQuestsItemDeliveryQuest`, `AdventureQuest`, ...) can fire the
     /// engine from their `questComplete()` overrides without threading an instance
-    /// reference through every subclass. Null when no save is loaded — the helper
+    /// reference through every subclass. Null when no save is loaded, the helper
     /// no-ops gracefully so unit-test / authoring scenarios work without one.
     public static ConsequenceEngine? Active { get; set; }
 
@@ -60,7 +60,7 @@ public sealed class ConsequenceEngine
 
     /// Drop pending dialogue entries the player has ducked for too long. Fired from
     /// `ModEntry.OnDayStarted`. Anything whose `EarliestFireDay` is more than
-    /// `ConsequenceGraceDays` days in the past stops being a plausible reaction —
+    /// `ConsequenceGraceDays` days in the past stops being a plausible reaction,
     /// an NPC isn't going to bring up an overfishing complaint a year after the fact.
     /// Stale-drop count is logged at Trace.
     public void SweepExpired()
@@ -123,7 +123,7 @@ public sealed class ConsequenceEngine
         var hated = MetOnly(_scanner.NpcsWhoHate(spec.Subject));
         if (spec.Targets.Count > 0)
         {
-            // Authors can append a fixed NPC even when scanning tastes — useful for the
+            // Authors can append a fixed NPC even when scanning tastes, useful for the
             // dispatcher's NPC if they aren't covered by the taste row.
             var extra = MetOnly(spec.Targets);
             var merged = new List<string>(hated.Count + extra.Count);
@@ -138,7 +138,7 @@ public sealed class ConsequenceEngine
         // loved + every hated NPC produces a fatigue-inducing wall of reactions over
         // the next in-game week; sampling per-side keeps the loved + hated narrative
         // beats both visible (so the player gets to feel the trade-off) without
-        // spamming. Tier 3 chains (Static source above) are exempt — those want every
+        // spamming. Tier 3 chains (Static source above) are exempt, those want every
         // ecology NPC to react over multiple days.
         return SampleEachSide(loved, hated);
     }

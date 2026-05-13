@@ -24,7 +24,7 @@ public sealed record MailReward(string LetterKey, MailWhen When = MailWhen.Today
 /// restricts the discount to entries whose `ItemId` matches one of the listed ids; an
 /// empty list discounts every entry in the shop. `GuaranteedStock` (when > 0) force-adds
 /// any `AppliesTo` item the shop doesn't already sell as a temporary stocked entry with
-/// that per-visit limit at the discounted price — handy for content quests that ask for
+/// that per-visit limit at the discounted price, handy for content quests that ask for
 /// modded crops the vanilla shop wouldn't normally carry. Persisted to
 /// `FrameworkState.ActiveShopDiscounts` and re-applied via an asset-edit handler each
 /// time `Data/Shops` is requested.
@@ -41,7 +41,7 @@ public sealed record ShopDiscountReward(
 /// vanilla `PurchaseAnimalsMenu` and any third-party menu rewrite, e.g. Livestock Bazaar,
 /// pick up the discounted price without a per-menu patch). Persisted to
 /// `FrameworkState.ActiveAnimalPurchaseDiscounts` and re-applied each time
-/// `Data/FarmAnimals` is requested. Discount is global across animal types — no
+/// `Data/FarmAnimals` is requested. Discount is global across animal types, no
 /// per-species filter today.
 public sealed record AnimalPurchaseDiscountReward(
     int PercentOff,

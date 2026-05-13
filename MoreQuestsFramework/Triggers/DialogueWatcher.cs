@@ -11,7 +11,7 @@ namespace MoreQuestsFramework.Triggers;
 
 /// Pushes `Source: NpcDialogue` quests into the journal the next time the player
 /// speaks with the queued target NPC. Watches `Game1.currentSpeaker` on the
-/// one-second tick — cheap (1 Hz) and avoids any Harmony patch on dialogue paths
+/// one-second tick, cheap (1 Hz) and avoids any Harmony patch on dialogue paths
 /// per the §8.7 patch budget.
 ///
 /// Persistence: the queue is mirrored into `FrameworkState.PendingDialogueQuests`

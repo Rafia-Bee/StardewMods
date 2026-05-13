@@ -16,12 +16,8 @@ namespace MoreQuests.Quests;
 
 internal static partial class Generators
 {
-    /// Single-objective Ship quest. Player ships Battery Pack OR Coal into the farm
-    /// shipping bin; the framework's DayEnding observer credits each match by weight,
-    /// where one Battery Pack equals 15 Coal of "fuel". The reward Pearl arrives by mail
-    /// the next morning. Mining-skill scaling: base = 15 fuel (= 1 battery / 15 coal),
-    /// scales 1.5× per mining level when DifficultyScaling is on. With scaling off it's
-    /// a fixed 30 fuel target (= 2 batteries / 30 coal).
+    /// Ship Battery Pack OR Coal (1 battery = 15 coal of "fuel"). Pearl reward arrives by
+    /// mail the next morning. Scaling on: 15 * 1.5 * MiningLevel. Off: 30 fuel.
     private static QuestPosting? SubmarineFuel(QuestContext ctx)
     {
         const int batteryWeight = 15;
@@ -53,15 +49,8 @@ internal static partial class Generators
         };
     }
 
-    /// Multi-step Ship Adventure: ship Void Essence + Bat Wings + Solar Essence to the
-    /// shipping bin, in any order. Combat-skill scaling: count = max(1, 2 × CombatLevel)
-    /// per item when DifficultyScaling is on; fixed 3 of each when off. Reward = Book of
-    /// Mysteries via inventory add on completion.
-
-    /// Multi-step Ship Adventure: ship Void Essence + Bat Wings + Solar Essence to the
-    /// shipping bin, in any order. Combat-skill scaling: count = max(1, 2 × CombatLevel)
-    /// per item when DifficultyScaling is on; fixed 3 of each when off. Reward = Book of
-    /// Mysteries via inventory add on completion.
+    /// Ship Void Essence + Bat Wings + Solar Essence in any order. Scaling on: 2*CombatLevel
+    /// per item. Off: 3 each. Reward: Book of Mysteries.
     private static QuestPosting? WizardsRitualMaterials(QuestContext ctx)
     {
         int countPer = ctx.Config.DifficultyScaling
@@ -115,21 +104,9 @@ internal static partial class Generators
         };
     }
 
-    /// Multi-step Deliver Adventure: hand Flour + Sugar + Egg to Evelyn in any order.
-    /// Farming-skill scaling: count = max(3, 6 × FarmingLevel) per ingredient when
-    /// DifficultyScaling is on; fixed 3 of each when off. Egg step accepts ANY edible egg
-    /// (Object Category -5 with non-inedible Edibility) via the `$edible-egg` token, so
-    /// modded eggs (Hootin' & Hollerin' Owl, SVE Goose, VMV Speckled Fowl, etc.) all
-    /// count alongside the vanilla white/brown chicken / duck / ostrich / void eggs.
-    /// Dinosaur Egg is excluded because vanilla marks it `Edibility = -300` (inedible).
-
-    /// Multi-step Deliver Adventure: hand Flour + Sugar + Egg to Evelyn in any order.
-    /// Farming-skill scaling: count = max(3, 6 × FarmingLevel) per ingredient when
-    /// DifficultyScaling is on; fixed 3 of each when off. Egg step accepts ANY edible egg
-    /// (Object Category -5 with non-inedible Edibility) via the `$edible-egg` token, so
-    /// modded eggs (Hootin' & Hollerin' Owl, SVE Goose, VMV Speckled Fowl, etc.) all
-    /// count alongside the vanilla white/brown chicken / duck / ostrich / void eggs.
-    /// Dinosaur Egg is excluded because vanilla marks it `Edibility = -300` (inedible).
+    /// Deliver Flour + Sugar + Egg to Evelyn in any order. Scaling on: 6*FarmingLevel per
+    /// ingredient. Off: 3 each. Egg step uses $edible-egg so vanilla and modded eggs both
+    /// count. Dinosaur Egg is excluded (Edibility = -300).
     private static QuestPosting? HolidayCookies(QuestContext ctx)
     {
         int countPer = ctx.Config.DifficultyScaling
@@ -190,18 +167,8 @@ internal static partial class Generators
         };
     }
 
-    // -------------------- Phase 7c: Check on Friends --------------------
-
-    /// Two-step Adventure: pick N met villagers + a separate giver, talk to all N (in
-    /// any order — the Talk step's CreditedKeys enforces uniqueness so the same NPC
-    /// can't be counted twice), then report back to the giver. Requires at least
-    /// CheckOnFriendsCount + 1 met villagers (otherwise there are fewer NPCs than the
-    /// quest expects). Reward = FriendshipIntermediate to the giver only.
-
-    /// Spring 6 (Egg Festival prep). Gus is taste-testing dishes for the festival;
-    /// player delivers spring-themed ingredients, gets a "sample" cooked dish back as
-    /// reward. CSV row 30. Reward kind = `Dish` only (no Festival Bonus), so no
-    /// dependency on the Phase 9 `FestivalBias` reward kind.
+    /// Spring 6 (Egg Festival prep). Gus is taste-testing for the festival. Player delivers
+    /// spring ingredients, gets a sample cooked dish back. Reward kind: Dish only.
     private static QuestPosting? GusFestivalFeastSpring(QuestContext ctx)
     {
 
@@ -246,15 +213,8 @@ internal static partial class Generators
         };
     }
 
-    /// Winter 18 (Winter Star prep). Ship winter-themed forageables; reward is
-    /// FriendshipMultiSmall to every met villager (CSV row 33: "Only +friendship
-    /// with NPCs farmer has already met."). Stacked FriendshipReward entries — one
-    /// per met villager — get applied at completion via the existing reward pipeline.
-
-    /// Winter 18 (Winter Star prep). Ship winter-themed forageables; reward is
-    /// FriendshipMultiSmall to every met villager (CSV row 33: "Only +friendship
-    /// with NPCs farmer has already met."). Stacked FriendshipReward entries — one
-    /// per met villager — get applied at completion via the existing reward pipeline.
+    /// Winter 18 (Winter Star prep). Ship winter forageables. Reward: FriendshipMultiSmall
+    /// to every met villager (one FriendshipReward each).
     private static QuestPosting? GusFestivalFeastWinter(QuestContext ctx)
     {
 
@@ -344,13 +304,7 @@ internal static partial class Generators
         ("(O)399", "Spring Onion")
     };
 
-    /// Curated vanilla spring "sample" dishes Gus could plausibly hand back as a taste
-    /// from his potluck testing. All have spring-themed ingredients in their vanilla
-    /// recipes, so they read as in-character for the Egg Festival prep flavour.
-
-    /// Curated vanilla spring "sample" dishes Gus could plausibly hand back as a taste
-    /// from his potluck testing. All have spring-themed ingredients in their vanilla
-    /// recipes, so they read as in-character for the Egg Festival prep flavour.
+    /// Spring sample dishes Gus could hand back. Spring-themed vanilla recipes.
     private static readonly (string Id, string Name)[] SpringSampleDishPool =
     {
         ("(O)196", "Salad"),
@@ -371,15 +325,7 @@ internal static partial class Generators
         return ctx.Items.TryResolveItem(id);
     }
 
-    // -------------------- Phase 8a: Preserves Season (SpecialOrder) --------------------
-
-    /// Vanilla artisan-good context tags. Each entry is one shippable category the order
-    /// can ask for. The synthetic `id_o_<itemid>` tag (vanilla auto-generates these per
-    /// `Utility.getStandardDescriptionFromItem`) lets us target a single specific item
-    /// without needing the item to declare a custom context tag in `Data/Objects`.
-
-    /// Curated vanilla fall ingredients. CSV row 31 calls for a "large" delivery; we keep
-    /// the pool focused on items the player can plausibly produce or forage by Fall 8.
+    /// Vanilla fall ingredients producible or forageable by Fall 8.
     private static readonly (string Id, string Name)[] FallIngredientPool =
     {
         ("(O)24", "Parsnip"),
@@ -392,11 +338,7 @@ internal static partial class Generators
         ("(O)404", "Common Mushroom")
     };
 
-    /// Vanilla fall-themed sample dishes Gus could plausibly hand back from his Fair
-    /// taste-testing. Picked for ingredients in the fall pool above.
-
-    /// Vanilla fall-themed sample dishes Gus could plausibly hand back from his Fair
-    /// taste-testing. Picked for ingredients in the fall pool above.
+    /// Vanilla fall sample dishes for Fair taste-testing. Ingredients match the fall pool.
     private static readonly (string Id, string Name)[] FallSampleDishPool =
     {
         ("(O)205", "Fried Mushroom"),
@@ -408,11 +350,8 @@ internal static partial class Generators
         ("(O)608", "Pumpkin Pie")
     };
 
-    /// Vanilla summer-themed dishes — ingredients that can be sourced by Summer 8 on a
-    /// first-year save. Tighter than Fall because the trigger is earlier in the season.
-
-    /// Vanilla summer-themed dishes — ingredients that can be sourced by Summer 8 on a
-    /// first-year save. Tighter than Fall because the trigger is earlier in the season.
+    /// Vanilla summer ingredients sourceable by Summer 8 on a first-year save. Tighter than
+    /// Fall since the trigger is earlier in the season.
     private static readonly (string Id, string Name)[] SummerIngredientPool =
     {
         ("(O)190", "Cauliflower"),
@@ -428,15 +367,8 @@ internal static partial class Generators
         ("(O)16", "Wild Horseradish")
     };
 
-    /// Fall 8 prep for the Stardew Valley Fair. CSV row 31. Multi-step Adventure: deliver
-    /// `GusFestivalFeastIngredientCount` distinct fall ingredients to Gus. Reward = a sample
-    /// dish via `ObjectReward` plus a `FestivalBias` Fair magnitude — the bias bumps the
-    /// player's grange score on Fall 16. Tier = Intermediate per the CSV.
-
-    /// Fall 8 prep for the Stardew Valley Fair. CSV row 31. Multi-step Adventure: deliver
-    /// `GusFestivalFeastIngredientCount` distinct fall ingredients to Gus. Reward = a sample
-    /// dish via `ObjectReward` plus a `FestivalBias` Fair magnitude — the bias bumps the
-    /// player's grange score on Fall 16. Tier = Intermediate per the CSV.
+    /// Fall 8 Fair prep: deliver N distinct fall ingredients to Gus. Reward: sample dish +
+    /// FestivalBias Fair magnitude (bumps grange score on Fall 16).
     private static QuestPosting? GusFestivalFeastFall(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Gus") == null)
@@ -493,15 +425,8 @@ internal static partial class Generators
         };
     }
 
-    /// Summer 8 prep for the Luau (Summer 11). CSV row 32. Multi-step Adventure: deliver 3
-    /// summer/spring-themed ingredients to Gus. Reward = `FestivalBias` Luau magnitude only
-    /// — no sample dish, since the CSV explicitly calls out "Festival Bonus" as the only
-    /// reward kind (a higher base potluck score). Tier = Intermediate.
-
-    /// Summer 8 prep for the Luau (Summer 11). CSV row 32. Multi-step Adventure: deliver 3
-    /// summer/spring-themed ingredients to Gus. Reward = `FestivalBias` Luau magnitude only
-    /// — no sample dish, since the CSV explicitly calls out "Festival Bonus" as the only
-    /// reward kind (a higher base potluck score). Tier = Intermediate.
+    /// Summer 8 Luau prep: deliver summer/spring ingredients to Gus. Reward: FestivalBias
+    /// Luau magnitude only (no sample dish; the bias is a higher base potluck score).
     private static QuestPosting? GusFestivalFeastSummer(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Gus") == null)
@@ -554,13 +479,8 @@ internal static partial class Generators
         };
     }
 
-    /// Picks up to `count` distinct entries from `pool`, dropping any whose id doesn't
-    /// resolve (modded mismatch, Game1 not yet ready). Returns the resolved items in pick
-    /// order. May return fewer than `count` when the pool can't satisfy that many resolves.
-
-    /// Picks up to `count` distinct entries from `pool`, dropping any whose id doesn't
-    /// resolve (modded mismatch, Game1 not yet ready). Returns the resolved items in pick
-    /// order. May return fewer than `count` when the pool can't satisfy that many resolves.
+    /// Up to `count` distinct resolved entries from `pool`. May return fewer if the pool
+    /// can't satisfy that many resolves.
     private static List<ResolvedItem> PickDistinctIngredients(QuestContext ctx, (string Id, string Name)[] pool, int count)
     {
         var picks = new List<ResolvedItem>(count);
@@ -587,11 +507,8 @@ internal static partial class Generators
         return ctx.Items.TryResolveItem(id);
     }
 
-    /// CSV row 50. Winter 13 (Night Market middle day). Picks a met NPC to send the
-    /// player on a non-current-season seed restock. Filter walks `Data/Crops` and keeps
-    /// any seed whose `Seasons` list excludes Winter so the request reads as "stock up
-    /// for next year while the Night Market's Magic Boat is in town". Reward =
-    /// `FriendshipBasic` with the picked NPC.
+    /// Winter 13 (Night Market). A met NPC asks for a non-winter seed restock. Filter:
+    /// any seed whose Data/Crops Seasons excludes Winter. Reward: FriendshipBasic.
     private static QuestPosting? MerchantUnpacking(QuestContext ctx)
     {
         var metNpcs = DispatchRegistry.MetHumanNpcs();
@@ -624,18 +541,10 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 52. Daily-board SlayMonster (any monster). Marlon dispatches the request
-    /// from the Adventurer's Guild. Reward = `GoldIntermediateBase` + one random item
-    /// from the framework's combat-food pool (seeded by this content mod with vanilla
-    /// combat-buff foods at `RegistrationOpen`; consumer mods can extend through
-    /// `IMoreQuestsApi.RegisterCombatFood`).
-
-    /// CSV row 66. Winter 22 DateLocked. Resolves the player's Winter Star recipient via
-    /// `Utility.GetRandomWinterStarParticipant` (the same deterministic random the game
-    /// uses to assign secret-santa pairings) and embeds a hint about the recipient's
-    /// loved gifts. Player can opt out via `SecretGiftHintEnabled`. Quest is a single
-    /// Talk step targeted at the recipient — the festival event surfaces dialogue with
-    /// them naturally so the quest closes on Winter 25 without bespoke event hooks.
+    /// Winter 22 DateLocked. Resolves the player's Winter Star recipient via
+    /// Utility.GetRandomWinterStarParticipant and embeds a hint about their loved gifts.
+    /// Single Talk step targeted at the recipient; the festival event surfaces dialogue
+    /// naturally so the quest closes on Winter 25 without bespoke event hooks.
     private static QuestPosting? SecretGiftHint(QuestContext ctx)
     {
         if (!ModEntry.Config.SecretGiftHintEnabled)
@@ -687,15 +596,9 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 73. Winter 20 DateLocked, mod-gated on Si.ExtraCraftingMaterials (Nexus
-    /// 25467). Lewis asks the player to ship Paper + Tape so the town can wrap their
-    /// Winter Star gifts. Reward = a Book of Stars from the same mod. Item ids are
-    /// configurable so the quest still works if the source mod renames items.
-
-    /// CSV row 73. Winter 20 DateLocked, mod-gated on Si.ExtraCraftingMaterials (Nexus
-    /// 25467). Lewis asks the player to ship Paper + Tape so the town can wrap their
-    /// Winter Star gifts. Reward = a Book of Stars from the same mod. Item ids are
-    /// configurable so the quest still works if the source mod renames items.
+    /// Winter 20, mod-gated on Si.ExtraCraftingMaterials. Lewis asks the player to ship
+    /// Paper + Tape for the town's Winter Star gift wrapping. Reward: Book of Stars.
+    /// Item ids are configurable so the quest still works if the source mod renames them.
     private static QuestPosting? WrappingPaper(QuestContext ctx)
     {
         if (!ctx.Helper.ModRegistry.IsLoaded(MoreQuestsFramework.ModCompat.SiExtraCraftingMaterials))
@@ -758,15 +661,7 @@ internal static partial class Generators
         };
     }
 
-    // -------------------- Phase 9.5a helpers --------------------
-
-    /// Picks a single random loved or liked item id from the NPC's `Data/NPCGiftTastes`
-    /// entry, then resolves it through `ItemResolver`. Skips items that can't be
-    /// resolved (modded id whose source mod isn't loaded, etc.) and falls back through
-    /// the candidate pool until one resolves.
-
-    /// Walks `Data/Crops` for seeds whose Seasons list excludes Winter. Returns the
-    /// resolved seed items so the picker can hand one to the Ship objective.
+    /// Walks Data/Crops for seeds whose Seasons list excludes Winter.
     private static List<ResolvedItem> ResolveNonWinterSeeds(QuestContext ctx)
     {
         var results = new List<ResolvedItem>();
@@ -799,14 +694,8 @@ internal static partial class Generators
         return results;
     }
 
-    /// Vanilla rare forage merged with anything carrying the `forage_item` context tag
-    /// AND not an obviously common pick (drops anything tagged `season_<current>` so the
-    /// daily-board posting feels rare, not an expanded SeasonalForaging).
-
-    /// Item ids that should never land as a decor reward even if they appear in the
-    /// festival shop's stock. Stardrop is the canonical one (unique permanent boost,
-    /// would feel game-breaking to hand out for finishing a board quest). Extend as
-    /// needed if a shop turns up additional non-decor specials.
+    /// Item ids that should never land as a decor reward. Stardrop is the canonical one
+    /// (unique permanent boost). Extend if other shops turn up non-decor specials.
     private static readonly HashSet<string> FestivalShopRewardExclusions = new(StringComparer.OrdinalIgnoreCase)
     {
         "(O)434" // Stardrop
@@ -829,13 +718,8 @@ internal static partial class Generators
         return filtered[Game1.random.Next(filtered.Count)];
     }
 
-    /// Picks one item id from a curated decor pool. Returns the id verbatim — any
-    /// resolution / instantiation happens later in `RewardApplier.ApplyOne` via
-    /// `ItemRegistry.Create`. Empty pools return null (caller skips the reward step).
-
-    /// Picks one item id from a curated decor pool. Returns the id verbatim — any
-    /// resolution / instantiation happens later in `RewardApplier.ApplyOne` via
-    /// `ItemRegistry.Create`. Empty pools return null (caller skips the reward step).
+    /// Picks one id from a decor pool. Resolution happens later in RewardApplier.ApplyOne.
+    /// Empty pools return null.
     private static string? PickDecor(string[] pool)
     {
         if (pool == null || pool.Length == 0)
@@ -843,13 +727,7 @@ internal static partial class Generators
         return pool[Game1.random.Next(pool.Length)];
     }
 
-    /// Splits a comma-separated NPC list (from `ModConfig.EastScarpFestivalNpcs` /
-    /// `RidgesideFestivalNpcs`) into a deduplicated list of trimmed names. Empty entries
-    /// are dropped; case-insensitive dedup so "Rosa, rosa" only counts once.
-
-    /// Splits a comma-separated NPC list (from `ModConfig.EastScarpFestivalNpcs` /
-    /// `RidgesideFestivalNpcs`) into a deduplicated list of trimmed names. Empty entries
-    /// are dropped; case-insensitive dedup so "Rosa, rosa" only counts once.
+    /// Splits a comma-separated NPC list into trimmed, case-insensitively deduplicated names.
     private static List<string> SplitNpcList(string raw)
     {
         var result = new List<string>();
@@ -866,14 +744,9 @@ internal static partial class Generators
         return result;
     }
 
-    /// Row 20 — Dance of the Moonlight Jellies Festival Decor Supply (Lewis, Summer 21,
-    /// 7 days before the festival on Summer 28). Two-step Ship Adventure: Torches + Wood.
-    /// Reward = `GoldBasicBase` + one random non-Stardrop entry from Pierre's festival
-    /// shop (`Festival_DanceOfTheMoonlightJellies_Pierre`), so modded decor in that stock
-    /// is eligible. Quantities scale with Foraging when DifficultyScaling is on. Deadline
-    /// is an explicit 6 days so the quest expires the morning of Summer 28 regardless of
-    /// what the player has set `DeadlineShort` to in GMCM (the festival itself blocks any
-    /// completion-day turn-in).
+    /// Moonlight Jellies decor: Lewis, Summer 21. Ship Torches + Wood. Reward: GoldBasicBase
+    /// + a random non-Stardrop item from Pierre's festival shop. Explicit 6-day deadline so
+    /// the quest expires on Summer 28 regardless of GMCM DeadlineShort.
     private static QuestPosting? MoonlightJelliesFestivalDecor(QuestContext ctx)
     {
         const string giver = "Lewis";
@@ -935,12 +808,8 @@ internal static partial class Generators
         };
     }
 
-    /// Row 22 — Egg Festival Decor Supply (Lewis, Spring 10, 3 days before the Egg Festival
-    /// on Spring 13). Single-step Ship Adventure for Hay Bales (a Big-Craftable that vanilla
-    /// won't ship without the bypass). Reward = `GoldBeginnerBase` + one random non-Stardrop
-    /// entry from Pierre's Egg-Festival shop (`Festival_EggFestival_Pierre`), so modded
-    /// decor in that stock is eligible. Explicit 3-day deadline so the quest expires the
-    /// morning of Spring 13 regardless of GMCM `DeadlineShort`.
+    /// Egg Festival decor: Lewis, Spring 10. Ship Hay Bales (BC that needs the decor bypass).
+    /// Reward: GoldBeginnerBase + a random non-Stardrop item from Pierre's Egg-Festival shop.
     private static QuestPosting? EggFestivalDecor(QuestContext ctx)
     {
         const string giver = "Lewis";
@@ -981,19 +850,10 @@ internal static partial class Generators
         };
     }
 
-    /// Row 23 — Stardew Valley Fair Decor Supply (Lewis, Fall 12, 4 days before the Fair
-    /// on Fall 16). Three-step Ship Adventure: Wood + any sign Big-Craftable (Wood / Stone
-    /// / Dark Sign) + fall-themed flowers. The flower list is scanned from `Data/Crops`
-    /// for any flower-category harvest item whose season list contains Fall, so modded
-    /// fall flowers ride along automatically; the explicit Wood Sign filter has been
-    /// widened to accept all three vanilla signs. Quantities scale with Farming /
-    /// Foraging when `DifficultyScaling` is on. Reward depends on
-    /// `FairFestivalRewardKind`: `GrangeScoreBonus` keeps the prior `FestivalBiasReward`
-    /// path (flat add to `grangeScore` before Lewis judges), `StarTokens` swaps to a
-    /// `FairStarTokensReward` that drops `FairStarTokensAmount` extra star tokens into
-    /// `Game1.player.festivalScore` once the Fair event is live so the player can spend
-    /// them at the festival stalls. Explicit 3-day deadline so the quest auto-fails the
-    /// morning of Fall 15 (one day before the Fair) regardless of GMCM `DeadlineShort`.
+    /// Fair decor: Lewis, Fall 12. Three Ship steps: Wood, any Sign BC (Wood/Stone/Dark),
+    /// fall flowers (scanned from Data/Crops so modded fall flowers come along). Reward
+    /// depends on FairFestivalRewardKind: GrangeScoreBonus adds flat grange points, StarTokens
+    /// adds extra festivalScore tokens to spend at the Fair.
     private static QuestPosting? FairFestivalDecor(QuestContext ctx)
     {
         const string giver = "Lewis";
@@ -1081,10 +941,9 @@ internal static partial class Generators
         };
     }
 
-    /// Returns every flower-category (Category == -80) crop harvest id whose `Data/Crops`
-    /// season list contains Fall. Picks up modded fall flowers automatically. Falls back
-    /// to the vanilla pair (Sunflower + Fairy Rose) if a content pack wipes the crop
-    /// table — the quest still needs *something* to accept.
+    /// Every flower-category (-80) harvest id whose Data/Crops season list contains Fall.
+    /// Picks up modded fall flowers. Falls back to Sunflower + Fairy Rose if the crop table
+    /// has been wiped (the quest still needs something to accept).
     private static List<string> GetFallFlowerItemIds(QuestContext ctx)
     {
         var ids = new List<string>();
@@ -1104,16 +963,8 @@ internal static partial class Generators
         return ids;
     }
 
-    /// Row 24 — Luau Decor Supply (Lewis, Summer 6, 5 days before the Luau on Summer 11).
-    /// Three-step Ship Adventure: Fiber + Hardwood + Wood Lamp-post `(BC)152`. The prior
-    /// Basic Log furniture step and the `(BC)21` lamp id (actually Crystalarium) were
-    /// both broken, so the log step was swapped for Hardwood per the note and the lamp
-    /// id corrected to vanilla's actual Wood Lamp-post. Quantities scale with Foraging
-    /// when `DifficultyScaling` is on. Reward = `GoldIntermediateBase` + one random
-    /// non-Stardrop entry from Pierre's Luau festival shop (`Festival_Luau_Pierre`), so
-    /// modded decor injected into that shop is eligible. Explicit 4-day deadline so the
-    /// quest auto-fails the morning of Summer 10 (one day before the Luau) regardless of
-    /// GMCM `DeadlineMedium`.
+    /// Luau decor: Lewis, Summer 6. Ship Fiber + Hardwood + Wood Lamp-post (BC)152.
+    /// Reward: GoldIntermediateBase + a random non-Stardrop item from the Luau shop.
     private static QuestPosting? LuauFestivalDecor(QuestContext ctx)
     {
         const string giver = "Lewis";
@@ -1188,13 +1039,9 @@ internal static partial class Generators
         };
     }
 
-    /// Row 26 — Spirit's Eve Decor Supply (Wizard, Fall 22, 5 days before Spirit's Eve
-    /// on Fall 27). Three-step Ship Adventure: Pumpkin Seeds + Cloth + Torches. Pumpkin
-    /// seeds (not pumpkins) match the audit verdict — the Wizard is building atmosphere,
-    /// not stocking a bake-off. Quantities scale with Farming / Foraging when
-    /// `DifficultyScaling` is on. Reward = `GoldIntermediateBase` + five Jack o' Lanterns
-    /// `(BC)126`. Explicit 4-day deadline so the quest auto-fails the morning of Fall 26
-    /// (one day before Spirit's Eve) regardless of GMCM `DeadlineShort`.
+    /// Spirit's Eve decor: Wizard, Fall 22. Ship Pumpkin Seeds + Cloth + Torches (seeds,
+    /// not pumpkins; the Wizard is building atmosphere, not stocking a bake-off).
+    /// Reward: GoldIntermediateBase + 5 Jack o' Lanterns.
     private static QuestPosting? SpiritsEveDecor(QuestContext ctx)
     {
         const string giver = "Wizard";
@@ -1268,20 +1115,9 @@ internal static partial class Generators
         };
     }
 
-    /// Row 21 — East Scarp Spirit's Eve Decor Supply (Rosa, Fall 24). Mod-gated on the
-    /// East Scarp / Eli & Dylan / Lurking in the Dark modset (any of the three lights up
-    /// the role). Three-step Ship Adventure: purple-dye items + slime + stone. Reward =
-    /// `FriendshipMultiHeart` to each named ESV festival NPC; the reward summary collapses
-    /// 3+ named friendships into one generic line so the loved-by pool isn't spoiled.
-
-    /// Row 21 — East Scarp Spirit's Eve Decor Supply (Rosa, Fall 24, 3 days before
-    /// Spirit's Eve on Fall 27). Mod-gated on the East Scarp / Eli & Dylan / Lurking in
-    /// the Dark modset (any of the three lights up the role). Three-step Ship Adventure:
-    /// purple-dye items + slime + stone. Reward = `FriendshipMultiHeart` to each named
-    /// ESV festival NPC; the reward summary collapses 3+ named friendships into one
-    /// generic line so the loved-by pool isn't spoiled. Explicit 3-day deadline so the
-    /// quest expires the morning of Fall 27 (festival day) regardless of the GMCM
-    /// `DeadlineShort` knob.
+    /// East Scarp Spirit's Eve decor: Rosa, Fall 24. Mod-gated on East Scarp / Eli &amp; Dylan /
+    /// Lurking in the Dark. Ship purple-dye items + slime + stone. Reward: FriendshipMultiHeart
+    /// to each named ESV festival NPC (summary collapses 3+ to a generic line).
     private static QuestPosting? EastScarpSpiritsEveDecor(QuestContext ctx)
     {
         if (!MoreQuestsFramework.ModCompat.HasEs(ctx.Helper.ModRegistry))
@@ -1343,14 +1179,10 @@ internal static partial class Generators
         };
     }
 
-    /// Row 25 — Ridgeside Gathering Decor Supply (Lenny, Fall 15). Mod-gated on Ridgeside
-    /// Village. Three-step Ship Adventure: Tub o' Flowers + Wood + any table furniture
-    /// (matched via `$tag:furniture_table` so vanilla AND modded tables count).
-    /// Quantities scale with Farming / Foraging when `DifficultyScaling` is on. Reward =
-    /// `FriendshipMultiHeart` to each named RSV festival NPC. The Tub o' Flowers crafting
-    /// recipe is granted at quest-accept by `MoreQuests.ModEntry.OnQuestAccepted` if the
-    /// player doesn't already know it (so they can craft tubs without scrambling for the
-    /// vanilla recipe).
+    /// Ridgeside Gathering decor: Lenny, Fall 15. Mod-gated on RSV. Ship Tub o' Flowers +
+    /// Wood + any table furniture ($tag:furniture_table catches modded ones). Reward:
+    /// FriendshipMultiHeart per named RSV festival NPC. Tub o' Flowers recipe is granted at
+    /// quest-accept by ModEntry.OnQuestAccepted if the player doesn't know it.
     private static QuestPosting? RidgesideGatheringDecor(QuestContext ctx)
     {
         if (!MoreQuestsFramework.ModCompat.HasRsv(ctx.Helper.ModRegistry))
@@ -1433,16 +1265,8 @@ internal static partial class Generators
         };
     }
 
-    // -------------------- Phase 9.5e: Fishing-track quests --------------------
-
-    /// Curated rare-tackle pool for the Rainy Day Catch reward. All vanilla qualified ids;
-    /// modded saves get the same pool unless the picker resolves to a missing id, in which
-    /// case the pick falls through.
-
-    /// Row 60 — Rainbow Platter (Trout Derby, Summer 20-21). DateLocked yearly DailyBoard
-    /// posting on Summer 20: catch `FestivalFishQty` Rainbow Trout (O)138. Giver dispatched
-    /// via `SaloonChef`; reward = recipe (per-giver) + `ShopDiscountReward` on the dish for
-    /// vanilla Gus saves only (the framework's discount writer needs a known shop id).
+    /// Rainbow Platter (Trout Derby, Summer 20): catch Rainbow Trout for a SaloonChef-pool
+    /// giver. Reward: recipe (per-giver) + ShopDiscountReward on the dish for Gus.
     private static QuestPosting? RainbowPlatter(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
@@ -1457,7 +1281,7 @@ internal static partial class Generators
         {
             new RecipeReward(recipeName)
         };
-        // Only Gus has a known vanilla shop; for modded givers we grant just the recipe.
+        // Only Gus has a known vanilla shop. Modded givers get just the recipe.
         if (string.Equals(giver, "Gus", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(ModEntry.Config.TroutDerbyDishGus))
         {
             rewards.Add(new ShopDiscountReward(
@@ -1486,13 +1310,7 @@ internal static partial class Generators
         };
     }
 
-    /// Row 70 — SquidFest Showcase (Winter 12-13). DateLocked yearly posting on Winter 12:
-    /// catch `FestivalFishQty` Squid (O)151. Same shape as Rainbow Platter — saloon-chef
-    /// giver, recipe reward per giver, ShopDiscountReward on the dish for vanilla Gus.
-
-    /// Row 70 — SquidFest Showcase (Winter 12-13). DateLocked yearly posting on Winter 12:
-    /// catch `FestivalFishQty` Squid (O)151. Same shape as Rainbow Platter — saloon-chef
-    /// giver, recipe reward per giver, ShopDiscountReward on the dish for vanilla Gus.
+    /// SquidFest Showcase (Winter 12): catch Squid. Same shape as RainbowPlatter.
     private static QuestPosting? SquidFestShowcase(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
@@ -1551,8 +1369,4 @@ internal static partial class Generators
         _ => ModEntry.Config.SquidFestRecipeGus
     };
 
-    /// Walks Data/Locations for the fish's spawn entries, intersected with the player's
-    /// visited locations, returning the first matching location key. Returns null when
-    /// the fish has no spawn in any visited spot. The CSV row asks for a fish at a
-    /// specific spot, so we need an actual reachable location to ground the quest in.
 }

@@ -14,10 +14,9 @@ using StardewValley;
 
 namespace MoreQuests.Quests;
 
-/// Central registration point for all C# quest generators referenced by `assets/quests.json`.
-/// Each method below is the `Build()` body that previously lived in its own
-/// `IQuestDefinition` class. Phase 4 migration: metadata (Id/Category/Kind/Weight/MaxPerDay/
-/// CooldownDays/Available) now lives in JSON; the C# side owns only runtime randomization.
+/// Registration point for all C# quest generators referenced by quests.json. Metadata
+/// (Id/Category/Kind/Weight/MaxPerDay/CooldownDays/Available) lives in JSON; the C# side
+/// owns only runtime randomization.
 internal static partial class Generators
 {
     public static void RegisterAll(IMoreQuestsModApi fw)
@@ -98,10 +97,8 @@ internal static partial class Generators
         Reg(fw, "SpringCleaning", SpringCleaning);
     }
 
-    /// Wraps `fw.RegisterGenerator` with a category-level master-toggle check. The
-    /// generator runs, produces a `QuestPosting?`, and we drop it when the matching
-    /// category toggle (`ModConfig.<Category>QuestsEnabled`) is off. Centralising the
-    /// check here means individual generators don't need per-category boilerplate.
+    /// Wraps fw.RegisterGenerator with a category master-toggle check. Drops the posting
+    /// when the matching ModConfig.&lt;Category&gt;QuestsEnabled is off.
     private static void Reg(IMoreQuestsModApi fw, string name, Func<QuestContext, QuestPosting?> gen)
     {
         fw.RegisterGenerator(name, ctx =>

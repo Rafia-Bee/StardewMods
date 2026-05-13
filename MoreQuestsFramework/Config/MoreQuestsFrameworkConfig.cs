@@ -49,7 +49,7 @@ public sealed class MoreQuestsFrameworkConfig
 
     /// Days past a consequence dialogue entry's `EarliestFireDay` after which it gets
     /// silently dropped on `DayStarted`. Stops chained / queued reactions from sitting
-    /// in the queue indefinitely on saves where the player ducks the NPC for weeks —
+    /// in the queue indefinitely on saves where the player ducks the NPC for weeks,
     /// an NPC isn't going to bring up an overfishing complaint a year after the fact.
     public int ConsequenceGraceDays { get; set; } = 7;
 

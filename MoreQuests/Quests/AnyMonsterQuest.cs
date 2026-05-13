@@ -9,10 +9,8 @@ using StardewValley.Quests;
 
 namespace MoreQuests.Quests;
 
-/// `SlayMonsterQuest` variant whose kill counter accepts any non-tame, non-farm
-/// monster. Used by Monster Hunt (CSV row 52) where the giver doesn't care what
-/// the player slays, only that the count is met. Title and objective render as
-/// "monsters" rather than the vanilla per-kind label.
+/// SlayMonsterQuest variant that counts any non-tame, non-farm monster. Used by Monster Hunt
+/// where the giver doesn't care what gets slain. Renders as "monsters" not the per-kind label.
 [XmlType("Mods_RafiaBee_MoreQuests_AnyMonsterQuest")]
 public sealed class AnyMonsterQuest : SlayMonsterQuest, IRewardedQuest
 {
@@ -22,8 +20,7 @@ public sealed class AnyMonsterQuest : SlayMonsterQuest, IRewardedQuest
 
     public AnyMonsterQuest()
     {
-        // Suppress vanilla's auto-title regeneration so the title set from the
-        // posting sticks.
+        // Suppress vanilla's auto-title regen so the posting's title sticks.
         _loadedTitle = true;
     }
 

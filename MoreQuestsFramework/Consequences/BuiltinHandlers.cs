@@ -10,7 +10,7 @@ internal sealed class Tier0Handler : IConsequenceHandler
     public void Apply(ConsequenceContext _) { }
 }
 
-/// Tier 1 — comment-tier. Loved-NPCs get a positive line + `+FriendshipBasic`. Hated
+/// Tier 1, comment-tier. Loved-NPCs get a positive line + `+FriendshipBasic`. Hated
 /// NPCs get a negative line + `-FriendshipBasic`. Lines are pre-resolved on the spec
 /// (`LovedLine` / `HatedLine`); when empty, only the friendship delta lands. Single-day,
 /// pops the next time the player chats with the affected NPC.
@@ -28,10 +28,10 @@ internal sealed class Tier1Handler : IConsequenceHandler
     }
 }
 
-/// Tier 2 — small loss. Multi-NPC negative reaction with a slightly bigger friendship
+/// Tier 2, small loss. Multi-NPC negative reaction with a slightly bigger friendship
 /// hit (defaults to halfway between `FriendshipBasic` and `FriendshipMid`). Loved NPCs
 /// also get a positive comment if the spec ships one (Weekly Special Complex's CSV row
-/// shows mixed reactions on the same dish — Shane likes peppers, Haley hates them).
+/// shows mixed reactions on the same dish, Shane likes peppers, Haley hates them).
 internal sealed class Tier2Handler : IConsequenceHandler
 {
     public void Apply(ConsequenceContext ctx)
@@ -49,7 +49,7 @@ internal sealed class Tier2Handler : IConsequenceHandler
     }
 }
 
-/// Tier 3 — significant. Multi-day chained dialogue. Friendship loss is applied per day
+/// Tier 3, significant. Multi-day chained dialogue. Friendship loss is applied per day
 /// on each of `ChainDays` consecutive days, stamped with stepping `EarliestFireDay` so
 /// the watcher only pops a line after each successive day starts. Lines come from
 /// `Spec.ChainLines`; one line per day per NPC.
@@ -105,8 +105,8 @@ internal sealed class Tier3Handler : IConsequenceHandler
     }
 }
 
-/// Special — gold loss. Subtracts `Spec.GoldDelta` from the player's wallet and queues
-/// a single line per affected NPC (HatedBy only — gold loss tiers are never positive
+/// Special, gold loss. Subtracts `Spec.GoldDelta` from the player's wallet and queues
+/// a single line per affected NPC (HatedBy only, gold loss tiers are never positive
 /// in the CSV today). `GoldDelta` is the absolute amount; the handler subtracts it.
 internal sealed class SpecialTierHandler : IConsequenceHandler
 {
@@ -116,7 +116,7 @@ internal sealed class SpecialTierHandler : IConsequenceHandler
         if (loss > 0 && Game1.player != null)
             Game1.player.Money = Math.Max(0, Game1.player.Money - loss);
 
-        // Optional dialogue per static target — used when the consequence has a
+        // Optional dialogue per static target, used when the consequence has a
         // narrative explanation (e.g. "you owe a fine for X"). Friendship side is
         // controlled by FriendshipOverride; defaults to zero so gold-loss tier doesn't
         // double-tax relationships unless the author asks for it.

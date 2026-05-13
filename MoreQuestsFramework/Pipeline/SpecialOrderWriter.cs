@@ -20,12 +20,12 @@ namespace MoreQuestsFramework.Pipeline;
 /// Cleanup: at every `DayStarted` the writer sweeps entries whose `ExpiresAfterDay` has
 /// passed and whose order isn't currently in `Game1.player.team.specialOrders` (so an
 /// in-flight accepted order isn't pulled out from under the player). Completion events
-/// are not emitted in 8a — vanilla owns the reward path end-to-end.
+/// are not emitted in 8a, vanilla owns the reward path end-to-end.
 ///
 /// **Multi-mod safety:** every emitted order's `OrderId` is namespaced as
 /// `<ownerUniqueId>.<defId>.<dayStamp>`, so collisions with vanilla or third-party
 /// `Data/SpecialOrders` keys are essentially impossible. Cache invalidation is a re-edit
-/// trigger, not a delete — other mods' entries remain intact across our invalidations.
+/// trigger, not a delete, other mods' entries remain intact across our invalidations.
 public sealed class SpecialOrderWriter
 {
     private const string AssetName = "Data/SpecialOrders";
@@ -145,14 +145,14 @@ public sealed class SpecialOrderWriter
 
     /// Walks `Game1.player.team.specialOrders` once and applies framework-owned rewards
     /// (anything in `Spec.FrameworkRewards`) for any of our emitted entries that have
-    /// flipped to `Complete` since the last check. Idempotent — `FrameworkRewardsGranted`
+    /// flipped to `Complete` since the last check. Idempotent, `FrameworkRewardsGranted`
     /// dedups across ticks and across save/load. Called from the existing
     /// `ModEntry.OnOneSecondTick` so the grant fires within ~1s of completion.
     ///
     /// This path bypasses vanilla's `Data/SpecialOrders` Rewards array entirely, so any
     /// third-party content pack that mutates the asset's reward data (e.g. a friendship-
     /// configuration pack overwriting `Friendship` `OrderReward` entries) cannot intercept
-    /// these. Money rewards are NOT applied here — they stay in the vanilla path because
+    /// these. Money rewards are NOT applied here, they stay in the vanilla path because
     /// the player-facing reward UI handles them and the user's modset hasn't shown any
     /// interception of money.
     public void CheckCompletionsAndGrantRewards()
@@ -267,7 +267,7 @@ public sealed class SpecialOrderWriter
 
     /// Constructs a vanilla `SpecialOrderData` instance from the framework-neutral
     /// `SpecialOrderSpec`. Built per asset-edit pass rather than cached so re-edits after
-    /// a save reload always see fresh references — vanilla mutates fields like `Objectives`
+    /// a save reload always see fresh references, vanilla mutates fields like `Objectives`
     /// during `GetSpecialOrder`, so a cached instance would drift across reloads.
     private SpecialOrderData BuildVanillaOrder(SpecialOrderSpec spec, string orderId, string ownerUniqueId)
     {

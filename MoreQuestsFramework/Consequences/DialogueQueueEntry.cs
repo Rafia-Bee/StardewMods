@@ -9,7 +9,7 @@ namespace MoreQuestsFramework.Consequences;
 /// Tier 3 chain can keep nudging the relationship one bucket per day without holding
 /// onto the original spec.
 ///
-/// `EarliestFireDay` lets Tier 3 chains spread across consecutive days — entry N in a
+/// `EarliestFireDay` lets Tier 3 chains spread across consecutive days, entry N in a
 /// chain stamps `today + N` so the watcher won't pop it before that day. Same-day
 /// entries (Tier 1/2) leave it at zero.
 public sealed class DialogueQueueEntry

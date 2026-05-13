@@ -7,7 +7,7 @@ namespace MoreQuestsFramework.Pipeline;
 /// One vanilla SpecialOrder objective in framework-neutral form. Translated into a
 /// `SpecialOrderObjectiveData` JSON entry by `SpecialOrderWriter` at emit time.
 ///
-/// `Type` is the vanilla type name without the `Objective` suffix — `Ship`, `Collect`,
+/// `Type` is the vanilla type name without the `Objective` suffix, `Ship`, `Collect`,
 /// `Slay`, `Fish`, `Donate`, `Reach`, `GiftLove`, `JKHTask`. `Data` carries the per-type
 /// fields exactly as vanilla expects them in `Data/SpecialOrders` (e.g. `AcceptedContextTags`
 /// for Ship/Collect, `TargetName` for Slay).
@@ -22,7 +22,7 @@ public sealed class SpecialOrderObjectiveSpec
 /// One vanilla SpecialOrder reward in framework-neutral form. Translated into a
 /// `SpecialOrderRewardData` JSON entry by `SpecialOrderWriter` at emit time.
 ///
-/// `Type` is the vanilla reward name without the `Reward` suffix — `Money`, `Friendship`,
+/// `Type` is the vanilla reward name without the `Reward` suffix, `Money`, `Friendship`,
 /// `Object`, `Mail`, `Gems`, `ResetEvent`. `Data` carries the per-type fields (e.g.
 /// `Amount` for Money, `TargetName` + `Amount` for Friendship).
 public sealed class SpecialOrderRewardSpec
@@ -42,7 +42,7 @@ public sealed class SpecialOrderSpec
     /// Body text shown on the order's accept screen. Player-facing.
     public string Text { get; set; } = "";
 
-    /// Vanilla NPC who "requests" the order — drives the portrait shown on the board and
+    /// Vanilla NPC who "requests" the order, drives the portrait shown on the board and
     /// the default `Friendship` reward target.
     public string Requester { get; set; } = "";
 

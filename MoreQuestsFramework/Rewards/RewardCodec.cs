@@ -14,7 +14,7 @@ namespace MoreQuestsFramework.Rewards;
 ///
 /// Consequence specs ride on the same list under a `Consequence|<base64-json>` line
 /// (lists + multi-line text would blow the flat key=val format apart). One spec per
-/// quest — extra `Consequence|` lines are ignored by `DecodeConsequence`.
+/// quest, extra `Consequence|` lines are ignored by `DecodeConsequence`.
 public static class RewardCodec
 {
     private const string ConsequencePrefix = "Consequence|";

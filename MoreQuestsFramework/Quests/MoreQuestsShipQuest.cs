@@ -12,7 +12,7 @@ namespace MoreQuestsFramework.Quests;
 /// Single-objective shipping quest. The player ships `numberToShip` units of `itemId`
 /// (or any id in `alternativeItemIds`) through the farm shipping bin; the framework
 /// observes the bin at `DayEnding` and increments `numberShipped` by the matching count.
-/// Vanilla sells the items normally — we observe, we don't consume. When `numberShipped`
+/// Vanilla sells the items normally, we observe, we don't consume. When `numberShipped`
 /// reaches `numberToShip`, `questComplete()` runs the declarative reward block.
 [XmlType("Mods_RafiaBee_MoreQuestsFramework_ShipQuest")]
 public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
@@ -22,7 +22,7 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
     public readonly NetStringList alternativeItemIds = new();
     /// Per-stack credit applied when the primary `itemId` is shipped. Defaults to 1, so a
     /// quest counts items 1:1. Higher weights let one item id be worth N "fuel units" of
-    /// progress — Submarine Fuel uses this so 1 Battery Pack = 15 Coal toward the same
+    /// progress, Submarine Fuel uses this so 1 Battery Pack = 15 Coal toward the same
     /// shipping bar.
     public readonly NetInt itemWeight = new();
     /// Parallel to `alternativeItemIds`. Each entry is the credit applied per matched
@@ -39,7 +39,7 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
     public NetStringList SerializedRewards => serializedRewards;
 
     /// Friendly item name shown in the "Ship X / Y <name>" objective line. Stored as a
-    /// plain string field (not net-synced) — host writes it once at posting time.
+    /// plain string field (not net-synced), host writes it once at posting time.
     public string objectiveItemName = string.Empty;
 
     /// Spoken/letter line shown when the quest completes. Empty for board-posted ship

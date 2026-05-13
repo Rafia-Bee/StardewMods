@@ -46,7 +46,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         // Use the JSON Name verbatim as the registry ID. Authors must pick
         // names that won't collide with other packs (e.g. "MyMod.QuestX").
         // Auto-prefixing by ownerUniqueId was originally slated for Phase 5
-        // but deferred — Phase 5 namespaces only generator names, not quest
+        // but deferred, Phase 5 namespaces only generator names, not quest
         // ids. Keeping the raw name preserves the existing `QuestWeights`
         // config keys ("Mining.BarDelivery" etc.) for in-flight saves and
         // for the framework's own GMCM page. Auto-prefixing will land at
@@ -185,7 +185,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     /// happens once at quest-creation time so the picked NPC names are stable through
     /// the quest's lifetime and round-trip through SpaceCore's serializer along with
     /// the rest of the step state. Unrecognised tokens pass through verbatim, which
-    /// makes the step match no NPC — the safe default rather than a crash.
+    /// makes the step match no NPC, the safe default rather than a crash.
     private static List<string> ResolveTargets(List<string> targets, string giver, Dispatch.DispatchRegistry dispatch)
     {
         var resolved = new List<string>(targets.Count);
@@ -210,7 +210,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
 
     /// Forms accepted: `$dispatcher.<role>` (one NPC) or `$dispatcher.<role>[N]`
     /// (N distinct NPCs). Falls back to whatever the role pool yields when N is
-    /// larger than the available pool — better to under-deliver than crash.
+    /// larger than the available pool, better to under-deliver than crash.
     private static void ResolveDispatcherToken(string token, Dispatch.DispatchRegistry dispatch, List<string> sink)
     {
         string body = token.Substring("$dispatcher.".Length);
@@ -393,7 +393,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     private static T ParseEnum<T>(string? value, T fallback) where T : struct, Enum
         => Enum.TryParse<T>(value, ignoreCase: true, out var parsed) ? parsed : fallback;
 
-    /// `When` field on a mail reward. Accepts `Today` (default — letter arrives in today's
+    /// `When` field on a mail reward. Accepts `Today` (default, letter arrives in today's
     /// mailbox immediately) or `Tomorrow` / `NextDay` (letter is queued for the next morning
     /// via `mailForTomorrow`). The `NextDay` alias matches plan §7b's authoring convention
     /// without churning the `MailWhen` enum.

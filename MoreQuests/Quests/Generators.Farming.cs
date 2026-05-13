@@ -16,15 +16,12 @@ namespace MoreQuests.Quests;
 
 internal static partial class Generators
 {
-    // -------------------- Phase 10: Recipe-unlock mail quests --------------------
+    // -------------------- Recipe-unlock mail quests --------------------
 
-    /// CSV row 57 (rewritten 9.5g). One-time mail from a random met adult villager the first
-    /// day after the player learns the Preserves Jar crafting recipe. Asks for `qty` jams or
-    /// pickles (OR-alternatives, ship to the farm shipping bin). Qty scales with Farming when
-    /// DifficultyScaling is on, otherwise rolls a small flat range. No deadline (matches the
-    /// vanilla "Meet the Townsfolk" shape via `DeadlineDays = 0`). Reward = 500 friendship pts
-    /// (2 hearts) to the giver. TODO: revisit reward magnitude / type once the broader
-    /// recipe-unlock-quest economy lands.
+    /// One-time mail from a random adult villager the day after the player learns the Preserves
+    /// Jar recipe. Asks for jams or pickles (OR-alternatives) to the shipping bin. Qty scales
+    /// with Farming when scaling is on. No deadline (matches "Meet the Townsfolk"). Reward:
+    /// 500 friendship pts (2 hearts). TODO: revisit reward once the broader recipe-unlock economy lands.
     private static QuestPosting? PreservesJarRequest(QuestContext ctx)
     {
         return BuildFarmingShipRequest(
@@ -37,9 +34,8 @@ internal static partial class Generators
             targetMessageKey: "quest.farming.preservesJarRequest.targetMessage");
     }
 
-    /// CSV row 57 (rewritten 9.5g). One-time mail when the player learns the Keg recipe.
-    /// Asks for `qty` of any keg output: wine (vanilla 348), juice (350), mead (459),
-    /// beer (346), or pale ale (303). Same qty scaling as PreservesJarRequest.
+    /// One-time mail when the player learns the Keg recipe. Asks for any keg output: wine,
+    /// juice, mead, beer, or pale ale. Same qty scaling as PreservesJarRequest.
     private static QuestPosting? KegRequest(QuestContext ctx)
     {
         return BuildFarmingShipRequest(
@@ -52,10 +48,8 @@ internal static partial class Generators
             targetMessageKey: "quest.farming.kegRequest.targetMessage");
     }
 
-    /// CSV row 57 (rewritten 9.5g). One-time mail when the player learns the Dehydrator
-    /// recipe (bought from Pierre's shop). Asks for `qty` of any dehydrator output:
-    /// `DriedMushrooms` or `DriedFruit` (which covers raisins and every other dried fruit
-    /// since the parent id is shared across flavors).
+    /// One-time mail when the player learns the Dehydrator recipe. Asks for DriedMushrooms
+    /// or DriedFruit (the parent id covers raisins and every other dried fruit variant).
     private static QuestPosting? DehydratorRequest(QuestContext ctx)
     {
         return BuildFarmingShipRequest(
@@ -68,11 +62,9 @@ internal static partial class Generators
             targetMessageKey: "quest.farming.dehydratorRequest.targetMessage");
     }
 
-    /// Shared scaffolding for the Farming-scaled recipe-unlock Ship quests. Picks a random
-    /// adult-human met giver, sets the OR-alternative item list, rolls a Farming-scaled qty,
-    /// and assembles the QuestPosting with `DeadlineDays = 0` so the framework treats the
-    /// quest as un-timed. All four parallel quests (Preserves Jar / Keg / Dehydrator share
-    /// this path; Fish Smoker rolls its own qty from Fishing) feed through here.
+    /// Shared scaffolding for Farming-scaled recipe-unlock Ship quests. Picks a random adult-human
+    /// giver, sets OR-alternatives, rolls a Farming-scaled qty, builds with DeadlineDays = 0
+    /// (un-timed). Preserves Jar / Keg / Dehydrator feed through here; Fish Smoker has its own.
     private static QuestPosting? BuildFarmingShipRequest(
         QuestContext ctx,
         string primaryItemId,
@@ -162,11 +154,9 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 54. Daily-board bulk-crop delivery for Pierre's General Store. Picks
-    /// `RequestVariationCount` distinct seasonal crops; player delivers a per-crop
-    /// quantity that scales with Farming skill. Reward = `ShopDiscount` on Pierre's
-    /// `SeedShop` for the matching seed ids, lasting `SeedShopDiscountDurationDays`
-    /// in-game days at `SeedShopDiscountPercent` off.
+    /// Bulk-crop delivery for Pierre. Picks RequestVariationCount distinct seasonal crops
+    /// with Farming-scaled per-crop quantity. Reward: SeedShop discount scoped to the matching
+    /// seed ids for SeedShopDiscountDurationDays at SeedShopDiscountPercent off.
     private static QuestPosting? PierresStockUp(QuestContext ctx)
     {
         int variationCount = Math.Clamp(ModEntry.Config.RequestVariationCount, 2, 5);
@@ -190,10 +180,8 @@ internal static partial class Generators
 
         const string giver = "Pierre";
 
-        // Reverse-map each picked crop's harvest item id to its seed id so the discount
-        // applies specifically to the seeds Pierre stocks for the requested crops. Misses
-        // (modded crops with no SeedShop entry) just don't get discounted; the whole
-        // quest still posts.
+        // Reverse-map each picked crop's harvest id to its seed id so the discount applies
+        // specifically to the matching seeds. Misses just don't get discounted; the quest still posts.
         var seedIds = new List<string>(picks.Count);
         foreach (var crop in picks)
         {
@@ -239,9 +227,8 @@ internal static partial class Generators
 
         if (ModEntry.Config.SeedShopDiscountPercent > 0 && ModEntry.Config.SeedShopDiscountDurationDays > 0)
         {
-            // A third of the requested haul as the per-visit seed cap on quest-injected
-            // entries (minimum 2). Picking qtyPer/3 keeps the discount window from
-            // becoming an unlimited farming press for high-value crops like ancient fruit.
+            // A third of the requested haul (min 2) as the per-visit seed cap. Keeps the
+            // discount window from becoming an unlimited farming press for ancient fruit etc.
             int guaranteedStock = Math.Max(2, qtyPer / 3);
             posting.Rewards.Add(new ShopDiscountReward(
                 ShopId: "SeedShop",
@@ -254,30 +241,16 @@ internal static partial class Generators
         return posting;
     }
 
-    /// Walks `Data/Crops` for a row whose `HarvestItemId` matches the requested crop, and
-    /// returns the qualified seed id (the dictionary key is the seed's bare item id). Used
-    /// to scope Pierre's seed-shop discount to the seeds for the quested crops.
-
-    /// CSV row 48. Daily-board single-objective Ship quest. Morris (JojaMart manager)
-    /// asks the farmer to dump `qty` of one seasonal crop into the farm shipping bin;
-    /// vanilla sells the items normally and the framework's DayEnding observer credits
-    /// the count. Reward = `RewardMultiplierBelowSell` of the crop's price (Joja pays
-    /// below sell so the headline gold figure looks high while the crop's lost-value
-    /// brings it back near break-even).
-    ///
-    /// Tier 1 consequence keyed off `Data/NPCGiftTastes`: villagers who love the chosen
-    /// crop comment positively + gain `+FriendshipBasic`; villagers who hate it
-    /// comment negatively + lose `-FriendshipBasic`. Lines are pre-resolved against
-    /// the content mod's i18n at build-time so the persisted dialogue queue holds
-    /// plain strings.
+    /// Morris (or SVE's MorrisTod) asks the farmer to ship qty of one seasonal crop. Reward
+    /// is sell-price below market (Joja pays below sell so the headline figure looks high
+    /// while lost crop value brings it back to break-even). Tier 1 consequence on NPCGiftTastes:
+    /// villagers who love the crop praise the player; haters get a negative line + delta.
     private static QuestPosting? MassiveHarvestRequest(QuestContext ctx)
     {
         if (Game1.player.FarmingLevel < 7)
-            return null; // CSV labels this Expert (Skill 10); start surfacing it once the
-                         // farmer is plausibly in the late-game band.
+            return null; // Expert-tier, surface in the late-game band.
 
-        // JojaCorpRep dispatcher pool covers both vanilla Morris and SVE's MorrisTod.
-        // Returns null on Community-Center-route saves where neither character exists.
+        // JojaCorpRep covers vanilla Morris + SVE's MorrisTod. Null on CC-route saves.
         string? giver = ctx.Dispatch.Pick(DispatchRoles.JojaCorpRep);
         if (giver == null)
             return null;
@@ -321,12 +294,9 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 58. Daily-board ItemDelivery for Silver-or-better (Quality>=1) seasonal
-    /// crops. Picks any met NPC as the requester. Reward scales with the crop's sell
-    /// price between `GoldBasicBase` and `GoldIntermediateBase` plus
-    /// `FriendshipIntermediate` to the requester. Skill-gated to Farming 2 so the quest
-    /// surfaces once the player has a few seasons under their belt and silver crops
-    /// start showing up reliably.
+    /// ItemDelivery for Silver-or-better seasonal crops. Reward scales with sell price between
+    /// GoldBasicBase and GoldIntermediateBase + FriendshipIntermediate. Farming 2 gate so the
+    /// quest surfaces once silver crops show up reliably.
     private static QuestPosting? QualityCropDelivery(QuestContext ctx)
     {
         var metNpcs = DispatchRegistry.MetHumanNpcs();
@@ -371,11 +341,9 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 56. Daily-board ItemDelivery for Iridium-quality (Quality=4) seasonal
-    /// crops. Iridium is the only gating constraint, no sell-price filter. Picks any
-    /// met NPC as the requester. Quantity scales with Farming skill when difficulty
-    /// scaling is on, otherwise rolls a flat band. Reward = `GoldAdvancedBase` plus
-    /// a stack of rare/ancient seeds equal to qty/3. Skill-gated to Farming 7.
+    /// ItemDelivery for Iridium-quality seasonal crops, no sell-price filter. Qty scales with
+    /// Farming when scaling is on. Reward: GoldAdvancedBase + rare/ancient seeds qty/3.
+    /// Farming 7 gate.
     private static QuestPosting? PremiumCropOrder(QuestContext ctx)
     {
         var metNpcs = DispatchRegistry.MetHumanNpcs();
@@ -420,16 +388,7 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 59. Daily-board ItemDelivery for Gold-quality (Quality=2) fish to Willy.
-    /// Implemented as `ItemDelivery` rather than `Fishing` because the player needs to
-    /// hold the gold-quality stack at turn-in time — `MoreQuestsFishingQuest`'s catch
-    /// counter ticks on every catch regardless of quality, which would falsely show
-    /// "5/5 caught" even when the player only had silver fish to deliver. The CSV row
-    /// note explicitly accepts either approach; ItemDelivery is the simpler match for
-    /// quality enforcement.
-
-    /// Vanilla rare/ancient seeds for the Premium Crop Order reward. Resolved at
-    /// pick-time so a missing modded id falls through to the next entry.
+    /// Vanilla rare/ancient seeds for the Premium Crop Order reward.
     private static readonly (string Id, string Name)[] RareSeedPool =
     {
         ("(O)499", "Ancient Seeds"),
@@ -438,16 +397,9 @@ internal static partial class Generators
 
     private static ResolvedItem? PickRareSeed(QuestContext ctx) => PickResolved(ctx, RareSeedPool);
 
-    /// Maps a vanilla quality value (0/1/2/4) to its translated display name. Quality 3
-    /// is unused by vanilla; the `_` fallback keeps the helper safe if a future
-    /// definition somehow ships with that value.
-
-    /// CSV row 15. Daily-board ItemDeliveryQuest. Caroline asks for off-season edible
-    /// forage or flowers she loves or likes (no herbs) so she can brew a new batch of
-    /// tea. Off-season pool: Y1 = seasons that have already passed in the current year
-    /// (so Y1 spring skips), Y2+ = every season except the current one. Quantity scales
-    /// with foraging level when DifficultyScaling is on; flat 5 when off. Reward =
-    /// `FriendshipMid` to Caroline + Tea Leaves equal to twice the requested quantity.
+    /// Caroline asks for off-season edible forage or flowers she loves/likes (no herbs).
+    /// Off-season: Y1 = seasons already passed, Y2+ = every season except the current.
+    /// Qty scales with foraging level when scaling on, flat 5 when off. Reward: FriendshipMid + 2x Tea Leaves.
     private static QuestPosting? CarolineTeaGarden(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Caroline") == null)

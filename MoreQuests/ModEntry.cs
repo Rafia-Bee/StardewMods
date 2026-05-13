@@ -17,18 +17,13 @@ public sealed class ModEntry : Mod
     internal static ModEntry Instance { get; private set; } = null!;
     internal static ModConfig Config { get; set; } = new();
 
-    /// Cached reference to the framework API. Set when `OnGameLaunched` first resolves
-    /// the API; quest generators read framework registries (combat-food pool, etc.)
-    /// through this handle since the framework's own `ModEntry.Instance` is `internal`.
+    /// Cached framework API. Generators use this since the framework's ModEntry.Instance is internal.
     internal static IMoreQuestsApi? Framework { get; private set; }
 
-    /// Per-mod scope captured at `GameLaunched`. Held so the GMCM save callback can call
-    /// `FindBoard` and re-apply tile/offset edits to the live registry instance.
+    /// Per-mod scope held so the GMCM save callback can re-apply board tile/offset edits.
     internal static IMoreQuestsModApi? ModScope { get; private set; }
 
-    /// Static accessor used by content-mod quest generators to look up their own i18n
-    /// strings. The framework's `QuestContext.Helper` belongs to the framework, so its
-    /// translation helper would only see the framework's i18n keys.
+    /// i18n accessor for content-mod generators. Framework's QuestContext.Helper only sees framework keys.
     internal static ITranslationHelper I18n => Instance.Helper.Translation;
 
     public override void Entry(IModHelper helper)
@@ -45,18 +40,13 @@ public sealed class ModEntry : Mod
     internal const string AdventureBoardAssetRoot = "Mods/RafiaBee.MoreQuests/AdventureBoard";
     internal const string AdventureBoardBackgroundAssetRoot = "Mods/RafiaBee.MoreQuests/AdventureBoardBackground";
 
-    /// Mail key prefix shared by every deep-dive reward letter. The bar id + count are
-    /// embedded directly in the key (e.g. `...DeepDiveReward.337.4` for 4 Iridium Bars),
-    /// so the asset edit handler can build the body + attachment on the fly without any
-    /// per-quest persistence.
+    /// Mail key prefix for deep-dive reward letters. Bar id + count are embedded in the key
+    /// (e.g. `...DeepDiveReward.337.4` for 4 Iridium Bars) so the asset edit can build the
+    /// body and attachment without needing per-quest persistence.
     internal const string DeepDiveRewardKeyPrefix = "RafiaBee.MoreQuests.DeepDiveReward.";
 
-    /// Asset edits and loads owned by the content mod:
-    /// - `Data/mail` reward letters (Submarine Fuel pearl, Wizard's Ritual book, deep-dive bars).
-    /// - `Mods/RafiaBee.MoreQuests/AdventureBoard` in-world wall sprite drawn at the board's
-    ///   anchor tile (Mine [12,6]).
-    /// - `Mods/RafiaBee.MoreQuests/AdventureBoardBackground` menu skin used for both the
-    ///   cork-board view and the accept-quest popup; sheet matches vanilla `LooseSprites/Billboard`.
+    /// Asset edits and loads owned by the content mod: Data/mail reward letters, the
+    /// AdventureBoard wall sprite, and its menu background.
     private void OnAssetRequested(object? sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
     {
         if (e.NameWithoutLocale.IsEquivalentTo(AdventureBoardAssetRoot))
@@ -114,13 +104,11 @@ public sealed class ModEntry : Mod
         e.Edit(asset =>
         {
             var mail = asset.AsDictionary<string, string>().Data;
-            // `%item object 797 1 %%` attaches a Pearl to the letter. Vanilla mail format:
-            // the trailing `%%` closes the token block.
+            // `%item object 797 1 %%` attaches a Pearl. Trailing `%%` closes the token block.
             string submarineBody = I18n.Get("mail.festival.submarineFuelReward.body").ToString();
             mail["RafiaBee.MoreQuests.SubmarineFuelReward"] = submarineBody + "%item object 797 1 %%";
 
-            // Book_Mystery is a 1.6 string-id item; the `%item object` token accepts string
-            // ids the same way it accepts numeric ones.
+            // Book_Mystery is a 1.6 string-id item. The `%item object` token accepts string ids fine.
             string wizardBody = I18n.Get("mail.festival.wizardsRitualReward.body").ToString();
             mail["RafiaBee.MoreQuests.WizardsRitualReward"] = wizardBody + "%item object Book_Mystery 1 %%";
 
@@ -128,10 +116,8 @@ public sealed class ModEntry : Mod
         });
     }
 
-    /// Scans the player's mail collections for deep-dive reward keys (queued by the
-    /// quest's `MailReward` on completion) and authors a body + bar attachment for each.
-    /// The key suffix carries the parameters: `{barId}.{count}`. Skipped entirely when
-    /// no save is loaded so SaveLoaded passes don't crash on a null player.
+    /// Scans the player's mail for deep-dive reward keys and authors a body + bar attachment for each.
+    /// Key suffix is `{barId}.{count}`. Skipped when no save is loaded.
     private void PopulateDeepDiveRewardLetters(IDictionary<string, string> mail)
     {
         if (Game1.player == null)
@@ -164,9 +150,8 @@ public sealed class ModEntry : Mod
                 barName = barId;
             }
 
-            // Skull Cavern Deep Dive (Row 67) pays in Radioactive Bars and uses a
-            // distinct "unexpected smelting byproduct" flavour. Mines Deep Dive
-            // (Row 78) keeps the standard Marlon-flavoured payout body.
+            // Skull Cavern pays in Radioactive Bars with the "unexpected smelting byproduct"
+            // flavour. Mines Deep Dive keeps the standard Marlon payout body.
             string bodyKey = barId == "910"
                 ? "mail.mining.deepDiveReward.skullCavern.body"
                 : "mail.mining.deepDiveReward.body";
@@ -197,30 +182,24 @@ public sealed class ModEntry : Mod
 
         Framework = fw;
         fw.RegistrationOpen += (_, _) => RegisterContent(fw);
-        // Deep-dive reward letters are parameterised — when one completes, invalidate
-        // `Data/mail` so the asset edit re-runs and populates the new key's body before
+        // Deep-dive reward letters are parameterised. When one completes, invalidate
+        // Data/mail so the asset edit re-runs and writes the new key's body before
         // vanilla reads it on the next mailbox open.
         fw.QuestCompleted += OnQuestCompleted;
-        // Phase 9.5d: grant the Tub o' Flowers crafting recipe up-front when the RSV
-        // Gathering quest is accepted, so the player can craft tubs to ship without
-        // hunting down the recipe mid-quest. CSV row 25's "give recipe with quest letter
-        // if not known" requirement.
+        // Grant the Tub o' Flowers recipe up-front on RSV Gathering accept so the player
+        // doesn't have to hunt down the recipe mid-quest.
         fw.QuestAccepted += OnQuestAccepted;
         fw.QuestRemoved += OnQuestRemoved;
 
         WireLivestockFollowsYou();
     }
 
-    /// Cached LivestockFollowsYou API (duck-typed). Null until `WireLivestockFollowsYou`
-    /// resolves it from the registry, and null forever on saves where LFY isn't installed.
-    /// Generators read this lazily (e.g. `MarnieCowOffer` checks for the Grazing Bell id).
+    /// Cached LivestockFollowsYou API (duck-typed). Null when LFY isn't installed.
+    /// Generators read this lazily (e.g. MarnieCowOffer checks for the Grazing Bell id).
     internal static ILfyApi? Lfy { get; private set; }
 
-    /// Fetches the LivestockFollowsYou API (duck-typed via the local `ILfyApi`) and
-    /// pipes its follower-count read into the framework's `FollowerApiBridge`, which is
-    /// what `AdventureQuest`'s Visit step's `$follower-count:N` gate consults. No-op
-    /// when LFY isn't installed — Visit-step follower gates evaluate to 0 in that case
-    /// and the matching quests just stay incomplete on warp.
+    /// Pipes LFY's follower count into the framework's FollowerApiBridge so AdventureQuest's
+    /// `$follower-count:N` gate works. No-op when LFY isn't installed (gates evaluate to 0).
     private void WireLivestockFollowsYou()
     {
         if (!Helper.ModRegistry.IsLoaded(MoreQuestsFramework.ModCompat.LivestockFollowsYou))
@@ -236,10 +215,8 @@ public sealed class ModEntry : Mod
         Monitor.Log("Wired LivestockFollowsYou follower count into the framework's FollowerApiBridge.", LogLevel.Trace);
     }
 
-    /// Duck-typed mirror of LivestockFollowsYou's `ILivestockFollowsYouApi`. Only declares
-    /// the members we actually consume so the surface area is minimal. SMAPI's
-    /// `GetApi<T>` matches by member shape, so the duck-typed interface lets us avoid an
-    /// assembly reference back to LFY.
+    /// Duck-typed mirror of LFY's ILivestockFollowsYouApi. Only the members we consume,
+    /// so we don't need an assembly reference back to LFY.
     internal interface ILfyApi
     {
         int FollowingAnimalCount { get; }
@@ -269,12 +246,9 @@ public sealed class ModEntry : Mod
         Helper.GameContent.InvalidateCache("Data/mail");
     }
 
-    /// Adopts a vanilla White Chicken directly into the first Coop on the player's farm
-    /// that has a free animal slot. Bypasses `PurchaseAnimalsMenu` entirely (so Livestock
-    /// Bazaar compatibility is automatic — both menus only sit on top of the same
-    /// `AnimalHouse.adoptAnimal` placement path). Falls back to a gold rebate via
-    /// `MarnieChickenOfferRebate` when no coop has space, so the player isn't left empty
-    /// handed if their coops are full at completion time.
+    /// Adopts a White Chicken into the first Coop with a free slot. Skips PurchaseAnimalsMenu,
+    /// so Livestock Bazaar compatibility comes for free (both menus go through AnimalHouse.adoptAnimal).
+    /// Falls back to a gold rebate when every coop is full.
     private void GrantFreeChicken()
     {
         var farm = Game1.getFarm();
@@ -318,9 +292,8 @@ public sealed class ModEntry : Mod
         return type.IndexOf("Coop", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    /// Adopts a free Dairy Cow (random White / Brown) directly into the first Barn on the
-    /// player's farm with a free animal slot. Mirrors `GrantFreeChicken` for Row 44.
-    /// Falls back to `MarnieCowOfferRebate` gold when every barn is full.
+    /// Adopts a random White/Brown cow into the first Barn with a free slot.
+    /// Mirrors GrantFreeChicken. Falls back to a gold rebate when every barn is full.
     private void GrantFreeCow()
     {
         var farm = Game1.getFarm();
@@ -365,18 +338,15 @@ public sealed class ModEntry : Mod
         return type.IndexOf("Barn", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    /// Player ModData key that flags Robin's free-silo voucher. Set on completion of
-    /// Robin's Silo Offer and cleared when the player builds any Silo on the farm. While
-    /// the flag is set, `OnAssetRequested` zeroes the Silo entry's BuildCost and
-    /// BuildMaterials in `Data/Buildings` so the build shows up free in Robin's menu.
+    /// ModData flag for Robin's free-silo voucher. Set on Silo Offer completion, cleared
+    /// when the player builds any Silo. While set, OnAssetRequested zeroes the Silo's
+    /// BuildCost and BuildMaterials so it shows free in Robin's menu.
     internal const string FreeSiloCreditModDataKey = "RafiaBee.MoreQuests.FreeSiloCredit";
 
-    /// Sets the free-silo voucher flag on the local player and invalidates `Data/Buildings`
-    /// so Robin's carpenter menu picks up the zeroed Silo entry on next open. The player
-    /// still chooses when and where to place the silo through Robin's shop; nothing is
-    /// auto-built. Skipped if a Silo already exists on the farm at completion time (the
-    /// generator's safety check should have already nulled the posting, but this guards
-    /// against edge cases where a silo was built mid-quest).
+    /// Sets the voucher flag and invalidates Data/Buildings so Robin's menu picks up the
+    /// zeroed Silo on next open. Player still picks when/where to place it. Skipped if a
+    /// Silo already exists (the generator's safety check should have nulled the posting,
+    /// but guards against a silo being built mid-quest).
     private void GrantFreeSilo()
     {
         var farm = Game1.getFarm();
@@ -398,9 +368,8 @@ public sealed class ModEntry : Mod
         Monitor.Log("Set the Robin free-silo voucher; Silo in Robin's carpenter menu will cost 0g and no materials until built.", LogLevel.Trace);
     }
 
-    /// Cleared on `World.BuildingListChanged` when a Silo is added to the farm and the
-    /// voucher flag is set. Subsequent silos pay the normal cost — the voucher is one-shot
-    /// per quest completion. Demolishing a silo never re-grants the voucher.
+    /// Clears the voucher flag when a Silo is built. One-shot per quest completion;
+    /// demolishing a silo never re-grants the voucher.
     private void OnBuildingListChanged(object? sender, StardewModdingAPI.Events.BuildingListChangedEventArgs e)
     {
         if (Game1.player == null)
@@ -421,19 +390,17 @@ public sealed class ModEntry : Mod
         }
     }
 
-    /// Returns a Dinosaur Egg whose Quality is one tier above whatever the player
-    /// delivered. Vanilla quality ladder: 0 regular → 1 silver → 2 gold → 4 iridium
-    /// (3 is skipped per vanilla). Iridium stays iridium. Reads the captured quality
-    /// from the framework's `MoreQuestsItemDeliveryQuest.deliveredQuality` field.
+    /// Returns a Dinosaur Egg one quality tier above what the player delivered.
+    /// Vanilla ladder: 0 regular, 1 silver, 2 gold, 4 iridium (3 is skipped). Iridium stays iridium.
     private void GrantUpgradedDinosaurEgg(StardewValley.Quests.Quest quest)
     {
         int delivered = quest is MoreQuestsItemDeliveryQuest idq ? idq.deliveredQuality.Value : 0;
         int upgraded = delivered switch
         {
-            <= 0 => 1, // regular → silver
-            1 => 2,    // silver → gold
-            2 => 4,    // gold → iridium
-            _ => 4     // iridium / unknown → iridium
+            <= 0 => 1,
+            1 => 2,
+            2 => 4,
+            _ => 4
         };
 
         var egg = new StardewValley.Object("107", 1) { Quality = upgraded };
@@ -460,9 +427,8 @@ public sealed class ModEntry : Mod
         Monitor.Log($"Granted '{recipe}' crafting recipe for Ridgeside Gathering quest.", LogLevel.Trace);
     }
 
-    /// True when the player has an active Marnie hay-delivery quest in their journal.
-    /// Matched by title rather than item id since other Animal quests (Marnie's Cow Offer)
-    /// also ask for Hay (O)178; the hay-supply title is distinct.
+    /// True when the player has an active Marnie hay-delivery quest. Matched by title
+    /// since Marnie's Cow Offer also asks for Hay (O)178.
     private bool IsHaySupplyRunActive()
     {
         var log = Game1.player?.questLog;
@@ -493,41 +459,25 @@ public sealed class ModEntry : Mod
         var scope = fw.GetModApi(ModManifest);
         ModScope = scope;
 
-        // Custom Quest subclasses (must register before quests.json loads so generators
-        // that build PreBuiltQuests of these types round-trip through SpaceCore).
-        // The framework's `AdventureQuest` is already registered framework-side, so the
-        // multistep Check on George quest doesn't need a content-mod-specific registration.
+        // Custom Quest subclasses. Must register before quests.json loads so PreBuiltQuests
+        // of these types round-trip through SpaceCore. AdventureQuest is already registered framework-side.
         scope.RegisterCustomQuestType(typeof(AnySlimeQuest));
         scope.RegisterCustomQuestType(typeof(AnyMonsterQuest));
         scope.RegisterCustomQuestType(typeof(CollectAndReportQuest));
 
-        // Combat-food pool is auto-populated at SaveLoaded by `OnSaveLoaded_ScanCombatFoods`
-        // (which reads buff data straight from `Data/Objects`, so modded foods that grant
-        // Attack/Defense get picked up automatically). The legacy `RegisterCombatFood`
-        // API is still live for consumer mods that want to add foods the scan misses.
-
-        // Register every C# generator referenced by assets/quests.json.
         Generators.RegisterAll(scope);
 
-        // Load the JSON quest pack. Each entry references a generator above. The cooldown
-        // tier resolver maps the named buckets in quests.json (Short / Medium / Long) to the
-        // current ModConfig values, so GMCM edits to those knobs apply on the next trigger
-        // evaluation without re-loading the pack.
+        // ResolveCooldownTier maps the Short/Medium/Long buckets in quests.json to current
+        // ModConfig values, so GMCM edits apply on the next trigger eval without reloading.
         scope.LoadQuestsFromMod(Helper, "assets/quests.json", ResolveCooldownTier);
 
-        // Adventurer's Guild board (Phase 8b/8c). When the player keeps it enabled, the
-        // guild board renders at the mine entrance and the mining/monster quests route
-        // there. When disabled, the board doesn't render and the same quests fall back
-        // onto the help-wanted board so the content stays reachable. Per-quest weights
-        // still gate individual quests on top of this.
         ApplyGuildBoardRouting(scope);
 
         GmcmRegistration.Register(Helper, ModManifest);
     }
 
-    /// Maps a `Trigger.CooldownTier` name from `assets/quests.json` to the current ModConfig
-    /// day count. Tier names are case-insensitive. Unknown tier names log a one-time warning
-    /// and fall back to the JSON's `CooldownDays` literal.
+    /// Maps a Trigger.CooldownTier name from quests.json to the current ModConfig day count.
+    /// Case-insensitive. Unknown tier names fall back to the JSON's CooldownDays literal.
     private int? ResolveCooldownTier(string tier)
     {
         return tier?.Trim().ToLowerInvariant() switch
@@ -539,24 +489,18 @@ public sealed class ModEntry : Mod
         };
     }
 
-    /// Combat-food magnitude lookup populated by `OnSaveLoaded_ScanCombatFoods`. Maps
-    /// qualified item id to `max(Attack, Defense)` rounded down from the buff's
-    /// `CustomAttributes`. Used by `MonsterHunt` to filter the reward pool by the
-    /// rolled target magnitude (+1 / +2 / +3). Foods registered via
-    /// `IMoreQuestsApi.RegisterCombatFood` that the scan didn't see won't appear here
-    /// and so won't be eligible as a magnitude-bucketed reward (they still show up in
-    /// the framework's flat `GetCombatFoodPool` for any future generic consumer).
+    /// Maps qualified item id to max(Attack, Defense) for combat foods. MonsterHunt uses
+    /// this to filter rewards by rolled target magnitude (+1/+2/+3). Foods added via the
+    /// legacy RegisterCombatFood API won't appear here unless the scan also picks them up.
     private static readonly Dictionary<string, int> CombatFoodMagnitudes =
         new(StringComparer.OrdinalIgnoreCase);
 
     internal static int? GetCombatFoodMagnitude(string qualifiedItemId)
         => CombatFoodMagnitudes.TryGetValue(qualifiedItemId, out int m) ? m : null;
 
-    /// Walks `Data/Objects` after the save loads (so every content-pack edit is live)
-    /// and registers every edible food whose `Buffs` grant a non-zero Attack or
-    /// Defense as a combat-buff food. Magnitude = `max(Attack, Defense)` floored to
-    /// the nearest int. Re-runs on each load so configs that swap content packs
-    /// between sessions pick up the right pool. Old entries are cleared first.
+    /// Walks Data/Objects on save load and registers every edible whose buffs grant a
+    /// non-zero Attack or Defense. Magnitude = floor(max(Attack, Defense)). Re-runs on
+    /// each load so swapped content packs pick up the right pool.
     private void OnSaveLoaded_ScanCombatFoods(object? sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
     {
         if (Framework == null)
@@ -593,12 +537,9 @@ public sealed class ModEntry : Mod
         Monitor.Log($"Scanned Data/Objects: registered {registered} combat-buff food(s).", LogLevel.Trace);
     }
 
-    /// Wires up the routing for the Adventurer's Guild board based on
-    /// `EnableAdventurersGuildBoard`. When on, mining/monster quests authored as
-    /// `DailyBoard` (Mining.BasicSlimeClearing + the framework's Vanilla.SlayMonster
-    /// wrapper) flip to `CustomBoard` so they post on the guild. When off, the guild
-    /// board never registers and the quests authored as `CustomBoard` (the deep dives)
-    /// flip back to `DailyBoard` so they reach the player via the help-wanted board.
+    /// Routes mining/monster quests to either the guild board or the help-wanted board
+    /// based on EnableAdventurersGuildBoard. When the guild is off, the deep-dive quests
+    /// flip back to DailyBoard so the content stays reachable.
     private void ApplyGuildBoardRouting(IMoreQuestsModApi scope)
     {
         if (Config.EnableAdventurersGuildBoard)
@@ -615,10 +556,8 @@ public sealed class ModEntry : Mod
         }
     }
 
-    /// Mutates the registered `AdventurersGuild` board's anchor tile + draw offset to
-    /// match `ModConfig`. Called once after `LoadBoardsFromMod` registers the board, and
-    /// again whenever GMCM saves so live edits in the config menu take effect on the
-    /// next render.
+    /// Applies the current ModConfig tile/offset to the AdventurersGuild board.
+    /// Called after board registration and on every GMCM save.
     internal static void ApplyAdventureBoardConfig()
     {
         var board = ModScope?.FindBoard("AdventurersGuild");

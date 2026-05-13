@@ -114,7 +114,7 @@ public sealed class TriggerDef
     public string? StartDate { get; set; }
 
     /// SpecialOrder: window length the order stays on the board. Accepts vanilla's
-    /// QuestDuration enum names — `OneDay`, `TwoDays`, `ThreeDays`, `Week`, `TwoWeeks`,
+    /// QuestDuration enum names, `OneDay`, `TwoDays`, `ThreeDays`, `Week`, `TwoWeeks`,
     /// `Month`. Defaults to `Week` when omitted. Maps to vanilla's `SetDuration`.
     public string? Duration { get; set; }
 }
@@ -151,7 +151,7 @@ public sealed class ObjectiveDef
 }
 
 /// One step within an Adventure quest's `Steps[]` list. Mirrors `AdventureStepState` but
-/// only carries the authoring-time fields (no `Progress` / `Done` — those start at zero).
+/// only carries the authoring-time fields (no `Progress` / `Done`, those start at zero).
 public sealed class StepDef
 {
     public string? Name { get; set; }
@@ -166,7 +166,7 @@ public sealed class StepDef
     /// Other step `Name`s that must be done before this one becomes active.
     public List<string> Requires { get; set; } = new();
 
-    /// NPC names / location names / monster types depending on Kind. Supports `$giver` —
+    /// NPC names / location names / monster types depending on Kind. Supports `$giver`,
     /// rewritten to the resolved giver at quest-creation time.
     public List<string> Targets { get; set; } = new();
 

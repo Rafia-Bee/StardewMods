@@ -42,7 +42,7 @@ public sealed class QuestPipeline
         {
             // Effective source consults `OverrideTriggerSource` first so a quest authored
             // as `CustomBoard` (or vice versa) can flip routing at runtime without
-            // re-registration. `Kind` (delivery channel) is unaffected by the override —
+            // re-registration. `Kind` (delivery channel) is unaffected by the override,
             // both `DailyBoard` and `CustomBoard` sources resolve to `PostingKind.DailyBoard`
             // delivery, so the existing `Kind` field on `def` still validates.
             if (_registry.EffectiveSource(def) != TriggerSource.DailyBoard || def.Kind != PostingKind.DailyBoard)
@@ -189,13 +189,13 @@ public sealed class QuestPipeline
     }
 
     /// Per-board batch of `TriggerSource.CustomBoard` postings, keyed by the board's
-    /// `OwnerUniqueId/Name` lookup key. Each board draws independently — its own
+    /// `OwnerUniqueId/Name` lookup key. Each board draws independently, its own
     /// `AllowedCategories` filter applies, its own `PoolSize` caps the result, and the
     /// pipeline's daily-board cooldown / availability gates still apply.
     ///
     /// `GenerateCustomBoardPostings` is called from `ModEntry.OnDayStarted` after the
     /// help-wanted batch lands. Postings are not posted via `QuestPoster` (board-bound
-    /// quests don't have a delivery channel of their own — they live on the board until
+    /// quests don't have a delivery channel of their own, they live on the board until
     /// the player opens it and clicks Accept), so the caller stamps slot lists directly.
     public Dictionary<string, List<(QuestPosting posting, BoardDefinition board)>> GenerateCustomBoardPostings(BoardRegistry boardRegistry)
     {

@@ -110,17 +110,13 @@ internal static partial class Generators
         return candidates[Game1.random.Next(candidates.Count)];
     }
 
-    /// CSV row 35. Daily-board AdventureQuest. The picked saloon NPC asks the player to
-    /// bring a small set of in-season "attainable" ingredients (seasonal crops, forage
-    /// catchable in already-visited locations, fish in visited locations, plus a handful
-    /// of cooking category tokens like any-egg / any-milk). The ingredient count scales
-    /// off DifficultyScaling + Cooking Skill mod presence (`BuildAttainableIngredientCount`).
-    /// One `Deliver` step per ingredient; category tokens become `$category:N` matchers so
-    /// the player can hand over any qualifying item. The framework picks an overlap-best
-    /// recipe from the picks to use as the "dish" for flavour text, Tier 1 GiftTastes
-    /// consequence, and per-NPC `FriendshipMultiSmall` to met saloon-crowd villagers who
-    /// love or like that dish. When no recipe overlaps the picks, the no-dish i18n
-    /// fallback runs and both the consequence and crowd-friendship reward are skipped.
+    /// AdventureQuest where a saloon NPC asks for a small set of in-season attainable
+    /// ingredients (seasonal crops, forage in visited locations, fish in visited locations,
+    /// plus category tokens like any-egg/any-milk). One Deliver step per ingredient. The
+    /// framework picks an overlap-best recipe for flavour text, Tier 1 GiftTastes consequence,
+    /// and per-NPC FriendshipMultiSmall to saloon-crowd villagers who love/like the dish.
+    /// When no recipe overlaps, the no-dish i18n fallback runs and the consequence + crowd
+    /// friendship reward are skipped.
     private static QuestPosting? WeeklySpecialCommon(QuestContext ctx)
     {
         return BuildAttainableWeeklySpecial(
@@ -138,13 +134,9 @@ internal static partial class Generators
             consequenceHatedKey: "quest.cooking.weeklySpecial.common.consequence.hated");
     }
 
-    /// CSV row 36. Same attainable-ingredient flow as the Common variant, but the pool
-    /// is built across all four seasons (Row 36 verdict: "Same ingredient formula as
-    /// common weekly special but remove seasonal restrictions"). Gold steps up to
-    /// `GoldIntermediateBase`, deadline to `Long`, consequence to Tier 2, and the
-    /// per-NPC saloon-crowd friendship bumps from `FriendshipMultiSmall` to
-    /// `FriendshipIntermediate`. Skill gate (`Cooking 4|Farming 5`) is enforced by the
-    /// quests.json `Available` block.
+    /// Same flow as the Common variant but the pool spans all four seasons. Gold steps up
+    /// to GoldIntermediateBase, deadline to Long, consequence to Tier 2, friendship to
+    /// FriendshipIntermediate. Skill gate (Cooking 4 or Farming 5) is in quests.json.
     private static QuestPosting? WeeklySpecialComplex(QuestContext ctx)
     {
         return BuildAttainableWeeklySpecial(
@@ -162,17 +154,11 @@ internal static partial class Generators
             consequenceHatedKey: "quest.cooking.weeklySpecial.complex.consequence.hated");
     }
 
-    /// Note 218 implementation for WeeklySpecialCommon. Replaces the old recipe-driven flow
-    /// with a freeform "attainable ingredients" pick: seasonal crops + visited-location
-    /// forage + visited-location fish + a small curated set of cooking category tokens
-    /// (any-egg / any-milk / any-fish / any-vegetable / any-fruit / any-flower). The dish
-    /// is then derived by scoring recipes against the picks (highest ingredient overlap
-    /// wins, ties broken randomly). When no recipe scores at least 1, the no-dish i18n
-    /// fallback runs and both the GiftTastes consequence and the saloon-crowd friendship
-    /// reward are dropped (gold still pays out so the player isn't penalised).
-    /// Parameterised so the Complex variant can reuse the same pipeline with an
-    /// all-seasons pool and tier-appropriate gold / deadline / consequence / friendship
-    /// magnitudes (CSV row 36).
+    /// Builds the attainable-ingredient WeeklySpecial. Pool = seasonal crops + visited-location
+    /// forage + visited-location fish + curated cooking category tokens. Dish is the
+    /// recipe with the highest ingredient overlap with the picks (random tiebreak). No-dish
+    /// fallback drops the consequence + crowd-friendship; gold still pays out.
+    /// Parameterised so Complex can reuse with an all-seasons pool and stronger magnitudes.
     private static QuestPosting? BuildAttainableWeeklySpecial(
         QuestContext ctx,
         DifficultyTier tier,
@@ -211,7 +197,7 @@ internal static partial class Generators
         foreach (var p in picks)
         {
             // Category tokens cap at 2 so "Bring 5 of any milk" doesn't sandbag early-game
-            // saves; concrete in-season items get up to 3 since they're usually farmable.
+            // saves. Concrete in-season items get up to 3 since they're usually farmable.
             int qty = p.IsCategoryToken
                 ? Game1.random.Next(1, 3)
                 : Game1.random.Next(1, 4);
@@ -291,12 +277,9 @@ internal static partial class Generators
         };
     }
 
-    /// One entry in the WeeklySpecialCommon ingredient pool. Wraps either a concrete
-    /// ResolvedItem (literal seasonal crop / forage / fish) or a curated cooking category
-    /// sentinel (`CategoryId != 0`, e.g. -5 for any-egg). `MatcherToken` is what the
-    /// Deliver step's `Items[]` carries: a qualified id for literals, a `$category:N`
-    /// matcher for sentinels (the existing `AdventureQuest.TokenMatches` path handles
-    /// both forms).
+    /// One entry in the WeeklySpecial ingredient pool. Wraps either a concrete ResolvedItem
+    /// or a curated category sentinel (CategoryId != 0). MatcherToken is the qualified id
+    /// for literals, a `$category:N` matcher for sentinels.
     private sealed class AttainableIngredient
     {
         public string QualifiedItemId { get; init; } = string.Empty;
@@ -373,9 +356,8 @@ internal static partial class Generators
         return result;
     }
 
-    /// Note 218 count rules. DifficultyScaling off: 1..4. DifficultyScaling on with a
-    /// Cooking Skill mod loaded: 2..max(2, cookingLevel/2). DifficultyScaling on without
-    /// the Cooking Skill mod: 2..5.
+    /// Ingredient count rules. Off: 1..4. On + Cooking Skill mod: 2..max(2, cookingLevel/2).
+    /// On + no Cooking Skill: 2..5.
     private static int ResolveWeeklySpecialCommonIngredientCount(QuestContext ctx)
     {
         if (!ctx.Config.DifficultyScaling)
@@ -389,11 +371,8 @@ internal static partial class Generators
         return Game1.random.Next(2, 6);
     }
 
-    /// Scores every cooking recipe by how many of its ingredients overlap with the picks
-    /// (literal-id match for concrete picks, category-id match for category-sentinel picks
-    /// and for picks whose item category matches a recipe's category sentinel). Highest
-    /// score wins, ties broken at random. Returns null when no recipe scores at least 1
-    /// (no shared ingredients) so the caller can drop the dish-keyed flavour text.
+    /// Scores recipes by ingredient overlap with the picks. Highest score wins, random tiebreak.
+    /// Returns null when no recipe scores 1+, so the caller can drop the dish flavour text.
     private static ResolvedItem? PickOverlapDish(QuestContext ctx, List<AttainableIngredient> picks)
     {
         var pickedCats = new HashSet<int>();
@@ -448,19 +427,9 @@ internal static partial class Generators
         return bestRecipes[Game1.random.Next(bestRecipes.Count)].OutputItem;
     }
 
-    /// Adds a per-NPC `FriendshipMultiSmall` reward for every met human villager whose
-    /// `Data/NPCGiftTastes` entry has the dish in its loved or liked list. Models the
-    /// CSV's "FriendshipMultiSmall with multiple NPCs" reward column — the saloon
-    /// regulars who'd enjoy that week's dish appreciate the help. NPCs who hate the
-    /// dish or are indifferent are skipped on the reward side; the consequence layer
-    /// handles the loved-or-hated reactions separately.
-
-    /// Adds a per-NPC `FriendshipMultiSmall` reward for every met human villager whose
-    /// `Data/NPCGiftTastes` entry has the dish in its loved or liked list. Models the
-    /// CSV's "FriendshipMultiSmall with multiple NPCs" reward column — the saloon
-    /// regulars who'd enjoy that week's dish appreciate the help. NPCs who hate the
-    /// dish or are indifferent are skipped on the reward side; the consequence layer
-    /// handles the loved-or-hated reactions separately.
+    /// Adds a per-NPC friendship bump for every met villager whose loved/liked list
+    /// contains the dish. The saloon regulars who'd enjoy the week's dish appreciate the
+    /// help. The consequence layer handles loved/hated reactions separately.
     private static void AddSaloonCrowdFriendship(QuestContext ctx, string dishQualifiedId, List<RewardSpec> rewards, int? perNpcMagnitude = null)
     {
         int magnitude = perNpcMagnitude ?? ctx.Config.FriendshipMultiSmall;
@@ -486,25 +455,13 @@ internal static partial class Generators
         }
     }
 
-    /// CSV row 34. SpecialOrder source. Picks `GrandFeastRecipeCount` distinct complex-
-    /// tier recipes (same pool as the Complex Weekly Special); aggregates their
-    /// ingredients into one Ship objective per unique ingredient (using vanilla
-    /// `id_o_<id>` context tags so the shipping bin counts modded items too); seeds one
-    /// Tier 2 consequence per dish so each sampled NPC reacts to a different dish across
-    /// the post-completion week. Reward = `GoldExpertBase` (vanilla path so the player
-    /// gets the standard reward-box UX) + `FriendshipMultiSmall` to every met villager
-    /// who loves or likes any of the chosen dishes (framework path, bypasses third-party
-    /// SpecialOrder reward overrides).
-
-    /// CSV row 34. SpecialOrder source. Picks a scaled number of distinct complex-tier
-    /// recipes (same pool as the Complex Weekly Special), now including ones whose
-    /// ingredients reference category tokens since the per-ingredient `category_<N>`
-    /// context tag path handles them at Ship time. Aggregates ingredients across dishes
-    /// into one Ship objective per unique entry, seeds a Tier 2 consequence per dish
-    /// (FriendshipIntermediate magnitude on the hated side). Reward = `GoldExpertBase`
-    /// (vanilla path so the player gets the standard reward-box UX) + `FriendshipMultiSmall`
-    /// to every met villager who loves or likes any of the chosen dishes (framework path,
-    /// bypasses third-party SpecialOrder reward overrides).
+    /// SpecialOrder source. Picks N complex-tier recipes (including ones with category-token
+    /// ingredients, since the Ship objective emits `category_&lt;N&gt;` context tags). Aggregates
+    /// ingredients across dishes into one Ship objective per unique entry. One Tier 2
+    /// consequence per dish (FriendshipIntermediate magnitude on the hated side). Reward:
+    /// GoldExpertBase (vanilla path for the standard reward-box UX) + FriendshipMultiSmall
+    /// to every villager who loves/likes any chosen dish (framework path, bypasses
+    /// third-party SpecialOrder reward overrides).
     private static QuestPosting? GrandFeast(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
@@ -512,10 +469,8 @@ internal static partial class Generators
             return null;
 
         int wanted = ResolveGrandFeastRecipeCount(ctx);
-        // Recipes with category-token ingredients (e.g. "any egg" = -5) stay in the pool
-        // now; the per-ingredient SpecialOrder Ship objective code path already emits a
-        // `category_<N>` context tag for them, so the shipping bin can match modded items
-        // that carry the right category.
+        // Category-token recipes stay in the pool. The Ship objective emits `category_&lt;N&gt;`
+        // tags so the bin can match modded items that carry the right category.
         var pool = ctx.Items.GetAllCookingRecipes()
             .Where(r => r.Ingredients.Count >= ModEntry.Config.WeeklySpecialComplexMinIngredients)
             .ToList();
@@ -531,9 +486,8 @@ internal static partial class Generators
             available.RemoveAt(idx);
         }
 
-        // Aggregate ingredients across the picked recipes — duplicates merge into one
-        // objective with summed counts so the player ships one bigger pile of cheese
-        // instead of three smaller piles.
+        // Aggregate ingredients across recipes. Duplicates merge into one objective with
+        // summed counts (one bigger pile of cheese instead of three smaller piles).
         var aggregate = new Dictionary<string, (string DisplayName, int Count, bool IsCategory, int CategoryId)>(StringComparer.Ordinal);
         foreach (var recipe in picked)
         {
@@ -565,11 +519,10 @@ internal static partial class Generators
         var dishNames = picked.Select(r => r.OutputItem.DisplayName).ToList();
         string dishesList = string.Join(", ", dishNames);
 
-        // Money stays in vanilla's path so the reward-box UX is the standard one. The
-        // friendship payout moves to FrameworkRewards because friendship-tuning content
-        // packs (e.g. Special Order Adjustments) overwrite vanilla `Friendship` reward
-        // entries on `Data/SpecialOrders` globally — routing through the framework path
-        // bypasses that interception entirely.
+        // Money stays on vanilla's path for the standard reward-box UX. Friendship moves
+        // to FrameworkRewards because friendship-tuning content packs (e.g. Special Order
+        // Adjustments) overwrite vanilla `Friendship` entries on Data/SpecialOrders globally.
+        // Routing through the framework path bypasses that interception.
         var vanillaRewards = new List<SpecialOrderRewardSpec>
         {
             new()
@@ -582,9 +535,8 @@ internal static partial class Generators
         var frameworkRewards = new List<RewardSpec>();
         foreach (var dish in picked)
             AddSaloonCrowdFriendship(ctx, dish.OutputItem.QualifiedItemId, frameworkRewards);
-        // Multiple dishes can share the same liked-by NPC — collapse duplicate
-        // FriendshipReward entries so the same NPC isn't paid twice for the same
-        // SpecialOrder completion.
+        // Multiple dishes can share the same liked-by NPC. Collapse duplicates so the same
+        // NPC isn't paid twice for the same completion.
         frameworkRewards = DedupeFriendshipRewards(frameworkRewards);
 
         var consequences = new List<ConsequenceSpec>();
@@ -631,10 +583,8 @@ internal static partial class Generators
         };
     }
 
-    /// Note 207 scaling. With DifficultyScaling on + a Cooking Skill mod installed:
-    /// `cookingLevel * 3 / 2` (floored). With DifficultyScaling on but no Cooking Skill
-    /// mod: small random 3..14. With DifficultyScaling off: small random 2..6.
-    /// Min-clamped to 1 so the pool-availability check stays sane on brand-new saves.
+    /// Recipe count. Scaling on + Cooking Skill: cookingLevel*3/2. Scaling on without
+    /// Cooking Skill: 3..14. Scaling off: 2..6. Floored to 1 for brand-new saves.
     private static int ResolveGrandFeastRecipeCount(QuestContext ctx)
     {
         if (!ctx.Config.DifficultyScaling)
@@ -646,16 +596,6 @@ internal static partial class Generators
         }
         return Game1.random.Next(3, 15);
     }
-
-    // -------------------- Phase 9c: Fishing ecology + Monster Parts --------------------
-
-    /// CSV row 49. Daily-board fishing quest. Pierre or Joja (Morris/MorrisTod) ask the
-    /// player for a bulk haul of one specific seasonal fish; reward is sell-price scaled
-    /// below market (`RewardMultiplierBelowSell`). Tier 2 ecology consequence: every
-    /// member of the `EcologyMinded` pool present on the save (Demetrius + RSV's Maddie /
-    /// Mr. Aguar + East Scarp's Dylan) gets a single negative line + the Tier 2 default
-    /// negative friendship delta on the next chat. Linus is intentionally excluded — the
-    /// plan reserves him for Tier 3 (Seafood Night).
 
     private static List<RewardSpec> DedupeFriendshipRewards(List<RewardSpec> rewards)
     {
@@ -681,24 +621,11 @@ internal static partial class Generators
     private static string Sanitise(string s) =>
         new string((s ?? string.Empty).Where(c => char.IsLetterOrDigit(c)).ToArray());
 
-    // -------------------- Phase 9.5a: Declarative quick-wins --------------------
-
-    /// CSV row 28. Daily-board ItemDelivery. Anonymous board posting from one met NPC
-    /// asking the player to deliver a small gift to a different met NPC. Item is picked
-    /// from the recipient's loved or liked list so the gift always lands well. Reward =
-    /// `RewardMultiplierBelowSell` × the item's sell price (the giver "covers the cost
-    /// minus a finder's fee") plus `FriendshipBasic` with the recipient.
-
-    /// CSV row 18. Daily-board AdventureQuest with one `Deliver` step per requested dish
-    /// (each step gates on `TargetName: <giver>` so the dishes have to land with one host,
-    /// not the saloon crowd). Dish count and per-dish quantity scale off the player's
-    /// Cooking Skill level when Moonslime's Cooking Skill Redux mod (moonslime.CookingSkill)
-    /// is installed, off the vanilla Farming level when it isn't
-    /// and DifficultyScaling is on, and roll a small random when scaling is off entirely.
-    /// Dish pool widens to loved + liked + neutral so even prickly hosts have a workable
-    /// menu. Reward = vanilla money proportional to dish sell prices (kept from the old
-    /// SpecialOrder path) + `FriendshipMid` to the giver. Completion dialogue replaces
-    /// the silent vanilla close so the host actually thanks the player.
+    /// AdventureQuest with one Deliver step per requested dish, gated on the giver's name so
+    /// dishes land with one host. Dish count + per-dish quantity scale off Cooking Skill when
+    /// installed, off Farming when not, and roll a small random when scaling is off. Dish pool
+    /// widens to loved/liked/neutral so even prickly hosts have a workable menu. Reward:
+    /// money proportional to dish sell prices + FriendshipMid to the giver.
     private static QuestPosting? DinnerParty(QuestContext ctx)
     {
         var npcs = DispatchRegistry.MetHumanNpcs();
@@ -806,9 +733,8 @@ internal static partial class Generators
         return null;
     }
 
-    /// Note 196 scaling. With DifficultyScaling on: 2 + cookingLevel/2 when a Cooking
-    /// Skill mod is installed, else 2 + farmingLevel/2 as a vanilla-only fallback. With
-    /// DifficultyScaling off: small random 1..3 inclusive.
+    /// Dish count. Scaling on: 2 + cookingLevel/2 (Cooking Skill) or 2 + farmingLevel/2.
+    /// Scaling off: 1..3.
     private static int ResolveDinnerPartyDishCount(QuestContext ctx, bool cookingSkillLoaded, int cookingLevel)
     {
         if (!ctx.Config.DifficultyScaling)
@@ -817,9 +743,7 @@ internal static partial class Generators
         return Math.Max(1, 2 + level / 2);
     }
 
-    /// Note 195 scaling. With a Cooking Skill mod installed: cookingLevel/2 (clamped to
-    /// at least 1 so a brand-new save still has a deliverable count). Otherwise small
-    /// random 1..3 inclusive.
+    /// Per-dish count. With Cooking Skill: cookingLevel/2 (min 1). Otherwise random 1..3.
     private static int ResolveDinnerPartyPerDishCount(bool cookingSkillLoaded, int cookingLevel)
     {
         if (!cookingSkillLoaded)

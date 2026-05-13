@@ -43,7 +43,7 @@ public static class NpcDispatch
         registry.Register(DispatchRoles.ConservationGuide, "Aster", ModCompat.VisitMountVapius);
 
         // CombatNpcs: combat-flavoured villagers who commission slime / monster work
-        // (CSV row 4 — Basic Slime Clearing). Vanilla Marlon isn't friendable and
+        // (CSV row 4, Basic Slime Clearing). Vanilla Marlon isn't friendable and
         // right-clicking him opens the Adventure Guild shop instead of dialogue, so
         // social-flow handlers never fire on him. Wizard is the vanilla anchor; SVE
         // adds Lance + MarlonFay; RSV adds Mr. Aguar / Jio / Daia; EliAndDylan adds
@@ -72,7 +72,7 @@ public static class NpcDispatch
 
         // JojaCorpRep: vanilla Morris is the JojaMart manager; SVE renames the same
         // character to MorrisTod (full body + dialogue + house). When SVE is loaded
-        // both entries are eligible — the picker lands on whichever the save actually
+        // both entries are eligible, the picker lands on whichever the save actually
         // has. Joja-route saves keep him; Community-Center-route saves lose him and
         // the role's pool collapses to zero (quest correctly stops posting).
         registry.Register(DispatchRoles.JojaCorpRep, "Morris");

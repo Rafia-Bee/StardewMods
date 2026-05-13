@@ -9,10 +9,8 @@ using StardewValley.Quests;
 
 namespace MoreQuests.Quests;
 
-/// `SlayMonsterQuest` variant whose kill counter accepts any slime variant
-/// (Green/Blue/Red/Frost/Sludge/Tiger/Squid Kid mode), since they all derive
-/// from `GreenSlime`. Replaces the vanilla name-based matching to avoid
-/// double counting and the misleading "Green Slimes" label.
+/// SlayMonsterQuest variant that counts any slime variant (they all derive from GreenSlime).
+/// Replaces vanilla's name-based matching to avoid double counting and the "Green Slimes" label.
 [XmlType("Mods_RafiaBee_MoreQuests_AnySlimeQuest")]
 public sealed class AnySlimeQuest : SlayMonsterQuest, IRewardedQuest
 {
@@ -22,8 +20,7 @@ public sealed class AnySlimeQuest : SlayMonsterQuest, IRewardedQuest
 
     public AnySlimeQuest()
     {
-        // Suppress vanilla's auto-title regeneration (which would print "Slay X Green Slime")
-        // so the title we set from the posting is the one that sticks.
+        // Suppress vanilla's auto-title regen ("Slay X Green Slime") so the posting's title sticks.
         _loadedTitle = true;
     }
 
@@ -77,8 +74,8 @@ public sealed class AnySlimeQuest : SlayMonsterQuest, IRewardedQuest
         return true;
     }
 
-    /// Vanilla `reloadObjective` would render "x/y Green Slimes" using `monster.Value`'s
-    /// display name. We track all slimes, so the label should say "slimes" generically.
+    /// Vanilla would render "x/y Green Slimes" via monster.Value's name. We track all slimes
+    /// so the label needs to be generic.
     public override void reloadObjective()
     {
         if (numberKilled.Value < numberToKill.Value)
@@ -87,10 +84,8 @@ public sealed class AnySlimeQuest : SlayMonsterQuest, IRewardedQuest
             currentObjective = objective.Value.loadDescriptionElement();
     }
 
-    /// Mirror vanilla's completion path explicitly. Vanilla's version calls
-    /// `reloadDescription()` which can blank out our manually-set targetMessage if
-    /// `parts`/`dialogueparts` are empty; we sidestep that by pushing the message
-    /// directly.
+    /// Mirrors vanilla's completion path but pushes targetMessage directly. Vanilla's
+    /// reloadDescription() can blank out the message when parts/dialogueparts are empty.
     public override bool OnNpcSocialized(NPC npc, bool probe = false)
     {
         if (completed.Value)

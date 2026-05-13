@@ -3,9 +3,8 @@ using StardewModdingAPI;
 
 namespace MoreQuests;
 
-/// Registers the content mod's per-quest content settings with Generic Mod Config Menu.
-/// Engine-wide tunables (deadlines, friendship/gold sizes, vanilla quest weights) live
-/// on the framework's own GMCM page.
+/// Registers per-quest content settings with GMCM. Engine-wide tunables live on the
+/// framework's own GMCM page.
 internal static class GmcmRegistration
 {
     public static void Register(IModHelper helper, IManifest manifest)
@@ -145,8 +144,7 @@ internal static class GmcmRegistration
         AddText(api, manifest, t, "WrappingPaperTapeId", () => ModEntry.Config.WrappingPaperTapeId, v => ModEntry.Config.WrappingPaperTapeId = v);
         AddText(api, manifest, t, "WrappingPaperBookOfStarsId", () => ModEntry.Config.WrappingPaperBookOfStarsId, v => ModEntry.Config.WrappingPaperBookOfStarsId = v);
 
-        // Per-quest weight overrides (for content-mod quests) live in the framework's GMCM page
-        // alongside the vanilla quest weights, since the framework owns the registry view.
+        // Per-quest weight overrides live on the framework's GMCM page (it owns the registry view).
     }
 
     private static void AddText(IGenericModConfigMenuApi api, IManifest manifest, ITranslationHelper t,

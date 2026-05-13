@@ -9,7 +9,7 @@ public static class ModCompat
     public const string EastScarp = "FlashShifter.EastScarpMod";
     public const string VisitMountVapius = "FlashShifter.VisitMountVapius";
     /// SVE ships as two mods: a C# mod (`FlashShifter.SVECode`) plus a CP content pack
-    /// (`FlashShifter.StardewValleyExpandedCP`). The C# mod is the authoritative one —
+    /// (`FlashShifter.StardewValleyExpandedCP`). The C# mod is the authoritative one,
     /// it's what places SVE NPCs (MarlonFay, MorrisTod, Lance, etc.) into the world.
     /// Earlier versions of this constant used `FlashShifter.StardewValleyExpanded` which
     /// matches neither install ID and silently dropped every SVE-gated dispatch entry.
