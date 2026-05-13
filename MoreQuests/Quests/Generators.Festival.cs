@@ -185,7 +185,7 @@ internal static partial class Generators
         var forage = PickSpringForage(ctx);
         if (forage == null)
             return null;
-        var sampleDish = PickSampleDishForIngredients(ctx, crop, forage);
+        var sampleDish = PickSampleDishForIngredients(ctx, new[] { crop, forage }, new HashSet<string> { crop.QualifiedItemId });
         if (sampleDish == null)
             return null;
 
@@ -358,19 +358,28 @@ internal static partial class Generators
     }
 
     /// Recipe pool widens past the asked ingredients to include any dish whose ingredient
-    /// list matches the crop's fruit/vegetable category, so modded recipes can ride along.
-    /// Forage's own category doesn't widen the pool (forage_item items aren't categorized
-    /// as fruit/veg in vanilla; the crop pick is the broader signal).
-    private static ResolvedItem? PickSampleDishForIngredients(QuestContext ctx, ResolvedItem crop, ResolvedItem forage)
+    /// list matches any picked crop's fruit/vegetable category, so modded recipes ride
+    /// along. `cropQualifiedIds` flags which entries in `ingredients` came from the crop
+    /// pool. Forage's own category doesn't widen the pool (forage_item items aren't
+    /// categorized as fruit/veg in vanilla; the crop pick is the broader signal).
+    private static ResolvedItem? PickSampleDishForIngredients(QuestContext ctx, IReadOnlyList<ResolvedItem> ingredients, HashSet<string> cropQualifiedIds)
     {
         var allRecipes = ctx.Items.GetAllCookingRecipes();
         if (allRecipes.Count == 0)
             return null;
 
-        string cropBare = StripPrefix(crop.QualifiedItemId);
-        string forageBare = StripPrefix(forage.QualifiedItemId);
-        bool cropIsFruit = crop.Category == StardewValley.Object.FruitsCategory;
-        bool cropIsVeg = crop.Category == StardewValley.Object.VegetableCategory;
+        var ingredientBareIds = new HashSet<string>();
+        bool anyCropFruit = false;
+        bool anyCropVeg = false;
+        foreach (var item in ingredients)
+        {
+            ingredientBareIds.Add(StripPrefix(item.QualifiedItemId));
+            if (cropQualifiedIds.Contains(item.QualifiedItemId))
+            {
+                if (item.Category == StardewValley.Object.FruitsCategory) anyCropFruit = true;
+                if (item.Category == StardewValley.Object.VegetableCategory) anyCropVeg = true;
+            }
+        }
 
         var pool = new List<CookingRecipeInfo>();
         foreach (var recipe in allRecipes)
@@ -380,15 +389,15 @@ internal static partial class Generators
             {
                 if (ing.IsCategoryToken)
                 {
-                    if (cropIsFruit && ing.CategoryId == StardewValley.Object.FruitsCategory) { match = true; break; }
-                    if (cropIsVeg && ing.CategoryId == StardewValley.Object.VegetableCategory) { match = true; break; }
+                    if (anyCropFruit && ing.CategoryId == StardewValley.Object.FruitsCategory) { match = true; break; }
+                    if (anyCropVeg && ing.CategoryId == StardewValley.Object.VegetableCategory) { match = true; break; }
                 }
                 else
                 {
                     string ingBare = StripPrefix(ing.Item.QualifiedItemId);
-                    if (ingBare == cropBare || ingBare == forageBare) { match = true; break; }
-                    if (cropIsFruit && ing.Item.Category == StardewValley.Object.FruitsCategory) { match = true; break; }
-                    if (cropIsVeg && ing.Item.Category == StardewValley.Object.VegetableCategory) { match = true; break; }
+                    if (ingredientBareIds.Contains(ingBare)) { match = true; break; }
+                    if (anyCropFruit && ing.Item.Category == StardewValley.Object.FruitsCategory) { match = true; break; }
+                    if (anyCropVeg && ing.Item.Category == StardewValley.Object.VegetableCategory) { match = true; break; }
                 }
             }
             if (match)
@@ -398,31 +407,6 @@ internal static partial class Generators
             return null;
         return pool[Game1.random.Next(pool.Count)].OutputItem;
     }
-
-    /// Vanilla fall ingredients producible or forageable by Fall 8.
-    private static readonly (string Id, string Name)[] FallIngredientPool =
-    {
-        ("(O)24", "Parsnip"),
-        ("(O)266", "Red Cabbage"),
-        ("(O)272", "Eggplant"),
-        ("(O)270", "Corn"),
-        ("(O)276", "Pumpkin"),
-        ("(O)278", "Bok Choy"),
-        ("(O)408", "Hazelnut"),
-        ("(O)404", "Common Mushroom")
-    };
-
-    /// Vanilla fall sample dishes for Fair taste-testing. Ingredients match the fall pool.
-    private static readonly (string Id, string Name)[] FallSampleDishPool =
-    {
-        ("(O)205", "Fried Mushroom"),
-        ("(O)225", "Fried Eel"),
-        ("(O)240", "Farmer's Lunch"),
-        ("(O)244", "Roots Platter"),
-        ("(O)457", "Vegetable Medley"),
-        ("(O)607", "Roasted Hazelnuts"),
-        ("(O)608", "Pumpkin Pie")
-    };
 
     /// Vanilla summer ingredients sourceable by Summer 8 on a first-year save. Tighter than
     /// Fall since the trigger is earlier in the season.
@@ -441,28 +425,62 @@ internal static partial class Generators
         ("(O)16", "Wild Horseradish")
     };
 
-    /// Fall 8 Fair prep: deliver N distinct fall ingredients to Gus. Reward: sample dish +
-    /// FestivalBias Fair magnitude (bumps grange score on Fall 16).
+    /// Fall 8 (Stardew Valley Fair prep). Player delivers N distinct fall ingredients to
+    /// Gus (count = `GusFestivalFeastIngredientCount`, default 3). The combined pool reads
+    /// `ctx.Items.GetSeasonalCrops("fall")` and `ctx.Items.GetForageItems("fall")`, so any
+    /// modded fall crop or fall forage rides along automatically. Year-1 limits to vanilla
+    /// numeric ids and excludes Beet `(O)284` (Desert/Oasis only) and Sweet Gem Berry
+    /// `(O)417` (Rare Seed, 24-day grow) so a fresh save can't roll an unreachable pick.
+    /// Per-item quantity scales by Farming for crop picks and Foraging for forage picks.
+    /// Dish pool searches `Data/CookingRecipes` for recipes whose ingredient list matches
+    /// any picked id or any picked crop's fruit/vegetable category, so modded recipes ride
+    /// along. Reward: sample dish + 5 Prize Tickets (Fair prize-wheel currency).
     private static QuestPosting? GusFestivalFeastFall(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Gus") == null)
             return null;
 
-        int ingredientCount = ModEntry.Config.GusFestivalFeastIngredientCount;
-        var picks = PickDistinctIngredients(ctx, FallIngredientPool, ingredientCount);
-        if (picks.Count == 0)
+        var (pool, cropQualifiedIds) = BuildFallIngredientPool(ctx);
+        if (pool.Count == 0)
             return null;
-        var sampleDish = PickSample(ctx, FallSampleDishPool);
+
+        int requested = ModEntry.Config.GusFestivalFeastIngredientCount;
+        int count = Math.Min(pool.Count, Math.Max(1, requested));
+        var picks = new List<ResolvedItem>(count);
+        var indices = new List<int>(pool.Count);
+        for (int i = 0; i < pool.Count; i++)
+            indices.Add(i);
+        for (int i = 0; i < count && indices.Count > 0; i++)
+        {
+            int j = Game1.random.Next(indices.Count);
+            picks.Add(pool[indices[j]]);
+            indices.RemoveAt(j);
+        }
+
+        var sampleDish = PickSampleDishForIngredients(ctx, picks, cropQualifiedIds);
         if (sampleDish == null)
             return null;
 
-        int qty = ctx.Config.DifficultyScaling
-            ? Math.Max(3, 2 * Game1.player.FarmingLevel)
-            : 5;
-
+        bool scaling = ctx.Config.DifficultyScaling;
+        var qtyByIndex = new int[picks.Count];
         var steps = new List<AdventureStepState>(picks.Count);
         for (int i = 0; i < picks.Count; i++)
         {
+            bool isCrop = cropQualifiedIds.Contains(picks[i].QualifiedItemId);
+            int qty;
+            if (scaling)
+            {
+                int upper = isCrop
+                    ? Math.Max(3, 2 * Game1.player.FarmingLevel)
+                    : Math.Max(2, 2 * Game1.player.ForagingLevel);
+                int lower = isCrop ? 3 : 2;
+                qty = Game1.random.Next(lower, upper + 1);
+            }
+            else
+            {
+                qty = 5;
+            }
+            qtyByIndex[i] = qty;
             steps.Add(new AdventureStepState
             {
                 Name = "DeliverIngredient" + i,
@@ -477,7 +495,7 @@ internal static partial class Generators
         var quest = new AdventureQuest();
         quest.Initialize(steps, giver: "Gus", completionDialogue: ModEntry.I18n.Get("quest.festival.gusFall.targetMessage", new { dish = sampleDish.DisplayName }));
 
-        string ingredientList = string.Join(", ", picks.Select(p => p.DisplayName));
+        string ingredientList = JoinItemList(picks.Select((p, i) => $"{qtyByIndex[i]} {p.DisplayName}"));
 
         return new QuestPosting
         {
@@ -486,17 +504,57 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = "Gus",
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            // Fall 8 trigger, Stardew Valley Fair on Fall 16: 7 days puts the auto-fail on
+            // Fall 15, one day before the festival. Same shape as Spring egg festival prep.
+            DeadlineDays = 7,
             Rewards =
             {
                 new ObjectReward(sampleDish.QualifiedItemId),
-                new FestivalBiasReward(FestivalKind.Fair, ModEntry.Config.FestivalBiasFairMagnitude)
+                new ObjectReward("(O)PrizeTicket", 5)
             },
             Title = ModEntry.I18n.Get("quest.festival.gusFall.title"),
-            Description = ModEntry.I18n.Get("quest.festival.gusFall.description", new { count = qty, ingredients = ingredientList }),
+            Description = ModEntry.I18n.Get("quest.festival.gusFall.description", new { ingredients = ingredientList }),
             TargetMessage = ModEntry.I18n.Get("quest.festival.gusFall.targetMessage", new { dish = sampleDish.DisplayName }),
             PreBuiltQuest = quest
         };
+    }
+
+    /// Combined fall ingredient pool: Data/Crops fall harvest items + Data/Objects fall
+    /// forage. Year 1 filters to vanilla numeric ids and drops Beet `(O)284` (Desert/Oasis
+    /// only) and Sweet Gem Berry `(O)417` (Rare Seed) so the quest can't ask for items the
+    /// player has no path to. Returned `CropQualifiedIds` flags which entries originated
+    /// from the crop pool, so the caller can pick the right skill (Farming vs Foraging)
+    /// for quantity scaling.
+    private static (List<ResolvedItem> Pool, HashSet<string> CropQualifiedIds) BuildFallIngredientPool(QuestContext ctx)
+    {
+        var pool = new List<ResolvedItem>();
+        var seen = new HashSet<string>();
+        var cropQualifiedIds = new HashSet<string>();
+
+        foreach (var c in ctx.Items.GetSeasonalCrops("fall"))
+        {
+            string bare = StripPrefix(c.QualifiedItemId);
+            if (bare == "284" || bare == "417")
+                continue;
+            if (Game1.year < 2 && !int.TryParse(bare, out _))
+                continue;
+            if (seen.Add(c.QualifiedItemId))
+            {
+                pool.Add(c);
+                cropQualifiedIds.Add(c.QualifiedItemId);
+            }
+        }
+
+        foreach (var f in ctx.Items.GetForageItems("fall"))
+        {
+            string bare = StripPrefix(f.QualifiedItemId);
+            if (Game1.year < 2 && !int.TryParse(bare, out _))
+                continue;
+            if (seen.Add(f.QualifiedItemId))
+                pool.Add(f);
+        }
+
+        return (pool, cropQualifiedIds);
     }
 
     /// Summer 8 Luau prep: deliver summer/spring ingredients to Gus. Reward: FestivalBias
@@ -573,12 +631,6 @@ internal static partial class Generators
                 i--; // try another
         }
         return picks;
-    }
-
-    private static ResolvedItem? PickSample(QuestContext ctx, (string Id, string Name)[] pool)
-    {
-        var (id, _) = pool[Game1.random.Next(pool.Length)];
-        return ctx.Items.TryResolveItem(id);
     }
 
     /// Winter 13 (Night Market). A met NPC asks for a non-winter seed restock. Filter:
