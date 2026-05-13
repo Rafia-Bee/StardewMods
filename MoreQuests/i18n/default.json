@@ -118,7 +118,7 @@
 
     "quest.farming.basic.title": "{{npc}}'s crop request",
     "quest.farming.basic.description": "Any kind farmer has some fresh {{item}}? Please bring by {{qty}} {{item}} to {{npc}} before the deadline.",
-    "quest.farming.basic.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.farming.basic.objective": "Bring {{item}} to {{npc}}.",
     "quest.farming.basic.targetMessage": "These look great. Thank you!",
 
     "quest.fishing.simple.title": "Fresh catch needed",
@@ -133,12 +133,12 @@
 
     "quest.mining.bar.title": "{{npc}} needs bars",
     "quest.mining.bar.description": "{{npc}} here. I've got an order on the bench and I'm short on stock. Could someone bring me {{qty}} {{item}} before the deadline? I'll make it worth your while.",
-    "quest.mining.bar.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.mining.bar.objective": "Bring {{item}} to {{npc}}.",
     "quest.mining.bar.targetMessage": "These are perfect, thanks for getting them so fast.",
 
     "quest.foraging.seasonal.title": "{{npc}}'s foraging request",
     "quest.foraging.seasonal.description": "I've been looking for some {{item}} but to no luck. I really want to make some salad with them. If someone finds {{qty}} {{item}}, please bring them by. Thanks! - {{npc}}",
-    "quest.foraging.seasonal.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.foraging.seasonal.objective": "Bring {{item}} to {{npc}}.",
     "quest.foraging.seasonal.targetMessage": "Wonderful, thank you for finding these!",
 
     "quest.social.elliott.title": "A token of inspiration",
@@ -155,17 +155,17 @@
 
     "quest.animal.hay.title": "Hay supply run",
     "quest.animal.hay.description": "My hay supply is running low. Could a kind farmer bring me some more? {{qty}} should be more than enough.",
-    "quest.animal.hay.objective": "Bring {{qty}} hay to Marnie.",
+    "quest.animal.hay.objective": "Bring hay to Marnie.",
     "quest.animal.hay.targetMessage": "Thanks! The cows were getting antsy.",
 
     "quest.seasonal.beach.title": "{{npc}}'s beach cleanup",
     "quest.seasonal.beach.description": "I almost hurt myself on a {{item}} the other day. Can someone pick them up from the beach? You can keep them, just let me know once you've gathered enough.",
-    "quest.seasonal.beach.objective": "Collect {{qty}} {{item}} and talk to {{npc}}.",
+    "quest.seasonal.beach.objective": "Collect {{item}} and talk to {{npc}}.",
     "quest.seasonal.beach.targetMessage": "Thanks for clearing those out. Fun to look at but not so fun to step on!",
 
     "quest.seasonal.floraltea.title": "Floral tea for {{npc}}",
     "quest.seasonal.floraltea.description": "I'd love to brew some floral tea this week. Could you bring me {{qty}} {{item}}?",
-    "quest.seasonal.floraltea.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.seasonal.floraltea.objective": "Bring {{item}} to {{npc}}.",
     "quest.seasonal.floraltea.targetMessage": "Lovely, thank you.",
 
     "quest.cooking.craving.title": "{{npc}} is craving a meal",
@@ -211,22 +211,22 @@
 
     "quest.farming.preservesJarRequest.title": "Help break in the preserves jar",
     "quest.farming.preservesJarRequest.description": "Heard you finally got a Preserves Jar going. I've been wanting to stock the pantry but I never got around to making my own. Could you ship me {{qty}} pickles or jams (any kind, ship them through the bin and I'll grab them on my end)? No rush, the pantry has all year.",
-    "quest.farming.preservesJarRequest.objective": "Ship {{qty}} pickles or jams to the shipping bin.",
+    "quest.farming.preservesJarRequest.objective": "Ship pickles or jams to the shipping bin.",
     "quest.farming.preservesJarRequest.targetMessage": "Got the haul. Pantry's finally stocked, thank you.",
 
     "quest.farming.kegRequest.title": "Kegs are running, care to share?",
     "quest.farming.kegRequest.description": "I heard you got a Keg working at the farm. I'd love to taste-test whatever's coming out of it. Could you ship me {{qty}} wines, juices, mead, beer, or pale ale (any combination)? Drop them in the shipping bin when you're ready, no deadline.",
-    "quest.farming.kegRequest.objective": "Ship {{qty}} fermented drinks to the shipping bin.",
+    "quest.farming.kegRequest.objective": "Ship fermented drinks to the shipping bin.",
     "quest.farming.kegRequest.targetMessage": "Cheers, this'll keep me happy for weeks.",
 
     "quest.farming.dehydratorRequest.title": "Got a Dehydrator going?",
     "quest.farming.dehydratorRequest.description": "I noticed you picked up the Dehydrator recipe. Mind making me a batch? Ship {{qty}} dried mushrooms or dried fruit (raisins, etc.) through the bin whenever you can. No rush.",
-    "quest.farming.dehydratorRequest.objective": "Ship {{qty}} dried mushrooms or dried fruit to the shipping bin.",
+    "quest.farming.dehydratorRequest.objective": "Ship dried mushrooms or dried fruit to the shipping bin.",
     "quest.farming.dehydratorRequest.targetMessage": "These will last forever. Thanks for the batch.",
 
     "quest.fishing.fishSmokerRequest.title": "Smoked fish for the pantry",
     "quest.fishing.fishSmokerRequest.description": "Willy told me you have a Fish Smoker running now. I haven't had smoked fish in ages, would you mind shipping me {{qty}} (any kind of smoked fish)? Whenever you have time, no rush.",
-    "quest.fishing.fishSmokerRequest.objective": "Ship {{qty}} smoked fish to the shipping bin.",
+    "quest.fishing.fishSmokerRequest.objective": "Ship smoked fish to the shipping bin.",
     "quest.fishing.fishSmokerRequest.targetMessage": "Perfect. I'll be eating well for weeks.",
 
     "quest.mining.skullCavernDeepDive.title": "Skull Cavern deep dive",
@@ -249,7 +249,7 @@
 
     "quest.farming.massiveHarvest.title": "Massive harvest request",
     "quest.farming.massiveHarvest.description": "{{npc}} from JojaMart here. Our usual supplier botched the {{item}} order, so we're stuck with empty crates and a manager breathing down our necks. We need {{qty}} {{item}} into the shipping bin by the deadline, anything you can spare. JojaMart will pay above market for the load.",
-    "quest.farming.massiveHarvest.objective": "Ship {{qty}} {{item}} to JojaMart.",
+    "quest.farming.massiveHarvest.objective": "Ship {{item}} to JojaMart.",
     "quest.farming.massiveHarvest.targetMessage": "Order received. JojaMart appreciates your cooperation.",
     "quest.farming.massiveHarvest.consequence.loved": "I heard JojaMart finally got a decent batch of {{item}} in. Thank you for that - the store-bought stuff was always rubbish.",
     "quest.farming.massiveHarvest.consequence.hated": "Why couldn't {{npc}} get better quality crops instead? I never eat {{item}}.",
@@ -301,7 +301,7 @@
 
     "quest.mining.monsterParts.title": "{{npc}} needs monster parts",
     "quest.mining.monsterParts.description": "{{npc}} is putting in an order for {{qty}} {{item}} - research, alchemy, or just a strong stomach, depends who you ask. Bring them by when you have the count and they'll trade you a gem worth the trip.",
-    "quest.mining.monsterParts.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.mining.monsterParts.objective": "Bring {{item}} to {{npc}}.",
     "quest.mining.monsterParts.targetMessage": "Excellent. That'll do nicely.",
     "quest.mining.monsterParts.consequence.hated": "So you're {{npc}}'s {{item}} courier now. The creatures down there have names too, you know.",
 
@@ -329,12 +329,12 @@
 
     "quest.seasonal.heatWaveRelief.title": "{{npc}}'s heat wave relief",
     "quest.seasonal.heatWaveRelief.description": "The clinic is full of folks half-fainted from the heat. {{npc}} is asking for {{qty}} {{item}} to keep around for anyone who comes in dehydrated. Drop them off when you can and there's something for the trouble.",
-    "quest.seasonal.heatWaveRelief.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.seasonal.heatWaveRelief.objective": "Bring {{item}} to {{npc}}.",
     "quest.seasonal.heatWaveRelief.targetMessage": "Perfect. That'll keep half the valley upright through the next hot spell.",
 
     "quest.seasonal.jellyfishWatch.title": "Notes for the Moonlight Jellies",
     "quest.seasonal.jellyfishWatch.description": "I'm pulling together some field notes ahead of the Dance of the Moonlight Jellies and could use a few specimens from the beach. Could you bring me {{qty}} {{item}} sometime in the next few days? The dance is coming up fast and the data set isn't going to fill itself.",
-    "quest.seasonal.jellyfishWatch.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.seasonal.jellyfishWatch.objective": "Bring {{item}} to {{npc}}.",
     "quest.seasonal.jellyfishWatch.targetMessage": "These are exactly what I needed. Thanks for indulging the field work.",
 
     "quest.festival.merchantUnpacking.title": "Night Market seeds for {{npc}}",
@@ -348,12 +348,12 @@
 
     "quest.foraging.rareForage.title": "{{npc}}'s rare forage",
     "quest.foraging.rareForage.description": "{{npc}} has heard rumours of {{item}} turning up in the area and wants {{qty}} of them. Bring what you can find, no rush. There'll be coin and seed packets in it for the trouble.",
-    "quest.foraging.rareForage.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.foraging.rareForage.objective": "Bring {{item}} to {{npc}}.",
     "quest.foraging.rareForage.targetMessage": "These are the real thing. Thank you for chasing them down.",
 
     "quest.mining.rareMaterial.title": "{{npc}}'s rare material request",
     "quest.mining.rareMaterial.description": "{{npc}} here. I'm working on a custom commission and the order calls for {{qty}} {{item}}. I'll cover the going rate and throw in a sweetener for the inconvenience.",
-    "quest.mining.rareMaterial.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "quest.mining.rareMaterial.objective": "Bring {{item}} to {{npc}}.",
     "quest.mining.rareMaterial.targetMessage": "These will do nicely. Tell the customer the timeline's back on schedule.",
 
     "quest.festival.secretGiftHint.title": "A whisper for the Winter Star",
@@ -373,12 +373,12 @@
 
     "quest.farming.qualityCrop.title": "{{npc}}'s quality crop order",
     "quest.farming.qualityCrop.description": "{{npc}} is putting together a particular meal and only the best {{item}} will do. Bring {{qty}} {{quality}} {{item}} when you have them. Anything less and it just won't taste right.",
-    "quest.farming.qualityCrop.objective": "Bring {{qty}} {{quality}} {{item}} to {{npc}}.",
+    "quest.farming.qualityCrop.objective": "Bring {{quality}} {{item}} to {{npc}}.",
     "quest.farming.qualityCrop.targetMessage": "These look perfect. Thank you for taking the extra care.",
 
     "quest.farming.premiumCrop.title": "{{npc}}'s premium order",
     "quest.farming.premiumCrop.description": "{{npc}} is willing to pay a premium for {{qty}} {{quality}} {{item}}. They've made it clear nothing short of iridium will land the deal. Bring them by when you have the lot.",
-    "quest.farming.premiumCrop.objective": "Bring {{qty}} {{quality}} {{item}} to {{npc}}.",
+    "quest.farming.premiumCrop.objective": "Bring {{quality}} {{item}} to {{npc}}.",
     "quest.farming.premiumCrop.targetMessage": "Spectacular. This is exactly what I needed.",
 
     "quest.fishing.qualityFish.title": "{{npc}}'s quality fish order",
@@ -482,7 +482,7 @@
 
     "quest.animal.alexProtein.title": "Protein for the home gym",
     "quest.animal.alexProtein.description": "Hey, I'm trying to bulk and Marnie can't seem to keep up with my protein needs. Bring me {{qty}} eggs and I'll cut you in on whatever supplement bottle I've got open. Cheers.",
-    "quest.animal.alexProtein.objective": "Bring {{qty}} eggs to Alex.",
+    "quest.animal.alexProtein.objective": "Bring eggs to Alex.",
     "quest.animal.alexProtein.targetMessage": "Solid. That's the lot. Here, take this with you.",
 
     "quest.animal.guntherDinosaur.title": "Specimen for the museum",
@@ -507,7 +507,7 @@
 
     "quest.animal.marnieChickenOffer.title": "Marnie's chicken offer",
     "quest.animal.marnieChickenOffer.description": "Saw the new coop going up. If you bring me {{qty}} Mixed Seeds for the layers, I'll send a chicken home with you to fill it. Drop the seeds by whenever you have them.",
-    "quest.animal.marnieChickenOffer.objective": "Bring {{qty}} Mixed Seeds to Marnie.",
+    "quest.animal.marnieChickenOffer.objective": "Bring Mixed Seeds to Marnie.",
     "quest.animal.marnieChickenOffer.targetMessage": "Perfect. Head back to the coop and your new layer will be settling in already.",
     "quest.animal.marnieChickenOffer.coopFullFallback": "All your coops are full. Marnie sent the chicken back with a refund instead.",
 
@@ -519,12 +519,12 @@
 
     "quest.animal.marnieEgg.title": "First eggs for Marnie",
     "quest.animal.marnieEgg.description": "Congratulations on your first eggs! If you can spare {{qty}} of them through the shipping bin, I'd love to send a Mayonnaise Machine recipe your way and pay the going rate. The hens will give you plenty more.",
-    "quest.animal.marnieEgg.objective": "Ship {{qty}} eggs.",
+    "quest.animal.marnieEgg.objective": "Ship eggs.",
     "quest.animal.marnieEgg.targetMessage": "Lovely. The recipe is on its way.",
 
     "quest.animal.marnieMilk.title": "First milk for Marnie",
     "quest.animal.marnieMilk.description": "Your cow's producing! If you can ship me {{qty}} milk through the bin, I'll send back a Cheese Press recipe so you can start turning that milk into something with a longer shelf life. There'll be coin too, of course.",
-    "quest.animal.marnieMilk.objective": "Ship {{qty}} milk.",
+    "quest.animal.marnieMilk.objective": "Ship milk.",
     "quest.animal.marnieMilk.targetMessage": "Wonderful, that's the lot. Cheese press recipe in the post.",
 
     "quest.animal.robinSilo.title": "Robin's silo offer",
@@ -535,7 +535,7 @@
 
     "quest.farming.carolineTeaGarden.title": "Caroline's tea garden",
     "quest.farming.carolineTeaGarden.description": "I'm putting together a fresh batch of tea and could really use {{qty}} {{item}}. If you've got some on hand (or know someone who does), drop them off and I'll send you home with plenty of tea leaves to brew with.",
-    "quest.farming.carolineTeaGarden.objective": "Bring {{qty}} {{item}} to Caroline.",
+    "quest.farming.carolineTeaGarden.objective": "Bring {{item}} to Caroline.",
     "quest.farming.carolineTeaGarden.targetMessage": "Wonderful! These are going straight in the kettle. Take some tea leaves, you've earned them.",
 
     "quest.foraging.clearDebris.title": "Help clear the debris",
@@ -546,7 +546,7 @@
 
     "quest.cooking.dinnerParty.title": "{{npc}}'s dinner party",
     "quest.cooking.dinnerParty.description": "{{npc}} is hosting a small dinner party and wants the night catered. Cook {{count}} of each of these and bring them over: {{dishes}}.",
-    "quest.cooking.dinnerParty.objective": "Deliver {{count}} {{item}} to {{npc}}.",
+    "quest.cooking.dinnerParty.objective": "Deliver {{item}} to {{npc}}.",
     "quest.cooking.dinnerParty.targetMessage": "These look incredible. {{npc}}'s guests are going to be thrilled. Here's a little something for your trouble.",
 
     "quest.foraging.plantTrees.title": "Plant some trees",

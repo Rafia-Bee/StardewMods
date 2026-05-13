@@ -247,7 +247,7 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
             ? lockedRequiredQty.Value
             : number.Value;
 
-        _currentObjective = delivered.Value > 0
+        _currentObjective = total > 1
             ? $"{baseObjective.Value} ({delivered.Value}/{total})"
             : baseObjective.Value;
     }

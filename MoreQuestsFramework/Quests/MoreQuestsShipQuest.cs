@@ -36,6 +36,10 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
     /// true so the player can deposit furniture / decor through the bin.
     public readonly NetBool allowDecorShipping = new();
 
+    /// Captured on first journal read so `reloadObjective` can rebuild `_currentObjective`
+    /// as `"<base> (X/Y)"` without losing the base text after the first append.
+    public readonly NetString baseObjective = new();
+
     public NetStringList SerializedRewards => serializedRewards;
 
     /// Friendly item name shown in the "Ship X / Y <name>" objective line. Stored as a
@@ -59,7 +63,8 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
             .AddField(numberToShip, "numberToShip")
             .AddField(numberShipped, "numberShipped")
             .AddField(serializedRewards, "serializedRewards")
-            .AddField(allowDecorShipping, "allowDecorShipping");
+            .AddField(allowDecorShipping, "allowDecorShipping")
+            .AddField(baseObjective, "baseObjective");
     }
 
     public override void questComplete()
@@ -75,9 +80,14 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
     {
         if (completed.Value)
             return;
-        // currentObjective text may already be set at posting time; refresh the count
-        // suffix when the journal pulls this string. Numbers display via the standard
-        // `(progress/count)` suffix the rest of the framework uses.
+        if (string.IsNullOrEmpty(baseObjective.Value) && !string.IsNullOrEmpty(_currentObjective))
+            baseObjective.Value = _currentObjective;
+        if (string.IsNullOrEmpty(baseObjective.Value))
+            return;
+
+        _currentObjective = numberToShip.Value > 1
+            ? $"{baseObjective.Value} ({numberShipped.Value}/{numberToShip.Value})"
+            : baseObjective.Value;
     }
 
     /// True when the bin item matches `itemId` or any of `alternativeItemIds`. Tolerates
