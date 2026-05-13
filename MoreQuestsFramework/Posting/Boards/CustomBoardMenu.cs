@@ -11,7 +11,7 @@ namespace MoreQuestsFramework.Posting.Boards;
 
 /// Generic cork-board menu rendered when the player interacts with a `BoardDefinition`'s
 /// anchor tile. Shares its scatter layout / pad-pin sprite logic with `MoreQuestsBillboard`
-/// via `BoardLayout`, but does NOT inherit vanilla `Billboard` — accept-quest popup
+/// via `BoardLayout`, but does NOT inherit vanilla `Billboard`, accept-quest popup
 /// integration for custom boards lands in Phase 8c when `TriggerSource.CustomBoard` quests
 /// start populating slots. Until then this menu renders the cork-board background and the
 /// "Nothing posted" fallback string, matching vanilla's empty-board behaviour.
@@ -82,7 +82,7 @@ public sealed class CustomBoardMenu : IClickableMenu
             }
             catch
             {
-                // Asset not registered or missing — fall through to the framework default.
+                // Asset not registered or missing, fall through to the framework default.
             }
         }
         return Game1.content.Load<Texture2D>(fallback);

@@ -11,7 +11,7 @@ using StardewValley;
 namespace MoreQuestsFramework.Posting.Boards;
 
 /// Per-location custom-board sprite renderer + click-to-open handler. Subscribes to
-/// SMAPI events only — no Harmony patches — to stay inside the §8.1 patch budget. Boards
+/// SMAPI events only, no Harmony patches, to stay inside the §8.1 patch budget. Boards
 /// whose `Available` conditions don't match are silently hidden (no sprite, no click).
 public sealed class BoardWorldRenderer
 {
