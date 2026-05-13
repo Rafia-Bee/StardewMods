@@ -565,7 +565,7 @@
                 "Source": "DateLocked",
                 "Date": "fall 24",
                 "RepeatYearly": true,
-                "Available": { "HasMod": "FlashShifter.EastScarpMod|Devilduke.EliandDylan|drbirbdev.LurkingInTheDark", "NpcExists": "Rosa" }
+                "Available": { "HasMod": "FlashShifter.EastScarpMod|Devilduke.EliandDylan|7thAxis.LitD.CP", "NpcExists": "Rosa" }
             },
             "Generator": "EastScarpSpiritsEveDecor"
         },

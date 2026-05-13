@@ -447,7 +447,8 @@ internal static partial class Generators
     };
 
 
-    /// Krobus + Dwarf are vanilla, Sen ships with East Scarp. Filters to met NPCs at 1+ hearts
+    /// Krobus + Dwarf are vanilla, Sen ships with Lurking in the Dark - NPC Sen
+    /// (East Scarp. Filters to met NPCs at 1+ hearts
     /// so the consequence reads as a reaction from someone the player knows.
     private static List<string> ResolveUndergroundTargets(string exclude)
     {
