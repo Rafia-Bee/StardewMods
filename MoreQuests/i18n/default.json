@@ -368,9 +368,8 @@
     "quest.mining.rareMaterial.targetMessage": "These will do nicely. Tell the customer the timeline's back on schedule.",
 
     "quest.festival.secretGiftHint.title": "A whisper for the Winter Star",
-    "quest.festival.secretGiftHint.description": "Lewis sent a quiet word: this year's Winter Star pairing has you giving to {{recipient}}. They've been overheard saying they'd love {{items}}. Drop in on them at the festival on Winter 25 and they'll know who to thank.",
-    "quest.festival.secretGiftHint.step": "Give your Winter Star gift to {{recipient}}. They'd love {{items}}.",
-    "quest.festival.secretGiftHint.targetMessage": "Oh! Did you draw my name this year? You shouldn't have. Truly. Thank you.",
+    "quest.festival.secretGiftHint.description": "I think {{recipient}} is going through a tough time this winter. Maybe a thoughtful gift would cheer them up. I heard they love {{item}}!",
+    "quest.festival.secretGiftHint.step": "Give {{recipient}} a {{item}} or something they like during the Festival of the Winter Star.",
     "quest.festival.secretGiftHint.fallback": "something thoughtful",
 
     "quest.festival.wrappingPaper.title": "Wrapping paper for the festival",

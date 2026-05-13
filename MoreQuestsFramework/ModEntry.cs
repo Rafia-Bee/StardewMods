@@ -109,6 +109,7 @@ public sealed class ModEntry : Mod
         ConsequenceDialoguePatches.Apply(harmony, Monitor);
         FestivalBiasPatches.Apply(harmony, Monitor);
         DecorShippingPatches.Apply(harmony, Monitor);
+        WinterStarGiftPatch.Apply(harmony);
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
