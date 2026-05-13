@@ -1,12 +1,23 @@
+using System.Collections.Generic;
 using MoreQuestsFramework.Registry;
 using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Config;
 
 /// Registers the framework's engine tunables with Generic Mod Config Menu. Per-quest
-/// content settings live in the consuming content mod's own GMCM page.
+/// content settings live in the consuming content mod's own GMCM page. Quest weights are
+/// split onto category subpages (Vanilla, Farming, Fishing, etc.) so the root stays
+/// scannable as more quests register.
 internal static class GmcmRegistration
 {
+    /// Stable display order for category weight subpages. Categories not in this list are
+    /// appended alphabetically at the end so newly-registered prefixes still surface.
+    private static readonly string[] CategoryOrder = new[]
+    {
+        "Vanilla", "Farming", "Fishing", "Mining", "Foraging",
+        "Social", "Seasonal", "Cooking", "Animal", "Festival",
+    };
+
     public static void Register(IModHelper helper, IManifest manifest, MoreQuestsFrameworkConfig config, QuestRegistry registry, System.Action onReset)
     {
         var api = helper.ModRegistry.GetApi<IGenericModConfigMenuApi>(ModCompat.GenericModConfigMenu);
@@ -21,6 +32,24 @@ internal static class GmcmRegistration
             save: () => helper.WriteConfig(ModEntry.Config)
         );
 
+        // Group daily-board definitions by the prefix of their ID (the part before the first '.').
+        var byCategory = new Dictionary<string, List<IQuestDefinition>>(System.StringComparer.OrdinalIgnoreCase);
+        foreach (var def in registry.All)
+        {
+            if (def.Kind != PostingKind.DailyBoard)
+                continue;
+            string id = def.Id ?? string.Empty;
+            int dot = id.IndexOf('.');
+            string category = dot > 0 ? id.Substring(0, dot) : "Other";
+            if (!byCategory.TryGetValue(category, out var list))
+            {
+                list = new List<IQuestDefinition>();
+                byCategory[category] = list;
+            }
+            list.Add(def);
+        }
+
+        // ----- Root page -----
         api.AddSectionTitle(manifest, () => t.Get("config.section.questBoard"));
         api.AddNumberOption(manifest,
             () => ModEntry.Config.QuestsPerDay,
@@ -34,22 +63,6 @@ internal static class GmcmRegistration
             () => t.Get("config.specialOrdersBoardPages"),
             () => t.Get("config.specialOrdersBoardPages.tooltip"),
             min: 1, max: 3);
-
-        api.AddSectionTitle(manifest, () => t.Get("config.section.weights"),
-            () => t.Get("config.section.weights.tooltip"));
-        foreach (var def in registry.All)
-        {
-            if (def.Kind != PostingKind.DailyBoard)
-                continue;
-            string id = def.Id;
-            int defaultWeight = def.DefaultWeight;
-            api.AddNumberOption(manifest,
-                () => ModEntry.Config.QuestWeights.TryGetValue(id, out int w) ? w : defaultWeight,
-                v => ModEntry.Config.QuestWeights[id] = v,
-                () => t.Get($"config.weight.{id}", new { fallback = id }),
-                () => BuildWeightTooltip(t, id),
-                min: 0, max: 100);
-        }
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.toggles"));
         api.AddBoolOption(manifest,
@@ -77,6 +90,16 @@ internal static class GmcmRegistration
             v => ModEntry.Config.SkipFriendshipQuestsAtMaxHeart = v,
             () => t.Get("config.skipFriendshipQuestsAtMaxHeart"),
             () => t.Get("config.skipFriendshipQuestsAtMaxHeart.tooltip"));
+
+        api.AddSectionTitle(manifest, () => t.Get("config.section.weights"),
+            () => t.Get("config.section.weights.tooltip"));
+        foreach (var category in OrderedCategories(byCategory.Keys))
+        {
+            string pageId = "weights." + category.ToLowerInvariant();
+            api.AddPageLink(manifest, pageId,
+                () => t.Get($"config.page.weights.{category.ToLowerInvariant()}", new { category }).Default($"{category} quest weights"),
+                () => t.Get("config.page.weights.tooltip", new { category }));
+        }
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.friendship"));
         AddInt(api, manifest, t, "FriendshipBasic", () => ModEntry.Config.FriendshipBasic, v => ModEntry.Config.FriendshipBasic = v, 0, 500);
@@ -106,6 +129,44 @@ internal static class GmcmRegistration
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.consequences"));
         AddInt(api, manifest, t, "ConsequenceGraceDays", () => ModEntry.Config.ConsequenceGraceDays, v => ModEntry.Config.ConsequenceGraceDays = v, 1, 60);
+
+        // ----- Category weight subpages -----
+        foreach (var category in OrderedCategories(byCategory.Keys))
+        {
+            string pageId = "weights." + category.ToLowerInvariant();
+            string capturedCategory = category;
+            api.AddPage(manifest, pageId,
+                () => t.Get($"config.page.weights.{capturedCategory.ToLowerInvariant()}", new { category = capturedCategory })
+                    .Default($"{capturedCategory} quest weights"));
+
+            foreach (var def in byCategory[category])
+            {
+                string id = def.Id;
+                int defaultWeight = def.DefaultWeight;
+                api.AddNumberOption(manifest,
+                    () => ModEntry.Config.QuestWeights.TryGetValue(id, out int w) ? w : defaultWeight,
+                    v => ModEntry.Config.QuestWeights[id] = v,
+                    () => t.Get($"config.weight.{id}", new { fallback = id }),
+                    () => BuildWeightTooltip(t, id),
+                    min: 0, max: 100);
+            }
+        }
+    }
+
+    /// Orders categories so the known set (Vanilla, Farming, ...) keeps its hand-curated
+    /// sequence and any new prefix from a content mod falls in alphabetically afterwards.
+    private static IEnumerable<string> OrderedCategories(IEnumerable<string> categories)
+    {
+        var set = new HashSet<string>(categories, System.StringComparer.OrdinalIgnoreCase);
+        foreach (var known in CategoryOrder)
+        {
+            if (set.Remove(known))
+                yield return known;
+        }
+        var rest = new List<string>(set);
+        rest.Sort(System.StringComparer.OrdinalIgnoreCase);
+        foreach (var c in rest)
+            yield return c;
     }
 
     /// Combines the generic weight tooltip with a per-quest constraint hint, if one is
