@@ -2,7 +2,7 @@
     "Schema": "1.0",
     "Quests": [
         {
-            "Name": "ExamplePack.SaplingForLewis",
+            "Name": "ExamplePack.Deliver_Apple",
             "Category": "Foraging",
             "Tier": "Beginner",
             "Trigger": {
@@ -10,49 +10,414 @@
                 "Weight": 20,
                 "MaxPerDay": 1,
                 "CooldownDays": 14,
-                "Available": { "Season": "spring|summer" }
+                "Available": { "Season": "fall" }
             },
             "Giver": "Lewis",
             "DeadlineDays": "Short",
             "Objective": {
                 "Kind": "Deliver",
-                "Item": "(O)628",
+                "Item": "(O)613",
                 "Count": 1
             },
-            "Title": "{i18n:example.sapling.title}",
-            "Description": "{i18n:example.sapling.description}",
-            "CurrentObjective": "{i18n:example.sapling.objective}",
-            "TargetMessage": "{i18n:example.sapling.targetMessage}",
+            "Title": "{i18n:example.deliver.title}",
+            "Description": "{i18n:example.deliver.description}",
+            "CurrentObjective": "{i18n:example.deliver.objective}",
+            "TargetMessage": "{i18n:example.deliver.targetMessage}",
             "Rewards": [
                 { "Kind": "Money", "Amount": 750 },
                 { "Kind": "Friendship", "Npc": "Lewis", "Points": 60 }
             ]
         },
         {
-            "Name": "ExamplePack.SapphireForEmily",
-            "Category": "Mining",
-            "Tier": "Intermediate",
+            "Name": "ExamplePack.Ship_Eggs",
+            "Category": "Animal",
+            "Tier": "Beginner",
             "Trigger": {
                 "Source": "DailyBoard",
                 "Weight": 15,
                 "MaxPerDay": 1,
-                "CooldownDays": 21,
-                "Available": { "MinDeepestMineLevel": "60", "NpcMet": "Emily" }
+                "CooldownDays": 7,
+                "Available": { "NpcMet": "Marnie" }
             },
-            "Giver": "Emily",
+            "Giver": "Marnie",
             "DeadlineDays": "Medium",
             "Objective": {
-                "Kind": "Deliver",
-                "Item": "(O)64",
-                "Count": 1
+                "Kind": "Ship",
+                "Item": "(O)176",
+                "Count": 10
             },
-            "Title": "{i18n:example.sapphire.title}",
-            "Description": "{i18n:example.sapphire.description}",
-            "CurrentObjective": "{i18n:example.sapphire.objective}",
-            "TargetMessage": "{i18n:example.sapphire.targetMessage}",
+            "Title": "{i18n:example.ship.title}",
+            "Description": "{i18n:example.ship.description}",
+            "CurrentObjective": "{i18n:example.ship.objective}",
+            "TargetMessage": "{i18n:example.ship.targetMessage}",
             "Rewards": [
-                { "Kind": "Friendship", "Npc": "Emily", "Points": 120 },
-                { "Kind": "Object", "Item": "(O)395", "Count": 1 }
+                { "Kind": "Money", "Amount": 500 },
+                { "Kind": "Friendship", "Npc": "Marnie", "Points": 60 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.Catch_LargemouthBass",
+            "Category": "Fishing",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 12,
+                "MaxPerDay": 1,
+                "CooldownDays": 7,
+                "Available": { "NpcMet": "Willy" }
+            },
+            "Giver": "Willy",
+            "DeadlineDays": "Short",
+            "Objective": {
+                "Kind": "Fish",
+                "Item": "(O)136",
+                "Count": 3
+            },
+            "Title": "{i18n:example.catch.title}",
+            "Description": "{i18n:example.catch.description}",
+            "CurrentObjective": "{i18n:example.catch.objective}",
+            "TargetMessage": "{i18n:example.catch.targetMessage}",
+            "Rewards": [
+                { "Kind": "Money", "Amount": 400 },
+                { "Kind": "Friendship", "Npc": "Willy", "Points": 60 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.Slay_Slimes",
+            "Category": "Mining",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 12,
+                "MaxPerDay": 1,
+                "CooldownDays": 7,
+                "Available": { "MinDeepestMineLevel": "1", "NpcMet": "Marlon" }
+            },
+            "Giver": "Marlon",
+            "DeadlineDays": "Medium",
+            "Objective": {
+                "Kind": "Slay",
+                "TargetMonster": "Green Slime",
+                "Count": 10
+            },
+            "Title": "{i18n:example.slay.title}",
+            "Description": "{i18n:example.slay.description}",
+            "CurrentObjective": "{i18n:example.slay.objective}",
+            "TargetMessage": "{i18n:example.slay.targetMessage}",
+            "Rewards": [
+                { "Kind": "Money", "Amount": 350 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.Collect_Mushrooms",
+            "Category": "Foraging",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 10,
+                "MaxPerDay": 1,
+                "CooldownDays": 5,
+                "Available": { "Season": "fall" }
+            },
+            "Giver": "Demetrius",
+            "DeadlineDays": "Short",
+            "Objective": {
+                "Kind": "Resource",
+                "Item": "(O)404",
+                "Count": 5
+            },
+            "Title": "{i18n:example.collect.title}",
+            "Description": "{i18n:example.collect.description}",
+            "CurrentObjective": "{i18n:example.collect.objective}",
+            "TargetMessage": "{i18n:example.collect.targetMessage}",
+            "Rewards": [
+                { "Kind": "Money", "Amount": 300 },
+                { "Kind": "Friendship", "Npc": "Demetrius", "Points": 60 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.Steps_CheckOnGramps",
+            "Category": "Social",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 8,
+                "MaxPerDay": 1,
+                "CooldownDays": 21,
+                "Available": { "NpcExists": "George Evelyn" }
+            },
+            "Giver": "Evelyn",
+            "DeadlineDays": "Short",
+            "Steps": [
+                {
+                    "Name": "GiftGeorge",
+                    "Kind": "Gift",
+                    "Targets": [ "George" ],
+                    "Count": 1,
+                    "Description": "{i18n:example.steps.gift}"
+                },
+                {
+                    "Name": "TalkGeorge",
+                    "Kind": "Talk",
+                    "Targets": [ "George" ],
+                    "Count": 1,
+                    "Description": "{i18n:example.steps.talkGeorge}"
+                },
+                {
+                    "Name": "ReportToEvelyn",
+                    "Kind": "Talk",
+                    "Targets": [ "$giver" ],
+                    "Requires": [ "GiftGeorge", "TalkGeorge" ],
+                    "Count": 1,
+                    "Description": "{i18n:example.steps.report}"
+                }
+            ],
+            "Title": "{i18n:example.steps.title}",
+            "Description": "{i18n:example.steps.description}",
+            "Rewards": [
+                { "Kind": "Friendship", "Npc": "Evelyn", "Points": 80 },
+                { "Kind": "Friendship", "Npc": "George", "Points": 80 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.GiftUnique_ForageRun",
+            "Category": "Foraging",
+            "Tier": "Intermediate",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 6,
+                "MaxPerDay": 1,
+                "CooldownDays": 14,
+                "Available": { "NpcMet": "Linus", "SkillLevel": "Foraging 3" }
+            },
+            "Giver": "Linus",
+            "DeadlineDays": "Medium",
+            "Steps": [
+                {
+                    "Name": "GiftForage",
+                    "Kind": "GiftUniqueNpcs",
+                    "Items": [ "$forage" ],
+                    "Count": 3,
+                    "Description": "{i18n:example.giftUnique.step}"
+                }
+            ],
+            "Title": "{i18n:example.giftUnique.title}",
+            "Description": "{i18n:example.giftUnique.description}",
+            "Rewards": [
+                { "Kind": "Friendship", "Npc": "Linus", "Points": 250 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.Steps_FishingTrip",
+            "Category": "Fishing",
+            "Tier": "Intermediate",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 8,
+                "MaxPerDay": 1,
+                "CooldownDays": 10,
+                "Available": { "NpcMet": "Willy", "SkillLevel": "Fishing 3" }
+            },
+            "Giver": "Willy",
+            "DeadlineDays": "Medium",
+            "Steps": [
+                {
+                    "Name": "CatchTrout",
+                    "Kind": "Catch",
+                    "Items": [ "(O)141" ],
+                    "Count": 3,
+                    "Description": "{i18n:example.fishingTrip.catch}"
+                },
+                {
+                    "Name": "DeliverTrout",
+                    "Kind": "Deliver",
+                    "Targets": [ "$giver" ],
+                    "Items": [ "(O)141" ],
+                    "Count": 3,
+                    "MinQuality": 2,
+                    "Requires": [ "CatchTrout" ],
+                    "Description": "{i18n:example.fishingTrip.deliver}"
+                }
+            ],
+            "Title": "{i18n:example.fishingTrip.title}",
+            "Description": "{i18n:example.fishingTrip.description}",
+            "Rewards": [
+                { "Kind": "Money", "Amount": 800 },
+                { "Kind": "Friendship", "Npc": "Willy", "Points": 80 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.Visit_LeahsHouse",
+            "Category": "Social",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 5,
+                "MaxPerDay": 1,
+                "CooldownDays": 21,
+                "Available": { "NpcMet": "Leah", "FriendshipLevel": "Leah 2" }
+            },
+            "Giver": "Leah",
+            "DeadlineDays": "Short",
+            "Steps": [
+                {
+                    "Name": "GoToLeah",
+                    "Kind": "Visit",
+                    "Targets": [ "LeahHouse" ],
+                    "Description": "{i18n:example.visit.step}"
+                }
+            ],
+            "Title": "{i18n:example.visit.title}",
+            "Description": "{i18n:example.visit.description}",
+            "Rewards": [
+                { "Kind": "Friendship", "Npc": "Leah", "Points": 80 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.Build_NewBarn",
+            "Category": "Animal",
+            "Tier": "Intermediate",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 3,
+                "MaxPerDay": 1,
+                "CooldownDays": 28,
+                "Available": { "NpcMet": "Robin", "not:BuildingExists": "Barn" }
+            },
+            "Giver": "Robin",
+            "DeadlineDays": "Extended",
+            "Steps": [
+                {
+                    "Name": "BuildBarn",
+                    "Kind": "Build",
+                    "Targets": [ "Barn" ],
+                    "Description": "{i18n:example.build.step}"
+                }
+            ],
+            "Title": "{i18n:example.build.title}",
+            "Description": "{i18n:example.build.description}",
+            "Rewards": [
+                { "Kind": "Friendship", "Npc": "Robin", "Points": 125 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.Reach_MinesFloor25",
+            "Category": "Mining",
+            "Tier": "Intermediate",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 5,
+                "MaxPerDay": 1,
+                "CooldownDays": 14,
+                "Available": { "MinDeepestMineLevel": "5", "NpcMet": "Marlon" }
+            },
+            "Giver": "Marlon",
+            "DeadlineDays": "Medium",
+            "Steps": [
+                {
+                    "Name": "ReachFloor",
+                    "Kind": "ReachLevel",
+                    "Targets": [ "Mine" ],
+                    "Count": 25,
+                    "Description": "{i18n:example.reach.reach}"
+                },
+                {
+                    "Name": "ShipOre",
+                    "Kind": "Ship",
+                    "Items": [ "(O)378", "(O)380", "(O)384" ],
+                    "Count": 20,
+                    "Requires": [ "ReachFloor" ],
+                    "Description": "{i18n:example.reach.ship}"
+                }
+            ],
+            "Title": "{i18n:example.reach.title}",
+            "Description": "{i18n:example.reach.description}",
+            "Rewards": [
+                { "Kind": "Money", "Amount": 1200 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.Plant_Trees",
+            "Category": "Foraging",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 5,
+                "MaxPerDay": 1,
+                "CooldownDays": 14,
+                "Available": { "NpcMet": "Linus" }
+            },
+            "Giver": "Linus",
+            "DeadlineDays": "Medium",
+            "Steps": [
+                {
+                    "Name": "PlantSaplings",
+                    "Kind": "Plant",
+                    "Targets": [ "Forest" ],
+                    "Count": 3,
+                    "Description": "{i18n:example.plant.step}"
+                }
+            ],
+            "Title": "{i18n:example.plant.title}",
+            "Description": "{i18n:example.plant.description}",
+            "Rewards": [
+                { "Kind": "Friendship", "Npc": "Linus", "Points": 125 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.ClearWeeds_Town",
+            "Category": "Seasonal",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 8,
+                "MaxPerDay": 1,
+                "CooldownDays": 7,
+                "Available": { "Season": "spring", "NpcMet": "Lewis" }
+            },
+            "Giver": "Lewis",
+            "DeadlineDays": "Short",
+            "Steps": [
+                {
+                    "Name": "ClearTown",
+                    "Kind": "ClearWeeds",
+                    "Targets": [ "Town" ],
+                    "Count": 8,
+                    "Description": "{i18n:example.clearWeeds.step}"
+                }
+            ],
+            "Title": "{i18n:example.clearWeeds.title}",
+            "Description": "{i18n:example.clearWeeds.description}",
+            "Rewards": [
+                { "Kind": "Friendship", "Npc": "Lewis", "Points": 60 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.ClearDebris_Backwoods",
+            "Category": "Foraging",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 6,
+                "MaxPerDay": 1,
+                "CooldownDays": 10,
+                "Available": { "NpcMet": "Demetrius" }
+            },
+            "Giver": "Demetrius",
+            "DeadlineDays": "Short",
+            "Steps": [
+                {
+                    "Name": "ClearDebrisStep",
+                    "Kind": "ClearDebris",
+                    "Targets": [ "Backwoods" ],
+                    "Count": 5,
+                    "Description": "{i18n:example.clearDebris.step}"
+                }
+            ],
+            "Title": "{i18n:example.clearDebris.title}",
+            "Description": "{i18n:example.clearDebris.description}",
+            "Rewards": [
+                { "Kind": "Money", "Amount": 500 }
             ]
         }
     ]

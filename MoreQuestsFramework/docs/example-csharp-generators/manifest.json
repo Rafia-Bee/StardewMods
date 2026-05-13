@@ -1,0 +1,15 @@
+{
+    "Name": "More Quests Framework: Example C# Generators",
+    "Author": "Rafia-Bee",
+    "Version": "1.0.0",
+    "MinimumApiVersion": "4.1.0",
+    "UniqueID": "RafiaBee.MoreQuestsFramework.ExampleCSharpGenerators",
+    "EntryDll": "ExampleCSharpGenerators.dll",
+    "Description": "Demonstrates pattern B: a C# SMAPI mod that registers JSON quest metadata plus C# generator functions for runtime randomization.",
+    "Dependencies": [
+        {
+            "UniqueID": "RafiaBee.MoreQuestsFramework",
+            "IsRequired": true
+        }
+    ]
+}

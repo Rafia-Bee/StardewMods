@@ -1,0 +1,17 @@
+{
+    "Schema": "1.0",
+    "Quests": [
+        {
+            "Name": "ExampleCSharpGenerators.RandomCropDelivery",
+            "Category": "Farming",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 25,
+                "MaxPerDay": 2,
+                "CooldownDays": 7,
+                "Available": { "Season": "spring|summer|fall" }
+            },
+            "Generator": "RandomCropDelivery"
+        }
+    ]
+}

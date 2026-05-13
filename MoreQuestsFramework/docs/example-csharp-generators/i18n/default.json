@@ -1,0 +1,6 @@
+{
+    "example.cropDelivery.title": "{{npc}}'s crop request",
+    "example.cropDelivery.description": "{{npc}} wants {{qty}} {{item}} delivered.",
+    "example.cropDelivery.objective": "Bring {{qty}} {{item}} to {{npc}}.",
+    "example.cropDelivery.targetMessage": "Thanks, this is exactly what I needed!"
+}
