@@ -182,9 +182,9 @@
     "quest.cooking.craving.targetMessage": "Oh, that smells amazing. Thank you! Oh, I made some {{item2}} for dinner, here, have some!",
 
     "quest.festival.submarineFuel.title": "Fuel for the submarine",
-    "quest.festival.submarineFuel.description": "We need backup power for the submarine during our stay in town. Last time the lights went out at low tide we lost a whole tank of squid and - it's a long story. Battery Pack is ideal, but a load of plain Coal will keep her running too. Would appreciate if someone could ship a few before the night market starts.",
-    "quest.festival.submarineFuel.objective": "Ship {{batteries}} Battery Pack or {{coal}} Coal.",
-    "quest.festival.submarineFuel.targetMessage": "The midnight squid are saved!",
+    "quest.festival.submarineFuel.description": "We need backup power for the submarine during our stay in town. Last time the lights went out at low tide we lost a whole tank of squid and, it's a long story. Ship me {{batteries}} Battery Packs and {{coal}} Coal before the night market starts. The kit takes both.",
+    "quest.festival.submarineFuel.step.battery": "Ship {{count}} Battery Pack.",
+    "quest.festival.submarineFuel.step.coal": "Ship {{count}} Coal.",
     "mail.festival.submarineFuelReward.body": "Dear farmer,^^She's running like new. The pearl divers found this little beauty last spring and I've been holding onto it for the right occasion. You should have it. Drop by my submarine while the Night Market is open and I can take you under the sea where you can fish some really peculiar fish.^^  -Captain",
 
     "quest.festival.wizardsRitual.title": "Ritual materials",

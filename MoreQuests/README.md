@@ -39,7 +39,7 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Seasonal | Floral Tea | Daily board | Any adult human (who doesn't dislike tea) | Deliver an in-season flower the giver loves or likes | Friendship (Basic) | Year-round, Cooldown 7d | Implemented |
 | Foraging | Seasonal Foraging | Daily board | Any | Gather and ship X seasonal forage | Gold (Beginner) | Cooldown 2d | Implemented |
 | Fishing | Simple Fishing Request | Daily board | Any | Catch X common fish | Gold scaled by sell price | Cooldown 2d | Implemented |
-| Festival | Submarine Fuel | Winter 12 (mail) | Captain | Ship Battery Pack or Coal (weighted alternatives) | Pearl via NextDay mail | DateLocked, OneTimePerYear | Implemented |
+| Festival | Submarine Fuel | Winter 12 (mail) | Captain | Ship Battery Packs + Coal (qty scales with Mining, coal locked to 5x battery count) | Pearl via NextDay mail | DateLocked, OneTimePerYear, deadline Winter 15 | Implemented |
 | Festival | Wizard's Ritual Materials | Fall 24 (mail) | M. Rasmodius | Ship Void Essence + Bat Wings + Solar Essence | Book of Mysteries via NextDay mail | DateLocked, OneTimePerYear | Implemented |
 | Festival | Evelyn's Holiday Cookies | Winter 21 (mail) | Evelyn | Deliver Flour, Sugar, and any edible egg | Friendship (Large) + 6x Cookie | DateLocked, OneTimePerYear | Implemented |
 | Fishing | Location-Specific Overpopulation | Daily board | Demetrius / Maddie / Mr Aguar / Dylan | Catch a specific fish at a specific spot (visited locations only) | Gold (Intermediate) + 10x Challenge Bait | Cooldown 4d, requires Fishing 2 | Implemented (9.5e) |
