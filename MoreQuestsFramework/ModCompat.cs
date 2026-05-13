@@ -15,7 +15,8 @@ public static class ModCompat
     /// matches neither install ID and silently dropped every SVE-gated dispatch entry.
     public const string StardewValleyExpanded = "FlashShifter.SVECode";
     public const string EliAndDylan = "Devilduke.EliandDylan";
-    public const string LurkingInTheDark = "drbirbdev.LurkingInTheDark";
+
+    public const string LurkingInTheDark = "7thAxis.LitD.CP";
     public const string AikawaAsakaiCP = "NassiLove.AikawaAsakaiCP";
     public const string HashtagBearFamGunnar = "MadDog.HashtagBearFam.Gunnar";
     public const string SiExtraCraftingMaterials = "Si.ExtraCraftingMaterials";

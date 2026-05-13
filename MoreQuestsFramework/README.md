@@ -296,5 +296,7 @@ Npcs from these mods added so much variety to my quest giver pools:
 - **FlashShifter** for **[Stardew Valley Expanded](https://www.nexusmods.com/stardewvalley/mods/3753)**
 - **TenebrousNova** for **[Eli and Dylan - Custom NPCs for East Scarp](https://www.nexusmods.com/stardewvalley/mods/13883)**
 - **NassilLove** for **[Arumi the Actress](https://www.nexusmods.com/stardewvalley/mods/44286)**
+- **7thAxis** for **[Lurking in the Dark - NPC Sen (East Scarp)](https://www.nexusmods.com/stardewvalley/mods/10770)**
+- **MadDog** for **[Gunnar from Bear Family Custom NPCs - An Add-On for East Scarp](https://www.nexusmods.com/stardewvalley/mods/16197)**
 
 Finally **the Stardew Valley modding community** for tuning feedback on the custom quests and for the modded NPC info that seeded the framework's NPC dispatch pools.
