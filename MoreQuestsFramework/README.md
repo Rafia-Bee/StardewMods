@@ -256,6 +256,16 @@ My festival supply quests often want the player to ship items vanilla refuses to
 
 The framework registers an `mq_refresh` SMAPI console command that re-rolls today's daily-board postings without reloading the save.
 
+### Versioning
+
+The framework follows semver from 1.0 onward.
+
+- **Major** bumps when the public API in `Api/` changes in a backwards-incompatible way, when the `quests.json` schema breaks, or when a built-in reward / objective / trigger kind is renamed or removed. Consumer mods should expect to update.
+- **Minor** bumps when new public API, new schema fields, new reward / objective / trigger kinds, or new built-in conditions land. Consumer mods written against the previous minor keep working.
+- **Patch** bumps for bug fixes, performance work, or internal refactors with no API-visible change.
+
+The `quests.json` `Schema` field (currently `"1.0"`) is the source of truth for what JSON keys mean. Bumping the framework's major bumps this number; the loader warns when a pack declares a schema it doesn't recognize (rather than refusing the pack) so authors can see the mismatch and update at their own pace.
+
 ## Notes for consumer mods
 
 - Declare `RafiaBee.MoreQuestsFramework` as a `Dependencies` entry with `IsRequired: true` so your mod loads after the framework.
