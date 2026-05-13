@@ -37,7 +37,7 @@ internal static class BoardLayout
 
     /// Scatter-place a note rectangle inside `BoardRect` (anchored at `xPositionOnScreen` /
     /// `yPositionOnScreen`). Returns null if no non-overlapping position was found in 4000
-    /// tries — the caller should fall back to the grid layout.
+    /// tries, the caller should fall back to the grid layout.
     public static Rectangle? ScatterBounds(
         int xPositionOnScreen, int yPositionOnScreen,
         int w, int h, List<Rectangle> placed, Random rng)
