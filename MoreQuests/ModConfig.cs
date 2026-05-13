@@ -75,7 +75,7 @@ public sealed class ModConfig
 
     // ----- Gus's festival feasts -----
     /// Number of distinct ingredients Gus's Fall + Summer feasts ask for.
-    public int GusFestivalFeastIngredientCount { get; set; } = 3;
+    public int GusFestivalFeastIngredientCount { get; set; } = 2;
     /// Tier bump applied to the governor's Luau reaction. Clamped to 5 ("loved it"); 6 is
     /// the Mayor's Shorts gag and is never overwritten.
     public int FestivalBiasLuauMagnitude { get; set; } = 1;

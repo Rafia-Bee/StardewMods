@@ -329,9 +329,9 @@
     "quest.festival.gusFall.targetMessage": "Perfect, that's the lot. Try the {{dish}}, tell me honestly what you think. Tickets are yours too, save them for the prize wheel at the Fair.",
 
     "quest.festival.gusSummer.title": "Gus's Luau potluck prep",
-    "quest.festival.gusSummer.description": "The Luau soup is more than I can prep alone this year. Bring me {{count}} of each: {{ingredients}}. Whatever you contribute makes it into the pot, and the governor's tongue won't forget where the flavour came from.",
+    "quest.festival.gusSummer.description": "The Luau soup is more than I can prep alone this year. Bring me {{ingredients}} when you can. Whatever you contribute makes it into the pot, and I'll make sure to put in a good word for you with the governor.",
     "quest.festival.gusSummer.step.deliver": "Bring {{count}} {{item}} to Gus.",
-    "quest.festival.gusSummer.targetMessage": "That'll do it. Whatever the soup tastes like at the Luau, you're the reason it tastes that way.",
+    "quest.festival.gusSummer.targetMessage": "That'll do it. Try the {{dish}}, tell me honestly what you think. Whatever the soup tastes like at the Luau, you're the reason it tastes that way.",
 
     "quest.social.giftDelivery.title": "A small gift for {{recipient}}",
     "quest.social.giftDelivery.description": "I overheard {{recipient}} craving some {{item}} the other day. Maybe you could get them one and make their day?",

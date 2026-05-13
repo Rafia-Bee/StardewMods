@@ -408,23 +408,6 @@ internal static partial class Generators
         return pool[Game1.random.Next(pool.Count)].OutputItem;
     }
 
-    /// Vanilla summer ingredients sourceable by Summer 8 on a first-year save. Tighter than
-    /// Fall since the trigger is earlier in the season.
-    private static readonly (string Id, string Name)[] SummerIngredientPool =
-    {
-        ("(O)190", "Cauliflower"),
-        ("(O)20", "Leek"),
-        ("(O)188", "Green Bean"),
-        ("(O)24", "Parsnip"),
-        ("(O)252", "Rhubarb"),
-        ("(O)254", "Melon"),
-        ("(O)256", "Tomato"),
-        ("(O)258", "Blueberry"),
-        ("(O)260", "Hot Pepper"),
-        ("(O)262", "Wheat"),
-        ("(O)16", "Wild Horseradish")
-    };
-
     /// Fall 8 (Stardew Valley Fair prep). Player delivers N distinct fall ingredients to
     /// Gus (count = `GusFestivalFeastIngredientCount`, default 3). The combined pool reads
     /// `ctx.Items.GetSeasonalCrops("fall")` and `ctx.Items.GetForageItems("fall")`, so any
@@ -557,25 +540,62 @@ internal static partial class Generators
         return (pool, cropQualifiedIds);
     }
 
-    /// Summer 8 Luau prep: deliver summer/spring ingredients to Gus. Reward: FestivalBias
-    /// Luau magnitude only (no sample dish; the bias is a higher base potluck score).
+    /// Summer 8 (Luau prep). Player delivers N distinct summer-or-spring ingredients to Gus
+    /// (count = `GusFestivalFeastIngredientCount`, default 2). The combined pool reads
+    /// `ctx.Items.GetSeasonalCrops("summer"|"spring")` and `ctx.Items.GetForageItems` for
+    /// both seasons so modded crops and forage ride along. Spring entries widen the Y1 pool
+    /// per the CSV intent ("Ingredients should be Spring/Summer themed to prevent
+    /// gatekeeping first years"). Year 1 limits to vanilla numeric ids and drops Beet
+    /// `(O)284` and Sweet Gem Berry `(O)417`. Per-item quantity scales by Farming (crop
+    /// picks) or Foraging (forage picks). Dish pool searches `Data/CookingRecipes` for
+    /// recipes matching any picked id or any picked crop's fruit/veg category. Reward:
+    /// sample dish + FestivalBias Luau magnitude (still tuned via GMCM).
     private static QuestPosting? GusFestivalFeastSummer(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Gus") == null)
             return null;
 
-        int ingredientCount = ModEntry.Config.GusFestivalFeastIngredientCount;
-        var picks = PickDistinctIngredients(ctx, SummerIngredientPool, ingredientCount);
-        if (picks.Count == 0)
+        var (pool, cropQualifiedIds) = BuildSummerIngredientPool(ctx);
+        if (pool.Count == 0)
             return null;
 
-        int qty = ctx.Config.DifficultyScaling
-            ? Math.Max(3, 2 * Game1.player.FarmingLevel)
-            : 5;
+        int requested = ModEntry.Config.GusFestivalFeastIngredientCount;
+        int count = Math.Min(pool.Count, Math.Max(1, requested));
+        var picks = new List<ResolvedItem>(count);
+        var indices = new List<int>(pool.Count);
+        for (int i = 0; i < pool.Count; i++)
+            indices.Add(i);
+        for (int i = 0; i < count && indices.Count > 0; i++)
+        {
+            int j = Game1.random.Next(indices.Count);
+            picks.Add(pool[indices[j]]);
+            indices.RemoveAt(j);
+        }
 
+        var sampleDish = PickSampleDishForIngredients(ctx, picks, cropQualifiedIds);
+        if (sampleDish == null)
+            return null;
+
+        bool scaling = ctx.Config.DifficultyScaling;
+        var qtyByIndex = new int[picks.Count];
         var steps = new List<AdventureStepState>(picks.Count);
         for (int i = 0; i < picks.Count; i++)
         {
+            bool isCrop = cropQualifiedIds.Contains(picks[i].QualifiedItemId);
+            int qty;
+            if (scaling)
+            {
+                int upper = isCrop
+                    ? Math.Max(3, 2 * Game1.player.FarmingLevel)
+                    : Math.Max(2, 2 * Game1.player.ForagingLevel);
+                int lower = isCrop ? 3 : 2;
+                qty = Game1.random.Next(lower, upper + 1);
+            }
+            else
+            {
+                qty = 5;
+            }
+            qtyByIndex[i] = qty;
             steps.Add(new AdventureStepState
             {
                 Name = "DeliverIngredient" + i,
@@ -588,9 +608,9 @@ internal static partial class Generators
         }
 
         var quest = new AdventureQuest();
-        quest.Initialize(steps, giver: "Gus", completionDialogue: ModEntry.I18n.Get("quest.festival.gusSummer.targetMessage"));
+        quest.Initialize(steps, giver: "Gus", completionDialogue: ModEntry.I18n.Get("quest.festival.gusSummer.targetMessage", new { dish = sampleDish.DisplayName }));
 
-        string ingredientList = string.Join(", ", picks.Select(p => p.DisplayName));
+        string ingredientList = JoinItemList(picks.Select((p, i) => $"{qtyByIndex[i]} {p.DisplayName}"));
 
         return new QuestPosting
         {
@@ -599,38 +619,70 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = "Gus",
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            // Summer 8 trigger, Luau on Summer 11: 2 days puts the auto-fail on Summer 10,
+            // one day before the festival. Same shape as the Spring and Fall feasts.
+            DeadlineDays = 2,
             Rewards =
             {
+                new ObjectReward(sampleDish.QualifiedItemId),
                 new FestivalBiasReward(FestivalKind.Luau, ModEntry.Config.FestivalBiasLuauMagnitude)
             },
             Title = ModEntry.I18n.Get("quest.festival.gusSummer.title"),
-            Description = ModEntry.I18n.Get("quest.festival.gusSummer.description", new { count = qty, ingredients = ingredientList }),
-            TargetMessage = ModEntry.I18n.Get("quest.festival.gusSummer.targetMessage"),
+            Description = ModEntry.I18n.Get("quest.festival.gusSummer.description", new { ingredients = ingredientList }),
+            TargetMessage = ModEntry.I18n.Get("quest.festival.gusSummer.targetMessage", new { dish = sampleDish.DisplayName }),
             PreBuiltQuest = quest
         };
     }
 
-    /// Up to `count` distinct resolved entries from `pool`. May return fewer if the pool
-    /// can't satisfy that many resolves.
-    private static List<ResolvedItem> PickDistinctIngredients(QuestContext ctx, (string Id, string Name)[] pool, int count)
+    /// Combined summer + spring ingredient pool for the Luau prep. Reads `Data/Crops`
+    /// summer + spring entries and `Data/Objects` summer + spring forage so modded crops
+    /// and forage ride along. Year 1 filters to vanilla numeric ids and drops Beet
+    /// `(O)284` (Desert/Oasis only) and Sweet Gem Berry `(O)417` (Rare Seed). Per the
+    /// CSV's "Ingredients should be Spring/Summer themed to prevent gatekeeping first
+    /// years" note, spring entries are folded in so a fresh save isn't stuck on the
+    /// narrow summer crop list. `CropQualifiedIds` flags which entries came from the
+    /// crop pool, so the caller picks the right skill (Farming vs Foraging) for qty.
+    private static (List<ResolvedItem> Pool, HashSet<string> CropQualifiedIds) BuildSummerIngredientPool(QuestContext ctx)
     {
-        var picks = new List<ResolvedItem>(count);
-        var indices = new List<int>(pool.Length);
-        for (int i = 0; i < pool.Length; i++)
-            indices.Add(i);
-        for (int i = 0; i < count && indices.Count > 0; i++)
+        var pool = new List<ResolvedItem>();
+        var seen = new HashSet<string>();
+        var cropQualifiedIds = new HashSet<string>();
+
+        void AddCrops(string season)
         {
-            int j = Game1.random.Next(indices.Count);
-            int poolIdx = indices[j];
-            indices.RemoveAt(j);
-            var resolved = ctx.Items.TryResolveItem(pool[poolIdx].Id);
-            if (resolved != null)
-                picks.Add(resolved);
-            else
-                i--; // try another
+            foreach (var c in ctx.Items.GetSeasonalCrops(season))
+            {
+                string bare = StripPrefix(c.QualifiedItemId);
+                if (bare == "284" || bare == "417")
+                    continue;
+                if (Game1.year < 2 && !int.TryParse(bare, out _))
+                    continue;
+                if (seen.Add(c.QualifiedItemId))
+                {
+                    pool.Add(c);
+                    cropQualifiedIds.Add(c.QualifiedItemId);
+                }
+            }
         }
-        return picks;
+
+        void AddForage(string season)
+        {
+            foreach (var f in ctx.Items.GetForageItems(season))
+            {
+                string bare = StripPrefix(f.QualifiedItemId);
+                if (Game1.year < 2 && !int.TryParse(bare, out _))
+                    continue;
+                if (seen.Add(f.QualifiedItemId))
+                    pool.Add(f);
+            }
+        }
+
+        AddCrops("summer");
+        AddCrops("spring");
+        AddForage("summer");
+        AddForage("spring");
+
+        return (pool, cropQualifiedIds);
     }
 
     /// Winter 13 (Night Market). A met NPC asks for a non-winter seed restock. Filter:
