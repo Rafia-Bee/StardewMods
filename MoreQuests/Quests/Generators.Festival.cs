@@ -168,32 +168,62 @@ internal static partial class Generators
     }
 
     /// Spring 6 (Egg Festival prep). Gus is taste-testing for the festival. Player delivers
-    /// spring ingredients, gets a sample cooked dish back. Reward kind: Dish only.
+    /// one spring crop AND one spring forage in parallel, gets a sample cooked dish back.
+    /// Year 1 restricts to vanilla items (excluding Rhubarb, which lives in the Desert);
+    /// Year 2+ opens the pool to any season_spring forage and any Data/Crops spring entry.
+    /// Dish pool searches Data/CookingRecipes for any recipe whose ingredient list mentions
+    /// the picked crop, the picked forage, or matches the crop's fruit/vegetable category,
+    /// so modded recipes ride along automatically. Reward kind: Dish only.
     private static QuestPosting? GusFestivalFeastSpring(QuestContext ctx)
     {
-
-        var ingredient = PickSpringIngredient(ctx);
-        if (ingredient == null)
+        if (Game1.getCharacterFromName("Gus") == null)
             return null;
-        var sampleDish = PickSpringSampleDish(ctx);
+
+        var crop = PickSpringCrop(ctx);
+        if (crop == null)
+            return null;
+        var forage = PickSpringForage(ctx);
+        if (forage == null)
+            return null;
+        var sampleDish = PickSampleDishForIngredients(ctx, crop, forage);
         if (sampleDish == null)
             return null;
 
-        int qty = ctx.Config.DifficultyScaling
-            ? Math.Max(3, 2 * Game1.player.FarmingLevel)
-            : 5;
+        int cropQty;
+        int forageQty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int cropUpper = Math.Max(3, 2 * Game1.player.FarmingLevel);
+            cropQty = Game1.random.Next(3, cropUpper + 1);
+            int forageUpper = Math.Max(2, 2 * Game1.player.ForagingLevel);
+            forageQty = Game1.random.Next(2, forageUpper + 1);
+        }
+        else
+        {
+            cropQty = 5;
+            forageQty = 5;
+        }
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
         {
             new AdventureStepState
             {
-                Name = "DeliverIngredient",
+                Name = "DeliverCrop",
                 Kind = AdventureStepKind.Deliver,
                 Targets = new List<string> { "Gus" },
-                Items = new List<string> { ingredient.QualifiedItemId },
-                Count = qty,
-                Description = ModEntry.I18n.Get("quest.festival.gusSpring.step.deliver", new { count = qty, item = ingredient.DisplayName })
+                Items = new List<string> { crop.QualifiedItemId },
+                Count = cropQty,
+                Description = ModEntry.I18n.Get("quest.festival.gusSpring.step.deliverCrop", new { count = cropQty, item = crop.DisplayName })
+            },
+            new AdventureStepState
+            {
+                Name = "DeliverForage",
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { "Gus" },
+                Items = new List<string> { forage.QualifiedItemId },
+                Count = forageQty,
+                Description = ModEntry.I18n.Get("quest.festival.gusSpring.step.deliverForage", new { count = forageQty, item = forage.DisplayName })
             }
         }, giver: "Gus", completionDialogue: ModEntry.I18n.Get("quest.festival.gusSpring.targetMessage", new { dish = sampleDish.DisplayName }));
 
@@ -204,10 +234,18 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = "Gus",
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            // Spring 6 trigger, Egg Festival on Spring 13: 6 days puts the auto-fail on
+            // Spring 12, one day before the festival. Same shape as Rows 20-26.
+            DeadlineDays = 6,
             Rewards = { new ObjectReward(sampleDish.QualifiedItemId) },
             Title = ModEntry.I18n.Get("quest.festival.gusSpring.title"),
-            Description = ModEntry.I18n.Get("quest.festival.gusSpring.description", new { count = qty, item = ingredient.DisplayName }),
+            Description = ModEntry.I18n.Get("quest.festival.gusSpring.description", new
+            {
+                cropCount = cropQty,
+                crop = crop.DisplayName,
+                forageCount = forageQty,
+                forage = forage.DisplayName
+            }),
             TargetMessage = ModEntry.I18n.Get("quest.festival.gusSpring.targetMessage", new { dish = sampleDish.DisplayName }),
             PreBuiltQuest = quest
         };
@@ -286,43 +324,79 @@ internal static partial class Generators
         return posting;
     }
 
-    /// Curated vanilla spring cooking ingredients. Modded ingredient pickup is a
-    /// follow-up; for now we keep the pool focused on items the player can plausibly
-    /// produce on the farm or forage by Spring 6 (the trigger date is early in the
-    /// season so deep-game crops aren't reachable yet).
-
-    /// Curated vanilla spring cooking ingredients. Modded ingredient pickup is a
-    /// follow-up; for now we keep the pool focused on items the player can plausibly
-    /// produce on the farm or forage by Spring 6 (the trigger date is early in the
-    /// season so deep-game crops aren't reachable yet).
-    private static readonly (string Id, string Name)[] SpringIngredientPool =
+    /// Spring 6 ingredient pool sources from Data/Crops (`GetSeasonalCrops("spring")`) and
+    /// Data/Objects context tags (`GetForageItems("spring")`). On year 1, filters to items
+    /// with a numeric vanilla id and excludes Rhubarb (`(O)252`, Desert-only).
+    private static ResolvedItem? PickSpringCrop(QuestContext ctx)
     {
-        ("(O)20", "Leek"),
-        ("(O)16", "Wild Horseradish"),
-        ("(O)18", "Daffodil"),
-        ("(O)22", "Dandelion"),
-        ("(O)399", "Spring Onion")
-    };
-
-    /// Spring sample dishes Gus could hand back. Spring-themed vanilla recipes.
-    private static readonly (string Id, string Name)[] SpringSampleDishPool =
-    {
-        ("(O)196", "Salad"),
-        ("(O)244", "Roots Platter"),
-        ("(O)457", "Vegetable Medley"),
-        ("(O)195", "Omelet")
-    };
-
-    private static ResolvedItem? PickSpringIngredient(QuestContext ctx)
-    {
-        var (id, _) = SpringIngredientPool[Game1.random.Next(SpringIngredientPool.Length)];
-        return ctx.Items.TryResolveItem(id);
+        var pool = ctx.Items.GetSeasonalCrops("spring");
+        var filtered = new List<ResolvedItem>();
+        foreach (var c in pool)
+        {
+            string bare = StripPrefix(c.QualifiedItemId);
+            if (bare == "252")
+                continue;
+            if (Game1.year < 2 && !int.TryParse(bare, out _))
+                continue;
+            filtered.Add(c);
+        }
+        return filtered.Count == 0 ? null : filtered[Game1.random.Next(filtered.Count)];
     }
 
-    private static ResolvedItem? PickSpringSampleDish(QuestContext ctx)
+    private static ResolvedItem? PickSpringForage(QuestContext ctx)
     {
-        var (id, _) = SpringSampleDishPool[Game1.random.Next(SpringSampleDishPool.Length)];
-        return ctx.Items.TryResolveItem(id);
+        var pool = ctx.Items.GetForageItems("spring");
+        var filtered = new List<ResolvedItem>();
+        foreach (var f in pool)
+        {
+            string bare = StripPrefix(f.QualifiedItemId);
+            if (Game1.year < 2 && !int.TryParse(bare, out _))
+                continue;
+            filtered.Add(f);
+        }
+        return filtered.Count == 0 ? null : filtered[Game1.random.Next(filtered.Count)];
+    }
+
+    /// Recipe pool widens past the asked ingredients to include any dish whose ingredient
+    /// list matches the crop's fruit/vegetable category, so modded recipes can ride along.
+    /// Forage's own category doesn't widen the pool (forage_item items aren't categorized
+    /// as fruit/veg in vanilla; the crop pick is the broader signal).
+    private static ResolvedItem? PickSampleDishForIngredients(QuestContext ctx, ResolvedItem crop, ResolvedItem forage)
+    {
+        var allRecipes = ctx.Items.GetAllCookingRecipes();
+        if (allRecipes.Count == 0)
+            return null;
+
+        string cropBare = StripPrefix(crop.QualifiedItemId);
+        string forageBare = StripPrefix(forage.QualifiedItemId);
+        bool cropIsFruit = crop.Category == StardewValley.Object.FruitsCategory;
+        bool cropIsVeg = crop.Category == StardewValley.Object.VegetableCategory;
+
+        var pool = new List<CookingRecipeInfo>();
+        foreach (var recipe in allRecipes)
+        {
+            bool match = false;
+            foreach (var ing in recipe.Ingredients)
+            {
+                if (ing.IsCategoryToken)
+                {
+                    if (cropIsFruit && ing.CategoryId == StardewValley.Object.FruitsCategory) { match = true; break; }
+                    if (cropIsVeg && ing.CategoryId == StardewValley.Object.VegetableCategory) { match = true; break; }
+                }
+                else
+                {
+                    string ingBare = StripPrefix(ing.Item.QualifiedItemId);
+                    if (ingBare == cropBare || ingBare == forageBare) { match = true; break; }
+                    if (cropIsFruit && ing.Item.Category == StardewValley.Object.FruitsCategory) { match = true; break; }
+                    if (cropIsVeg && ing.Item.Category == StardewValley.Object.VegetableCategory) { match = true; break; }
+                }
+            }
+            if (match)
+                pool.Add(recipe);
+        }
+        if (pool.Count == 0)
+            return null;
+        return pool[Game1.random.Next(pool.Count)].OutputItem;
     }
 
     /// Vanilla fall ingredients producible or forageable by Fall 8.
