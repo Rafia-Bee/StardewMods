@@ -540,8 +540,8 @@
 
     "quest.foraging.clearDebris.title": "Help clear the debris",
     "quest.foraging.clearDebris.description": "{{npc}} would appreciate a hand tidying up around the valley. Could you clear out {{count}} of the bigger logs, boulders, or stumps? Anywhere off the farm is fair game, it all helps.",
-    "quest.foraging.clearDebris.objective": "Clear {{count}} debris anywhere off the farm.",
-    "quest.foraging.clearDebris.step": "Clear {{count}} debris anywhere off the farm.",
+    "quest.foraging.clearDebris.objective": "Clear debris anywhere off the farm.",
+    "quest.foraging.clearDebris.step": "Clear debris anywhere off the farm.",
     "quest.foraging.clearDebris.targetMessage": "Looks much better already. Thanks for pitching in.",
 
     "quest.cooking.dinnerParty.title": "{{npc}}'s dinner party",
@@ -551,13 +551,13 @@
 
     "quest.foraging.plantTrees.title": "Plant some trees",
     "quest.foraging.plantTrees.description": "{{npc}} wants the canopy thicker around {{location}}. Plant {{count}} new trees there and they'll be in your debt.",
-    "quest.foraging.plantTrees.objective": "Plant {{count}} trees in {{location}}.",
-    "quest.foraging.plantTrees.step": "Plant {{count}} trees in {{location}}.",
+    "quest.foraging.plantTrees.objective": "Plant trees in {{location}}.",
+    "quest.foraging.plantTrees.step": "Plant trees in {{location}}.",
     "quest.foraging.plantTrees.targetMessage": "Beautiful work. The forest will thank you for years.",
 
     "quest.seasonal.springCleaning.title": "Spring cleaning",
     "quest.seasonal.springCleaning.description": "The weeds are getting out of hand and it's an eyesore. If someone could get rid of {{count}} weeds around town, I would be very grateful.",
-    "quest.seasonal.springCleaning.objective": "Clear {{count}} weeds from anywhere but the farm.",
-    "quest.seasonal.springCleaning.step": "Clear {{count}} weeds.",
+    "quest.seasonal.springCleaning.objective": "Clear weeds from anywhere but the farm.",
+    "quest.seasonal.springCleaning.step": "Clear weeds.",
     "quest.seasonal.springCleaning.targetMessage": "Much tidier. Thanks for taking the time!"
 }
