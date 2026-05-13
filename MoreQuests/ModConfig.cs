@@ -51,7 +51,6 @@ public sealed class ModConfig
     // ----- Quantity tunables -----
     public int FishHaulMediumQty { get; set; } = 15;
     public int FishHaulLargeQty { get; set; } = 30;
-    public int FestivalFishQty { get; set; } = 5;
     public int CropMassiveQty { get; set; } = 50;
 
     /// How many distinct item variations a "mixed bag" quest asks for (e.g. Pierre's
@@ -143,8 +142,21 @@ public sealed class ModConfig
     public string SquidFestRecipeCelestine { get; set; } = "Squid Ink Ravioli";
     /// SquidFest recipe for Rosa (East Scarp).
     public string SquidFestRecipeRosa { get; set; } = "Fried Calamari";
-    /// Gus SquidFest dish id, used by ShopDiscountReward.
+
+    /// Shop ids used by the SquidFest ShopDiscountReward per giver. Empty value
+    /// skips the discount for that giver but still grants the recipe.
+    public string SquidFestShopGus { get; set; } = "Saloon";
+    public string SquidFestShopPika { get; set; } = "RSVPikaShop";
+    public string SquidFestShopRosa { get; set; } = "Lemurkat.EastScarp_InnShop";
+    public string SquidFestShopCelestine { get; set; } = "Saloon";
+
+    /// Qualified item id of the discounted dish per giver. Defaults reference the
+    /// vanilla / RSV / ES dishes that ship with the matching recipe; override to
+    /// match your modded recipe pack. Empty value skips the discount.
     public string SquidFestDishGus { get; set; } = "(O)227";
+    public string SquidFestDishPika { get; set; } = "(O)Rafseazz.RSVCP_Ridgeside_Shaketini";
+    public string SquidFestDishRosa { get; set; } = "(O)228";
+    public string SquidFestDishCelestine { get; set; } = "";
 
     // ----- One-shot triggered animal/farm quests -----
 

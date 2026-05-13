@@ -29,7 +29,6 @@
     "config.section.weeklySpecial": "Saloon weekly special",
     "config.section.checkOnFriends": "Check on Friends",
     "config.section.festivalShopDiscount": "Festival shop discounts",
-    "config.section.fishingFestivals": "SquidFest & Trout Derby",
     "config.section.gusFeasts": "Gus's festival feasts",
     "config.section.luauFairBias": "Luau & Fair bias",
     "config.consequences": "Enable consequences",
@@ -96,8 +95,6 @@
     "config.FishHaulMediumQty.tooltip": "Catch count for medium-tier fishing hauls.",
     "config.FishHaulLargeQty": "Large fish haul quantity",
     "config.FishHaulLargeQty.tooltip": "Catch count for expert-tier fishing hauls.",
-    "config.FestivalFishQty": "Festival fish quantity",
-    "config.FestivalFishQty.tooltip": "Catch count for SquidFest and Trout Derby.",
     "config.CropMassiveQty": "Massive crop quantity",
     "config.CropMassiveQty.tooltip": "Crop count for Massive Harvest order.",
     "config.RequestVariationCount": "Request variation count",
@@ -487,7 +484,7 @@
     "quest.festival.rainbowPlatter.targetMessage": "Beautiful catch. The platter's going to look incredible.",
 
     "quest.festival.squidFest.title": "Showcase dish for SquidFest",
-    "quest.festival.squidFest.description": "{{npc}} wants a SquidFest showcase plate and needs {{qty}} fresh squid for it. Hand them in and you'll get the {{recipe}} recipe and a discount on the dish.",
+    "quest.festival.squidFest.description": "With SquidFest coming up, I'm doing a showcase and I would need {{qty}} squid for the feast. I'll teach you the recipe for {{recipe}} and there will be a discount for the dish at my place just for you as thanks.",
     "quest.festival.squidFest.objective": "Catch {{qty}} Squid for {{npc}}.",
     "quest.festival.squidFest.targetMessage": "Perfect. SquidFest is going to be a hit.",
 

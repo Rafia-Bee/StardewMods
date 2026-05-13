@@ -1544,7 +1544,12 @@ internal static partial class Generators
         _ => (ModEntry.Config.TroutDerbyShopGus, ModEntry.Config.TroutDerbyDishGus)
     };
 
-    /// SquidFest Showcase (Winter 12): catch Squid. Same shape as RainbowPlatter.
+    /// SquidFest Showcase (posted Winter 11 so the quest spans the two-day festival
+    /// on Winter 12-13 and auto-fails Winter 14, one day after the festival ends):
+    /// catch Squid and turn the stack in to the SaloonChef-pool giver. Quantity
+    /// scales with Fishing (on: 2 + fishing/2; off: Random.Next(1, 5)) and the shop
+    /// discount resolves per giver via config so RSV / ES / VMV saloons all get the
+    /// discount alongside Gus, matching the Rainbow Platter parallel.
     private static QuestPosting? SquidFestShowcase(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
@@ -1552,20 +1557,26 @@ internal static partial class Generators
             return null;
 
         const string squidId = "(O)151";
-        int qty = Math.Max(1, ModEntry.Config.FestivalFishQty);
+
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+            qty = Math.Max(1, 2 + Game1.player.FishingLevel / 2);
+        else
+            qty = Game1.random.Next(1, 5);
 
         string recipeName = ResolveSquidFestRecipe(giver);
         var rewards = new List<RewardSpec>
         {
             new RecipeReward(recipeName)
         };
-        if (string.Equals(giver, "Gus", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(ModEntry.Config.SquidFestDishGus))
+        var (shopId, dishId) = ResolveSquidFestDiscount(giver);
+        if (!string.IsNullOrEmpty(shopId) && !string.IsNullOrEmpty(dishId))
         {
             rewards.Add(new ShopDiscountReward(
-                ShopId: "Saloon",
+                ShopId: shopId,
                 PercentOff: ModEntry.Config.ShopDiscountPercent,
                 DurationDays: ModEntry.Config.ShopDiscountDurationDays,
-                AppliesTo: new List<string> { ModEntry.Config.SquidFestDishGus },
+                AppliesTo: new List<string> { dishId },
                 GuaranteedStock: 5));
         }
 
@@ -1578,14 +1589,22 @@ internal static partial class Generators
             ObjectiveItemId = squidId,
             ObjectiveItemName = "Squid",
             ObjectiveQuantity = qty,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = 3,
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.festival.squidFest.title"),
-            Description = ModEntry.I18n.Get("quest.festival.squidFest.description", new { npc = giver, qty, recipe = recipeName }),
+            Description = ModEntry.I18n.Get("quest.festival.squidFest.description", new { qty, recipe = recipeName }),
             CurrentObjective = ModEntry.I18n.Get("quest.festival.squidFest.objective", new { qty, npc = giver }),
             TargetMessage = ModEntry.I18n.Get("quest.festival.squidFest.targetMessage")
         };
     }
+
+    private static (string shopId, string dishId) ResolveSquidFestDiscount(string giver) => giver switch
+    {
+        "Pika" => (ModEntry.Config.SquidFestShopPika, ModEntry.Config.SquidFestDishPika),
+        "Celestine" => (ModEntry.Config.SquidFestShopCelestine, ModEntry.Config.SquidFestDishCelestine),
+        "Rosa" => (ModEntry.Config.SquidFestShopRosa, ModEntry.Config.SquidFestDishRosa),
+        _ => (ModEntry.Config.SquidFestShopGus, ModEntry.Config.SquidFestDishGus)
+    };
 
     private static string ResolveTroutDerbyRecipe(string giver) => giver switch
     {
