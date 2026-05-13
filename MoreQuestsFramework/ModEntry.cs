@@ -28,6 +28,7 @@ public sealed class ModEntry : Mod
 {
     internal static ModEntry Instance { get; private set; } = null!;
     internal static MoreQuestsFrameworkConfig Config { get; set; } = new();
+    internal static ITranslationHelper? Translation { get; private set; }
 
     internal const string PadAssetRoot = "Mods/RafiaBee.MoreQuestsFramework/Pad";
     internal const string PinAssetRoot = "Mods/RafiaBee.MoreQuestsFramework/Pin";
@@ -67,6 +68,7 @@ public sealed class ModEntry : Mod
     public override void Entry(IModHelper helper)
     {
         Instance = this;
+        Translation = helper.Translation;
         Config = helper.ReadConfig<MoreQuestsFrameworkConfig>();
 
         _registry = new QuestRegistry(Monitor);

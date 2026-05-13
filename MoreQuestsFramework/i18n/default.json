@@ -157,5 +157,7 @@
     "quest.reward.line.recipe": "You will learn the {{recipe}} recipe",
     "quest.reward.line.mail": "{{npc}} will send you a letter in the next few days",
     "quest.reward.line.shopDiscount": "{{npc}} will mark down their shop {{percent}}% for {{days}} day(s)",
-    "quest.reward.line.animalPurchaseDiscount": "{{npc}} will mark down livestock {{percent}}% for {{days}} day(s)"
+    "quest.reward.line.animalPurchaseDiscount": "{{npc}} will mark down livestock {{percent}}% for {{days}} day(s)",
+
+    "quest.itemDelivery.partial.thanks": "Thanks! Bring me {{remaining}} more when you can."
 }
