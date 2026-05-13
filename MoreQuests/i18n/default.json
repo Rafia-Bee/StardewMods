@@ -409,6 +409,25 @@
     "quest.festival.eggFestivalDecor.description": "Farmer, I need your help decorating the town for the upcoming Egg festival. The rest of the townsfolk have helped out a ton, I just need a few haybales to complete the look. Ship me {{count}} when you can.",
     "quest.festival.eggFestivalDecor.step.hayBales": "Ship {{count}} hay bales.",
 
+    "quest.festival.lewisEasterEggs.title": "Dye for the Egg Festival",
+    "quest.festival.lewisEasterEggs.description": "Farmer, the children are itching to paint eggs at the Egg Festival and the dye kit Pierre stocks is, well, beige. I'd like to set out something brighter this year. Ship me {{countPer}} dyed items in each of these {{colorCount}} colors so we can mix proper paints: {{colors}}. Get them in before festival day and I'll send a little something I had Robin help me put together.",
+    "quest.festival.lewisEasterEggs.step": "Ship {{count}} {{color}} items.",
+
+    "color.red": "red",
+    "color.orange": "orange",
+    "color.yellow": "yellow",
+    "color.green": "green",
+    "color.blue": "blue",
+    "color.purple": "purple",
+    "color.pink": "pink",
+
+    "item.eggBasket.cream.name": "Cream Egg Basket",
+    "item.eggBasket.cream.description": "A hand-woven basket lined with pale cream cloth. Robin says she's seen better baskets at the Fair, but Lewis insists this one has character.",
+    "item.eggBasket.pink.name": "Pink Egg Basket",
+    "item.eggBasket.pink.description": "A soft pink basket trimmed with ribbon. Looks like it could hold a dozen freshly painted eggs without losing a single one.",
+    "item.eggBasket.rustic.name": "Rustic Egg Basket",
+    "item.eggBasket.rustic.description": "A sturdy brown basket made from hardwood splints. The kind of thing you'd grab on the way out to gather eggs at dawn.",
+
     "quest.festival.fairDecor.title": "Fair grounds preparation",
     "quest.festival.fairDecor.description": "Farmer, could you spare {{flowers}} fall flowers, {{wood}} wood, and {{signs}} signs for the upcoming Fair decorations? I will remember your favor when judging the grange displays...",
     "quest.festival.fairDecor.step.wood": "Ship {{count}} wood.",

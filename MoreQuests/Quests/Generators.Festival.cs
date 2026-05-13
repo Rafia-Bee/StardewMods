@@ -1550,4 +1550,75 @@ internal static partial class Generators
         _ => ModEntry.Config.SquidFestRecipeGus
     };
 
+    /// Lewis's Easter Eggs: posted Spring 8, deadline Spring 12 (one day before the Egg
+    /// Festival on Spring 13). Picks 2-5 distinct dye colors from a festival-appropriate
+    /// palette and asks the player to ship N items per color, where N is shared across
+    /// every step (scaling on: rand(3, max(3, farming*2)); off: 3). color_white is left
+    /// off the pool so plain cloth doesn't blanket-satisfy a step. Reward: all three
+    /// authored Egg Basket variants (Cream, Pink, Rustic) at once.
+    private static QuestPosting? LewisEasterEggs(QuestContext ctx)
+    {
+        const string giver = "Lewis";
+
+        string[] palette = { "red", "orange", "yellow", "green", "blue", "purple", "pink" };
+
+        int colorCount = Math.Min(Game1.random.Next(2, 6), palette.Length);
+        var pickedColors = palette.OrderBy(_ => Game1.random.Next()).Take(colorCount).ToList();
+
+        int countPer;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int farming = Difficulty.GetSkillLevel(QuestCategory.Farming);
+            int upper = Math.Max(3, farming * 2);
+            countPer = Game1.random.Next(3, upper + 1);
+        }
+        else
+        {
+            countPer = 3;
+        }
+
+        var steps = new List<AdventureStepState>();
+        foreach (var color in pickedColors)
+        {
+            string colorDisplay = ModEntry.I18n.Get("color." + color).ToString();
+            steps.Add(new AdventureStepState
+            {
+                Name = "Ship_" + color,
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "$tag:color_" + color },
+                Count = countPer,
+                Description = ModEntry.I18n.Get("quest.festival.lewisEasterEggs.step", new { count = countPer, color = colorDisplay })
+            });
+        }
+
+        var quest = new AdventureQuest();
+        quest.Initialize(steps.ToArray(), giver: giver);
+
+        string colorList = string.Join(", ", pickedColors.Select(c => ModEntry.I18n.Get("color." + c).ToString()));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = 4,
+            Rewards =
+            {
+                new ObjectReward("(O)" + ModEntry.EggBasketCreamId),
+                new ObjectReward("(O)" + ModEntry.EggBasketPinkId),
+                new ObjectReward("(O)" + ModEntry.EggBasketRusticId)
+            },
+            Title = ModEntry.I18n.Get("quest.festival.lewisEasterEggs.title"),
+            Description = ModEntry.I18n.Get("quest.festival.lewisEasterEggs.description", new
+            {
+                countPer,
+                colorCount = pickedColors.Count,
+                colors = colorList
+            }),
+            PreBuiltQuest = quest
+        };
+    }
+
 }

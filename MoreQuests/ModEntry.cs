@@ -40,6 +40,13 @@ public sealed class ModEntry : Mod
     internal const string AdventureBoardAssetRoot = "Mods/RafiaBee.MoreQuests/AdventureBoard";
     internal const string AdventureBoardBackgroundAssetRoot = "Mods/RafiaBee.MoreQuests/AdventureBoardBackground";
 
+    internal const string EggBasketCreamId = "RafiaBee.MoreQuests.EggBasketCream";
+    internal const string EggBasketPinkId = "RafiaBee.MoreQuests.EggBasketPink";
+    internal const string EggBasketRusticId = "RafiaBee.MoreQuests.EggBasketRustic";
+    internal const string EggBasketCreamTexture = "Mods/RafiaBee.MoreQuests/EggBasketCream";
+    internal const string EggBasketPinkTexture = "Mods/RafiaBee.MoreQuests/EggBasketPink";
+    internal const string EggBasketRusticTexture = "Mods/RafiaBee.MoreQuests/EggBasketRustic";
+
     /// Mail key prefix for deep-dive reward letters. Bar id + count are embedded in the key
     /// (e.g. `...DeepDiveReward.337.4` for 4 Iridium Bars) so the asset edit can build the
     /// body and attachment without needing per-quest persistence.
@@ -58,6 +65,45 @@ public sealed class ModEntry : Mod
         if (e.NameWithoutLocale.IsEquivalentTo(AdventureBoardBackgroundAssetRoot))
         {
             e.LoadFromModFile<Texture2D>("assets/AdventureBoardBackground.png", AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(EggBasketCreamTexture))
+        {
+            e.LoadFromModFile<Texture2D>("assets/EggBasketCream.png", AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(EggBasketPinkTexture))
+        {
+            e.LoadFromModFile<Texture2D>("assets/EggBasketPink.png", AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(EggBasketRusticTexture))
+        {
+            e.LoadFromModFile<Texture2D>("assets/EggBasketRustic.png", AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))
+        {
+            e.Edit(asset =>
+            {
+                var data = asset.AsDictionary<string, StardewValley.GameData.Objects.ObjectData>().Data;
+                data[EggBasketCreamId] = BuildEggBasketObject(
+                    I18n.Get("item.eggBasket.cream.name").ToString(),
+                    I18n.Get("item.eggBasket.cream.description").ToString(),
+                    EggBasketCreamTexture);
+                data[EggBasketPinkId] = BuildEggBasketObject(
+                    I18n.Get("item.eggBasket.pink.name").ToString(),
+                    I18n.Get("item.eggBasket.pink.description").ToString(),
+                    EggBasketPinkTexture);
+                data[EggBasketRusticId] = BuildEggBasketObject(
+                    I18n.Get("item.eggBasket.rustic.name").ToString(),
+                    I18n.Get("item.eggBasket.rustic.description").ToString(),
+                    EggBasketRusticTexture);
+            }, AssetEditPriority.Default);
             return;
         }
 
@@ -452,6 +498,26 @@ public sealed class ModEntry : Mod
         if (string.IsNullOrEmpty(itemId))
             return false;
         return itemId == "178" || itemId == "(O)178";
+    }
+
+    /// Builds a Data/Objects entry for one Egg Basket variant. The sprite is a single 16x16
+    /// tile, so SpriteIndex 0 covers it. Price is set to 0 because the basket is a quest
+    /// reward keepsake, not something the player should farm by replaying.
+    private static StardewValley.GameData.Objects.ObjectData BuildEggBasketObject(string displayName, string description, string texture)
+    {
+        return new StardewValley.GameData.Objects.ObjectData
+        {
+            Name = displayName,
+            DisplayName = displayName,
+            Description = description,
+            Type = "Crafting",
+            Category = -8,
+            Price = 0,
+            Texture = texture,
+            SpriteIndex = 0,
+            Edibility = -300,
+            IsDrink = false
+        };
     }
 
     private void RegisterContent(IMoreQuestsApi fw)
