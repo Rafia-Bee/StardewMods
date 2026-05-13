@@ -303,6 +303,11 @@ internal static partial class Generators
                 result.Add(ing);
         }
 
+        // Legendaries (Legend II, Crimsonfish, RSV Deep Ridge Angler, etc) shouldn't show up on a saloon-prep list.
+        var bossIds = new HashSet<string>(
+            ctx.Items.GetBossFish().Select(f => f.QualifiedItemId),
+            StringComparer.OrdinalIgnoreCase);
+
         var seasons = allSeasons ? AllSeasons : new[] { ctx.Season };
         foreach (var season in seasons)
         {
@@ -315,6 +320,9 @@ internal static partial class Generators
                     MatcherToken = c.QualifiedItemId
                 });
             foreach (var fi in ctx.Items.GetSeasonalFishInVisitedLocations(season))
+            {
+                if (bossIds.Contains(fi.QualifiedItemId))
+                    continue;
                 Add(new AttainableIngredient
                 {
                     QualifiedItemId = fi.QualifiedItemId,
@@ -322,6 +330,7 @@ internal static partial class Generators
                     Category = fi.Category,
                     MatcherToken = fi.QualifiedItemId
                 });
+            }
         }
         foreach (var f in ctx.Items.GetForageItemsInVisitedLocations(allSeasons ? null : ctx.Season))
             Add(new AttainableIngredient
