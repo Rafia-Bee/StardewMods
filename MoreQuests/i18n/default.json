@@ -349,9 +349,8 @@
     "quest.seasonal.jellyfishWatch.targetMessage": "These are exactly what I needed. Thanks for indulging the field work.",
 
     "quest.festival.merchantUnpacking.title": "Night Market seeds for {{npc}}",
-    "quest.festival.merchantUnpacking.description": "{{npc}} won't make it down to the Night Market this year, but the Magic Boat's stocking out-of-season seed packets and they don't want to miss the chance. Ship {{qty}} {{item}} through the bin and they'll consider it a personal favour.",
-    "quest.festival.merchantUnpacking.objective": "Ship {{qty}} {{item}}.",
-    "quest.festival.merchantUnpacking.targetMessage": "Got them! That'll save me a trip to the boat. Many thanks.",
+    "quest.festival.merchantUnpacking.description": "Farmer, the Magic Boat at the Night Market stocks seeds you can't get anywhere else, and I'd love to try planting some next year. I need {{qty}} of each of these {{varietyCount}} kinds: {{items}}. Ship them through the bin once you've picked them up and I'll owe you one.",
+    "quest.festival.merchantUnpacking.step": "Ship {{count}} {{item}}.",
 
     "quest.mining.monsterHunt.title": "Monster bounty",
     "quest.mining.monsterHunt.description": "{{npc}} here. I've got a stack of complaints from townsfolk about monsters near the trails. {{qty}} kills should clear the worst of it, type doesn't matter. Stop by when you've thinned the numbers and there's a hot meal waiting.",
