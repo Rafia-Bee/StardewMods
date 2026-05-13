@@ -40,7 +40,7 @@ The **Adventurer's Guild board** toggle (default on) controls whether the mining
 | Foraging | Seasonal Foraging | Daily board | Any | Gather and ship X seasonal forage | Gold (Beginner) | Cooldown 2d | Implemented |
 | Fishing | Simple Fishing Request | Daily board | Any | Catch X common fish | Gold scaled by sell price | Cooldown 2d | Implemented |
 | Festival | Submarine Fuel | Winter 12 (mail) | Captain | Ship Battery Packs + Coal (qty scales with Mining, coal locked to 5x battery count) | Pearl via NextDay mail | DateLocked, OneTimePerYear, deadline Winter 15 | Implemented |
-| Festival | Wizard's Ritual Materials | Fall 24 (mail) | M. Rasmodius | Ship Void Essence + Bat Wings + Solar Essence | Book of Mysteries via NextDay mail | DateLocked, OneTimePerYear | Implemented |
+| Festival | Wizard's Ritual Materials | Fall 24 (mail) | M. Rasmodius | Ship Void Essence + Bat Wings + Solar Essence | Book of Mysteries via NextDay mail | DateLocked, OneTimePerYear, deadline Fall 28 | Implemented |
 | Festival | Evelyn's Holiday Cookies | Winter 21 (mail) | Evelyn | Deliver Flour, Sugar, and any edible egg | Friendship (Large) + 6x Cookie | DateLocked, OneTimePerYear | Implemented |
 | Fishing | Location-Specific Overpopulation | Daily board | Demetrius / Maddie / Mr Aguar / Dylan | Catch a specific fish at a specific spot (visited locations only) | Gold (Intermediate) + 10x Challenge Bait | Cooldown 4d, requires Fishing 2 | Implemented (9.5e) |
 | Animal | Alex's Protein Shakes | Periodic (mail, 14d) | Alex | Deliver eggs scaled to chicken count | Friendship (Basic) + Energy Tonic / Muscle Remedy / Life Elixir | Cooldown 14d, requires NpcMet Alex; Protein Bar reward deferred to asset drop | Implemented (9.5f) |
