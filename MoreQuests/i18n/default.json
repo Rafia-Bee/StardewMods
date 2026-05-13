@@ -556,8 +556,8 @@
     "quest.foraging.plantTrees.targetMessage": "Beautiful work. The forest will thank you for years.",
 
     "quest.seasonal.springCleaning.title": "Spring cleaning",
-    "quest.seasonal.springCleaning.description": "The weeds are out of hand again this year and {{npc}} is asking around for help. Pull up {{count}} of the worst clumps anywhere off the farm and they'll appreciate it.",
-    "quest.seasonal.springCleaning.objective": "Clear {{count}} weeds anywhere off the farm.",
-    "quest.seasonal.springCleaning.step": "Clear {{count}} weeds anywhere off the farm.",
-    "quest.seasonal.springCleaning.targetMessage": "Much tidier. Thanks for taking the time."
+    "quest.seasonal.springCleaning.description": "The weeds are getting out of hand and it's an eyesore. If someone could get rid of {{count}} weeds around town, I would be very grateful.",
+    "quest.seasonal.springCleaning.objective": "Clear {{count}} weeds from anywhere but the farm.",
+    "quest.seasonal.springCleaning.step": "Clear {{count}} weeds.",
+    "quest.seasonal.springCleaning.targetMessage": "Much tidier. Thanks for taking the time!"
 }

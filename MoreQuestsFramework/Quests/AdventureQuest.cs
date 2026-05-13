@@ -575,21 +575,50 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         if (!TargetMatches(step, npc.Name)) return false;
         if (!ItemMatches(step, item)) return false;
         if (step.MinQuality > 0 && (item is not StardewValley.Object obj || obj.Quality < step.MinQuality)) return false;
-        if (item.Stack < step.Count) return false;
+
+        int remaining = step.Count - step.Progress;
+        if (remaining <= 0) return false;
 
         if (probe) return true;
 
-        Game1.player.Items.Reduce(item, step.Count);
-        bool willComplete = WillStepCompleteQuest(idx);
-        if (willComplete && !string.IsNullOrEmpty(completionMessage.Value))
+        int accept = Math.Min(item.Stack, remaining);
+        Game1.player.Items.Reduce(item, accept);
+        step.Progress += accept;
+
+        if (step.Progress >= step.Count)
         {
-            npc.CurrentDialogue.Push(new Dialogue(npc, null, completionMessage.Value));
-            Game1.drawDialogue(npc);
+            bool willComplete = WillStepCompleteQuest(idx);
+            if (willComplete && !string.IsNullOrEmpty(completionMessage.Value))
+            {
+                npc.CurrentDialogue.Push(new Dialogue(npc, null, completionMessage.Value));
+                Game1.drawDialogue(npc);
+            }
+            if (HasMultipleDeliverSteps())
+                Game1.playSound("give_gift");
+            MarkStepDone(idx, step);
         }
-        if (HasMultipleDeliverSteps())
+        else
+        {
             Game1.playSound("give_gift");
-        MarkStepDone(idx, step);
+            Persist(idx, step);
+            reloadObjective();
+            string partial = TryGetPartialDialogue(step.Count - step.Progress);
+            if (!string.IsNullOrEmpty(partial))
+            {
+                npc.CurrentDialogue.Push(new Dialogue(npc, null, partial));
+                Game1.drawDialogue(npc);
+            }
+        }
         return true;
+    }
+
+    private static string TryGetPartialDialogue(int remaining)
+    {
+        var translation = ModEntry.Translation;
+        if (translation == null)
+            return string.Empty;
+        string text = translation.Get("quest.itemDelivery.partial.thanks", new { remaining }).ToString();
+        return string.IsNullOrWhiteSpace(text) ? string.Empty : text;
     }
 
     /// True when there are 2+ Deliver steps. Gates the per-step delivery sound cue: single-
