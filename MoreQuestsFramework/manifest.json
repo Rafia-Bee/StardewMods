@@ -4,7 +4,7 @@
     "Version": "1.0.0",
     "MinimumApiVersion": "4.1.0",
     "UniqueID": "RafiaBee.MoreQuestsFramework",
-    "Description": "Quest framework that powers More Quests. Adds a multi-slot help-wanted billboard and registers four configurable vanilla quest types (item delivery, resource collection, slay monster, fishing). Other mods can register their own quests through it.",
+    "Description": "An extensive quest framework that lets you register custom quests, and additionally control vanilla help wanted quest weights.",
     "EntryDll": "MoreQuestsFramework.dll",
     "UpdateKeys": [],
     "Dependencies": [

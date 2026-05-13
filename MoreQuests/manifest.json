@@ -4,7 +4,7 @@
     "Version": "1.0.0",
     "MinimumApiVersion": "4.1.0",
     "UniqueID": "RafiaBee.MoreQuests",
-    "Description": "Adds new daily Help Wanted quests with progressive difficulty, varied rewards, consequences, festival prep chains, animal quests, and full modded item/NPC support. Built on the More Quests Framework.",
+    "Description": "Adds 70+ quests of different types, built on More Quests Framework.",
     "EntryDll": "MoreQuests.dll",
     "UpdateKeys": [],
     "Dependencies": [
