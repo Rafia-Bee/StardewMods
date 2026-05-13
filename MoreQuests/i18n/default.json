@@ -116,14 +116,6 @@
     "config.FairStarTokensAmount": "Fair bonus star tokens",
     "config.FairStarTokensAmount.tooltip": "How many extra star tokens land in your Fair pouch when 'Fair reward kind' is set to StarTokens. Default 100 is roughly one mid-priced shop item. Ignored when the grange bonus mode is selected.",
 
-    "config.section.modItemIds": "Modded item IDs (Wrapping Paper quest)",
-    "config.WrappingPaperPaperId": "Paper item ID",
-    "config.WrappingPaperPaperId.tooltip": "Qualified item ID for the Paper item from Si's Extra Crafting Materials. Override here if the source mod renames the item between versions.",
-    "config.WrappingPaperTapeId": "Tape item ID",
-    "config.WrappingPaperTapeId.tooltip": "Qualified item ID for the Tape item from Si's Extra Crafting Materials.",
-    "config.WrappingPaperBookOfStarsId": "Book of Stars item ID",
-    "config.WrappingPaperBookOfStarsId.tooltip": "Qualified item ID for the Book of Stars reward item from Si's Extra Crafting Materials.",
-
     "quest.farming.basic.title": "{{npc}}'s crop request",
     "quest.farming.basic.description": "Any kind farmer has some fresh {{item}}? Please bring by {{qty}} {{item}} to {{npc}} before the deadline.",
     "quest.farming.basic.objective": "Bring {{qty}} {{item}} to {{npc}}.",
@@ -370,7 +362,7 @@
     "quest.festival.secretGiftHint.fallback": "something thoughtful",
 
     "quest.festival.wrappingPaper.title": "Wrapping paper for the festival",
-    "quest.festival.wrappingPaper.description": "Lewis is putting together gift packs for the elder folks who can't make it to the Winter Star and the town's run out of wrapping supplies. Ship {{count}} {{paper}} and {{count}} {{tape}} through the bin and there'll be a Book of Stars in the mail by way of thanks.",
+    "quest.festival.wrappingPaper.description": "Folks have put in orders for wrapping paper ahead of the gift giving festivities. Please ship {{count}} papers and tapes before the deadline. I have a nice book I can give you as thanks.",
     "quest.festival.wrappingPaper.step.paper": "Ship {{count}} {{item}}.",
     "quest.festival.wrappingPaper.step.tape": "Ship {{count}} {{item}}.",
 

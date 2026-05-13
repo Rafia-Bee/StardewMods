@@ -64,14 +64,6 @@ public sealed class ModConfig
     /// Recipes with at least this many distinct ingredient lines qualify for the Complex pool.
     public int WeeklySpecialComplexMinIngredients { get; set; } = 4;
 
-    // ----- Wrapping Paper (gated on Si.ExtraCraftingMaterials) -----
-    /// Paper item id from Si's Extra Crafting Materials. Override if the source mod renames it.
-    public string WrappingPaperPaperId { get; set; } = "Si.ECM_Paper";
-    /// Tape item id from Si's Extra Crafting Materials.
-    public string WrappingPaperTapeId { get; set; } = "Si.ECM_Tape";
-    /// Book of Stars reward item id from Si's Extra Crafting Materials.
-    public string WrappingPaperBookOfStarsId { get; set; } = "Si.ECM_BookOfStars";
-
     // ----- Gus's festival feasts -----
     /// Number of distinct ingredients Gus's Fall + Summer feasts ask for.
     public int GusFestivalFeastIngredientCount { get; set; } = 2;

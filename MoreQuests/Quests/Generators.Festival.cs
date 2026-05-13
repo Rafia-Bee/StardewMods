@@ -847,33 +847,39 @@ internal static partial class Generators
     }
 
     /// Winter 20, mod-gated on Si.ExtraCraftingMaterials. Lewis asks the player to ship
-    /// Paper + Tape for the town's Winter Star gift wrapping. Reward: Book of Stars.
-    /// Item ids are configurable so the quest still works if the source mod renames them.
+    /// Paper + Tape for the town's Winter Star gift wrapping. Reward: Friendship 101
+    /// (Book_Friendship). Scaling on: 2 + Random.Next((int)(FarmingLevel*1.5)). Off:
+    /// Random.Next(2, 6). Single roll applied to both steps. Deadline hardcoded to 5
+    /// days so the quest spans Winter 20-24 and auto-fails Winter 25 morning, the day
+    /// of the Feast of the Winter Star.
     private static QuestPosting? WrappingPaper(QuestContext ctx)
     {
         if (!ctx.Helper.ModRegistry.IsLoaded(MoreQuestsFramework.ModCompat.SiExtraCraftingMaterials))
             return null;
 
-        string paperId = string.IsNullOrWhiteSpace(ModEntry.Config.WrappingPaperPaperId)
-            ? "Si.ECM_Paper"
-            : ModEntry.Config.WrappingPaperPaperId;
-        string tapeId = string.IsNullOrWhiteSpace(ModEntry.Config.WrappingPaperTapeId)
-            ? "Si.ECM_Tape"
-            : ModEntry.Config.WrappingPaperTapeId;
-        string bookId = string.IsNullOrWhiteSpace(ModEntry.Config.WrappingPaperBookOfStarsId)
-            ? "Si.ECM_BookOfStars"
-            : ModEntry.Config.WrappingPaperBookOfStarsId;
+        const string paperId = "Si.ECM_Paper";
+        const string tapeId = "Si.ECM_Tape";
 
         var paper = ctx.Items.TryResolveItem(paperId);
         var tape = ctx.Items.TryResolveItem(tapeId);
         if (paper == null || tape == null)
         {
-            ctx.Monitor.Log($"WrappingPaper: Paper ({paperId}) or Tape ({tapeId}) item not found in registry; skipping. Override item ids in More Quests config if the source mod renamed them.", LogLevel.Trace);
+            ctx.Monitor.Log($"WrappingPaper: Paper ({paperId}) or Tape ({tapeId}) item not found in registry; skipping.", LogLevel.Trace);
             return null;
         }
 
         const string giver = "Lewis";
-        const int qtyPerItem = 5;
+
+        int qtyPerItem;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int upper = Math.Max(1, (int)(Game1.player.FarmingLevel * 1.5));
+            qtyPerItem = 2 + Game1.random.Next(upper);
+        }
+        else
+        {
+            qtyPerItem = Game1.random.Next(2, 6);
+        }
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -903,10 +909,10 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
-            Rewards = { new ObjectReward(bookId) },
+            DeadlineDays = 5,
+            Rewards = { new ObjectReward("(O)Book_Friendship") },
             Title = ModEntry.I18n.Get("quest.festival.wrappingPaper.title"),
-            Description = ModEntry.I18n.Get("quest.festival.wrappingPaper.description", new { paper = paper.DisplayName, tape = tape.DisplayName, count = qtyPerItem }),
+            Description = ModEntry.I18n.Get("quest.festival.wrappingPaper.description", new { count = qtyPerItem }),
             PreBuiltQuest = quest
         };
     }

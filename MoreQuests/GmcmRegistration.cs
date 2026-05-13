@@ -184,10 +184,6 @@ internal static class GmcmRegistration
             tooltip: () => t.Get("config.FairFestivalRewardKind.tooltip"),
             allowedValues: new[] { "GrangeScoreBonus", "StarTokens" });
         AddInt(api, manifest, t, "FairStarTokensAmount", () => ModEntry.Config.FairStarTokensAmount, v => ModEntry.Config.FairStarTokensAmount = v, 0, 1000);
-        api.AddSectionTitle(manifest, () => t.Get("config.section.modItemIds"));
-        AddText(api, manifest, t, "WrappingPaperPaperId", () => ModEntry.Config.WrappingPaperPaperId, v => ModEntry.Config.WrappingPaperPaperId = v);
-        AddText(api, manifest, t, "WrappingPaperTapeId", () => ModEntry.Config.WrappingPaperTapeId, v => ModEntry.Config.WrappingPaperTapeId = v);
-        AddText(api, manifest, t, "WrappingPaperBookOfStarsId", () => ModEntry.Config.WrappingPaperBookOfStarsId, v => ModEntry.Config.WrappingPaperBookOfStarsId = v);
 
         // ----- Adventurer's Guild board -----
         api.AddPage(manifest, PageAdventureBoard, () => t.Get("config.page.adventureBoard"));
