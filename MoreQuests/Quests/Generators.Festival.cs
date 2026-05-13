@@ -688,8 +688,12 @@ internal static partial class Generators
         return (pool, cropQualifiedIds);
     }
 
-    /// Winter 13 (Night Market). A met NPC asks for a non-winter seed restock. Filter:
-    /// any seed whose Data/Crops Seasons excludes Winter. Reward: FriendshipBasic.
+    /// Winter 13 (Night Market). A met NPC posts a Help Wanted ask for seeds pulled
+    /// programmatically from the Magic Shop Boat's actual stock (Days 1-3, unioned,
+    /// filtered to Category -74 seed items). Multi-step Adventure Ship. Variety count
+    /// and quantity per seed scale with Farming; deadline is fixed at 5 days so the
+    /// quest auto-fails Winter 18, one day after the Night Market ends on Winter 17.
+    /// Reward: FriendshipBasic to the giver.
     private static QuestPosting? MerchantUnpacking(QuestContext ctx)
     {
         var metNpcs = DispatchRegistry.MetHumanNpcs();
@@ -697,28 +701,59 @@ internal static partial class Generators
             return null;
         string giver = metNpcs[Game1.random.Next(metNpcs.Count)];
 
-        var seeds = ResolveNonWinterSeeds(ctx);
+        var seeds = ResolveMagicBoatSeeds(ctx);
         if (seeds.Count == 0)
             return null;
-        var pick = seeds[Game1.random.Next(seeds.Count)];
 
-        int qty = Game1.random.Next(3, 7);
+        int varietyCount;
+        int qtyPer;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int farming = Difficulty.GetSkillLevel(QuestCategory.Farming);
+            int varietyUpper = Math.Max(1, farming / 2);
+            varietyCount = Game1.random.Next(1, varietyUpper + 1);
+            int qtyUpper = Math.Max(3, farming * 4);
+            qtyPer = Game1.random.Next(3, qtyUpper + 1);
+        }
+        else
+        {
+            varietyCount = Game1.random.Next(1, 4);
+            qtyPer = Game1.random.Next(3, 12);
+        }
+
+        varietyCount = Math.Min(varietyCount, seeds.Count);
+        var picked = seeds.OrderBy(_ => Game1.random.Next()).Take(varietyCount).ToList();
+
+        var steps = new List<AdventureStepState>();
+        foreach (var seed in picked)
+        {
+            steps.Add(new AdventureStepState
+            {
+                Name = "Ship_" + seed.QualifiedItemId,
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { seed.QualifiedItemId },
+                Count = qtyPer,
+                Description = ModEntry.I18n.Get("quest.festival.merchantUnpacking.step", new { count = qtyPer, item = seed.DisplayName })
+            });
+        }
+
+        var quest = new AdventureQuest();
+        quest.Initialize(steps.ToArray(), giver: giver);
+
+        string itemList = string.Join(", ", picked.Select(s => s.DisplayName));
 
         return new QuestPosting
         {
             Category = QuestCategory.Festival,
             Tier = DifficultyTier.Beginner,
-            QuestType = BoardQuestType.Ship,
+            QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
-            ObjectiveItemId = pick.QualifiedItemId,
-            ObjectiveItemName = pick.DisplayName,
-            ObjectiveQuantity = qty,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            ObjectiveQuantity = 1,
+            DeadlineDays = 5,
             Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipBasic) },
             Title = ModEntry.I18n.Get("quest.festival.merchantUnpacking.title", new { npc = giver }),
-            Description = ModEntry.I18n.Get("quest.festival.merchantUnpacking.description", new { npc = giver, qty, item = pick.DisplayName }),
-            CurrentObjective = ModEntry.I18n.Get("quest.festival.merchantUnpacking.objective", new { qty, item = pick.DisplayName }),
-            TargetMessage = ModEntry.I18n.Get("quest.festival.merchantUnpacking.targetMessage")
+            Description = ModEntry.I18n.Get("quest.festival.merchantUnpacking.description", new { qty = qtyPer, varietyCount, items = itemList }),
+            PreBuiltQuest = quest
         };
     }
 
@@ -842,35 +877,30 @@ internal static partial class Generators
         };
     }
 
-    /// Walks Data/Crops for seeds whose Seasons list excludes Winter.
-    private static List<ResolvedItem> ResolveNonWinterSeeds(QuestContext ctx)
+    /// Pulls Magic Shop Boat stock from all three Night Market days and dedupes by
+    /// qualified id, then keeps only Category -74 (Seeds) entries. Content Patcher
+    /// edits to these vanilla shop ids are picked up automatically since the
+    /// framework reads `Data/Shops` at call time.
+    private static readonly string[] MagicBoatShopIds =
+    {
+        "Festival_NightMarket_MagicBoat_Day1",
+        "Festival_NightMarket_MagicBoat_Day2",
+        "Festival_NightMarket_MagicBoat_Day3"
+    };
+
+    private static List<ResolvedItem> ResolveMagicBoatSeeds(QuestContext ctx)
     {
         var results = new List<ResolvedItem>();
-        try
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var shopId in MagicBoatShopIds)
         {
-            foreach (var (seedId, data) in ctx.Data.Crops)
+            foreach (var item in ctx.Items.GetShopItems(shopId))
             {
-                if (data.Seasons == null || data.Seasons.Count == 0)
+                if (item.Category != -74)
                     continue;
-                bool hasWinter = false;
-                foreach (var s in data.Seasons)
-                {
-                    if (string.Equals(s.ToString(), "winter", StringComparison.OrdinalIgnoreCase))
-                    {
-                        hasWinter = true;
-                        break;
-                    }
-                }
-                if (hasWinter)
-                    continue;
-                var seed = ctx.Items.TryResolveItem("(O)" + seedId);
-                if (seed != null)
-                    results.Add(seed);
+                if (seen.Add(item.QualifiedItemId))
+                    results.Add(item);
             }
-        }
-        catch (Exception ex)
-        {
-            ctx.Monitor.Log($"ResolveNonWinterSeeds: {ex.Message}", LogLevel.Warn);
         }
         return results;
     }
