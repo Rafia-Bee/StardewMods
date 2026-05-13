@@ -292,9 +292,9 @@
     "quest.reward.line.fairStarTokens": "{{npc}} will slip you {{amount}} extra star tokens to spend at the Fair",
 
     "quest.festival.gusFall.title": "Gus's Fair feast prep",
-    "quest.festival.gusFall.description": "I'm putting up the saloon's spread for the Fair and the prep list isn't small. Bring me {{count}} of each: {{ingredients}}. I'll fix you a sample plate, and I'll have a word with the grange judges about who really pulled the festival together.",
+    "quest.festival.gusFall.description": "I'm putting up the saloon's spread for the Fair and the prep list isn't small. Bring me {{ingredients}} when you can. I'll fix you a sample plate, and I'll talk Lewis into giving you a few extra tickets for that prize wheel of his.",
     "quest.festival.gusFall.step.deliver": "Bring {{count}} {{item}} to Gus.",
-    "quest.festival.gusFall.targetMessage": "Perfect, that's the lot. Try the {{dish}} - tell me honestly what you think. And don't worry about the judging, I'll make sure they hear who supplied half the menu.",
+    "quest.festival.gusFall.targetMessage": "Perfect, that's the lot. Try the {{dish}}, tell me honestly what you think. Tickets are yours too, save them for the prize wheel at the Fair.",
 
     "quest.festival.gusSummer.title": "Gus's Luau potluck prep",
     "quest.festival.gusSummer.description": "The Luau soup is more than I can prep alone this year. Bring me {{count}} of each: {{ingredients}}. Whatever you contribute makes it into the pot, and the governor's tongue won't forget where the flavour came from.",
