@@ -514,6 +514,17 @@
             "Generator": "EggFestivalDecor"
         },
         {
+            "Name": "Festival.LewisEasterEggs",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "DateLocked",
+                "Date": "spring 8",
+                "RepeatYearly": true,
+                "Available": { "NpcExists": "Lewis" }
+            },
+            "Generator": "LewisEasterEggs"
+        },
+        {
             "Name": "Festival.FairDecor",
             "Category": "Festival",
             "Trigger": {
