@@ -1556,7 +1556,7 @@ internal static partial class Generators
     /// every step (scaling on: rand(3, max(3, farming*2)); off: 3). color_white is left
     /// off the pool so plain cloth doesn't blanket-satisfy a step. Reward: all three
     /// authored Egg Basket variants (Cream, Pink, Rustic) at once.
-    private static QuestPosting? LewisEasterEggs(QuestContext ctx)
+    private static QuestPosting? DyeForEggs(QuestContext ctx)
     {
         const string giver = "Lewis";
 
@@ -1587,7 +1587,7 @@ internal static partial class Generators
                 Kind = AdventureStepKind.Ship,
                 Items = new List<string> { "$tag:color_" + color },
                 Count = countPer,
-                Description = ModEntry.I18n.Get("quest.festival.lewisEasterEggs.step", new { count = countPer, color = colorDisplay })
+                Description = ModEntry.I18n.Get("quest.festival.dyeForEggs.step", new { count = countPer, color = colorDisplay })
             });
         }
 
@@ -1610,8 +1610,8 @@ internal static partial class Generators
                 new ObjectReward("(O)" + ModEntry.EggBasketPinkId),
                 new ObjectReward("(O)" + ModEntry.EggBasketRusticId)
             },
-            Title = ModEntry.I18n.Get("quest.festival.lewisEasterEggs.title"),
-            Description = ModEntry.I18n.Get("quest.festival.lewisEasterEggs.description", new
+            Title = ModEntry.I18n.Get("quest.festival.dyeForEggs.title"),
+            Description = ModEntry.I18n.Get("quest.festival.dyeForEggs.description", new
             {
                 countPer,
                 colorCount = pickedColors.Count,
