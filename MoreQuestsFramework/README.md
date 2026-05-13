@@ -284,7 +284,7 @@ If your mod delivers items to NPCs outside the in-person flow, call `quest.OnIte
 
 **Pathoschild** for **[SMAPI](https://www.nexusmods.com/stardewvalley/mods/2400)**.
 
-**spacechase0** for **[Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098)**.
+**spacechase0** for **[SpaceCore](https://www.nexusmods.com/stardewvalley/mods/1348)** and **[Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098)**.
 
 **aedenthorn** for **[Help Wanted](https://www.nexusmods.com/stardewvalley/mods/14640)**, the inspiration for this framework's vanilla quest tuning, and the source the pad and pin sprites were retextured from.
 
