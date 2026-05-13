@@ -210,24 +210,24 @@
     "quest.festival.gusWinter.step.ship": "Ship {{count}} {{item}}.",
 
     "quest.farming.preservesJarRequest.title": "Help break in the preserves jar",
-    "quest.farming.preservesJarRequest.description": "Heard you finally got a Preserves Jar going. I've been wanting to stock the pantry but I never got around to making my own. Could you ship me {{qty}} pickles or jams (any kind, ship them through the bin and I'll grab them on my end)? No rush, the pantry has all year.",
+    "quest.farming.preservesJarRequest.description": "Heard you finally got some Preserves Jars going. I've been wanting to stock the pantry but I never got around to making my own. Could you ship {{qty}} pickles or jams? I'll take any kind.",
     "quest.farming.preservesJarRequest.objective": "Ship pickles or jams to the shipping bin.",
-    "quest.farming.preservesJarRequest.targetMessage": "Got the haul. Pantry's finally stocked, thank you.",
+    "quest.farming.preservesJarRequest.targetMessage": "Got the haul. I already sampled some and it's delicious, thank you!",
 
     "quest.farming.kegRequest.title": "Kegs are running, care to share?",
-    "quest.farming.kegRequest.description": "I heard you got a Keg working at the farm. I'd love to taste-test whatever's coming out of it. Could you ship me {{qty}} wines, juices, mead, beer, or pale ale (any combination)? Drop them in the shipping bin when you're ready, no deadline.",
-    "quest.farming.kegRequest.objective": "Ship fermented drinks to the shipping bin.",
-    "quest.farming.kegRequest.targetMessage": "Cheers, this'll keep me happy for weeks.",
+    "quest.farming.kegRequest.description": "I heard you got a Keg working at the farm. I'd love to taste-test whatever's coming out of it. Drop them in the shipping bin when you're ready, no rush.",
+    "quest.farming.kegRequest.objective": "Ship keg products to the shipping bin.",
+    "quest.farming.kegRequest.targetMessage": "Cheers, this'll keep me happy for the season.",
 
     "quest.farming.dehydratorRequest.title": "Got a Dehydrator going?",
-    "quest.farming.dehydratorRequest.description": "I noticed you picked up the Dehydrator recipe. Mind making me a batch? Ship {{qty}} dried mushrooms or dried fruit (raisins, etc.) through the bin whenever you can. No rush.",
-    "quest.farming.dehydratorRequest.objective": "Ship dried mushrooms or dried fruit to the shipping bin.",
-    "quest.farming.dehydratorRequest.targetMessage": "These will last forever. Thanks for the batch.",
+    "quest.farming.dehydratorRequest.description": "I noticed you picked up the Dehydrator recipe. Mind making me a batch of some dried mushrooms? I would also be happy with some raisins.",
+    "quest.farming.dehydratorRequest.objective": "Ship dried mushrooms or raisins through the shipping bin.",
+    "quest.farming.dehydratorRequest.targetMessage": "These will last forever. Thanks for the batch!",
 
     "quest.fishing.fishSmokerRequest.title": "Smoked fish for the pantry",
-    "quest.fishing.fishSmokerRequest.description": "Willy told me you have a Fish Smoker running now. I haven't had smoked fish in ages, would you mind shipping me {{qty}} (any kind of smoked fish)? Whenever you have time, no rush.",
+    "quest.fishing.fishSmokerRequest.description": "Willy told me you have a Fish Smoker running now. I haven't had smoked fish in ages, would you mind shipping me {{qty}}? Whenever you have time, no rush.",
     "quest.fishing.fishSmokerRequest.objective": "Ship smoked fish to the shipping bin.",
-    "quest.fishing.fishSmokerRequest.targetMessage": "Perfect. I'll be eating well for weeks.",
+    "quest.fishing.fishSmokerRequest.targetMessage": "Whew! These look amazing, thank you! I can't wait to try them with some pickles.",
 
     "quest.mining.skullCavernDeepDive.title": "Skull Cavern deep dive",
     "quest.mining.skullCavernDeepDive.description": "The ores found beyond the deeper floors of the Skull Cavern are apparently exceptional. The Guild would like to investigate further. Reach floor {{floor}} and ship {{count}} ore (any type) through your shipping bin. We'll be in touch the morning after the haul lands.",
@@ -243,9 +243,9 @@
     "mail.mining.deepDiveReward.skullCavern.body": "Dear farmer,^^Thanks for the ores. While smelting them, we got a few of these weird looking bars - {{count}} {{bar}} to be exact. Maybe you can find some use for them.^^  -Marlon",
 
     "quest.farming.pierresStockUp.title": "Pierre's stock-up",
-    "quest.farming.pierresStockUp.description": "Pierre's running low on a few seasonal staples for the store. He's asking for {{count}} each of {{items}}. Bring them by the shop when you can - he'll knock the price down on the seeds for those crops in return.",
+    "quest.farming.pierresStockUp.description": "I'm running low on a few seasonal staples for the store. I'd like to stock up on {{count}} each of {{items}}. Bring them by the shop when you can - I'll knock the price down on the seeds for those crops in return.",
     "quest.farming.pierresStockUp.step.deliver": "Bring {{count}} {{item}} to {{npc}}.",
-    "quest.farming.pierresStockUp.targetMessage": "Wonderful, that'll keep the shelves stocked. I've marked down the seeds for those crops as a thank-you.",
+    "quest.farming.pierresStockUp.targetMessage": "Wonderful, that'll keep the shelves stocked. I've marked down the seeds for those crops as a thank you.",
 
     "quest.farming.massiveHarvest.title": "Massive harvest request",
     "quest.farming.massiveHarvest.description": "{{npc}} from JojaMart here. Our usual supplier botched the {{item}} order, so we're stuck with empty crates and a manager breathing down our necks. We need {{qty}} {{item}} into the shipping bin by the deadline, anything you can spare. JojaMart will pay above market for the load.",
@@ -306,8 +306,9 @@
     "quest.mining.monsterParts.consequence.hated": "So you're {{npc}}'s {{item}} courier now. The creatures down there have names too, you know.",
 
     "quest.foraging.forageWithLinus.title": "Forage gifts for the valley",
-    "quest.foraging.forageWithLinus.description": "Linus says the best way to share what the woods give us is to give it back to the people. Find {{count}} folks in town and gift each of them a forage they'll actually love or like. He wants you to think about it before you hand anything over - bringing someone a daffodil they don't care for doesn't count.",
+    "quest.foraging.forageWithLinus.description": "The best way to appreciate what nature gives us is to give it back to the people. Find {{count}} folks in town and gift each of them a forage they will like.",
     "quest.foraging.forageWithLinus.step.gift": "Gift loved or liked forage to {{count}} different villagers.",
+
     "quest.reward.line.festivalBias.luau": "{{npc}} says he'll put in a good word with the governor at the Luau",
     "quest.reward.line.festivalBias.fair": "{{npc}} says your contribution will give the grange judges something to talk about",
     "quest.reward.line.fairStarTokens": "{{npc}} will slip you {{amount}} extra star tokens to spend at the Fair",
@@ -496,9 +497,9 @@
     "quest.animal.krobusVoidNote.targetMessage": "Yes. Yes, this one is healthy. Take this book. It will help you understand what walks beneath the valley.",
 
     "quest.animal.leahFarmPainting.title": "Leah wants to paint your animals",
-    "quest.animal.leahFarmPainting.description": "I've been itching to paint something with a bit more life in it than a still bowl of fruit. Bring one of your animals over to my place sometime soon, would you? I'll sketch them from a chair on the porch, and there's a little something on the easel for you in return.",
+    "quest.animal.leahFarmPainting.description": "I've been itching to paint something with a bit more life in it than my blueprints of sculptures. Bring one of your animals over to my place sometime soon, would you? I'd love some inspiration, and Marnie's cows refuse to stand still long enough for me to get a good look.",
     "quest.animal.leahFarmPainting.step.visit": "Walk into Leah's house with at least one animal following you.",
-    "quest.animal.leahFarmPainting.targetMessage": "Look at that face. Thank you. Take this for the house, it'll keep something living in the corner of every room.",
+    "quest.animal.leahFarmPainting.targetMessage": "My goodness, look at that face! Thank you.",
 
     "quest.animal.marnieLivestockShow.title": "Show your animals around town",
     "quest.animal.marnieLivestockShow.description": "That deluxe barn of yours looks ready for a proper showing. Take a couple of your animals on a walk into Pelican Town when the weather's nice. The neighbors love seeing healthy livestock around the square, and I'd love hearing back about it.",
@@ -506,9 +507,9 @@
     "quest.animal.marnieLivestockShow.targetMessage": "Look at them, parading around like champions. Everyone's been talking about it. I owe you for that.",
 
     "quest.animal.marnieChickenOffer.title": "Marnie's chicken offer",
-    "quest.animal.marnieChickenOffer.description": "Saw the new coop going up. If you bring me {{qty}} Mixed Seeds for the layers, I'll send a chicken home with you to fill it. Drop the seeds by whenever you have them.",
+    "quest.animal.marnieChickenOffer.description": "I heard you got a new coop! The ranch just got a fresh batch of baby chicks and I'll be glad to give one to you in exchange for some Mixed Seeds.",
     "quest.animal.marnieChickenOffer.objective": "Bring Mixed Seeds to Marnie.",
-    "quest.animal.marnieChickenOffer.targetMessage": "Perfect. Head back to the coop and your new layer will be settling in already.",
+    "quest.animal.marnieChickenOffer.targetMessage": "Thank you! Head back to the coop and your new friend should be settling in already.",
     "quest.animal.marnieChickenOffer.coopFullFallback": "All your coops are full. Marnie sent the chicken back with a refund instead.",
 
     "quest.animal.marnieCowOffer.title": "Marnie's cow offer",
