@@ -489,11 +489,12 @@ internal static partial class Generators
 
         int targetMagnitude = ctx.Config.DifficultyScaling ? Game1.random.Next(1, 4) : 1;
 
-        var pool = ModEntry.Framework?.GetCombatFoodPool() ?? Array.Empty<string>();
+        var fw = ModEntry.Framework;
+        var pool = fw?.GetCombatFoodPool() ?? Array.Empty<string>();
         var bucket = new List<string>();
         foreach (string id in pool)
         {
-            int? m = ModEntry.GetCombatFoodMagnitude(id);
+            int? m = fw?.GetCombatFoodMagnitude(id);
             if (m.HasValue && m.Value == targetMagnitude)
                 bucket.Add(id);
         }
@@ -505,7 +506,7 @@ internal static partial class Generators
             {
                 foreach (string id in pool)
                 {
-                    int? mag = ModEntry.GetCombatFoodMagnitude(id);
+                    int? mag = fw?.GetCombatFoodMagnitude(id);
                     if (mag.HasValue && mag.Value == m)
                         bucket.Add(id);
                 }

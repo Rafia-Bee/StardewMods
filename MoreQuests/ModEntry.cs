@@ -32,7 +32,6 @@ public sealed class ModEntry : Mod
         Config = helper.ReadConfig<ModConfig>();
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
-        helper.Events.GameLoop.SaveLoaded += OnSaveLoaded_ScanCombatFoods;
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.World.BuildingListChanged += OnBuildingListChanged;
     }
@@ -545,54 +544,6 @@ public sealed class ModEntry : Mod
             "long" => Config.QuestCooldownLongDays,
             _ => null
         };
-    }
-
-    /// Maps qualified item id to max(Attack, Defense) for combat foods. MonsterHunt uses
-    /// this to filter rewards by rolled target magnitude (+1/+2/+3). Foods added via the
-    /// legacy RegisterCombatFood API won't appear here unless the scan also picks them up.
-    private static readonly Dictionary<string, int> CombatFoodMagnitudes =
-        new(StringComparer.OrdinalIgnoreCase);
-
-    internal static int? GetCombatFoodMagnitude(string qualifiedItemId)
-        => CombatFoodMagnitudes.TryGetValue(qualifiedItemId, out int m) ? m : null;
-
-    /// Walks Data/Objects on save load and registers every edible whose buffs grant a
-    /// non-zero Attack or Defense. Magnitude = floor(max(Attack, Defense)). Re-runs on
-    /// each load so swapped content packs pick up the right pool.
-    private void OnSaveLoaded_ScanCombatFoods(object? sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
-    {
-        if (Framework == null)
-            return;
-
-        CombatFoodMagnitudes.Clear();
-
-        var data = Helper.GameContent.Load<Dictionary<string, StardewValley.GameData.Objects.ObjectData>>("Data/Objects");
-        int registered = 0;
-        foreach (var (rawId, obj) in data)
-        {
-            if (obj == null || obj.Edibility <= 0 || obj.Buffs == null)
-                continue;
-
-            int magnitude = 0;
-            foreach (var buff in obj.Buffs)
-            {
-                var attrs = buff?.CustomAttributes;
-                if (attrs == null)
-                    continue;
-                int level = (int)Math.Floor(Math.Max(attrs.Attack, attrs.Defense));
-                if (level > magnitude)
-                    magnitude = level;
-            }
-            if (magnitude <= 0)
-                continue;
-
-            string qualified = "(O)" + rawId;
-            CombatFoodMagnitudes[qualified] = magnitude;
-            Framework.RegisterCombatFood(qualified);
-            registered++;
-        }
-
-        Monitor.Log($"Scanned Data/Objects: registered {registered} combat-buff food(s).", LogLevel.Trace);
     }
 
     /// Routes mining/monster quests to either the guild board or the help-wanted board
