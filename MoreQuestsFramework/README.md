@@ -223,5 +223,5 @@ If your mod delivers items to NPCs outside the in-person flow, call `quest.OnIte
 - **ConcernedApe** for Stardew Valley.
 - **Pathoschild** for SMAPI.
 - **spacechase0** for Generic Mod Config Menu.
-- **aedenthorn** for [Help Wanted](https://www.nexusmods.com/stardewvalley/mods/9089) — the inspiration for this framework's vanilla quest tuning, and the source the pad and pin sprites were retextured from.
+- **aedenthorn** for [Help Wanted](https://www.nexusmods.com/stardewvalley/mods/14640) — the inspiration for this framework's vanilla quest tuning, and the source the pad and pin sprites were retextured from.
 - **The Stardew Valley modding community** for tuning feedback on the custom quests and for the modded-NPC info that seeds the framework's NPC dispatch pools.

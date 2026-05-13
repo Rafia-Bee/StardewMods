@@ -16,36 +16,63 @@ namespace MoreQuests.Quests;
 
 internal static partial class Generators
 {
-    /// Ship Battery Pack OR Coal (1 battery = 15 coal of "fuel"). Pearl reward arrives by
-    /// mail the next morning. Scaling on: 15 * 1.5 * MiningLevel. Off: 30 fuel.
+    /// Captain's letter arrives Winter 12 (DateLocked mail delivery). Ship Battery Packs
+    /// AND Coal as parallel Adventure steps, with the coal count locked to 5x the battery
+    /// count. Scaling on: batteries = 1 + Random.Next(1, max(1, mining/2)+1); off: 2
+    /// batteries. Coal is always 5*batteries. Deadline 3 days (active Winter 12-14,
+    /// auto-fails Winter 15 morning, the day the Night Market opens). Pearl reward
+    /// arrives by mail the morning after completion. Mail-only quest (no NPC turn-in),
+    /// so no `TargetMessage` is set.
     private static QuestPosting? SubmarineFuel(QuestContext ctx)
     {
-        const int batteryWeight = 15;
-        int totalFuel = ctx.Config.DifficultyScaling
-            ? Math.Max(15, (int)Math.Floor(15 * 1.5 * Game1.player.MiningLevel))
-            : 30;
+        int batteryQty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int upper = Math.Max(1, Game1.player.MiningLevel / 2);
+            batteryQty = 1 + Game1.random.Next(1, upper + 1);
+        }
+        else
+        {
+            batteryQty = 2;
+        }
+        int coalQty = 5 * batteryQty;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "ShipBattery",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)787" },
+                Count = batteryQty,
+                Description = ModEntry.I18n.Get("quest.festival.submarineFuel.step.battery", new { count = batteryQty })
+            },
+            new AdventureStepState
+            {
+                Name = "ShipCoal",
+                Kind = AdventureStepKind.Ship,
+                Items = new List<string> { "(O)382" },
+                Count = coalQty,
+                Description = ModEntry.I18n.Get("quest.festival.submarineFuel.step.coal", new { count = coalQty })
+            }
+        }, giver: "Captain");
 
         return new QuestPosting
         {
             Category = QuestCategory.Festival,
             Tier = DifficultyTier.Intermediate,
-            QuestType = BoardQuestType.Ship,
+            QuestType = BoardQuestType.Adventure,
             QuestGiver = "Captain",
-            ObjectiveItemId = "(O)787",
-            ObjectiveItemName = "Battery Pack",
-            ObjectiveItemWeight = batteryWeight,
-            AlternativeObjectiveItemIds = { "(O)382" },
-            AlternativeObjectiveItemWeights = { 1 },
-            ObjectiveQuantity = totalFuel,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            ObjectiveQuantity = 1,
+            DeadlineDays = 3,
             Rewards =
             {
                 new MailReward("RafiaBee.MoreQuests.SubmarineFuelReward", MailWhen.Tomorrow)
             },
             Title = ModEntry.I18n.Get("quest.festival.submarineFuel.title"),
-            Description = ModEntry.I18n.Get("quest.festival.submarineFuel.description"),
-            CurrentObjective = ModEntry.I18n.Get("quest.festival.submarineFuel.objective", new { batteries = Math.Max(1, (int)Math.Ceiling(totalFuel / (double)batteryWeight)), coal = totalFuel }),
-            TargetMessage = ModEntry.I18n.Get("quest.festival.submarineFuel.targetMessage")
+            Description = ModEntry.I18n.Get("quest.festival.submarineFuel.description", new { batteries = batteryQty, coal = coalQty }),
+            PreBuiltQuest = quest
         };
     }
 
