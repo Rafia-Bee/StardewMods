@@ -76,12 +76,8 @@ internal static partial class Generators
         return total;
     }
 
-    /// Counts farm animals whose `displayType` / animal type name contains the given
-    /// substring (case-insensitive). Used by Alex's Protein Shakes to scale the egg ask
-    /// by chicken count, where `kind = "Chicken"` matches White / Brown / Blue / Void
-    /// chickens and any modded chicken type. Walks both `location.animals` and the
-    /// indoor animals of every farm building in case the save spreads animals across
-    /// multiple coops/barns.
+    /// Counts farm animals whose type name contains the given substring (case-insensitive).
+    /// `kind = "Chicken"` matches every chicken variant including modded ones.
     private static int CountAnimalsByType(string kind)
     {
         if (string.IsNullOrEmpty(kind))
@@ -104,19 +100,8 @@ internal static partial class Generators
         return total;
     }
 
-    /// CSV row 14. Periodic ItemDelivery to Alex, scaled by chicken count. Asks for eggs
-    /// (vanilla `(O)176` white egg accepted; the framework's ItemDelivery quest matches
-    /// against either the requested id or any modded-egg alternative the resolver
-    /// surfaces). Reward = a random pick from the curated stamina/health pool — Energy
-    /// Tonic / Muscle Remedy / Life Elixir. The custom Protein Bar reward referenced in
-    /// the CSV is deferred to the asset drop (no spritework yet).
-
-    /// CSV row 14. Periodic ItemDelivery to Alex, scaled by chicken count. Asks for eggs
-    /// (vanilla `(O)176` white egg accepted; the framework's ItemDelivery quest matches
-    /// against either the requested id or any modded-egg alternative the resolver
-    /// surfaces). Reward = a random pick from the curated stamina/health pool — Energy
-    /// Tonic / Muscle Remedy / Life Elixir. The custom Protein Bar reward referenced in
-    /// the CSV is deferred to the asset drop (no spritework yet).
+    /// Alex's Protein Shakes reward pool: Energy Tonic / Muscle Remedy / Life Elixir.
+    /// Protein Bar is deferred until the spritework lands.
     private static readonly string[] AlexProteinRewardPool =
     {
         "(O)349", // Energy Tonic
@@ -177,16 +162,9 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 29. OneShot triggered when the player first holds a Dinosaur Egg `(O)107`
-    /// (framework `FirstHeldItem` predicate). Mail+ItemDelivery to Gunther for one
-    /// Dinosaur Egg. Reward = `GoldAdvancedBase` plus one Dinosaur Egg returned via
-    /// CSV row 29. OneShot triggered when the player first holds a Dinosaur Egg `(O)107`
-    /// (framework `FirstHeldItem` predicate). Mail+ItemDelivery to Gunther for one
-    /// Dinosaur Egg. Reward = `GoldAdvancedBase` + a Dinosaur Egg returned one quality
-    /// tier higher than the delivered one (regular → silver, silver → gold, gold →
-    /// iridium, iridium stays iridium). The quality bump is granted via a
-    /// `QuestCompleted` listener in `MoreQuests.ModEntry` that reads the framework's
-    /// `MoreQuestsItemDeliveryQuest.deliveredQuality` field.
+    /// OneShot on first-held Dinosaur Egg. ItemDelivery to Gunther for one Dinosaur Egg.
+    /// Reward: GoldAdvancedBase + a Dinosaur Egg one quality tier higher (iridium stays iridium).
+    /// The quality bump runs in MoreQuests.ModEntry via QuestCompleted reading deliveredQuality.
     private static QuestPosting? GuntherDinosaurStudy(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Gunther") == null)
@@ -217,11 +195,9 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 39. OneShot triggered when the player first holds a Void Egg `(O)305`,
-    /// gated on Krobus heart-1. Mail+ItemDelivery for one Void Egg to Krobus. Reward =
-    /// FriendshipMid for Krobus + a Monster Compendium book (`(O)Book_Void`) as a
-    /// placeholder for the CSV's Void Chicken Statue (asset deferred until Rafia
-    /// produces the sprite).
+    /// OneShot on first-held Void Egg, gated to Krobus heart-1. ItemDelivery for one
+    /// Void Egg. Reward: FriendshipMid + the Void Monster Compendium (placeholder for the
+    /// Void Chicken Statue until the sprite lands).
     private static QuestPosting? KrobusVoidNote(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Krobus") == null)
@@ -252,12 +228,10 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 40. Periodic mail-delivered Adventure quest gated on LivestockFollowsYou
-    /// being installed, single-player, and 2+ hearts with Leah. AdventureQuest holds a
-    /// single `Visit` step on LeahHouse with a `$follower-count:1` gate — the quest only
-    /// closes when the player walks into Leah's house with at least one animal in tow.
-    /// Reward is a random in-game `Data/Furniture` houseplant entry (CSV's bespoke animal
-    /// painting deferred until Rafia ships the sprite pack).
+    /// Periodic AdventureQuest gated on LFY + single-player + Leah heart-2. One Visit step
+    /// on LeahHouse with `$follower-count:1`. Closes when the player walks into Leah's house
+    /// with at least one animal in tow. Reward is a random Data/Furniture houseplant (the
+    /// bespoke animal painting is deferred until the sprite pack ships).
     private static QuestPosting? LeahFarmPainting(QuestContext ctx)
     {
         if (Game1.IsMultiplayer)
@@ -308,11 +282,8 @@ internal static partial class Generators
         };
     }
 
-    /// Returns a randomly-chosen `(F)<id>` furniture id whose name in `Data/Furniture`
-    /// starts with "House Plant". Scans the live asset dictionary at posting time so
-    /// modded houseplants surface automatically alongside vanilla ones. Null when no
-    /// houseplant rows are present (vanilla ships ~15, so realistically only triggers
-    /// in a heavily-pared content config).
+    /// Random `(F)&lt;id&gt;` furniture id whose Data/Furniture name starts with "House Plant".
+    /// Scans live so modded houseplants surface automatically.
     private static string? PickRandomHouseplantFurnitureId(QuestContext ctx)
     {
         try
@@ -338,12 +309,9 @@ internal static partial class Generators
         }
     }
 
-    /// CSV row 46. OneShot (post-Deluxe-Barn upgrade) mail-delivered Adventure quest.
-    /// Marnie asks the player to walk their animals into Town to show them off. Gates:
-    /// LivestockFollowsYou installed, single-player, Marnie present, season != Winter,
-    /// and at least 2 animals on the farm. Completion = entering Town with at least 2
-    /// animals in tow (`$follower-count:2` Visit-step gate). Reward = FriendshipLarge
-    /// for Marnie.
+    /// OneShot post-Deluxe-Barn AdventureQuest. Marnie asks the player to walk animals into
+    /// Town. Gated on LFY + single-player + Marnie present + not winter + 2+ animals on the
+    /// farm. Completion: enter Town with `$follower-count:2`. Reward: FriendshipLarge.
     private static QuestPosting? MarnieLivestockShow(QuestContext ctx)
     {
         if (Game1.IsMultiplayer)
@@ -391,12 +359,10 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 43. BuildingBuilt(Coop)+1 day. Mail+ItemDelivery to Marnie asking for a
-    /// stack of Mixed Seeds (per CSV's "15 mixed seeds" wording, which the wiki resolves
-    /// to the vanilla `(O)770` item). Reward = a free White Chicken adopted directly into
-    /// the player's coop on completion (see `MoreQuests.ModEntry.GrantFreeChicken`) plus a
-    /// FriendshipBasic bump for Marnie. The `MarnieChickenOfferRebate` config still ships
-    /// as a fallback paid out when the player has no coop slot free.
+    /// BuildingBuilt(Coop)+1 day. ItemDelivery to Marnie for Mixed Seeds (vanilla (O)770).
+    /// Reward: a free White Chicken adopted into the player's coop on completion (see
+    /// GrantFreeChicken) plus FriendshipBasic. MarnieChickenOfferRebate is the fallback
+    /// when no coop slot is free.
     private static QuestPosting? MarnieChickenOffer(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Marnie") == null)
@@ -425,12 +391,10 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 44. BuildingBuilt(Barn)+1 day. Mail+ItemDelivery whose ask flips based on
-    /// whether LivestockFollowsYou is installed: with LFY, Marnie wants the player to show
-    /// up with a Grazing Bell (queried from LFY's API); without LFY, she asks for a Milk
-    /// Pail. Reward = a free Dairy Cow adopted directly into the player's barn on
-    /// completion (see `MoreQuests.ModEntry.GrantFreeCow`). `MarnieCowOfferRebate` stays
-    /// as the fallback paid when every barn is full at completion time.
+    /// BuildingBuilt(Barn)+1 day. ItemDelivery whose ask flips on LFY: with LFY, Marnie wants
+    /// a Grazing Bell (queried via LFY's API); without LFY, a Milk Pail. Reward: a free Dairy
+    /// Cow adopted into the player's barn (see GrantFreeCow). MarnieCowOfferRebate is the
+    /// fallback when every barn is full.
     private static QuestPosting? MarnieCowOffer(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Marnie") == null)
@@ -471,13 +435,10 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 45. OneShot on `chickenEggsLayed >= 1`. Mail+Ship 10 eggs through the bin
-    /// with `AlternativeObjectiveItemIds` populated from a live scan of `Game1.objectData`
-    /// (every edible-egg entry: Category -5, Edibility != -300) so brown / large / Void /
-    /// Golden / Ostrich / Duck / modded eggs all count toward the haul. Reward =
-    /// `GoldBasicBase` plus the Mayonnaise Machine — as a `RecipeReward` when the player
-    /// doesn't know the recipe yet, or as a direct `(BC)24` `ObjectReward` when they do
-    /// (so the quest doesn't silently no-op the reward on a re-roll save).
+    /// OneShot on first egg laid. Ship quest. Alternatives populated from a live scan of
+    /// Game1.objectData (every Category -5 edible egg) so brown/large/Void/Golden/Ostrich/Duck
+    /// and modded eggs all count. Reward: GoldBasicBase + Mayonnaise Machine (RecipeReward
+    /// if unknown, direct (BC)24 ObjectReward if the player already learned it).
     private static QuestPosting? MarnieEggRequest(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Marnie") == null)
@@ -523,11 +484,8 @@ internal static partial class Generators
         return posting;
     }
 
-    /// Yields every `(O)<id>` Object whose `Data/Objects` row has Category -5 (egg) and
-    /// `Edibility != -300` (inedible — excludes the Dinosaur Egg). Scans the live
-    /// `Game1.objectData` so modded eggs registered via content-pack edits surface
-    /// alongside vanilla ones. Used by `MarnieEggRequest` to widen its Ship-bin matcher
-    /// beyond the vanilla white egg.
+    /// Every `(O)&lt;id&gt;` whose Data/Objects row has Category -5 (egg) and Edibility != -300
+    /// (excludes Dinosaur Egg). Lets MarnieEggRequest match modded eggs too.
     private static IEnumerable<string> EnumerateEdibleEggIds()
     {
         const int eggCategory = -5;
@@ -542,13 +500,9 @@ internal static partial class Generators
         }
     }
 
-    /// CSV row 47. Mail+Ship 10 milk through the bin. Now widened beyond vanilla cow
-    /// milk: `AlternativeObjectiveItemIds` is populated from a live scan of
-    /// `Game1.farmAnimalData` for every animal whose `HarvestTool == "Milk Pail"` — picks
-    /// up vanilla cow + goat milks plus any modded milking animal (Buffalo / Llama /
-    /// content-pack additions). Reward = `GoldBasicBase` plus the Cheese Press —
-    /// `RecipeReward` when not known, falls back to a direct `(BC)16` `ObjectReward`
-    /// when the player already learned the recipe (Farming 6 / Mr. Qi etc).
+    /// Ship 10 milk. Alternatives populated from Game1.farmAnimalData for every animal whose
+    /// HarvestTool is "Milk Pail" (vanilla cow/goat plus modded Buffalo/Llama/etc). Reward:
+    /// GoldBasicBase + Cheese Press (RecipeReward if unknown, (BC)16 ObjectReward if known).
     private static QuestPosting? MarnieMilkRequest(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Marnie") == null)
@@ -594,10 +548,8 @@ internal static partial class Generators
         return posting;
     }
 
-    /// Yields every produce id (qualified `(O)<id>`) from every `Data/FarmAnimals` entry
-    /// whose `HarvestTool == "Milk Pail"`. Picks up vanilla cow / goat milks (both
-    /// regular and Large variants via `DeluxeProduceItemIds`) plus modded milking
-    /// animals registered via content-pack edits.
+    /// Every produce id from Data/FarmAnimals entries with HarvestTool "Milk Pail".
+    /// Includes regular and Large variants via DeluxeProduceItemIds, plus modded milking animals.
     private static IEnumerable<string> EnumerateMilkProduceIds()
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -626,24 +578,18 @@ internal static partial class Generators
         }
     }
 
-    /// CSV row 64. Two JSON entries (one for Coop, one for Barn) gate this generator on
-    /// `BuildingBuilt` + `not:BuildingExists Silo`, so the offer fires the first time the
-    /// player builds either an animal house without already owning a silo. Mail+ItemDelivery
-    /// where the player can satisfy the posting with EITHER 100 Stone, 10 Clay, or 5 Copper
-    /// Bars (the actual silo recipe inputs). Reward = a free Silo *credit* on Robin's
-    /// carpenter menu — `ModEntry.GrantFreeSilo` flips a player ModData flag that the
-    /// `Data/Buildings` asset edit reads to zero the Silo entry's BuildCost and
-    /// BuildMaterials. The player still chooses when and where to place the silo through
-    /// Robin's shop; the credit is cleared on `BuildingListChanged` when a Silo is built.
+    /// Fires the first time the player builds a Coop or Barn without already owning a Silo.
+    /// ItemDelivery satisfied by EITHER 100 Stone, 10 Clay, or 5 Copper Bars (the silo recipe
+    /// inputs). Reward: a free Silo credit on Robin's carpenter menu via GrantFreeSilo's
+    /// ModData flag, which the Data/Buildings asset edit reads to zero the Silo's BuildCost
+    /// and BuildMaterials. Cleared on BuildingListChanged once a Silo is built.
     private static QuestPosting? RobinSiloOffer(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Robin") == null)
             return null;
 
-        // Bail if the player has somehow already built a silo between trigger eval and
-        // this generator run (e.g. they bought a silo same day as the coop). The trigger's
-        // Available block already gates on `not:BuildingExists Silo` but generators are
-        // robust to this edge case for safety.
+        // Bail if a silo got built between trigger eval and now (e.g. silo bought same day
+        // as the coop). Trigger's Available already gates on `not:BuildingExists Silo`.
         var farm = Game1.getFarm();
         if (farm != null)
         {
@@ -680,12 +626,10 @@ internal static partial class Generators
         return posting;
     }
 
-    // -------------------- Phase 9.5g: Multi-step / misc --------------------
+    // -------------------- Multi-step / misc --------------------
 
-    /// CSV row 15. Daily-board ItemDeliveryQuest. Caroline asks for off-season edible
-    /// forage or flowers she loves or likes (no herbs) so she can brew a new batch of
-    /// tea. Off-season pool: Y1 = seasons that have already passed in the current year
-    /// (so Y1 spring skips), Y2+ = every season except the current one. Quantity scales
-    /// with foraging level when DifficultyScaling is on; flat 5 when off. Reward =
-    /// `FriendshipMid` to Caroline + Tea Leaves equal to twice the requested quantity.
+    /// Caroline asks for off-season edible forage or flowers she loves or likes (no herbs)
+    /// for a new batch of tea. Off-season pool: Y1 = seasons already passed (Y1 spring skips),
+    /// Y2+ = every season except the current one. Qty scales with foraging level when
+    /// DifficultyScaling is on, flat 5 when off. Reward: FriendshipMid + 2x Tea Leaves.
 }

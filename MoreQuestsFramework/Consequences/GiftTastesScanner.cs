@@ -70,7 +70,7 @@ public sealed class GiftTastesScanner
         foreach (var (npc, line) in raw)
         {
             // Vanilla also stores universal taste rows under keys like "Universal_Love";
-            // skip them — we want per-NPC indexes only.
+            // skip them, we want per-NPC indexes only.
             if (npc.StartsWith("Universal_", StringComparison.OrdinalIgnoreCase))
                 continue;
             built[npc] = ParseRow(line);

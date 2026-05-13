@@ -8,11 +8,10 @@ using StardewValley.Quests;
 
 namespace MoreQuests.Quests;
 
-/// "Collect items and report" quest. Player gathers `requiredCount` of `itemId` and
-/// completes the quest by speaking to (or right-clicking with the item on)
-/// `talkToNpc` while carrying that many of the item; the items are not consumed.
-/// Counter is checked from inventory at speak time, not tracked over time. Items
-/// lost (sold, gifted) before reporting must be re-collected.
+/// "Collect items and report" quest. Player gathers requiredCount of itemId and completes
+/// by speaking to (or right-clicking with the item on) talkToNpc while carrying that many.
+/// Items aren't consumed. Counter is checked from inventory at speak time, not tracked over
+/// time. Items sold or gifted before reporting must be re-collected.
 [XmlType("Mods_RafiaBee_MoreQuests_CollectAndReportQuest")]
 public sealed class CollectAndReportQuest : Quest, IRewardedQuest
 {
@@ -55,9 +54,9 @@ public sealed class CollectAndReportQuest : Quest, IRewardedQuest
         return true;
     }
 
-    /// Suppress the gift action when the player right-clicks the report NPC while holding
-    /// the requested item. Without this, vanilla would consume one item as a gift even
-    /// though the quest only requires the items to be in inventory.
+    /// Suppress gifting when the player right-clicks the report NPC while holding the
+    /// requested item. Without this, vanilla consumes one as a gift even though we only
+    /// need them in inventory.
     public override bool OnItemOfferedToNpc(NPC npc, Item item, bool probe = false)
     {
         if (!IsReportableTo(npc))

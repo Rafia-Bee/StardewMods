@@ -7,7 +7,7 @@ namespace MoreQuestsFramework.State;
 /// `Helper.Data.WriteSaveData("MoreQuestsFrameworkState", state)` per plan.md §9.
 ///
 /// All collections are keyed by the registered quest definition id (the JSON
-/// `Name` verbatim — auto-prefixing by ownerUniqueId is deferred to Phase 10).
+/// `Name` verbatim, auto-prefixing by ownerUniqueId is deferred to Phase 10).
 /// Empty/zero values are valid defaults, so a save written before any Phase 6
 /// trigger fires deserialises into a clean state.
 public sealed class FrameworkState
@@ -102,7 +102,7 @@ public sealed class FrameworkState
 public sealed class ActiveFestivalBias
 {
     /// `"Luau"` or `"Fair"`. Stringly-typed so the enum can move without breaking save
-    /// compat — the readers tolerate unknown values by skipping them.
+    /// compat, the readers tolerate unknown values by skipping them.
     public string Festival { get; set; } = "";
 
     /// How strong the bias is. Luau treats this as tier-bump steps (clamped 0..5);

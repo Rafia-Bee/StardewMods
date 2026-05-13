@@ -20,7 +20,7 @@ namespace MoreQuestsFramework.Patches;
 ///
 /// These patches surface every eligible order on the board, paginated 2 per page, capped
 /// at `Config.SpecialOrdersBoardPages` pages (1 = vanilla behaviour, no patches active).
-/// The accept flow remains entirely vanilla — we only swap `leftOrder` / `rightOrder` to
+/// The accept flow remains entirely vanilla, we only swap `leftOrder` / `rightOrder` to
 /// the current page's slice and add prev/next chrome. Existing modded SpecialOrders flow
 /// through the same `availableSpecialOrders` list and appear naturally in the rotation;
 /// no orders are evicted, no slots are stolen.

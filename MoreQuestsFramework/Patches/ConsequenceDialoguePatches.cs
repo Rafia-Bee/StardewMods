@@ -12,7 +12,7 @@ namespace MoreQuestsFramework.Patches;
 /// the normal dialogue, producing a visible flash where the normal line shows for a
 /// frame and then gets replaced by the consequence line on the next tick.
 ///
-/// Patch is fully gated per §8.1 — when no consequence lines are queued, the prefix
+/// Patch is fully gated per §8.1, when no consequence lines are queued, the prefix
 /// returns immediately after one int compare. The watcher stays as a backup for any
 /// dialogue path that doesn't go through `checkAction` (e.g. NPC-initiated greetings
 /// or scripted events that call `Game1.drawDialogue` directly), so a queued line is
@@ -34,7 +34,7 @@ internal static class ConsequenceDialoguePatches
     }
 
     /// `__instance` is the NPC the player just clicked. Returns void so vanilla
-    /// continues to its own `checkAction` body — we just slip a dialogue onto the top
+    /// continues to its own `checkAction` body, we just slip a dialogue onto the top
     /// of `currentDialogue` first, which vanilla will then pop + draw normally.
     /// `who` is the farmer; `l` is the location. Neither is needed here but the
     /// prefix signature has to match Harmony's matching rules.
@@ -52,7 +52,7 @@ internal static class ConsequenceDialoguePatches
         int today = Game1.Date?.TotalDays ?? 0;
         string npcName = __instance.Name;
 
-        // Per-day clamp — at most one consequence line per NPC per day. Without this,
+        // Per-day clamp, at most one consequence line per NPC per day. Without this,
         // a player who skips ahead in time then talks to a chained-Tier3 NPC gets every
         // queued line back-to-back, which breaks immersion.
         if (ActiveState.LastConsequencePoppedDay.TryGetValue(npcName, out int lastDay) && lastDay >= today)
@@ -62,7 +62,7 @@ internal static class ConsequenceDialoguePatches
         // narrative is: line 1 on day 1, line 2 on day 2, line 3 on day 3. If the
         // player skips a day's chat (e.g. cheats forward, or just doesn't visit the
         // NPC), the eligible queue ends up with multiple entries for the same NPC.
-        // Pop the entry with the GREATEST `EarliestFireDay` that's still <= today —
+        // Pop the entry with the GREATEST `EarliestFireDay` that's still <= today,
         // i.e. the most-recent narrative beat, not the oldest. Drop any earlier
         // eligible entries for the same NPC silently so the chain doesn't re-surface
         // out of order on subsequent chats.
@@ -86,7 +86,7 @@ internal static class ConsequenceDialoguePatches
 
         var chosen = queue[bestIdx];
         // Walk back-to-front so RemoveAt indices stay valid. Drop every earlier-day
-        // eligible entry for this NPC — they're stale narrative beats the player
+        // eligible entry for this NPC, they're stale narrative beats the player
         // can't catch up on without time-travel.
         int dropped = 0;
         for (int i = queue.Count - 1; i >= 0; i--)
@@ -128,7 +128,7 @@ internal static class ConsequenceDialoguePatches
         if (!string.IsNullOrEmpty(entry.Line))
         {
             // Portrait code goes at the END of the dialogue per SDV's parser
-            // convention — placing it at the start only renders for one frame before
+            // convention, placing it at the start only renders for one frame before
             // the page swap wipes it.
             string text = string.IsNullOrEmpty(entry.Portrait)
                 ? entry.Line

@@ -24,7 +24,7 @@ public static class RewardApplier
     /// Set by `ModEntry.OnSaveLoaded` to a callback that writes the granted ShopDiscount
     /// into per-save framework state. Static so generators / tests can fire individual
     /// rewards via `Apply(...)` without threading a save-state reference through every
-    /// completion path. Null when no save is loaded — `ApplyOne` no-ops the discount in
+    /// completion path. Null when no save is loaded, `ApplyOne` no-ops the discount in
     /// that case (test / generator authoring scenarios won't have a save to write to).
     public static System.Action<ShopDiscountReward>? OnShopDiscountGranted { get; set; }
 
@@ -43,7 +43,7 @@ public static class RewardApplier
 
     /// Applies every reward in the encoded list to the active player. Designed for
     /// `Quest.questComplete()` overrides on our custom subclasses. Consequence-spec
-    /// lines (`Consequence|...`) are ignored here — they're forwarded to the
+    /// lines (`Consequence|...`) are ignored here, they're forwarded to the
     /// `ConsequenceEngine` separately via `FireEncodedConsequence`.
     public static void ApplyEncoded(IEnumerable<string> encoded)
     {
@@ -124,7 +124,7 @@ public static class RewardApplier
             lines.Add(translation.Get("quest.reward.line.money", new { npc = giver, gold })
                 .Default($"{giver} will give you {gold}g in return").ToString());
 
-        // Collapse the friendship lines when there are 3+ named NPCs — listing every
+        // Collapse the friendship lines when there are 3+ named NPCs, listing every
         // loved-by villager spoils the consequence pool (the summary doubles as a tip
         // sheet for who's about to react). For 1-2 NPCs we keep the named lines so
         // small-cast rewards (single FriendshipReward, e.g. Forage with Linus) read

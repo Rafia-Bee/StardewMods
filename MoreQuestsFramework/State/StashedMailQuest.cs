@@ -4,7 +4,7 @@ namespace MoreQuestsFramework.State;
 
 /// Serializable mirror of a pending mail-quest posting. Persisted in
 /// `FrameworkState.PendingMailDeliveries` so a mail letter sitting in the
-/// player's mailbox at save time still resolves correctly on reload — the
+/// player's mailbox at save time still resolves correctly on reload, the
 /// `%item quest <mailKey> 1 %%` token in the letter body looks up its prepared
 /// Quest by mailKey, and our Harmony prefix on `Quest.getQuestFromId` returns
 /// the subclass we built from these fields.
@@ -13,7 +13,7 @@ namespace MoreQuestsFramework.State;
 /// subclasses with their own NetFields can't be reconstructed from a flat DTO
 /// alone). Phase 6 mail quests all flow through `QuestFactory.Build`, which
 /// returns the framework's own `MoreQuestsItemDeliveryQuest` /
-/// `MoreQuestsFishingQuest` / `SlayMonsterQuest` — none rely on PreBuilt.
+/// `MoreQuestsFishingQuest` / `SlayMonsterQuest`, none rely on PreBuilt.
 public sealed class StashedMailQuest
 {
     public string MailKey { get; set; } = "";
@@ -29,7 +29,7 @@ public sealed class StashedMailQuest
     public string ObjectiveItemId { get; set; } = "";
     public string ObjectiveItemName { get; set; } = "";
     /// OR-alternative ids accepted in place of `ObjectiveItemId`. Round-trips so a mail
-    /// letter for "Submarine Fuel — battery OR coal" still resolves correctly on reload.
+    /// letter for "Submarine Fuel, battery OR coal" still resolves correctly on reload.
     public List<string> AlternativeObjectiveItemIds { get; set; } = new();
     /// Weight applied to the primary item per stack matched. Defaults to 1.
     public int ObjectiveItemWeight { get; set; } = 1;
@@ -44,7 +44,7 @@ public sealed class StashedMailQuest
     public string TargetMessage { get; set; } = "";
 
     /// Each reward is encoded via `RewardCodec.Encode` so the persisted record
-    /// stays text-only — no polymorphic serializer required.
+    /// stays text-only, no polymorphic serializer required.
     public List<string> EncodedRewards { get; set; } = new();
 
     /// Encoded consequence line (`Consequence|<base64-json>`) when the original posting

@@ -62,7 +62,7 @@ public sealed class QuestRegistry
     /// `QuestPipeline` instead of `def.Source` at posting time.
     ///
     /// Allowed at any point during the registration window AND after freeze, since the
-    /// override is metadata — it doesn't add or remove definitions.
+    /// override is metadata, it doesn't add or remove definitions.
     public void OverrideSource(string definitionId, TriggerSource source)
     {
         if (string.IsNullOrEmpty(definitionId))

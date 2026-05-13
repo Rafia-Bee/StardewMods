@@ -1,8 +1,7 @@
 namespace MoreQuests;
 
-/// Per-quest content settings for the More Quests content mod. Engine-wide tunables
-/// (questsPerDay, friendship/gold bases, deadlines, reward multipliers, vanilla quest
-/// weights) live in the framework's own config under `Mods/MoreQuestsFramework/config.json`.
+/// Per-quest content settings. Engine-wide tunables (questsPerDay, friendship/gold bases,
+/// deadlines, reward multipliers, vanilla weights) live in the framework's own config.
 public sealed class ModConfig
 {
     // ----- Master toggles -----
@@ -20,26 +19,17 @@ public sealed class ModConfig
     public bool SeasonalQuestsEnabled { get; set; } = true;
     public bool SecretGiftHintEnabled { get; set; } = true;
 
-    /// When on (default), an Adventurer's Guild board renders at the Mine entrance and
-    /// hosts the mining + monster quests (Mines / Skull Cavern Deep Dive, Basic Slime
-    /// Clearing, Vanilla monster eradication); the help-wanted board only sees Bar
-    /// Delivery from the mining category. When off, the guild board is hidden entirely
-    /// and every guild-tagged quest falls back to the help-wanted board so the content
-    /// stays reachable. Per-quest weights still gate individual quests on top of this.
+    /// When on, an Adventurer's Guild board renders at the Mine entrance and hosts the
+    /// mining/monster quests. When off, those quests fall back to the help-wanted board.
     public bool EnableAdventurersGuildBoard { get; set; } = true;
 
-    /// Tile X of the Adventurer's Guild board's anchor (the player walks here to interact).
-    /// Default places the anchor on a reachable Mine entrance tile beneath the wall art;
-    /// tunable from GMCM so players can move the board after installing other Mine-modifying mods.
+    /// Tile X of the guild board's anchor (where the player walks to interact).
     public int AdventureBoardTileX { get; set; } = 20;
-    /// Tile Y of the Adventurer's Guild board's anchor.
+    /// Tile Y of the guild board's anchor.
     public int AdventureBoardTileY { get; set; } = 4;
-    /// Pixel X offset applied to the in-world board sprite (and the indicator). 1 tile = 64px.
-    /// Lets players park the sprite art on a nearby wall while keeping the click target at
-    /// a walkable spot. Negative values move left.
+    /// Pixel X offset for the in-world sprite. 1 tile = 64px. Negative values move left.
     public int AdventureBoardDrawOffsetX { get; set; } = 0;
-    /// Pixel Y offset applied to the in-world board sprite. Negative values move up. Default
-    /// lifts the sprite onto the Mine wall above the anchor tile.
+    /// Pixel Y offset for the in-world sprite. Negative values move up.
     public int AdventureBoardDrawOffsetY { get; set; } = -197;
 
     // ----- Shop discounts -----
@@ -49,15 +39,13 @@ public sealed class ModConfig
     public int SeedShopDiscountDurationDays { get; set; } = 3;
 
     // ----- Shared cooldown buckets -----
-    /// In-game days a quest in the "short" cooldown bucket waits before re-rolling. Quests
-    /// in `assets/quests.json` opt in via `Trigger.CooldownTier: "Short"` (the framework
-    /// resolves the tier name to this value at trigger evaluation time, so GMCM edits apply
-    /// without re-rolling the day). One-shot / building / mail-periodic triggers are not in
-    /// the bucket system and keep their per-quest `CooldownDays`.
+    /// Days a "short" bucket quest waits before re-rolling. Quests opt in via
+    /// `Trigger.CooldownTier: "Short"` in quests.json. One-shot / building / mail-periodic
+    /// triggers don't use the bucket system and keep their per-quest CooldownDays.
     public int QuestCooldownShortDays { get; set; } = 2;
-    /// In-game days a quest in the "medium" cooldown bucket waits before re-rolling.
+    /// Days a "medium" bucket quest waits before re-rolling.
     public int QuestCooldownMediumDays { get; set; } = 7;
-    /// In-game days a quest in the "long" cooldown bucket waits before re-rolling.
+    /// Days a "long" bucket quest waits before re-rolling.
     public int QuestCooldownLongDays { get; set; } = 14;
 
     // ----- Quantity tunables -----
@@ -66,9 +54,8 @@ public sealed class ModConfig
     public int FestivalFishQty { get; set; } = 5;
     public int CropMassiveQty { get; set; } = 50;
 
-    /// Shared knob for "how many distinct item variations does an NPC request" across
-    /// quests that ask for a mixed bag (e.g. Pierre's Stock-Up's seasonal-crop spread).
-    /// Clamped to [2, 5] at read time. Default 3 matches the prior hardcoded value.
+    /// How many distinct item variations a "mixed bag" quest asks for (e.g. Pierre's
+    /// seasonal-crop spread). Clamped to [2, 5] at read time.
     public int RequestVariationCount { get; set; } = 3;
 
     // ----- Skull Cavern depth cap for Deep Dive quest -----
@@ -77,145 +64,110 @@ public sealed class ModConfig
     // ----- Saloon weekly special / Grand Feast tunables -----
     /// Recipes with at least this many distinct ingredient lines qualify for the Complex pool.
     public int WeeklySpecialComplexMinIngredients { get; set; } = 4;
-    // ----- Phase 9.5a: Wrapping Paper (mod-gated on Si.ExtraCraftingMaterials) -----
-    /// Qualified item id for the Paper item from Si's Extra Crafting Materials. Override
-    /// here if the source mod renames the item between versions.
+
+    // ----- Wrapping Paper (gated on Si.ExtraCraftingMaterials) -----
+    /// Paper item id from Si's Extra Crafting Materials. Override if the source mod renames it.
     public string WrappingPaperPaperId { get; set; } = "Si.ECM_Paper";
-    /// Qualified item id for the Tape item from Si's Extra Crafting Materials.
+    /// Tape item id from Si's Extra Crafting Materials.
     public string WrappingPaperTapeId { get; set; } = "Si.ECM_Tape";
-    /// Qualified item id for the Book of Stars reward item from Si's Extra Crafting Materials.
+    /// Book of Stars reward item id from Si's Extra Crafting Materials.
     public string WrappingPaperBookOfStarsId { get; set; } = "Si.ECM_BookOfStars";
 
-    // ----- Phase 9d: Gus's festival feasts -----
-    /// Number of distinct ingredient kinds Gus's Fall + Summer feasts ask for.
+    // ----- Gus's festival feasts -----
+    /// Number of distinct ingredients Gus's Fall + Summer feasts ask for.
     public int GusFestivalFeastIngredientCount { get; set; } = 3;
-    /// Tier bump applied to the governor's Luau reaction (clamped to 5 = "loved it"; 6 is
-    /// the Mayor's Shorts gag and is never overwritten). 1 = one tier up.
+    /// Tier bump applied to the governor's Luau reaction. Clamped to 5 ("loved it"); 6 is
+    /// the Mayor's Shorts gag and is never overwritten.
     public int FestivalBiasLuauMagnitude { get; set; } = 1;
-    /// Flat bonus added to the player's Stardew Valley Fair grange score before Lewis
-    /// judges. The pass-the-test threshold is 60 / podium tiers at 75 + 90, so 15 nudges
-    /// most submissions one podium step up without forcing a guaranteed first. Only
-    /// applied when `FairFestivalRewardKind` is `GrangeScoreBonus`.
+    /// Flat bonus added to the grange score before Lewis judges. Thresholds are 60/75/90,
+    /// so 15 nudges most submissions one podium step up without guaranteeing first.
+    /// Only used when FairFestivalRewardKind is GrangeScoreBonus.
     public int FestivalBiasFairMagnitude { get; set; } = 15;
 
-    /// Picks how the Fair decor supply quest pays out. `GrangeScoreBonus` adds
-    /// `FestivalBiasFairMagnitude` flat points to the player's grange display score
-    /// before Lewis judges (default, preserves the prior behaviour). `StarTokens` skips
-    /// the grange bias and instead injects `FairStarTokensAmount` extra star tokens
-    /// into `Game1.player.festivalScore` once the Fair is live, so the player can
-    /// spend them at the Fair shop. Values: GrangeScoreBonus, StarTokens.
+    /// How the Fair decor supply quest pays out. GrangeScoreBonus adds flat points to the
+    /// grange display score. StarTokens skips the bias and injects extra star tokens into
+    /// festivalScore once the Fair is live. Values: GrangeScoreBonus, StarTokens.
     public string FairFestivalRewardKind { get; set; } = "GrangeScoreBonus";
 
-    /// Bonus star tokens granted at the start of the Fair when `FairFestivalRewardKind`
-    /// is set to `StarTokens`. Default 100 is one mid-priced shop item. Ignored when
-    /// the reward kind is the grange bonus.
+    /// Bonus star tokens granted at the Fair when FairFestivalRewardKind is StarTokens.
+    /// Default 100 is one mid-priced shop item. Ignored for grange bonus.
     public int FairStarTokensAmount { get; set; } = 100;
 
-    // ----- Phase 9.5d: Festival decor-supply quests -----
-    /// Comma-separated list of East Scarp NPC names that get a `FriendshipMultiHeart` bump
-    /// on completing the East Scarp Spirit's Eve festival quest (CSV row 21). Curated to
-    /// well-known mod NPCs; users can extend or override. Friendships to NPCs the save
-    /// doesn't have silently no-op, so over-listing is safe.
+    // ----- Festival decor-supply quests -----
+    /// East Scarp NPCs (comma-separated) that get a FriendshipMultiHeart bump on completing
+    /// the East Scarp Spirit's Eve quest. Missing NPCs silently no-op so over-listing is safe.
     public string EastScarpFestivalNpcs { get; set; } = "Sonny, Rosa, Eli, Andy, Bonnie, Lily";
-    /// Comma-separated list of Ridgeside Village NPC names that get a `FriendshipMultiHeart`
-    /// bump on completing the Ridgeside Gathering quest (CSV row 25). Same conventions as
-    /// `EastScarpFestivalNpcs`.
+    /// Ridgeside Village NPCs (comma-separated) that get a FriendshipMultiHeart bump on
+    /// completing the Ridgeside Gathering quest.
     public string RidgesideFestivalNpcs { get; set; } = "Pika, Lenny, Mr. Aguar, Pam, Blair, Kimpoi, Hugo";
 
-    /// Qualified item id for Tub o' Flowers, the RSV Gathering quest's primary ship item.
-    /// Defaults to vanilla Stardew's Tub o' Flowers `(BC)108`. RSV ships its own variant
-    /// via a different id; override here if your save uses the RSV-namespaced item.
+    /// Tub o' Flowers item id (RSV Gathering's primary ship item). Default is vanilla (BC)108.
     public string RsvTubOFlowersId { get; set; } = "(BC)108";
-    /// Crafting recipe name for Tub o' Flowers. Granted via `Player.craftingRecipes.Add`
-    /// at quest-accept if the player doesn't already know it. Defaults to vanilla "Tub o' Flowers".
+    /// Tub o' Flowers crafting recipe name. Granted on quest-accept if the player doesn't know it.
     public string RsvTubOFlowersRecipeName { get; set; } = "Tub o' Flowers";
 
-    // ----- Phase 9.5e: Fishing-track tunables -----
-    /// Probability (0 to 100) that the Rainy Day Catch mail lands on a day where tomorrow
-    /// is forecast as rain. The quest no longer has a daily-board variant; this knob is
-    /// the only spawn gate apart from the Fishing 3 skill requirement. 100 = always mails
-    /// when rain is forecast (legacy behavior), 0 disables the quest entirely.
+    // ----- Fishing-track tunables -----
+    /// Chance (0 to 100) that Rainy Day Catch mail lands when tomorrow is forecast rain.
+    /// 100 = always when rain is forecast, 0 = disables the quest.
     public int RainyDayCatchMailChancePercent { get; set; } = 100;
 
-    /// Trout Derby (Rainbow Platter) recipe granted to Gus / vanilla saloon-chef saves.
-    /// Vanilla cooking recipes that use Rainbow Trout: "Trout Soup". Authors can override
-    /// to "Maki Roll" or any other recipe name. RecipeKind defaults to Cooking.
+    /// Trout Derby recipe for Gus / vanilla saloon. Vanilla Rainbow Trout recipe is Trout Soup.
     public string TroutDerbyRecipeGus { get; set; } = "Trout Soup";
-    /// Trout Derby recipe for Pika (Ridgeside Village). RSV recipe; the framework grants
-    /// via `RecipeReward` so authors can swap if a content pack renames the recipe.
+    /// Trout Derby recipe for Pika (RSV).
     public string TroutDerbyRecipePika { get; set; } = "Highland Ice Cream";
-    /// Trout Derby recipe for Celestine (Visit Mount Vapius). VMV recipe.
+    /// Trout Derby recipe for Celestine (Visit Mount Vapius).
     public string TroutDerbyRecipeCelestine { get; set; } = "Toast and Trout";
-    /// Trout Derby recipe for Rosa (East Scarp). Falls back to vanilla Trout Soup unless
-    /// East Scarp ships a trout-derby-specific dish — override here when one lands.
+    /// Trout Derby recipe for Rosa (East Scarp). Falls back to vanilla Trout Soup.
     public string TroutDerbyRecipeRosa { get; set; } = "Trout Soup";
-    /// Qualified item id for the Gus Trout Derby reward dish, used by `ShopDiscountReward`
-    /// to discount the dish in the Saloon shop. Defaults to vanilla Trout Soup `(O)219`.
-    /// Pair with `TroutDerbyRecipeGus`.
+    /// Gus Trout Derby dish id. Used by ShopDiscountReward to discount the dish in the Saloon shop.
     public string TroutDerbyDishGus { get; set; } = "(O)219";
 
-    /// SquidFest recipe for Gus / vanilla saloon. Vanilla recipes using Squid: "Squid Ink
-    /// Ravioli" (uses Squid Ink) or "Fried Calamari".
+    /// SquidFest recipe for Gus / vanilla saloon.
     public string SquidFestRecipeGus { get; set; } = "Fried Calamari";
-    /// SquidFest recipe for Pika (RSV). RSV recipe.
+    /// SquidFest recipe for Pika (RSV).
     public string SquidFestRecipePika { get; set; } = "Ridgeside Shaketini";
     /// SquidFest recipe for Celestine (VMV).
     public string SquidFestRecipeCelestine { get; set; } = "Squid Ink Ravioli";
     /// SquidFest recipe for Rosa (East Scarp).
     public string SquidFestRecipeRosa { get; set; } = "Fried Calamari";
-    /// Qualified item id for the Gus SquidFest reward dish, used by `ShopDiscountReward`
-    /// to discount the dish in the Saloon shop. Defaults to Fried Calamari `(O)227`.
+    /// Gus SquidFest dish id, used by ShopDiscountReward.
     public string SquidFestDishGus { get; set; } = "(O)227";
 
-    // ----- Phase 9.5f: One-shot triggered animal/farm quests -----
+    // ----- One-shot triggered animal/farm quests -----
 
-    /// Alex's Protein Shakes (CSV row 14): how many eggs to ask for per chicken on the
-    /// farm, plus a flat base. Final qty = `AlexProteinShakesBaseQty` + chickens *
-    /// `AlexProteinShakesPerChicken`, clamped between Base and 30. Set per-chicken to 0
-    /// to drop the scaling and always ask for exactly Base eggs.
+    /// Alex's Protein Shakes: final qty = Base + chickens * PerChicken, clamped to [Base, 30].
+    /// Set PerChicken to 0 to always ask for exactly Base eggs.
     public int AlexProteinShakesBaseQty { get; set; } = 5;
     public int AlexProteinShakesPerChicken { get; set; } = 1;
 
-    /// Gold rebate for Marnie's Chicken Offer (CSV row 43). Vanilla white chicken price
-    /// is 800g; the quest pays the player back this amount on completion to simulate
-    /// "get a deal on a chicken" without patching the animal-shop menu (deferred — the
-    /// framework doesn't currently hook `PurchaseAnimalsMenu`).
+    /// Gold rebate paid on Marnie's Chicken Offer completion. Vanilla white chicken is 800g.
+    /// Done as a rebate since the framework doesn't currently hook PurchaseAnimalsMenu.
     public int MarnieChickenOfferRebate { get; set; } = 800;
-    /// How many seeds the chicken-offer quest asks the player to deliver. The quest picks
-    /// one current-season seed type and asks for this many.
+    /// Seed delivery qty for the chicken-offer quest. Picks one current-season seed.
     public int MarnieChickenOfferSeedQty { get; set; } = 15;
 
-    /// Gold rebate for Marnie's Cow Offer (CSV row 44). Vanilla cow price is 1500g; same
-    /// rebate-as-proxy approach as the Chicken Offer.
+    /// Gold rebate for Marnie's Cow Offer (vanilla cow is 1500g).
     public int MarnieCowOfferRebate { get; set; } = 1500;
-    /// How many Hay the cow-offer quest asks the player to deliver. Vanilla hay sells for
-    /// 50g, so 50 hay is a meaningful (but not punishing) ask paired with the cow rebate.
+    /// Hay qty Marnie's Cow Offer asks for. Hay sells for 50g, so 50 hay is meaningful but not punishing.
     public int MarnieCowOfferHayQty { get; set; } = 50;
 
-    /// How many eggs Marnie's Egg Request (CSV row 45) asks the player to ship. Defaults
-    /// to 10 per the CSV. Quest grants the Mayonnaise Machine recipe as part of the reward.
+    /// Egg qty for Marnie's Egg Request. Quest grants the Mayonnaise Machine recipe.
     public int MarnieEggRequestQty { get; set; } = 10;
-    /// How many milk units Marnie's Milk Request (CSV row 47) asks the player to ship.
-    /// Defaults to 10 per the CSV. Quest grants the Cheese Press recipe as part of the reward.
+    /// Milk qty for Marnie's Milk Request. Quest grants the Cheese Press recipe.
     public int MarnieMilkRequestQty { get; set; } = 10;
 
-    /// Stone quantity Robin asks for in her silo offer letter (CSV row 64). The player can
-    /// satisfy the posting with any one of stone, clay, or copper bars; see
-    /// `RobinSiloOfferClayQty` and `RobinSiloOfferCopperBarQty` for the alternatives.
-    /// Defaults match the vanilla silo recipe (100 stone OR 10 clay OR 5 copper bars).
+    /// Stone qty Robin asks for in her silo offer. Player can satisfy with stone, clay, or
+    /// copper bars (vanilla silo recipe: 100 stone OR 10 clay OR 5 copper bars).
     public int RobinSiloOfferStoneQty { get; set; } = 100;
     public int RobinSiloOfferClayQty { get; set; } = 10;
     public int RobinSiloOfferCopperBarQty { get; set; } = 5;
 
-    // ----- Phase 9.5g: Multi-step / misc quest tunables -----
+    // ----- Multi-step / misc quest tunables -----
 
-    /// Spring Cleaning (CSV row 69). Spring-only weed clear (anywhere except the farm,
-    /// `'*', '!Farm'` target set). `SpringCleaningCount` is the number of weeds to clear
-    /// per posting. The old per-location config was dropped in 9.5g when the targeting
-    /// switched to wildcard to avoid "this location has no weeds today" dead-ends.
+    /// Spring Cleaning weed-clear count. Targets `'*', '!Farm'` (wildcard avoids
+    /// "this location has no weeds today" dead-ends).
     public int SpringCleaningCount { get; set; } = 8;
 
-    /// Check on Friends (CSV row 16). How many distinct NPCs the player must talk to
-    /// before reporting back to the giver. Defaults to 3.
+    /// Check on Friends: how many distinct NPCs to talk to before reporting back.
     public int CheckOnFriendsCount { get; set; } = 3;
 }

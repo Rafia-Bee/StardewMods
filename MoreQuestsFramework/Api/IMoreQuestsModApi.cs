@@ -45,7 +45,7 @@ public interface IMoreQuestsModApi
     void LoadQuestsFromMod(IModHelper helper, string relativePath, Func<string, int?> cooldownTierResolver);
 
     /// Adds an NPC to the named dispatch role. Optional `requiredModUniqueId` filters
-    /// the entry out unless that mod is loaded — used to scope modded NPCs to their
+    /// the entry out unless that mod is loaded, used to scope modded NPCs to their
     /// host mod. Authors can add new roles by passing any string they like.
     void RegisterDispatchNpc(string role, string npcName, string? requiredModUniqueId = null);
 
@@ -70,7 +70,7 @@ public interface IMoreQuestsModApi
     /// Re-routes an already-registered quest to a different `TriggerSource`. The override
     /// is consulted by the pipeline instead of the definition's declared `Source`, so a
     /// quest authored as `CustomBoard` can be flipped to `DailyBoard` (or vice versa) at
-    /// runtime without re-registering. Useful for player-toggleable routing — e.g. a
+    /// runtime without re-registering. Useful for player-toggleable routing, e.g. a
     /// content mod's "enable Adventurer's Guild board" config flag flipping the guild's
     /// quest pool back to the help-wanted board when off so the content stays reachable.
     /// No-ops with a warning if no quest with that id is registered.
@@ -81,7 +81,7 @@ public interface IMoreQuestsModApi
     /// cadence, or gold-loss formula than the framework defaults. The framework's seed
     /// handlers are registered before `RegistrationOpen` fires, so a consumer-mod call
     /// during registration cleanly takes precedence. Engine availability follows the
-    /// save lifecycle — calls before the first save load are buffered and applied to
+    /// save lifecycle, calls before the first save load are buffered and applied to
     /// each fresh engine when it stands up.
     void RegisterConsequenceTier(ConsequenceTier tier, IConsequenceHandler handler);
 }

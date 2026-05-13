@@ -11,7 +11,7 @@ namespace MoreQuestsFramework.Api;
 
 /// SMAPI's `GetApi`/`GetApi&lt;T&gt;` paths reject API instances whose concrete type isn't
 /// `Type.IsPublic`. `IsPublic` returns `false` for nested types regardless of their
-/// declared accessibility — only top-level types qualify. Keep this class top-level.
+/// declared accessibility, only top-level types qualify. Keep this class top-level.
 public sealed class MoreQuestsApi : IMoreQuestsApi
 {
     private readonly QuestRegistry _registry;

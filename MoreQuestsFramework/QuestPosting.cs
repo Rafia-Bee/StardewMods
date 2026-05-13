@@ -27,7 +27,7 @@ public enum BoardQuestType
     Fishing,
     SlayMonster,
     Socialize,
-    /// Single-objective shipping quest — player ships N of an item (or any of a set of
+    /// Single-objective shipping quest, player ships N of an item (or any of a set of
     /// alternatives) into the farm shipping bin. Counted at `DayEnding` by scanning
     /// `Game1.getFarm().getShippingBin(player)` and matching item ids; the items are not
     /// removed by the framework, vanilla still sells them as normal.
@@ -65,7 +65,7 @@ public sealed class QuestPosting
     /// items (e.g. Submarine Fuel accepts a Battery Pack OR Coal). Empty means single-item.
     public List<string> AlternativeObjectiveItemIds { get; set; } = new();
     /// Per-stack credit toward `ObjectiveQuantity` when the primary item is matched. Defaults
-    /// to 1 (count items 1:1). Higher values let one item count as N units of progress —
+    /// to 1 (count items 1:1). Higher values let one item count as N units of progress,
     /// Submarine Fuel uses weight 15 on Battery Pack so 1 battery = 15 coal of fuel toward
     /// the same shipping bar.
     public int ObjectiveItemWeight { get; set; } = 1;

@@ -33,7 +33,7 @@ public sealed class RecipeIngredient
     public ResolvedItem Item { get; set; } = null!;
     public int Count { get; set; }
     /// When non-zero, the ingredient line was a vanilla category sentinel (negative id in
-    /// `Data/CookingRecipes`) rather than a literal item id — `Item` then carries the
+    /// `Data/CookingRecipes`) rather than a literal item id, `Item` then carries the
     /// per-category display name and a synthetic placeholder `QualifiedItemId` so step
     /// builders can still feed `AdventureStep.Items` with `$category:<CategoryId>`.
     public int CategoryId { get; set; }
@@ -214,7 +214,7 @@ public sealed class ItemResolver
     /// All recipes from `Data/CookingRecipes` whose ingredient list resolves cleanly into
     /// either literal items or `$category:N` tokens (negative ids in vanilla recipes encode
     /// "any item with category N"). Unlike `GetKnownRecipes`, this ignores
-    /// `Game1.player.cookingRecipes` — the saloon's menu doesn't depend on what the player
+    /// `Game1.player.cookingRecipes`, the saloon's menu doesn't depend on what the player
     /// already knows, so quests that pull from the saloon's dish pool need the full list.
     /// Recipes with a non-resolvable ingredient (corrupt data, bad modded entries) are
     /// silently dropped so the caller never has to check.

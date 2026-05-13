@@ -7,7 +7,7 @@ namespace MoreQuestsFramework.Patches;
 
 /// Harmony postfix on `Quest.GetObjectiveDescriptions` so the journal can render an
 /// `AdventureQuest`'s currently-active steps as parallel bullets. Vanilla's method is
-/// non-virtual (see Quest.cs:655 — `public List<string> GetObjectiveDescriptions()`), so a
+/// non-virtual (see Quest.cs:655, `public List<string> GetObjectiveDescriptions()`), so a
 /// subclass override won't reach the journal call site at QuestLog.cs:462.
 ///
 /// Patch is gated on `__instance is AdventureQuest`: every other Quest takes one type

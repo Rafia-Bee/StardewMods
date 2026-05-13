@@ -63,13 +63,12 @@ internal static partial class Generators
         };
     }
 
-    /// Prismatic Bar comes from `Si.ExtraCraftingMaterials`. Only used as a bar pool
-    /// entry when the mod is loaded AND the player has reached the Ginger Island tier.
+    /// Prismatic Bar from Si.ExtraCraftingMaterials. Only used when the mod is loaded AND
+    /// the player has reached Ginger Island.
     private const string PrismaticBarItemId = "Si.ECM_PrismaticBar";
 
-    /// Geodes + Artifact Trove that can roll as a side reward alongside the gold payout.
-    /// Picking one type and stacking `qty / 2` of it keeps the reward tidy in the mail
-    /// (a single object stack rather than a hand-of-mixed-geodes).
+    /// Geodes + Artifact Trove side-reward pool. One type stacked qty/2 keeps the reward
+    /// tidy (single stack instead of a mixed-geode hand).
     private static readonly string[] BarDeliveryGeodeRewards =
     {
         "(O)535", // Geode
@@ -79,13 +78,10 @@ internal static partial class Generators
         "(O)275"  // Artifact Trove
     };
 
-    /// CSV row 2. Daily-board bar order routed through the blacksmith pool (Clint
-    /// vanilla; MarlonFay SVE, Eli ED, Mariam VMV, Lola/Jio/Daia RSV). Bar tier expands
-    /// with mine depth: Copper from the start, Iron at floor 40, Gold at 80, Iridium
-    /// once Skull Cavern is unlocked, and Radioactive + (mod-gated) Prismatic once the
-    /// player is on Ginger Island. Quantity scales with Mining when DifficultyScaling
-    /// is on. Reward = `GoldIntermediateBase` + `qty/2` of one random geode (Geode /
-    /// Frozen / Magma / Omni / Artifact Trove). Skill gate: Mining 3.
+    /// Bar order from the blacksmith pool. Bar tier expands with mine depth: Copper from
+    /// the start, Iron at 40, Gold at 80, Iridium past Skull Cavern, Radioactive (and
+    /// optional Prismatic) on Ginger Island. Reward: GoldIntermediateBase + qty/2 of one
+    /// random geode. Mining 3 gate.
     private static QuestPosting? BarDelivery(QuestContext ctx)
     {
         if (Game1.player.MiningLevel < 3)
@@ -148,10 +144,8 @@ internal static partial class Generators
         };
     }
 
-    /// Vanilla ore + stone ids accepted by Mines Deep Dive (CSV row 78). Stone is
-    /// included per the CSV row's "(any type of ore)/stone" wording — Marlon's not picky
-    /// about what fills the crate, the bar reward is fixed by quest difficulty rather
-    /// than the player's specific haul.
+    /// Ores + stone accepted by Mines Deep Dive. Marlon isn't picky about what fills the
+    /// crate; the bar reward is fixed by quest difficulty.
     private static readonly string[] AnyOreOrStone =
     {
         "(O)378", // Copper Ore
@@ -161,9 +155,8 @@ internal static partial class Generators
         "(O)390"  // Stone
     };
 
-    /// Vanilla ore-only ids accepted by Skull Cavern Deep Dive (CSV row 67). Stone is
-    /// intentionally excluded — the quest's pitch is investigating "exceptional" ores
-    /// found beyond the target floor, so plain stone doesn't fit the framing.
+    /// Ores accepted by Skull Cavern Deep Dive. Stone is excluded since the pitch is
+    /// "exceptional ores beyond the target floor".
     private static readonly string[] AnyOreNoStone =
     {
         "(O)378", // Copper Ore
@@ -172,21 +165,13 @@ internal static partial class Generators
         "(O)386" // Iridium Ore
     };
 
-    /// CSV row 67. Adventurer's Guild board posting (falls back to the help-wanted
-    /// daily board when the guild board is disabled, via `ApplyGuildBoardRouting`).
-    /// Two-step Adventure: ReachLevel a target floor in Skull Cavern → ship an
-    /// ore-only haul through the farm shipping bin. Floor target rolls in
-    /// `[10, SkullCavernMaxLevel]`; haul size scales with Mining skill when
-    /// DifficultyScaling is on. Reward = a parameterised mail-delivered Radioactive
-    /// Bar stack the morning after completion (no gold component: the player already
-    /// realises the shipping value of the ores). The mail body's flavour treats the
-    /// bars as an unexpected smelting byproduct from the "exceptional" deep-floor
-    /// ores rather than a flat payout.
+    /// Guild-board two-step Adventure (falls back to help-wanted if the guild board is off):
+    /// ReachLevel target floor in Skull Cavern, then ship an ore haul. Floor target rolls in
+    /// [10, SkullCavernMaxLevel]. Reward: a parameterised mail-delivered Radioactive Bar stack
+    /// the next morning (no gold; the player already realises the shipping value).
     private static QuestPosting? SkullCavernDeepDive(QuestContext ctx)
     {
-        // Gate on Skull Cavern access. Vanilla unlocks the Cavern after the first iridium
-        // ore drops the player past floor 120; reflecting that in availability keeps the
-        // quest from posting on saves where Skull Cavern is still locked.
+        // Skull Cavern unlocks once the player passes floor 120.
         if (Game1.player.deepestMineLevel <= 120)
             return null;
 
@@ -206,10 +191,9 @@ internal static partial class Generators
 
         int bars = Math.Max(2, haul / 5);
 
-        // Marlon is the in-character "giver" the journal references, but no NPC turn-in
-        // happens — the Ship step closes the quest on its own at DayEnding. The bar
-        // reward arrives the morning after via a parameterised mail key so the player
-        // doesn't get items mysteriously appearing in inventory while sleeping.
+        // Marlon is the in-character giver but there's no NPC turn-in. The Ship step closes
+        // the quest at DayEnding. Bar reward arrives by mail the next morning so items don't
+        // mysteriously appear in inventory while sleeping.
         const string giver = "Marlon";
         const string barId = "910"; // Radioactive Bar
         string letterKey = BuildDeepDiveRewardLetterKey(barId, bars);
@@ -255,13 +239,10 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 78. Sibling of `SkullCavernDeepDive` for the regular Mines (capped at 120).
-    /// With DifficultyScaling on the ceiling is the full 120; off, it tracks the player's
-    /// deepest Mines progress so the quest never demands floors they haven't already
-    /// proven they can reach. Bar reward type matches the floor band the quest targets,
-    /// using the same depth thresholds as `BarDelivery` (Copper <40, Iron 40-79, Gold
-    /// 80-119, Iridium 120). Ship step at DayEnding closes the quest without requiring
-    /// an NPC turn-in (vanilla Marlon isn't a giftable villager).
+    /// Sibling of SkullCavernDeepDive for the regular Mines (cap 120). Scaling on: ceiling
+    /// is 120. Scaling off: tracks the player's deepest Mines progress. Bar reward matches
+    /// the floor band (same thresholds as BarDelivery: Copper &lt;40, Iron 40-79, Gold 80-119,
+    /// Iridium 120). Ship step closes at DayEnding (Marlon isn't giftable).
     private static QuestPosting? MinesDeepDive(QuestContext ctx)
     {
         int deepest = Math.Min(120, Game1.player.deepestMineLevel);
@@ -339,40 +320,20 @@ internal static partial class Generators
         };
     }
 
-    /// Builds a parameterised reward letter key that bakes the bar id + count into the
-    /// key itself. The content mod's `Data/mail` asset edit parses the suffix on the fly,
-    /// so neither the framework nor save state needs to track per-quest reward bodies.
-    /// Format: `RafiaBee.MoreQuests.DeepDiveReward.{barId}.{count}` — both numeric so the
-    /// `%item object {barId} {count} %%` mail token slots in directly.
-
-    /// Builds a parameterised reward letter key that bakes the bar id + count into the
-    /// key itself. The content mod's `Data/mail` asset edit parses the suffix on the fly,
-    /// so neither the framework nor save state needs to track per-quest reward bodies.
-    /// Format: `RafiaBee.MoreQuests.DeepDiveReward.{barId}.{count}` — both numeric so the
-    /// `%item object {barId} {count} %%` mail token slots in directly.
+    /// Bakes the bar id + count into the mail key. The content mod's Data/mail asset edit
+    /// parses the suffix at read time so nothing needs to be persisted per-quest. Format:
+    /// `RafiaBee.MoreQuests.DeepDiveReward.{barId}.{count}` (slots into `%item object {barId} {count} %%`).
     internal static string BuildDeepDiveRewardLetterKey(string barId, int count)
         => $"RafiaBee.MoreQuests.DeepDiveReward.{barId}.{count}";
 
-    /// CSV row 54. Daily-board bulk-crop delivery for Pierre's General Store. Picks 3
-    /// distinct seasonal crops; player delivers a per-crop quantity that scales with
-    /// Farming skill. Reward = `ShopDiscount` on Pierre's `SeedShop` for the matching
-    /// seed ids, lasting `SeedShopDiscountDurationDays` in-game days at
-    /// `SeedShopDiscountPercent` off.
-
-    /// 1 heart of friendship in vanilla = 250 points. Used as the threshold for
-    /// whether an "underground" NPC reacts to the monster-parts trade: at zero
-    /// hearts a freshly-met villager is too distant for the consequence dialog to
-    /// land without breaking immersion, so we gate on a real relationship existing.
+    /// 1 heart of friendship = 250 points. Threshold for whether an "underground" NPC reacts
+    /// to the monster-parts trade. At zero hearts a freshly-met villager feels too distant.
     private const int FriendshipPointsPerHeart = 250;
 
-    /// CSV row 53. Daily-board item delivery. Routed through the `CombatNpcs` pool
-    /// (Wizard / Lance / MarlonFay / Mr. Aguar / Jio / Daia / Eli / Mariam) and
-    /// asks for a Combat-scaled quantity of one rare monster drop. Reward = one
-    /// random gem or artifact, pulled live from `Data/Objects` (Category -2 or
-    /// Type "Arch"), with a stack count sized so the headline value clears
-    /// `GoldIntermediateBase`. Tier 1 negative consequence routed via `Source:
-    /// Static` to Krobus / Dwarf / Sen — but only those at >= 1 heart, and the
-    /// quest itself refuses to post if none of the three qualify.
+    /// Item delivery from a CombatNpcs-pool giver for a Combat-scaled qty of one rare
+    /// monster drop. Reward: one random gem/artifact from Data/Objects, stack sized so the
+    /// headline value clears GoldIntermediateBase. Tier 1 negative consequence on Krobus /
+    /// Dwarf / Sen at 1+ hearts. Quest refuses to post when none of the three qualify.
     private static QuestPosting? MonsterParts(QuestContext ctx)
     {
         if (Game1.player.CombatLevel < 2)
@@ -382,16 +343,13 @@ internal static partial class Generators
         if (giver == null)
             return null;
 
-        // Quest refuses to post unless at least one underground NPC is at >= 1
-        // heart. Re-checked below to build the consequence target list (giver
-        // excluded), so the two stay in sync.
+        // Quest refuses to post unless at least one underground NPC is at 1+ hearts.
         var underground = ResolveUndergroundTargets(exclude: giver);
         if (underground.Count == 0)
             return null;
 
-        // TODO: vanilla monster drops only. Modded drops aren't enumerable without
-        // per-mod data, so the pool stays vanilla. Add modded drops manually here
-        // when extending mod-pack coverage (e.g. RSV / ESV / SVE custom monsters).
+        // TODO: vanilla drops only. Modded drops aren't enumerable without per-mod data;
+        // extend manually when adding RSV/ESV/SVE monster coverage.
         var drop = MonsterDropPool[Game1.random.Next(MonsterDropPool.Length)];
         var resolved = ctx.Items.TryResolveItem(drop.Id);
         if (resolved == null)
@@ -446,10 +404,8 @@ internal static partial class Generators
         };
     }
 
-    /// Walks `Data/Objects` once and returns a single random (id, count) reward
-    /// where `id` is either a gem (Category `Object.GemCategory == -2`) or an
-    /// artifact (Type `Arch`), and `count` is sized so `count * sellPrice` clears
-    /// `GoldIntermediateBase`. Picks up modded gems and artifacts automatically.
+    /// Random gem or artifact from Data/Objects, stacked so count*sellPrice clears
+    /// GoldIntermediateBase. Picks up modded gems/artifacts automatically.
     private static (string QualifiedItemId, int Count)? PickGemOrArtifactReward(QuestContext ctx)
     {
         var data = ctx.Helper.GameContent.Load<Dictionary<string, StardewValley.GameData.Objects.ObjectData>>("Data/Objects");
@@ -480,13 +436,8 @@ internal static partial class Generators
         return null;
     }
 
-    /// Vanilla "rare" monster drops. Modded drops aren't enumerable without per-mod data,
-    /// so the pool stays vanilla — the framework's `Data/NPCGiftTastes` consequence path
-    /// still picks up modded NPCs who happen to like or hate any of these.
-
-    /// Vanilla "rare" monster drops. Modded drops aren't enumerable without per-mod data,
-    /// so the pool stays vanilla — the framework's `Data/NPCGiftTastes` consequence path
-    /// still picks up modded NPCs who happen to like or hate any of these.
+    /// Vanilla "rare" monster drops. Modded drops aren't enumerable without per-mod data.
+    /// The NPCGiftTastes consequence path still picks up modded NPCs reacting to these.
     private static readonly (string Id, string Name)[] MonsterDropPool =
     {
         ("(O)767", "Bat Wing"),
@@ -496,15 +447,8 @@ internal static partial class Generators
     };
 
 
-    /// Pufferfish carries the Nausea status effect when eaten — the only vanilla "fish"
-    /// any reasonable cook would call poisonous. Filtered out of the Seafood Night pool
-    /// so the CSV's "edible non-poisonous" framing holds. Modded fish stay in as long as
-    /// their Edibility is positive.
-
-    /// Krobus + Dwarf are vanilla; Sen ships with East Scarp. Filters to met NPCs
-    /// at >= 1 heart of friendship so the consequence dialog reads as a reaction
-    /// from someone the player actually knows. Met-at-0-hearts and never-met both
-    /// drop out; missing characters (mod not loaded) also drop out.
+    /// Krobus + Dwarf are vanilla, Sen ships with East Scarp. Filters to met NPCs at 1+ hearts
+    /// so the consequence reads as a reaction from someone the player knows.
     private static List<string> ResolveUndergroundTargets(string exclude)
     {
         string[] candidates = { "Krobus", "Dwarf", "Sen" };
@@ -524,22 +468,10 @@ internal static partial class Generators
         return targets;
     }
 
-    // -------------------- Phase 9d: Forage with Linus --------------------
-
-    /// CSV row 27. Daily-board, Linus giver, single-step `GiftUniqueNpcs` objective: gift a
-    /// forage-category item that the recipient loves or likes to 5 distinct NPCs. Reward is
-    /// `FriendshipLarge` with Linus only — no consequence engine wiring needed since the
-    /// gift recipients already get the standard friendship boost from vanilla's gift flow.
-    /// Quest gates on Linus being met (no point posting a "deliver gifts on Linus's behalf"
-    /// quest before the player has met Linus).
-
-    /// CSV row 52. Daily-board SlayMonster (any monster). Routed through the
-    /// `CombatNpcs` dispatch pool (Wizard / Lance / MarlonFay / Mr. Aguar / Jio /
-    /// Daia / Eli / Mariam, mod-gated). Reward = `GoldIntermediateBase` + one combat
-    /// food sized to the rolled magnitude bucket: +1 when DifficultyScaling is off,
-    /// or a random +1 / +2 / +3 when it's on. The combat-food pool is auto-scanned
-    /// at save load from every edible item in `Data/Objects` whose `Buffs` grant a
-    /// non-zero Attack or Defense; magnitude is `max(Attack, Defense)`.
+    /// SlayMonster (any monster) from a CombatNpcs-pool giver. Reward: GoldIntermediateBase
+    /// + one combat food sized to the rolled magnitude bucket (+1 when scaling off, random
+    /// +1/+2/+3 when on). Combat-food pool is scanned at save load from Data/Objects
+    /// edibles whose buffs grant non-zero Attack or Defense.
     private static QuestPosting? MonsterHunt(QuestContext ctx)
     {
         if (Game1.player.deepestMineLevel < 1)
@@ -565,9 +497,8 @@ internal static partial class Generators
             if (m.HasValue && m.Value == targetMagnitude)
                 bucket.Add(id);
         }
-        // Fallback: if the rolled bucket is empty (e.g. no +3 foods in this save's
-        // content), drop to the next-lower magnitude that does have entries. Keeps
-        // the reward non-null while still honouring the magnitude direction.
+        // Fallback: if the rolled bucket is empty (no +3 foods in this save's content),
+        // drop to the next-lower magnitude that has entries.
         if (bucket.Count == 0)
         {
             for (int m = targetMagnitude - 1; m >= 1 && bucket.Count == 0; m--)
@@ -621,15 +552,9 @@ internal static partial class Generators
         };
     }
 
-    /// Vanilla rare forageables. Modded forage gets folded in via the `forage_item`
-    /// context tag so this list is the seed; the resolver appends matching modded ids.
-
-    /// CSV row 63. Daily-board ItemDelivery commissioned by a blacksmith. Asks for a
-    /// Mining-scaled quantity of one random gem (live `Data/Objects` scan, Category
-    /// `Object.GemCategory == -2`, modded gems included automatically). Reward =
-    /// `GoldAdvancedBase` + Artifact Troves at 1:1 with the requested gem count.
-    /// Skill gates on Mining 7 so the quest only surfaces when the player can
-    /// plausibly source the asked materials.
+    /// ItemDelivery from a blacksmith asking for a Mining-scaled qty of one random gem
+    /// (live Data/Objects scan, modded gems included). Reward: GoldAdvancedBase + Artifact
+    /// Troves 1:1 with the gem count. Mining 7 gate.
     private static QuestPosting? RareMaterialRequest(QuestContext ctx)
     {
         if (Game1.player.MiningLevel < 7)
@@ -679,9 +604,7 @@ internal static partial class Generators
         };
     }
 
-    /// Walks `Data/Objects` and returns a randomly-chosen gem (Category
-    /// `Object.GemCategory == -2`, Price > 0). Vanilla gems and any modded
-    /// content-pack additions surface together.
+    /// Random gem from Data/Objects (Category GemCategory, Price &gt; 0). Vanilla + modded.
     private static ResolvedItem? PickRandomGem(QuestContext ctx)
     {
         var data = ctx.Helper.GameContent.Load<Dictionary<string, StardewValley.GameData.Objects.ObjectData>>("Data/Objects");
@@ -705,10 +628,4 @@ internal static partial class Generators
         return null;
     }
 
-    /// CSV row 66. Winter 22 DateLocked. Resolves the player's Winter Star recipient via
-    /// `Utility.GetRandomWinterStarParticipant` (the same deterministic random the game
-    /// uses to assign secret-santa pairings) and embeds a hint about the recipient's
-    /// loved gifts. Player can opt out via `SecretGiftHintEnabled`. Quest is a single
-    /// Talk step targeted at the recipient — the festival event surfaces dialogue with
-    /// them naturally so the quest closes on Winter 25 without bespoke event hooks.
 }

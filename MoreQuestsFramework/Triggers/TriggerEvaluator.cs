@@ -11,7 +11,7 @@ namespace MoreQuestsFramework.Triggers;
 /// pipeline only has to ask "yes or no" per definition.
 ///
 /// Plan.md §7 splits triggers into pool / calendar / event classes. Phase 6 evaluates
-/// every non-pool trigger at `DayStarted` rather than via runtime watchers — calendar
+/// every non-pool trigger at `DayStarted` rather than via runtime watchers, calendar
 /// triggers are naturally per-day, and event triggers (Building/Mail/OneShot) are
 /// detected by diffing yesterday's snapshot against today. NpcDialogue is the one
 /// runtime-watcher exception and is handled by `DialogueWatcher`.
@@ -82,7 +82,7 @@ public sealed class TriggerEvaluator
     {
         int today = Game1.Date.TotalDays;
 
-        // Honour scheduled fire days (DayDelay) regardless of source — once a quest is
+        // Honour scheduled fire days (DayDelay) regardless of source, once a quest is
         // scheduled, it fires on its target day or skips if conditions changed.
         if (_state.ScheduledFireDay.TryGetValue(defId, out int dueDay))
         {
@@ -276,7 +276,7 @@ public sealed class TriggerEvaluator
         {
             case "firststat":
                 // FirstStat <name>[|<name>...] >= <n>. Pipe-separated stat names short-circuit
-                // on the first one that crosses `min` (OR across stats — e.g. a "first milk
+                // on the first one that crosses `min` (OR across stats, e.g. a "first milk
                 // collected" trigger that accepts either `cowMilkProduced` or `goatMilkProduced`).
                 if (parts.Length < 4 || parts[2] != ">=" || !uint.TryParse(parts[3], out uint min))
                     return false;
@@ -303,7 +303,7 @@ public sealed class TriggerEvaluator
                 return PlayerInventoryContains(parts[1]);
 
             case "firstcraftingrecipe":
-                // `FirstCraftingRecipe <Name>` — fires the first day the named entry appears in
+                // `FirstCraftingRecipe <Name>`, fires the first day the named entry appears in
                 // `Game1.player.craftingRecipes`. Joins every token after the keyword so multi-word
                 // recipe names (e.g. `Preserves Jar`, `Fish Smoker`) don't need quoting in JSON.
                 if (parts.Length < 2)

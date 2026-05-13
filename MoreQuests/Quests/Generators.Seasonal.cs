@@ -66,13 +66,10 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 10 (rebranded from "SpringTea" to "FloralTea" in 9.5f). Year-round daily-board
-    /// ItemDelivery. An adult human villager (not a tea-disliker) asks for a few of one
-    /// seasonal flower they already love or like, so they can brew it into tea. The flower
-    /// is sampled from the giver's own gift-taste row gated by the current-season context
-    /// tag, so the request always lands on a flower the giver actually wants AND that's
-    /// in season (winter rolls naturally fail to post in vanilla, which has no winter
-    /// flowers; a modded winter flower with the right tag would let it run year-round).
+    /// An adult villager (non-tea-disliker) asks for a few of one seasonal flower they
+    /// love/like. Flower sampled from the giver's gift-taste row, gated by `season_&lt;current&gt;`,
+    /// so the request lands on a flower the giver actually wants AND is in-season. Winter
+    /// naturally fails in vanilla (no winter flowers); a modded one with the tag enables it.
     private static QuestPosting? FloralTea(QuestContext ctx)
     {
         var allFlowers = ctx.Items.GetItemsByCategory(StardewValley.Object.flowersCategory);
@@ -139,9 +136,8 @@ internal static partial class Generators
         };
     }
 
-    /// Walks the NPC's `Data/NPCGiftTastes` loved + liked lists and returns every flower
-    /// (resolved against `seasonalFlowers`) that's in-season for this posting. Empty result
-    /// means the giver has no seasonal flower preference and `FloralTea` skips them.
+    /// Returns every flower from the NPC's loved+liked lists that's in-season. Empty result
+    /// means no seasonal flower preference, so FloralTea skips them.
     private static List<ResolvedItem> ResolveLovedOrLikedFlowers(QuestContext ctx, string npc, IDictionary<string, ResolvedItem> seasonalFlowers)
     {
         var matches = new List<ResolvedItem>();
@@ -170,11 +166,8 @@ internal static partial class Generators
         }
     }
 
-    /// True if the NPC's disliked (field 5) or hated (field 7) gift tokens list Green Tea
-    /// (object 614) or Tea Leaves (815). The taste data uses bare ids; both qualified and
-    /// bare forms are tolerated so a modded gift-tastes edit that emits `(O)614` doesn't
-    /// slip past. Modded tea items would need their own check; vanilla coverage is good
-    /// enough for the FloralTea narrative gate.
+    /// True if the NPC's disliked or hated gift tokens list Green Tea or Tea Leaves.
+    /// Both qualified and bare forms tolerated. Modded tea items aren't covered.
     private static bool NpcDislikesTea(QuestContext ctx, string npc)
     {
         if (!ctx.Data.GiftTastes.TryGetValue(npc, out var raw))
@@ -199,19 +192,8 @@ internal static partial class Generators
         return false;
     }
 
-    // -------------------- Phase 8c: Adventurer's Guild deep-dive quests --------------------
-
-    /// Vanilla ore + stone ids accepted by both deep-dive quests' Deliver step. Stone is
-    /// included per the CSV row's "(any type of ore)/stone" wording — Marlon's not picky
-    /// about what fills the crate, the bar reward is fixed by quest difficulty rather
-    /// than the player's specific haul.
-
-    /// CSV row 37. Summer-only daily-board ItemDelivery. Asks for a cold-food vanilla
-    /// staple (Ice Cream, Melon, or Juice) for a HeatWaveRelief-role giver (Harvey + Maru
-    /// vanilla, Paula + Philip RSV, Jacob East Scarp). Reward = `FriendshipBasic` plus one
-    /// random item pulled from Harvey's clinic shop (`Data/Shops["Hospital"]`); if the
-    /// shop scan returns nothing (e.g. a content pack wiped the entry) the friendship
-    /// reward stands alone.
+    /// Summer-only ItemDelivery: a cold-food staple (Ice Cream, Melon, or Juice) for a
+    /// HeatWaveRelief-role giver. Reward: FriendshipBasic + a random item from the Hospital shop.
     private static readonly string[] HeatWaveColdItemIds =
     {
         "(O)233", // Ice Cream
@@ -278,14 +260,10 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 38. DateLocked mail quest fired on Summer 21 (7 days before the Dance of
-    /// the Moonlight Jellies on Summer 28), with a 6-day deadline so the player must
-    /// finish at least one day before the festival. Picks an ecology-role giver
-    /// (Demetrius vanilla, Maddie + Mr. Aguar RSV, Dylan East Scarp) who wants
-    /// data on local marine life before the dance. Forage pool reuses `GetBeachForageItems`
-    /// so vanilla shells AND mod-added beach forage are eligible. Qty scales with Foraging
-    /// when DifficultyScaling is on, otherwise rolls a small flat range. Reward =
-    /// `FriendshipBasic` plus a random loved or liked item from the giver's own gift tastes.
+    /// DateLocked Summer 21 (7 days before Moonlight Jellies on Summer 28) with a 6-day
+    /// deadline. An EcologyMinded giver wants marine-life data before the dance. Forage pool
+    /// reuses GetBeachForageItems. Reward: FriendshipBasic + a random loved/liked item from
+    /// the giver's gift tastes.
     private static QuestPosting? JellyfishWatchPrep(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.EcologyMinded);
@@ -334,21 +312,9 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 50. Winter 13 (Night Market middle day). Picks a met NPC to send the
-    /// player on a non-current-season seed restock. Filter walks `Data/Crops` and keeps
-    /// any seed whose `Seasons` list excludes Winter so the request reads as "stock up
-    /// for next year while the Night Market's Magic Boat is in town". Reward =
-    /// `FriendshipBasic` with the picked NPC.
-
-    /// Walks `Data/Crops` for seeds whose Seasons list excludes Winter. Returns the
-    /// resolved seed items so the picker can hand one to the Ship objective.
-
-    /// CSV row 69. Spring-only daily-board single-step `ClearWeeds` AdventureQuest. Any
-    /// met human NPC can be the giver; the player clears `SpringCleaningCount` weed
-    /// `Object`s anywhere except the farm (modded locations included), matching the
-    /// ClearDebris pattern so a "Town has no weeds today" roll doesn't dead-end the quest.
-    /// Reward = `FriendshipBasic`. The `ClearWeeds` step rides `World.ObjectListChanged`
-    /// filtered to `Object.IsWeeds()` removals.
+    /// Spring-only single-step ClearWeeds AdventureQuest. Any met human can be the giver;
+    /// the player clears SpringCleaningCount weeds anywhere except the farm. Wildcard
+    /// targets avoid the "Town has no weeds today" dead-end. Reward: FriendshipBasic.
     private static QuestPosting? SpringCleaning(QuestContext ctx)
     {
         if (!string.Equals(ctx.Season, "spring", StringComparison.OrdinalIgnoreCase))

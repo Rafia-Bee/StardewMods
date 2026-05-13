@@ -16,14 +16,9 @@ namespace MoreQuests.Quests;
 
 internal static partial class Generators
 {
-    /// CSV row 57 piece (rewritten 9.5g). One-time mail from a random met adult villager
-    /// the first day after the player learns the Fish Smoker crafting recipe (vanilla path
-    /// is Willy's mail / shop after a fishing-friendship gate). Asks for `qty` of any
-    /// `SmokedFish` output. Since vanilla rolls every smoked-fish stack with the same
-    /// parent id (`(O)SmokedFish`) and varies only the `preservedParentSheetIndex`, the
-    /// Ship-quest matcher accepts any smoked fish for the count. Qty scales with Fishing
-    /// when DifficultyScaling is on (`rand(5, max(5, fishing*2))`), otherwise rolls
-    /// `rand(2, 6)`. No deadline. Reward = 500 friendship pts (2 hearts).
+    /// One-time mail when the player learns the Fish Smoker recipe. Asks for qty of any
+    /// SmokedFish output (every smoked-fish stack shares (O)SmokedFish, varying only by
+    /// preservedParentSheetIndex). Qty scales with Fishing when scaling on. Reward: 500 friendship pts.
     private static QuestPosting? FishSmokerRequest(QuestContext ctx)
     {
         var candidates = MetAdultHumanGiftReceivers();
@@ -62,15 +57,9 @@ internal static partial class Generators
         };
     }
 
-    /// Seasonal fish pool minus anything flagged `IsBossFish` in `Data/Locations`. Used
-    /// by every non-Legendary fishing generator so quests never ask for vanilla Crimsonfish
-    /// / Angler / Legend / Glacierfish / Mutant Carp or the Extended-Family variants
-    /// (Son of Crimsonfish, Ms. Angler, Legend II, Glacierfish Jr., Radioactive Carp) that
-    /// only spawn during Mr. Qi's Extended Family special order. Modded fish that follow
-    /// the same `IsBossFish` convention are stripped too. `ignoresVisited` overrides the
-    /// `FishingIgnoresVisitedLocations` config when a quest deliberately wants one or the
-    /// other (LocationFishOverpopulation always wants visited-only since it grounds the
-    /// quest in a real spot).
+    /// Seasonal fish pool minus IsBossFish entries from Data/Locations. Keeps quests from
+    /// asking for Legendaries or Extended-Family variants. Modded fish using the same flag
+    /// are stripped too. `ignoresVisited` overrides FishingIgnoresVisitedLocations.
     private static List<ResolvedItem> GetSeasonalNonBossFish(QuestContext ctx, string? weatherFilter = null, bool? ignoresVisited = null)
     {
         bool useFullPool = ignoresVisited ?? ctx.Config.FishingIgnoresVisitedLocations;
@@ -88,14 +77,10 @@ internal static partial class Generators
         return seasonal.Where(f => !bossIds.Contains(f.QualifiedItemId)).ToList();
     }
 
-    /// CSV row 12. Daily-board fishing quest. Giver is any met adult human who has at
-    /// least one fish in their loved/liked gift-taste pool, so the request reads as the
-    /// NPC asking for a fish they'd actually want. Common-fish filter = Difficulty < 60.
-    /// Time gate: with `DifficultyScaling` on the time field is unconstrained; with it
-    /// off the fish must be catchable for the entire vanilla day (600 to 2600), so the
-    /// player isn't cornered into fishing at a narrow window. Description grounds the
-    /// catch in a visited spawn location; if no visited location for the picked fish
-    /// resolves the candidate is dropped and another is tried.
+    /// Fishing quest from any adult human who has a fish in their loved/liked list. Common-
+    /// fish filter (Difficulty &lt; 60). Scaling off: fish must be catchable 600-2600 so the
+    /// player isn't cornered into a narrow window. Description grounds the catch in a
+    /// visited spawn location; candidates without one are dropped.
     private static QuestPosting? SimpleFishingRequest(QuestContext ctx)
     {
         var givers = MetAdultHumanFishLovers(ctx);
@@ -163,13 +148,9 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 49. Daily-board fishing quest. Pierre or Joja (Morris/MorrisTod) ask the
-    /// player for a bulk haul of one specific seasonal fish; reward is sell-price scaled
-    /// below market (`RewardMultiplierBelowSell`). Tier 2 ecology consequence: every
-    /// member of the `EcologyMinded` pool present on the save (Demetrius + RSV's Maddie /
-    /// Mr. Aguar + East Scarp's Dylan) gets a single negative line + the Tier 2 default
-    /// negative friendship delta on the next chat. Linus is intentionally excluded — the
-    /// plan reserves him for Tier 3 (Seafood Night).
+    /// Pierre or Joja asks for a bulk haul of one seasonal fish. Reward = sell-price below
+    /// market. Tier 2 ecology consequence: every EcologyMinded NPC present gets a negative
+    /// line and the Tier 2 friendship delta. Linus is reserved for Seafood Night (Tier 3).
     private static QuestPosting? MediumFishingHaul(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.BulkFishBuyer);
@@ -225,17 +206,9 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 65. Daily-board fishing quest. SaloonChef-pool giver (Gus / Pika RSV /
-    /// Rosa ESV / Celestine VMV) asks for a large haul of one edible non-poisonous fish;
-    /// reward is `RewardMultiplierFishPremium` of the fish's price × qty. Tier 3 ecology
-    /// chain consequence: every ecology NPC present on the save plus Linus gets one
-    /// chained dialogue line and a `-FriendshipMid` friendship hit on each of `ChainDays`
-    /// consecutive days (per-day, no division). Static source so the engine pushes a
-    /// chain to every target rather than sampling a single NPC.
-    /// Legendary / boss fish are excluded upstream by `GetSeasonalNonBossFish`, which
-    /// strips anything flagged `IsBossFish` in `Data/Locations` (vanilla legendaries +
-    /// modded fish following the same convention). Sell-price floor was dropped, the
-    /// multiplier + quantity already do the reward scaling work.
+    /// SaloonChef asks for a large haul of one edible non-poisonous fish. Reward uses the
+    /// fish-premium multiplier. Tier 3 chain consequence: every ecology NPC plus Linus gets
+    /// one line and a -FriendshipMid hit on each of ChainDays. Boss fish excluded upstream.
     private static QuestPosting? SeafoodNight(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.SaloonChef);
@@ -293,10 +266,8 @@ internal static partial class Generators
         };
     }
 
-    /// Pufferfish carries the Nausea status effect when eaten — the only vanilla "fish"
-    /// any reasonable cook would call poisonous. Filtered out of the Seafood Night pool
-    /// so the CSV's "edible non-poisonous" framing holds. Modded fish stay in as long as
-    /// their Edibility is positive.
+    /// Pufferfish causes Nausea, the only vanilla fish a cook would call poisonous.
+    /// Filtered out of Seafood Night. Modded fish stay in if Edibility &gt; 0.
     private static readonly HashSet<string> SeafoodNightExclusions = new(StringComparer.OrdinalIgnoreCase)
     {
         "(O)128" // Pufferfish
@@ -312,17 +283,8 @@ internal static partial class Generators
         return false;
     }
 
-    /// Resolves the live `EcologyMinded` pool (filtered by mod presence + NPC existence)
-    /// and optionally appends Linus for Tier 3 quests. Excludes the quest giver — a
-    /// shopkeeper who's also coincidentally in the ecology role shouldn't shame
-    /// themselves on the next chat. The list is the resolved snapshot, so saves where a
-    /// modded NPC is missing simply drop that entry.
-
-    /// Resolves the live `EcologyMinded` pool (filtered by mod presence + NPC existence)
-    /// and optionally appends Linus for Tier 3 quests. Excludes the quest giver — a
-    /// shopkeeper who's also coincidentally in the ecology role shouldn't shame
-    /// themselves on the next chat. The list is the resolved snapshot, so saves where a
-    /// modded NPC is missing simply drop that entry.
+    /// EcologyMinded pool (live) optionally with Linus appended for Tier 3. Excludes the
+    /// quest giver so a shopkeeper-also-ecologist doesn't shame themselves.
     private static List<string> ResolveEcologyTargets(QuestContext ctx, bool includeLinus, string exclude)
     {
         var pool = ctx.Dispatch.ResolvePool(DispatchRoles.EcologyMinded);
@@ -343,18 +305,9 @@ internal static partial class Generators
         return targets;
     }
 
-    /// Krobus + Dwarf are vanilla; Sen ships with East Scarp. The list is the literal
-    /// CSV row 53 set; the engine filters to met villagers downstream so unknown NPCs
-    /// silently drop out. We still pre-filter by `getCharacterFromName` so we never queue
-    /// a line for an NPC whose mod isn't loaded.
-
-    /// CSV row 59. Daily-board two-step Adventure quest. Giver is dispatched from the
-    /// `FishermenNpcs` pool (Willy / Pam / Elliott vanilla, plus Carmen / Blair RSV and
-    /// modded fishermen Arumi + Gunnar when their packs are loaded). The player catches
-    /// X of a seasonal fish first, then delivers the gold-quality stack to the giver.
-    /// Quality enforcement lives on the Deliver step (`MinQuality = 2`) since vanilla's
-    /// fish-caught event doesn't expose quality, so the Catch step only counts catches.
-    /// Reward is unclamped sell-price * qty * `RewardMultiplierBelowSell` (no 30g floor).
+    /// Two-step Adventure from a FishermenNpcs-pool giver. Catch X of a seasonal fish then
+    /// deliver the gold-quality stack. Quality enforcement is on the Deliver step
+    /// (MinQuality = 2) since vanilla's fish-caught event doesn't expose quality.
     private static QuestPosting? QualityFishDelivery(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.FishermenNpcs);
@@ -444,26 +397,22 @@ internal static partial class Generators
 
     /// Row 13, `<Location>` fish overpopulation. Daily-board FishingQuest gated on a
     /// specific location: pick a fish from the player's visited-location pool, then read
-    /// its first eligible spawn location from the visited set so the quest description
-    /// can ground the request in a real spot. Reward = `GoldIntermediateBase` + Challenge
-    /// Bait at 2x the requested fish quantity. Giver is dispatched via `EcologyMinded`.
+    /// Asks for a fish at a specific visited spawn spot. Reward: GoldIntermediateBase +
+    /// Challenge Bait at 2x the fish qty. Giver from EcologyMinded.
     private static QuestPosting? LocationFishOverpopulation(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.EcologyMinded);
         if (giver == null)
             return null;
 
-        // The CSV's "fish for a specific fish at a specific spot" only makes sense if the
-        // player has actually visited a spawn location for the fish. Force the visited-only
-        // pool regardless of the global `FishingIgnoresVisitedLocations` config; the helper
-        // strips boss/legendary fish so we never ask for one-per-save targets.
+        // "Specific fish at a specific spot" only makes sense if the player has visited a
+        // spawn for the fish. Force visited-only; helper strips boss/legendary fish.
         var fish = GetSeasonalNonBossFish(ctx, ignoresVisited: false);
         if (fish.Count == 0)
             return null;
 
-        // Try a handful of fish so a fish whose only spawn locations the player hasn't
-        // actually visited drops out. Each pick walks Data/Locations to verify the fish
-        // has at least one spawn in a visited spot.
+        // Try a handful so a fish whose only spawn spots the player hasn't visited drops out.
+        // Each pick walks Data/Locations to verify a visited spawn exists.
         ResolvedItem? target = null;
         string? targetLocation = null;
         var pool = new List<ResolvedItem>(fish);
@@ -521,13 +470,9 @@ internal static partial class Generators
         };
     }
 
-    /// Row 61. Mail-delivered rainy-weather fishing quest. Fires through `WeatherForecast`
-    /// when tomorrow is forecast as rain. A configurable `RainyDayCatchMailChancePercent`
-    /// roll gates each qualifying day (default 100 = always). Giver is dispatched from
-    /// the shared `FishermenNpcs` pool. Filters to fish whose `Data/Fish` weather field
-    /// includes "rainy" with a runtime gate that the player is fishing in actual rain.
-    /// Reward = `GoldIntermediateBase` + one rare tackle. Deadline = Short so the quest
-    /// stays within the rainy window.
+    /// Mail quest when tomorrow is forecast rain. RainyDayCatchMailChancePercent gates each
+    /// qualifying day. Filters to rainy Data/Fish entries with a runtime gate that the player
+    /// is actually fishing in rain. Reward: GoldIntermediateBase + one rare tackle.
     private static QuestPosting? RainyDayCatch(QuestContext ctx)
     {
         int chance = Math.Clamp(ModEntry.Config.RainyDayCatchMailChancePercent, 0, 100);
@@ -573,15 +518,9 @@ internal static partial class Generators
         };
     }
 
-    /// Row 68 — Small/Medium/Large fish overpopulation. Daily-board fish-agnostic
-    /// FishingQuest filtered by a hardcoded size bucket: Small (1-24 inches), Medium
-    /// (25-49), Large (50+). Any caught fish whose reported size in inches lands in the
-    /// active bucket counts (`CatchAnyFish` + `CatchMinSize` + `CatchMaxSize`). Quest
-    /// names neither a fish nor a location, only the size category and its inch range.
-    /// Giver dispatched from `EcologyMindedNpcs` (Demetrius vanilla, plus Maddie /
-    /// Mr. Aguar RSV, Dylan East Scarp). Reward = `GoldIntermediateBase` + `qty * 3`
-    /// Magic Bait. Boss / legendary fish are excluded upstream by `GetSeasonalNonBossFish`
-    /// (their `IsBossFish` flag suppresses them across the whole fishing track).
+    /// Fish-agnostic FishingQuest filtered by size bucket: Small (1-24"), Medium (25-49"),
+    /// Large (50+). Any caught fish in the bucket counts. Names a size category, not a fish
+    /// or location. Giver from EcologyMinded. Reward: GoldIntermediateBase + qty*3 Magic Bait.
     private const string MagicBaitId = "(O)908";
 
     private const int SizeBucketSmallMaxInches = 24;
@@ -593,8 +532,7 @@ internal static partial class Generators
         if (giver == null)
             return null;
 
-        // Pick a bucket. Mapping bucket → (min, max) inches. Max = 0 means no upper
-        // bound (Large catches all fish ≥ 50 inches).
+        // Pick a bucket. Max = 0 means no upper bound (Large = any fish 50+ inches).
         int bucket = Game1.random.Next(3); // 0=Small, 1=Medium, 2=Large
         (int minSize, int maxSize) = bucket switch
         {
@@ -609,10 +547,8 @@ internal static partial class Generators
             _ => "large"
         };
 
-        // Pick any seasonal non-boss fish for the underlying ItemId. The catch counter
-        // doesn't gate on this (CatchAnyFish bypasses the id check), but vanilla
-        // FishingQuest.loadQuestInfo only short-circuits when both target and ItemId are
-        // set, so we always supply a non-null fish.
+        // The catch counter doesn't gate on ItemId (CatchAnyFish bypasses it), but vanilla's
+        // FishingQuest.loadQuestInfo only short-circuits when both target and ItemId are set.
         var fish = GetSeasonalNonBossFish(ctx);
         if (fish.Count == 0)
             return null;
@@ -662,13 +598,9 @@ internal static partial class Generators
         };
     }
 
-    /// Row 41 - Legendary Fish Quest. Daily-board FishingQuest restricted to legendary /
-    /// boss fish (anything flagged `IsBossFish = true` in Data/Locations: vanilla Crimsonfish
-    /// / Angler / Legend / Glacierfish / Mutant Carp + their family variants, plus modded
-    /// equivalents like RSV's Deep Ridge Angler / Waterfall Snakehead / Sockeye Salmon).
-    /// Quest is skipped when no legendary in the current season can be caught. Reward
-    /// placeholder = `GoldExpertBase` + 50 Challenge Bait until per-fish display furniture
-    /// assets are ready (CSV's "unique fish display furniture per fish" reward).
+    /// FishingQuest restricted to IsBossFish entries from Data/Locations (vanilla legendaries
+    /// + modded equivalents). Skipped when no legendary is in-season. Reward placeholder:
+    /// GoldExpertBase + 50 Challenge Bait (CSV's "unique display furniture" reward pending assets).
     private const int LegendaryChallengeBaitQty = 50;
 
     private static QuestPosting? LegendaryFishQuest(QuestContext ctx)
@@ -714,15 +646,8 @@ internal static partial class Generators
         };
     }
 
-    /// Row 60 — Rainbow Platter (Trout Derby, Summer 20-21). DateLocked yearly DailyBoard
-    /// posting on Summer 20: catch `FestivalFishQty` Rainbow Trout (O)138. Giver dispatched
-    /// via `SaloonChef`; reward = recipe (per-giver) + `ShopDiscountReward` on the dish for
-    /// vanilla Gus saves only (the framework's discount writer needs a known shop id).
-
-    /// Walks Data/Locations for the fish's spawn entries, intersected with the player's
-    /// visited locations, returning the first matching location key. Returns null when
-    /// the fish has no spawn in any visited spot. The CSV row asks for a fish at a
-    /// specific spot, so we need an actual reachable location to ground the quest in.
+    /// Walks Data/Locations for the fish's spawn entries intersected with the player's visited
+    /// locations. Returns the first match, or null if the fish has no visited spawn spot.
     private static string? ResolveVisitedSpawnLocation(QuestContext ctx, string fishQualifiedId)
     {
         try
@@ -759,14 +684,9 @@ internal static partial class Generators
         return null;
     }
 
-    /// Lightweight pretty-printer for vanilla location keys used in quest descriptions.
-    /// Maps the common keys back to their in-game labels; unknown keys (modded) pass
-    /// through verbatim, which is usually what the player sees on the map anyway.
-
-    /// Lightweight pretty-printer for location keys used in quest descriptions. Maps
-    /// common vanilla keys back to their in-game labels. Unknown keys fall back to the
-    /// runtime location's `DisplayName` (which picks up modded translations), and finally
-    /// to the raw key if no live location matches.
+    /// Pretty-printer for location keys in quest descriptions. Maps common vanilla keys to
+    /// their in-game labels. Unknown keys fall back to the runtime location's DisplayName,
+    /// then to the raw key.
     private static string LocationDisplayName(string key)
     {
         string label = key?.ToLowerInvariant() switch
@@ -791,12 +711,4 @@ internal static partial class Generators
         return key ?? string.Empty;
     }
 
-    // -------------------- Phase 9.5f: One-shot triggered animal/farm rows --------------------
-
-    /// Counts farm animals whose `displayType` / animal type name contains the given
-    /// substring (case-insensitive). Used by Alex's Protein Shakes to scale the egg ask
-    /// by chicken count, where `kind = "Chicken"` matches White / Brown / Blue / Void
-    /// chickens and any modded chicken type. Walks both `location.animals` and the
-    /// indoor animals of every farm building in case the save spreads animals across
-    /// multiple coops/barns.
 }

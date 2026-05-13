@@ -27,7 +27,7 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
     /// Phase 9.5e Catch filters. When non-empty, the catch only credits when the player's
     /// current location matches; when > 0, the reported catch size (inches) must be ≥ the
     /// threshold; when non-empty, the runtime weather must match. All three are independent
-    /// — empty / zero defaults disable each gate, so a vanilla single-objective fishing
+    ///, empty / zero defaults disable each gate, so a vanilla single-objective fishing
     /// quest with none of these set behaves exactly like base `FishingQuest`.
     public readonly NetString catchLocationName = new();
     public readonly NetInt catchMinSize = new();
@@ -36,7 +36,7 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
 
     /// When true, the quest counts ANY caught fish that passes the size / location /
     /// weather filters, regardless of `ItemId.Value`. Turn-in then only requires the
-    /// catch counter to be full — no specific fish stack is needed in inventory and no
+    /// catch counter to be full, no specific fish stack is needed in inventory and no
     /// fish are consumed. Used by the Size Overpopulation quest (and any future "any
     /// fish in bucket X" content). Defaults to false so single-species quests keep the
     /// vanilla item-id gate + the existing consume-on-turn-in semantics.

@@ -20,7 +20,7 @@ public sealed class ConsequenceContext
     public IReadOnlyList<string> LovedBy { get; }
 
     /// NPCs resolved as "hated" the subject (Tier 1/2 negative branch). For `Source =
-    /// Static`, these are the spec's `Targets[]` verbatim — the static-targets list is
+    /// Static`, these are the spec's `Targets[]` verbatim, the static-targets list is
     /// always treated as "hated/affected" since static authors only specify negative
     /// reactors today (no positive static-target use-case in the CSV).
     public IReadOnlyList<string> HatedBy { get; }
@@ -43,7 +43,7 @@ public sealed class ConsequenceContext
         HatedBy = hatedBy;
     }
 
-    /// Helper used by every tier handler — applies an immediate friendship delta to an
+    /// Helper used by every tier handler, applies an immediate friendship delta to an
     /// NPC, skipping NPCs the player hasn't met (no entry in `friendshipData` ⇒ vanilla
     /// would silently no-op the change anyway, but checking up-front keeps the trace
     /// log honest about who actually got hit).
@@ -60,7 +60,7 @@ public sealed class ConsequenceContext
 
     /// Append one queue entry. Same-day pops use `earliestFireDay = 0`. `portrait` is
     /// a Stardew dialogue token (`$h`, `$a`, `$s`, `$l`, `$u`) prepended to the line
-    /// before drawing — empty string means no portrait override.
+    /// before drawing, empty string means no portrait override.
     public void EnqueueLine(string npcName, string line, int friendshipDelta, int earliestFireDay, string portrait = "")
     {
         if (string.IsNullOrEmpty(npcName))

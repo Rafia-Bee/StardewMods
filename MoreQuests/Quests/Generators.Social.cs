@@ -98,11 +98,9 @@ internal static partial class Generators
         };
     }
 
-    /// Two-step Adventure: pick N met villagers + a separate giver, talk to all N (in
-    /// any order — the Talk step's CreditedKeys enforces uniqueness so the same NPC
-    /// can't be counted twice), then report back to the giver. Requires at least
-    /// CheckOnFriendsCount + 1 met villagers (otherwise there are fewer NPCs than the
-    /// quest expects). Reward = FriendshipIntermediate to the giver only.
+    /// Two-step Adventure: talk to N met villagers in any order (Talk step's CreditedKeys
+    /// enforces uniqueness), then report back to the giver. Needs at least N+1 met villagers.
+    /// Reward: FriendshipIntermediate to the giver.
     private static QuestPosting? CheckOnFriends(QuestContext ctx)
     {
         int n = Math.Max(1, ModEntry.Config.CheckOnFriendsCount);
@@ -166,18 +164,8 @@ internal static partial class Generators
         };
     }
 
-    // -------------------- Phase 7c: Gus's Festival Feast variants --------------------
-
-    /// Spring 6 (Egg Festival prep). Gus is taste-testing dishes for the festival;
-    /// player delivers spring-themed ingredients, gets a "sample" cooked dish back as
-    /// reward. CSV row 30. Reward kind = `Dish` only (no Festival Bonus), so no
-    /// dependency on the Phase 9 `FestivalBias` reward kind.
-
-    /// CSV row 28. Daily-board ItemDelivery. Anonymous board posting picks a met NPC as
-    /// the secret giver and a different met NPC as the recipient. Item is picked from the
-    /// recipient's loved or liked list so the gift always lands well. Reward =
-    /// `RewardMultiplierBelowSell` × the item's sell price plus `FriendshipBasic` to both
-    /// the giver and the recipient.
+    /// Anonymous gift-delivery: a met NPC asks the player to drop a loved/liked item on a
+    /// different met NPC. Reward: below-sell gold + FriendshipBasic to both NPCs.
     private static QuestPosting? GiftDelivery(QuestContext ctx)
     {
         var metNpcs = DispatchRegistry.MetHumanNpcs();
@@ -199,10 +187,8 @@ internal static partial class Generators
 
         int gold = Math.Max(50, (int)(pick.SellPrice * ctx.Config.RewardMultiplierBelowSell));
 
-        // Modded NPCs sometimes use namespaced internal names (e.g. "Nova.Eli" for Eli from
-        // "Eli & Dylan"). Player-facing text reads from the NPC's DisplayName so the journal
-        // shows "Eli" rather than the raw prefix. Falls back to the internal name when the
-        // villager can't be resolved (very unlikely for met NPCs).
+        // Modded NPCs sometimes use namespaced names (e.g. "Nova.Eli"). Pull DisplayName so
+        // the journal shows "Eli" not the raw prefix. Falls back to internal name if unresolved.
         string recipientDisplay = Game1.getCharacterFromName(recipient)?.displayName ?? recipient;
 
         return new QuestPosting
@@ -229,9 +215,4 @@ internal static partial class Generators
         };
     }
 
-    /// CSV row 37. Summer-only daily-board ItemDelivery. Cold-tag items (vanilla and
-    /// modded) for Harvey or Paula (RSV via the `HeatWaveRelief` dispatch role). Reward =
-    /// a random clinic-themed item from the curated pool — Harvey runs a clinic, not a
-    /// shop, so the "Harvey's shop" reward column is sourced from medicine-adjacent
-    /// vanilla items.
 }

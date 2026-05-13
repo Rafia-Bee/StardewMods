@@ -192,8 +192,8 @@ public sealed class ModEntry : Mod
 
         // RegistrationOpen fires from OnFirstTick (one tick after every consumer mod's
         // GameLaunched runs), so consumer mods that subscribe in their own GameLaunched
-        // — which by definition runs after the framework's, since they declare us as a
-        // dependency — actually receive the event.
+        //, which by definition runs after the framework's, since they declare us as a
+        // dependency, actually receive the event.
     }
 
     private void OnFirstTick(object? sender, UpdateTickingEventArgs e)
@@ -241,7 +241,7 @@ public sealed class ModEntry : Mod
         _animalPurchaseDiscountWriter?.WireState(_stateStore.State);
         _festivalBiasWriter?.WireState(_stateStore.State);
         _fairStarTokensWriter?.WireState(_stateStore.State);
-        // Always invalidate the shop cache after wiring state — discounts loaded from the
+        // Always invalidate the shop cache after wiring state, discounts loaded from the
         // save would otherwise sit dormant until something else triggers the next read.
         if (_stateStore.State.ActiveShopDiscounts.Count > 0)
             Helper.GameContent.InvalidateCache("Data/Shops");
@@ -305,7 +305,7 @@ public sealed class ModEntry : Mod
 
     /// At day-end, before vanilla sells the shipping bin, walk every active framework
     /// quest looking for a `MoreQuestsShipQuest` or an `AdventureQuest` with an active
-    /// `Ship` step and credit them with matching items in the bin. We only observe —
+    /// `Ship` step and credit them with matching items in the bin. We only observe,
     /// items still get sold to the player at full price (the bin contents are not
     /// removed). Cheap when no ship quest is active: the loop short-circuits the first
     /// time it sees no candidate.
@@ -585,7 +585,7 @@ public sealed class ModEntry : Mod
 
     /// Walks the active quest log once a second and lets every `AdventureQuest` with an
     /// active `ClearDebris` step poll the resource-clump count at its target location.
-    /// Cheap when no ClearDebris quest is active — early-returns on the per-step kind
+    /// Cheap when no ClearDebris quest is active, early-returns on the per-step kind
     /// check before touching `location.resourceClumps`.
     private void PollClumpsOnQuestLog()
     {
@@ -626,7 +626,7 @@ public sealed class ModEntry : Mod
 
     /// Re-rolls the daily-board batch on demand. Used by `IMoreQuestsApi.RefreshOffers()`
     /// so testers can preview new variants without reloading the save. Safe to call at
-    /// any time after save load — uses the same code path as the day-start flow.
+    /// any time after save load, uses the same code path as the day-start flow.
     /// Test/debug helper. Force-fires every SpecialOrder-source definition regardless of
     /// today's date or cooldown, dropping any persisted emit records for those defs first.
     /// Bypasses `TriggerEvaluator.SpecialOrderReady` entirely so a save that already saw
@@ -694,7 +694,7 @@ public sealed class ModEntry : Mod
 
         _dataCache?.Refresh();
         // Roll back today's cooldown records so just-posted definitions are eligible again
-        // — otherwise the re-roll pool is empty and tomorrow's batch is also blocked.
+        //, otherwise the re-roll pool is empty and tomorrow's batch is also blocked.
         _antiRepetition?.RewindToDayStart();
         _poster.BeginDay();
         var daily = _pipeline.GenerateDailyPostings();

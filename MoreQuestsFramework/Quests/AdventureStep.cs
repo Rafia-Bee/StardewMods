@@ -6,8 +6,8 @@ namespace MoreQuestsFramework.Quests;
 
 /// One step in an `AdventureQuest`. Encodes both definition (Kind / Items / Count / Requires)
 /// and runtime progress (Progress / Done) so the whole step can ride a single `NetStringList`
-/// entry on the quest. The list-per-step layout keeps Netcode synchronisation flat — no
-/// nested NetCollections — and lets `RewardCodec`-style line-encoded persistence round-trip
+/// entry on the quest. The list-per-step layout keeps Netcode synchronisation flat, no
+/// nested NetCollections, and lets `RewardCodec`-style line-encoded persistence round-trip
 /// through SpaceCore's serializer without polymorphic JSON.
 ///
 /// 7a wires up `Deliver`, `Talk`, and `Gift` handlers. Remaining kinds land in 7b/7c.
@@ -44,7 +44,7 @@ public sealed class AdventureStepState
     /// so the per-quest flag tracks any opted-in step. See `DecorShippingPatches`.
     public bool AllowDecorShipping { get; set; }
     /// `Catch` step filter: when non-empty, the caught fish only credits the step when the
-    /// player's current location name matches (case-insensitive). Plain location key — e.g.
+    /// player's current location name matches (case-insensitive). Plain location key, e.g.
     /// `"Mountain"` or `"Beach"`.
     public string LocationName { get; set; } = string.Empty;
     /// `Catch` step filter: when > 0, the caught fish only credits the step when its size
