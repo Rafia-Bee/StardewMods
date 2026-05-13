@@ -179,8 +179,9 @@
     "quest.social.checkOnFriends.targetMessage": "Thank you for taking the time. It really does mean a lot when someone bothers to ask.",
 
     "quest.festival.gusSpring.title": "Gus's festival taste-test",
-    "quest.festival.gusSpring.description": "I'm planning the saloon's spread for the Egg Festival and I'd like to test a few recipes early. Bring me {{count}} {{item}} when you have a moment and I'll fix you up a sample plate.",
-    "quest.festival.gusSpring.step.deliver": "Bring {{count}} {{item}} to Gus.",
+    "quest.festival.gusSpring.description": "Spring is finally back in the saloon kitchen and I'm planning the spread for the Egg Festival. Could you bring me {{cropCount}} {{crop}} and {{forageCount}} {{forage}} when you have the chance? I'll fix you up a sample plate as thanks.",
+    "quest.festival.gusSpring.step.deliverCrop": "Bring {{count}} {{item}} to Gus.",
+    "quest.festival.gusSpring.step.deliverForage": "Bring {{count}} {{item}} to Gus.",
     "quest.festival.gusSpring.targetMessage": "Perfect, just what I needed. Here, try the {{dish}} - tell me honestly what you think.",
 
     "quest.festival.gusWinter.title": "Winter Star feast prep",
