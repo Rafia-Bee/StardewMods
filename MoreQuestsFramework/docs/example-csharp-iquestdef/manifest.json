@@ -1,0 +1,15 @@
+{
+    "Name": "More Quests Framework: Example C# IQuestDefinition",
+    "Author": "Rafia-Bee",
+    "Version": "1.0.0",
+    "MinimumApiVersion": "4.1.0",
+    "UniqueID": "RafiaBee.MoreQuestsFramework.ExampleCSharpIQuestDef",
+    "EntryDll": "ExampleCSharpIQuestDef.dll",
+    "Description": "Demonstrates pattern C: a C# SMAPI mod that registers a quest as a pure IQuestDefinition instance, no JSON file involved.",
+    "Dependencies": [
+        {
+            "UniqueID": "RafiaBee.MoreQuestsFramework",
+            "IsRequired": true
+        }
+    ]
+}

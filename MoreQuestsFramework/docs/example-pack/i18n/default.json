@@ -1,11 +1,66 @@
 {
-    "example.sapling.title": "Lewis needs a maple sapling",
-    "example.sapling.description": "Lewis wants to plant a maple sapling near the town square. Can you bring him one?",
-    "example.sapling.objective": "Bring 1 Maple Sapling to Lewis.",
-    "example.sapling.targetMessage": "Perfect, I'll get this in the ground today. Thanks!",
+    "example.deliver.title": "Lewis wants an apple",
+    "example.deliver.description": "Lewis is putting together a small fall display for the town square. Can you bring him a fresh Apple?",
+    "example.deliver.objective": "Bring 1 Apple to Lewis.",
+    "example.deliver.targetMessage": "Beautiful, that's exactly what I had in mind. Thanks!",
 
-    "example.sapphire.title": "Emily's sapphire request",
-    "example.sapphire.description": "Emily is working on a new piece and needs a Sapphire. Could you spare one?",
-    "example.sapphire.objective": "Bring 1 Sapphire to Emily.",
-    "example.sapphire.targetMessage": "Oh wow, the colors are gorgeous. Thank you!"
+    "example.ship.title": "Marnie's egg order",
+    "example.ship.description": "Marnie is short on eggs for her shop. Could you ship 10 of any kind?",
+    "example.ship.objective": "Ship 10 eggs through the bin.",
+    "example.ship.targetMessage": "Oh thank goodness, the shop has been wiped out.",
+
+    "example.catch.title": "Willy's largemouth bass request",
+    "example.catch.description": "Willy is putting together a sample of the lake's best. Can you bring him three Largemouth Bass?",
+    "example.catch.objective": "Catch 3 Largemouth Bass.",
+    "example.catch.targetMessage": "Beautiful catches. Thanks!",
+
+    "example.slay.title": "Marlon's slime clearing",
+    "example.slay.description": "Marlon wants the upper mines thinned out. Slay 10 Green Slimes and let him know.",
+    "example.slay.objective": "Slay 10 Green Slimes in the mines.",
+    "example.slay.targetMessage": "Good work. The guild stays a little quieter today.",
+
+    "example.collect.title": "Demetrius's mushroom survey",
+    "example.collect.description": "Demetrius is sampling the fall canopy. Could you gather 5 Common Mushrooms?",
+    "example.collect.objective": "Collect 5 Common Mushrooms.",
+    "example.collect.targetMessage": "Great. These will round out the study nicely.",
+
+    "example.steps.title": "Check on George",
+    "example.steps.description": "Evelyn says George has been quieter than usual. Bring him a small gift, chat with him for a bit, then let her know how he's doing.",
+    "example.steps.gift": "Give George a gift.",
+    "example.steps.talkGeorge": "Talk to George.",
+    "example.steps.report": "Report back to Evelyn.",
+
+    "example.giftUnique.title": "Linus's forage hand-outs",
+    "example.giftUnique.description": "Linus wants to spread some forage around town. Gift any forage to three different villagers.",
+    "example.giftUnique.step": "Gift forage to 3 different villagers.",
+
+    "example.fishingTrip.title": "Willy's gold-quality rainbow trout",
+    "example.fishingTrip.description": "Willy wants three Gold-quality Rainbow Trout for a tasting. Catch them and bring them back.",
+    "example.fishingTrip.catch": "Catch 3 Rainbow Trout.",
+    "example.fishingTrip.deliver": "Deliver 3 Gold-quality Rainbow Trout to Willy.",
+
+    "example.visit.title": "Drop by Leah's place",
+    "example.visit.description": "Leah invited you over for a quick visit. Just walk into her house.",
+    "example.visit.step": "Visit Leah's house.",
+
+    "example.build.title": "Robin's barn-raising tip",
+    "example.build.description": "Robin says you should expand into livestock. Build a Barn on your farm.",
+    "example.build.step": "Build a Barn on the farm.",
+
+    "example.reach.title": "Marlon's mine goal",
+    "example.reach.description": "Marlon wants you to reach floor 25 of the Mines and bring back a small ore haul.",
+    "example.reach.reach": "Reach floor 25 of the Mines.",
+    "example.reach.ship": "Ship 20 ore (Copper, Iron, or Gold) through the bin.",
+
+    "example.plant.title": "Linus's reforestation patch",
+    "example.plant.description": "Linus is reseeding part of Cindersap. Plant 3 trees anywhere in the Forest.",
+    "example.plant.step": "Plant 3 trees in Cindersap Forest.",
+
+    "example.clearWeeds.title": "Spring cleaning the square",
+    "example.clearWeeds.description": "Lewis wants Pelican Town tidied up. Clear 8 weeds.",
+    "example.clearWeeds.step": "Clear 8 weeds in Pelican Town.",
+
+    "example.clearDebris.title": "Demetrius's backwoods clean-up",
+    "example.clearDebris.description": "Demetrius is running an experiment in the Backwoods and needs the path cleared. Take down 5 resource clumps.",
+    "example.clearDebris.step": "Clear 5 resource clumps in the Backwoods."
 }

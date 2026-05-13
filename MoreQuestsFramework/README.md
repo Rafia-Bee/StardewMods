@@ -1,60 +1,114 @@
 # More Quests Framework
 
-A SMAPI mod for Stardew Valley that provides a quest engine and a multi-slot help-wanted billboard. Other mods register quests through it; the framework handles generation, posting, rendering, completion, and rewards.
+A SMAPI mod for Stardew Valley that provides a quest engine and a roomier help-wanted billboard. Other mods register quests through it. The framework handles generation, posting, rendering, completion, and rewards.
 
-This mod powers [More Quests](../MoreQuests/README.md) and ships four configurable wrappers around the vanilla quest types so you get a working billboard out of the box even with no consumer mod installed.
+This mod powers [More Quests](../MoreQuests/README.md) and ships four configurable wrappers around the vanilla quest types so you get a working billboard out of the box even with no other mod installed.
 
 ## What this mod provides
 
 - **Multi-slot billboard.** Replaces vanilla's single "Quest of the Day" with a configurable per-day batch, rendered by `MoreQuestsBillboard`.
-- **Paginated SpecialOrders board (opt-in).** Vanilla's SpecialOrders board hardcodes two random slots from the eligible pool, which can hide framework-emitted (and other modded) orders behind a 2/N random pick. Setting `SpecialOrdersBoardPages` to 2 or 3 in config adds prev/next arrows to the board so the player can browse every eligible order, two per page. Default is 1 (vanilla behaviour, patches no-op). No orders are evicted; existing modded SpecialOrders flow through the same `availableSpecialOrders` list and appear naturally in the rotation. Vanilla's accept flow + per-week accept limit are unchanged.
-- **Daily generation pipeline.** Samples the registry by weight at `DayStarted`, subject to `MaxPerDay`, `CooldownDays`, per-NPC dedup, friendship-cap dedup, and recent history. Triggered (non-board) quests run as a separate pass.
-- **Trigger sources.** `DailyBoard`, `Mail`, `Periodic` (every N days), `DateLocked` (specific date, optionally yearly), `DateRange`, `OneShot` (first time a predicate is true), `BuildingBuilt`, `MailReceived`, `WeatherForecast`, `NpcDialogue`, `SpecialOrder` (writes a configurable `Data/SpecialOrders` entry on the matching `StartDate` for `Duration` days; vanilla owns the accept + objective + reward flow from there), and `CustomBoard` (per-day weighted draw routed to a registered `BoardDefinition`'s slot list, filtered by the board's `AllowedCategories` and capped at its `PoolSize`). Source is independent of delivery channel — every non-board source defaults to mail, overridable via `Trigger.Delivery`. Fire history persists per-save in `MoreQuestsFrameworkState`.
-- **Quest factory.** Builds the right `Quest` subclass per posting (`ItemDeliveryQuest`, `FishingQuest`, `SlayMonsterQuest`, `ResourceCollectionQuest`, plus the framework's own multistep `AdventureQuest` and shipping-tracked `MoreQuestsShipQuest`).
-- **Declarative rewards.** Each `QuestPosting` carries a `List<RewardSpec>` (Money / Friendship / Object / Recipe / Mail). `RewardApplier.ApplyEncoded` decodes and pays at `questComplete`, so vanilla in-person delivery, Mail Services Mod, and any future channel produce the same payout. Vanilla's hidden bonuses (every-3rd-quest prize ticket, default 150/255 friendship bumps) are suppressed.
-- **Custom Quest subclasses.** `MoreQuestsItemDeliveryQuest` / `MoreQuestsFishingQuest` implement `IRewardedQuest` (rewards survive save round-trip) and override vanilla turn-in to actually consume requested items. `MoreQuestsShipQuest` is observed at `DayEnding` against the player's shipping bin. `AdventureQuest` is a multistep substrate: each step ships its own kind (`Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `ReachLevel`; the rest of the planned verb set lands as later phases need it) with `Requires[]` ordering. Every active step sees each event in parallel, so independent steps complete in any order. Adventure JSON also accepts `$giver` (resolves to the giver) and `$dispatcher.<role>[N]` (samples N distinct NPCs from a registered dispatch role) tokens in step `Targets[]`. The Items field also accepts `$forage` (any object with the `forage_item` context tag), `$edible-egg` (any non-inedible egg-category object), and `$category:N` (any object with the given vanilla category constant).
-- **Custom boards.** `BoardDefinition` registers a per-location pin-board at a tile of your choosing; `LoadBoardsFromMod(helper, "assets/boards.json")` auto-loads a JSON pack. Quest definitions with `Trigger.Source: "CustomBoard"` are routed to the matching board's slot list each `DayStarted` (filtered by the board's `AllowedCategories`, capped at its `PoolSize`). The framework renders the board sprite + a bobbing "!" indicator in-world, opens a cork-board `CustomBoardMenu` on action-button click, and reuses vanilla `Billboard(true)` as the inner accept-quest popup. No Harmony patches; the world renderer + click handler ride pure SMAPI events.
-- **Runtime trigger-source overrides.** `IMoreQuestsModApi.OverrideTriggerSource(definitionId, source)` re-routes an already-registered quest to a different `TriggerSource` without re-registration. Useful for content-mod config toggles that flip a quest between the help-wanted board and a custom board (e.g. "enable Adventurer's Guild board: when off, fall the guild quests back to the help-wanted board so they stay reachable"). The pipeline consults the override before reading `def.Source`, so the flip takes effect on the next daily roll.
-- **Reward kinds.** `Money`, `Friendship`, `Object`, `Recipe`, `Mail` (`Today` or `Tomorrow` / `NextDay`), `ShopDiscount` (temporarily reduces prices in `Data/Shops/<ShopId>` by `PercentOff` for `DurationDays`; optional `AppliesTo` whitelist scopes it to specific item ids), and `FestivalBias` (Luau or Fair: bumps the governor's reaction tier on the Luau, capped below the Mayor's Shorts gag, or adds a flat bonus to the Fair grange score). Discounts and biases persist per-save, sweep on `DayStarted` once expired, and re-grants merge into the existing entry instead of stacking.
-- **Consequence engine.** Each `QuestPosting` can carry a `ConsequenceSpec` (`Tier1`-`Tier3` + `Special`); `SpecialOrderSpec` carries a list (one entry per dish for Grand-Feast-style multi-dish orders). On `questComplete`, the engine resolves loved/hated NPCs via `Data/NPCGiftTastes` (or a static `Targets[]` for Tier 3 ecology chains), filters to met villagers, samples one NPC per side (one loved + one hated for `GiftTastes` source; every static target for `Static` source), and queues a per-NPC dialogue line + friendship delta. The persistent dialogue queue surfaces lines on the next chat with the affected NPC, capped at one pop per NPC per in-game day. Tier 3 chains step `EarliestFireDay` so one line surfaces per day; if the player skips chat days, the queue prefers the most-recent eligible line and drops earlier stale ones so the narrative stays in order. Entries past `ConsequenceGraceDays` (default 7 days past their fire day) silently expire on `DayStarted` so a player who ducks the affected NPC for weeks doesn't get an out-of-context grievance later. Built-in handlers (`Tier1` = `±FriendshipBasic`, `Tier2` = loved `+FriendshipBasic` / hated `-(FriendshipBasic+FriendshipMid)/2`, `Tier3` = multi-day chain to ecology NPCs, `Special` = gold loss) can be replaced per-tier through `IMoreQuestsModApi.RegisterConsequenceTier`.
-- **Four vanilla wrappers.** `VanillaItemDelivery`, `VanillaResourceCollection`, `VanillaSlayMonster`, `VanillaFishing` expose vanilla quest types as configurable `IQuestDefinition`s with their own GMCM weights.
-- **Condition evaluator.** `ConditionEvaluator.Evaluate(dict, modRegistry)` covers Season, Date, DayRange, Weather, FriendshipLevel, MailReceived, EventSeen, SkillLevel, BuildingExists, KnownCookingRecipe, KnownCraftingRecipe, StatAtLeast, ShippedAtLeast, HasItemEverObtained, HasMod, Random, plus `GSQ` (1.6 GameStateQuery escape hatch). Top-level keys AND-combine; `not:` prefix negates; `|` inside a value is OR. See `plan.md §2.6` for the full key list.
-- **Game-data cache.** `GameDataCache` reads `Data/Crops`, `Data/Fish`, `Data/Locations`, `Data/CookingRecipes`, `Data/NPCGiftTastes` once per day so generators don't pay the load cost per Build call.
-- **Item resolver + NPC dispatch.** `ItemResolver` reads cached game data so modded items surface automatically. `DispatchRegistry` is a runtime, role-keyed picker (saloon chefs, ecology-minded, conservation guides, etc.); the built-in vanilla + RSV/ESV/VMV/SVE seeds register through the same public `RegisterDispatchNpc` API third parties use, and authors can define new role strings on the fly.
-- **Custom assets.** Pad and pin sprites for the billboard, loaded from `Mods/RafiaBee.MoreQuestsFramework/Pad` and `.../Pin`.
+- **Paginated Special Orders board (opt-in).** If you play a heavily modded game, chances are the special orders list is quite long and it'll take a lot of in-game years to do even *see* all the quests. This config lets you see up to 3 pages in the special orders board so you get a bigger selection of orders. Set `SpecialOrdersBoardPages` to 2 or 3 in config and the board grows prev/next arrows so you can browse every eligible order, two per page. Default is 1 (vanilla behavior, patches no-op). You still can only pick 1 order, I didn't change anything related to the special order code itself.
+- **Daily generation pipeline.** Samples the registry by weight at `DayStarted`, subject to `MaxPerDay`, cooldowns, per-NPC dedup, friendship-cap dedup, and recent history. This is *only* for the Help Wanted billboard (daily board) quests.
+- **Trigger sources.**
+  - `DailyBoard`, weighted draw from the daily pool.
+  - `Mail`, older path kept around for compatibility. Use `Periodic` instead if you want a quest that fires every N days.
+  - `Periodic`, every N in-game days.
+  - `DateLocked`, a specific date, optionally yearly.
+  - `DateRange`, every day inside a closed date range.
+  - `OneShot`, fires once per save when the `When` predicate first comes true.
+  - `BuildingBuilt`, the day a given farm building is added (with optional `DayDelay`).
+  - `MailReceived`, the day a given mail flag enters the player's received list (with optional `DayDelay`).
+  - `WeatherForecast`, when tomorrow's weather matches. Handy for rainy-day mail that arrives the night before.
+  - `NpcDialogue`, queues the posting until the player next speaks to the named NPC.
+  - `SpecialOrder`, writes a `Data/SpecialOrders` entry on the matching `StartDate` for `Duration` days. Vanilla owns the accept and tracking flow from there.
+  - `CustomBoard`, per-day weighted draw routed to a registered `BoardDefinition`'s slot list, filtered by the board's `AllowedCategories` and capped at its `PoolSize`.
+
+  The trigger and the delivery method are picked separately. The trigger says *when* the quest fires, and the delivery says *how* it reaches the player (mail letter, next NPC chat, daily board slot, etc.). For example, a `DateLocked` quest set to Winter 12 doesn't have to arrive as mail, you can set `Trigger.Delivery` to `NpcDialogue` and it'll instead wait until you talk to the giver. Non-board sources default to mail when `Delivery` isn't set. Fire history is saved per-save in `MoreQuestsFrameworkState`.
+- **Quest factory.** Builds the right `Quest` subclass per posting (`ItemDeliveryQuest`, `FishingQuest`, `SlayMonsterQuest`, `ResourceCollectionQuest`, plus the framework's own multi-step `AdventureQuest` and shipping-tracked `MoreQuestsShipQuest`).
+- **Declarative rewards.** Each `QuestPosting` carries a `List<RewardSpec>`. `RewardApplier.ApplyEncoded` decodes and pays them at `questComplete`, so vanilla in-person delivery, Mail Services Mod, and any future channel all produce the same payout. Vanilla's default 150/255 friendship bump on completion is suppressed so the declarative rewards are the only source. The every-3rd-quest prize ticket and milestone mail flags are kept (we mark accepted billboard quests with `dailyQuest = true` so those side-effects still fire).
+- **Custom Quest subclasses.** `MoreQuestsItemDeliveryQuest` and `MoreQuestsFishingQuest` implement `IRewardedQuest` (so rewards survive save round-trip) and override vanilla turn-in to actually consume requested items. `MoreQuestsShipQuest` is observed at `DayEnding` against the player's shipping bin. `AdventureQuest` is the base for any quest with more than one step. You give it a list of steps and each step has its own kind (`Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `ReachLevel`, `Visit`, `Build`, `Plant`, `Collect`, `ClearWeeds`, `ClearDebris`, `Custom`) and uses `Requires[]` for ordering. Every active step sees each event in parallel, so independent steps can complete in any order. Adventure JSON also accepts `$giver` (resolves to the giver) and `$dispatcher.<role>[N]` (samples N distinct NPCs from a registered dispatch role) tokens in step `Targets[]`. The `Items` field also accepts `$forage` (any object tagged `forage_item`), `$edible-egg` (any non-inedible egg-category object), and `$category:N` (any object with that vanilla category constant).
+- **Custom boards.** `BoardDefinition` registers a per-location pin-board at a tile of your choosing. `LoadBoardsFromMod(helper, "assets/boards.json")` auto-loads a JSON pack. Quest definitions with `Trigger.Source: "CustomBoard"` route to the matching board's slot list each `DayStarted` (filtered by the board's `AllowedCategories`, capped at its `PoolSize`). The framework renders the board sprite plus a bobbing "!" indicator in-world, opens a cork-board `CustomBoardMenu` on action-button click, and reuses vanilla `Billboard(true)` as the inner accept-quest popup.
+- **Runtime trigger-source overrides.** `IMoreQuestsModApi.OverrideTriggerSource(definitionId, source)` re-routes an already-registered quest to a different `TriggerSource` without re-registration. Useful for content-mod toggles that flip a quest between the help-wanted board and a custom board (e.g. guild board on -> off, falls the guild quests back to the help-wanted board so they stay reachable). The pipeline checks the override before reading `def.Source`, so the flip takes effect after you go to sleep.
+- **Reward kinds.**
+  - `Money`, gold dropped into the player's wallet at completion.
+  - `Friendship`, a flat friendship-point change for a named NPC.
+  - `Object`, a stack of one item id.
+  - `Recipe`, a cooking or crafting recipe.
+  - `Mail` with `Today` or `Tomorrow` (alias `NextDay`).
+  - `ShopDiscount`, lowers prices in `Data/Shops/<ShopId>` by `PercentOff` for `DurationDays`. Optional `AppliesTo` whitelist scopes it to specific item ids. Optional `GuaranteedStock` force-adds any whitelisted item the shop doesn't normally carry.
+  - `AnimalPurchaseDiscount`, the same concept but applied to every `Data/FarmAnimals` purchase price. Should be compatible with mods like Livestock Bazaar that patch onto the animal purchase UI, but needs testing.
+  - `FestivalBias`, a one-shot bias on the Luau governor reaction or the Fair grange judging score.
+  - `FairStarTokens`, adds tokens to the player's `festivalScore` at the start of the vanilla Stardew Valley Fair.
+
+  Discounts and biases persist per save, sweep off on `DayStarted` once expired, and a re-grant merges into the existing entry instead of stacking.
+- **Consequence engine.** Each `QuestPosting` can carry a `ConsequenceSpec` (`Tier1` to `Tier3`, or `Special`). `SpecialOrderSpec` carries a list (e.g. one entry per dish for Grand-Feast-style multi-dish orders). On `questComplete`, the engine resolves loved/hated NPCs via `Data/NPCGiftTastes` (or a static `Targets[]` for Tier 3 ecology chains), filters to met villagers, samples one NPC per side (one loved plus one hated for `GiftTastes` source, every static target for `Static` source), and queues a per-NPC dialogue line plus friendship delta. The persistent dialogue queue adds lines on the next chat with the affected NPC, capped at one pop per NPC per in-game day. Tier 3 chains step `EarliestFireDay` so one line shows up per day. If the player doesn't chat with the designated npc that day (or for a number of days), the queue drops earlier stale lines and shows the most recent elligible line so the narration stays immersive (I tried my best). Entries past `ConsequenceGraceDays` (default 7 days after the quest starts) silently expire on `DayStarted`, so if you avoid the affected NPC for the whole week, you won't face the consequence. Built-in handlers (`Tier1` = `±FriendshipBasic`, `Tier2` = loved `+FriendshipBasic` / hated `-(FriendshipBasic+FriendshipMid)/2`, `Tier3` = multi-day chain to ecology NPCs, `Special` = gold loss) can be replaced per-tier through `IMoreQuestsModApi.RegisterConsequenceTier`.
+- **Four vanilla wrappers.** `VanillaItemDelivery`, `VanillaResourceCollection`, `VanillaSlayMonster`, `VanillaFishing` expose vanilla quest types as configurable `IQuestDefinition`s with their own GMCM weights. (Just turn them off, my quests are better :>)
+- **Condition evaluator.** Powers the JSON `Available { ... }` block. Every key in the block has to be true for the quest to post. Stick `not:` in front of a key to flip it. Use `|` inside a value to mean "any of these". Supported keys (case-insensitive):
+
+  | Key | Notes | Examples |
+  | --- | --- | --- |
+  | `Season` | One of `spring` / `summer` / `fall` / `winter`. Space-separated list works too. | `"spring"`, `"spring fall"`, `"spring\|fall"` |
+  | `Date` | `<season> <day>`, or a closed range like `winter 22-25`. | `"winter 12"`, `"winter 22-25"` |
+  | `DayRange` | Day numbers inside the current season. | `"1-7"`, `"21-28"` |
+  | `DaysOfWeek` | Full name (`Monday`), short (`Mon`), or number 0-6 (0 = Sunday). Space-separated for multiple. | `"Mon Wed Fri"`, `"Saturday Sunday"` |
+  | `Year` | Year number, true when the current year is at or above this. | `"2"`, `"3"` |
+  | `Weather` | Today's weather. | `"Rain"`, `"Sun"`, `"Sun\|Wind"` |
+  | `WeatherForecast` | Tomorrow's weather. | `"Rain"`, `"Storm"` |
+  | `MinDaysPlayed` / `MaxDaysPlayed` | Total in-game days played. | `"28"`, `"112"` |
+  | `IsPlayerMarried` / `IsMultiplayer` / `IsCommunityCenterCompleted` | True/false flags. | `"true"`, `"false"` |
+  | `SkillLevel` | `<Skill> <minLevel>`. Skill is one of Farming/Fishing/Mining/Foraging/Combat/Cooking. | `"Farming 4"`, `"Fishing 6"` |
+  | `MinDeepestMineLevel` | Lowest mine floor the player has reached. | `"40"`, `"120"` |
+  | `NpcExists` / `NpcMet` | NPC is loaded in the save / has been spoken to. Space-separated is AND, `\|` is OR. | `"Caroline"`, `"George Evelyn"`, `"Maru\|Sebastian"` |
+  | `FriendshipLevel` | `<NPC> <minHearts>`. | `"Caroline 1"`, `"Leah 8"` |
+  | `FriendshipStatus` | `<NPC> <status>`. Status is `dating` / `engaged` / `married` / `roommate` / `divorced`. | `"Abigail dating"`, `"Shane married"` |
+  | `MailReceived` / `EventSeen` | A specific mail flag is set / event id has been seen. | `"Visit_Island"`, `"60367"` |
+  | `BuildingExists` | Farm has the named building. | `"Coop"`, `"Deluxe Barn"`, `"Silo"` |
+  | `KnownCookingRecipe` / `KnownCraftingRecipe` | The player learned the recipe. | `"Pizza"`, `"Preserves Jar"` |
+  | `StatAtLeast` | `<statName> <minCount>`, reads from `Game1.stats`. | `"ChickenEggsLayed 1"`, `"MonstersKilled 50"` |
+  | `ShippedAtLeast` | `<itemId> <minCount>` (qualified `(O)174` or bare `174`). | `"(O)174 10"`, `"184 1"` |
+  | `HasItemEverObtained` | The item has been shipped or cooked at least once on this save. | `"176"`, `"305"` |
+  | `HasMod` | A mod with the given UniqueID is installed. | `"PathosChild.SkipIntro"`, `"Rafseazz.RidgesideVillage"` |
+  | `FollowingAnimalCount` | Animals currently following the player (uses the Livestock Follows You bridge). | `"1"`, `"2"` |
+  | `Random` | A 0.0 to 1.0 chance gate rolled each evaluation. | `"0.25"`, `"0.5"` |
+  | `GSQ` | A 1.6 `GameStateQuery` string, for anything the keys above don't cover. | `"PLAYER_HAS_PROFESSION Current Rancher"` |
+
+- **Game-data cache.** `GameDataCache` reads `Data/Crops`, `Data/Fish`, `Data/Locations`, `Data/CookingRecipes`, `Data/NPCGiftTastes` once per day so generators don't pay the load cost on every Build call.
+- **Item resolver and NPC dispatch.** `ItemResolver` reads cached game data so modded items show up automatically. `DispatchRegistry` is a runtime role-keyed picker (saloon chefs, ecology-minded, conservation guides, etc.). The built-in vanilla and RSV / ESV / VMV / SVE seeds register through the same public `RegisterDispatchNpc` API that third parties use, and mod authors can define new role strings on the fly.
+- **Custom assets.** Pad and pin sprites for the billboard, loaded from `Mods/RafiaBee.MoreQuestsFramework/Pad` and `.../Pin` (resprite of Aedenthorn's Help Wanted pad and pin!).
 
 ## Dependencies
 
 **Required**
 
-- **SpaceCore** (`spacechase0.SpaceCore`) — registers custom `Quest` subclasses with the serializer so saves round-trip cleanly.
+- **SpaceCore** (`spacechase0.SpaceCore`), registers custom `Quest` subclasses with the serializer so saves round-trip cleanly.
 
 **Optional**
 
-- **Generic Mod Config Menu** — exposes the framework's tunables and per-quest weights as an in-game config page.
+- **Generic Mod Config Menu**
 
 ## Configuration
 
-`Mods/MoreQuestsFramework/config.json`. Surfaced through GMCM when installed:
+`Mods/MoreQuestsFramework/config.json`. Shows up in GMCM when installed:
 
-- **Quest board** — `QuestsPerDay`, `AllowDuplicateGiverPerDay`, `SkipFriendshipQuestsAtMaxHeart`.
-- **Per-quest weights** — one entry per registered `IQuestDefinition` (built dynamically; consumer mods' quests appear too).
-- **Vanilla wrappers** — toggle and tune the four bundled vanilla quest types.
-- **Friendship reward sizes** — `FriendshipBasic`, `FriendshipMid`, `FriendshipIntermediate`, `FriendshipLarge`, `FriendshipMultiSmall`, `FriendshipMultiHeart`.
-- **Gold reward bases** — beginner / basic / intermediate / advanced / expert tiers.
-- **Reward multipliers** — `RewardMultiplierBelowSell`, `RewardMultiplierAboveSell`, `RewardMultiplierFishPremium`.
-- **Deadlines** — short / medium / long / extended (in-game days).
-- **Consequences** — `ConsequenceGraceDays` (days past a queued reaction's fire day before it silently expires; default 7). Controls how long an NPC keeps a chained or queued reaction alive when the player is dodging them.
+- **Quest board:** `QuestsPerDay`, `SpecialOrdersBoardPages`, `AllowDuplicateGiverPerDay`, `SkipFriendshipQuestsAtMaxHeart`.
+- **Master toggles:** `DifficultyScaling`, `FishingIgnoresVisitedLocations`, `ForagingIgnoresVisitedLocations`.
+- **Per-quest weights:** one entry per registered `IQuestDefinition` (built at runtime, so consumer mods' quests show up too).
+- **Vanilla wrappers:** toggle and tune the four bundled vanilla quest types.
+- **Friendship reward sizes:** `FriendshipBasic`, `FriendshipMid`, `FriendshipIntermediate`, `FriendshipLarge`, `FriendshipMultiSmall`, `FriendshipMultiHeart`.
+- **Gold reward bases:** beginner / basic / intermediate / advanced / expert tiers.
+- **Reward multipliers:** `RewardMultiplierBelowSell`, `RewardMultiplierAboveSell`, `RewardMultiplierFishPremium`.
+- **Deadlines:** short / medium / long / extended / none (in-game days).
+- **Consequences:** `ConsequenceGraceDays` (days past a queued reaction's fire day before it silently expires, default 7). Controls how long an NPC keeps a queued reaction alive when the player avoids them (i.e. how long Demetrious keeps a grudge when you catch too many fish).
 
-GMCM registration is deferred until the first `UpdateTicking` so consumer-mod quests that register during their own `OnGameLaunched` appear in the per-quest weight list.
+GMCM registration is deferred until the first `UpdateTicking` so consumer-mod quests that register during their own `GameLaunched` show up in the per-quest weight list.
 
-## Registering quests from another mod
+## For Mod Authors: registering quests from another mod
 
-Three entry points, depending on whether your mod is a SMAPI content pack, a C# mod with bundled JSON, or a C# mod with imperative quest definitions.
+There are three entry points, depending on whether your mod is a SMAPI content pack, a C# mod with bundled JSON, or a C# mod with imperative quest definitions.
 
 ### A. SMAPI content pack (no code)
 
-Drop a folder under `Mods/` with a `manifest.json` declaring `"ContentPackFor": { "UniqueID": "RafiaBee.MoreQuestsFramework" }` and a `quests.json` next to it. The framework auto-loads every owned content pack at startup. See the working example at [docs/example-pack/](docs/example-pack/).
+Drop a folder under `Mods/` with a `manifest.json` declaring `"ContentPackFor": { "UniqueID": "RafiaBee.MoreQuestsFramework" }` and a `quests.json` with it. The framework auto-loads every owned content pack at startup. See the working example at [docs/example-pack/](docs/example-pack/).
 
 ### B. C# mod with bundled JSON + generators
 
@@ -77,7 +131,7 @@ private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
 }
 ```
 
-`quests.json` carries metadata; the C# generator owns runtime randomization. `RegistrationOpen` fires from the framework's first update tick (after every consumer mod's `GameLaunched` runs), so subscribing inside your own `GameLaunched` is the correct timing.
+`quests.json` carries metadata, the C# generator owns runtime randomization. `RegistrationOpen` fires from the framework's first update tick (after every consumer mod's `GameLaunched` runs), so subscribing inside your own `GameLaunched` is the right timing. See the working example at [docs/example-csharp-generators/](docs/example-csharp-generators/).
 
 ### C. C# mod with `IQuestDefinition` instances
 
@@ -86,6 +140,8 @@ For mods that prefer pure C# without JSON:
 ```csharp
 scope.RegisterQuest(new MyQuestDefinition());
 ```
+
+See the working example at [docs/example-csharp-iquestdef/](docs/example-csharp-iquestdef/).
 
 ### Schema
 
@@ -144,14 +200,15 @@ scope.RegisterQuest(new MyQuestDefinition());
 
 Notes on the schema:
 
-- Each `QuestDef` sets either `Generator` (a name registered via `RegisterGenerator`) or a fully-declarative `Objective` (or `Steps[]` for multistep).
+- Each `QuestDef` sets either `Generator` (a name registered via `RegisterGenerator`) or a fully-declarative `Objective` (or `Steps[]` for multi-step).
 - `{i18n:key}` tokens in any string field resolve through the owning pack's translation helper.
-- `Available` accepts every key the framework's `ConditionEvaluator` knows about; `not:` prefix negates; `|` inside a value is OR.
-- `Trigger.Delivery: "Mail" | "NpcDialogue" | "DailyBoard"` overrides the channel default if needed.
-- Adventure (multistep) quests use `Steps[]` instead of `Objective`. Each step has a `Name` (used by other steps' `Requires[]`), a `Kind`, a `Description`, and step-kind-specific targeting fields. `$giver` in `Targets[]` rewrites to the resolved giver name. `$dispatcher.<role>` resolves to one NPC from the named dispatch role; `$dispatcher.<role>[N]` resolves to N distinct NPCs (clamped to whatever the role's pool yields when smaller). Resolution happens once at quest-creation time, so the picked names are stable across save/reload. Step kinds available now: `Deliver`, `Talk`, `Gift`, `Ship`, `Catch`, `Slay`. Independent steps (no `Requires[]`) are all active simultaneously.
-- Single-objective `Ship` quests use `"Objective": { "Kind": "Ship", "Item": "(O)787", "Count": 1 }`. `Item` accepts a single string or an array — when an array, any id satisfies the delivery. Observed against `Game1.getFarm().getShippingBin(player)` at `DayEnding`.
+- `Available` accepts every key the condition evaluator knows about (table above). `not:` prefix negates. `|` inside a value is OR.
+- `Trigger.Delivery: "Mail" | "NpcDialogue" | "DailyBoard"` overrides the default channel.
+- Adventure (multi-step) quests use `Steps[]` instead of `Objective`. Each step has a `Name` (used by other steps' `Requires[]`), a `Kind`, a `Description`, and step-kind-specific targeting fields. `$giver` in `Targets[]` rewrites to the resolved giver name. `$dispatcher.<role>` resolves to one NPC from the named dispatch role, `$dispatcher.<role>[N]` to N distinct NPCs (clamped to whatever the pool has when smaller). Resolution happens once at quest-creation time so the picked names are stable across save/reload.
+- Step kinds available: `Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearWeeds`, `ClearDebris`, `Custom`. Independent steps (no `Requires[]`) are all active at once.
+- Single-objective `Ship` quests use `"Objective": { "Kind": "Ship", "Item": "(O)787", "Count": 1 }`. `Item` accepts a single string or an array, when an array, any id satisfies the delivery. Observed against `Game1.getFarm().getShippingBin(player)` at `DayEnding`.
 - `MailReward` accepts `"When": "Today"` (default), `"Tomorrow"`, or `"NextDay"` (alias for `Tomorrow`).
-- **`SpecialOrder` source.** Trigger fires when `today == StartDate` (`<season> <day>`) and the cooldown has elapsed. The framework writes a vanilla `Data/SpecialOrders` entry (key namespaced as `<ownerUniqueId>.<defId>.<dayStamp>` so other mods' SpecialOrders are never disturbed) for `Duration` days (`OneDay`/`TwoDays`/`ThreeDays`/`Week`/`TwoWeeks`/`Month`). The matching `Generator` returns a `QuestPosting` with `Kind = PostingKind.SpecialOrder` and a populated `SpecialOrder` block (`Name`/`Text`/`Requester`/`Duration`/`Objectives[]`/`Rewards[]`); each `SpecialOrderObjectiveSpec.Type`/`SpecialOrderRewardSpec.Type` is the vanilla type name without the `Objective`/`Reward` suffix (e.g. `Ship`, `Money`, `Friendship`). Vanilla owns accept + objective tracking + reward grant from there.
+- **`SpecialOrder` source.** Trigger fires when `today == StartDate` (`<season> <day>`) and the cooldown has elapsed. The framework writes a vanilla `Data/SpecialOrders` entry (key namespaced as `<ownerUniqueId>.<defId>.<dayStamp>` so other mods' orders are never disturbed) for `Duration` days (`OneDay` / `TwoDays` / `ThreeDays` / `Week` / `TwoWeeks` / `Month`). The matching `Generator` returns a `QuestPosting` with `Kind = PostingKind.SpecialOrder` and a populated `SpecialOrder` block (`Name` / `Text` / `Requester` / `Duration` / `Objectives[]` / `Rewards[]`). Each `SpecialOrderObjectiveSpec.Type` / `SpecialOrderRewardSpec.Type` is the vanilla type name without the `Objective` / `Reward` suffix (e.g. `Ship`, `Money`, `Friendship`). Vanilla owns accept, objective tracking, and reward grant from there.
 
 ## Public API
 
@@ -159,42 +216,45 @@ Notes on the schema:
 
 Lifecycle events:
 
-- `RegistrationOpen` / `RegistrationClosed` — bracket the window in which `RegisterQuest` is accepted. The registry freezes after `RegistrationClosed`.
-- `QuestAccepted` / `QuestCompleted` / `QuestRemoved` — fired only for framework-managed quests. Each event arg carries `Quest`, `OwnerUniqueId`, `DefinitionId`.
-- `DayRefreshed(dailyCount, mailCount)` — fires at end of `OnDayStarted` and from `RefreshOffers()`.
+- `RegistrationOpen` / `RegistrationClosed`, bracket the window in which `RegisterQuest` is accepted. The registry freezes after `RegistrationClosed`.
+- `QuestAccepted` / `QuestCompleted` / `QuestRemoved`, fired only for framework-managed quests. Each event arg carries `Quest`, `OwnerUniqueId`, `DefinitionId`.
+- `DayRefreshed(dailyCount, mailCount)`, fires at the end of `OnDayStarted` and from `RefreshOffers()`.
 
 Custom `Quest` subclasses must carry a unique `[XmlType("Mods_<owner>_<name>")]` attribute and be registered via `RegisterCustomQuestType` so SpaceCore's serializer factory knows about them.
 
 ### Quality-aware Deliver
 
-`ObjectiveDef.MinQuality` and `AdventureStep.MinQuality` gate item acceptance on `Object.Quality >= MinQuality` for `MoreQuestsItemDeliveryQuest` and AdventureQuest `Deliver` steps. Quality 0 = base / vanilla behaviour (any quality accepted), 1 = silver, 2 = gold, 4 = iridium (vanilla skips 3). Non-Object items (rings, weapons, etc.) fail any non-zero gate. Quest descriptions render the requirement on the content side; the framework only enforces.
+`ObjectiveDef.MinQuality` and `AdventureStep.MinQuality` gate item acceptance on `Object.Quality >= MinQuality` for `MoreQuestsItemDeliveryQuest` and AdventureQuest `Deliver` steps. Quality 0 = base (any quality accepted), 1 = silver, 2 = gold, 4 = iridium (vanilla skips 3). Non-Object items (rings, weapons, etc.) fail any non-zero gate. Quest descriptions render the requirement on the content side, the framework only enforces.
 
-`ObjectiveDef.LocationName` / `MinSize` / `Weather` extend single-objective `Fishing` quests with the same filter set the `Catch` step exposes. Set on a `QuestPosting` (or via the JSON `Objective.{LocationName,MinSize,Weather}` fields) and the catch only credits when the player is at the named location, the catch's reported size (inches) clears the threshold, and the runtime weather matches. Weather alias / `Rain ∋ Storm` rules mirror the `Catch` step. Empty / zero values disable each gate independently.
+`ObjectiveDef.LocationName` / `MinSize` / `Weather` extend single-objective `Fishing` quests with the same filter set the `Catch` step exposes. Set them on a `QuestPosting` (or via the JSON `Objective.{LocationName,MinSize,Weather}` fields) and the catch only credits when the player is at the named location, the catch's reported size (inches) clears the threshold, and the runtime weather matches. Weather alias and `Rain ∋ Storm` rules mirror the `Catch` step. Empty or zero values disable each gate independently.
 
 ### AdventureQuest step kinds
 
-Multi-step "Adventure" quests carry a `Steps[]` list; each entry has a `Kind` driving how the step advances:
+Multi-step Adventure quests carry a `Steps[]` list. Each entry has a `Kind` driving how the step advances:
 
-- `Deliver` / `Talk` / `Gift` / `GiftUniqueNpcs` — vanilla `OnItemOfferedToNpc` / `OnNpcSocialized` virtuals. `Targets[]` = NPC names, `Items[]` = accepted item ids (or `$`-prefixed predicates: `$edible-egg`, `$category:N`, `$tag:<contextTag>`, `$forage` (alias for `$tag:forage_item`)).
-- `Catch` — `OnFishCaught` virtual. `Items[]` = accepted fish ids. Optional `LocationName`, `MinSize`, `Weather` filters gate the catch on current location, reported size in inches (size -1 always fails non-zero gates), and runtime weather (`Sun` / `Rain` / `Storm` / `Snow` / `Wind`; `Rain` matches both Rain and Storm).
-- `Slay` — `OnMonsterSlain` virtual. `Targets[]` = monster type names.
-- `Ship` — DayEnding shipping-bin observer. `Items[]` filter, `Count` = stack to credit. Set `AllowDecorShipping: true` on the step to bypass vanilla's furniture / decor shipping ban while the parent quest is in the active log.
-- `ReachLevel` — DayStarted + `Player.Warped` poll of `deepestMineLevel`. `Targets[0]` = `Mine` or `SkullCavern`, `Count` = floor.
-- `Visit` — `Player.Warped` observer. `Targets[0]` = location name. `Items[]` reserved for future "with N following animals" gating (no-op until LivestockFollowsYou exposes a follower API).
-- `Build` — DayStarted diff against the previous day's farm-building snapshot. `Targets[0]` = building type.
-- `Plant` — `World.TerrainFeatureListChanged` filter Tree. `Targets[0]` = location, `Count` = trees planted.
-- `ClearWeeds` — `World.ObjectListChanged` removed list filter `IsWeeds()`. `Targets[0]` = location, `Count` = weeds cleared.
-- `ClearDebris` — per-second poll of `location.resourceClumps`. `Targets[0]` = location, `Count` = clumps removed.
+- `Deliver` / `Talk` / `Gift` / `GiftUniqueNpcs`, vanilla `OnItemOfferedToNpc` and `OnNpcSocialized` virtuals. `Targets[]` = NPC names, `Items[]` = accepted item ids (or `$`-prefixed predicates: `$edible-egg`, `$category:N`, `$tag:<contextTag>`, `$forage` (alias for `$tag:forage_item`)).
+- `Catch`, the `OnFishCaught` virtual. `Items[]` = accepted fish ids. Optional `LocationName`, `MinSize`, `Weather` filters gate the catch on current location, reported size in inches (size -1 always fails non-zero gates), and runtime weather (`Sun` / `Rain` / `Storm` / `Snow` / `Wind`. `Rain` matches both Rain and Storm).
+- `Slay`, the `OnMonsterSlain` virtual. `Targets[]` = monster type names.
+- `Ship`, DayEnding shipping-bin observer. `Items[]` filter, `Count` = stack to credit. Set `AllowDecorShipping: true` on the step to bypass vanilla's furniture / decor shipping ban while the parent quest is in the active log.
+- `ReachLevel`, DayStarted plus `Player.Warped` poll of `deepestMineLevel`. `Targets[0]` = `Mine` or `SkullCavern`, `Count` = floor.
+- `Visit`, `Player.Warped` observer. `Targets[0]` = location name. `Items[]` accepts `$follower-count:N` so quests can require N animals following the player (uses the Livestock Follows You bridge when present).
+- `Build`, DayStarted diff against the previous day's farm-building snapshot. `Targets[0]` = building type.
+- `Plant`, `World.TerrainFeatureListChanged` filtered to Tree. `Targets[0]` = location, `Count` = trees planted.
+- `ClearWeeds`, `World.ObjectListChanged` removed list filtered by `IsWeeds()`. `Targets[0]` = location, `Count` = weeds cleared.
+- `ClearDebris`, per-second poll of `location.resourceClumps`. `Targets[0]` = location, `Count` = clumps removed.
+- `Collect`, `Player.InventoryChanged` additions for matching item ids.
+- `Custom`, escape hatch for consumer-mod step handlers.
 
-Step ordering is enforced by `Requires[]` (other step `Name`s that must be Done before the step becomes active). `$giver` in `Targets[]` rewrites to the resolved giver at quest-creation time. None of the step observers add Harmony patches; every kind rides an existing SMAPI event or a framework-owned tick.
+Step ordering is enforced by `Requires[]` (other step `Name`s that must be Done before the step becomes active). `$giver` in `Targets[]` rewrites to the resolved giver at quest-creation time. None of the step observers add Harmony patches, every kind rides an existing SMAPI event or a framework-owned tick.
 
 ### Decor-shipping bypass
 
-Festival-supply quests often want the player to ship items vanilla refuses to accept (Hay Bales, Wood Lamp-posts, table furniture, custom decor). Set `AllowDecorShipping = true` on a `QuestPosting` (single-step Ship quests) or any `AdventureStep` of `Kind: Ship` (multi-step Adventure quests) and the framework lifts the ban for the duration of the quest. Implemented as a gated postfix on `Object.canBeShipped`, recomputed once a second from the player's quest log; off-quest sessions pay one int compare. The bypass is total — every item becomes shippable while a decor-shipping quest is in the log — so authors should only enable it on quests where that's an acceptable trade-off.
+This is mainly for peeps who don't use [Ship Anything](https://www.nexusmods.com/stardewvalley/mods/3782) mod.
+My festival supply quests often want the player to ship items vanilla refuses to accept (Hay Bales, Wood Lamp-posts, table furniture, custom decor). Set `AllowDecorShipping = true` on a `QuestPosting` (single-step Ship quests) or any `AdventureStep` of `Kind: Ship` (multi-step Adventure quests) and the framework lifts the ban for as long as the quest is active. Implemented as a gated postfix on `Object.canBeShipped`, recomputed once a second from the player's quest log. Off-quest sessions pay one int compare. The bypass is total, every item becomes shippable while a decor-shipping quest is in the log, so authors should only enable it on quests where that trade-off is acceptable.
 
 ### Combat-food reward pool
 
-Quests that hand out a random combat-buff food on completion (e.g. More Quests' Monster Hunt) draw from a shared item-id pool the framework owns. The pool starts empty; the content mod seeds vanilla defaults at `RegistrationOpen`, and other mods can append their own combat foods through:
+Quests that hand out a random combat-buff food on completion (e.g. More Quests' Monster Hunt) draw from a shared item-id pool the framework owns. The pool starts empty. The content mod seeds vanilla defaults at `RegistrationOpen`, and other mods can append their own combat foods through:
 
 ```csharp
 var fw = helper.ModRegistry.GetApi<IMoreQuestsApi>("RafiaBee.MoreQuestsFramework");
@@ -214,14 +274,28 @@ The framework registers an `mq_refresh` SMAPI console command that re-rolls toda
 
 ## Notes for mods that deliver items on the player's behalf (Mail Services Mod, etc.)
 
-The framework's gift-step quests (`Gift`, `GiftUniqueNpcs` in `AdventureQuest`, plus the vanilla `ItemDeliveryQuest`-style turn-ins) advance via `Quest.OnItemOfferedToNpc`. Mods that mail items on the player's behalf bypass that hook because no in-person interaction occurs, so steps that count gifted items don't tick.
+The framework's gift-step quests (`Gift`, `GiftUniqueNpcs` in `AdventureQuest`, plus the vanilla `ItemDeliveryQuest`-style turn-ins) advance via `Quest.OnItemOfferedToNpc`. Mods that mail items on the player's behalf skip that hook because no in-person interaction happens, so steps that count gifted items don't tick.
 
-If your mod delivers items to NPCs outside the in-person flow, call `quest.OnItemOfferedToNpc(npc, item, probe: false)` on each in-progress quest in `Game1.player.questLog` after the delivery succeeds. The framework's quest subclasses respond to the call — gift steps tick, friendship rewards land, the consequence (if any) fires on completion. Probe-mode (`probe: true`) returns whether the quest accepts the item without consuming it, which mirrors vanilla's accept-check pattern.
+If your mod delivers items to NPCs outside the in-person flow, call `quest.OnItemOfferedToNpc(npc, item, probe: false)` on each in-progress quest in `Game1.player.questLog` after the delivery succeeds. The framework's quest subclasses respond to the call, gift steps tick, friendship rewards land, and the consequence (if any) fires on completion. Probe-mode (`probe: true`) returns whether the quest accepts the item without consuming it, which mirrors vanilla's accept-check pattern.
 
 ## Credits
 
-- **ConcernedApe** for Stardew Valley.
-- **Pathoschild** for SMAPI.
-- **spacechase0** for Generic Mod Config Menu.
-- **aedenthorn** for [Help Wanted](https://www.nexusmods.com/stardewvalley/mods/14640) — the inspiration for this framework's vanilla quest tuning, and the source the pad and pin sprites were retextured from.
-- **The Stardew Valley modding community** for tuning feedback on the custom quests and for the modded-NPC info that seeds the framework's NPC dispatch pools.
+**ConcernedApe** for Stardew Valley.
+
+**Pathoschild** for **[SMAPI](https://www.nexusmods.com/stardewvalley/mods/2400)**.
+
+**spacechase0** for **[Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098)**.
+
+**aedenthorn** for **[Help Wanted](https://www.nexusmods.com/stardewvalley/mods/14640)**, the inspiration for this framework's vanilla quest tuning, and the source the pad and pin sprites were retextured from.
+
+**SiTheGreat1** for **[Si's Extra Crafting Materials](https://www.nexusmods.com/stardewvalley/mods/25467)**
+
+Npcs from these mods added so much variety to my quest giver pools:
+- **Rafseazz** for **[Ridgeside Village](https://www.nexusmods.com/stardewvalley/mods/7286)**.
+- **lemurkat** for **[East Scarp](https://www.nexusmods.com/stardewvalley/mods/5787)**
+- **Lumisteria** for **[Visit Mount Vapius](https://www.nexusmods.com/stardewvalley/mods/9600)**
+- **FlashShifter** for **[Stardew Valley Expanded](https://www.nexusmods.com/stardewvalley/mods/3753)**
+- **TenebrousNova** for **[Eli and Dylan - Custom NPCs for East Scarp](https://www.nexusmods.com/stardewvalley/mods/13883)**
+- **NassilLove** for **[Arumi the Actress](https://www.nexusmods.com/stardewvalley/mods/44286)**
+
+Finally **the Stardew Valley modding community** for tuning feedback on the custom quests and for the modded NPC info that seeded the framework's NPC dispatch pools.
