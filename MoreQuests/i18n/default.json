@@ -409,9 +409,9 @@
     "quest.festival.eggFestivalDecor.description": "Farmer, I need your help decorating the town for the upcoming Egg festival. The rest of the townsfolk have helped out a ton, I just need a few haybales to complete the look. Ship me {{count}} when you can.",
     "quest.festival.eggFestivalDecor.step.hayBales": "Ship {{count}} hay bales.",
 
-    "quest.festival.lewisEasterEggs.title": "Dye for the Egg Festival",
-    "quest.festival.lewisEasterEggs.description": "Farmer, the children are itching to paint eggs at the Egg Festival and the dye kit Pierre stocks is, well, beige. I'd like to set out something brighter this year. Ship me {{countPer}} dyed items in each of these {{colorCount}} colors so we can mix proper paints: {{colors}}. Get them in before festival day and I'll send a little something I had Robin help me put together.",
-    "quest.festival.lewisEasterEggs.step": "Ship {{count}} {{color}} items.",
+    "quest.festival.dyeForEggs.title": "Dye for the Egg Festival",
+    "quest.festival.dyeForEggs.description": "Farmer, the children are itching to paint eggs at the Egg Festival and the dye kit Pierre stocks is, well, beige. I'd like to set out something brighter this year. Ship me {{countPer}} dyed items in each of these {{colorCount}} colors so we can mix proper paints: {{colors}}. Get them in before festival day and I'll send a little something I had Robin help me put together.",
+    "quest.festival.dyeForEggs.step": "Ship {{count}} {{color}} items.",
 
     "color.red": "red",
     "color.orange": "orange",

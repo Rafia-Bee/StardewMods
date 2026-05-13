@@ -69,7 +69,7 @@ internal static partial class Generators
         Reg(fw, "QualityFishDelivery", QualityFishDelivery);
         Reg(fw, "MoonlightJelliesFestivalDecor", MoonlightJelliesFestivalDecor);
         Reg(fw, "EggFestivalDecor", EggFestivalDecor);
-        Reg(fw, "LewisEasterEggs", LewisEasterEggs);
+        Reg(fw, "DyeForEggs", DyeForEggs);
         Reg(fw, "FairFestivalDecor", FairFestivalDecor);
         Reg(fw, "LuauFestivalDecor", LuauFestivalDecor);
         Reg(fw, "SpiritsEveDecor", SpiritsEveDecor);

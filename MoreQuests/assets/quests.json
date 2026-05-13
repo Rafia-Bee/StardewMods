@@ -514,7 +514,7 @@
             "Generator": "EggFestivalDecor"
         },
         {
-            "Name": "Festival.LewisEasterEggs",
+            "Name": "Festival.DyeForEggs",
             "Category": "Festival",
             "Trigger": {
                 "Source": "DateLocked",
@@ -522,7 +522,7 @@
                 "RepeatYearly": true,
                 "Available": { "NpcExists": "Lewis" }
             },
-            "Generator": "LewisEasterEggs"
+            "Generator": "DyeForEggs"
         },
         {
             "Name": "Festival.FairDecor",
