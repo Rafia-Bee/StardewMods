@@ -299,7 +299,10 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = "Gus",
             ObjectiveQuantity = 1,
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+            // Winter 18 trigger, Feast of the Winter Star on Winter 25: 6 days puts the
+            // auto-fail on Winter 24, one day before the festival. Same shape as the other
+            // Gus festival feasts (Rows 30-32).
+            DeadlineDays = 6,
             Title = ModEntry.I18n.Get("quest.festival.gusWinter.title"),
             Description = ModEntry.I18n.Get("quest.festival.gusWinter.description", new
             {
