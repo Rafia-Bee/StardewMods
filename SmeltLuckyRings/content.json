@@ -66,7 +66,7 @@
             { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
             { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
           ],
-          "MinutesUntilReady": 60
+          "MinutesUntilReady": 50
         }
       },
       "When": { "HasMod": "nachonline.mps" }
@@ -87,7 +87,7 @@
             { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
             { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
           ],
-          "MinutesUntilReady": 60
+          "MinutesUntilReady": 40
         }
       },
       "When": { "HasMod": "nachonline.mps" }
@@ -108,7 +108,7 @@
             { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
             { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
           ],
-          "MinutesUntilReady": 60
+          "MinutesUntilReady": 30
         }
       },
       "When": { "HasMod": "nachonline.mps" }
@@ -129,7 +129,7 @@
             { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
             { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
           ],
-          "MinutesUntilReady": 60
+          "MinutesUntilReady": 20
         }
       },
       "When": { "HasMod": "nachonline.mps" }
@@ -150,7 +150,7 @@
             { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 35, "Condition": "RANDOM 0.5" },
             { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 15 }
           ],
-          "MinutesUntilReady": 60
+          "MinutesUntilReady": 40
         }
       },
       "When": { "HasMod": "nachonline.mps" }
@@ -171,7 +171,7 @@
             { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 35, "Condition": "RANDOM 0.5" },
             { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 15 }
           ],
-          "MinutesUntilReady": 60
+          "MinutesUntilReady": 20
         }
       },
       "When": { "HasMod": "nachonline.mps" }
