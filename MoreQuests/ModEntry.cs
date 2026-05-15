@@ -147,7 +147,9 @@ public sealed class ModEntry : Mod
                     {
                         string id = $"{LeahPaintingFurnitureIdPrefix}{animal}.{frame}";
                         string displayName = I18n.Get($"item.leahPainting.{animal}.name", new { frame = I18n.Get($"item.leahPainting.frame.{frame}").ToString() }).ToString();
-                        string texture = $"{LeahPaintingTextureRoot}/{animal}_{frame}";
+                        // Texture path uses backslashes so the '/' field separator in Data/Furniture
+                        // doesn't slice the path apart (ArgUtility.Get reads field 9 as the texture).
+                        string texture = $"Mods\\RafiaBee.MoreQuests\\LeahPainting\\{animal}_{frame}";
                         // Format: name/type/tilesheetSize/boundingBox/rotations/price/placement/displayName/spriteIndex/texture
                         // tilesheetSize -1 = default 2x2 for paintings, boundingBox -1 = default 2x2, indoors-only via placement 0.
                         data[id] = $"{displayName}/painting/-1/-1/1/0/0/{displayName}/0/{texture}";
