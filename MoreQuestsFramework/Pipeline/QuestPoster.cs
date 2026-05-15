@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Posting;
 using MoreQuestsFramework.Rewards;
@@ -307,6 +308,19 @@ public sealed class QuestPoster
     ///   - Friendship/Object/Recipe/Mail rewards are encoded into the quest's NetStringList
     ///     if it implements `IRewardedQuest`; the subclass's `questComplete` override decodes
     ///     them back via `RewardApplier.ApplyEncoded`.
+    /// `Quest.questTitle`'s getter is a first-read-builds-from-fields gate: until
+    /// `_loadedTitle` flips to true, it overwrites whatever we set with a vanilla template
+    /// built from `target.Value` / `ItemId.Value` (e.g. "Fishing: Minnow" from the
+    /// placeholder fish on a Size Overpopulation quest). `_loadedDescription` has the same
+    /// shape. The setters don't flip these flags, so we do it ourselves after assignment.
+    /// Vanilla's own subclass constructors do exactly this (see `FishingQuest(...)` which
+    /// sets `_loadedTitle = true` after writing `questTitle`).
+    private static readonly FieldInfo? LoadedTitleField = typeof(Quest)
+        .GetField("_loadedTitle", BindingFlags.Instance | BindingFlags.NonPublic);
+
+    private static readonly FieldInfo? LoadedDescriptionField = typeof(Quest)
+        .GetField("_loadedDescription", BindingFlags.Instance | BindingFlags.NonPublic);
+
     private void ApplyPostingFields(Quest quest, QuestPosting posting, bool dailyQuestDefault, int daysLeft)
     {
         quest.dailyQuest.Value = dailyQuestDefault;
@@ -314,9 +328,15 @@ public sealed class QuestPoster
         if (!dailyQuestDefault)
             quest.accepted.Value = false;
         if (!string.IsNullOrEmpty(posting.Title))
+        {
             quest.questTitle = posting.Title;
+            LoadedTitleField?.SetValue(quest, true);
+        }
         if (!string.IsNullOrEmpty(posting.Description))
+        {
             quest.questDescription = AppendRewardLine(posting.Description, posting);
+            LoadedDescriptionField?.SetValue(quest, true);
+        }
         if (!string.IsNullOrEmpty(posting.CurrentObjective))
             quest.currentObjective = posting.CurrentObjective;
 

@@ -42,6 +42,13 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
     /// vanilla item-id gate + the existing consume-on-turn-in semantics.
     public readonly NetBool catchAnyFish = new();
 
+    /// Progress-line template for `catchAnyFish` quests. Vanilla
+    /// `FishingQuest.reloadObjective` would otherwise rebuild the objective from
+    /// `ItemId.Value` (the placeholder fish), showing e.g. "0/5 Frog caught" for a
+    /// Size Overpopulation quest. When set, `{0}` is replaced with the current catch
+    /// counter and `{1}` with the quota.
+    public readonly NetString catchProgressTemplate = new();
+
     public NetStringList SerializedRewards => serializedRewards;
 
     protected override void initNetFields()
@@ -53,7 +60,8 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
             .AddField(catchMinSize, "catchMinSize")
             .AddField(catchMaxSize, "catchMaxSize")
             .AddField(catchWeather, "catchWeather")
-            .AddField(catchAnyFish, "catchAnyFish");
+            .AddField(catchAnyFish, "catchAnyFish")
+            .AddField(catchProgressTemplate, "catchProgressTemplate");
     }
 
     /// Apply the Phase 9.5e Catch filters before letting the base `FishingQuest`
@@ -144,6 +152,32 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
         RewardApplier.ApplyEncoded(serializedRewards);
         RewardApplier.FireEncodedConsequence(serializedRewards);
         base.questComplete();
+    }
+
+    /// `Quest.currentObjective`'s getter calls `reloadObjective` on every read, so the
+    /// objective text we set at posting time gets clobbered by vanilla
+    /// `FishingQuest.reloadObjective` rebuilding from `ItemId.Value` (which is just the
+    /// placeholder fish for `catchAnyFish` quests). Intercept that for the any-fish path
+    /// and write our own "{caught}/{total} {noun} caught" line. Single-species fishing
+    /// quests fall through to base so they keep the vanilla "0/5 Tuna caught" line.
+    public override void reloadObjective()
+    {
+        if (catchAnyFish.Value && !string.IsNullOrEmpty(catchProgressTemplate.Value))
+        {
+            if (completed.Value)
+                return;
+            if (numberFished.Value >= numberToFish.Value && target.Value != null)
+            {
+                base.reloadObjective();
+                return;
+            }
+            currentObjective = string.Format(
+                catchProgressTemplate.Value,
+                numberFished.Value,
+                numberToFish.Value);
+            return;
+        }
+        base.reloadObjective();
     }
 
     public override bool OnNpcSocialized(NPC npc, bool probe = false)

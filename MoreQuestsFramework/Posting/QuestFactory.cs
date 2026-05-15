@@ -45,6 +45,7 @@ public static class QuestFactory
                 catchMaxSize = { Value = Math.Max(0, p.CatchMaxSize) },
                 catchWeather = { Value = p.CatchWeather ?? string.Empty },
                 catchAnyFish = { Value = p.CatchAnyFish },
+                catchProgressTemplate = { Value = p.CatchProgressTemplate ?? string.Empty },
                 targetMessage = p.TargetMessage
             },
             BoardQuestType.SlayMonster => new SlayMonsterQuest

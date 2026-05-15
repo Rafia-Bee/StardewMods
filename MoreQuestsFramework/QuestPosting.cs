@@ -111,6 +111,14 @@ public sealed class QuestPosting
     /// and Storm.
     public string CatchWeather { get; set; } = string.Empty;
 
+    /// `BoardQuestType.Fishing` progress template for `catchAnyFish` quests. Vanilla
+    /// `FishingQuest.reloadObjective` always rebuilds the objective line from `ItemId.Value`
+    /// (the placeholder fish), so a Size Overpopulation quest would show "0/5 Frog caught"
+    /// instead of "0/5 medium-sized fish caught". When this is set on a `catchAnyFish`
+    /// posting, `MoreQuestsFishingQuest.reloadObjective` formats it with the catch counter
+    /// and quota in place of `{0}` and `{1}`. Empty string falls back to vanilla behaviour.
+    public string CatchProgressTemplate { get; set; } = string.Empty;
+
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
     public string CurrentObjective { get; set; } = "";

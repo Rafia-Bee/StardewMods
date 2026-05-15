@@ -456,6 +456,7 @@
     "quest.fishing.sizeOverpop.description.predator": "The number of {{bucket}} fish have been growing in alarming rates lately and the smaller fish are struggling to survive. We need to reduce their numbers before the ecosystem collapses. Pull {{qty}} catches measuring at least {{minSize}} inches.",
     "quest.fishing.sizeOverpop.objective.bounded": "Catch {{qty}} {{bucket}} fish measuring ({{minSize}}-{{maxSize}} inches).",
     "quest.fishing.sizeOverpop.objective.large": "Catch {{qty}} {{bucket}} fish measuring ({{minSize}}+ inches).",
+    "quest.fishing.sizeOverpop.progress": "{0}/{1} {{bucket}} fish caught",
     "quest.fishing.sizeOverpop.targetMessage": "Good. The numbers should settle now.",
 
     "quest.fishing.legendary.title": "Tale of the {{item}}",
