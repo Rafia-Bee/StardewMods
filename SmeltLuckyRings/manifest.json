@@ -1,0 +1,13 @@
+{
+  "Name": "Smelt Lucky Rings",
+  "Author": "Rafia",
+  "Version": "1.0.0",
+  "Description": "Smelt a Lucky Ring in the furnace for random ores.",
+  "UniqueID": "Rafia.SmeltLuckyRings",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [ "Nexus:46258" ],
+  "ContentPackFor": {
+    "UniqueID": "Pathoschild.ContentPatcher",
+    "MinimumVersion": "2.0.0"
+  }
+}

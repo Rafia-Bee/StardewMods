@@ -12,3 +12,4 @@ A collection of my mods for [Stardew Valley](https://www.stardewvalley.net/).
 | [Deluxe Grabber Fix](DeluxeGrabberFix/) | Fixed and improved fork of Deluxe Grabber Redux for SDV 1.6 |
 | [Livestock Follows You](LivestockFollowsYou/) | When you buy an animal, it follows you around instead of teleporting straight to its building |
 | [Loanable Tractor](LoanableTractor/) | Rent a tractor from Joja Corp. for a daily fee — no garage required |
+| [Smelt Lucky Rings](SmeltLuckyRings/) | Smelt a Lucky Ring in the furnace for random ores (heavy furnace melts 5 at once) |

@@ -1,0 +1,180 @@
+{
+  "Format": "2.9.0",
+  "Changes": [
+    {
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [ "(BC)13", "OutputRules" ],
+      "Entries": {
+        "Rafia.LuckyRing": {
+          "Id": "Rafia.LuckyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)859",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 10, "Condition": "RANDOM 0.3333" },
+            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
+            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
+          ],
+          "MinutesUntilReady": 60
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [ "(BC)HeavyFurnace", "OutputRules" ],
+      "Entries": {
+        "Rafia.LuckyRing": {
+          "Id": "Rafia.LuckyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)859",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 50, "Condition": "RANDOM 0.3333" },
+            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 35, "Condition": "RANDOM 0.5" },
+            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 15 }
+          ],
+          "MinutesUntilReady": 60
+        }
+      }
+    },
+
+    {
+      "LogName": "MPS Steel Furnace recipe",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [ "(BC)nachonline.mps_SteelFurnace", "OutputRules" ],
+      "Entries": {
+        "Rafia.LuckyRing": {
+          "Id": "Rafia.LuckyRing",
+          "Triggers": [
+            { "Id": "ItemPlaced", "Trigger": "ItemPlacedInMachine", "RequiredItemId": "(O)859", "RequiredCount": 1 }
+          ],
+          "OutputItem": [
+            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 10, "Condition": "RANDOM 0.3333" },
+            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
+            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
+          ],
+          "MinutesUntilReady": 60
+        }
+      },
+      "When": { "HasMod": "nachonline.mps" }
+    },
+    {
+      "LogName": "MPS Gold Furnace recipe",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [ "(BC)nachonline.mps_GoldFurnace", "OutputRules" ],
+      "Entries": {
+        "Rafia.LuckyRing": {
+          "Id": "Rafia.LuckyRing",
+          "Triggers": [
+            { "Id": "ItemPlaced", "Trigger": "ItemPlacedInMachine", "RequiredItemId": "(O)859", "RequiredCount": 1 }
+          ],
+          "OutputItem": [
+            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 10, "Condition": "RANDOM 0.3333" },
+            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
+            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
+          ],
+          "MinutesUntilReady": 60
+        }
+      },
+      "When": { "HasMod": "nachonline.mps" }
+    },
+    {
+      "LogName": "MPS Diamond Furnace recipe",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [ "(BC)nachonline.mps_DiamondFurnace", "OutputRules" ],
+      "Entries": {
+        "Rafia.LuckyRing": {
+          "Id": "Rafia.LuckyRing",
+          "Triggers": [
+            { "Id": "ItemPlaced", "Trigger": "ItemPlacedInMachine", "RequiredItemId": "(O)859", "RequiredCount": 1 }
+          ],
+          "OutputItem": [
+            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 10, "Condition": "RANDOM 0.3333" },
+            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
+            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
+          ],
+          "MinutesUntilReady": 60
+        }
+      },
+      "When": { "HasMod": "nachonline.mps" }
+    },
+    {
+      "LogName": "MPS Iridium Furnace recipe",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [ "(BC)nachonline.mps_IridiumFurnace", "OutputRules" ],
+      "Entries": {
+        "Rafia.LuckyRing": {
+          "Id": "Rafia.LuckyRing",
+          "Triggers": [
+            { "Id": "ItemPlaced", "Trigger": "ItemPlacedInMachine", "RequiredItemId": "(O)859", "RequiredCount": 1 }
+          ],
+          "OutputItem": [
+            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 10, "Condition": "RANDOM 0.3333" },
+            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
+            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
+          ],
+          "MinutesUntilReady": 60
+        }
+      },
+      "When": { "HasMod": "nachonline.mps" }
+    },
+    {
+      "LogName": "MPS Radioactive Heavy Furnace recipe",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [ "(BC)nachonline.mps_RadioactiveHeavyFurnace", "OutputRules" ],
+      "Entries": {
+        "Rafia.LuckyRing": {
+          "Id": "Rafia.LuckyRing",
+          "Triggers": [
+            { "Id": "ItemPlaced", "Trigger": "ItemPlacedInMachine", "RequiredItemId": "(O)859", "RequiredCount": 5 }
+          ],
+          "OutputItem": [
+            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 50, "Condition": "RANDOM 0.3333" },
+            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 35, "Condition": "RANDOM 0.5" },
+            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 15 }
+          ],
+          "MinutesUntilReady": 60
+        }
+      },
+      "When": { "HasMod": "nachonline.mps" }
+    },
+    {
+      "LogName": "MPS Prismatic Heavy Furnace recipe",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [ "(BC)nachonline.mps_PrismaticHeavyFurnace", "OutputRules" ],
+      "Entries": {
+        "Rafia.LuckyRing": {
+          "Id": "Rafia.LuckyRing",
+          "Triggers": [
+            { "Id": "ItemPlaced", "Trigger": "ItemPlacedInMachine", "RequiredItemId": "(O)859", "RequiredCount": 5 }
+          ],
+          "OutputItem": [
+            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 50, "Condition": "RANDOM 0.3333" },
+            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 35, "Condition": "RANDOM 0.5" },
+            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 15 }
+          ],
+          "MinutesUntilReady": 60
+        }
+      },
+      "When": { "HasMod": "nachonline.mps" }
+    }
+  ]
+}
