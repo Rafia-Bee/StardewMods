@@ -569,6 +569,12 @@ internal static partial class Generators
                 : "quest.fishing.sizeOverpop.description.predator",
             new { qty, bucket = bucketLabel, minSize, maxSize, npc = giver });
 
+        // {0} and {1} are intentionally left for `string.Format` at journal-render time
+        // (SMAPI's i18n only substitutes mustache tokens like `{{bucket}}`).
+        string progressTemplate = ModEntry.I18n.Get(
+            "quest.fishing.sizeOverpop.progress",
+            new { bucket = bucketLabel });
+
         return new QuestPosting
         {
             Category = QuestCategory.Fishing,
@@ -581,6 +587,7 @@ internal static partial class Generators
             CatchMinSize = minSize,
             CatchMaxSize = maxSize,
             CatchAnyFish = true,
+            CatchProgressTemplate = progressTemplate,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.fishing.sizeOverpop.title", new { bucket = bucketLabel }),
