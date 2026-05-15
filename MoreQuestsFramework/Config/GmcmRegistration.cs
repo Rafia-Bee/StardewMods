@@ -58,11 +58,11 @@ internal static class GmcmRegistration
             () => t.Get("config.questsPerDay.tooltip"),
             min: 1, max: 20);
         api.AddNumberOption(manifest,
-            () => System.Math.Clamp(ModEntry.Config.SpecialOrdersBoardPages, 1, 3),
-            v => ModEntry.Config.SpecialOrdersBoardPages = System.Math.Clamp(v, 1, 3),
+            () => System.Math.Clamp(ModEntry.Config.SpecialOrdersBoardPages, 1, 5),
+            v => ModEntry.Config.SpecialOrdersBoardPages = System.Math.Clamp(v, 1, 5),
             () => t.Get("config.specialOrdersBoardPages"),
             () => t.Get("config.specialOrdersBoardPages.tooltip"),
-            min: 1, max: 3);
+            min: 1, max: 5);
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.toggles"));
         api.AddBoolOption(manifest,

@@ -77,7 +77,7 @@ internal static class SpecialOrdersBoardPatches
     {
         try
         {
-            int maxPages = Math.Clamp(ModEntry.Config.SpecialOrdersBoardPages, 1, 3);
+            int maxPages = Math.Clamp(ModEntry.Config.SpecialOrdersBoardPages, 1, 5);
             if (maxPages <= 1)
                 return;
 
