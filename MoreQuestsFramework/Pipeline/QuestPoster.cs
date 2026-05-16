@@ -13,12 +13,6 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Pipeline;
 
-/// Routes generated postings to their delivery channel. DailyBoard postings are pushed into
-/// `BillboardSlots` for display on the help-wanted billboard. Mail postings still ship a
-/// flavour letter via a Data/mail asset edit and are added to the journal directly.
-///
-/// Quest construction is delegated to `QuestFactory`; reward summary text comes from
-/// `RewardApplier`. This class is now pure routing + asset-edit plumbing.
 public sealed class QuestPoster
 {
     private const string MailPrefix = "RafiaBee.MoreQuestsFramework.";
@@ -39,17 +33,12 @@ public sealed class QuestPoster
         _api = api;
     }
 
-    /// Wires the mail-quest registry + persisted state. Called from `ModEntry.OnSaveLoaded`
-    /// once the per-save state is available. Safe to call multiple times, the latest
-    /// references win.
     public void WireMailDelivery(MailQuestRegistry registry, FrameworkState state)
     {
         _mailRegistry = registry;
         _state = state;
     }
 
-    /// Wires the SpecialOrder writer so PostingKind.SpecialOrder routes through it. Called
-    /// once at startup from `ModEntry`.
     public void WireSpecialOrders(SpecialOrderWriter writer)
     {
         _specialOrders = writer;
@@ -60,16 +49,13 @@ public sealed class QuestPoster
         _helper.Events.Content.AssetRequested += OnAssetRequested;
     }
 
-    /// Only wipes the in-flight board buffer; mail buffer is preserved
-    /// across days because letters can target a future day.
+    // Preserves the mail buffer across days because letters can target a future day.
     public void BeginDay()
     {
         _pendingBoard.Clear();
         BillboardSlots.Clear();
     }
 
-    /// Commits the buffered daily-board postings to BillboardSlots so the custom Billboard
-    /// menu can render them when opened.
     public void CommitBoard()
     {
         BillboardSlots.Replace(_pendingBoard, _monitor);
@@ -103,11 +89,6 @@ public sealed class QuestPoster
             Post(p);
     }
 
-    /// Builds + stamps a Quest from a CustomBoard-source posting and registers it with the
-    /// API (so QuestAccepted/QuestCompleted events attribute back to the owning mod). The
-    /// caller then stuffs the Quest into the per-board `CustomBoardSlots` for display,
-    /// no help-wanted billboard plumbing involved. Returns null when the QuestType isn't
-    /// constructable from posting fields.
     public Quest? PrepareCustomBoardQuest(QuestPosting posting)
     {
         Quest? quest = posting.PreBuiltQuest ?? QuestFactory.Build(posting);
@@ -121,9 +102,8 @@ public sealed class QuestPoster
         return quest;
     }
 
-    /// Builds and stamps a Quest from the posting without delivering it. Used by the
-    /// `NpcDialogue` watcher, which needs to push the prepared Quest into `questLog`
-    /// at chat time rather than at posting time.
+    // Used by the NpcDialogue watcher: it pushes the prepared Quest into questLog at
+    // chat time, not posting time.
     public Quest? PrepareQuest(QuestPosting posting, int daysLeft = 0)
     {
         Quest? quest = posting.PreBuiltQuest ?? QuestFactory.Build(posting);
@@ -163,16 +143,10 @@ public sealed class QuestPoster
         ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: ResolveMailDaysLeft(posting));
 
         string mailKey = MailPrefix + posting.DefinitionId.Replace('.', '_') + "_" + Game1.Date.TotalDays;
-        // Use the mailKey as the Quest's id so the `%item quest <mailKey> 1 %%`
-        // token can find it via our Harmony prefix on `Quest.getQuestFromId`.
+        // mailKey doubles as the Quest's id so the "%item quest <mailKey> 1 %%" token
+        // resolves via our Harmony prefix on Quest.getQuestFromId.
         quest.id.Value = mailKey;
 
-        // Embed the standard vanilla mail-quest token. The trailing `1` is the
-        // "addImmediately" flag, vanilla `LetterViewerMenu` calls
-        // `Game1.player.addQuest(mailKey)` at letter-open time, which routes
-        // through `getQuestFromId` (and our prefix), pushes the prepared Quest
-        // into `questLog`, and trips Quest Helper / similar tracker hooks via
-        // the standard NetCollection-change event.
         string flavour = posting.MailBody ?? BuildDefaultMailBody(posting);
         string body = AppendQuestToken(flavour, mailKey);
         _pendingMail[mailKey] = body;
@@ -192,23 +166,18 @@ public sealed class QuestPoster
         _monitor.Log($"Posted {posting.DefinitionId} via mail. Days left: {quest.daysLeft.Value}.", LogLevel.Trace);
     }
 
-    /// Appends `%item quest <id> 1 %%` to the letter body unless one is already
-    /// present. The trailing `1` is vanilla's `addImmediately` flag, quest enters
-    /// the journal at letter-open with no Accept button.
+    // Trailing 1 is vanilla's addImmediately flag (quest enters the journal at
+    // letter-open, no Accept button). "^^" is the hard-line-break in mail bodies.
     private static string AppendQuestToken(string body, string mailKey)
     {
         if (body.Contains("%item quest ", StringComparison.Ordinal))
             return body;
-        // `^^` is vanilla's hard-line-break in mail bodies; one creates the gap
-        // before the auto-added quest's HUD message.
         return body + "^^%item quest " + mailKey + " 1 %%";
     }
 
-    /// Mirrors the just-posted Quest into framework save state so a letter sitting
-    /// unread across save/load still resolves the same quest. Rebuilt at SaveLoaded.
-    /// PreBuilt postings (custom Quest subclasses with their own NetFields) can't
-    /// round-trip through this DTO and will skip the stash; their owners must
-    /// re-post on the next trigger fire if the player reloaded before reading.
+    // PreBuilt postings (custom Quest subclasses with their own NetFields) can't
+    // round-trip through this DTO, so they skip the stash; the owner re-posts on
+    // the next trigger fire if the player reloaded before reading.
     private void StashForReload(QuestPosting posting, string mailKey, string body)
     {
         if (_state == null || posting.PreBuiltQuest != null)
@@ -244,15 +213,10 @@ public sealed class QuestPoster
         if (posting.Consequence != null && posting.Consequence.Tier != Consequences.ConsequenceTier.Tier0)
             stash.EncodedConsequence = RewardCodec.EncodeConsequence(posting.Consequence);
 
-        // Replace any prior stash with the same mailKey (re-fire on the same day).
         _state.PendingMailDeliveries.RemoveAll(s => s.MailKey == mailKey);
         _state.PendingMailDeliveries.Add(stash);
     }
 
-    /// Rehydrates a stashed mail quest after save load. Called by ModEntry while
-    /// rebuilding the registry. Returns the prepared Quest (added to the registry
-    /// with its mailKey) and re-injects the body into `_pendingMail` so the
-    /// `Data/mail` asset edit still applies for letters in the player's mailbox.
     public Quest? RehydrateStash(StashedMailQuest stash)
     {
         var posting = new QuestPosting
@@ -294,32 +258,25 @@ public sealed class QuestPoster
         return quest;
     }
 
-    /// Drop a stash entry when the corresponding mail letter is no longer in flight
-    /// (player opened it, or expired off the mailbox). Called from ModEntry's
-    /// `QuestAccepted` / `QuestCompleted` / `QuestRemoved` handlers.
     public void DropStash(string mailKey)
     {
         _pendingMail.Remove(mailKey);
         _state?.PendingMailDeliveries.RemoveAll(s => s.MailKey == mailKey);
     }
 
-    /// `Quest.questTitle`'s and `questDescription`'s getters are first-read-builds-from-fields
-    /// gates: until `_loadedTitle` / `_loadedDescription` flip to true, the getter overwrites
-    /// whatever we set with a vanilla template built from `target.Value` / `ItemId.Value`
-    /// (e.g. "Fishing: Minnow" from a placeholder fish). Setters don't flip these flags, so
-    /// we do it ourselves after assignment. Vanilla subclass constructors (e.g.
-    /// `FishingQuest(...)`) do the same.
+    // Quest.questTitle/questDescription getters are first-read-builds-from-fields gates:
+    // until _loadedTitle/_loadedDescription flip true, the getter overwrites what we set
+    // with a vanilla template built from target.Value/ItemId.Value. Setters don't flip
+    // these flags, so we do it ourselves (vanilla subclass ctors do the same).
     private static readonly FieldInfo? LoadedTitleField = typeof(Quest)
         .GetField("_loadedTitle", BindingFlags.Instance | BindingFlags.NonPublic);
 
     private static readonly FieldInfo? LoadedDescriptionField = typeof(Quest)
         .GetField("_loadedDescription", BindingFlags.Instance | BindingFlags.NonPublic);
 
-    /// Stamps title/description/objective + reward fields onto the quest. Reward routing:
-    ///   - Money rewards collapse into vanilla `Quest.moneyReward` (paid by base.questComplete).
-    ///   - Friendship/Object/Recipe/Mail rewards are encoded into the quest's NetStringList
-    ///     if it implements `IRewardedQuest`; the subclass's `questComplete` override decodes
-    ///     them back via `RewardApplier.ApplyEncoded`.
+    // Reward routing: Money collapses into Quest.moneyReward (paid by base.questComplete).
+    // Friendship/Object/Recipe/Mail are encoded into the quest's NetStringList if it
+    // implements IRewardedQuest; subclass questComplete decodes via ApplyEncoded.
     private void ApplyPostingFields(Quest quest, QuestPosting posting, bool dailyQuestDefault, int daysLeft)
     {
         quest.dailyQuest.Value = dailyQuestDefault;
@@ -347,25 +304,17 @@ public sealed class QuestPoster
             RewardApplier.EncodeInto(rewarded.SerializedRewards, posting.Rewards, posting.Consequence);
     }
 
-    /// Appends a "Reward: ..." footer to the description so the quest log shows it inline,
-    /// matching how vanilla bakes the reward into the description text.
     private string AppendRewardLine(string description, QuestPosting posting)
     {
         string summary = RewardApplier.BuildRewardSummary(posting.Rewards, posting.QuestGiver, _helper.Translation);
         if (string.IsNullOrEmpty(summary))
             return description;
-        // `Game1.parseText` (used by the quest log) treats `\n` as a hard line break;
-        // `^` doesn't work for quest descriptions (it's a mail-asset convention), and
-        // showed up rendered as `~~` glyphs.
+        // Quest descriptions use \n (Game1.parseText). "^" is mail-only and renders as ~~.
         return $"{description}\n\n{summary}";
     }
 
-    /// `DeadlineDays == 0` is the explicit "no deadline" opt-in: the quest enters the
-    /// journal with `daysLeft = 0` AND `dailyQuest = false`, matching the vanilla "Meet
-    /// the Townsfolk" shape, `Quest.IsTimedQuest()` returns false when both are zero, so
-    /// `dayUpdate` never decrements and the quest never auto-expires. Positive values
-    /// produce a normal countdown; negative values are clamped to 1 to guard against
-    /// bad JSON. Used by mail-delivered recipe-unlock quests (PreservesJarRequest, etc.).
+    // 0 = explicit "no deadline" (quest enters with daysLeft=0 AND dailyQuest=false, so
+    // IsTimedQuest()==false and dayUpdate never decrements). Negatives clamp to 1.
     private static int ResolveMailDaysLeft(QuestPosting posting)
     {
         if (posting.DeadlineDays == 0)

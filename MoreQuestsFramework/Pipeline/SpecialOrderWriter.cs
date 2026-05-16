@@ -11,21 +11,9 @@ using StardewValley.SpecialOrders;
 
 namespace MoreQuestsFramework.Pipeline;
 
-/// Owns the framework's edits to `Data/SpecialOrders`. Translates a `QuestPosting` whose
-/// `Kind == SpecialOrder` into a vanilla `SpecialOrderData` JSON entry, stores it in
-/// `FrameworkState.EmittedSpecialOrders`, and re-applies every emitted entry on every
-/// `OnAssetRequested("Data/SpecialOrders")` pass so a SMAPI cache invalidation by any
-/// other mod doesn't drop our edits.
-///
-/// Cleanup: at every `DayStarted` the writer sweeps entries whose `ExpiresAfterDay` has
-/// passed and whose order isn't currently in `Game1.player.team.specialOrders` (so an
-/// in-flight accepted order isn't pulled out from under the player). Completion events
-/// are not emitted in 8a, vanilla owns the reward path end-to-end.
-///
-/// **Multi-mod safety:** every emitted order's `OrderId` is namespaced as
-/// `<ownerUniqueId>.<defId>.<dayStamp>`, so collisions with vanilla or third-party
-/// `Data/SpecialOrders` keys are essentially impossible. Cache invalidation is a re-edit
-/// trigger, not a delete, other mods' entries remain intact across our invalidations.
+// OrderId is namespaced as <ownerUniqueId>.<defId>.<dayStamp> so vanilla/third-party
+// SpecialOrders keys can't collide. SweepExpired only drops entries past expiry that
+// aren't in-flight in team.specialOrders, so accepted orders aren't yanked.
 public sealed class SpecialOrderWriter
 {
     private const string AssetName = "Data/SpecialOrders";
@@ -41,20 +29,14 @@ public sealed class SpecialOrderWriter
         _monitor = monitor;
     }
 
-    /// Wires the per-save state the writer reads from at every asset-edit pass. Called
-    /// from `ModEntry.OnSaveLoaded` once the state is rehydrated.
     public void WireState(FrameworkState state)
     {
         _state = state;
     }
 
-    /// Read-only view of every framework-emitted entry currently in `Data/SpecialOrders`.
-    /// Consumers (the pagination patch) use this to guarantee framework-emitted orders
-    /// surface on the board ahead of any random fill from the eligible pool.
     public IReadOnlyList<EmittedSpecialOrder> EmittedOrders =>
         _state?.EmittedSpecialOrders ?? (IReadOnlyList<EmittedSpecialOrder>)Array.Empty<EmittedSpecialOrder>();
 
-    /// Registers the asset-edit handler. Idempotent; only ever subscribes once.
     public void Register()
     {
         if (_registered)
@@ -63,10 +45,6 @@ public sealed class SpecialOrderWriter
         _registered = true;
     }
 
-    /// Translates a `QuestPosting` (Kind == SpecialOrder) into a `SpecialOrderData` JSON
-    /// entry, persists it into save state, and invalidates the asset cache so the entry
-    /// becomes visible to vanilla on the next read. No-op when the posting carries no
-    /// `SpecialOrder` block.
     public void Emit(QuestPosting posting)
     {
         if (_state == null)
@@ -84,13 +62,9 @@ public sealed class SpecialOrderWriter
         int today = Game1.Date.TotalDays;
         string orderId = BuildOrderId(posting.OwnerUniqueId, posting.DefinitionId, today);
         int durationDays = ResolveDurationDays(spec.Duration);
-        // Grace window so a player who accepts the order on the last offered day still has
-        // vanilla's full duration to complete it before the writer evicts the entry.
+        // +7 grace so accepting on the last offered day still leaves full duration.
         int expiresAfterDay = today + durationDays + 7;
 
-        // Drop any prior emission for this definition (re-fire on the same day, or stale
-        // entry from a previous attempt). Vanilla won't double-list a key, but we don't
-        // want two stale dict entries hanging around either.
         _state.EmittedSpecialOrders.RemoveAll(e => e.DefinitionId == posting.DefinitionId);
 
         var entry = new EmittedSpecialOrder
@@ -108,8 +82,6 @@ public sealed class SpecialOrderWriter
         _monitor.Log($"Emitted SpecialOrder '{orderId}' (definition '{posting.DefinitionId}', duration '{spec.Duration}').", LogLevel.Trace);
     }
 
-    /// Drops every emitted entry whose expiry has passed and whose order isn't currently
-    /// in-flight (`Game1.player.team.specialOrders`). Called once per day from `ModEntry.OnDayStarted`.
     public void SweepExpired()
     {
         if (_state == null || _state.EmittedSpecialOrders.Count == 0)
@@ -129,9 +101,7 @@ public sealed class SpecialOrderWriter
         {
             if (e.ExpiresAfterDay > today || inFlight.Contains(e.OrderId))
                 return false;
-            // Also clear granted-rewards bookkeeping for the dropped entry so a future
-            // re-emit of the same definition (next year, after cooldown) re-grants on
-            // its own completion instead of being mistaken as already-granted.
+            // Clear bookkeeping so a future re-emit of the same definition re-grants.
             _state.FrameworkRewardsGranted.Remove(e.OrderId);
             return true;
         });
@@ -143,18 +113,9 @@ public sealed class SpecialOrderWriter
         }
     }
 
-    /// Walks `Game1.player.team.specialOrders` once and applies framework-owned rewards
-    /// (anything in `Spec.FrameworkRewards`) for any of our emitted entries that have
-    /// flipped to `Complete` since the last check. Idempotent, `FrameworkRewardsGranted`
-    /// dedups across ticks and across save/load. Called from the existing
-    /// `ModEntry.OnOneSecondTick` so the grant fires within ~1s of completion.
-    ///
-    /// This path bypasses vanilla's `Data/SpecialOrders` Rewards array entirely, so any
-    /// third-party content pack that mutates the asset's reward data (e.g. a friendship-
-    /// configuration pack overwriting `Friendship` `OrderReward` entries) cannot intercept
-    /// these. Money rewards are NOT applied here, they stay in the vanilla path because
-    /// the player-facing reward UI handles them and the user's modset hasn't shown any
-    /// interception of money.
+    // Idempotent via FrameworkRewardsGranted (dedups across ticks and save/load). Bypasses
+    // Data/SpecialOrders.Rewards entirely. Money stays in the vanilla path because the
+    // reward UI handles it natively.
     public void CheckCompletionsAndGrantRewards()
     {
         if (_state == null || _state.EmittedSpecialOrders.Count == 0)
@@ -163,7 +124,6 @@ public sealed class SpecialOrderWriter
         if (team == null || team.specialOrders.Count == 0)
             return;
 
-        // Index emitted entries by orderId for O(1) lookup against the in-flight list.
         var byOrderId = new Dictionary<string, EmittedSpecialOrder>(StringComparer.Ordinal);
         foreach (var e in _state.EmittedSpecialOrders)
             byOrderId[e.OrderId] = e;
@@ -183,7 +143,6 @@ public sealed class SpecialOrderWriter
                 continue;
             if (emitted.Spec.FrameworkRewards.Count == 0 && emitted.Spec.Consequences.Count == 0)
             {
-                // Mark granted anyway so we don't keep re-checking an empty payload.
                 _state.FrameworkRewardsGranted.Add(key);
                 continue;
             }
@@ -226,8 +185,7 @@ public sealed class SpecialOrderWriter
 
         e.Edit(asset =>
         {
-            // `Data/SpecialOrders` is strongly-typed as Dictionary<string, SpecialOrderData>;
-            // SMAPI's AsDictionary<,> requires the exact value type (object won't cast).
+            // AsDictionary<,> requires the exact value type (object won't cast).
             var dict = asset.AsDictionary<string, SpecialOrderData>().Data;
             foreach (var emitted in _state.EmittedSpecialOrders)
             {
@@ -245,9 +203,8 @@ public sealed class SpecialOrderWriter
 
     private static string BuildOrderId(string ownerUniqueId, string defId, int today)
     {
-        // Two-segment namespace: owner UniqueID guarantees we don't collide with another
-        // mod's order; the daystamp suffix lets the same definition emit one entry per
-        // year (vanilla won't accept two entries with the same key on the same load).
+        // Daystamp suffix lets the same definition emit one entry per year (vanilla
+        // won't accept two entries with the same key on the same load).
         string owner = string.IsNullOrEmpty(ownerUniqueId) ? "RafiaBee.MoreQuestsFramework" : ownerUniqueId;
         return $"{owner}.{defId}.{today}";
     }
@@ -261,14 +218,12 @@ public sealed class SpecialOrderWriter
             "threedays" => 3,
             "twoweeks" => 14,
             "month" => 28,
-            _ => 7 // Week (default) and any unrecognised value
+            _ => 7
         };
     }
 
-    /// Constructs a vanilla `SpecialOrderData` instance from the framework-neutral
-    /// `SpecialOrderSpec`. Built per asset-edit pass rather than cached so re-edits after
-    /// a save reload always see fresh references, vanilla mutates fields like `Objectives`
-    /// during `GetSpecialOrder`, so a cached instance would drift across reloads.
+    // Built per edit-pass, not cached: vanilla mutates fields like Objectives during
+    // GetSpecialOrder, so a cached instance would drift.
     private SpecialOrderData BuildVanillaOrder(SpecialOrderSpec spec, string orderId, string ownerUniqueId)
     {
         var data = new SpecialOrderData
@@ -287,10 +242,7 @@ public sealed class SpecialOrderWriter
             RandomizedElements = null,
             Objectives = new List<SpecialOrderObjectiveData>(spec.Objectives.Count),
             Rewards = new List<SpecialOrderRewardData>(spec.Rewards.Count),
-            // Quest-tracker mods commonly read CustomFields for source attribution. Filling
-            // these explicitly lets trackers credit the order to the framework + owning
-            // content mod instead of falling back to whatever heuristic they use (which can
-            // pick a wrong mod when our orderId prefix doesn't match a UniqueID directly).
+            // Quest trackers read CustomFields for source attribution.
             CustomFields = new Dictionary<string, string>
             {
                 ["FromMod"] = string.IsNullOrEmpty(ownerUniqueId) ? "RafiaBee.MoreQuestsFramework" : ownerUniqueId,
@@ -315,9 +267,6 @@ public sealed class SpecialOrderWriter
                 Type = r.Type,
                 Data = rewardData
             });
-            // Diagnostic logging for the friendship-reward bug investigation. Logs each
-            // reward type + its data dict at injection time so we can verify the round
-            // trip from generator → save state → asset edit preserves every field.
             string dump = string.Join(", ", rewardData.Select(kv => $"{kv.Key}={kv.Value}"));
             _monitor.Log(
                 $"SpecialOrder '{orderId}' reward '{r.Type}' Data: [{dump}]",

@@ -4,9 +4,7 @@ using Newtonsoft.Json;
 
 namespace MoreQuestsFramework.Content;
 
-/// `Newtonsoft.Json` converter that accepts either a single string or a string array
-/// and produces a `List<string>`. Used by `ObjectiveDef.Item` so authors can write
-/// `"Item": "(O)787"` (single) or `"Item": ["(O)787", "(O)382"]` (OR-alternatives).
+// Accepts either "Item": "X" or "Item": ["X", "Y"].
 internal sealed class StringOrArrayConverter : JsonConverter<List<string>>
 {
     public override List<string>? ReadJson(JsonReader reader, Type objectType, List<string>? existingValue, bool hasExistingValue, JsonSerializer serializer)

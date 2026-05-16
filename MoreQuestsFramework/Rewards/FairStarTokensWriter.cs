@@ -5,27 +5,13 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Rewards;
 
-/// Owns the framework's pending Stardew Valley Fair star-token grants. When `RewardApplier`
-/// grants a `FairStarTokensReward`, the amount is queued in `FrameworkState.ActiveFairStarTokens`
-/// with an expiry well past the Fair so the grant survives save/reload between quest
-/// completion and Fall 16. The framework's once-per-second tick consumes the queue the
-/// first time the Fair festival event is live, adding the amount to
-/// `Game1.player.festivalScore`.
-///
-/// Sweep happens on `DayStarted` from `ModEntry`; entries past their `ExpiresAfterDay`
-/// are dropped so a stale unused grant doesn't sit on the save forever.
 public sealed class FairStarTokensWriter
 {
-    /// Generous lookahead: any quest that grants this reward triggers between Fall 12
-    /// and Fall 15. Padding to 30 days covers a player completing very early in the
-    /// season plus the festival day itself.
     private const int LookaheadDays = 30;
 
     private readonly IMonitor _monitor;
     private FrameworkState? _state;
 
-    /// Static handle used by the framework tick so it doesn't need an instance reference
-    /// threaded through every consumer. Reset to null on save unload.
     public static FairStarTokensWriter? Active { get; private set; }
 
     public FairStarTokensWriter(IMonitor monitor)

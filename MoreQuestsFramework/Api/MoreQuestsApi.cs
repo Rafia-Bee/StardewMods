@@ -9,9 +9,8 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Api;
 
-/// SMAPI's `GetApi`/`GetApi&lt;T&gt;` paths reject API instances whose concrete type isn't
-/// `Type.IsPublic`. `IsPublic` returns `false` for nested types regardless of their
-/// declared accessibility, only top-level types qualify. Keep this class top-level.
+// Must stay top-level: SMAPI's GetApi rejects API types where Type.IsPublic is false,
+// which is the case for nested types regardless of declared accessibility.
 public sealed class MoreQuestsApi : IMoreQuestsApi
 {
     private readonly QuestRegistry _registry;
@@ -91,10 +90,6 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
 
     public int? GetCombatFoodMagnitude(string qualifiedItemId) => _combatFood.GetMagnitude(qualifiedItemId);
 
-    // --- Internal hooks called by framework code ---
-
-    /// Tracks a Quest the framework just posted. The owner UniqueID + definition ID
-    /// flow into subsequent `QuestAccepted` / `QuestCompleted` / `QuestRemoved` events.
     internal void TrackPosted(Quest quest, string ownerUniqueId, string definitionId)
     {
         if (quest == null)

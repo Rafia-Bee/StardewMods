@@ -6,9 +6,8 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework;
 
-/// Process-wide state for the day's daily-board postings. Holds the unaccepted Quest objects
-/// so the custom Billboard menu can render tiles for each, and so the Harmony patch redirecting
-/// `Game1.questOfTheDay` getters to our currently-selected quest can find the right one.
+// Backs the custom Billboard menu and the Harmony patch that redirects
+// Game1.questOfTheDay getters to the currently-selected quest.
 public static class BillboardSlots
 {
     private static readonly List<Slot> _slots = new();
@@ -46,7 +45,6 @@ public static class BillboardSlots
         Selected = null;
     }
 
-    /// Marks the currently selected slot accepted and removes it from the unaccepted pool.
     public static Quest? AcceptSelected()
     {
         if (Selected == null)

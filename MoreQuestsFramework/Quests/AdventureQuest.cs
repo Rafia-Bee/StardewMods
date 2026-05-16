@@ -10,11 +10,8 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests;
 
-/// Multi-step ("Adventure") quest. Each step has a kind (Deliver, Talk, Gift, ...) plus an
-/// optional Requires[] list; the active step is the first not-Done step whose prereqs are
-/// all Done. Step state (definition + progress + done flag) rides inside stepStates, one
-/// encoded line per step. Reward payout uses IRewardedQuest like the framework's other
-/// custom subclasses.
+// Active step = first not-Done step whose Requires[] are all Done. Step state rides
+// as one encoded line per step inside stepStates.
 [XmlType("Mods_RafiaBee_MoreQuestsFramework_AdventureQuest")]
 public sealed class AdventureQuest : Quest, IRewardedQuest
 {
@@ -22,23 +19,17 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     public readonly NetStringList serializedRewards = new();
     public readonly NetString giverNpc = new();
 
-    /// Spoken by the NPC who closes out the quest via a Talk or Deliver step. Optional;
-    /// when empty, the NPC keeps their normal dialogue. Gift-step completions never push
-    /// this so vanilla's gift-reaction line takes priority.
+    // Spoken by the closing NPC. Gift-step completions never push this so vanilla's
+    // gift-reaction line takes priority.
     public readonly NetString completionMessage = new();
 
     public NetStringList SerializedRewards => serializedRewards;
 
-    /// Lazily-decoded mirror of stepStates. Re-decoded when the count changes or Persist
-    /// writes a new entry. Cached so step handlers don't allocate per virtual call.
     private List<AdventureStepState>? _decoded;
 
-    /// Per-step baseline ResourceClump count for ClearDebris, keyed by step index.
-    /// Reset on save load (next PollResourceClumps re-baselines from current world state).
+    // Per-step baseline ResourceClump count for ClearDebris. Re-baselines on save load.
     private Dictionary<int, int>? _clumpBaselines;
 
-    /// True when any step opts into decor-shipping. Read by the per-tick log diff to count
-    /// this quest toward the Object.canBeShipped active-quest tally.
     public bool HasDecorShippingStep
     {
         get
@@ -63,9 +54,6 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             .AddField(completionMessage, "completionMessage");
     }
 
-    /// Authoring entry point for generators and the JSON path. Replaces any prior step list,
-    /// stamps the giver, primes the journal text. `completionDialogue` is the closing Talk/
-    /// Deliver line; pass null when the quest has no scripted thank-you.
     public void Initialize(IEnumerable<AdventureStepState> steps, string giver, string? completionDialogue = null)
     {
         stepStates.Clear();
@@ -104,9 +92,6 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             _decoded[index] = state;
     }
 
-    /// True when there's a not-Done step of `kind` whose Targets matches `locationName`
-    /// (wildcard/exclusion semantics like the step polls). Used by the PlantTrees patch to
-    /// opt the quest-target location into vanilla's CanPlantTreesHere gate.
     public bool HasActiveStepTargeting(AdventureStepKind kind, string locationName)
     {
         if (completed.Value || string.IsNullOrEmpty(locationName))
@@ -123,8 +108,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return false;
     }
 
-    /// First not-Done step whose Requires[] are all Done. Returns -1 when every step is done
-    /// or when no step is currently reachable (malformed Requires graph).
+    // Returns -1 when every step is done or no step is reachable (malformed Requires).
     public int ActiveStepIndex()
     {
         var steps = Steps;
@@ -161,16 +145,12 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     {
         if (completed.Value)
             return;
-        // Single-line summary for callers reading `currentObjective` directly (external
-        // trackers, log lines). The journal goes through GetObjectiveDescriptions, patched
-        // by AdventureQuestPatches to return one entry per active step.
+        // Single-line summary for callers reading currentObjective directly. The journal
+        // uses GetObjectiveDescriptions (patched to one entry per active step).
         var lines = BuildActiveObjectiveDescriptions();
         _currentObjective = lines.Count == 0 ? string.Empty : lines[0];
     }
 
-    /// Every not-Done step whose Requires[] are all Done, in declaration order. Each line
-    /// gets a `(progress/count)` suffix when Count &gt; 1, matching vanilla's
-    /// "0/2 Rock Crab defeated" style.
     public List<string> BuildActiveObjectiveDescriptions()
     {
         var lines = new List<string>();
@@ -194,9 +174,8 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     {
         if (completed.Value || npc == null || item == null)
             return false;
-        // Walk all currently-active steps (Requires met, not Done) instead of just the first.
-        // Lets multi-step Adventure quests like "deliver Flour + Sugar + Eggs to Evelyn" accept
-        // each item independently of declaration order, the player can hand them in any order.
+        // Walk every active step (not just the first) so the player can hand in items
+        // in any order (e.g. "deliver Flour + Sugar + Eggs to Evelyn").
         var steps = Steps;
         for (int i = 0; i < steps.Count; i++)
         {
@@ -261,8 +240,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return false;
     }
 
-    /// Called when deepestMineLevel may have advanced. ReachLevel steps compare their target
-    /// against `min(120, deepest)` for Mine, `max(0, deepest - 120)` for SkullCavern.
+    // Mine target = min(120, deepest). SkullCavern target = max(0, deepest - 120).
     public void ObserveReachLevel(int deepestMineLevel)
     {
         if (completed.Value)
@@ -295,8 +273,6 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
-    /// Called by the framework's DayEnding observer with the farm shipping bin contents.
-    /// Each active `Ship` step counts matching items independently.
     public void ObserveShippingBin(IList<Item> bin)
     {
         if (completed.Value || bin == null || bin.Count == 0)
@@ -338,8 +314,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
-    /// Called when the player warps. Visit steps match Targets[0] against the entered location.
-    /// Items[] is for "with N following animals" gates (e.g. `$follower-count:2`).
+    // Items[] carries "with N following animals" gates (e.g. $follower-count:2).
     public void ObserveVisit(string locationName)
     {
         if (completed.Value || string.IsNullOrEmpty(locationName))
@@ -357,8 +332,6 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
-    /// Called at DayStarted with building types newly added since the last snapshot. Build
-    /// steps match Targets[0] against the new types; first match closes the step.
     public void ObserveBuild(IReadOnlyCollection<string> newBuildingTypes)
     {
         if (completed.Value || newBuildingTypes == null || newBuildingTypes.Count == 0)
@@ -382,8 +355,6 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
-    /// Called when trees are added to a location's terrainFeatures. Plant steps targeting
-    /// that location get incremented by `delta`.
     public void ObservePlantedTree(string locationName, int delta)
     {
         if (completed.Value || delta <= 0 || string.IsNullOrEmpty(locationName))
@@ -399,8 +370,6 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
-    /// Called when weed Objects are removed from a location's `objects` collection.
-    /// ClearWeeds steps targeting that location get incremented by `delta`.
     public void ObserveWeedsCleared(string locationName, int delta)
     {
         if (completed.Value || delta <= 0 || string.IsNullOrEmpty(locationName))
@@ -416,11 +385,8 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
-    /// Polls resourceClumps count and credits each ClearDebris step targeting that location
-    /// for the drop since the previous poll. First poll records the baseline only. Only
-    /// counts Large Stump (600), Large Log (602), Boulder (672), Meteorite (622), the four
-    /// mine rocks (752/754/756/758), and the quarry boulder (148). Green rain bushes and
-    /// giant crops are filtered out.
+    // Counts Large Stump, Large Log, Boulder, Meteorite, mine rocks, quarry boulder.
+    // Green rain bushes and giant crops are filtered out.
     public void PollResourceClumps(GameLocation? location)
     {
         if (completed.Value || location == null)
@@ -479,8 +445,6 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return total;
     }
 
-    /// Called when Twig/Stone Objects are removed. ClearDebris steps targeting that location
-    /// get incremented by `delta`.
     public void ObserveDebrisCleared(string locationName, int delta)
     {
         if (completed.Value || delta <= 0 || string.IsNullOrEmpty(locationName))
@@ -512,9 +476,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
-    /// Catch step filters. Empty/zero filters pass through. Set fields gate against the
-    /// player's location, the catch size, and runtime weather. `Rain` matches both Rain and
-    /// Storm so vanilla rain-only fish data stays consistent across thunderstorms.
+    // Empty/zero filters pass through.
     private static bool CatchFiltersPass(AdventureStepState step, int size)
     {
         if (!string.IsNullOrEmpty(step.LocationName))
@@ -554,8 +516,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return string.Equals(actual, norm, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// `*` matches any location; `!Name` excludes one. Passes when a positive target matches
-    /// AND no exclusion matches. Enables `Targets = ["*", "!Farm"]` for "anywhere except Farm".
+    // "*" matches any, "!Name" excludes. Targets=["*", "!Farm"] = anywhere except Farm.
     private static bool LocationMatches(AdventureStepState step, string locationName)
     {
         if (step.Targets.Count == 0)
@@ -579,9 +540,8 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return anyPositive && positiveMatched;
     }
 
-    /// Evaluates `$`-prefixed gate tokens on a Visit step's Items[]. Today the only token is
-    /// `$follower-count:N` (consults FollowerApiBridge). Unknown tokens fail the gate so
-    /// future tokens don't auto-complete on saves where they aren't implemented yet.
+    // Only $follower-count:N today. Unknown tokens fail the gate so future tokens
+    // don't auto-complete on saves where they aren't implemented yet.
     private static bool VisitGatesMet(AdventureStepState step)
     {
         foreach (var entry in step.Items)
@@ -613,9 +573,6 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         base.questComplete();
     }
 
-    /// Vanilla ItemDeliveryQuest-style: match NPC + item, reduce inventory, mark step done.
-    /// Returning true short-circuits the gift path. When this delivery closes the whole
-    /// quest, completionMessage is pushed as the NPC's response.
     private bool TryAdvanceDeliver(int idx, AdventureStepState step, NPC npc, Item item, bool probe)
     {
         if (!TargetMatches(step, npc.Name)) return false;
@@ -667,8 +624,8 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return string.IsNullOrWhiteSpace(text) ? string.Empty : text;
     }
 
-    /// True when there are 2+ Deliver steps. Gates the per-step delivery sound cue: single-
-    /// step quests use vanilla's complete fanfare; multi-ingredient asks need a per-handoff cue.
+    // Single-step quests use vanilla's complete fanfare; multi-ingredient asks need
+    // a per-handoff cue so the player knows that hand-off counted.
     private bool HasMultipleDeliverSteps()
     {
         var steps = Steps;
@@ -681,13 +638,11 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return false;
     }
 
-    /// Gift step: matches loved/liked items, or Stardrop Tea (always acceptable). Returns
-    /// false so vanilla's gift flow (friendship bump, daily counter) still runs. We observe,
-    /// not consume.
+    // Returns false so vanilla's gift flow (friendship bump, daily counter) still runs.
     private bool TryAdvanceGift(int idx, AdventureStepState step, NPC npc, Item item, bool probe)
     {
         if (!TargetMatches(step, npc.Name)) return false;
-        // Items list optional for Gift: empty list means "any thoughtful item to the target".
+        // Empty Items list = "any thoughtful item to the target".
         if (step.Items.Count > 0 && !ItemMatches(step, item)) return false;
 
         int taste = npc.getGiftTasteForThisItem(item);
@@ -697,18 +652,15 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         if (!acceptable)
             return false;
 
-        if (probe) return false; // silence the vanilla "this would advance a quest" cue
+        if (probe) return false;
 
         MarkStepDone(idx, step);
         return false;
     }
 
-    /// Counts unique NPC recipients. Each gift must pass Items filter (e.g. $forage) AND be
-    /// loved/liked by that recipient. CreditedKeys dedupes by name. Returns false so vanilla's
-    /// gift flow still runs.
+    // CreditedKeys dedupes by NPC name. Returns false so vanilla's gift flow still runs.
     private bool TryAdvanceGiftUniqueNpcs(int idx, AdventureStepState step, NPC npc, Item item, bool probe)
     {
-        // Targets non-empty = whitelist, otherwise any villager qualifies.
         if (!npc.IsVillager) return false;
         if (step.Targets.Count > 0)
         {
@@ -736,7 +688,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         if (step.CreditedKeys.Contains(npc.Name, StringComparer.OrdinalIgnoreCase))
             return false;
 
-        if (probe) return false; // observe only, don't consume vanilla's gift cue
+        if (probe) return false;
 
         step.CreditedKeys.Add(npc.Name);
         step.Progress++;
@@ -750,9 +702,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return false;
     }
 
-    /// Catch step: increments progress when the caught fish matches one of Items[] AND passes
-    /// the optional LocationName / MinSize / Weather filters. Returns false so vanilla's
-    /// other quests still see the catch.
+    // Returns false so vanilla's other quests still see the catch.
     private bool TryAdvanceCatch(int idx, AdventureStepState step, string fishId, int numberCaught, int size, bool probe)
     {
         if (step.Items.Count == 0)
@@ -795,8 +745,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return false;
     }
 
-    /// Slay step: matches monsters whose name appears in Targets. Empty Targets = "any
-    /// monster". Tame monsters never count; bomb kills count by default.
+    // Empty Targets = any monster. Tame monsters never count; bomb kills do.
     private bool TryAdvanceSlay(int idx, AdventureStepState step, Monster monster, bool probe)
     {
         bool matched = step.Targets.Count == 0;
@@ -829,8 +778,8 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return false;
     }
 
-    /// Talk step: matches a target NPC. CreditedKeys dedupes so "talk to 3 different
-    /// villagers" can't be satisfied by the same NPC three times.
+    // CreditedKeys dedupes so "talk to 3 different villagers" can't be satisfied by
+    // the same NPC three times.
     private bool TryAdvanceTalk(int idx, AdventureStepState step, NPC npc, bool probe)
     {
         if (!TargetMatches(step, npc.Name)) return false;
@@ -844,8 +793,6 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         step.Progress++;
         if (step.Progress >= step.Count)
         {
-            // If this Talk closes out the entire quest, push the configured thank-you line so
-            // the NPC says it instead of falling through to their normal greeting / chat.
             if (WillStepCompleteQuest(idx) && !string.IsNullOrEmpty(completionMessage.Value))
             {
                 npc.CurrentDialogue.Push(new Dialogue(npc, null, completionMessage.Value));
@@ -861,8 +808,6 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return true;
     }
 
-    /// True when every step other than `doneIdx` is already Done. Used by Talk/Deliver to
-    /// decide whether to push `completionMessage` as the NPC's response.
     private bool WillStepCompleteQuest(int doneIdx)
     {
         var steps = Steps;
@@ -880,16 +825,13 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         step.Progress = Math.Max(step.Progress, step.Count);
         Persist(idx, step);
 
-        // Refresh the journal text for whichever step becomes active next, then complete the
-        // quest if the whole step list is now Done.
         if (ActiveStepIndex() < 0)
             questComplete();
         else
             reloadObjective();
     }
 
-    /// Empty Targets matches the giverNpc. `$giver` is rewritten to the giver name at
-    /// Initialize so we don't need to dereference it here.
+    // Empty Targets matches giverNpc. $giver is rewritten at Initialize.
     private bool TargetMatches(AdventureStepState step, string npcName)
     {
         if (step.Targets.Count == 0)
@@ -911,8 +853,6 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         foreach (var entry in step.Items)
         {
             if (string.IsNullOrEmpty(entry)) continue;
-            // `$`-prefixed entries are predicates, not literal ids. `$edible-egg` covers
-            // vanilla + modded eggs; `$category:N` is the generic category escape hatch.
             if (entry.StartsWith("$", StringComparison.Ordinal))
             {
                 if (TokenMatches(entry, item)) return true;
@@ -920,19 +860,14 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             }
             if (string.Equals(entry, qid, StringComparison.OrdinalIgnoreCase)) return true;
             if (string.Equals(entry, id, StringComparison.OrdinalIgnoreCase)) return true;
-            // Author-supplied ids may omit the `(O)` prefix; tolerate both forms.
             if (entry.StartsWith("(") && string.Equals(entry.Substring(entry.IndexOf(')') + 1), id, StringComparison.OrdinalIgnoreCase))
                 return true;
         }
         return false;
     }
 
-    /// `$`-prefixed Items entries are predicates, not literal ids. Tokens:
-    /// `$edible-egg` (Category -5, Edibility != -300; excludes Dinosaur Egg).
-    /// `$category:N` (Object Category == N).
-    /// `$forage` (carries `forage_item` tag; alias for `$tag:forage_item`).
-    /// `$furniture-table` (Furniture with furniture_type table=11 or longTable=5).
-    /// `$tag:&lt;tag&gt;` (any item carrying the given context tag, including Furniture/BC).
+    // Tokens: $edible-egg, $category:N, $forage (= $tag:forage_item), $furniture-table,
+    // $tag:<tag>. $edible-egg excludes Dinosaur Egg (Edibility -300).
     private static bool TokenMatches(string token, Item item)
     {
         const int eggCategory = -5;
@@ -967,8 +902,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             return false;
         try
         {
-            // HasBaseTag covers authored Data/Objects tags + runtime tags Stardew injects
-            // (preserve_sheet_* etc). Same source of truth Data/Shops uses.
+            // HasBaseTag covers authored + runtime tags (preserve_sheet_* etc).
             return StardewValley.ItemContextTagManager.HasBaseTag(item.QualifiedItemId, tag);
         }
         catch

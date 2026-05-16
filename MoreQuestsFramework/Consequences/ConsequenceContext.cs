@@ -5,8 +5,6 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Consequences;
 
-/// All the state a handler needs to enact a consequence. Constructed by `ConsequenceEngine`
-/// at fire time so handlers don't reach for global statics.
 public sealed class ConsequenceContext
 {
     public ConsequenceSpec Spec { get; }
@@ -15,14 +13,10 @@ public sealed class ConsequenceContext
     public FrameworkState State { get; }
     public IMonitor Monitor { get; }
 
-    /// NPCs the engine has resolved as "loved" the subject (Tier 1 positive branch).
-    /// Empty for tiers that don't use the GiftTastes branch.
     public IReadOnlyList<string> LovedBy { get; }
 
-    /// NPCs resolved as "hated" the subject (Tier 1/2 negative branch). For `Source =
-    /// Static`, these are the spec's `Targets[]` verbatim, the static-targets list is
-    /// always treated as "hated/affected" since static authors only specify negative
-    /// reactors today (no positive static-target use-case in the CSV).
+    // For Source=Static, these are Targets[] verbatim (static is always treated as
+    // the affected/hated side; no positive static-target use case today).
     public IReadOnlyList<string> HatedBy { get; }
 
     public ConsequenceContext(
@@ -43,10 +37,6 @@ public sealed class ConsequenceContext
         HatedBy = hatedBy;
     }
 
-    /// Helper used by every tier handler, applies an immediate friendship delta to an
-    /// NPC, skipping NPCs the player hasn't met (no entry in `friendshipData` ⇒ vanilla
-    /// would silently no-op the change anyway, but checking up-front keeps the trace
-    /// log honest about who actually got hit).
     public bool ChangeFriendship(string npcName, int delta)
     {
         if (string.IsNullOrEmpty(npcName) || delta == 0)
@@ -58,9 +48,8 @@ public sealed class ConsequenceContext
         return true;
     }
 
-    /// Append one queue entry. Same-day pops use `earliestFireDay = 0`. `portrait` is
-    /// a Stardew dialogue token (`$h`, `$a`, `$s`, `$l`, `$u`) prepended to the line
-    /// before drawing, empty string means no portrait override.
+    // Same-day pops use earliestFireDay=0. Portrait is a Stardew dialogue token
+    // ($h/$a/$s/$l/$u), or empty for no override.
     public void EnqueueLine(string npcName, string line, int friendshipDelta, int earliestFireDay, string portrait = "")
     {
         if (string.IsNullOrEmpty(npcName))

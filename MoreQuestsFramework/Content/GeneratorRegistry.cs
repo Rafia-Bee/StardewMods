@@ -4,10 +4,7 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Content;
 
-/// Runtime map of named C# generators that JSON quest definitions can reference
-/// via `"Generator": "<name>"` (plan.md §6). Names are namespaced as
-/// `{ownerUniqueId}/{name}` so two mods can ship a generator called `EggDelivery`
-/// without colliding.
+// Names are namespaced as {ownerUniqueId}/{name}.
 public sealed class GeneratorRegistry
 {
     private readonly IMonitor _monitor;
@@ -35,9 +32,8 @@ public sealed class GeneratorRegistry
         _generators[fq] = generator;
     }
 
-    /// Looks up a generator. The lookup tries the literal name first (lets a JSON
-    /// quest reference a generator owned by another mod via `"OtherMod/Name"`),
-    /// then falls back to `{ownerUniqueId}/{name}` for unqualified references.
+    // Tries the literal name first (so JSON can reference another mod's generator
+    // via "OtherMod/Name"), then falls back to {ownerUniqueId}/{name}.
     public Func<QuestContext, QuestPosting?>? Resolve(string ownerUniqueId, string name)
     {
         if (_generators.TryGetValue(name, out var direct))

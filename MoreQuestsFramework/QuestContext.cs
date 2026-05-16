@@ -6,8 +6,6 @@ using StardewValley;
 
 namespace MoreQuestsFramework;
 
-/// Shared context passed to every board-quest definition. Holds all the helpers a quest
-/// generator might need to resolve items, check mod presence, and look up tunables.
 public sealed class QuestContext
 {
     public IModHelper Helper { get; }

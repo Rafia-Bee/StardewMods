@@ -2,8 +2,6 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests.Vanilla;
 
-/// Wraps vanilla `ItemDeliveryQuest`. Vanilla picks a random NPC + a random item
-/// they like; we don't override that logic, only the chance of this type appearing.
 public sealed class VanillaItemDelivery : IQuestDefinition
 {
     public string Id => "Vanilla.ItemDelivery";

@@ -10,9 +10,7 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Posting.Boards;
 
-/// Per-location custom-board sprite renderer + click-to-open handler. Subscribes to
-/// SMAPI events only, no Harmony patches, to stay inside the §8.1 patch budget. Boards
-/// whose `Available` conditions don't match are silently hidden (no sprite, no click).
+// SMAPI-only (no Harmony). Boards failing Available are silently hidden.
 public sealed class BoardWorldRenderer
 {
     private const int TilePixels = 64;
@@ -91,8 +89,6 @@ public sealed class BoardWorldRenderer
             anchor += new Vector2(board.Indicator.OffsetX, board.Indicator.OffsetY);
         var screenPos = Game1.GlobalToLocal(Game1.viewport, anchor);
 
-        // Vanilla's "!" indicator sprite from `LooseSprites/Cursors`, drawn with the same
-        // bobbing oscillation vanilla uses on quest-indicator NPCs.
         float bob = 4f * (float)System.Math.Sin(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 250.0);
         b.Draw(
             Game1.mouseCursors,
@@ -125,8 +121,6 @@ public sealed class BoardWorldRenderer
             if (!IsAvailable(board))
                 continue;
 
-            // Player must be standing close enough to interact (mirrors how vanilla
-            // gates action-button presses on neighbouring tiles).
             if (!IsPlayerWithinReach(board, tx, ty))
                 continue;
 
@@ -138,10 +132,8 @@ public sealed class BoardWorldRenderer
         }
     }
 
-    /// True when `(tileX, tileY)` falls inside the board's visual footprint (anchor tile
-    /// shifted by `DrawOffset` in tile units, sized by `FootprintTiles`). Falls back to
-    /// the anchor tile alone for boards whose footprint floats off-grid (sub-tile pixel
-    /// offsets) so the anchor is always clickable.
+    // Anchor tile is always clickable, even when the footprint floats off-grid
+    // (sub-tile pixel DrawOffset).
     private static bool IsClickInFootprint(Api.BoardDefinition board, int tileX, int tileY)
     {
         if (board.TileX == tileX && board.TileY == tileY)

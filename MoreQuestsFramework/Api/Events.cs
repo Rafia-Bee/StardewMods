@@ -34,7 +34,6 @@ public sealed class QuestRemovedArgs : EventArgs
     public Quest Quest { get; }
     public string OwnerUniqueId { get; }
     public string DefinitionId { get; }
-    /// True if the quest was completed before being removed from the journal.
     public bool WasCompleted { get; }
     public QuestRemovedArgs(Quest quest, string ownerUniqueId, string definitionId, bool wasCompleted)
     {
@@ -47,9 +46,7 @@ public sealed class QuestRemovedArgs : EventArgs
 
 public sealed class DayRefreshedArgs : EventArgs
 {
-    /// Number of postings the framework just placed on the daily board.
     public int DailyBoardCount { get; }
-    /// Number of mail-triggered postings dispatched this day.
     public int MailCount { get; }
     public DayRefreshedArgs(int dailyBoardCount, int mailCount)
     {

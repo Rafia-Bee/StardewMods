@@ -6,10 +6,7 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Posting.Boards;
 
-/// Process-wide per-board slot lists. Phase 8c populates these from the
-/// `TriggerSource.CustomBoard` pool draw; Phase 8b leaves every list empty so the
-/// rendered menus open with vanilla's "Nothing posted" fallback. Mirrors the help-wanted
-/// `BillboardSlots` shape so the layout helper can render either kind interchangeably.
+// Mirrors BillboardSlots for the help-wanted board so BoardLayout can render either.
 public static class CustomBoardSlots
 {
     private static readonly Dictionary<string, List<Slot>> _byBoardKey
@@ -32,9 +29,6 @@ public static class CustomBoardSlots
         }
     }
 
-    /// Currently-selected slot for the inner accept-quest popup (`Billboard(true)` reused
-    /// from vanilla via the `BillboardPatches` `questOfTheDay` redirect). Null when no
-    /// custom-board accept popup is up. Mirrors `BillboardSlots.Selected`.
     public static Slot? Selected { get; set; }
 
     public static IReadOnlyList<Slot> SlotsFor(BoardDefinition board)
@@ -69,8 +63,6 @@ public static class CustomBoardSlots
         Selected = null;
     }
 
-    /// Marks the currently selected slot accepted and removes it from the unaccepted pool
-    /// for whichever board it belongs to. Mirrors `BillboardSlots.AcceptSelected`.
     public static Quest? AcceptSelected()
     {
         if (Selected == null)

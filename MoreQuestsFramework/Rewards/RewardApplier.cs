@@ -6,45 +6,20 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Rewards;
 
-/// Centralized reward application. Custom Quest subclasses delegate their on-complete
-/// payouts here so any completion path - in-person delivery, Mail Services Mod,
-/// future custom quest types - produces the same result without duplicating the
-/// inventory/friendship/recipe/mail dance per subclass.
-///
-/// Phase 3 introduces a declarative `RewardSpec` list. Quests author rewards as
-/// records (`MoneyReward`, `FriendshipReward`, `ObjectReward`, `RecipeReward`,
-/// `MailReward`); the framework encodes them into a `NetStringList` on the
-/// quest, and `Apply` decodes + dispatches at completion time.
-///
-/// Money is a special case: vanilla `Quest.questComplete()` already pays
-/// `Quest.moneyReward.Value`, so `MoneyReward` entries route into that field at
-/// posting time rather than going through the encoded list.
+// Money is a special case: vanilla Quest.questComplete already pays Quest.moneyReward,
+// so MoneyReward routes there at posting time rather than through the encoded list.
 public static class RewardApplier
 {
-    /// Set by `ModEntry.OnSaveLoaded` to a callback that writes the granted ShopDiscount
-    /// into per-save framework state. Static so generators / tests can fire individual
-    /// rewards via `Apply(...)` without threading a save-state reference through every
-    /// completion path. Null when no save is loaded, `ApplyOne` no-ops the discount in
-    /// that case (test / generator authoring scenarios won't have a save to write to).
+    // Set by ModEntry.OnSaveLoaded so the static Apply path reaches per-save state
+    // without each reward record knowing about it. Null when no save is loaded.
     public static System.Action<ShopDiscountReward>? OnShopDiscountGranted { get; set; }
 
-    /// Same shape as `OnShopDiscountGranted` for `FestivalBiasReward`. Wired by the
-    /// `FestivalBiasWriter` at save-load so the static `Apply` path reaches per-save state
-    /// without each reward record knowing about it. Null when no save is loaded.
     public static System.Action<FestivalBiasReward>? OnFestivalBiasGranted { get; set; }
 
-    /// Same shape as `OnShopDiscountGranted` for `AnimalPurchaseDiscountReward`. Wired by
-    /// `AnimalPurchaseDiscountWriter` at save-load.
     public static System.Action<AnimalPurchaseDiscountReward>? OnAnimalPurchaseDiscountGranted { get; set; }
 
-    /// Same shape as `OnFestivalBiasGranted` for `FairStarTokensReward`. Wired by the
-    /// `FairStarTokensWriter` at save-load.
     public static System.Action<FairStarTokensReward>? OnFairStarTokensGranted { get; set; }
 
-    /// Applies every reward in the encoded list to the active player. Designed for
-    /// `Quest.questComplete()` overrides on our custom subclasses. Consequence-spec
-    /// lines (`Consequence|...`) are ignored here, they're forwarded to the
-    /// `ConsequenceEngine` separately via `FireEncodedConsequence`.
     public static void ApplyEncoded(IEnumerable<string> encoded)
     {
         foreach (var line in encoded)
@@ -57,10 +32,6 @@ public static class RewardApplier
         }
     }
 
-    /// Decodes the consequence line (if any) from the encoded list and forwards it to
-    /// the active `ConsequenceEngine`. Called from custom Quest subclasses' `questComplete()`
-    /// overrides alongside `ApplyEncoded` so the consequence fires on the same event as
-    /// reward payout. No-ops gracefully when the engine isn't wired (e.g. authoring tests).
     public static void FireEncodedConsequence(IEnumerable<string> encoded)
     {
         var spec = RewardCodec.DecodeConsequence(encoded);
@@ -69,19 +40,12 @@ public static class RewardApplier
         Consequences.ConsequenceEngine.Active?.Apply(spec);
     }
 
-    /// Applies a single reward spec. Public so generators / tests can fire individual
-    /// rewards without going through the encoded list.
     public static void Apply(IEnumerable<RewardSpec> rewards)
     {
         foreach (var r in rewards)
             ApplyOne(r);
     }
 
-    /// Encodes the non-Money rewards in `rewards` into `target`, replacing existing
-    /// entries. Money rewards are skipped because they're paid by vanilla via
-    /// `Quest.moneyReward` instead. When `consequence` is non-null, its encoded form
-    /// is appended as a `Consequence|...` line so the same NetStringList carries both
-    /// reward + consequence state through save/reload.
     public static void EncodeInto(NetStringList target, IEnumerable<RewardSpec> rewards, Consequences.ConsequenceSpec? consequence = null)
     {
         target.Clear();
@@ -95,8 +59,6 @@ public static class RewardApplier
             target.Add(RewardCodec.EncodeConsequence(consequence));
     }
 
-    /// Total of all `MoneyReward` entries, summed. Routed into `Quest.moneyReward` at
-    /// posting time.
     public static int SumMoney(IEnumerable<RewardSpec> rewards)
     {
         int total = 0;
@@ -106,11 +68,6 @@ public static class RewardApplier
         return total;
     }
 
-    /// Builds the "Reward:" block appended to the quest description in the journal.
-    /// Each reward gets its own bullet line phrased in the quest giver's voice
-    /// ("Marnie will give you 200g in return", "Abigail will like you more", etc.)
-    /// rather than a flat comma-separated list. Vanilla bakes its reward into the
-    /// description text; we mirror that look while keeping the wording personal.
     public static string BuildRewardSummary(IReadOnlyList<RewardSpec> rewards, string questGiver, ITranslationHelper translation)
     {
         if (rewards.Count == 0)
@@ -124,18 +81,15 @@ public static class RewardApplier
             lines.Add(translation.Get("quest.reward.line.money", new { npc = giver, gold })
                 .Default($"{giver} will give you {gold}g in return").ToString());
 
-        // Collapse the friendship lines when there are 3+ named NPCs, listing every
-        // loved-by villager spoils the consequence pool (the summary doubles as a tip
-        // sheet for who's about to react). For 1-2 NPCs we keep the named lines so
-        // small-cast rewards (single FriendshipReward, e.g. Forage with Linus) read
-        // naturally.
+        // 3+ named NPCs collapse to one line: the summary doubles as a tip sheet for
+        // who's about to react, so listing every loved-by villager spoils the consequence pool.
         var friendshipRewards = rewards.OfType<FriendshipReward>()
             .Where(f => f.Points > 0 && !string.IsNullOrEmpty(f.Npc))
             .ToList();
         if (friendshipRewards.Count >= 3)
         {
             lines.Add(translation.Get("quest.reward.line.friendship.collapsed")
-                .Default("Word will get around — a few villagers will warm up to you").ToString());
+                .Default("Word will get around, a few villagers will warm up to you").ToString());
         }
         else
         {
@@ -218,9 +172,8 @@ public static class RewardApplier
         switch (spec)
         {
             case MoneyReward m:
-                // Money is normally paid by vanilla via `Quest.moneyReward`. This branch
-                // covers the case where a generator calls Apply directly outside a Quest
-                // completion path, so the player still gets paid.
+                // Covers the case where a generator calls Apply directly outside a Quest
+                // completion path; otherwise vanilla pays via Quest.moneyReward.
                 if (m.Amount > 0)
                     Game1.player.Money += m.Amount;
                 break;

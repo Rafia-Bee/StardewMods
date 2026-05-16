@@ -5,12 +5,9 @@ using StardewValley.GameData.Objects;
 
 namespace MoreQuestsFramework;
 
-/// Pool of qualified item ids the framework offers to consumer mods as combat-food
-/// rewards. On each `SaveLoaded` the framework auto-scans `Data/Objects` and registers
-/// every edible whose buffs grant non-zero Attack or Defense, with the magnitude
-/// (max of Attack / Defense levels, floored) recorded alongside the id. Consumer mods
-/// can also call `Register(itemId, magnitude)` to add items the scan misses (modded
-/// foods that grant attack via a non-standard mechanism, custom rings, etc.).
+// Pool of qualified item ids offered as combat-food rewards. SaveLoaded auto-scans
+// Data/Objects for edibles with non-zero Attack/Defense buffs; consumers can also
+// call Register() to add items the scan misses.
 public sealed class CombatFoodRegistry
 {
     private readonly IMonitor _monitor;
@@ -53,12 +50,9 @@ public sealed class CombatFoodRegistry
     public int? GetMagnitude(string qualifiedItemId)
         => !string.IsNullOrEmpty(qualifiedItemId) && _magnitudes.TryGetValue(qualifiedItemId, out int m) ? m : null;
 
-    /// Walks `Data/Objects` and registers every edible with a non-zero Attack or Defense
-    /// buff. Magnitude = floor(max(Attack, Defense)) across all of the item's buffs.
-    /// Re-runs on every SaveLoaded so swapped content packs pick up the right pool.
-    /// Manual entries added via `Register(id, magnitude)` survive the rescan (their
-    /// magnitudes are merged in, not overwritten downward) so consumers can keep
-    /// overrides registered at `RegistrationOpen`.
+    // Re-runs on every SaveLoaded so swapped content packs pick up the right pool.
+    // Manual entries merged back in afterward; an explicit override never gets
+    // downgraded by a weaker scan result on the same id.
     internal void RunDataScan(IGameContentHelper content)
     {
         if (content == null)
@@ -93,9 +87,6 @@ public sealed class CombatFoodRegistry
             registered++;
         }
 
-        // Re-merge any manual overrides registered before the scan ran. Pick the higher
-        // of (scan magnitude, override magnitude) so an explicit override never gets
-        // downgraded by a weaker buff entry on the same id.
         foreach (var (id, mag) in manualOverrides)
             Register(id, mag);
 

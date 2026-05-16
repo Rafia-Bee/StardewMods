@@ -7,60 +7,35 @@ using System.Xml.Serialization;
 
 namespace MoreQuestsFramework.Quests;
 
-/// `ItemDeliveryQuest` variant that runs the framework's declarative reward block on
-/// completion. Vanilla `ItemDeliveryQuest` only ever gives money + the fixed 255
-/// friendship to the recipient; this subclass replaces both: vanilla's bonus
-/// friendship is suppressed and the per-posting `RewardSpec` list is paid out via
-/// `RewardApplier`.
+// Replaces vanilla ItemDeliveryQuest's money + fixed-255 friendship payout with the
+// framework's declarative RewardSpec list applied through RewardApplier.
 [XmlType("Mods_RafiaBee_MoreQuestsFramework_ItemDeliveryQuest")]
 public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQuest
 {
     public readonly NetStringList serializedRewards = new();
 
-    /// OR-alternative item ids accepted in place of `ItemId`. Empty for single-item delivery
-    /// (vanilla behaviour). Populated from a declarative `"Item": [...]` JSON objective so
-    /// e.g. a "bring batteries OR coal" quest can satisfy on either id.
     public readonly NetStringList alternativeItemIds = new();
 
-    /// Per-alternative required stack size, parallel to `alternativeItemIds`. When an
-    /// alternative matches, the player must offer a stack of at least its quantity (instead
-    /// of `number.Value`). Used by Robin's Silo Offer so 100 Stone OR 10 Clay OR 5 Copper
-    /// Bars all satisfy the same posting. Entries missing or non-positive fall back to
-    /// `number.Value` (vanilla ItemDelivery behaviour).
+    // Per-alt required stack size. Lets one quest accept e.g. 100 Stone OR 10 Clay
+    // OR 5 Copper Bars. Missing/zero entries fall back to number.Value.
     public readonly NetIntList alternativeItemQuantities = new();
 
-    /// Minimum `Object.Quality` required for a delivered item to count. 0 = base
-    /// (vanilla behaviour, any quality accepted), 1 = silver, 2 = gold, 4 = iridium.
-    /// Quality 3 is unused by vanilla; the matcher is `>=` so silver-or-better at 1,
-    /// gold-or-better at 2, iridium only at 4. Populated from `QuestPosting.MinQuality`
-    /// at posting time; serialized so the gate survives save/load.
+    // 0 = any quality. 1 = silver+, 2 = gold+, 4 = iridium (3 unused by vanilla).
     public readonly NetInt minQuality = new();
 
-    /// Quality of the item the player actually delivered. Captured in
-    /// `OnItemOfferedToNpc` before the stack is consumed so a `QuestCompleted` listener
-    /// can read it and return a quality-tier-upgraded item (e.g. Gunther's Dinosaur
-    /// Study returns a one-tier-higher Dinosaur Egg). 0 if never offered.
+    // Captured before consume so QuestCompleted listeners can read it (e.g. Gunther's
+    // Dinosaur Study returns a one-tier-higher egg).
     public readonly NetInt deliveredQuality = new();
 
-    /// Cumulative units the player has handed in toward this quest. Partial stacks count;
-    /// when this reaches the locked-or-primary target the quest completes. Drives the
-    /// "(delivered/total)" progress suffix on the journal objective line.
     public readonly NetInt delivered = new();
 
-    /// First-offered item id when this quest has mixed alternativeItemQuantities (e.g.
-    /// Robin's silo "100 Stone OR 10 Clay OR 5 Copper Bars"). Once set, only that id is
-    /// accepted for the remaining deliveries; other matched alts fall through to vanilla
-    /// gifting. Empty when no lock applies (uniform-qty alts like `$edible-egg` accept
-    /// any matched id and accumulate freely).
+    // For mixed-alt quests, first delivery locks the quest to that id; other matched
+    // alts fall through to vanilla gifting. Empty for uniform-qty alts (e.g. $edible-egg).
     public readonly NetString lockedItemId = new();
 
-    /// Required total for the locked id (mirrors alternativeItemQuantities[i] or
-    /// number.Value for the primary). Zero when no lock is in effect.
     public readonly NetInt lockedRequiredQty = new();
 
-    /// Captured at first journal read so `reloadObjective` can rebuild
-    /// `_currentObjective` as `"<base> (X/Y)"` once partial progress exists. Without
-    /// this we'd lose the base text once we appended a suffix.
+    // Captured on first journal read so reloadObjective can rebuild "<base> (X/Y)".
     public readonly NetString baseObjective = new();
 
     public NetStringList SerializedRewards => serializedRewards;
@@ -80,10 +55,8 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
             .AddField(baseObjective, "baseObjective");
     }
 
-    /// Fully replaces vanilla's `ItemDeliveryQuest.OnItemOfferedToNpc` so the implicit
-    /// 150/255 friendship bump is skipped. The declarative `Rewards` block is the only
-    /// payout path. Also adds partial-stack accumulation: offering 4 of 7 eggs counts as
-    /// progress instead of falling through to the gift flow.
+    // Adds partial-stack accumulation: 4 of 7 eggs counts as progress instead of
+    // falling through to the gift flow.
     public override bool OnItemOfferedToNpc(NPC npc, Item item, bool probe = false)
     {
         if (completed.Value)
@@ -102,7 +75,7 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
         {
             if (lockedRequiredQty.Value <= 0)
             {
-                // First delivery for a mixed-alt quest: this id becomes the only acceptable one.
+                // First delivery for a mixed-alt quest: lock this id.
                 requiredTotal = matchedQty;
             }
             else if (string.Equals(matchedId, lockedItemId.Value, StringComparison.OrdinalIgnoreCase))
@@ -111,7 +84,6 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
             }
             else
             {
-                // Quest already committed to a different alt; let vanilla gifting handle this one.
                 return false;
             }
         }
@@ -157,11 +129,6 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
         return true;
     }
 
-    /// Compare offered item against `ItemId` plus any `alternativeItemIds`. Both qualified
-    /// and bare ids are tolerated so author input can use either form. Emits the required
-    /// stack size for the matched id (primary uses `number.Value`, alternatives use the
-    /// parallel `alternativeItemQuantities` entry when present, otherwise fall back to
-    /// `number.Value`).
     private bool TryMatchObjective(Item item, out int requiredQty, out string matchedId)
     {
         requiredQty = number.Value;
@@ -185,11 +152,6 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
         return false;
     }
 
-    /// True when at least one alternative carries a non-zero `alternativeItemQuantities`
-    /// entry, signalling that alternatives have their own (possibly different) totals
-    /// (Robin's silo, Submarine Fuel). When false (all alternatives share `number.Value`,
-    /// e.g. `$edible-egg`), partial deliveries can mix-and-match alts freely. When true,
-    /// the first-offered id locks the quest to that id for the remainder.
     private bool HasMixedAlternativeQuantities()
     {
         for (int i = 0; i < alternativeItemQuantities.Count; i++)
@@ -216,9 +178,8 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
         return false;
     }
 
-    /// Reward awarding lives here (not in `OnItemOfferedToNpc`) so any completion path
-    /// produces the same payout: vanilla in-person delivery, Mail Services Mod's
-    /// mailbox-delivery flow, or any other mod that funnels into `questComplete`.
+    // Rewards live here, not in OnItemOfferedToNpc, so any completion path (in-person,
+    // Mail Services Mod's mailbox flow, etc.) produces the same payout.
     public override void questComplete()
     {
         if (completed.Value)
@@ -228,12 +189,9 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
         base.questComplete();
     }
 
-    /// Vanilla's `Quest.currentObjective` getter calls `reloadObjective` on every read,
-    /// so this is the seam for showing "(X/Y)" progress while a partial delivery is in
-    /// flight. We capture the base text on first read (set by `QuestPoster` into
-    /// `_currentObjective`) and rebuild from it each time. Vanilla `ItemDeliveryQuest`
-    /// overrides this to clobber `_currentObjective` from `objective.Value`, but our
-    /// framework quests don't populate `objective` so this override is the only path.
+    // Quest.currentObjective calls reloadObjective on every read. Vanilla
+    // ItemDeliveryQuest clobbers _currentObjective from objective.Value, which our
+    // framework quests don't populate, so this override is the only path.
     public override void reloadObjective()
     {
         if (completed.Value)

@@ -7,11 +7,6 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Consequences;
 
-/// Routes every `ConsequenceSpec` to the matching `IConsequenceHandler`. One singleton
-/// per save load, wired in `ModEntry.OnSaveLoaded` after the state store and gift-tastes
-/// scanner are ready. Handler registration is open from `RegistrationOpen` until the
-/// registration window closes; built-in handlers seed first so consumer mods can replace
-/// them by name.
 public sealed class ConsequenceEngine
 {
     private readonly Dictionary<ConsequenceTier, IConsequenceHandler> _handlers = new();
@@ -21,11 +16,8 @@ public sealed class ConsequenceEngine
     private readonly FrameworkState _state;
     private readonly IMonitor _monitor;
 
-    /// Set by `ModEntry.OnSaveLoaded` to the live engine instance. Static so quest
-    /// subclasses (`MoreQuestsItemDeliveryQuest`, `AdventureQuest`, ...) can fire the
-    /// engine from their `questComplete()` overrides without threading an instance
-    /// reference through every subclass. Null when no save is loaded, the helper
-    /// no-ops gracefully so unit-test / authoring scenarios work without one.
+    // Set by ModEntry.OnSaveLoaded so quest-subclass questComplete overrides can fire
+    // the engine without threading an instance reference through every subclass.
     public static ConsequenceEngine? Active { get; set; }
 
     public ConsequenceEngine(
@@ -40,8 +32,6 @@ public sealed class ConsequenceEngine
         _state = state;
         _monitor = monitor;
 
-        // Built-ins seed first; consumer-mod overrides land via Register() during
-        // RegistrationOpen and replace the entry by tier.
         Register(ConsequenceTier.Tier0, new Tier0Handler());
         Register(ConsequenceTier.Tier1, new Tier1Handler());
         Register(ConsequenceTier.Tier2, new Tier2Handler());
@@ -58,11 +48,8 @@ public sealed class ConsequenceEngine
         _handlers[tier] = handler;
     }
 
-    /// Drop pending dialogue entries the player has ducked for too long. Fired from
-    /// `ModEntry.OnDayStarted`. Anything whose `EarliestFireDay` is more than
-    /// `ConsequenceGraceDays` days in the past stops being a plausible reaction,
-    /// an NPC isn't going to bring up an overfishing complaint a year after the fact.
-    /// Stale-drop count is logged at Trace.
+    // Drops queued lines past the grace window. An NPC bringing up an overfishing
+    // complaint a year later wouldn't read.
     public void SweepExpired()
     {
         int today = StardewValley.Game1.Date?.TotalDays ?? 0;
@@ -83,8 +70,6 @@ public sealed class ConsequenceEngine
                 LogLevel.Trace);
     }
 
-    /// Fire a consequence on quest completion. Resolves the loved/hated NPC sets via
-    /// `Source` + `Subject`, builds the context, and forwards to the registered handler.
     public void Apply(ConsequenceSpec? spec)
     {
         if (spec == null || spec.Tier == ConsequenceTier.Tier0)
@@ -109,22 +94,16 @@ public sealed class ConsequenceEngine
 
     private (IReadOnlyList<string> loved, IReadOnlyList<string> hated) ResolveAffectedNpcs(ConsequenceSpec spec)
     {
-        // Static-source quests treat `Targets[]` as the affected pool (today's CSV
-        /// only uses static for negative reactions, so we route them into `hated`).
-        // Tier 3 chain consequences (Seafood Night, etc.) want every static target to
-        // get a chained dialogue, so we don't sample down on this path.
+        // Static routes to hated (no positive static use case today). Tier 3 chains
+        // come through here and rely on every static target reacting, no sampling.
         if (spec.Source == ConsequenceSource.Static)
             return (Array.Empty<string>(), MetOnly(spec.Targets));
 
-        // GiftTastes: scan `Data/NPCGiftTastes` for NPCs whose loved / hated list
-        // mentions the subject id. Filter to met NPCs so we never queue a line for
-        // someone the player hasn't actually encountered.
+        // Filter to met NPCs so we never queue a line for an unencountered one.
         var loved = MetOnly(_scanner.NpcsWhoLove(spec.Subject));
         var hated = MetOnly(_scanner.NpcsWhoHate(spec.Subject));
         if (spec.Targets.Count > 0)
         {
-            // Authors can append a fixed NPC even when scanning tastes, useful for the
-            // dispatcher's NPC if they aren't covered by the taste row.
             var extra = MetOnly(spec.Targets);
             var merged = new List<string>(hated.Count + extra.Count);
             merged.AddRange(hated);
@@ -134,18 +113,11 @@ public sealed class ConsequenceEngine
             hated = merged;
         }
 
-        // Sample down to one NPC per side independently. Queueing a line for every
-        // loved + every hated NPC produces a fatigue-inducing wall of reactions over
-        // the next in-game week; sampling per-side keeps the loved + hated narrative
-        // beats both visible (so the player gets to feel the trade-off) without
-        // spamming. Tier 3 chains (Static source above) are exempt, those want every
-        // ecology NPC to react over multiple days.
+        // Sample one per side so the player feels both beats without a week-long
+        // wall of reactions. Tier 3 (Static, above) is exempt.
         return SampleEachSide(loved, hated);
     }
 
-    /// Picks at most one NPC from each pool independently. So a quest with both
-    /// loved-by + hated-by NPCs surfaces exactly two reactions (one positive, one
-    /// negative); a quest with only one side populated surfaces just that side.
     private static (IReadOnlyList<string> loved, IReadOnlyList<string> hated) SampleEachSide(IReadOnlyList<string> loved, IReadOnlyList<string> hated)
     {
         var rng = StardewValley.Game1.random;

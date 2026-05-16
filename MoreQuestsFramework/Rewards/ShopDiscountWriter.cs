@@ -8,14 +8,6 @@ using StardewValley.GameData.Shops;
 
 namespace MoreQuestsFramework.Rewards;
 
-/// Owns the framework's edits to `Data/Shops`. When `RewardApplier` grants a
-/// `ShopDiscountReward`, the entry is appended to `FrameworkState.ActiveShopDiscounts`
-/// and the asset cache is invalidated so the next read picks up the discount. Each
-/// asset-edit pass walks every active discount and reduces the matching shop entry's
-/// `Price` field; vanilla then reads that lowered price wherever it shows the shop.
-///
-/// Sweep happens on `DayStarted` from `ModEntry`; expired entries are dropped and the
-/// cache invalidated again so the original prices come back.
 public sealed class ShopDiscountWriter
 {
     private const string AssetName = "Data/Shops";
@@ -34,8 +26,6 @@ public sealed class ShopDiscountWriter
     public void WireState(FrameworkState state)
     {
         _state = state;
-        // Subscribe RewardApplier's static sink so `ShopDiscountReward.questComplete()` paths
-        // route through here without having to know about per-save state.
         RewardApplier.OnShopDiscountGranted = Grant;
     }
 
@@ -47,9 +37,7 @@ public sealed class ShopDiscountWriter
         _registered = true;
     }
 
-    /// Records a new discount in save state and invalidates the shop cache so the next
-    /// read applies the price reduction. Idempotent on `(ShopId, AppliesTo)`: a re-grant
-    /// extends the existing entry's expiry rather than stacking a second discount.
+    // Idempotent on (ShopId, AppliesTo): re-grant extends expiry instead of stacking.
     public void Grant(ShopDiscountReward reward)
     {
         if (_state == null)
@@ -63,8 +51,6 @@ public sealed class ShopDiscountWriter
         int today = Game1.Date?.TotalDays ?? 0;
         int expiresAfter = today + reward.DurationDays - 1;
 
-        // Merge into existing entry with the same ShopId + AppliesTo footprint so a re-grant
-        // extends the window rather than producing a parallel discount on the same items.
         bool merged = false;
         foreach (var d in _state.ActiveShopDiscounts)
         {
@@ -105,8 +91,8 @@ public sealed class ShopDiscountWriter
             return false;
         if (aCount == 0)
             return true;
-        // Cheap order-insensitive equality. The lists are small (a handful of seed ids in
-        // practice), so an O(n²) scan beats allocating a HashSet here.
+        // O(n²) order-insensitive comparison; lists are small enough that allocating a
+        // HashSet would be more expensive.
         foreach (var x in a!)
         {
             bool found = false;
@@ -147,8 +133,6 @@ public sealed class ShopDiscountWriter
         bool restrict = disc.AppliesTo.Count > 0;
         var allowed = restrict ? new HashSet<string>(disc.AppliesTo, StringComparer.OrdinalIgnoreCase) : null;
 
-        // Track which `AppliesTo` items already exist in the shop so the post-pass can
-        // inject temporary entries for the ones that don't (when `GuaranteedStock > 0`).
         var present = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         for (int i = 0; i < shop.Items.Count; i++)
@@ -160,9 +144,8 @@ public sealed class ShopDiscountWriter
             if (restrict)
                 present.Add(NormaliseItemId(entry.ItemId));
 
-            // Vanilla treats Price = -1 as "use base item price"; we resolve it on the fly so
-            // the percent-off keeps a meaningful value. After the discount the field is a
-            // concrete gold amount, so vanilla's own shop UI shows the lowered number.
+            // Price=-1 in vanilla means "use base item price"; resolve so the percent-off
+            // is meaningful and vanilla's UI shows a concrete number.
             int basePrice = entry.Price;
             if (basePrice <= 0)
                 basePrice = ResolveDefaultPrice(entry.ItemId);
@@ -173,8 +156,6 @@ public sealed class ShopDiscountWriter
             entry.Price = discounted;
         }
 
-        // Inject temporary stocked entries for any `AppliesTo` items the shop doesn't
-        // already sell. Only runs when the quest opted in via `GuaranteedStock > 0`.
         if (restrict && disc.GuaranteedStock > 0)
             InjectMissingStock(shop, disc, present);
     }
@@ -189,16 +170,14 @@ public sealed class ShopDiscountWriter
 
             int basePrice = ResolveDefaultPrice(requested);
             if (basePrice <= 0)
-                continue; // unresolvable id (modded asset that hasn't loaded?) — skip silently
+                continue;
 
             int discounted = (int)Math.Max(1, Math.Floor(basePrice * (100 - disc.PercentOff) / 100.0));
 
-            // Stable, namespaced row Id so a re-grant on the same shop+item lands on the
-            // same row (vanilla won't duplicate). The day suffix keeps separate quest fires
-            // distinct so an old run doesn't share its purchase counter with a new one.
+            // Day suffix keeps separate quest fires distinct so an old run doesn't share
+            // its purchase counter with a new one.
             string rowId = $"RafiaBee.MoreQuestsFramework.Stock.{disc.ShopId}.{norm}.{disc.ExpiresAfterDay}";
 
-            // Skip if already injected (re-edit pass on the same asset load).
             for (int i = 0; i < shop.Items.Count; i++)
             {
                 if (shop.Items[i] != null && string.Equals(shop.Items[i].Id, rowId, StringComparison.Ordinal))
@@ -240,7 +219,7 @@ public sealed class ShopDiscountWriter
             return false;
         if (allowed.Contains(entryItemId))
             return true;
-        // Tolerate qualified vs bare ids: `(O)472` should match an authored `472` and vice versa.
+        // Tolerate qualified vs bare ids.
         if (entryItemId.StartsWith("(", StringComparison.Ordinal))
         {
             int closing = entryItemId.IndexOf(')');
@@ -261,9 +240,7 @@ public sealed class ShopDiscountWriter
         try
         {
             var data = ItemRegistry.GetData(itemId);
-            // `Price` doesn't exist on the abstract `ParsedItemData`; objects expose it via
-            // `RawData` cast to `ObjectData`. Falling back to constructing the item lets us
-            // pull the salePrice for non-Object types (rare, but the shop dict allows them).
+            // ParsedItemData has no Price; Objects expose it via RawData cast.
             if (data?.RawData is StardewValley.GameData.Objects.ObjectData obj)
                 return obj.Price;
             var item = ItemRegistry.Create(itemId, 1, 0, true);

@@ -4,10 +4,8 @@ using StardewValley;
 
 namespace MoreQuestsFramework;
 
-/// Reflective bridge to SpaceCore's `Skills.GetSkillLevel(Farmer, string)`. Lets quest
-/// generators read SpaceCore custom-skill levels (e.g. the Cooking Skill mod's
-/// `spacechase0.Cooking`) without taking a hard dependency on SpaceCore. Returns 0 when
-/// SpaceCore isn't installed, the method isn't resolvable, or the skill id is unknown.
+// Reflective bridge to SpaceCore.Skills.GetSkillLevel without a hard dependency.
+// Returns 0 when SpaceCore isn't installed or the skill id is unknown.
 public static class SpaceCoreSkills
 {
     private static Func<Farmer, string, int>? _getSkillLevel;

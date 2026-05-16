@@ -2,7 +2,6 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests.Vanilla;
 
-/// Wraps vanilla `ResourceCollectionQuest` (random NPC asks for X of a basic resource).
 public sealed class VanillaResourceCollection : IQuestDefinition
 {
     public string Id => "Vanilla.ResourceCollection";

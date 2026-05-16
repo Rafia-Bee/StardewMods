@@ -9,12 +9,8 @@ using StardewValley.Menus;
 
 namespace MoreQuestsFramework.Posting.Boards;
 
-/// Generic cork-board menu rendered when the player interacts with a `BoardDefinition`'s
-/// anchor tile. Shares its scatter layout / pad-pin sprite logic with `MoreQuestsBillboard`
-/// via `BoardLayout`, but does NOT inherit vanilla `Billboard`, accept-quest popup
-/// integration for custom boards lands in Phase 8c when `TriggerSource.CustomBoard` quests
-/// start populating slots. Until then this menu renders the cork-board background and the
-/// "Nothing posted" fallback string, matching vanilla's empty-board behaviour.
+// Does NOT inherit vanilla Billboard. Shares scatter layout with MoreQuestsBillboard
+// via BoardLayout.
 public sealed class CustomBoardMenu : IClickableMenu
 {
     private const int MenuWidth = 338 * 4;
@@ -30,8 +26,6 @@ public sealed class CustomBoardMenu : IClickableMenu
     private string _hoverTitle = "";
     private string _hoverText = "";
 
-    /// Inner accept-quest popup shown when the player clicks a pad. When non-null, the
-    /// outer cork board defers all input + draw to this inner menu.
     public CustomBoardQuestMenu? InnerAcceptPopup { get; private set; }
 
     private sealed class Note
@@ -82,7 +76,6 @@ public sealed class CustomBoardMenu : IClickableMenu
             }
             catch
             {
-                // Asset not registered or missing, fall through to the framework default.
             }
         }
         return Game1.content.Load<Texture2D>(fallback);
@@ -214,10 +207,7 @@ public sealed class CustomBoardMenu : IClickableMenu
         }
     }
 
-    /// Called by `CustomBoardQuestMenu` after the player clicks the inner accept or close
-    /// button. `reopen` rebuilds the cork board after a successful accept so the
-    /// just-accepted slot drops out of the layout; on a plain dismiss we just clear the
-    /// popup and leave the existing layout in place.
+    // reopen=true rebuilds the cork board so the just-accepted slot drops out.
     public void OnInnerAcceptClosed(bool reopen)
     {
         InnerAcceptPopup = null;

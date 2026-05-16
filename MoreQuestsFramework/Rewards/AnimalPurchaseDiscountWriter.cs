@@ -8,14 +8,8 @@ using StardewValley.GameData.FarmAnimals;
 
 namespace MoreQuestsFramework.Rewards;
 
-/// Owns the framework's edits to `Data/FarmAnimals`. Parallel to `ShopDiscountWriter`
-/// but operates on the animal-purchase price field that `Utility.getPurchaseAnimalStock`
-/// reads when building the `PurchaseAnimalsMenu` stock list. Asset-edit approach picks
-/// up automatically in third-party menu rewrites (Livestock Bazaar etc) since they read
-/// the same data dictionary.
-///
-/// Sweep happens on `DayStarted` from `ModEntry`; expired entries are dropped and the
-/// cache invalidated so original prices come back.
+// Asset-edit approach so third-party menu rewrites (Livestock Bazaar etc) pick up
+// the discount without a per-menu patch.
 public sealed class AnimalPurchaseDiscountWriter
 {
     private const string AssetName = "Data/FarmAnimals";
@@ -45,9 +39,6 @@ public sealed class AnimalPurchaseDiscountWriter
         _registered = true;
     }
 
-    /// Records a new discount in save state and invalidates the asset cache. Idempotent:
-    /// a re-grant while an existing discount is active extends the expiry and picks the
-    /// higher percent rather than stacking a second entry.
     public void Grant(AnimalPurchaseDiscountReward reward)
     {
         if (_state == null)
@@ -82,8 +73,6 @@ public sealed class AnimalPurchaseDiscountWriter
             LogLevel.Trace);
     }
 
-    /// Drops every entry whose `ExpiresAfterDay` is in the past. Invalidates the asset
-    /// cache when something was removed so the next read goes back to vanilla prices.
     public void SweepExpired()
     {
         if (_state == null || _state.ActiveAnimalPurchaseDiscounts.Count == 0)
@@ -133,6 +122,6 @@ public sealed class AnimalPurchaseDiscountWriter
         foreach (var d in _state!.ActiveAnimalPurchaseDiscounts)
             if (d.PercentOff > best)
                 best = d.PercentOff;
-        return Math.Min(95, best); // never sell animals for free / negative
+        return Math.Min(95, best);
     }
 }

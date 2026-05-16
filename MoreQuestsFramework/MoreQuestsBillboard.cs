@@ -9,11 +9,9 @@ using StardewValley.Menus;
 
 namespace MoreQuestsFramework;
 
-/// Custom Billboard menu that renders a scattered "cork-board" of quest notes (pad + pin +
-/// NPC portrait) instead of vanilla's single quest slot. Clicking a note selects that quest
-/// and spawns a vanilla `Billboard(true)` over the top so the player sees vanilla's
-/// accept-quest UI; our Harmony patches redirect `Game1.questOfTheDay` getters there to the
-/// selected slot.
+// Cork-board of quest notes (pad + pin + portrait). Clicking spawns a vanilla
+// Billboard(true) overlay for accept-quest UI; Harmony redirects Game1.questOfTheDay
+// to the selected slot.
 public sealed class MoreQuestsBillboard : Billboard
 {
     private readonly List<Note> _notes = new();

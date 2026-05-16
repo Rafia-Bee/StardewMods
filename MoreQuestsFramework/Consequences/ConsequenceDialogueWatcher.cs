@@ -5,17 +5,8 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Consequences;
 
-/// Pops queued consequence dialogue lines the next time the player chats with the
-/// affected NPC. Mirrors `Triggers/DialogueWatcher` (the NpcDialogue trigger source),
-/// 1 Hz tick on `OneSecondUpdateTicked`, no Harmony patch, stays inside §8.7's patch
-/// budget.
-///
-/// Pop rule: at most one line per NPC per chat session AND at most one line per NPC
-/// per in-game day. Without the per-day clamp, a player who skips ahead with cheats
-/// (or just doesn't talk to the NPC for a few days) gets every queued line back to
-/// back on the next chat, breaks immersion. `EarliestFireDay` is honoured on top so
-/// Tier 3 chains spread across consecutive days; entries scheduled for tomorrow
-/// stay in the queue until the relevant `DayStarted`.
+// Pop rule: at most one line per NPC per chat session AND per in-game day. Without
+// the per-day clamp, a player who skips days gets every queued line back-to-back.
 public sealed class ConsequenceDialogueWatcher
 {
     private readonly FrameworkState _state;
@@ -40,9 +31,7 @@ public sealed class ConsequenceDialogueWatcher
         if (_state.PendingConsequenceLines.Count == 0)
             return;
 
-        // Skip during cutscenes / festival events. The intercept would otherwise
-        // overwrite the scripted dialogue (Krobus's vault cutscene, etc.), players
-        // get an out-of-context consequence line and lose the cutscene's intended one.
+        // Cutscenes/festivals: otherwise overwrites scripted dialogue (Krobus vault, etc.).
         if (Game1.eventUp || Game1.CurrentEvent != null)
             return;
 
@@ -53,22 +42,17 @@ public sealed class ConsequenceDialogueWatcher
             return;
         }
         if (_lastSpeaker == speaker)
-            return; // already handled this conversation
+            return;
         _lastSpeaker = speaker;
 
         int today = Game1.Date?.TotalDays ?? 0;
         string speakerName = speaker.Name;
 
-        // Per-day clamp, if a consequence already popped for this NPC today (via the
-        // checkAction prefix or an earlier tick this conversation), don't pop another.
         if (_state.LastConsequencePoppedDay.TryGetValue(speakerName, out int lastDay) && lastDay >= today)
             return;
 
-        // Pick the most-recent eligible entry for this NPC (greatest EarliestFireDay
-        // that's still <= today). Tier 3 chains queue one entry per day; if the player
-        // skipped a chat day, the queue holds an out-of-order older line that we don't
-        // want surfacing now. See `ConsequenceDialoguePatches.CheckAction_Prefix` for
-        // the matching logic.
+        // Pick the most-recent eligible entry (greatest EarliestFireDay <= today). If
+        // the player skipped chat days, older queued chain lines would be out-of-order.
         var queue = _state.PendingConsequenceLines;
         int bestIdx = -1;
         int bestDay = int.MinValue;
@@ -128,11 +112,8 @@ public sealed class ConsequenceDialogueWatcher
 
         if (!string.IsNullOrEmpty(entry.Line))
         {
-            // Portrait code goes at the END of the dialogue per SDV's parser
-            // convention, the portrait switches when the parser hits the token, so
-            // a leading-position token only renders for one frame before the next
-            // page wipes it. Wiki: "Portrait commands should be at the end of a
-            // dialogue line".
+            // Portrait token MUST be at the end: SDV's parser switches when it hits
+            // the token, so a leading-position token only renders for one frame.
             string text = string.IsNullOrEmpty(entry.Portrait)
                 ? entry.Line
                 : entry.Line + entry.Portrait;

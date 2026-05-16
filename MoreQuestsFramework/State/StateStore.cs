@@ -2,10 +2,7 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.State;
 
-/// Thin SMAPI save-data wrapper. Owns the read-at-save-load / write-at-day-end
-/// lifecycle so callers don't have to care about the asset key. Multiplayer note:
-/// SMAPI scopes `Helper.Data.WriteSaveData` to the host save, which matches the
-/// "host-only" multiplayer stance in plan.md §10.
+// SMAPI scopes WriteSaveData to the host save, matching our host-only multiplayer stance.
 public sealed class StateStore
 {
     private const string Key = "MoreQuestsFrameworkState";
