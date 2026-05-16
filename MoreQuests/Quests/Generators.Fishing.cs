@@ -454,7 +454,7 @@ internal static partial class Generators
             CatchLocationName = targetLocation,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             Rewards = rewards,
-            Title = ModEntry.I18n.Get("quest.fishing.locationOverpop.title"),
+            Title = ModEntry.I18n.Get("quest.fishing.locationOverpop.title", new { location = LocationDisplayName(targetLocation) }),
             Description = ModEntry.I18n.Get("quest.fishing.locationOverpop.description", new
             {
                 npc = giver,
@@ -648,7 +648,7 @@ internal static partial class Generators
             ObjectiveQuantity = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
             Rewards = rewards,
-            Title = ModEntry.I18n.Get("quest.fishing.legendary.title"),
+            Title = ModEntry.I18n.Get("quest.fishing.legendary.title", new { item = target.DisplayName }),
             Description = ModEntry.I18n.Get("quest.fishing.legendary.description", new { item = target.DisplayName }),
             CurrentObjective = ModEntry.I18n.Get("quest.fishing.legendary.objective", new { item = target.DisplayName }),
             TargetMessage = ModEntry.I18n.Get("quest.fishing.legendary.targetMessage")
