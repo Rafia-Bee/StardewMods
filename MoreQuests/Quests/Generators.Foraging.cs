@@ -38,7 +38,7 @@ internal static partial class Generators
         }
         int gold = ctx.Config.GoldBeginnerBase;
 
-        var npcs = DispatchRegistry.MetHumanNpcs();
+        var npcs = MetAdultHumanGiftReceivers();
         if (npcs.Count == 0)
             return null;
         string giver = npcs[Game1.random.Next(npcs.Count)];
@@ -122,7 +122,7 @@ internal static partial class Generators
     /// Reward: GoldIntermediateBase + 10 of one current-season seed.
     private static QuestPosting? RareForageHunt(QuestContext ctx)
     {
-        var metNpcs = DispatchRegistry.MetHumanNpcs();
+        var metNpcs = MetAdultHumanGiftReceivers();
         if (metNpcs.Count == 0)
             return null;
         string giver = metNpcs[Game1.random.Next(metNpcs.Count)];
