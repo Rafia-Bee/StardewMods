@@ -250,17 +250,14 @@ internal static partial class Generators
     }
 
     /// Single-step Plant AdventureQuest from a ConservationGuide role NPC. Player plants a
-    /// scaled number of trees near the giver's home (Linus/Demetrius hardcoded to Mountain;
-    /// modded givers use NPC.DefaultMap, Beach routes back to Town since trees can't grow on
-    /// sand). Reward: FriendshipIntermediate. PlantTreesPatches opens the location's
-    /// CanPlantTreesHere gate while the quest is active.
+    /// scaled number of trees anywhere outside the farm. Reward: FriendshipIntermediate.
+    /// PlantTreesPatches opens the CanPlantTreesHere gate on every non-Farm location while
+    /// the quest is active.
     private static QuestPosting? PlantTrees(QuestContext ctx)
     {
         string? giver = ctx.Dispatch.Pick(DispatchRoles.ConservationGuide);
         if (giver == null)
             return null;
-
-        string location = ResolvePlantTreesLocation(giver);
 
         int count;
         if (ctx.Config.DifficultyScaling)
@@ -274,8 +271,6 @@ internal static partial class Generators
             count = Game1.random.Next(2, 7);
         }
 
-        string locationLabel = LocationDisplayName(location);
-
         var quest = new AdventureQuest();
         quest.Initialize(new[]
         {
@@ -283,9 +278,9 @@ internal static partial class Generators
             {
                 Name = "PlantTrees",
                 Kind = AdventureStepKind.Plant,
-                Targets = new List<string> { location },
+                Targets = new List<string> { "*", "!Farm" },
                 Count = count,
-                Description = ModEntry.I18n.Get("quest.foraging.plantTrees.step", new { count, location = locationLabel })
+                Description = ModEntry.I18n.Get("quest.foraging.plantTrees.step", new { count })
             }
         }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.foraging.plantTrees.targetMessage"));
 
@@ -299,32 +294,10 @@ internal static partial class Generators
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
             Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipIntermediate) },
             Title = ModEntry.I18n.Get("quest.foraging.plantTrees.title", new { npc = giver }),
-            Description = ModEntry.I18n.Get("quest.foraging.plantTrees.description", new { npc = giver, count, location = locationLabel }),
-            CurrentObjective = ModEntry.I18n.Get("quest.foraging.plantTrees.objective", new { count, location = locationLabel }),
+            Description = ModEntry.I18n.Get("quest.foraging.plantTrees.description", new { npc = giver, count }),
+            CurrentObjective = ModEntry.I18n.Get("quest.foraging.plantTrees.objective", new { count }),
             TargetMessage = ModEntry.I18n.Get("quest.foraging.plantTrees.targetMessage"),
             PreBuiltQuest = quest
         };
-    }
-
-    private static string ResolvePlantTreesLocation(string giver)
-    {
-        // Vanilla givers hardcoded for narrative: Linus's tent and the Science House sit on
-        // the Mountain proper, not the Forest map id.
-        if (string.Equals(giver, "Linus", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(giver, "Demetrius", StringComparison.OrdinalIgnoreCase))
-            return "Mountain";
-
-        var npc = Game1.getCharacterFromName(giver);
-        string? home = npc?.DefaultMap;
-        if (string.IsNullOrEmpty(home))
-            return "Town";
-
-        // Beach maps can't grow trees (sand, not dirt). Beach-living modded NPCs route the
-        // quest back to Town and rely on PlantTreesPatches to open the gate.
-        if (string.Equals(home, "Beach", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(home, "BeachNightMarket", StringComparison.OrdinalIgnoreCase))
-            return "Town";
-
-        return home;
     }
 }
