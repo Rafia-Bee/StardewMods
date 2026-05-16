@@ -522,8 +522,8 @@ internal static partial class Generators
 
     /// Fish-agnostic FishingQuest filtered by size bucket: Small (1-24"), Medium (25-49"),
     /// Large (50+). Any caught fish in the bucket counts. Names a size category, not a fish
-    /// or location. Giver from EcologyMinded. Reward: GoldIntermediateBase + qty*3 Magic Bait.
-    private const string MagicBaitId = "(O)908";
+    /// or location. Giver from EcologyMinded. Reward: GoldIntermediateBase + qty*3 Wild Bait.
+    private const string WildBaitId = "(O)774";
 
     private const int SizeBucketSmallMaxInches = 24;
     private const int SizeBucketMediumMaxInches = 49;
@@ -560,9 +560,9 @@ internal static partial class Generators
         int gold = ctx.Config.GoldIntermediateBase;
 
         var rewards = new List<RewardSpec> { new MoneyReward(gold) };
-        var magicBait = ctx.Items.TryResolveItem(MagicBaitId);
-        if (magicBait != null)
-            rewards.Add(new ObjectReward(MagicBaitId, qty * 3));
+        var wildBait = ctx.Items.TryResolveItem(WildBaitId);
+        if (wildBait != null)
+            rewards.Add(new ObjectReward(WildBaitId, qty * 3));
 
         string bucketLabel = ModEntry.I18n.Get($"quest.fishing.sizeOverpop.bucket.{bucketKey}");
         string flavour = ModEntry.I18n.Get(
@@ -608,9 +608,9 @@ internal static partial class Generators
     }
 
     /// FishingQuest restricted to IsBossFish entries from Data/Locations (vanilla legendaries
-    /// + modded equivalents). Skipped when no legendary is in-season. Reward placeholder:
-    /// GoldExpertBase + 50 Challenge Bait (CSV's "unique display furniture" reward pending assets).
-    private const int LegendaryChallengeBaitQty = 50;
+    /// + modded equivalents). Skipped when no legendary is in-season. Reward: GoldExpertBase
+    /// + 5 Challenge Bait.
+    private const int LegendaryChallengeBaitQty = 5;
 
     private static QuestPosting? LegendaryFishQuest(QuestContext ctx)
     {
