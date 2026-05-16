@@ -49,6 +49,11 @@ internal class FollowingAnimal
     /// <summary>Frames spent on the eating pause after reaching a grass tile (negative = not eating yet).</summary>
     public int EatingFrames { get; set; } = -1;
 
+    /// <summary>Earliest <c>idleTicks</c> value at which this animal may try to pick a grass tile during the current idle stop.
+    /// <c>int.MaxValue</c> means "not scheduled" (animal has already grazed this stop, or the stop just started and the
+    /// initial offset hasn't been applied yet).</summary>
+    public int GrazeRetryAt { get; set; } = int.MaxValue;
+
     /// <summary>Current idle roaming activity when the player is standing still.</summary>
     public IdleActivity CurrentIdleActivity { get; set; }
 
