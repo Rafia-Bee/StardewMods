@@ -18,6 +18,21 @@ internal class FollowingAnimal
     public int StuckTicks { get; set; }
     public int DirectionCooldown { get; set; }
 
+    /// <summary>Current path of tiles from the animal's tile to the goal (goal included, start excluded).</summary>
+    public Queue<Point> Path { get; set; }
+
+    /// <summary>The tile we last pathed toward, so we can detect when the player moved enough to need a rebuild.</summary>
+    public Point? PathTarget { get; set; }
+
+    /// <summary>Frames since the path was last rebuilt; used to throttle rebuilds.</summary>
+    public int FramesSincePathBuild { get; set; }
+
+    /// <summary>Frames the animal's pixel position hasn't meaningfully changed while trying to follow.</summary>
+    public int FramesSinceProgress { get; set; }
+
+    /// <summary>Consecutive path rebuilds that didn't produce a path.</summary>
+    public int ConsecutivePathFailures { get; set; }
+
     /// <summary>True if this animal is on a voluntary walk (Grazing Bell), false if purchase escort.</summary>
     public bool IsWalk { get; set; }
 
@@ -287,6 +302,13 @@ internal class AnimalFollowManager
         {
             var animal = follow.Animal;
 
+            // Any cached path is from the previous map; throw it out.
+            follow.Path = null;
+            follow.PathTarget = null;
+            follow.FramesSincePathBuild = 0;
+            follow.FramesSinceProgress = 0;
+            follow.ConsecutivePathFailures = 0;
+
             if (follow.State == FollowState.PendingSpawn)
             {
                 if (!newLocation.IsOutdoors)
@@ -404,69 +426,183 @@ internal class AnimalFollowManager
     }
 
     private const int DefaultAnimalSpeed = 2;
+    private const int PathRebuildInterval = 30;
+    private const int MaxStallFrames = 20;
+    private const int MaxConsecutivePathFailures = 3;
 
     private void SteerAnimal(FollowingAnimal follow, Vector2 target, ModConfig config, GameTime time)
     {
         var animal = follow.Animal;
         var player = Game1.player;
-        Vector2 diff = target - animal.Position;
-        float tileDistance = diff.Length() / 64f;
+        var location = animal.currentLocation;
+
         float tileDistanceToPlayer = Vector2.Distance(animal.Position, player.Position) / 64f;
 
         animal.speed = DefaultAnimalSpeed;
 
-        if (tileDistance < 1.5f)
+        if (tileDistanceToPlayer < 1.5f)
         {
             animal.Halt();
-            follow.StuckTicks = 0;
+            follow.Path = null;
+            follow.PathTarget = null;
+            follow.FramesSinceProgress = 0;
+            follow.ConsecutivePathFailures = 0;
             return;
         }
 
-        if (tileDistanceToPlayer > config.RubberBandDistance)
+        // Only teleport when the animal is genuinely lost (well past the rubber band).
+        if (tileDistanceToPlayer > config.RubberBandDistance * 1.6f)
         {
             TeleportNearPlayer(follow);
+            follow.Path = null;
+            follow.PathTarget = null;
+            follow.FramesSinceProgress = 0;
+            follow.ConsecutivePathFailures = 0;
             return;
         }
 
-        if (Vector2.Distance(animal.Position, follow.LastPosition) < 1f)
+        Point animalTile = animal.TilePoint;
+        Point goal = player.TilePoint;
+
+        bool needRebuild =
+            follow.Path == null
+            || follow.Path.Count == 0
+            || follow.PathTarget != goal
+            || follow.FramesSincePathBuild >= PathRebuildInterval;
+
+        if (needRebuild)
         {
-            follow.StuckTicks++;
-            if (follow.StuckTicks > 30)
+            Queue<Point> path;
+            if (AnimalPathfinder.HasLineOfSight(location, animal, animalTile, goal))
             {
-                TeleportNearPlayer(follow);
-                return;
+                path = BuildStraightPath(animalTile, goal);
             }
+            else
+            {
+                path = AnimalPathfinder.FindPath(location, animal, animalTile, goal);
+            }
+
+            if (path != null && path.Count > 0)
+            {
+                follow.Path = path;
+                follow.PathTarget = goal;
+                follow.ConsecutivePathFailures = 0;
+            }
+            else
+            {
+                follow.Path = null;
+                follow.PathTarget = null;
+                follow.ConsecutivePathFailures++;
+            }
+
+            follow.FramesSincePathBuild = 0;
         }
         else
         {
-            follow.StuckTicks = 0;
+            follow.FramesSincePathBuild++;
         }
-        follow.LastPosition = animal.Position;
 
-        if (follow.DirectionCooldown > 0)
-            follow.DirectionCooldown--;
+        if (follow.ConsecutivePathFailures >= MaxConsecutivePathFailures)
+        {
+            TeleportNearPlayer(follow);
+            follow.ConsecutivePathFailures = 0;
+            follow.FramesSinceProgress = 0;
+            return;
+        }
 
-        int desiredDir;
-        if (Math.Abs(diff.X) > Math.Abs(diff.Y))
-            desiredDir = diff.X > 0 ? 1 : 3;
-        else
-            desiredDir = diff.Y > 0 ? 2 : 0;
-
-        if (follow.DirectionCooldown > 0 && desiredDir != animal.FacingDirection)
-            desiredDir = animal.FacingDirection;
-
-        if (animal.FacingDirection != desiredDir || !animal.isMoving())
+        if (follow.Path == null || follow.Path.Count == 0)
         {
             animal.Halt();
-            switch (desiredDir)
-            {
-                case 0: animal.SetMovingUp(true); break;
-                case 1: animal.SetMovingRight(true); break;
-                case 2: animal.SetMovingDown(true); break;
-                case 3: animal.SetMovingLeft(true); break;
-            }
-            follow.DirectionCooldown = 15;
+            return;
         }
+
+        // Advance past any waypoints we've already reached.
+        while (follow.Path.Count > 0 && follow.Path.Peek() == animalTile)
+            follow.Path.Dequeue();
+
+        if (follow.Path.Count == 0)
+        {
+            animal.Halt();
+            return;
+        }
+
+        Point waypoint = follow.Path.Peek();
+        int desiredDir = GetDirToWaypoint(animalTile, waypoint, animal.Position);
+
+        // Pre-check whether vanilla MovePosition would refuse this move. If we set a
+        // movement flag toward a blocked tile, vanilla's bounce logic has a 60% chance
+        // of flipping us to the opposite direction every tick (see FarmAnimal.MovePosition),
+        // which produces a visible up/down or left/right walk-in-place glitch. Halting
+        // and not setting any flag avoids that entirely.
+        var nextRect = animal.nextPosition(desiredDir);
+        bool blocked = location.isCollidingPosition(
+            nextRect, Game1.viewport,
+            isFarmer: false, damagesFarmer: 0, glider: false, animal, pathfinding: false);
+
+        if (blocked)
+        {
+            animal.Halt();
+            if (animal.FacingDirection != desiredDir)
+                animal.faceDirection(desiredDir);
+        }
+        else if (animal.FacingDirection != desiredDir || !animal.isMoving())
+        {
+            animal.Halt();
+            SetMovingDirection(animal, desiredDir);
+        }
+
+        // Stall detection by pixel position. Works for both "blocked at next step" and
+        // "vanilla refused our move" cases.
+        if (Vector2.Distance(animal.Position, follow.LastPosition) < 0.5f)
+        {
+            follow.FramesSinceProgress++;
+        }
+        else
+        {
+            follow.FramesSinceProgress = 0;
+            follow.LastPosition = animal.Position;
+        }
+
+        if (follow.FramesSinceProgress > MaxStallFrames)
+        {
+            follow.Path = null;
+            follow.PathTarget = null;
+            follow.FramesSinceProgress = 0;
+            follow.FramesSincePathBuild = PathRebuildInterval;
+            follow.ConsecutivePathFailures++;
+        }
+    }
+
+    private static Queue<Point> BuildStraightPath(Point start, Point goal)
+    {
+        var q = new Queue<Point>();
+        int dx = System.Math.Sign(goal.X - start.X);
+        int dy = System.Math.Sign(goal.Y - start.Y);
+        Point cur = start;
+        while (cur != goal)
+        {
+            cur = new Point(cur.X + dx, cur.Y + dy);
+            q.Enqueue(cur);
+        }
+        return q;
+    }
+
+    private static int GetDirToWaypoint(Point from, Point to, Vector2 animalPos)
+    {
+        int dx = to.X - from.X;
+        int dy = to.Y - from.Y;
+
+        if (dx != 0 && dy == 0)
+            return dx > 0 ? 1 : 3;
+        if (dy != 0 && dx == 0)
+            return dy > 0 ? 2 : 0;
+
+        // Same tile or diagonal (shouldn't happen with 4-connected BFS). Aim at pixel offset.
+        Vector2 wpPixel = new(to.X * 64f + 32f, to.Y * 64f + 32f);
+        Vector2 diff = wpPixel - animalPos;
+        if (System.Math.Abs(diff.X) > System.Math.Abs(diff.Y))
+            return diff.X > 0 ? 1 : 3;
+        return diff.Y > 0 ? 2 : 0;
     }
 
     /// <summary>Teleport an animal to a position near the player with horizontal spread for multiple animals.</summary>
