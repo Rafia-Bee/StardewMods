@@ -549,9 +549,9 @@
     "quest.cooking.dinnerParty.targetMessage": "These look incredible. My guests are going to be thrilled. Here's a little something for your trouble.",
 
     "quest.foraging.plantTrees.title": "Plant some trees",
-    "quest.foraging.plantTrees.description": "The trees in {{location}} are looking a bit sparse. Plant {{count}} new trees there and I'll be in your debt.",
-    "quest.foraging.plantTrees.objective": "Plant trees in {{location}}.",
-    "quest.foraging.plantTrees.step": "Plant trees in {{location}}.",
+    "quest.foraging.plantTrees.description": "The valley's tree cover is looking a bit sparse. Plant {{count}} new trees anywhere outside the farm and I'll be in your debt.",
+    "quest.foraging.plantTrees.objective": "Plant {{count}} trees anywhere outside the farm.",
+    "quest.foraging.plantTrees.step": "Plant {{count}} trees anywhere outside the farm.",
     "quest.foraging.plantTrees.targetMessage": "Beautiful work. The forest will thank you for years.",
 
     "quest.seasonal.springCleaning.title": "Spring cleaning",
