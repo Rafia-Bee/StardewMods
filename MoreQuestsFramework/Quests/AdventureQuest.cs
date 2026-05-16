@@ -417,7 +417,10 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     }
 
     /// Polls resourceClumps count and credits each ClearDebris step targeting that location
-    /// for the drop since the previous poll. First poll records the baseline only.
+    /// for the drop since the previous poll. First poll records the baseline only. Only
+    /// counts Large Stump (600), Large Log (602), Boulder (672), Meteorite (622), the four
+    /// mine rocks (752/754/756/758), and the quarry boulder (148). Green rain bushes and
+    /// giant crops are filtered out.
     public void PollResourceClumps(GameLocation? location)
     {
         if (completed.Value || location == null)
@@ -430,7 +433,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             if (step.Kind != AdventureStepKind.ClearDebris) continue;
             if (!LocationMatches(step, location.Name)) continue;
 
-            int current = location.resourceClumps?.Count ?? 0;
+            int current = CountTargetClumps(location);
             _clumpBaselines ??= new Dictionary<int, int>();
             if (!_clumpBaselines.TryGetValue(i, out int baseline))
             {
@@ -447,6 +450,49 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             {
                 _clumpBaselines[i] = current;
             }
+        }
+    }
+
+    private static bool IsTargetClumpIndex(int idx) =>
+        idx == StardewValley.TerrainFeatures.ResourceClump.stumpIndex
+        || idx == StardewValley.TerrainFeatures.ResourceClump.hollowLogIndex
+        || idx == StardewValley.TerrainFeatures.ResourceClump.boulderIndex
+        || idx == StardewValley.TerrainFeatures.ResourceClump.meteoriteIndex
+        || idx == StardewValley.TerrainFeatures.ResourceClump.mineRock1Index
+        || idx == StardewValley.TerrainFeatures.ResourceClump.mineRock2Index
+        || idx == StardewValley.TerrainFeatures.ResourceClump.mineRock3Index
+        || idx == StardewValley.TerrainFeatures.ResourceClump.mineRock4Index
+        || idx == StardewValley.TerrainFeatures.ResourceClump.quarryBoulderIndex;
+
+    private static int CountTargetClumps(GameLocation location)
+    {
+        var clumps = location.resourceClumps;
+        if (clumps == null) return 0;
+        int total = 0;
+        for (int i = 0; i < clumps.Count; i++)
+        {
+            var c = clumps[i];
+            if (c is StardewValley.TerrainFeatures.GiantCrop) continue;
+            if (IsTargetClumpIndex(c.parentSheetIndex.Value))
+                total++;
+        }
+        return total;
+    }
+
+    /// Called when Twig/Stone Objects are removed. ClearDebris steps targeting that location
+    /// get incremented by `delta`.
+    public void ObserveDebrisCleared(string locationName, int delta)
+    {
+        if (completed.Value || delta <= 0 || string.IsNullOrEmpty(locationName))
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.ClearDebris) continue;
+            if (!LocationMatches(step, locationName)) continue;
+            CreditCount(i, step, delta);
         }
     }
 
