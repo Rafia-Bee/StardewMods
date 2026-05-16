@@ -211,16 +211,32 @@ internal static partial class Generators
     }
 
     /// Subset of MetAdultHumanGiftReceivers whose loved/liked pool contains at least one
-    /// fish-category item. For fishing quests where the giver narratively wants the fish themselves.
+    /// fish-category item. For fishing quests where the giver narratively wants the fish
+    /// themselves. EcologyMinded NPCs (Demetrius, Maddie, Mr. Aguar, Dylan) are excluded:
+    /// they shouldn't be commissioning fish hauls outside of their dedicated ecology quests.
     private static List<string> MetAdultHumanFishLovers(QuestContext ctx)
     {
+        var ecology = EcologyMindedSet(ctx);
         var results = new List<string>();
         foreach (var name in MetAdultHumanGiftReceivers())
         {
+            if (ecology.Contains(name))
+                continue;
             if (NpcLikesAnyFish(ctx, name))
                 results.Add(name);
         }
         return results;
+    }
+
+    /// Met NPCs registered under the EcologyMinded dispatch role. Used to filter generic
+    /// fish-haul quests so ecology NPCs only commission their own ecology quests.
+    private static HashSet<string> EcologyMindedSet(QuestContext ctx)
+    {
+        var pool = ctx.Dispatch.ResolvePool(DispatchRoles.EcologyMinded);
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (int i = 0; i < pool.Count; i++)
+            set.Add(pool[i]);
+        return set;
     }
 
     private static bool NpcLikesAnyFish(QuestContext ctx, string npc)

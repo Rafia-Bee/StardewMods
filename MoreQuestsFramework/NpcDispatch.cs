@@ -34,12 +34,12 @@ public static class NpcDispatch
         registry.Register(DispatchRoles.EcologyMinded, "Demetrius");
         registry.Register(DispatchRoles.EcologyMinded, "Maddie", ModCompat.RidgesideVillage);
         registry.Register(DispatchRoles.EcologyMinded, "Mr. Aguar", ModCompat.RidgesideVillage);
-        registry.Register(DispatchRoles.EcologyMinded, "Dylan", ModCompat.EastScarp);
+        registry.Register(DispatchRoles.EcologyMinded, "Dylan", ModCompat.EliAndDylan);
 
         registry.Register(DispatchRoles.ConservationGuide, "Linus");
         registry.Register(DispatchRoles.ConservationGuide, "Demetrius");
         registry.Register(DispatchRoles.ConservationGuide, "Kimpoi", ModCompat.RidgesideVillage);
-        registry.Register(DispatchRoles.ConservationGuide, "Dylan", ModCompat.EastScarp);
+        registry.Register(DispatchRoles.ConservationGuide, "Dylan", ModCompat.EliAndDylan);
         registry.Register(DispatchRoles.ConservationGuide, "Aster", ModCompat.VisitMountVapius);
 
         // CombatNpcs: combat-flavoured villagers who commission slime / monster work
@@ -59,7 +59,7 @@ public static class NpcDispatch
 
         registry.Register(DispatchRoles.BeachCleanup, "Elliott");
         registry.Register(DispatchRoles.BeachCleanup, "Willy");
-        registry.Register(DispatchRoles.BeachCleanup, "Dylan", ModCompat.EastScarp);
+        registry.Register(DispatchRoles.BeachCleanup, "Dylan", ModCompat.EliAndDylan);
         registry.Register(DispatchRoles.BeachCleanup, "Arumi", ModCompat.AikawaAsakaiCP);
 
         registry.Register(DispatchRoles.HeatWaveRelief, "Harvey");

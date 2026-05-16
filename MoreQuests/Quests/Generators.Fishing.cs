@@ -22,6 +22,8 @@ internal static partial class Generators
     private static QuestPosting? FishSmokerRequest(QuestContext ctx)
     {
         var candidates = MetAdultHumanGiftReceivers();
+        var ecology = EcologyMindedSet(ctx);
+        candidates.RemoveAll(n => ecology.Contains(n));
         if (candidates.Count == 0)
             return null;
         string giver = candidates[Game1.random.Next(candidates.Count)];
