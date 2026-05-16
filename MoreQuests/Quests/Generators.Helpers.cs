@@ -183,7 +183,9 @@ internal static partial class Generators
     // -------------------- Adult-human giver pools --------------------
 
     /// Met villagers narrowed to adult humans who can plausibly receive a quest gift.
-    /// Filters: not a child, not Dwarvish-speaking, has a NPCGiftTastes row, CanReceiveGifts is true.
+    /// Filters: not a child, not Dwarvish-speaking, CanReceiveGifts is true, CanSocialize
+    /// is true (excludes "friendable animal" NPCs like East Scarp's Duck2NPC whose
+    /// `CharacterData.CanSocialize` GSQ resolves to false).
     /// Krobus is excluded by name (passes every other filter but isn't human; vanilla data has
     /// no programmatic marker). Quests involving Krobus should reference him directly.
     private static List<string> MetAdultHumanGiftReceivers()
@@ -197,6 +199,8 @@ internal static partial class Generators
             if (npc == null)
                 continue;
             if (npc.Age == 2)
+                continue;
+            if (!npc.CanSocialize)
                 continue;
             var data = npc.GetData();
             if (data == null)
