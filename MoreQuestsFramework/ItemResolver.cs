@@ -91,12 +91,13 @@ public sealed class ItemResolver
                     continue;
 
                 var item = TryResolveItem("(O)" + fishId);
-                if (item != null)
-                {
-                    if (int.TryParse(fields[1], out int difficulty))
-                        item.Difficulty = difficulty;
-                    results.Add(item);
-                }
+                if (item == null)
+                    continue;
+                if (IsNonFishFishEntry(item))
+                    continue;
+                if (int.TryParse(fields[1], out int difficulty))
+                    item.Difficulty = difficulty;
+                results.Add(item);
             }
         }
         catch (Exception ex)
@@ -104,6 +105,21 @@ public sealed class ItemResolver
             _monitor.Log($"GetSeasonalFish: {ex.Message}", LogLevel.Warn);
         }
         return results;
+    }
+
+    // Drops items that live in Data/Fish but aren't really fish (SVE's Dulse Seaweed,
+    // etc). SVE marks these with `fish_nonfish`; we also drop anything tagged
+    // `seaweed_item` as a backstop for other mods that follow the same naming.
+    private static bool IsNonFishFishEntry(ResolvedItem item)
+    {
+        foreach (var tag in item.ContextTags)
+        {
+            if (tag.Equals("fish_nonfish", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (tag.Equals("seaweed_item", StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
     }
 
     // Falls back to the full seasonal pool if the filter would produce nothing,
