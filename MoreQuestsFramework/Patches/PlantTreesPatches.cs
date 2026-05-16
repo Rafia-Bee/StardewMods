@@ -5,16 +5,8 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Patches;
 
-/// Harmony postfix on `GameLocation.CanPlantTreesHere` so an active PlantTrees AdventureQuest
-/// can opt its target location into wild-tree-seed planting even when vanilla rules say no.
-/// Vanilla already allows wild seeds on outdoor Dirt tiles, so this is only load-bearing for
-/// target locations the player is routed to that lack Dirt back-layer tiles (Town etc.). The
-/// per-tile gates (`IsNoSpawnTile`, object/terrain collision, `CheckItemPlantRules` diggable
-/// check) still apply, so the player must still find a plantable tile within the location.
-///
-/// Skipped entirely when the AnythingAnywhere mod (`Espy.AnythingAnywhere`) is loaded - that
-/// mod already patches placement validation, so layering our patch on top would be redundant
-/// and risks double-counting placement rules.
+// Opts the target location into wild-tree-seed planting even where vanilla says no.
+// Skipped when Espy.AnythingAnywhere is loaded to avoid double-counting placement rules.
 internal static class PlantTreesPatches
 {
     private static IModRegistry? _registry;

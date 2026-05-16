@@ -9,46 +9,28 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests;
 
-/// Single-objective shipping quest. The player ships `numberToShip` units of `itemId`
-/// (or any id in `alternativeItemIds`) through the farm shipping bin; the framework
-/// observes the bin at `DayEnding` and increments `numberShipped` by the matching count.
-/// Vanilla sells the items normally, we observe, we don't consume. When `numberShipped`
-/// reaches `numberToShip`, `questComplete()` runs the declarative reward block.
+// Observes the shipping bin at DayEnding (vanilla sells items normally, we don't consume).
 [XmlType("Mods_RafiaBee_MoreQuestsFramework_ShipQuest")]
 public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
 {
     public readonly NetString target = new();
     public readonly NetString itemId = new();
     public readonly NetStringList alternativeItemIds = new();
-    /// Per-stack credit applied when the primary `itemId` is shipped. Defaults to 1, so a
-    /// quest counts items 1:1. Higher weights let one item id be worth N "fuel units" of
-    /// progress, Submarine Fuel uses this so 1 Battery Pack = 15 Coal toward the same
-    /// shipping bar.
+    // Higher = one item id is worth N units of progress (Submarine Fuel uses 15 on
+    // Battery Pack so 1 battery = 15 coal toward the same shipping bar).
     public readonly NetInt itemWeight = new();
-    /// Parallel to `alternativeItemIds`. Each entry is the credit applied per matched
-    /// stack of that alternative. Missing entries default to 1.
     public readonly NetIntList alternativeItemWeights = new();
     public readonly NetInt numberToShip = new();
     public readonly NetInt numberShipped = new();
     public readonly NetStringList serializedRewards = new();
-    /// Mirrors `QuestPosting.AllowDecorShipping`. While this quest is in the active log
-    /// the framework's `DecorShippingPatches` postfix on `Object.canBeShipped` returns
-    /// true so the player can deposit furniture / decor through the bin.
     public readonly NetBool allowDecorShipping = new();
 
-    /// Captured on first journal read so `reloadObjective` can rebuild `_currentObjective`
-    /// as `"<base> (X/Y)"` without losing the base text after the first append.
     public readonly NetString baseObjective = new();
 
     public NetStringList SerializedRewards => serializedRewards;
 
-    /// Friendly item name shown in the "Ship X / Y <name>" objective line. Stored as a
-    /// plain string field (not net-synced), host writes it once at posting time.
     public string objectiveItemName = string.Empty;
 
-    /// Spoken/letter line shown when the quest completes. Empty for board-posted ship
-    /// quests; mail-delivered quests usually leave this empty since the reward letter
-    /// itself is the thank-you message.
     public string targetMessage = string.Empty;
 
     protected override void initNetFields()
@@ -90,8 +72,6 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
             : baseObjective.Value;
     }
 
-    /// True when the bin item matches `itemId` or any of `alternativeItemIds`. Tolerates
-    /// both qualified (`(O)787`) and bare (`787`) author input.
     public bool MatchesItem(Item item)
     {
         if (item == null)
@@ -122,10 +102,6 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
         return false;
     }
 
-    /// Walks the shipping bin once and increments `numberShipped` by the weighted count of
-    /// matching entries. Each match's contribution is `weight * stack` so a single Battery
-    /// Pack with weight 15 contributes 15 toward a `numberToShip` of 30 (= 2 batteries to
-    /// finish). Called by the framework's DayEnding observer for each active ship quest.
     public void ObserveShippingBin(IList<Item> bin, IMonitor? monitor = null)
     {
         if (completed.Value || bin == null || bin.Count == 0)

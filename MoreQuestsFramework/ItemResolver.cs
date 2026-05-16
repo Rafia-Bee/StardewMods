@@ -32,15 +32,12 @@ public sealed class RecipeIngredient
 {
     public ResolvedItem Item { get; set; } = null!;
     public int Count { get; set; }
-    /// When non-zero, the ingredient line was a vanilla category sentinel (negative id in
-    /// `Data/CookingRecipes`) rather than a literal item id, `Item` then carries the
-    /// per-category display name and a synthetic placeholder `QualifiedItemId` so step
-    /// builders can still feed `AdventureStep.Items` with `$category:<CategoryId>`.
+    // Non-zero when the ingredient was a vanilla category sentinel (negative id in
+    // Data/CookingRecipes); Item then carries a synthetic $category:N placeholder.
     public int CategoryId { get; set; }
     public bool IsCategoryToken => CategoryId != 0;
 }
 
-/// Dynamically resolves items from the game registry. Designed to surface modded crops/fish/objects automatically.
 public sealed class ItemResolver
 {
     private readonly IMonitor _monitor;
@@ -109,10 +106,8 @@ public sealed class ItemResolver
         return results;
     }
 
-    /// Subset of `GetSeasonalFish` filtered to fish whose Data/Locations spawn entries
-    /// match a location the player has visited at least once. Falls back to the full
-    /// seasonal pool if the filter would produce nothing (so quests still post on a
-    /// fresh save where the player has only been to the farm).
+    // Falls back to the full seasonal pool if the filter would produce nothing,
+    // so quests still post on a fresh save where the player has only been to the farm.
     public List<ResolvedItem> GetSeasonalFishInVisitedLocations(string season, string? weatherFilter = null)
     {
         var seasonal = GetSeasonalFish(season, weatherFilter);
@@ -127,13 +122,8 @@ public sealed class ItemResolver
         return filtered.Count > 0 ? filtered : seasonal;
     }
 
-    /// Boss/legendary fish for the current save. Walks `Data/Locations` and collects every
-    /// `SpawnFishData.ItemId` whose entry sets `IsBossFish = true`. Picks up vanilla
-    /// (Crimsonfish, Angler, Legend, Glacierfish, Mutant Carp, plus the family variants)
-    /// and any modded fish that follow the same convention (Ridgeside Village's Deep Ridge
-    /// Angler / Waterfall Snakehead / Sockeye Salmon, SVE / ESV / VMV equivalents). The
-    /// returned items carry their `Difficulty` from `Data/Fish` when available so callers
-    /// can sort or filter on it.
+    // Walks Data/Locations for SpawnFishData entries with IsBossFish=true. Picks up
+    // vanilla and any modded fish (RSV, SVE, VMV, etc.) following the same convention.
     public List<ResolvedItem> GetBossFish()
     {
         var results = new List<ResolvedItem>();
@@ -211,13 +201,9 @@ public sealed class ItemResolver
         }
     }
 
-    /// All recipes from `Data/CookingRecipes` whose ingredient list resolves cleanly into
-    /// either literal items or `$category:N` tokens (negative ids in vanilla recipes encode
-    /// "any item with category N"). Unlike `GetKnownRecipes`, this ignores
-    /// `Game1.player.cookingRecipes`, the saloon's menu doesn't depend on what the player
-    /// already knows, so quests that pull from the saloon's dish pool need the full list.
-    /// Recipes with a non-resolvable ingredient (corrupt data, bad modded entries) are
-    /// silently dropped so the caller never has to check.
+    // Unlike GetKnownRecipes, ignores Game1.player.cookingRecipes (the saloon's menu
+    // doesn't depend on what the player knows). Recipes with unresolvable ingredients
+    // are silently dropped.
     public List<CookingRecipeInfo> GetAllCookingRecipes()
     {
         var results = new List<CookingRecipeInfo>();
@@ -314,10 +300,7 @@ public sealed class ItemResolver
         return results;
     }
 
-    /// Subset of `GetForageItems` filtered to items whose Data/Locations Forage spawn
-    /// entries match a location the player has visited at least once. Falls back to the
-    /// full forage pool if the filter would produce nothing (so quests still post on a
-    /// fresh save where the player has only been to the farm).
+    // Falls back to the full forage pool if the filter would produce nothing.
     public List<ResolvedItem> GetForageItemsInVisitedLocations(string? season = null)
     {
         var pool = GetForageItems(season);
@@ -369,12 +352,8 @@ public sealed class ItemResolver
         }
     }
 
-    /// Resolves every plain-id item entry under `Data/Shops[<shopId>]` into the deduped
-    /// `ResolvedItem` list (qualified-id keyed). Skips entries whose `ItemId` is an
-    /// `ItemQuery` token (anything with whitespace), since those need `ItemQueryResolver`
-    /// + a runtime farmer context that callers may not want to build. Callers that need
-    /// query-driven items (RANDOM_ITEMS, FLAVORED_ITEM, etc.) should pull those through
-    /// the vanilla path; this helper is for "pull the basic stock list of shop X".
+    // Skips ItemQuery tokens (anything with whitespace) since those need
+    // ItemQueryResolver + a runtime farmer context. Plain-id stock only.
     public List<ResolvedItem> GetShopItems(string shopId)
     {
         var results = new List<ResolvedItem>();
@@ -411,15 +390,9 @@ public sealed class ItemResolver
         return results;
     }
 
-    /// Returns the union of (a) the vanilla beach forage roster (Coral, Sea Urchin, Nautilus
-    /// Shell, Rainbow Shell, Clam, Cockle, Mussel, Oyster) and (b) any item whose `Data/Locations`
-    /// Forage spawn entry sits on a location whose key contains `beach` (case-insensitive).
-    /// The location filter is intentionally substring-based so modded beach locations are
-    /// picked up automatically without an explicit allowlist (vanilla `Beach`, the festival
-    /// `BeachNightMarket`, and modded keys like `Custom_BeachWest`, `EsBeach`, etc. all
-    /// match). The vanilla roster is seeded directly because vanilla beach forage spawns
-    /// via `Beach.SpawnObjects()` rather than `Data/Locations`, so a pure location-scan
-    /// would miss every vanilla shell.
+    // Vanilla shells are seeded directly because Beach.SpawnObjects() drops them,
+    // not Data/Locations. Location-name filter is substring-based ("beach") so modded
+    // beach locations are picked up automatically.
     public List<ResolvedItem> GetBeachForageItems()
     {
         var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -466,8 +439,6 @@ public sealed class ItemResolver
         return results;
     }
 
-    /// Items tagged `forage_item` (and optionally `season_<season>`) in their context tags.
-    /// Returns vanilla and modded forage in one list.
     public List<ResolvedItem> GetForageItems(string? season = null)
     {
         var results = new List<ResolvedItem>();
@@ -556,10 +527,8 @@ public sealed class ItemResolver
         return ingredients;
     }
 
-    /// Variant of `ParseIngredients` that returns null when the ingredient string can't be
-    /// parsed cleanly (bad pair, unresolved literal id). Negative integer ids are kept as
-    /// `CategoryId` sentinel ingredients with a per-category display name; callers feed
-    /// these into `AdventureStep.Items` as `$category:<n>` tokens.
+    // Returns null on any unparseable pair or unresolved literal id. Negative ids
+    // become $category:N sentinels.
     private List<RecipeIngredient>? ParseIngredientsStrict(string ingredientString)
     {
         var ingredients = new List<RecipeIngredient>();
@@ -593,9 +562,8 @@ public sealed class ItemResolver
         return ingredients;
     }
 
-    /// Player-facing names for the vanilla `Data/Objects` category constants that show up
-    /// in `Data/CookingRecipes` ingredient lists. Used so a quest description can say
-    /// "Bring 1 milk" instead of "Bring 1 (-6)".
+    // Display names for the vanilla category constants in Data/CookingRecipes
+    // (e.g. -6 → "milk") so quest text reads "Bring 1 milk" instead of "Bring 1 (-6)".
     private static string CategoryDisplayName(int category) => category switch
     {
         -5 => "egg",

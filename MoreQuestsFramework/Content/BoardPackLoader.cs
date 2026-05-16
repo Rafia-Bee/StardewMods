@@ -5,10 +5,6 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Content;
 
-/// Reads `boards.json` files alongside the existing `quests.json` flow. Each entry is
-/// validated and pushed into `BoardRegistry` under the loading mod / pack's `UniqueID`.
-/// Errors are logged with the offending mod + board name so authors can find the bad row
-/// quickly.
 public sealed class BoardPackLoader
 {
     private readonly BoardRegistry _registry;
@@ -33,7 +29,7 @@ public sealed class BoardPackLoader
             return;
         }
         if (doc == null)
-            return; // boards.json is optional, no warning
+            return;
 
         Apply(doc, pack.Manifest.UniqueID);
     }

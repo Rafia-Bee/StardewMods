@@ -4,22 +4,9 @@ using MoreQuestsFramework.Cache;
 
 namespace MoreQuestsFramework.Consequences;
 
-/// Pre-built per-NPC loved/liked/hated/disliked sets keyed by item id. Backed by
-/// `GameDataCache.GiftTastes` so modded NPCs and modded items participate natively
-/// (the data source is the live `Data/NPCGiftTastes` asset). Refreshed on the same
-/// cadence as `GameDataCache` itself: SaveLoaded + DayStarted + content invalidation.
-///
-/// `Data/NPCGiftTastes` row format (fields separated by `/`):
-///   0: universal love-line
-///   1: loved item ids (space-separated bare ids)
-///   2: universal like-line
-///   3: liked item ids
-///   4: universal dislike-line
-///   5: disliked item ids
-///   6: universal hate-line
-///   7: hated item ids
-///   8: universal neutral-line
-///   9: neutral item ids
+// Data/NPCGiftTastes row format (slash-separated): 0 universal-love, 1 loved ids,
+// 2 universal-like, 3 liked ids, 4 universal-dislike, 5 disliked ids, 6 universal-hate,
+// 7 hated ids, 8 universal-neutral, 9 neutral ids.
 public sealed class GiftTastesScanner
 {
     private readonly GameDataCache _cache;
@@ -31,8 +18,6 @@ public sealed class GiftTastesScanner
         _cache = cache;
     }
 
-    /// NPC names whose loved-item set contains `bareItemId`. Bare = strip `(O)` prefix
-    /// if present. Empty list when no NPC loves the item.
     public IReadOnlyList<string> NpcsWhoLove(string itemId) => Lookup(itemId, t => t.Loved);
 
     public IReadOnlyList<string> NpcsWhoLike(string itemId) => Lookup(itemId, t => t.Liked);
@@ -60,8 +45,7 @@ public sealed class GiftTastesScanner
     private void EnsureBuilt()
     {
         var raw = _cache.GiftTastes;
-        // GameDataCache returns the same dictionary instance across the day; we cache the
-        // built index until the underlying reference changes (DayStarted refresh swaps it).
+        // GameDataCache returns the same dict across the day; rebuild only when swapped.
         string sig = raw.Count.ToString() + ":" + raw.GetHashCode().ToString();
         if (_index != null && _signature == sig)
             return;
@@ -69,8 +53,6 @@ public sealed class GiftTastesScanner
         var built = new Dictionary<string, NpcTasteIndex>(StringComparer.OrdinalIgnoreCase);
         foreach (var (npc, line) in raw)
         {
-            // Vanilla also stores universal taste rows under keys like "Universal_Love";
-            // skip them, we want per-NPC indexes only.
             if (npc.StartsWith("Universal_", StringComparison.OrdinalIgnoreCase))
                 continue;
             built[npc] = ParseRow(line);

@@ -8,11 +8,8 @@ public static class ModCompat
     public const string RidgesideVillage = "Rafseazz.RidgesideVillage";
     public const string EastScarp = "Lemurkat.EastScarpNPCs";
     public const string VisitMountVapius = "Lumisteria.MtVapius";
-    /// SVE ships as two mods: a C# mod (`FlashShifter.SVECode`) plus a CP content pack
-    /// (`FlashShifter.StardewValleyExpandedCP`). The C# mod is the authoritative one,
-    /// it's what places SVE NPCs (MarlonFay, MorrisTod, Lance, etc.) into the world.
-    /// Earlier versions of this constant used `FlashShifter.StardewValleyExpanded` which
-    /// matches neither install ID and silently dropped every SVE-gated dispatch entry.
+    // Must be SVECode (the C# mod that places SVE NPCs), NOT StardewValleyExpanded
+    // (matches neither install ID and silently drops every SVE-gated entry).
     public const string StardewValleyExpanded = "FlashShifter.SVECode";
     public const string EliAndDylan = "TenebrousNova.EliDylan.CP";
 
@@ -22,9 +19,8 @@ public static class ModCompat
     public const string SiExtraCraftingMaterials = "Si.ExtraCraftingMaterials";
     public const string GenericModConfigMenu = "spacechase0.GenericModConfigMenu";
     public const string SpaceCore = "spacechase0.SpaceCore";
-    /// Moonslime's Cooking Skill Redux. Adds a SpaceCore custom skill with id
-    /// `spacechase0.Cooking` (inherited from Spacechase0's original mod for save
-    /// compatibility, even though the original is unmaintained and not supported here).
+    // Custom SpaceCore skill id is "spacechase0.Cooking" (inherited from the original
+    // unmaintained Spacechase0 mod for save compat).
     public const string CookingSkillRedux = "moonslime.CookingSkill";
 
     public static bool IsLoaded(IModRegistry registry, string uniqueId) => registry.IsLoaded(uniqueId);

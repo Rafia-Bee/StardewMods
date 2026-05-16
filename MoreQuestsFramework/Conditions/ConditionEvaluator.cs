@@ -6,22 +6,11 @@ using StardewValley.Locations;
 
 namespace MoreQuestsFramework.Conditions;
 
-/// Central evaluator for "is this condition true right now?" queries used by quest
-/// availability, trigger gating, and JSON `Available { ... }` blocks (Phase 3+).
-///
-/// The static helpers cover the common cases each quest's `IsAvailable` calls
-/// directly. `Evaluate(dict, modRegistry)` is the dictionary-driven entry point
-/// for declarative specs; it covers every key in plan.md §2.6 plus `GSQ` (the
-/// 1.6 GameStateQuery escape hatch).
-///
-/// Top-level dictionary keys are AND-combined. A key may be prefixed with `not:`
-/// to negate. Values may use `|` as an OR-combinator (e.g. `"Season": "spring|fall"`
-/// matches either season). For backwards compatibility, `Season` also accepts a
-/// space-separated list.
+// Top-level dictionary keys are AND-combined. Prefix a key with "not:" to negate.
+// Values may use "|" to OR alternatives. "Season" also accepts a space-separated list
+// for backwards compat.
 public static class ConditionEvaluator
 {
-    // -------- Calendar / time --------
-
     public static bool MatchesSeason(string season) =>
         string.Equals(Game1.currentSeason, season, StringComparison.OrdinalIgnoreCase);
 
@@ -37,8 +26,6 @@ public static class ConditionEvaluator
 
     public static bool MinDaysPlayed(int days) => Game1.stats.DaysPlayed > (uint)days;
 
-    // -------- Skills / mine progress --------
-
     public static int FarmingLevel => Game1.player.FarmingLevel;
     public static int FishingLevel => Game1.player.FishingLevel;
     public static int MiningLevel => Game1.player.MiningLevel;
@@ -48,17 +35,10 @@ public static class ConditionEvaluator
     public static bool MinDeepestMineLevel(int level) => Game1.player.deepestMineLevel >= level;
     public static bool MineShaftReached(int level) => MineShaft.lowestLevelReached >= level;
 
-    // -------- NPCs --------
-
     public static bool NpcExists(string name) => Game1.getCharacterFromName(name) != null;
     public static bool NpcMet(string name) => Game1.player.friendshipData.ContainsKey(name);
 
-    // -------- Dictionary-driven evaluation --------
-
-    /// Evaluates a flat condition dictionary. Top-level keys are AND-combined; a key
-    /// prefixed with `not:` is negated. Values may include `|` to OR alternatives.
-    /// Unknown keys evaluate to false (and the whole AND chain fails) - safer to fail
-    /// closed than to silently match.
+    // Unknown keys evaluate false (fail closed).
     public static bool Evaluate(IReadOnlyDictionary<string, string>? conditions, IModRegistry? modRegistry = null)
     {
         if (conditions == null || conditions.Count == 0)
@@ -75,7 +55,6 @@ public static class ConditionEvaluator
         return true;
     }
 
-    /// Splits the value on `|` and returns true if any alternative matches.
     private static bool EvaluateAlternatives(string key, string value, IModRegistry? modRegistry)
     {
         if (!value.Contains('|'))
@@ -91,9 +70,7 @@ public static class ConditionEvaluator
     {
         switch (key.ToLowerInvariant())
         {
-            // ---- calendar ----
             case "season":
-                // Accept space-separated lists for compat with plan.md §5.2 examples.
                 foreach (var s in value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                     if (MatchesSeason(s)) return true;
                 return false;
@@ -116,7 +93,6 @@ public static class ConditionEvaluator
             case "weatherforecast":
                 return MatchesWeather(Game1.weatherForTomorrow, value);
 
-            // ---- player progress ----
             case "mindaysplayed":
                 return int.TryParse(value, out int min) && MinDaysPlayed(min);
 
@@ -138,9 +114,8 @@ public static class ConditionEvaluator
             case "mindeepestminelevel":
                 return int.TryParse(value, out int dml) && MinDeepestMineLevel(dml);
 
-            // ---- npcs / friendship ----
             case "npcexists":
-                // Space-separated value is AND ("George Evelyn" = both exist). Use `|` for OR.
+                // Space-separated value is AND. Use "|" for OR.
                 foreach (var n in value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                     if (!NpcExists(n)) return false;
                 return true;
@@ -156,25 +131,21 @@ public static class ConditionEvaluator
             case "friendshipstatus":
                 return MatchesFriendshipStatus(value);
 
-            // ---- mail / events ----
             case "mailreceived":
                 return Game1.player.mailReceived.Contains(value);
 
             case "eventseen":
                 return Game1.player.eventsSeen.Contains(value);
 
-            // ---- buildings ----
             case "buildingexists":
                 return BuildingExists(value);
 
-            // ---- recipes ----
             case "knowncookingrecipe":
                 return Game1.player.cookingRecipes.ContainsKey(value);
 
             case "knowncraftingrecipe":
                 return Game1.player.craftingRecipes.ContainsKey(value);
 
-            // ---- stats / shipping / item history ----
             case "statatleast":
                 return MatchesStatAtLeast(value);
 
@@ -182,19 +153,15 @@ public static class ConditionEvaluator
                 return MatchesShippedAtLeast(value);
 
             case "hasitemeverobtained":
-                // Vanilla doesn't track this generically. Phase 6 lands an `ItemHistoryWatcher`
-                // (plan.md §7) that will populate save data. Until then, fall back to a cheap
-                // heuristic: shipped-at-least-1, which catches first-egg/first-milk style triggers.
+                // Vanilla doesn't track this generically; fall back to shipped/cooked-at-least-1
+                // which catches first-egg/first-milk style triggers.
                 return Game1.player.basicShipped.ContainsKey(value)
                     || Game1.player.recipesCooked.ContainsKey(value);
 
-            // ---- mods / RNG / GSQ ----
             case "hasmod":
                 return modRegistry != null && modRegistry.IsLoaded(value);
 
             case "followinganimalcount":
-                // Livestock Follows You integration. Without that mod loaded, count is 0.
-                // Phase 5 plans to expose this as a registered condition handler.
                 return int.TryParse(value, out int needed)
                     && modRegistry != null
                     && modRegistry.IsLoaded(ModCompat.LivestockFollowsYou)
@@ -211,12 +178,10 @@ public static class ConditionEvaluator
         }
     }
 
-    // ----- helpers -----
-
     private static bool ParseBool(string value) =>
         bool.TryParse(value, out bool b) ? b : value == "1";
 
-    /// `"spring 8"` or `"spring 8-12"` - matches today's date.
+    // "spring 8" or "spring 8-12".
     private static bool MatchesDate(string value)
     {
         var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -236,7 +201,7 @@ public static class ConditionEvaluator
         return int.TryParse(parts[1], out int day) && Game1.dayOfMonth == day;
     }
 
-    /// `"1-7"` - day-of-month range, season-agnostic.
+    // "1-7", season-agnostic day-of-month range.
     private static bool MatchesDayRange(string value)
     {
         var parts = value.Split('-');
@@ -246,17 +211,16 @@ public static class ConditionEvaluator
             && Game1.dayOfMonth >= from && Game1.dayOfMonth <= to;
     }
 
-    /// `"Mon Wed Fri"` or `"1 3 5"` - matches today's day-of-week.
+    // "Mon Wed Fri" or "1 3 5".
     private static bool MatchesDayOfWeek(string value)
     {
-        var today = Game1.Date.DayOfWeek; // System.DayOfWeek
+        var today = Game1.Date.DayOfWeek;
         foreach (var token in value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
         {
             if (int.TryParse(token, out int idx) && (int)today == idx % 7)
                 return true;
             if (Enum.TryParse<DayOfWeek>(token, ignoreCase: true, out var dow) && dow == today)
                 return true;
-            // Three-letter shorthand: Mon, Tue, ...
             if (token.Length >= 3 && Enum.TryParse<DayOfWeek>(ExpandShortDay(token), ignoreCase: true, out var dow2) && dow2 == today)
                 return true;
         }
@@ -275,8 +239,7 @@ public static class ConditionEvaluator
         _ => token
     };
 
-    /// `"sunny"`, `"rain"`, `"storm"`, `"snow"`, `"wind"` (case-insensitive). Vanilla weather
-    /// IDs are: Sun, Rain, Storm, Snow, Wind, Festival, Wedding, GreenRain.
+    // sunny/rainy/stormy/snowy/windy aliases map to vanilla Sun/Rain/Storm/Snow/Wind IDs.
     private static bool MatchesWeather(string? actual, string requested)
     {
         if (string.IsNullOrEmpty(actual))
@@ -293,12 +256,8 @@ public static class ConditionEvaluator
         return string.Equals(actual, norm, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// `"Farming 5"` - skill name + minimum level. The `cooking` skill name reads the
-    /// SpaceCore `spacechase0.Cooking` custom skill (used by both the Spacechase0 Cooking
-    /// Skill mod and Moonslime's Redux fork). When neither mod is installed, the bridge
-    /// returns 0 so a `"Cooking N"` requirement (N >= 1) fails closed; pair it with an
-    /// alternative via the `|` OR combinator (e.g. `"Cooking 2|Farming 3"`) to fall back
-    /// to a vanilla skill when the cooking mod is absent.
+    // "Farming 5". "cooking" reads SpaceCore's spacechase0.Cooking and returns 0 when
+    // no cooking-skill mod is installed (so "Cooking N" with N>=1 fails closed).
     private static bool MatchesSkillLevel(string value)
     {
         var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -317,7 +276,7 @@ public static class ConditionEvaluator
         return actual >= min;
     }
 
-    /// `"Abigail 2"` - NPC + minimum hearts (1 heart = 250 friendship points).
+    // "Abigail 2" = 2 hearts (250 points per heart).
     private static bool MatchesFriendshipLevel(string value)
     {
         var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -328,7 +287,7 @@ public static class ConditionEvaluator
         return f.Points >= hearts * 250;
     }
 
-    /// `"Abigail dating"` / `"Abigail married"` / `"Abigail engaged"` / `"Abigail roommate"`.
+    // "Abigail dating|married|engaged|roommate|divorced".
     private static bool MatchesFriendshipStatus(string value)
     {
         var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -347,9 +306,7 @@ public static class ConditionEvaluator
         };
     }
 
-    /// `"Coop"`, `"Big Coop"`, `"Deluxe Coop"`, `"Barn"`, `"Big Barn"`, `"Deluxe Barn"`,
-    /// `"Silo"`, `"Stable"`, `"Mill"`, `"Slime Hutch"`, `"Shed"`, etc. Counts buildings on
-    /// the farm only.
+    // Counts buildings on the farm only.
     private static bool BuildingExists(string buildingType)
     {
         var farm = Game1.getFarm();
@@ -361,7 +318,7 @@ public static class ConditionEvaluator
         return false;
     }
 
-    /// `"ChickenEggsLayed 1"`, `"MonstersKilled 50"`, etc. Reads from `Game1.stats.Values`.
+    // "ChickenEggsLayed 1", "MonstersKilled 50", etc. Reads Game1.stats.
     private static bool MatchesStatAtLeast(string value)
     {
         var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -370,7 +327,7 @@ public static class ConditionEvaluator
         return Game1.stats.Get(parts[0]) >= min;
     }
 
-    /// `"(O)174 1"` (qualified ID + minimum count) or `"174 1"` (bare ID).
+    // "(O)174 1" or "174 1": item id + minimum shipped count.
     private static bool MatchesShippedAtLeast(string value)
     {
         var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);

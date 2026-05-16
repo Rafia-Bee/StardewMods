@@ -5,30 +5,19 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Posting;
 
-/// Builds a concrete `Quest` instance from a `QuestPosting`. Reusable factory for the
-/// engine's built-in `BoardQuestType` switch. Custom Quest subclasses (e.g. content-mod
-/// `Socialize`-style quests) bypass this factory by setting `posting.PreBuiltQuest`.
 public static class QuestFactory
 {
-    /// Mints a runtime quest ID prefixed with the framework's UniqueID. MH Quest Manager
-    /// uses this prefix to attribute quests back to their owning mod.
+    // MH Quest Manager keys off this prefix to attribute quests back to the owning mod.
     public const string IdPrefix = "RafiaBee.MoreQuestsFramework";
 
-    /// Builds a vanilla `Quest` (or our framework Quest subclass) from a posting.
-    /// Returns null when the posting's QuestType isn't recognized.
     public static Quest? Build(QuestPosting p)
     {
-        // Vanilla ItemDeliveryQuest / FishingQuest compare against `item.QualifiedItemId`,
-        // so ItemId must be the qualified form (e.g. "(O)334"). Stripping the prefix
-        // breaks completion for both vanilla and modded items.
+        // Must be qualified ("(O)334"): vanilla ItemDeliveryQuest/FishingQuest compare
+        // against item.QualifiedItemId, and stripping the prefix breaks completion.
         string itemId = ItemRegistry.QualifyItemId(p.ObjectiveItemId) ?? p.ObjectiveItemId;
         string giver = string.IsNullOrEmpty(p.QuestGiver) ? "Lewis" : p.QuestGiver;
-        // For ItemDelivery/ResourceCollection, the runtime `target.Value` drives both the
-        // completion gate (`npc.Name == target.Value` in OnItemOfferedToNpc) and what MH
-        // Quest Manager surfaces as "deliver to" in its overlay. Most quests have the
-        // giver receiving their own item, so `DeliveryTarget` is empty and we fall back
-        // to `giver`. GiftDelivery sets `DeliveryTarget` to the recipient so the hand-off
-        // lands on the right villager.
+        // target.Value drives both the completion gate and "deliver to" tracker overlays.
+        // GiftDelivery sets DeliveryTarget to the recipient so the hand-off lands right.
         string deliveryTarget = string.IsNullOrEmpty(p.DeliveryTarget) ? giver : p.DeliveryTarget;
 
         Quest? quest = p.QuestType switch
@@ -64,9 +53,7 @@ public static class QuestFactory
                 targetMessage = p.TargetMessage
             },
             BoardQuestType.Ship => BuildShipQuest(p, itemId, giver),
-            // Adventure quests are always pre-built by the JSON path / generators because
-            // their step list lives on the Quest subclass itself; the factory has nothing
-            // to construct from posting-level scalars alone.
+            // Adventure quests are always PreBuiltQuest (step list lives on the subclass).
             BoardQuestType.Adventure => null,
             _ => null
         };

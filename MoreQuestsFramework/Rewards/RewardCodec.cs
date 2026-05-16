@@ -5,23 +5,14 @@ using Newtonsoft.Json;
 
 namespace MoreQuestsFramework.Rewards;
 
-/// Encodes/decodes a `RewardSpec` to/from a single text line so it can ride
-/// inside a `NetStringList` on a custom Quest subclass and survive a save
-/// round-trip without a polymorphic JSON serializer.
-///
-/// Format: `Kind|key1=val1|key2=val2`. Order of keys is fixed per kind so the
-/// decoder can be a flat switch instead of a key/value parser.
-///
-/// Consequence specs ride on the same list under a `Consequence|<base64-json>` line
-/// (lists + multi-line text would blow the flat key=val format apart). One spec per
-/// quest, extra `Consequence|` lines are ignored by `DecodeConsequence`.
+// Format: Kind|key1=val1|key2=val2. Consequence specs ride on the same list under
+// a Consequence|<base64-json> line (lists + multi-line text would blow the flat
+// key=val format apart).
 public static class RewardCodec
 {
     private const string ConsequencePrefix = "Consequence|";
 
-    /// Encode a consequence spec into the same `NetStringList` slot as rewards. JSON
-    /// keeps the lists + arbitrary string fields intact; base64 keeps `|` characters
-    /// inside lines from colliding with the codec's own field separator.
+    // Base64 so "|" chars inside the JSON don't collide with the codec separator.
     public static string EncodeConsequence(ConsequenceSpec spec)
     {
         string json = JsonConvert.SerializeObject(spec);
@@ -29,8 +20,6 @@ public static class RewardCodec
         return ConsequencePrefix + b64;
     }
 
-    /// Returns the first consequence line decoded from `lines`, or null if there isn't
-    /// one. The encoded spec rides alongside reward entries in the same NetStringList.
     public static ConsequenceSpec? DecodeConsequence(IEnumerable<string> lines)
     {
         foreach (var line in lines)
@@ -73,8 +62,6 @@ public static class RewardCodec
     {
         if (items == null || items.Count == 0)
             return string.Empty;
-        // Sanitise: id list never contains `|` (the codec separator) or `,` (our sub-delimiter)
-        // for vanilla / modded item ids, so a plain `,` join round-trips cleanly.
         return string.Join(",", items);
     }
 

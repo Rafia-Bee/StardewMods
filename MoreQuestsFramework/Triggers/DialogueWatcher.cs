@@ -9,13 +9,6 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Triggers;
 
-/// Pushes `Source: NpcDialogue` quests into the journal the next time the player
-/// speaks with the queued target NPC. Watches `Game1.currentSpeaker` on the
-/// one-second tick, cheap (1 Hz) and avoids any Harmony patch on dialogue paths
-/// per the §8.7 patch budget.
-///
-/// Persistence: the queue is mirrored into `FrameworkState.PendingDialogueQuests`
-/// so a quest queued today still fires after the player saves and reloads.
 public sealed class DialogueWatcher
 {
     private readonly QuestRegistry _registry;
@@ -44,7 +37,6 @@ public sealed class DialogueWatcher
 
     public IReadOnlyDictionary<string, string> Pending => _state.PendingDialogueQuests;
 
-    /// Adds a queue entry. No-op if already queued.
     public void Enqueue(string defId, string npcName)
     {
         if (_state.PendingDialogueQuests.ContainsKey(defId))
@@ -53,7 +45,6 @@ public sealed class DialogueWatcher
         _monitor.Log($"DialogueWatcher: queued '{defId}' for next chat with {npcName}.", LogLevel.Trace);
     }
 
-    /// Reset the speaker pointer at SaveLoaded so the first dialogue after load fires.
     public void Reset()
     {
         _lastSpeaker = null;
@@ -70,10 +61,9 @@ public sealed class DialogueWatcher
             return;
         }
         if (_lastSpeaker == speaker)
-            return; // already handled this conversation
+            return;
         _lastSpeaker = speaker;
 
-        // Snapshot keys to allow modifying the dictionary during iteration.
         string speakerName = speaker.Name;
         var ready = new List<string>();
         foreach (var (defId, target) in _state.PendingDialogueQuests)

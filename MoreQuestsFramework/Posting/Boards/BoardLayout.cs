@@ -6,12 +6,8 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Posting.Boards;
 
-/// Shared cork-board layout primitives. Used by both the help-wanted-board renderer
-/// (`MoreQuestsBillboard`) and the generic `CustomBoardMenu` so both render notes with
-/// identical scatter behaviour, sizing curves, and per-quest-type tinting.
 internal static class BoardLayout
 {
-    /// Inner area of the cork-board background where notes can be scattered.
     public static readonly Rectangle BoardRect = new(78 * 4, 58 * 4, 184 * 4, 96 * 4);
     public const int PadSpriteSize = 64;
 
@@ -35,9 +31,7 @@ internal static class BoardLayout
             _ => 2f
         };
 
-    /// Scatter-place a note rectangle inside `BoardRect` (anchored at `xPositionOnScreen` /
-    /// `yPositionOnScreen`). Returns null if no non-overlapping position was found in 4000
-    /// tries, the caller should fall back to the grid layout.
+    // Returns null after 4000 tries with no non-overlapping spot; caller falls back to grid.
     public static Rectangle? ScatterBounds(
         int xPositionOnScreen, int yPositionOnScreen,
         int w, int h, List<Rectangle> placed, Random rng)

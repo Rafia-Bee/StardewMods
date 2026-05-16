@@ -9,8 +9,6 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Pipeline;
 
-/// Builds the day's batch of board postings via weighted sampling. Honours per-definition
-/// cooldown + max-per-day rules and the pipeline-wide one-per-quest-giver rule.
 public sealed class QuestPipeline
 {
     private readonly QuestContext _ctx;
@@ -40,11 +38,6 @@ public sealed class QuestPipeline
         var pool = new List<(IQuestDefinition Def, int Weight)>();
         foreach (var def in _registry.All)
         {
-            // Effective source consults `OverrideTriggerSource` first so a quest authored
-            // as `CustomBoard` (or vice versa) can flip routing at runtime without
-            // re-registration. `Kind` (delivery channel) is unaffected by the override,
-            // both `DailyBoard` and `CustomBoard` sources resolve to `PostingKind.DailyBoard`
-            // delivery, so the existing `Kind` field on `def` still validates.
             if (_registry.EffectiveSource(def) != TriggerSource.DailyBoard || def.Kind != PostingKind.DailyBoard)
                 continue;
             if (!def.IsAvailable(_ctx))
@@ -120,10 +113,7 @@ public sealed class QuestPipeline
         return _activePostings;
     }
 
-    /// Triggered (non-daily-board) quests delivered via mail or NPC-dialogue. Drives the
-    /// Phase 6 trigger sources: Periodic, DateLocked, DateRange, OneShot, BuildingBuilt,
-    /// MailReceived, WeatherForecast, plus the legacy `Mail` cooldown source. Called once
-    /// per day after the building/mail snapshots have been refreshed in `TriggerEvaluator.BeginDay`.
+    // Called once per day after TriggerEvaluator.BeginDay has refreshed snapshots.
     public List<QuestPosting> GenerateTriggered()
     {
         var results = new List<QuestPosting>();
@@ -145,8 +135,7 @@ public sealed class QuestPipeline
                 continue;
             if (string.IsNullOrEmpty(posting.OwnerUniqueId))
                 posting.OwnerUniqueId = def.OwnerUniqueId;
-            // Force the posting's delivery channel to match what the definition declared,
-            // since generators sometimes leave Kind unset.
+            // Generators sometimes leave Kind unset.
             posting.Kind = def.Kind;
             results.Add(posting);
             _antiRepetition.Record(posting);
@@ -154,9 +143,6 @@ public sealed class QuestPipeline
         return results;
     }
 
-    /// SpecialOrder-source definitions whose `StartDate` matches today and whose cooldown
-    /// has elapsed. The framework writes each into `Data/SpecialOrders` via
-    /// `SpecialOrderWriter`; vanilla owns the accept/track/reward path from there.
     public List<QuestPosting> GenerateSpecialOrders()
     {
         var results = new List<QuestPosting>();
@@ -188,15 +174,8 @@ public sealed class QuestPipeline
         return results;
     }
 
-    /// Per-board batch of `TriggerSource.CustomBoard` postings, keyed by the board's
-    /// `OwnerUniqueId/Name` lookup key. Each board draws independently, its own
-    /// `AllowedCategories` filter applies, its own `PoolSize` caps the result, and the
-    /// pipeline's daily-board cooldown / availability gates still apply.
-    ///
-    /// `GenerateCustomBoardPostings` is called from `ModEntry.OnDayStarted` after the
-    /// help-wanted batch lands. Postings are not posted via `QuestPoster` (board-bound
-    /// quests don't have a delivery channel of their own, they live on the board until
-    /// the player opens it and clicks Accept), so the caller stamps slot lists directly.
+    // Keyed by OwnerUniqueId/Name. Caller stamps slot lists directly since board-bound
+    // quests don't have a delivery channel (they live on the board until accepted).
     public Dictionary<string, List<(QuestPosting posting, BoardDefinition board)>> GenerateCustomBoardPostings(BoardRegistry boardRegistry)
     {
         var sw = Stopwatch.StartNew();
@@ -204,10 +183,6 @@ public sealed class QuestPipeline
         if (boardRegistry == null || boardRegistry.All.Count == 0)
             return result;
 
-        // Gather every CustomBoard-source definition once so the per-board passes only
-        // re-evaluate availability + cooldown filters. Routes through `EffectiveSource`
-        // so an `OverrideTriggerSource` flip pulls the quest in/out of the custom-board
-        // pool the same day the override is set.
         var allDefs = new List<IQuestDefinition>();
         foreach (var def in _registry.All)
         {
@@ -297,9 +272,6 @@ public sealed class QuestPipeline
         return false;
     }
 
-    /// Returns every NpcDialogue-source definition that should fire today (per
-    /// IsAvailable + cooldown). The caller queues them through the dialogue watcher
-    /// so they post next time the player speaks with the target NPC.
     public List<(IQuestDefinition Def, string Npc)> GenerateNpcDialogueQueue()
     {
         var queue = new List<(IQuestDefinition, string)>();
@@ -318,9 +290,8 @@ public sealed class QuestPipeline
         return queue;
     }
 
-    /// True if the posting rewards friendship to its own quest giver and that NPC is
-    /// already at max heart level. Quests that reward a different NPC than the giver
-    /// (e.g. CheckOnGeorge rewards Evelyn for caring about George) still post.
+    // Returns true only for the giver=reward-recipient case. Quests that reward a
+    // different NPC (e.g. CheckOnGeorge rewards Evelyn) still post.
     private static bool IsAtMaxHeartWithRewardNpc(QuestPosting posting)
     {
         var giverReward = posting.GiverFriendshipReward;

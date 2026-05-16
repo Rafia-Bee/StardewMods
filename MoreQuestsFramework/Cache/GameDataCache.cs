@@ -7,9 +7,8 @@ using StardewValley.GameData.Locations;
 
 namespace MoreQuestsFramework.Cache;
 
-/// One-day-scope cache for game-data assets the quest pipeline reads repeatedly.
-/// Refresh() runs at SaveLoaded and DayStarted; entries are immutable for the rest of the day.
-/// Per-asset try/catch isolates failures so one missing/broken asset cannot poison the rest.
+// Refreshed at SaveLoaded and DayStarted; entries are immutable for the rest of the day.
+// Per-asset try/catch isolates failures so one bad asset can't poison the rest.
 public sealed class GameDataCache
 {
     private readonly IMonitor _monitor;
@@ -31,7 +30,6 @@ public sealed class GameDataCache
     public IReadOnlyDictionary<string, string> CookingRecipes => EnsureLoaded(ref _cookingRecipes, "Data/CookingRecipes");
     public IReadOnlyDictionary<string, string> GiftTastes => EnsureLoaded(ref _giftTastes, "Data/NPCGiftTastes");
 
-    /// Forces reload of every asset. Cheap when assets haven't changed since the game caches under the hood.
     public void Refresh()
     {
         _crops = null;
@@ -41,7 +39,6 @@ public sealed class GameDataCache
         _giftTastes = null;
     }
 
-    /// Targeted invalidation triggered by SMAPI content events.
     public void Invalidate(string assetName)
     {
         switch (assetName)

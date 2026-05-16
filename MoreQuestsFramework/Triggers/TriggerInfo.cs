@@ -1,9 +1,7 @@
 namespace MoreQuestsFramework.Triggers;
 
-/// Bag of trigger-specific options carried alongside a `TriggerSource`. Every field
-/// is optional; the relevant subset is interpreted by `TriggerEvaluator` based on
-/// the source. `JsonQuestDefinition` builds one of these from the JSON `TriggerDef`;
-/// C# definitions can build one explicitly via the constructor.
+// Weight: SpecialOrder cooldown-only chance (0..100). When StartDate is absent and
+// Weight>0, the order fires on a Sunday past cooldown with Weight% chance.
 public sealed record TriggerInfo(
     int? EveryDays = null,
     string? Date = null,
@@ -18,10 +16,6 @@ public sealed record TriggerInfo(
     string? Npc = null,
     string? StartDate = null,
     string? Duration = null,
-    /// SpecialOrder cooldown-only mode chance (0..100). When `StartDate` is absent and
-    /// `Weight > 0`, the order fires on a Sunday whose cooldown has elapsed with this
-    /// percentage chance. Lets cooldown-only SpecialOrders blend into the natural weekly
-    /// refresh rhythm without needing a hard-coded calendar date.
     int? Weight = null)
 {
     public static readonly TriggerInfo Default = new();

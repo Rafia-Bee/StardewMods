@@ -4,13 +4,9 @@ using System.Text;
 
 namespace MoreQuestsFramework.Quests;
 
-/// One step in an `AdventureQuest`. Encodes both definition (Kind / Items / Count / Requires)
-/// and runtime progress (Progress / Done) so the whole step can ride a single `NetStringList`
-/// entry on the quest. The list-per-step layout keeps Netcode synchronisation flat, no
-/// nested NetCollections, and lets `RewardCodec`-style line-encoded persistence round-trip
-/// through SpaceCore's serializer without polymorphic JSON.
-///
-/// 7a wires up `Deliver`, `Talk`, and `Gift` handlers. Remaining kinds land in 7b/7c.
+// One step's definition + runtime progress fits in a single NetStringList entry per
+// step, keeping Netcode flat (no nested NetCollections) and round-tripping cleanly
+// through SpaceCore's serializer.
 public enum AdventureStepKind
 {
     Deliver,
@@ -39,32 +35,18 @@ public sealed class AdventureStepState
     public List<string> Items { get; set; } = new();
     public int Count { get; set; } = 1;
     public int MinQuality { get; set; }
-    /// When true on a `Ship` step, vanilla's furniture / decor shipping ban is bypassed
-    /// while the parent quest is in the active log. Read by `AdventureQuest.HasDecorShippingStep`
-    /// so the per-quest flag tracks any opted-in step. See `DecorShippingPatches`.
+    // Ship step opt-in to the decor shipping bypass. See DecorShippingPatches.
     public bool AllowDecorShipping { get; set; }
-    /// `Catch` step filter: when non-empty, the caught fish only credits the step when the
-    /// player's current location name matches (case-insensitive). Plain location key, e.g.
-    /// `"Mountain"` or `"Beach"`.
     public string LocationName { get; set; } = string.Empty;
-    /// `Catch` step filter: when > 0, the caught fish only credits the step when its size
-    /// (in inches, the value vanilla passes through `OnFishCaught`) is ≥ this threshold.
-    /// Squid / Octopus / pond-caught fish that report size -1 fail the gate, which matches
-    /// the "only counts a properly-sized rod-caught specimen" intent of the size-bucket rows.
+    // Catch size in inches. Squid/Octopus/pond returns report -1 and fail this gate.
     public int MinSize { get; set; }
-    /// `Catch` step filter: when non-empty, the caught fish only credits the step when the
-    /// runtime weather at the player's current location matches the requested label. Accepts
-    /// `Sun` / `Rain` / `Storm` / `Snow` / `Wind` (and the `sunny` / `rainy` / ... aliases
-    /// used by `WeatherForecast` triggers). `Rain` matches both Rain and Storm (vanilla
-    /// fish-data rain spawns fire under both).
+    // Sun/Rain/Storm/Snow/Wind (sunny/rainy aliases). "Rain" matches Rain+Storm.
     public string Weather { get; set; } = string.Empty;
     public int Progress { get; set; }
     public bool Done { get; set; }
     public string Description { get; set; } = string.Empty;
 
-    /// Distinct names of NPCs/items already credited toward this step. Used by Talk and Gift
-    /// to enforce uniqueness ("talk to N different NPCs"). Encoded as a comma-separated
-    /// list so it round-trips through the same NetStringList entry as the rest of the step.
+    // Uniqueness tracking for Talk/Gift ("talk to N different NPCs").
     public List<string> CreditedKeys { get; set; } = new();
 }
 
@@ -87,9 +69,8 @@ internal static class AdventureStepCodec
         sb.Append("|Progress=").Append(s.Progress);
         sb.Append("|Done=").Append(s.Done ? "1" : "0");
         sb.Append("|Credited=").Append(JoinList(s.CreditedKeys));
-        // Description goes last because the journal text is the only field that may legitimately
-        // contain `|`; any pipes are replaced with `/` at encode time so the decoder's flat
-        // split-on-`|` keeps working. `\n` is also stripped to keep one step per NetStringList line.
+        // Description last because it's the only field that may contain "|"; sanitised
+        // to keep the decoder's flat split working and one step per NetStringList line.
         sb.Append("|Description=").Append((s.Description ?? string.Empty).Replace('|', '/').Replace('\n', ' '));
         return sb.ToString();
     }
@@ -100,7 +81,6 @@ internal static class AdventureStepCodec
             return null;
 
         var state = new AdventureStepState();
-        // Find the description marker first so we can split the rest as flat key=value pairs.
         const string descMarker = "|Description=";
         int descAt = line.IndexOf(descMarker, StringComparison.Ordinal);
         string head;

@@ -6,9 +6,6 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Content;
 
-/// Reads `quests.json` files and registers each entry with the framework registry as
-/// a `JsonQuestDefinition`. Errors are logged with the offending mod + quest name so
-/// authors can find the bad row quickly.
 public sealed class QuestPackLoader
 {
     private readonly QuestRegistry _registry;
@@ -22,11 +19,6 @@ public sealed class QuestPackLoader
         _monitor = monitor;
     }
 
-    /// Loads from a SMAPI `IContentPack`. The pack's translation helper resolves
-    /// `{i18n:...}` tokens. Used by third-party content packs that declare
-    /// `ContentPackFor: RafiaBee.MoreQuestsFramework`. The optional `cooldownTierResolver`
-    /// maps `Trigger.CooldownTier` strings to in-game day counts at trigger evaluation time;
-    /// returning null falls back to the JSON's `CooldownDays` literal.
     public void LoadContentPack(IContentPack pack, Func<string, int?>? cooldownTierResolver = null)
     {
         QuestPackDocument? doc;
@@ -47,9 +39,6 @@ public sealed class QuestPackLoader
         Apply(doc, pack.Manifest.UniqueID, pack.Translation, cooldownTierResolver);
     }
 
-    /// Loads from a JSON file bundled inside a regular C# mod's folder. Used by
-    /// our own `RafiaBee.MoreQuests` content mod which ships `assets/quests.json`
-    /// alongside generators registered in C#.
     public void LoadFromMod(IModHelper helper, IManifest manifest, string relativePath, Func<string, int?>? cooldownTierResolver = null)
     {
         QuestPackDocument? doc;

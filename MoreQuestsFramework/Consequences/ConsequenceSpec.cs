@@ -2,15 +2,9 @@ using System.Collections.Generic;
 
 namespace MoreQuestsFramework.Consequences;
 
-/// Tiered post-completion fallout for a quest. Plan §2.5.
-///
-/// - `Tier0`, no consequence. Most quests.
-/// - `Tier1`, comment-tier. Loved-comment + small positive friendship to NPCs who love
-///   `Subject`; hated-comment + small negative friendship to NPCs who hate it.
-/// - `Tier2`, small-loss. Multi-NPC negative reaction (e.g. saloon Weekly Special Complex).
-/// - `Tier3`, significant. Multi-day chained dialogue + large friendship loss to a fixed
-///   set of ecology NPCs (Seafood Night → Demetrius / Linus / mod analogues).
-/// - `Special`, gold loss. Player loses gold on quest completion.
+// Tier0: none. Tier1: small comment + +/-FriendshipBasic. Tier2: multi-NPC small
+// loss. Tier3: multi-day chain + large friendship loss to a fixed ecology set.
+// Special: gold loss.
 public enum ConsequenceTier
 {
     Tier0,
@@ -20,73 +14,42 @@ public enum ConsequenceTier
     Special
 }
 
-/// How the consequence engine resolves which NPCs are affected.
-///
-/// - `GiftTastes`, scan `Data/NPCGiftTastes` for NPCs whose loved/hated list mentions
-///   `Subject`. Used by saloon dish + crop / fish category quests.
-/// - `Static`, apply to a fixed `Targets[]` list (configured by the caller). Used by
-///   Tier 3 ecology consequences and any tier where the affected NPCs aren't taste-driven.
+// GiftTastes: scan Data/NPCGiftTastes for NPCs with Subject in loved/hated list.
+// Static: use Targets[] verbatim.
 public enum ConsequenceSource
 {
     GiftTastes,
     Static
 }
 
-/// One consequence block attached to a `QuestPosting`. The engine fires it on
-/// `questComplete()` for every `IRewardedQuest` and `AdventureQuest` that carries one.
-///
-/// Dialogue lines are passed in pre-resolved (the generator owns the translation
-/// helper), the engine snapshot-encodes lines into the persistent queue at fire time
-/// so the watcher only needs raw strings to pop. That keeps the queue self-contained
-/// across save/reload without re-resolving translations.
 public sealed class ConsequenceSpec
 {
     public ConsequenceTier Tier { get; set; } = ConsequenceTier.Tier0;
     public ConsequenceSource Source { get; set; } = ConsequenceSource.GiftTastes;
 
-    /// Item id (qualified or bare) the consequence is "about", the dish, the crop, the
-    /// fish category. Required for `Source = GiftTastes`. Ignored for `Source = Static`.
+    // Item id (qualified or bare) for GiftTastes lookup. Ignored when Source=Static.
     public string Subject { get; set; } = "";
 
-    /// NPC names the consequence applies to when `Source = Static`. For `GiftTastes` this
-    /// list is appended to the resolved set (so authors can hard-code an extra NPC even
-    /// when scanning gift tastes, useful when the quest dispatcher's NPC isn't covered
-    /// by the taste scan).
+    // For Static, the affected set. For GiftTastes, appended to the resolved set.
     public List<string> Targets { get; set; } = new();
 
-    /// Override gold delta for `Special` tier. Negative = player loses; positive would
-    /// reward (not currently used). Ignored for other tiers.
+    // Special tier only. Negative = player loses gold.
     public int GoldDelta { get; set; }
 
-    /// Optional override of the per-NPC friendship delta. Zero = use the tier's default
-    /// (`+/- FriendshipBasic` for Tier 1, `-FriendshipBasic..-FriendshipMid` for Tier 2,
-    /// `-FriendshipLarge` for Tier 3). For Tier 3, this is the TOTAL loss spread across
-    /// `ChainDays`. Set `FriendshipPerDay` instead if you want the value to apply per day.
+    // Zero = tier default. For Tier 3 this is TOTAL loss spread across ChainDays
+    // (use FriendshipPerDay instead for a per-day value).
     public int FriendshipOverride { get; set; }
 
-    /// Tier 3 only. Per-chain-day friendship delta. When non-zero, the handler applies
-    /// this exact value on each of the `ChainDays` consecutive days, with no division.
-    /// e.g. `FriendshipPerDay = -FriendshipMid` over `ChainDays = 3` removes
-    /// `FriendshipMid` per day for three days (total = `-3 * FriendshipMid`). When zero,
-    /// the handler falls back to splitting `FriendshipOverride` (or the tier default
-    /// `-FriendshipLarge`) across `ChainDays`, preserving legacy behaviour.
+    // Tier 3 only. When non-zero, applied verbatim per chain day (no division).
     public int FriendshipPerDay { get; set; }
 
-    /// Number of days a Tier 3 chained dialogue runs. One line per day for `ChainDays`
-    /// consecutive days starting the day after completion. Defaults to 3 if zero.
-    /// Ignored for other tiers.
+    // Tier 3 only. Defaults to 3 when zero.
     public int ChainDays { get; set; }
 
-    /// Pre-resolved positive (loved) dialogue line. Used for the Tier 1 loved branch.
-    /// Empty = no dialogue, only the friendship delta is applied.
     public string LovedLine { get; set; } = "";
 
-    /// Pre-resolved negative (hated) dialogue line. Used for the Tier 1 hated branch
-    /// and Tier 2's single-day reaction. Empty = no dialogue, only the friendship delta.
     public string HatedLine { get; set; } = "";
 
-    /// Pre-resolved Tier 3 chained lines, one per day in order. The engine pops one per
-    /// day per NPC; the chain length is `min(Lines.Count, ChainDays)`. Empty = no
-    /// dialogue, only the friendship delta on day 0.
+    // Tier 3 only. One line per chain day, in order.
     public List<string> ChainLines { get; set; } = new();
 }

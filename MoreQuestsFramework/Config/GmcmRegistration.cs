@@ -4,14 +4,9 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Config;
 
-/// Registers the framework's engine tunables with Generic Mod Config Menu. Per-quest
-/// content settings live in the consuming content mod's own GMCM page. Quest weights are
-/// split onto category subpages (Vanilla, Farming, Fishing, etc.) so the root stays
-/// scannable as more quests register.
 internal static class GmcmRegistration
 {
-    /// Stable display order for category weight subpages. Categories not in this list are
-    /// appended alphabetically at the end so newly-registered prefixes still surface.
+    // Stable display order; categories not listed are appended alphabetically.
     private static readonly string[] CategoryOrder = new[]
     {
         "Vanilla", "Farming", "Fishing", "Mining", "Foraging",
@@ -32,7 +27,7 @@ internal static class GmcmRegistration
             save: () => helper.WriteConfig(ModEntry.Config)
         );
 
-        // Group daily-board definitions by the prefix of their ID (the part before the first '.').
+        // Group by the ID prefix before the first '.'.
         var byCategory = new Dictionary<string, List<IQuestDefinition>>(System.StringComparer.OrdinalIgnoreCase);
         foreach (var def in registry.All)
         {
@@ -49,7 +44,6 @@ internal static class GmcmRegistration
             list.Add(def);
         }
 
-        // ----- Root page -----
         api.AddSectionTitle(manifest, () => t.Get("config.section.questBoard"));
         api.AddNumberOption(manifest,
             () => ModEntry.Config.QuestsPerDay,
@@ -130,7 +124,6 @@ internal static class GmcmRegistration
         api.AddSectionTitle(manifest, () => t.Get("config.section.consequences"));
         AddInt(api, manifest, t, "ConsequenceGraceDays", () => ModEntry.Config.ConsequenceGraceDays, v => ModEntry.Config.ConsequenceGraceDays = v, 1, 60);
 
-        // ----- Category weight subpages -----
         foreach (var category in OrderedCategories(byCategory.Keys))
         {
             string pageId = "weights." + category.ToLowerInvariant();
@@ -153,8 +146,6 @@ internal static class GmcmRegistration
         }
     }
 
-    /// Orders categories so the known set (Vanilla, Farming, ...) keeps its hand-curated
-    /// sequence and any new prefix from a content mod falls in alphabetically afterwards.
     private static IEnumerable<string> OrderedCategories(IEnumerable<string> categories)
     {
         var set = new HashSet<string>(categories, System.StringComparer.OrdinalIgnoreCase);
@@ -169,8 +160,6 @@ internal static class GmcmRegistration
             yield return c;
     }
 
-    /// Combines the generic weight tooltip with a per-quest constraint hint, if one is
-    /// defined. Definitions whose `IsAvailable` is unconditional don't get a hint.
     private static string BuildWeightTooltip(ITranslationHelper t, string id)
     {
         string baseLine = t.Get("config.weight.tooltip", new { id }).ToString();

@@ -9,15 +9,8 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Content;
 
-/// `IQuestDefinition` adapter that feeds the existing pipeline from a JSON
-/// `QuestDef`. Two modes:
-///
-/// 1. Generator-referenced: `def.Generator` is set. Build() resolves the
-///    generator at quest-creation time and calls it. The C# side owns Title /
-///    Description / Objective / Rewards.
-/// 2. Declarative single-step: `def.Objective` is set. Build() constructs a
-///    `QuestPosting` directly from the JSON fields, with `{i18n:...}` tokens
-///    resolved against the owning pack's translation helper.
+// Modes: Generator-referenced (C# owns Build), Declarative single-step (built from
+// Objective), or Adventure (built from Steps[]).
 internal sealed class JsonQuestDefinition : IQuestDefinition
 {
     private readonly QuestDef _def;
@@ -43,15 +36,8 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         _monitor = monitor;
         _cooldownTierResolver = cooldownTierResolver;
 
-        // Use the JSON Name verbatim as the registry ID. Authors must pick
-        // names that won't collide with other packs (e.g. "MyMod.QuestX").
-        // Auto-prefixing by ownerUniqueId was originally slated for Phase 5
-        // but deferred, Phase 5 namespaces only generator names, not quest
-        // ids. Keeping the raw name preserves the existing `QuestWeights`
-        // config keys ("Mining.BarDelivery" etc.) for in-flight saves and
-        // for the framework's own GMCM page. Auto-prefixing will land at
-        // Phase 10 alongside the v1.0 API freeze; collisions until then are
-        // logged + rejected by `QuestRegistry.Register`.
+        // Raw JSON Name preserves existing QuestWeights config keys for in-flight
+        // saves. Collisions are logged + rejected by QuestRegistry.Register.
         Id = def.Name!;
         Category = ParseEnum(def.Category, QuestCategory.Social);
         Source = ParseSource(def.Trigger?.Source);
@@ -70,9 +56,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     public int DefaultWeight { get; }
     public int MaxPerDay { get; }
 
-    /// Evaluated on each access so live GMCM edits to a tiered cooldown apply without
-    /// re-loading the quest pack. Resolver-returned null (unknown tier) falls back to the
-    /// `CooldownDays` literal in the JSON.
+    // Evaluated per access so live GMCM edits to a tiered cooldown apply without reload.
     public int CooldownDays
     {
         get
@@ -179,13 +163,9 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         return posting;
     }
 
-    /// `$giver` rewrites to the giver name. `$dispatcher.<role>` resolves to one NPC
-    /// from the named dispatch role; `$dispatcher.<role>[N]` resolves to N distinct
-    /// NPCs (or as many as the role has, when the pool is smaller than N). Resolution
-    /// happens once at quest-creation time so the picked NPC names are stable through
-    /// the quest's lifetime and round-trip through SpaceCore's serializer along with
-    /// the rest of the step state. Unrecognised tokens pass through verbatim, which
-    /// makes the step match no NPC, the safe default rather than a crash.
+    // $giver rewrites to the giver name. $dispatcher.<role> or $dispatcher.<role>[N]
+    // resolves to N distinct NPCs from the dispatch role. Resolved once at creation
+    // time so picks are stable across save/load.
     private static List<string> ResolveTargets(List<string> targets, string giver, Dispatch.DispatchRegistry dispatch)
     {
         var resolved = new List<string>(targets.Count);
@@ -208,9 +188,6 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         return resolved;
     }
 
-    /// Forms accepted: `$dispatcher.<role>` (one NPC) or `$dispatcher.<role>[N]`
-    /// (N distinct NPCs). Falls back to whatever the role pool yields when N is
-    /// larger than the available pool, better to under-deliver than crash.
     private static void ResolveDispatcherToken(string token, Dispatch.DispatchRegistry dispatch, List<string> sink)
     {
         string body = token.Substring("$dispatcher.".Length);
@@ -229,9 +206,8 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         if (pool.Count == 0)
             return;
 
-        // Sample without replacement so the same NPC never appears twice in one step's
-        // Targets[] (e.g. "talk to 3 different villagers" can't be satisfied by the
-        // same NPC three times even if the role pool repeats them).
+        // Sample without replacement so "talk to 3 different villagers" can't be
+        // satisfied by the same NPC three times.
         var indices = new List<int>(pool.Count);
         for (int i = 0; i < pool.Count; i++)
             indices.Add(i);
@@ -332,9 +308,6 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             _ => TriggerSource.DailyBoard
         };
 
-    /// Picks the delivery channel (PostingKind) based on the trigger source. Authors
-    /// can override via `Trigger.Delivery` for unusual combinations like a DateLocked
-    /// quest delivered via NPC dialogue.
     private static PostingKind ResolveDelivery(TriggerSource source, string? deliveryOverride)
     {
         if (!string.IsNullOrEmpty(deliveryOverride))
@@ -393,10 +366,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     private static T ParseEnum<T>(string? value, T fallback) where T : struct, Enum
         => Enum.TryParse<T>(value, ignoreCase: true, out var parsed) ? parsed : fallback;
 
-    /// `When` field on a mail reward. Accepts `Today` (default, letter arrives in today's
-    /// mailbox immediately) or `Tomorrow` / `NextDay` (letter is queued for the next morning
-    /// via `mailForTomorrow`). The `NextDay` alias matches plan §7b's authoring convention
-    /// without churning the `MailWhen` enum.
+    // Accepts Today (default) or Tomorrow / NextDay.
     private static MailWhen ParseMailWhen(string? value)
         => value?.ToLowerInvariant() switch
         {

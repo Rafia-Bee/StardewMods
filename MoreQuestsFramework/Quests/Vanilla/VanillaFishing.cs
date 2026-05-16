@@ -2,7 +2,6 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests.Vanilla;
 
-/// Wraps vanilla `FishingQuest` (Willy asks for a specific fish catch).
 public sealed class VanillaFishing : IQuestDefinition
 {
     public string Id => "Vanilla.Fishing";

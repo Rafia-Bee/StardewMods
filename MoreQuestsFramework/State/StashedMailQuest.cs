@@ -2,18 +2,8 @@ using System.Collections.Generic;
 
 namespace MoreQuestsFramework.State;
 
-/// Serializable mirror of a pending mail-quest posting. Persisted in
-/// `FrameworkState.PendingMailDeliveries` so a mail letter sitting in the
-/// player's mailbox at save time still resolves correctly on reload, the
-/// `%item quest <mailKey> 1 %%` token in the letter body looks up its prepared
-/// Quest by mailKey, and our Harmony prefix on `Quest.getQuestFromId` returns
-/// the subclass we built from these fields.
-///
-/// Only non-PreBuilt postings are persistable through this path (custom Quest
-/// subclasses with their own NetFields can't be reconstructed from a flat DTO
-/// alone). Phase 6 mail quests all flow through `QuestFactory.Build`, which
-/// returns the framework's own `MoreQuestsItemDeliveryQuest` /
-/// `MoreQuestsFishingQuest` / `SlayMonsterQuest`, none rely on PreBuilt.
+// Serializable mirror of a pending mail-quest posting. Only non-PreBuilt postings can
+// round-trip through this DTO (custom Quest subclasses with NetFields can't).
 public sealed class StashedMailQuest
 {
     public string MailKey { get; set; } = "";
@@ -21,19 +11,15 @@ public sealed class StashedMailQuest
     public string DefinitionId { get; set; } = "";
     public string MailBody { get; set; } = "";
 
-    /// `BoardQuestType` enum value as int so JSON survives renames.
+    // Enums stored as int so JSON survives renames.
     public int QuestType { get; set; }
     public int Category { get; set; }
     public int Tier { get; set; }
     public string QuestGiver { get; set; } = "";
     public string ObjectiveItemId { get; set; } = "";
     public string ObjectiveItemName { get; set; } = "";
-    /// OR-alternative ids accepted in place of `ObjectiveItemId`. Round-trips so a mail
-    /// letter for "Submarine Fuel, battery OR coal" still resolves correctly on reload.
     public List<string> AlternativeObjectiveItemIds { get; set; } = new();
-    /// Weight applied to the primary item per stack matched. Defaults to 1.
     public int ObjectiveItemWeight { get; set; } = 1;
-    /// Parallel to `AlternativeObjectiveItemIds`. Missing entries default to 1.
     public List<int> AlternativeObjectiveItemWeights { get; set; } = new();
     public int ObjectiveQuantity { get; set; } = 1;
     public string? TargetMonster { get; set; }
@@ -43,13 +29,8 @@ public sealed class StashedMailQuest
     public string CurrentObjective { get; set; } = "";
     public string TargetMessage { get; set; } = "";
 
-    /// Each reward is encoded via `RewardCodec.Encode` so the persisted record
-    /// stays text-only, no polymorphic serializer required.
+    // RewardCodec.Encode keeps this text-only (no polymorphic serializer).
     public List<string> EncodedRewards { get; set; } = new();
 
-    /// Encoded consequence line (`Consequence|<base64-json>`) when the original posting
-    /// carried a `ConsequenceSpec`. Empty when the quest had no consequence. Round-trips
-    /// through the same NetStringList path on rehydrate so a mail letter sitting unread
-    /// at save time still fires its consequence on the eventual completion.
     public string EncodedConsequence { get; set; } = "";
 }

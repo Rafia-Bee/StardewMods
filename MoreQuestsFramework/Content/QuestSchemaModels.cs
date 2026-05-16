@@ -3,14 +3,6 @@ using Newtonsoft.Json;
 
 namespace MoreQuestsFramework.Content;
 
-/// Plain DTO shapes for `quests.json`. Deserialised directly from JSON via
-/// SMAPI's `IDataHelper.ReadJsonFile` / `IContentPack.ReadJsonFile`.
-///
-/// This is the Phase 4 subset of plan.md §5: top-level `Schema` + `Quests`,
-/// and a `QuestDef` shape that supports both generator-referenced quests
-/// (Phase 4's primary migration target) and fully-declarative single-step
-/// quests with fixed item + giver. Multi-step (`Steps`) and `Boards` are
-/// deferred to later phases.
 public sealed class QuestPackDocument
 {
     public string Schema { get; set; } = "1.0";
@@ -25,19 +17,14 @@ public sealed class QuestDef
 
     public TriggerDef? Trigger { get; set; }
 
-    /// If present, this name resolves to a generator registered via
-    /// `RegisterGenerator(...)`. The generator owns full Build() control.
-    /// All other fields below (Title/Description/Objective/Rewards) are
-    /// ignored when Generator is set.
+    // When set, references a generator registered via RegisterGenerator(...);
+    // the generator owns Build() and every other field is ignored.
     public string? Generator { get; set; }
 
     public string? Giver { get; set; }
     public ObjectiveDef? Objective { get; set; }
 
-    /// Multi-step ("Adventure") quests. When set, the quest is built as an `AdventureQuest`
-    /// instead of a single-objective vanilla wrapper. `Objective` is ignored if `Steps` is
-    /// non-empty. Step `Requires[]` enforces ordering; `$giver` in `Targets[]` is rewritten
-    /// to the resolved giver name at quest-creation time.
+    // Multi-step "Adventure" quests. Overrides Objective when non-empty.
     public List<StepDef> Steps { get; set; } = new();
 
     public string? DeadlineDays { get; set; }
@@ -56,150 +43,109 @@ public sealed class TriggerDef
     public int? MaxPerDay { get; set; }
     public int? CooldownDays { get; set; }
 
-    /// Optional named cooldown bucket. When set, the framework asks the consumer mod's
-    /// registered cooldown-tier resolver (see `IMoreQuestsModApi.LoadQuestsFromMod` overload)
-    /// for the day count at trigger-evaluation time instead of using `CooldownDays`. This lets
-    /// a content mod surface a small set of shared "short / medium / long" knobs in GMCM and
-    /// have edits apply live. Tier names are author-defined; the consumer mod's resolver picks
-    /// the mapping. If the resolver returns null (unknown tier name or no resolver registered),
-    /// the framework falls back to `CooldownDays`.
+    // Named cooldown bucket resolved by the consumer mod's cooldown-tier resolver
+    // (see IMoreQuestsModApi.LoadQuestsFromMod overload). Null/unknown falls back
+    // to CooldownDays.
     public string? CooldownTier { get; set; }
     public Dictionary<string, string>? Available { get; set; }
 
-    /// Optional override of the delivery channel. Defaults vary by source: DailyBoard
-    /// posts to the help-wanted board, NpcDialogue queues for the next chat, every
-    /// other source defaults to `Mail`. Accepts `Mail`, `NpcDialogue`, or `DailyBoard`.
+    // Mail | NpcDialogue | DailyBoard.
     public string? Delivery { get; set; }
 
-    // Phase 6 trigger-specific options. See plan.md §5.4 for the full grammar.
-
-    /// Periodic: in-game days between fires. Required for `Source: Periodic`.
+    // Periodic.
     public int? EveryDays { get; set; }
 
-    /// DateLocked: in-game date as `"<season> <day>"`, e.g. `"spring 8"`.
+    // DateLocked: "<season> <day>".
     public string? Date { get; set; }
 
-    /// DateLocked: re-arms the trigger every in-game year. Default false (one-shot per save).
+    // DateLocked.
     public bool RepeatYearly { get; set; }
 
-    /// DateRange: inclusive window endpoints, both `"<season> <day>"`.
+    // DateRange.
     public string? From { get; set; }
     public string? To { get; set; }
 
-    /// OneShot: predicate that must be true for the trigger to fire (once per save).
-    /// Recognised forms: `FirstStat <name> >= <n>`, `FirstShipped <itemId>`,
-    /// `FirstItemOwned <itemId>`.
+    // OneShot. Forms: "FirstStat <name> >= <n>", "FirstShipped <itemId>",
+    // "FirstItemOwned <itemId>".
     public string? When { get; set; }
 
-    /// BuildingBuilt: farm building type to watch for, e.g. `"Coop"` or `"Slime Hutch"`.
+    // BuildingBuilt.
     public string? Building { get; set; }
 
-    /// BuildingBuilt / MailReceived: number of in-game days to wait before firing
-    /// after the trigger event. 0 = same day.
+    // BuildingBuilt / MailReceived: days to wait after the event. 0 = same day.
     public int? DayDelay { get; set; }
 
-    /// MailReceived: mail flag whose appearance in `mailReceived` triggers the quest.
+    // MailReceived.
     public string? Flag { get; set; }
 
-    /// WeatherForecast: weather id (`Sun`, `Rain`, `Storm`, `Snow`, `Wind`) or the
-    /// adjective alias (`sunny`, `rainy`, ...). Matches `Game1.weatherForTomorrow`.
+    // WeatherForecast: Sun/Rain/Storm/Snow/Wind or sunny/rainy aliases.
     public string? Weather { get; set; }
 
-    /// NpcDialogue: target NPC. Quest is queued and pushed into the journal the next
-    /// time the player speaks with this NPC.
+    // NpcDialogue.
     public string? Npc { get; set; }
 
-    /// SpecialOrder: in-game date as `"<season> <day>"` when the order is offered on the
-    /// SpecialOrders board. Cooldown gates re-fires across years.
+    // SpecialOrder.
     public string? StartDate { get; set; }
 
-    /// SpecialOrder: window length the order stays on the board. Accepts vanilla's
-    /// QuestDuration enum names, `OneDay`, `TwoDays`, `ThreeDays`, `Week`, `TwoWeeks`,
-    /// `Month`. Defaults to `Week` when omitted. Maps to vanilla's `SetDuration`.
+    // SpecialOrder. Vanilla QuestDuration names (OneDay/TwoDays/Week/TwoWeeks/Month).
     public string? Duration { get; set; }
 }
 
 public sealed class ObjectiveDef
 {
-    /// Deliver | Resource | Fish | Slay | Ship
+    // Deliver | Resource | Fish | Slay | Ship.
     public string Kind { get; set; } = "Deliver";
 
-    /// Item id(s) accepted by the objective. Authors may write either a single string
-    /// (`"Item": "(O)787"`) or a string array (`"Item": ["(O)787", "(O)382"]`); the
-    /// converter normalises both shapes to a `List<string>`. The first entry is the
-    /// "primary" id used for journal text + display; any extra entries are OR-alternatives
-    /// matched at completion time.
+    // First entry is the primary (used for journal text); extras are OR-alternatives.
     [JsonConverter(typeof(StringOrArrayConverter))]
     public List<string> Item { get; set; } = new();
     public int Count { get; set; } = 1;
     public string? TargetMonster { get; set; }
 
-    /// `Catch` / `Fish` / `Fishing` filter: when set, only counts fish caught at the
-    /// matching location name (case-insensitive against `Game1.currentLocation.Name`).
+    // Fishing filter: case-insensitive Game1.currentLocation.Name match.
     public string? LocationName { get; set; }
 
-    /// `Catch` / `Fish` / `Fishing` filter: when > 0, only counts a catch whose `size`
-    /// (the inches value vanilla passes through `OnFishCaught`) is ≥ the threshold. Squid /
-    /// Octopus and pond catches that report size -1 fail this gate.
+    // Fishing filter: catch size in inches. Squid/Octopus/pond returns report -1
+    // and fail this gate.
     public int MinSize { get; set; }
 
-    /// `Catch` / `Fish` / `Fishing` filter: when set, only counts fish caught while the
-    /// runtime weather at the player's current location matches. Accepts `Sun` / `Rain` /
-    /// `Storm` / `Snow` / `Wind` plus the `sunny` / `rainy` / ... aliases. `Rain` matches
-    /// both Rain and Storm states.
+    // Sun/Rain/Storm/Snow/Wind (or sunny/rainy aliases). "Rain" matches Rain+Storm.
     public string? Weather { get; set; }
 }
 
-/// One step within an Adventure quest's `Steps[]` list. Mirrors `AdventureStepState` but
-/// only carries the authoring-time fields (no `Progress` / `Done`, those start at zero).
 public sealed class StepDef
 {
     public string? Name { get; set; }
 
-    /// `Deliver` | `Talk` | `Gift` | `Catch` | `Slay` | `Ship` | `Visit` | `Build` |
-    /// `ReachLevel` | `Plant` | `Collect` | `ClearDebris` | `ClearWeeds` | `Custom`. 7a
-    /// implements `Deliver`, `Talk`, and `Gift`; the rest land in 7b/7c.
+    // Deliver | Talk | Gift | Catch | Slay | Ship | Visit | Build | ReachLevel |
+    // Plant | Collect | ClearDebris | ClearWeeds | Custom.
     public string Kind { get; set; } = "Talk";
 
     public string? Description { get; set; }
 
-    /// Other step `Name`s that must be done before this one becomes active.
     public List<string> Requires { get; set; } = new();
 
-    /// NPC names / location names / monster types depending on Kind. Supports `$giver`,
-    /// rewritten to the resolved giver at quest-creation time.
+    // Supports $giver, rewritten at quest-creation time.
     public List<string> Targets { get; set; } = new();
 
-    /// Item ids accepted for `Deliver` / `Gift` / `Ship` / `Collect`. May be set as a
-    /// single string OR a string array in JSON; the parser normalises to a list.
     public List<string> Items { get; set; } = new();
 
     public int Count { get; set; } = 1;
     public int MinQuality { get; set; }
 
-    /// `Ship`-step opt-in to the framework's furniture / decor shipping bypass. While the
-    /// parent quest is in the active log and any step has this flag set, vanilla's
-    /// shipping ban is lifted via a gated Harmony postfix on `Object.canBeShipped`.
+    // Lifts vanilla's furniture/decor shipping ban while the parent quest is active.
     public bool AllowDecorShipping { get; set; }
 
-    /// `Catch` step filter: when set, only counts fish caught at the matching location name
-    /// (case-insensitive against `Game1.currentLocation.Name`).
     public string? LocationName { get; set; }
 
-    /// `Catch` step filter: when > 0, only counts a catch whose `size` (the inches value
-    /// vanilla passes through `OnFishCaught`) is ≥ the threshold. Squid / Octopus and pond
-    /// catches that report size -1 fail this gate.
     public int MinSize { get; set; }
 
-    /// `Catch` step filter: when set, only counts fish caught while the runtime weather at
-    /// the player's current location matches. Accepts `Sun` / `Rain` / `Storm` / `Snow` /
-    /// `Wind` plus the `sunny` / `rainy` / ... aliases. `Rain` matches both Rain and Storm.
     public string? Weather { get; set; }
 }
 
 public sealed class RewardDef
 {
-    /// Money | Friendship | Object | Recipe | Mail
+    // Money | Friendship | Object | Recipe | Mail.
     public string Kind { get; set; } = "Money";
 
     public int Amount { get; set; }

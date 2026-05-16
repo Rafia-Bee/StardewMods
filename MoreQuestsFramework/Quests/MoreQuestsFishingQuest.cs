@@ -7,46 +7,27 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests;
 
-/// `FishingQuest` variant that turns the second half into an actual delivery.
-/// Vanilla `FishingQuest.OnNpcSocialized` completes the quest as soon as
-/// `numberFished >= numberToFish` and the player chats with the target NPC - the
-/// fish are never consumed. That means the player can sell or eat every fish
-/// they caught and still claim the reward.
-///
-/// We override `OnNpcSocialized` (and `OnItemOfferedToNpc`, for the right-click-
-/// with-fish path) to require the player to have the fish in their inventory at
-/// turn-in time and remove the stack on completion. If they don't have enough,
-/// the quest simply doesn't complete - vanilla NPC dialogue plays as normal and
-/// the journal still shows the catch counter so the player can see the quest is
-/// open.
+// Vanilla FishingQuest.OnNpcSocialized completes as soon as numberFished is met and
+// the player chats with the target, NEVER consuming the fish, so the player can sell
+// every fish and still claim the reward. This subclass requires the fish to be in
+// inventory at turn-in and removes the stack on completion.
 [XmlType("Mods_RafiaBee_MoreQuestsFramework_FishingQuest")]
 public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
 {
     public readonly NetStringList serializedRewards = new();
 
-    /// Phase 9.5e Catch filters. When non-empty, the catch only credits when the player's
-    /// current location matches; when > 0, the reported catch size (inches) must be ≥ the
-    /// threshold; when non-empty, the runtime weather must match. All three are independent
-    ///, empty / zero defaults disable each gate, so a vanilla single-objective fishing
-    /// quest with none of these set behaves exactly like base `FishingQuest`.
+    // Empty/zero disables each gate.
     public readonly NetString catchLocationName = new();
     public readonly NetInt catchMinSize = new();
     public readonly NetInt catchMaxSize = new();
     public readonly NetString catchWeather = new();
 
-    /// When true, the quest counts ANY caught fish that passes the size / location /
-    /// weather filters, regardless of `ItemId.Value`. Turn-in then only requires the
-    /// catch counter to be full, no specific fish stack is needed in inventory and no
-    /// fish are consumed. Used by the Size Overpopulation quest (and any future "any
-    /// fish in bucket X" content). Defaults to false so single-species quests keep the
-    /// vanilla item-id gate + the existing consume-on-turn-in semantics.
+    // True = counter-only (any catch passing filters counts, no specific stack needed
+    // at turn-in, no fish consumed). Used by Size Overpopulation.
     public readonly NetBool catchAnyFish = new();
 
-    /// Progress-line template for `catchAnyFish` quests. Vanilla
-    /// `FishingQuest.reloadObjective` would otherwise rebuild the objective from
-    /// `ItemId.Value` (the placeholder fish), showing e.g. "0/5 Frog caught" for a
-    /// Size Overpopulation quest. When set, `{0}` is replaced with the current catch
-    /// counter and `{1}` with the quota.
+    // Overrides vanilla's reloadObjective rebuild for catchAnyFish quests.
+    // {0} = catch counter, {1} = quota.
     public readonly NetString catchProgressTemplate = new();
 
     public NetStringList SerializedRewards => serializedRewards;
@@ -64,19 +45,13 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
             .AddField(catchProgressTemplate, "catchProgressTemplate");
     }
 
-    /// Apply the Phase 9.5e Catch filters before letting the base `FishingQuest`
-    /// increment its counter. When a filter is unset (empty / zero) the gate is
-    /// pass-through; when set, a mismatch returns false without crediting (vanilla's
-    /// "this counted toward a quest" UI cue stays silent).
     public override bool OnFishCaught(string fishId, int numberCaught, int size, bool probe = false)
     {
         if (!CatchFiltersPass(fishId, size))
             return false;
         if (catchAnyFish.Value)
         {
-            // Bypass base.OnFishCaught's `fishId == ItemId.Value` gate. Any caught fish
-            // that passes the filters counts. Mirror the increment + completion-cue path
-            // that base FishingQuest.OnFishCaught walks for a matched fish.
+            // Bypass base's fishId==ItemId.Value gate; mirrors the matched-fish path.
             if (numberFished.Value >= numberToFish.Value)
                 return false;
             if (probe)
@@ -118,10 +93,7 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
         return true;
     }
 
-    /// Reads the runtime weather at the player's current location and compares to the
-    /// requested label. Mirrors `ConditionEvaluator.MatchesWeather`'s alias handling.
-    /// `Rain` matches Rain or Storm so vanilla rain-only fish data stays consistent (Storm
-    /// is a thunderstorm variant that still fires rain spawns in `Data/Fish`).
+    // "Rain" matches Rain+Storm so vanilla rain-only fish data stays consistent.
     private static bool CurrentWeatherMatches(string requested)
     {
         string contextId = Game1.player?.currentLocation?.GetLocationContextId() ?? "Default";
@@ -154,12 +126,8 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
         base.questComplete();
     }
 
-    /// `Quest.currentObjective`'s getter calls `reloadObjective` on every read, so the
-    /// objective text we set at posting time gets clobbered by vanilla
-    /// `FishingQuest.reloadObjective` rebuilding from `ItemId.Value` (which is just the
-    /// placeholder fish for `catchAnyFish` quests). Intercept that for the any-fish path
-    /// and write our own "{caught}/{total} {noun} caught" line. Single-species fishing
-    /// quests fall through to base so they keep the vanilla "0/5 Tuna caught" line.
+    // Single-species fishing quests fall through to base for the vanilla
+    // "0/5 Tuna caught" line.
     public override void reloadObjective()
     {
         if (catchAnyFish.Value && !string.IsNullOrEmpty(catchProgressTemplate.Value))
@@ -185,13 +153,10 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
         if (!IsReportableTo(npc))
             return false;
 
-        // Player still has fishing to do - let vanilla's OnFishCaught keep tracking.
         if (numberFished.Value < numberToFish.Value)
             return false;
 
         int needed = numberToFish.Value;
-        // Fish-agnostic quests (Size Overpopulation, etc) only require the catch counter
-        // to be full. No specific fish is held back for turn-in and no stack is consumed.
         if (!catchAnyFish.Value && CountInInventory(ItemId.Value) < needed)
             return false;
 
@@ -207,12 +172,9 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
         return true;
     }
 
-    /// Right-click on the target NPC while holding the requested fish. Vanilla
-    /// `FishingQuest` doesn't override this so it would fall through to the gift
-    /// flow, donating one fish as a gift. Intercept the same way `CollectAndReportQuest`
-    /// does, but consume the requested count rather than treat it as a gift.
-    /// `catchAnyFish` quests don't use this path (no specific item required), so the
-    /// override no-ops for them and right-click falls back to vanilla's gift behaviour.
+    // Right-click-with-fish path. Vanilla FishingQuest doesn't override so it'd fall
+    // through to the gift flow (donating one fish). Intercept like CollectAndReportQuest
+    // but consume the requested count. catchAnyFish quests fall back to vanilla gifting.
     public override bool OnItemOfferedToNpc(NPC npc, Item item, bool probe = false)
     {
         if (catchAnyFish.Value)
@@ -265,8 +227,6 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
         return total;
     }
 
-    /// Removes `count` of `qualifiedItemId` from the active player's inventory.
-    /// Walks the inventory, deducting from each matching stack until `count` is hit.
     private static void ConsumeFish(string qualifiedItemId, int count)
     {
         if (string.IsNullOrEmpty(qualifiedItemId) || count <= 0)
@@ -286,8 +246,7 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
         }
     }
 
-    /// Match either the qualified ID (`(O)129`) or the bare ID (`129`), so the quest
-    /// is robust to whichever form vanilla / mods produced the player's stack with.
+    // Tolerates both qualified ("(O)129") and bare ("129") ids.
     private static bool ItemIdMatches(Item item, string qualifiedItemId)
     {
         if (string.Equals(item.QualifiedItemId, qualifiedItemId, StringComparison.OrdinalIgnoreCase))

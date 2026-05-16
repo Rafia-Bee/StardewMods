@@ -138,8 +138,7 @@ public sealed class ModEntry : Mod
             + "if vanilla's two slots are already filled by other mods' picks).",
             (_, _) => ReemitSpecialOrders());
         // Defer GMCM + content-pack loading + RegistrationClosed until after every consumer
-        // mod's `GameLaunched` has run, so their registered quests appear in GMCM and
-        // any content pack that references their generators sees them in the registry.
+        // mod's GameLaunched has run.
         helper.Events.GameLoop.UpdateTicking += OnFirstTick;
     }
 
@@ -163,19 +162,13 @@ public sealed class ModEntry : Mod
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
-        // Register the framework's own four vanilla wrappers before consumer mods see RegistrationOpen.
         _registry.Register(new VanillaItemDelivery());
         _registry.Register(new VanillaResourceCollection());
         _registry.Register(new VanillaSlayMonster());
         _registry.Register(new VanillaFishing());
 
-        // Seed the dispatch registry with the framework's built-in vanilla + RSV/ESV/VMV/SVE
-        // entries. Goes through the same `Register` API third-party mods use, so there's
-        // no privileged path.
         NpcDispatch.SeedBuiltins(Dispatch);
 
-        // Resolve SpaceCore once so the API can forward `RegisterCustomQuestType` calls without
-        // every consumer mod having to declare its own dependency on SpaceCore.
         _spaceCore = Helper.ModRegistry.GetApi<ISpaceCoreApi>(ModCompat.SpaceCore);
         if (_spaceCore != null)
         {
@@ -193,23 +186,16 @@ public sealed class ModEntry : Mod
                 LogLevel.Warn);
         }
 
-        // RegistrationOpen fires from OnFirstTick (one tick after every consumer mod's
-        // GameLaunched runs), so consumer mods that subscribe in their own GameLaunched
-        //, which by definition runs after the framework's, since they declare us as a
-        // dependency, actually receive the event.
     }
 
     private void OnFirstTick(object? sender, UpdateTickingEventArgs e)
     {
         Helper.Events.GameLoop.UpdateTicking -= OnFirstTick;
 
-        // Open the registration window. Consumer-mod handlers subscribed during their
-        // own GameLaunched run synchronously here and call into IMoreQuestsModApi.
+        // Deferred one tick past GameLaunched so consumer-mod subscribers registered
+        // during their own GameLaunched (after ours) actually receive these events.
         _api.FireRegistrationOpen();
 
-        // Auto-load any SMAPI content pack that targets the framework. Runs after
-        // RegistrationOpen handlers, so C# generators consumer mods just registered
-        // are visible when packs that reference them load.
         foreach (var pack in Helper.ContentPacks.GetOwned())
         {
             _loader.LoadContentPack(pack);
@@ -246,18 +232,12 @@ public sealed class ModEntry : Mod
         _animalPurchaseDiscountWriter?.WireState(_stateStore.State);
         _festivalBiasWriter?.WireState(_stateStore.State);
         _fairStarTokensWriter?.WireState(_stateStore.State);
-        // Always invalidate the shop cache after wiring state, discounts loaded from the
-        // save would otherwise sit dormant until something else triggers the next read.
+        // Persisted discounts would sit dormant until something else triggers a read.
         if (_stateStore.State.ActiveShopDiscounts.Count > 0)
             Helper.GameContent.InvalidateCache("Data/Shops");
-        // Re-publish any persisted SpecialOrder entries by invalidating the cache;
-        // the writer's OnAssetRequested handler injects them on the next read.
         if (_stateStore.State.EmittedSpecialOrders.Count > 0)
             Helper.GameContent.InvalidateCache("Data/SpecialOrders");
 
-        // Rehydrate any mail letters that were sitting unread when the previous
-        // session saved. Re-injects bodies into the Data/mail edit and re-registers
-        // each prepared Quest so the `%item quest %% ` token resolves on letter-open.
         _mailQuests.Clear();
         var mailbox = Game1.player?.mailbox;
         var mailReceived = Game1.player?.mailReceived;
@@ -267,7 +247,7 @@ public sealed class ModEntry : Mod
             bool inMailbox = mailbox != null && mailbox.Contains(stash.MailKey);
             bool alreadyRead = mailReceived != null && mailReceived.Contains(stash.MailKey);
             if (alreadyRead || !inMailbox)
-                continue; // already opened or vanished — drop on next save
+                continue;
             var quest = _poster.RehydrateStash(stash);
             if (quest == null)
                 continue;
@@ -286,9 +266,8 @@ public sealed class ModEntry : Mod
             posting => _poster!.PrepareQuest(posting, daysLeft: Math.Max(1, posting.DeadlineDays)));
         _dialogueWatcher.Reset();
 
-        // Phase 9a: stand up the consequence engine + dialogue watcher per-save. Engine is
-        // exposed via a static `Active` so quest-subclass `questComplete` overrides can fire
-        // it from anywhere without threading an instance reference through every subclass.
+        // Engine exposed as a static so quest-subclass questComplete overrides can fire
+        // it without threading an instance reference through every subclass.
         _consequenceEngine = new ConsequenceEngine(Config, _dataCache, _stateStore.State, Monitor);
         MoreQuestsFramework.Api.ConsequenceOverrides.ApplyTo(_consequenceEngine);
         ConsequenceEngine.Active = _consequenceEngine;
@@ -308,12 +287,7 @@ public sealed class ModEntry : Mod
         _stateStore?.Save();
     }
 
-    /// At day-end, before vanilla sells the shipping bin, walk every active framework
-    /// quest looking for a `MoreQuestsShipQuest` or an `AdventureQuest` with an active
-    /// `Ship` step and credit them with matching items in the bin. We only observe,
-    /// items still get sold to the player at full price (the bin contents are not
-    /// removed). Cheap when no ship quest is active: the loop short-circuits the first
-    /// time it sees no candidate.
+    // Observes only; items still get sold to the player at full price.
     private void ObserveShippingBin()
     {
         if (!Context.IsWorldReady || Game1.player == null)
@@ -335,7 +309,6 @@ public sealed class ModEntry : Mod
             if (!isShip && !isAdventure)
                 continue;
 
-            // Lazily fetch the bin so we don't pay the cost when no ship-tracking quest is active.
             bin ??= farm.getShippingBin(Game1.player);
             if (bin == null || bin.Count == 0)
                 return;
@@ -358,15 +331,10 @@ public sealed class ModEntry : Mod
             return;
 
         _dataCache?.Refresh();
-        // Snapshot anti-repetition state so a same-day mq_refresh can roll back today's
-        // cooldown records and produce a fresh batch instead of an empty board.
         _antiRepetition?.BeginDay();
         _triggers?.BeginDay();
         _poster.BeginDay();
 
-        // Phase 9.5c: credit AdventureQuest `Build` steps with the building-types diff
-        // computed by `_triggers.BeginDay()`. Same source of truth the BuildingBuilt
-        // trigger uses, no extra farm scan.
         ObserveBuildOnQuestLog();
 
         var daily = _pipeline.GenerateDailyPostings();
@@ -376,24 +344,17 @@ public sealed class ModEntry : Mod
         var triggered = _pipeline.GenerateTriggered();
         _poster.PostBatch(triggered);
 
-        // Sweep expired SpecialOrder dict entries before emitting today's batch so a
-        // re-fire on a yearly cadence doesn't collide with a stale entry from last year.
+        // Sweep before emit so a yearly re-fire doesn't collide with a stale entry.
         _specialOrderWriter?.SweepExpired();
         var specialOrders = _pipeline.GenerateSpecialOrders();
         _poster.PostBatch(specialOrders);
 
-        // Queue NpcDialogue-source quests so the watcher can push them into the
-        // journal at the next chat with their target NPC.
         if (_dialogueWatcher != null)
         {
             foreach (var (def, npc) in _pipeline.GenerateNpcDialogueQueue())
                 _dialogueWatcher.Enqueue(def.Id, npc);
         }
 
-        // Custom-board postings (Phase 8c). Drawn per-board with each board's own
-        // `AllowedCategories` filter + `PoolSize` cap. Slots stay scoped to their board
-        // key; the BoardWorldRenderer's "!" indicator activates as soon as the list is
-        // non-empty.
         CustomBoardSlots.ClearAll();
         var customByBoard = _pipeline.GenerateCustomBoardPostings(_boards);
         foreach (var (_, perBoard) in customByBoard)
@@ -410,28 +371,21 @@ public sealed class ModEntry : Mod
             CustomBoardSlots.Replace(board, entries, Monitor);
         }
 
-        // Suppress vanilla's lone questOfTheDay so we are the single source of truth on the board.
+        // Single source of truth on the board.
         if (Game1.IsMasterGame)
             Game1.netWorldState.Value.SetQuestOfTheDay(null);
 
-        // Poll ReachLevel steps once per day so a quest accepted on a previous session,
-        // where the player already descended past the target floor, advances without
-        // requiring a fresh warp into the mine.
+        // Catches quests accepted on a previous session where the player already
+        // descended past the target floor.
         ObserveReachLevelOnQuestLog();
 
-        // Sweep expired ShopDiscount entries; invalidate the shop cache when something
-        // dropped off so the asset edit picks up the smaller list.
         SweepShopDiscounts();
         _animalPurchaseDiscountWriter?.SweepExpired();
 
-        // Sweep expired FestivalBias entries so the patches stay fast on saves where the
-        // player accepted a feast quest months ago and never made it to the festival.
         _festivalBiasWriter?.SweepExpired();
         _fairStarTokensWriter?.SweepExpired();
         _fairTokensAppliedThisSession = false;
 
-        // Drop pending consequence dialogue lines past their grace window so chained
-        // reactions don't sit in the queue indefinitely if the player ducks the NPC.
         _consequenceEngine?.SweepExpired();
 
         _api.FireDayRefreshed(daily.Count, triggered.Count);
@@ -508,10 +462,6 @@ public sealed class ModEntry : Mod
         }
     }
 
-    /// Walks the active quest log once and lets every `AdventureQuest` with an active
-    /// `ReachLevel` step compare its target floor against the player's deepest reached
-    /// mine/skull-cavern level. Cheap when no ReachLevel quest is active (just a type check
-    /// per quest). Called from DayStarted and `Player.Warped`.
     private void ObserveReachLevelOnQuestLog()
     {
         if (Game1.player == null)
@@ -525,10 +475,6 @@ public sealed class ModEntry : Mod
         }
     }
 
-    /// Walks the active quest log once at DayStarted and lets every `AdventureQuest` with
-    /// an active `Build` step credit against the building-types newly added to the farm
-    /// since yesterday's snapshot. Diff is computed by `TriggerEvaluator.BeginDay`, so no
-    /// extra farm scan here.
     private void ObserveBuildOnQuestLog()
     {
         if (Game1.player == null || _triggers == null)
@@ -544,11 +490,8 @@ public sealed class ModEntry : Mod
         }
     }
 
-    /// Recomputes `DecorShippingPatches.ActiveCount` from the player's quest log.
-    /// Called once a second alongside the dialogue / consequence / clump pollers. Counts
-    /// every active framework quest (`AdventureQuest` with any decor-shipping step,
-    /// `MoreQuestsShipQuest` with the flag set) so the gated `Object.canBeShipped`
-    /// postfix can fast-path out when no decor-shipping quest is in the log.
+    // Keeps the gated canBeShipped postfix on a fast path when no decor-shipping quest
+    // is in the log.
     private static void RecomputeDecorShippingCount()
     {
         if (Game1.player == null)
@@ -571,11 +514,8 @@ public sealed class ModEntry : Mod
         Patches.DecorShippingPatches.ActiveCount = count;
     }
 
-    /// Fires any pending `FairStarTokensReward` grants into `Game1.player.festivalScore`
-    /// the first time the Fair festival is active on Fall 16. Idempotent across the
-    /// festival session via `_fairTokensAppliedThisSession`; the writer's `Consume` also
-    /// drops the pending entries so a re-entry into the festival event same day can't
-    /// double-grant.
+    // Idempotent across the festival session; writer's Consume also drops pending
+    // entries so a re-entry same day can't double-grant.
     private void ApplyFairStarTokensIfFairActive()
     {
         if (_fairTokensAppliedThisSession)
@@ -595,10 +535,6 @@ public sealed class ModEntry : Mod
         Monitor.Log($"FairStarTokens applied: +{amount} festivalScore.", LogLevel.Trace);
     }
 
-    /// Walks the active quest log once a second and lets every `AdventureQuest` with an
-    /// active `ClearDebris` step poll the resource-clump count at its target location.
-    /// Cheap when no ClearDebris quest is active, early-returns on the per-step kind
-    /// check before touching `location.resourceClumps`.
     private void PollClumpsOnQuestLog()
     {
         if (Game1.player == null)
@@ -608,9 +544,8 @@ public sealed class ModEntry : Mod
         {
             if (log[i] is not AdventureQuest a || a.completed.Value)
                 continue;
-            // Player.currentLocation is the most-likely spot for clump removal; polling
-            // there is enough for the common case (player breaks a clump where they
-            // stand). For multi-location ClearDebris quests the next warp re-baselines.
+            // Polling at currentLocation handles the common case (player breaks a clump
+            // where they stand). Multi-location quests re-baseline on the next warp.
             a.PollResourceClumps(Game1.currentLocation);
         }
     }
@@ -636,15 +571,8 @@ public sealed class ModEntry : Mod
             Helper.GameContent.InvalidateCache("Data/Shops");
     }
 
-    /// Re-rolls the daily-board batch on demand. Used by `IMoreQuestsApi.RefreshOffers()`
-    /// so testers can preview new variants without reloading the save. Safe to call at
-    /// any time after save load, uses the same code path as the day-start flow.
-    /// Test/debug helper. Force-fires every SpecialOrder-source definition regardless of
-    /// today's date or cooldown, dropping any persisted emit records for those defs first.
-    /// Bypasses `TriggerEvaluator.SpecialOrderReady` entirely so a save that already saw
-    /// the trigger fire (LastFiredDay populated) can re-emit the entry without waiting
-    /// for the next StartDate. Caller must open the SpecialOrders board afterwards to see
-    /// the result.
+    // Test/debug helper. Force-fires every SpecialOrder-source definition regardless of
+    // date or cooldown, dropping any persisted emit records for those defs first.
     private void ReemitSpecialOrders()
     {
         if (!Context.IsWorldReady || _pipeline == null || _poster == null || _stateStore == null)
@@ -662,9 +590,7 @@ public sealed class ModEntry : Mod
         {
             if (def.Source != TriggerSource.SpecialOrder)
                 continue;
-            // Drop any persisted entry for this def so the writer can emit fresh.
             state.EmittedSpecialOrders.RemoveAll(e => e.DefinitionId == def.Id);
-            // Clear cooldown bookkeeping so the trigger evaluator wouldn't block future fires.
             state.LastFiredDay.Remove(def.Id);
 
             if (!def.IsAvailable(ctx))
@@ -705,8 +631,8 @@ public sealed class ModEntry : Mod
         }
 
         _dataCache?.Refresh();
-        // Roll back today's cooldown records so just-posted definitions are eligible again
-        //, otherwise the re-roll pool is empty and tomorrow's batch is also blocked.
+        // Otherwise the re-roll pool is empty (every def is on its own freshly-recorded
+        // cooldown) and tomorrow's batch ends up blocked too.
         _antiRepetition?.RewindToDayStart();
         _poster.BeginDay();
         var daily = _pipeline.GenerateDailyPostings();
@@ -716,10 +642,6 @@ public sealed class ModEntry : Mod
         _api.FireDayRefreshed(daily.Count, 0);
     }
 
-    /// Diff the player's quest log against the previous tick to fire `QuestAccepted`
-    /// (managed quest appeared in the log), `QuestCompleted` (completed.Value flipped
-    /// to true), and `QuestRemoved` (managed quest left the log). Cheap because most
-    /// ticks have no diff.
     private void OnOneSecondTick(object? sender, OneSecondUpdateTickedEventArgs e)
     {
         if (!Context.IsWorldReady || Game1.player == null)
@@ -730,9 +652,8 @@ public sealed class ModEntry : Mod
         PollClumpsOnQuestLog();
         RecomputeDecorShippingCount();
         ApplyFairStarTokensIfFairActive();
-        // Grant FrameworkRewards for any framework-emitted SpecialOrder that completed
-        // this tick. Bypasses vanilla's Data/SpecialOrders Rewards array entirely so
-        // third-party content packs that mutate that array can't intercept the grant.
+        // Bypasses Data/SpecialOrders.Rewards entirely so third-party content packs
+        // that mutate that array can't intercept the grant.
         _specialOrderWriter?.CheckCompletionsAndGrantRewards();
 
         var current = Game1.player.questLog;
@@ -749,8 +670,7 @@ public sealed class ModEntry : Mod
             if (_seenInLog.Add(q))
             {
                 _api.FireQuestAccepted(q, info);
-                // The mail letter has been opened (vanilla addQuest pushed the quest
-                // into the log); the stash + Data/mail edit are no longer needed.
+                // Letter has been opened (vanilla addQuest pushed quest into the log).
                 if (!string.IsNullOrEmpty(q.id.Value))
                     _poster?.DropStash(q.id.Value);
             }
@@ -775,10 +695,9 @@ public sealed class ModEntry : Mod
                 bool wasCompleted = firedCompletedThisRun || q.completed.Value;
                 if (!_api.TryGetManaged(q, out var info))
                     continue;
-                // Vanilla `Quest.questComplete` yanks reward-less quests out of `questLog`
-                // in the same call that flips `completed.Value`, so the in-log loop above
-                // never sees them as completed. Fire QuestCompleted here so subscribers still
-                // hear about it before the QuestRemoved that follows.
+                // Vanilla Quest.questComplete yanks reward-less quests out of questLog in
+                // the same call that flips completed.Value, so the in-log loop never sees
+                // them as completed; fire here before the QuestRemoved that follows.
                 if (wasCompleted && !firedCompletedThisRun)
                     _api.FireQuestCompleted(q, info);
                 _api.FireQuestRemoved(q, info, wasCompleted);

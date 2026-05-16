@@ -6,18 +6,9 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Patches;
 
-/// Harmony postfixes on `Event.governorTaste` (Luau) and `Event.judgeGrange` (Fair).
-/// Both fast-path out when no `ActiveFestivalBias` is recorded for that festival,
-/// so the patches stay near-free for non-quest sessions per §8.1's gating rules.
-///
-/// Luau path: vanilla writes the next-step event command as `"switchEvent governorReactionN"`
-/// where `N` is 0..6 (6 = Mayor's Shorts gag, untouchable). The postfix peeks the queued
-/// command, parses the trailing digit, bumps it by the bias magnitude, clamps to 5, and
-/// writes the new command back. We never overwrite a 6.
-///
-/// Fair path: vanilla writes `grangeScore = num` at the end of `judgeGrange`. The postfix
-/// reads the field, adds the bias magnitude, and writes it back. The "Mayor's Shorts"
-/// disqualification (-666) is preserved since we no-op when the score is negative.
+// Luau: bumps "switchEvent governorReactionN" (N=0..6) by the bias magnitude, clamping
+// to 5. Never overwrites 6 (Mayor's Shorts gag).
+// Fair: adds the bias to grangeScore, except when score < 0 (Mayor's Shorts -666).
 internal static class FestivalBiasPatches
 {
     private static IMonitor? _monitor;
@@ -62,8 +53,6 @@ internal static class FestivalBiasPatches
             if (bump <= 0)
                 return;
 
-            // `eventCommands` and `CurrentCommand` are both private; AccessTools resolves
-            // them by name without forcing us to recompile against an internal API.
             var commands = AccessTools.Field(typeof(Event), "eventCommands")?.GetValue(__instance) as System.Collections.Generic.IList<string>;
             int currentCmd = (int?)AccessTools.Property(typeof(Event), "CurrentCommand")?.GetValue(__instance) ?? -1;
             if (commands == null || currentCmd < 0 || currentCmd + 1 >= commands.Count)
@@ -77,8 +66,6 @@ internal static class FestivalBiasPatches
             if (!int.TryParse(tail, out int tier))
                 return;
 
-            // Tier 6 is the Mayor's Shorts gag; never overwrite it. Otherwise clamp to 5
-            // ("loved it") so the bias can't push past the highest legitimate reaction.
             if (tier == 6)
                 return;
             int boosted = Math.Min(5, tier + bump);
@@ -109,8 +96,6 @@ internal static class FestivalBiasPatches
             if (grangeField == null)
                 return;
             int score = (int?)grangeField.GetValue(__instance) ?? 0;
-            // Vanilla sets `-666` when the player's display violates the Mayor's Shorts
-            // disqualification; respect that and don't lift them out of the penalty.
             if (score < 0)
                 return;
             int boosted = score + bonus;

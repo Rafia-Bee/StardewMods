@@ -5,9 +5,6 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Registry;
 
-/// Mutable runtime registry of `BoardDefinition`s. Populated during `RegistrationOpen` by
-/// consumer mods (via `IMoreQuestsModApi.RegisterBoard`) and during content-pack auto-load
-/// (via `BoardPackLoader`). Frozen at the same time as `QuestRegistry`.
 public sealed class BoardRegistry
 {
     private readonly IMonitor _monitor;
@@ -23,9 +20,7 @@ public sealed class BoardRegistry
 
     public IReadOnlyList<BoardDefinition> All => _ordered;
 
-    /// Adds a board. The lookup key is namespaced as `{ownerUniqueId}/{Name}` so two mods
-    /// can ship boards with the same short name without collision. Duplicate keys are
-    /// logged and rejected.
+    // Lookup key is namespaced as {ownerUniqueId}/{Name}.
     public void Register(BoardDefinition def, string ownerUniqueId)
     {
         if (_frozen)
@@ -61,18 +56,14 @@ public sealed class BoardRegistry
         _monitor.Log($"Registered board '{key}' at {def.Location} ({def.TileX}, {def.TileY}).", LogLevel.Trace);
     }
 
-    /// Returns the board registered by `ownerUniqueId` under the short `name`, or null.
-    /// Used by content mods that want to mutate their own board (tile, draw offset, etc.)
-    /// at runtime, e.g. driving the values from a GMCM page.
     public BoardDefinition? Find(string ownerUniqueId, string name)
     {
         string key = ownerUniqueId + "/" + name;
         return _byKey.TryGetValue(key, out var def) ? def : null;
     }
 
-    /// First match wins when boards from different owners share a `Name` and the caller
-    /// only knows the short name. Phase 8c quest definitions look up their target board
-    /// by `OwnerUniqueId/Name`, so ambiguity there is impossible.
+    // First match wins on Name collision across owners. Quest definitions look up by
+    // OwnerUniqueId/Name so ambiguity there is impossible.
     public BoardDefinition? FindByName(string name)
     {
         for (int i = 0; i < _ordered.Count; i++)
@@ -81,7 +72,6 @@ public sealed class BoardRegistry
         return null;
     }
 
-    /// Boards anchored in the given location, in registration order.
     public IEnumerable<BoardDefinition> InLocation(string locationName)
     {
         for (int i = 0; i < _ordered.Count; i++)

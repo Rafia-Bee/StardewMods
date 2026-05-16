@@ -98,19 +98,13 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
     {
         if (handler == null)
             throw new ArgumentNullException(nameof(handler));
-        // Buffer + live-apply: register on whatever engine instance is currently active
-        // (post-save-load) and remember it so the next save's engine receives the same
-        // override. Avoids ordering issues where a consumer mod registers during
-        // RegistrationOpen (no save loaded yet).
+        // Buffer + live-apply so consumer-mod registrations during RegistrationOpen
+        // (before any save loads) carry through every subsequent save's engine.
         ConsequenceOverrides.Set(tier, handler);
         ConsequenceEngine.Active?.Register(tier, handler);
     }
 }
 
-/// Process-wide buffer for consequence-tier overrides registered before the engine
-/// exists. Applied to each fresh `ConsequenceEngine` instance at SaveLoaded so a
-/// consumer-mod registration that ran during `RegistrationOpen` survives subsequent
-/// save loads without re-firing.
 internal static class ConsequenceOverrides
 {
     private static readonly Dictionary<ConsequenceTier, IConsequenceHandler> _overrides = new();

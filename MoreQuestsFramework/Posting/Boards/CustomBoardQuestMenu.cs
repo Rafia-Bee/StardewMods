@@ -6,11 +6,6 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Posting.Boards;
 
-/// Accept-quest popup shown when the player clicks a pad on a `CustomBoardMenu`. Reuses the
-/// menu skin (`BoardDefinition.Background`) so the description sheet matches the cork board.
-/// Layout mirrors vanilla `Billboard(true)`: top-left 338x198 of the skin scaled 4x, the
-/// quest description block at (xPosition + 352, yPosition + 256), the accept button centered
-/// near the bottom, and the close X in the top-right corner.
 public sealed class CustomBoardQuestMenu : IClickableMenu
 {
     private const int SourceWidth = 338;
@@ -88,8 +83,8 @@ public sealed class CustomBoardQuestMenu : IClickableMenu
             quest.accepted.Value = true;
             quest.canBeCancelled.Value = true;
             quest.daysLeft.Value = deadline;
-            // CustomBoard quests aren't vanilla "daily" quests; leave dailyQuest false so
-            // completion doesn't trigger billboard-quest milestone mail or prize tickets.
+            // dailyQuest=false: CustomBoard quests shouldn't trigger billboard milestone
+            // mail or prize tickets.
             quest.dailyQuest.Value = false;
             Game1.player.questLog.Add(quest);
 

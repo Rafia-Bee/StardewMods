@@ -9,10 +9,8 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Patches;
 
-/// Harmony patches that splice MoreQuestsBillboard into the vanilla Billboard pipeline.
-/// Strategy mirrors the aedenthorn/HelpWanted reference: redirect every `Game1.questOfTheDay`
-/// getter inside Billboard to our currently-selected slot's Quest, and on draw, swap the
-/// vanilla daily-quest Billboard out for our multi-slot subclass.
+// Redirects every Game1.questOfTheDay getter inside Billboard to the currently-selected
+// slot's Quest, and on draw swaps vanilla's daily-quest Billboard for our multi-slot subclass.
 internal static class BillboardPatches
 {
     public static void Apply(Harmony harmony)
@@ -41,7 +39,6 @@ internal static class BillboardPatches
             prefix: new HarmonyMethod(typeof(BillboardPatches), nameof(CanAccept_Prefix)));
     }
 
-    /// Replaces every call to `Game1.questOfTheDay` getter with our `BillboardPatches.GetSelectedQuest`.
     private static IEnumerable<CodeInstruction> RedirectQuestOfTheDay(IEnumerable<CodeInstruction> instructions)
     {
         var questOfTheDayGetter = AccessTools.PropertyGetter(typeof(Game1), nameof(Game1.questOfTheDay));
@@ -64,7 +61,6 @@ internal static class BillboardPatches
     public static IEnumerable<CodeInstruction> Generic_Transpiler(IEnumerable<CodeInstruction> instructions)
         => RedirectQuestOfTheDay(instructions);
 
-    /// Used by the redirected callsites to fetch the selected quest (or fall back to vanilla's).
     public static Quest? GetSelectedQuest()
     {
         var sel = BillboardSlots.Selected;
@@ -83,8 +79,6 @@ internal static class BillboardPatches
         return true;
     }
 
-    /// If the player opens the daily-quest Billboard, swap it for our subclass (unless we're
-    /// already showing a `MoreQuestsBillboard` or there are no slot postings to display).
     public static bool Draw_Prefix(Billboard __instance, bool ___dailyQuestBoard)
     {
         if (!___dailyQuestBoard)
@@ -100,7 +94,6 @@ internal static class BillboardPatches
         return false;
     }
 
-    /// Records pre-click state so the postfix can detect whether the accept button was hit.
     public static void Click_Prefix(Billboard __instance, bool ___dailyQuestBoard,
         int x, int y, out bool __state)
     {
@@ -114,8 +107,6 @@ internal static class BillboardPatches
         __state = __instance.acceptQuestButton.containsPoint(x, y);
     }
 
-    /// If the click landed on the accept button while the inner Billboard was up, vanilla has
-    /// just written the selected quest to questLog. Drop the slot and close the inner popup.
     public static void Click_Postfix(Billboard __instance, bool ___dailyQuestBoard,
         int x, int y, bool __state)
     {
@@ -126,15 +117,13 @@ internal static class BillboardPatches
         {
             if (__state)
             {
-                // Capture posting before AcceptSelected drops the slot; vanilla's accept logic
-                // hardcodes `daysLeft.Value = 2`, overwriting the configured deadline.
+                // Vanilla's accept hardcodes daysLeft=2; capture before AcceptSelected drops
+                // the slot so we can restore the configured deadline.
                 var sel = BillboardSlots.Selected;
                 int deadline = sel != null ? Math.Max(1, sel.Posting.DeadlineDays) : 2;
                 var accepted = BillboardSlots.AcceptSelected();
-                // Keep `dailyQuest.Value = true` (set by vanilla's accept logic) so vanilla's
-                // billboard-quest side-effects on completion still fire: stats increment, prize
-                // ticket every 3rd quest, the milestone mail flags. Just override the deadline,
-                // which vanilla otherwise hardcodes to 2.
+                // dailyQuest.Value=true (set by vanilla) is preserved so completion side
+                // effects fire: stats increment, prize ticket every 3rd quest, milestone mail.
                 if (accepted != null)
                     accepted.daysLeft.Value = deadline;
                 MoreQuestsBillboard.InnerBillboard = null;

@@ -3,7 +3,6 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests.Vanilla;
 
-/// Wraps vanilla `SlayMonsterQuest` (Adventurer's Guild monster eradication).
 public sealed class VanillaSlayMonster : IQuestDefinition
 {
     public string Id => "Vanilla.SlayMonster";

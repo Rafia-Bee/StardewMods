@@ -5,12 +5,7 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Patches;
 
-/// Harmony postfix on `GameLocation.isCollidingPosition` that blocks player and NPC
-/// movement through the visual footprint of every registered `BoardDefinition`. Without
-/// this the cork-board sprite reads as a "roof" the player can walk under; with it the
-/// sprite is a solid wall fixture. Footprint is anchor-tile + `DrawOffset` (pixels) +
-/// `FootprintTiles` (tiles), so the collision box always tracks where the sprite is
-/// drawn.
+// Without this, board sprites read as a "roof" the player can walk under.
 internal static class BoardCollisionPatches
 {
     private const int TilePixels = 64;

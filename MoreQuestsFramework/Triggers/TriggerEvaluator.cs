@@ -6,31 +6,18 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Triggers;
 
-/// Decides whether a non-daily-board quest definition should fire today. Holds the
-/// snapshot diffs (buildings, mail) that BuildingBuilt / MailReceived rely on so the
-/// pipeline only has to ask "yes or no" per definition.
-///
-/// Plan.md §7 splits triggers into pool / calendar / event classes. Phase 6 evaluates
-/// every non-pool trigger at `DayStarted` rather than via runtime watchers, calendar
-/// triggers are naturally per-day, and event triggers (Building/Mail/OneShot) are
-/// detected by diffing yesterday's snapshot against today. NpcDialogue is the one
-/// runtime-watcher exception and is handled by `DialogueWatcher`.
+// Non-pool triggers evaluated at DayStarted. Calendar triggers are per-day; event
+// triggers (Building/Mail/OneShot) are detected by diffing yesterday's snapshot.
+// NpcDialogue is the runtime-watcher exception, handled by DialogueWatcher.
 public sealed class TriggerEvaluator
 {
     private readonly FrameworkState _state;
     private readonly IMonitor _monitor;
 
-    /// Building types newly added to the farm since the last DayStarted snapshot.
-    /// Computed once per day in `BeginDay` so multiple defs sharing the same building
-    /// type still all see it.
     private readonly HashSet<string> _newBuildingsToday = new(StringComparer.OrdinalIgnoreCase);
 
-    /// Read-only view of `_newBuildingsToday` so AdventureQuest's `Build` step observers
-    /// can credit on the same per-day diff the trigger pass uses, without each quest
-    /// re-scanning the farm.
     public IReadOnlyCollection<string> NewBuildingsToday => _newBuildingsToday;
 
-    /// Mail flags newly added to `Game1.player.mailReceived` since the last DayStarted.
     private readonly HashSet<string> _newMailFlagsToday = new(StringComparer.OrdinalIgnoreCase);
 
     public TriggerEvaluator(FrameworkState state, IMonitor monitor)
@@ -39,15 +26,11 @@ public sealed class TriggerEvaluator
         _monitor = monitor;
     }
 
-    /// Snapshots today's farm buildings + mail flags so per-definition trigger checks
-    /// can ask "did this just appear?" without each one scanning the world. Must be
-    /// called once at the start of every day-start trigger pass.
     public void BeginDay()
     {
         _newBuildingsToday.Clear();
         _newMailFlagsToday.Clear();
 
-        // Buildings delta.
         var farm = Game1.getFarm();
         var current = new List<string>();
         if (farm != null)
@@ -61,7 +44,6 @@ public sealed class TriggerEvaluator
                 _newBuildingsToday.Add(t);
         _state.LastSeenBuildings = current;
 
-        // Mail delta. mailReceived is a NetStringList; iterate without allocating.
         if (Game1.player != null)
         {
             var prevMail = new HashSet<string>(_state.LastSeenMailFlags, StringComparer.OrdinalIgnoreCase);
@@ -76,14 +58,10 @@ public sealed class TriggerEvaluator
         }
     }
 
-    /// True if the definition should fire today. Records the fire to state on a `true`
-    /// return so `Periodic` and `OneShot` can't double-fire on the same day.
     public bool ShouldFireToday(string defId, TriggerSource source, TriggerInfo info, int cooldownDays)
     {
         int today = Game1.Date.TotalDays;
 
-        // Honour scheduled fire days (DayDelay) regardless of source, once a quest is
-        // scheduled, it fires on its target day or skips if conditions changed.
         if (_state.ScheduledFireDay.TryGetValue(defId, out int dueDay))
         {
             if (today < dueDay)
@@ -103,7 +81,7 @@ public sealed class TriggerEvaluator
             TriggerSource.BuildingBuilt => BuildingTriggered(defId, info),
             TriggerSource.MailReceived => MailTriggered(defId, info),
             TriggerSource.WeatherForecast => WeatherForecastMatches(info.Weather),
-            TriggerSource.NpcDialogue => false, // queued at registration, fired by watcher
+            TriggerSource.NpcDialogue => false,
             TriggerSource.SpecialOrder => SpecialOrderReady(defId, info.StartDate, cooldownDays, info.Weight ?? 0),
             _ => false
         };
@@ -145,7 +123,6 @@ public sealed class TriggerEvaluator
             return true;
         if (!repeatYearly)
             return false;
-        // RepeatYearly: only fire if last fire was a different in-game year.
         int lastYear = (last - 1) / 112 + 1;
         return Game1.year > lastYear;
     }
@@ -204,16 +181,7 @@ public sealed class TriggerEvaluator
         return true;
     }
 
-    /// SpecialOrder triggers fire in one of two modes:
-    /// 1. **Date-locked**: `StartDate` is set. Fires on that `<season> <day>` AND when the
-    ///    cooldown since the last fire has elapsed. Re-fires every year when the date comes
-    ///    round again.
-    /// 2. **Cooldown-only**: `StartDate` is absent and `weight > 0`. Mirrors vanilla's
-    ///    weekly SpecialOrder refresh: checks every Sunday after the cooldown elapses and
-    ///    rolls a `weight`/100 chance to post. Lets authors blend a recurring order into
-    ///    the natural special-orders board rhythm without pinning a calendar date.
-    /// When neither condition holds, returns false (legacy "needs StartDate" behavior is
-    /// preserved for any author who set StartDate-less + Weight-less SpecialOrders).
+    // Date-locked (StartDate set) or cooldown-only (Sunday + cooldown + weight% roll).
     private bool SpecialOrderReady(string defId, string? startDate, int cooldownDays, int weight)
     {
         if (!string.IsNullOrWhiteSpace(startDate))
@@ -256,16 +224,9 @@ public sealed class TriggerEvaluator
         return string.Equals(tomorrow, norm, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// Tiny grammar for `OneShot When:` predicates. Four forms are recognised:
-    ///   "FirstStat <statName> >= <n>"
-    ///   "FirstShipped <itemId>"
-    ///   "FirstItemOwned <itemId>"  (proxied to basicShipped + recipesCooked because
-    ///                                 vanilla doesn't track lifetime inventory)
-    ///   "FirstHeldItem <itemId>"   (true on the first DayStarted the player has the item
-    ///                                 in inventory; complements FirstItemOwned for items
-    ///                                 the player typically incubates / hatches rather than
-    ///                                 ships, e.g. Dinosaur Egg)
-    /// Anything else logs once and returns false.
+    // Forms: "FirstStat <name>[|<name>...] >= <n>", "FirstShipped <id>",
+    // "FirstItemOwned <id>" (proxied to basicShipped + recipesCooked), "FirstHeldItem <id>",
+    // "FirstCraftingRecipe <Name>", "FirstCookingRecipe <Name>".
     private bool EvaluateOneShotPredicate(string when)
     {
         var parts = when.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -275,9 +236,6 @@ public sealed class TriggerEvaluator
         switch (parts[0].ToLowerInvariant())
         {
             case "firststat":
-                // FirstStat <name>[|<name>...] >= <n>. Pipe-separated stat names short-circuit
-                // on the first one that crosses `min` (OR across stats, e.g. a "first milk
-                // collected" trigger that accepts either `cowMilkProduced` or `goatMilkProduced`).
                 if (parts.Length < 4 || parts[2] != ">=" || !uint.TryParse(parts[3], out uint min))
                     return false;
                 foreach (var statName in parts[1].Split('|', StringSplitOptions.RemoveEmptyEntries))
@@ -303,17 +261,13 @@ public sealed class TriggerEvaluator
                 return PlayerInventoryContains(parts[1]);
 
             case "firstcraftingrecipe":
-                // `FirstCraftingRecipe <Name>`, fires the first day the named entry appears in
-                // `Game1.player.craftingRecipes`. Joins every token after the keyword so multi-word
-                // recipe names (e.g. `Preserves Jar`, `Fish Smoker`) don't need quoting in JSON.
+                // Joins remaining tokens so multi-word names ("Preserves Jar") don't need quoting.
                 if (parts.Length < 2)
                     return false;
                 string craftingName = string.Join(' ', parts, 1, parts.Length - 1);
                 return Game1.player.craftingRecipes.ContainsKey(craftingName);
 
             case "firstcookingrecipe":
-                // Parallel to FirstCraftingRecipe but against `Game1.player.cookingRecipes`. Lets
-                // cooking-skill or chef-quest-style content gate on a learned dish.
                 if (parts.Length < 2)
                     return false;
                 string cookingName = string.Join(' ', parts, 1, parts.Length - 1);
@@ -325,10 +279,6 @@ public sealed class TriggerEvaluator
         }
     }
 
-    /// True when any item in the player's inventory matches `requested` either as a
-    /// qualified id (`(O)107`) or as the bare numeric/string id (`107`). Compares against
-    /// `Item.QualifiedItemId` first and falls through to `ItemId` so authors can write the
-    /// shorter bare form when convenient.
     private static bool PlayerInventoryContains(string requested)
     {
         if (string.IsNullOrWhiteSpace(requested) || Game1.player == null)

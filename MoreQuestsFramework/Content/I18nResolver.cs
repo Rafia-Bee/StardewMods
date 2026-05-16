@@ -3,10 +3,7 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Content;
 
-/// Resolves `{i18n:key.subkey}` tokens against a SMAPI translation helper.
-/// Scoped per content pack so each pack's `quests.json` looks up keys in
-/// its own `i18n/default.json` (plan.md §5.6). Unknown keys fall through
-/// to the original token text so authors get a visible cue in-game.
+// Unknown keys fall through to the original token text so authors get a visible cue in-game.
 internal static class I18nResolver
 {
     private static readonly Regex Token = new(@"\{i18n:([^}]+)\}", RegexOptions.Compiled);
