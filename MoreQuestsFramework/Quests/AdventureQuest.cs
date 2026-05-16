@@ -931,6 +931,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     /// `$edible-egg` (Category -5, Edibility != -300; excludes Dinosaur Egg).
     /// `$category:N` (Object Category == N).
     /// `$forage` (carries `forage_item` tag; alias for `$tag:forage_item`).
+    /// `$furniture-table` (Furniture with furniture_type table=11 or longTable=5).
     /// `$tag:&lt;tag&gt;` (any item carrying the given context tag, including Furniture/BC).
     private static bool TokenMatches(string token, Item item)
     {
@@ -940,6 +941,12 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             return item is StardewValley.Object eggObj && eggObj.Category == eggCategory && eggObj.Edibility != inedible;
         if (string.Equals(token, "$forage", StringComparison.OrdinalIgnoreCase))
             return HasContextTag(item, "forage_item");
+        if (string.Equals(token, "$furniture-table", StringComparison.OrdinalIgnoreCase))
+        {
+            if (item is not StardewValley.Objects.Furniture f) return false;
+            int t = f.furniture_type.Value;
+            return t == StardewValley.Objects.Furniture.table || t == StardewValley.Objects.Furniture.longTable;
+        }
         if (token.StartsWith("$category:", StringComparison.OrdinalIgnoreCase))
         {
             if (item is StardewValley.Object catObj && int.TryParse(token.Substring("$category:".Length), out int cat))
