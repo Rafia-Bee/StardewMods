@@ -6,7 +6,7 @@
     "config.follow_speed.tooltip": "Speed multiplier for how fast animals catch up when they fall behind. Higher values make them keep up better.",
 
     "config.rubber_band_distance.name": "Catch-up Distance",
-    "config.rubber_band_distance.tooltip": "If the animal falls this many tiles behind, it teleports closer to you.",
+    "config.rubber_band_distance.tooltip": "How many tiles the animal can fall behind before it starts sprinting to catch up. If it falls behind by more than twice this distance, it teleports to you.",
 
     "config.auto_deliver_time.name": "Auto-deliver Time",
     "config.auto_deliver_time.tooltip": "Game time when animals are automatically sent home if you haven't delivered them yet. (2000 = 8:00 PM)",
