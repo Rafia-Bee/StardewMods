@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
-using StardewModdingAPI;
 using StardewValley;
 using StardewValley.TerrainFeatures;
 
@@ -11,8 +10,6 @@ namespace LivestockFollowsYou.Framework;
 /// finds nearby grass, steers animals to eat it, and applies mood boosts.</summary>
 internal class GrazingManager
 {
-    private readonly IMonitor Monitor;
-    private readonly IModHelper Helper;
     private readonly Func<ModConfig> GetConfig;
 
     private Vector2 lastPlayerPosition;
@@ -24,13 +21,8 @@ internal class GrazingManager
     private const int EatingDurationTicks = 60;
     private const int GrassScanRadius = 5;
 
-    /// <summary>Per-animal tick counter for the eating animation pause.</summary>
-    private readonly Dictionary<long, int> eatingTimers = new();
-
-    public GrazingManager(IMonitor monitor, IModHelper helper, Func<ModConfig> getConfig)
+    public GrazingManager(Func<ModConfig> getConfig)
     {
-        Monitor = monitor;
-        Helper = helper;
         GetConfig = getConfig;
     }
 
@@ -94,7 +86,7 @@ internal class GrazingManager
                 follow.PathTarget = null;
                 follow.FramesSinceProgress = 0;
                 follow.ConsecutivePathFailures = 0;
-                eatingTimers.Remove(follow.Animal.myID.Value);
+                follow.EatingFrames = -1;
             }
         }
     }
@@ -103,7 +95,6 @@ internal class GrazingManager
     {
         idleTicks = 0;
         wasIdle = false;
-        eatingTimers.Clear();
     }
 
     private void UpdateGrazingAnimal(FollowingAnimal follow, GameLocation location)
@@ -132,18 +123,17 @@ internal class GrazingManager
         if (result != SteerResult.Arrived)
             return;
 
-        long animalId = animal.myID.Value;
-        if (!eatingTimers.ContainsKey(animalId))
+        if (follow.EatingFrames < 0)
         {
             animal.Halt();
             animal.FacingDirection = 2;
-            eatingTimers[animalId] = 0;
+            follow.EatingFrames = 0;
             return;
         }
 
-        eatingTimers[animalId]++;
+        follow.EatingFrames++;
 
-        if (eatingTimers[animalId] >= EatingDurationTicks)
+        if (follow.EatingFrames >= EatingDurationTicks)
         {
             ConsumeGrass(follow, location, target.Value);
             FinishGrazing(follow);
@@ -175,14 +165,14 @@ internal class GrazingManager
         follow.HasGrazedThisStop = true;
     }
 
-    private void FinishGrazing(FollowingAnimal follow)
+    private static void FinishGrazing(FollowingAnimal follow)
     {
         follow.GrazeTarget = null;
         follow.State = FollowState.FollowingPlayer;
-        eatingTimers.Remove(follow.Animal.myID.Value);
+        follow.EatingFrames = -1;
     }
 
-    private void CancelAllGrazing(IReadOnlyList<FollowingAnimal> followers)
+    private static void CancelAllGrazing(IReadOnlyList<FollowingAnimal> followers)
     {
         for (int i = 0; i < followers.Count; i++)
         {
@@ -194,7 +184,7 @@ internal class GrazingManager
             {
                 follow.State = FollowState.FollowingPlayer;
                 follow.GrazeTarget = null;
-                eatingTimers.Remove(follow.Animal.myID.Value);
+                follow.EatingFrames = -1;
             }
 
             follow.HasGrazedThisStop = false;
