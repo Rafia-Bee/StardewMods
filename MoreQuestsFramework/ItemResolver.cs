@@ -300,55 +300,63 @@ public sealed class ItemResolver
         return results;
     }
 
-    // Falls back to the full forage pool if the filter would produce nothing.
+    // Soft filter: drops items whose Data/Locations Forage entries are ALL in
+    // non-visited locations. Items with no Data/Locations Forage entry anywhere
+    // (e.g. RSV / VMV forage spawned by FarmTypeManager) pass through, since
+    // there's no "this only spawns at X" signal to filter on.
+    // Falls back to the full pool if everything would be dropped.
     public List<ResolvedItem> GetForageItemsInVisitedLocations(string? season = null)
     {
         var pool = GetForageItems(season);
         if (pool.Count == 0)
             return pool;
 
-        HashSet<string>? allowed = TryGetSpawnableForageIdsForVisitedLocations();
-        if (allowed == null || allowed.Count == 0)
+        var (visitedSpawns, otherSpawns) = TryGetForageSpawnSplit();
+        if (visitedSpawns == null || otherSpawns == null)
             return pool;
 
-        var filtered = pool.Where(f => allowed.Contains(f.QualifiedItemId)).ToList();
+        var filtered = pool.Where(f =>
+        {
+            string id = f.QualifiedItemId;
+            if (visitedSpawns.Contains(id)) return true;
+            return !otherSpawns.Contains(id);
+        }).ToList();
         return filtered.Count > 0 ? filtered : pool;
     }
 
-    private HashSet<string>? TryGetSpawnableForageIdsForVisitedLocations()
+    private (HashSet<string>? visited, HashSet<string>? other) TryGetForageSpawnSplit()
     {
         try
         {
             var visited = Game1.player.locationsVisited;
             if (visited == null || visited.Count == 0)
-                return null;
+                return (null, null);
 
             var visitedSet = new HashSet<string>(visited, StringComparer.OrdinalIgnoreCase);
-            var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var visitedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var otherIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var (locName, data) in _cache.Locations)
             {
-                bool isDefault = locName.Equals("Default", StringComparison.OrdinalIgnoreCase);
-                bool isVisited = visitedSet.Contains(locName);
-                if (!isDefault && !isVisited)
-                    continue;
                 if (data.Forage == null || data.Forage.Count == 0)
                     continue;
-
+                bool isVisited = locName.Equals("Default", StringComparison.OrdinalIgnoreCase)
+                    || visitedSet.Contains(locName);
+                var target = isVisited ? visitedIds : otherIds;
                 foreach (var spawn in data.Forage)
                 {
                     if (spawn?.ItemId == null)
                         continue;
                     string qualified = ItemRegistry.QualifyItemId(spawn.ItemId) ?? spawn.ItemId;
-                    ids.Add(qualified);
+                    target.Add(qualified);
                 }
             }
-            return ids;
+            return (visitedIds, otherIds);
         }
         catch (Exception ex)
         {
-            _monitor.Log($"TryGetSpawnableForageIdsForVisitedLocations: {ex.Message}", LogLevel.Warn);
-            return null;
+            _monitor.Log($"TryGetForageSpawnSplit: {ex.Message}", LogLevel.Warn);
+            return (null, null);
         }
     }
 
