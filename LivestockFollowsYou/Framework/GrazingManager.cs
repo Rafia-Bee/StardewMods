@@ -20,6 +20,7 @@ internal class GrazingManager
     private bool wasIdle;
 
     private const int GrazeMoveSpeed = 2;
+    private const float GrazeArrivalPixels = 48f;
     private const int EatingDurationTicks = 60;
     private const int GrassScanRadius = 5;
 
@@ -84,11 +85,15 @@ internal class GrazingManager
             if (idleTicks != requiredIdleTicks + i * 10)
                 continue;
 
-            var grassTile = FindNearestGrass(follow.Animal.Position, player.Position, location, config);
+            var grassTile = FindNearestGrass(follow.Animal, player.Position, location, config);
             if (grassTile.HasValue)
             {
                 follow.GrazeTarget = grassTile.Value;
                 follow.State = FollowState.Grazing;
+                follow.Path = null;
+                follow.PathTarget = null;
+                follow.FramesSinceProgress = 0;
+                follow.ConsecutivePathFailures = 0;
                 eatingTimers.Remove(follow.Animal.myID.Value);
             }
         }
@@ -112,14 +117,20 @@ internal class GrazingManager
             return;
         }
 
-        Vector2 targetWorldPos = target.Value * 64f + new Vector2(32f, 32f);
-        float distance = Vector2.Distance(animal.Position, targetWorldPos);
+        Point goalTile = new((int)target.Value.X, (int)target.Value.Y);
+        var result = AnimalSteering.SteerAlongPath(
+            follow, goalTile, location, GrazeMoveSpeed, GrazeArrivalPixels);
 
-        if (distance > 48f)
+        if (result == SteerResult.Stuck)
         {
-            SteerToward(animal, targetWorldPos);
+            // Grass is unreachable (locked behind a fence, blocked by another animal, etc).
+            // Give up on this grass and let the next idle tick pick a new target if any.
+            FinishGrazing(follow);
             return;
         }
+
+        if (result != SteerResult.Arrived)
+            return;
 
         long animalId = animal.myID.Value;
         if (!eatingTimers.ContainsKey(animalId))
@@ -190,17 +201,10 @@ internal class GrazingManager
         }
     }
 
-    private Vector2? FindNearestGrass(Vector2 animalPosition, Vector2 playerPosition, GameLocation location, ModConfig config)
+    private static Vector2? FindNearestGrass(FarmAnimal animal, Vector2 playerPosition, GameLocation location, ModConfig config)
     {
-        Vector2 animalTile = new Vector2(
-            (int)(animalPosition.X / 64f),
-            (int)(animalPosition.Y / 64f)
-        );
-
-        Vector2 playerTile = new Vector2(
-            (int)(playerPosition.X / 64f),
-            (int)(playerPosition.Y / 64f)
-        );
+        Point animalTile = animal.TilePoint;
+        Point playerTile = new((int)(playerPosition.X / 64f), (int)(playerPosition.Y / 64f));
 
         float maxDistFromPlayer = config.RubberBandDistance - 2;
 
@@ -211,71 +215,30 @@ internal class GrazingManager
         {
             for (int dy = -GrassScanRadius; dy <= GrassScanRadius; dy++)
             {
-                var checkTile = new Vector2(animalTile.X + dx, animalTile.Y + dy);
+                Point checkTile = new(animalTile.X + dx, animalTile.Y + dy);
+                Vector2 checkVec = new(checkTile.X, checkTile.Y);
 
-                if (Vector2.Distance(playerTile, checkTile) > maxDistFromPlayer)
+                if (Vector2.Distance(new Vector2(playerTile.X, playerTile.Y), checkVec) > maxDistFromPlayer)
                     continue;
 
-                if (location.terrainFeatures.TryGetValue(checkTile, out var feature) && feature is Grass)
-                {
-                    float dist = Vector2.DistanceSquared(animalTile, checkTile);
-                    if (dist < nearestDist && IsPathWalkable(animalTile, checkTile, location))
-                    {
-                        nearestDist = dist;
-                        nearest = checkTile;
-                    }
-                }
+                if (!location.terrainFeatures.TryGetValue(checkVec, out var feature) || feature is not Grass)
+                    continue;
+
+                float dist = Vector2.DistanceSquared(new Vector2(animalTile.X, animalTile.Y), checkVec);
+                if (dist >= nearestDist)
+                    continue;
+
+                // Reachability: prefer a straight orthogonal line if there is one, otherwise BFS.
+                bool reachable = AnimalPathfinder.HasLineOfSight(location, animal, animalTile, checkTile)
+                    || AnimalPathfinder.FindPath(location, animal, animalTile, checkTile) != null;
+                if (!reachable)
+                    continue;
+
+                nearestDist = dist;
+                nearest = checkVec;
             }
         }
 
         return nearest;
-    }
-
-    /// <summary>Checks that tiles along a straight line from start to end are passable (no water, cliffs, etc.).</summary>
-    private static bool IsPathWalkable(Vector2 startTile, Vector2 endTile, GameLocation location)
-    {
-        int steps = (int)Math.Max(Math.Abs(endTile.X - startTile.X), Math.Abs(endTile.Y - startTile.Y));
-        if (steps == 0)
-            return true;
-
-        for (int i = 1; i <= steps; i++)
-        {
-            float t = i / (float)steps;
-            int tileX = (int)Math.Round(startTile.X + (endTile.X - startTile.X) * t);
-            int tileY = (int)Math.Round(startTile.Y + (endTile.Y - startTile.Y) * t);
-
-            if (location.isWaterTile(tileX, tileY))
-                return false;
-
-            if (!location.isTilePassable(new xTile.Dimensions.Location(tileX * 64, tileY * 64), Game1.viewport))
-                return false;
-        }
-
-        return true;
-    }
-
-    private static void SteerToward(FarmAnimal animal, Vector2 target)
-    {
-        Vector2 diff = target - animal.Position;
-
-        int dir;
-        if (Math.Abs(diff.X) > Math.Abs(diff.Y))
-            dir = diff.X > 0 ? 1 : 3;
-        else
-            dir = diff.Y > 0 ? 2 : 0;
-
-        if (animal.FacingDirection != dir || !animal.isMoving())
-        {
-            animal.Halt();
-            switch (dir)
-            {
-                case 0: animal.SetMovingUp(true); break;
-                case 1: animal.SetMovingRight(true); break;
-                case 2: animal.SetMovingDown(true); break;
-                case 3: animal.SetMovingLeft(true); break;
-            }
-        }
-
-        animal.speed = GrazeMoveSpeed;
     }
 }
