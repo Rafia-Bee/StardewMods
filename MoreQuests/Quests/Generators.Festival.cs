@@ -1290,9 +1290,15 @@ internal static partial class Generators
         };
     }
 
+    private static readonly string[] VanillaRarecrowIds =
+    {
+        "(BC)110", "(BC)113", "(BC)126", "(BC)136",
+        "(BC)137", "(BC)138", "(BC)139", "(BC)140"
+    };
+
     /// Spirit's Eve decor: Wizard, Fall 22. Ship Pumpkin Seeds + Cloth + Torches (seeds,
     /// not pumpkins; the Wizard is building atmosphere, not stocking a bake-off).
-    /// Reward: GoldIntermediateBase + 5 Jack o' Lanterns.
+    /// Reward: GoldIntermediateBase + 1 random vanilla rarecrow.
     private static QuestPosting? SpiritsEveDecor(QuestContext ctx)
     {
         const string giver = "Wizard";
@@ -1358,7 +1364,7 @@ internal static partial class Generators
             Rewards =
             {
                 new MoneyReward(ctx.Config.GoldIntermediateBase),
-                new ObjectReward("(BC)126", 5)
+                new ObjectReward(VanillaRarecrowIds[Game1.random.Next(VanillaRarecrowIds.Length)], 1)
             },
             Title = ModEntry.I18n.Get("quest.festival.spiritsEveDecor.title"),
             Description = ModEntry.I18n.Get("quest.festival.spiritsEveDecor.description", new { pumpkinSeeds = pumpkinSeedCount, cloth = clothCount, torches = torchCount }),
