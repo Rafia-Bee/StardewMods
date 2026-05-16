@@ -54,6 +54,10 @@ internal class FollowingAnimal
     /// initial offset hasn't been applied yet).</summary>
     public int GrazeRetryAt { get; set; } = int.MaxValue;
 
+    /// <summary>The animal's persistent follow slot. The actual follow goal is <c>player.TilePoint + FollowSlotOffset</c>, so
+    /// multiple followers spread into a small formation around the player instead of all targeting the same tile.</summary>
+    public Point FollowSlotOffset { get; set; }
+
     /// <summary>Current idle roaming activity when the player is standing still.</summary>
     public IdleActivity CurrentIdleActivity { get; set; }
 
@@ -206,6 +210,7 @@ internal class AnimalFollowManager
     {
         following.Add(follow);
         followingIds.Add(follow.Animal.myID.Value);
+        AssignFollowSlot(follow);
     }
 
     private void RemoveFollowerAt(int index)
@@ -465,6 +470,43 @@ internal class AnimalFollowManager
     private const int SprintSpeed = DefaultAnimalSpeed * 3;
     private const float PlayerArrivalPixels = 96f;
 
+    /// <summary>Per-slot offset from the player tile, picked so each follower aims at a different tile in a small cluster behind
+    /// the player. Ordered by how natural the spot looks: directly behind first, then diagonals, then wider/farther.</summary>
+    private static readonly Point[] FollowSlotOffsets = new[]
+    {
+        new Point(0, 1),
+        new Point(-1, 1),
+        new Point(1, 1),
+        new Point(-1, 0),
+        new Point(1, 0),
+        new Point(0, 2),
+        new Point(-1, 2),
+        new Point(1, 2),
+        new Point(-2, 1),
+        new Point(2, 1),
+    };
+
+    /// <summary>Pick the lowest-indexed slot that isn't already in use by another follower. Falls back to wrapping
+    /// when there are more followers than predefined slots (10+), which is rare but accepted.</summary>
+    private void AssignFollowSlot(FollowingAnimal follow)
+    {
+        var taken = new HashSet<Point>();
+        foreach (var other in following)
+            if (other != follow)
+                taken.Add(other.FollowSlotOffset);
+
+        for (int i = 0; i < FollowSlotOffsets.Length; i++)
+        {
+            if (!taken.Contains(FollowSlotOffsets[i]))
+            {
+                follow.FollowSlotOffset = FollowSlotOffsets[i];
+                return;
+            }
+        }
+
+        follow.FollowSlotOffset = FollowSlotOffsets[(following.Count - 1) % FollowSlotOffsets.Length];
+    }
+
     private void SteerAnimal(FollowingAnimal follow, ModConfig config)
     {
         var animal = follow.Animal;
@@ -490,8 +532,12 @@ internal class AnimalFollowManager
         bool sprint = tileDistanceToPlayer > config.RubberBandDistance;
         int speed = sprint ? Math.Max(normalSpeed, SprintSpeed) : normalSpeed;
 
+        // Each follower has its own slot offset so a group spreads into a small formation around the player
+        // instead of all marching to the same tile.
+        Point goal = new(player.TilePoint.X + follow.FollowSlotOffset.X, player.TilePoint.Y + follow.FollowSlotOffset.Y);
+
         var result = AnimalSteering.SteerAlongPath(
-            follow, player.TilePoint, location, speed, PlayerArrivalPixels);
+            follow, goal, location, speed, PlayerArrivalPixels);
 
         if (result == SteerResult.Stuck)
         {
