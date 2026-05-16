@@ -483,8 +483,9 @@ internal class AnimalFollowManager
             return;
         }
 
+        int speed = Math.Max(1, (int)Math.Round(DefaultAnimalSpeed * config.FollowSpeedMultiplier));
         var result = AnimalSteering.SteerAlongPath(
-            follow, player.TilePoint, location, DefaultAnimalSpeed, PlayerArrivalPixels);
+            follow, player.TilePoint, location, speed, PlayerArrivalPixels);
 
         if (result == SteerResult.Stuck)
         {
