@@ -9,7 +9,7 @@ internal static class AnimalPathfinder
 {
     private const int MaxNodes = 1500;
 
-    public static Queue<Point> FindPath(GameLocation location, FarmAnimal animal, Point start, Point goal)
+    public static Queue<Point> FindPath(GameLocation location, FarmAnimal animal, Point start, Point goal, ISet<Point> avoid = null)
     {
         if (location == null)
             return null;
@@ -34,6 +34,8 @@ internal static class AnimalPathfinder
 
                 // Always accept the goal tile even if it has the player on it.
                 bool isGoal = next == goal;
+                if (!isGoal && avoid != null && avoid.Contains(next))
+                    continue;
                 if (!isGoal && !IsPassable(location, animal, next))
                     continue;
 
@@ -49,7 +51,7 @@ internal static class AnimalPathfinder
     }
 
     /// <summary>True when the straight tile line from start to goal has no blockers, so BFS can be skipped.</summary>
-    public static bool HasLineOfSight(GameLocation location, FarmAnimal animal, Point start, Point goal)
+    public static bool HasLineOfSight(GameLocation location, FarmAnimal animal, Point start, Point goal, ISet<Point> avoid = null)
     {
         if (location == null)
             return false;
@@ -72,6 +74,8 @@ internal static class AnimalPathfinder
             Point t = new(start.X + stepX * i, start.Y + stepY * i);
             if (t == goal)
                 return true;
+            if (avoid != null && avoid.Contains(t))
+                return false;
             if (!IsPassable(location, animal, t))
                 return false;
         }
