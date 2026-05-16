@@ -74,7 +74,7 @@ public static class RewardApplier
             return string.Empty;
 
         var lines = new List<string>(rewards.Count);
-        string giver = string.IsNullOrEmpty(questGiver) ? "They" : questGiver;
+        string giver = string.IsNullOrEmpty(questGiver) ? "They" : NpcDisplay.Resolve(questGiver);
 
         int gold = SumMoney(rewards);
         if (gold > 0)
@@ -95,8 +95,9 @@ public static class RewardApplier
         {
             foreach (var r in friendshipRewards)
             {
-                lines.Add(translation.Get("quest.reward.line.friendship", new { npc = r.Npc })
-                    .Default($"{r.Npc} will like you more").ToString());
+                string npcDisplay = NpcDisplay.Resolve(r.Npc);
+                lines.Add(translation.Get("quest.reward.line.friendship", new { npc = npcDisplay })
+                    .Default($"{npcDisplay} will like you more").ToString());
             }
         }
 
