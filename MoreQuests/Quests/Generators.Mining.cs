@@ -404,15 +404,20 @@ internal static partial class Generators
         };
     }
 
+    private const int GemArtifactPriceFloor = 50;
+    private const int GemArtifactMaxStack = 10;
+
     /// Random gem or artifact from Data/Objects, stacked so count*sellPrice clears
-    /// GoldIntermediateBase. Picks up modded gems/artifacts automatically.
+    /// GoldIntermediateBase. Filters out trinket-priced entries (Dwarf Scrolls etc.
+    /// sit at Price 1 in vanilla, which would give floor/1 = floor count and produce
+    /// absurd 500-scroll stacks). Stack count is also hard-capped.
     private static (string QualifiedItemId, int Count)? PickGemOrArtifactReward(QuestContext ctx)
     {
         var data = ctx.Helper.GameContent.Load<Dictionary<string, StardewValley.GameData.Objects.ObjectData>>("Data/Objects");
         var pool = new List<(string Id, int Price)>(data.Count);
         foreach (var (rawId, obj) in data)
         {
-            if (obj == null || obj.Price <= 0)
+            if (obj == null || obj.Price < GemArtifactPriceFloor)
                 continue;
             bool isGem = obj.Category == StardewValley.Object.GemCategory;
             bool isArtifact = string.Equals(obj.Type, "Arch", StringComparison.OrdinalIgnoreCase);
@@ -431,6 +436,7 @@ internal static partial class Generators
             if (resolved == null)
                 continue;
             int count = Math.Max(1, (int)Math.Ceiling(floor / (double)pick.Price));
+            count = Math.Min(count, GemArtifactMaxStack);
             return (resolved.QualifiedItemId, count);
         }
         return null;
