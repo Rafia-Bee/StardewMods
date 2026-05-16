@@ -1431,9 +1431,10 @@ internal static partial class Generators
     }
 
     /// Ridgeside Gathering decor: Lenny, Fall 15. Mod-gated on RSV. Ship Tub o' Flowers +
-    /// Wood + any table furniture ($tag:furniture_table catches modded ones). Reward:
-    /// FriendshipMultiHeart per named RSV festival NPC. Tub o' Flowers recipe is granted at
-    /// quest-accept by ModEntry.OnQuestAccepted if the player doesn't know it.
+    /// Wood + any table furniture ($furniture-table matches Furniture items whose
+    /// furniture_type is table=11 or longTable=5, so vanilla and modded tables both count).
+    /// Reward: FriendshipMultiHeart per named RSV festival NPC. Tub o' Flowers recipe is
+    /// granted at quest-accept by ModEntry.OnQuestAccepted if the player doesn't know it.
     private static QuestPosting? RidgesideGatheringDecor(QuestContext ctx)
     {
         if (!MoreQuestsFramework.ModCompat.HasRsv(ctx.Helper.ModRegistry))
@@ -1487,7 +1488,7 @@ internal static partial class Generators
             {
                 Name = "ShipTables",
                 Kind = AdventureStepKind.Ship,
-                Items = new List<string> { "$tag:furniture_table" },
+                Items = new List<string> { "$furniture-table" },
                 Count = tableCount,
                 AllowDecorShipping = true,
                 Description = ModEntry.I18n.Get("quest.festival.rsvGathering.step.table", new { count = tableCount })
