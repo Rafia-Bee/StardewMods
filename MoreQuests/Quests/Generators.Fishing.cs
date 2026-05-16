@@ -695,7 +695,8 @@ internal static partial class Generators
 
     /// Pretty-printer for location keys in quest descriptions. Maps common vanilla keys to
     /// their in-game labels. Unknown keys fall back to the runtime location's DisplayName,
-    /// then to the raw key.
+    /// then to a humanized form of the raw key. Detects "(no translation:..." (Content
+    /// Patcher's marker for a missing i18n token) and treats it as a translation failure.
     private static string LocationDisplayName(string key)
     {
         string label = key?.ToLowerInvariant() switch
@@ -715,9 +716,26 @@ internal static partial class Generators
             return label;
         var loc = Game1.getLocationFromName(key);
         string? display = loc?.DisplayName;
-        if (!string.IsNullOrWhiteSpace(display))
+        if (!string.IsNullOrWhiteSpace(display) && !display.StartsWith("(no translation:", StringComparison.Ordinal))
             return display;
-        return key ?? string.Empty;
+        return HumanizeLocationKey(key);
+    }
+
+    private static string HumanizeLocationKey(string? key)
+    {
+        if (string.IsNullOrEmpty(key)) return string.Empty;
+        if (key.StartsWith("Custom_Ridgeside_", StringComparison.OrdinalIgnoreCase)
+            || key.StartsWith("RidgesideVillage", StringComparison.OrdinalIgnoreCase))
+            return "Ridgeside Village";
+        if (key.StartsWith("Lumisteria.MtVapius", StringComparison.OrdinalIgnoreCase)
+            || key.IndexOf("MtVapius", StringComparison.OrdinalIgnoreCase) >= 0)
+            return "Mount Vapius";
+        if (key.StartsWith("Custom_EastScarp_", StringComparison.OrdinalIgnoreCase)
+            || key.StartsWith("EastScarp_", StringComparison.OrdinalIgnoreCase))
+            return "East Scarp";
+        if (key.StartsWith("Custom_", StringComparison.OrdinalIgnoreCase))
+            return key.Substring("Custom_".Length).Replace('_', ' ');
+        return key.Replace('_', ' ');
     }
 
 }
