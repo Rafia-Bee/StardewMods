@@ -285,16 +285,16 @@ public sealed class QuestPoster
             quest.accepted.Value = false;
         if (!string.IsNullOrEmpty(posting.Title))
         {
-            quest.questTitle = posting.Title;
+            quest.questTitle = NpcDisplay.SubstituteIn(posting.Title);
             LoadedTitleField?.SetValue(quest, true);
         }
         if (!string.IsNullOrEmpty(posting.Description))
         {
-            quest.questDescription = AppendRewardLine(posting.Description, posting);
+            quest.questDescription = NpcDisplay.SubstituteIn(AppendRewardLine(posting.Description, posting));
             LoadedDescriptionField?.SetValue(quest, true);
         }
         if (!string.IsNullOrEmpty(posting.CurrentObjective))
-            quest.currentObjective = posting.CurrentObjective;
+            quest.currentObjective = NpcDisplay.SubstituteIn(posting.CurrentObjective);
 
         int money = posting.TotalMoney;
         if (money > 0)
@@ -326,8 +326,8 @@ public sealed class QuestPoster
     {
         string greeting = $"Dear @,^";
         string body = string.IsNullOrEmpty(p.Description) ? p.CurrentObjective : p.Description;
-        string signoff = $"^  -{p.QuestGiver}";
-        return greeting + body + signoff;
+        string signoff = $"^  -{NpcDisplay.Resolve(p.QuestGiver)}";
+        return NpcDisplay.SubstituteIn(greeting + body + signoff);
     }
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
