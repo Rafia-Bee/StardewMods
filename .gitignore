@@ -11,6 +11,7 @@ obj/
 *.user
 *.suo
 *.sln.docstates
+*.csproj.lscache
 
 # NuGet
 packages/
@@ -28,20 +29,4 @@ rafia-stardew-mods.sln
 # Internal docs
 hiddenDocs/
 .github
-
-# External/temporary mods
-FishingAssistant2Fast/
-temp_findings.md
-
-# Secret mods
-CapybaraPigReplacement/
-CarbonizerRafiaEdit/
-SMAPI-latest.txt
-DeluxeGrabberRedux*
-*QuestManager*
-RivalHearts/
-MultipleMiniObelisks/
-MaturingShelvesExpansion/
-MPS Rafia Fixes/
-
 tools/

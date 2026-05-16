@@ -303,24 +303,23 @@ public sealed class QuestPoster
         _state?.PendingMailDeliveries.RemoveAll(s => s.MailKey == mailKey);
     }
 
-    /// Stamps title/description/objective + reward fields onto the quest. Reward routing:
-    ///   - Money rewards collapse into vanilla `Quest.moneyReward` (paid by base.questComplete).
-    ///   - Friendship/Object/Recipe/Mail rewards are encoded into the quest's NetStringList
-    ///     if it implements `IRewardedQuest`; the subclass's `questComplete` override decodes
-    ///     them back via `RewardApplier.ApplyEncoded`.
-    /// `Quest.questTitle`'s getter is a first-read-builds-from-fields gate: until
-    /// `_loadedTitle` flips to true, it overwrites whatever we set with a vanilla template
-    /// built from `target.Value` / `ItemId.Value` (e.g. "Fishing: Minnow" from the
-    /// placeholder fish on a Size Overpopulation quest). `_loadedDescription` has the same
-    /// shape. The setters don't flip these flags, so we do it ourselves after assignment.
-    /// Vanilla's own subclass constructors do exactly this (see `FishingQuest(...)` which
-    /// sets `_loadedTitle = true` after writing `questTitle`).
+    /// `Quest.questTitle`'s and `questDescription`'s getters are first-read-builds-from-fields
+    /// gates: until `_loadedTitle` / `_loadedDescription` flip to true, the getter overwrites
+    /// whatever we set with a vanilla template built from `target.Value` / `ItemId.Value`
+    /// (e.g. "Fishing: Minnow" from a placeholder fish). Setters don't flip these flags, so
+    /// we do it ourselves after assignment. Vanilla subclass constructors (e.g.
+    /// `FishingQuest(...)`) do the same.
     private static readonly FieldInfo? LoadedTitleField = typeof(Quest)
         .GetField("_loadedTitle", BindingFlags.Instance | BindingFlags.NonPublic);
 
     private static readonly FieldInfo? LoadedDescriptionField = typeof(Quest)
         .GetField("_loadedDescription", BindingFlags.Instance | BindingFlags.NonPublic);
 
+    /// Stamps title/description/objective + reward fields onto the quest. Reward routing:
+    ///   - Money rewards collapse into vanilla `Quest.moneyReward` (paid by base.questComplete).
+    ///   - Friendship/Object/Recipe/Mail rewards are encoded into the quest's NetStringList
+    ///     if it implements `IRewardedQuest`; the subclass's `questComplete` override decodes
+    ///     them back via `RewardApplier.ApplyEncoded`.
     private void ApplyPostingFields(Quest quest, QuestPosting posting, bool dailyQuestDefault, int daysLeft)
     {
         quest.dailyQuest.Value = dailyQuestDefault;
