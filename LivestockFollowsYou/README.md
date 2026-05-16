@@ -12,8 +12,9 @@ When you buy an animal, it follows you around instead of teleporting straight to
 - **Livestock Bazaar compatible**: Hooks into `AnimalHouse.adoptAnimal`, so any mod that routes through the standard adoption path is supported.
 - **Farm arrival**: When you reach the farm, animals spread out in front of their barn/coop and wait for you to enter the building.
 - **Auto-delivery**: Animals are delivered to their buildings when you enter them, or automatically at a configurable curfew time (default 8:00 PM).
-- **Rubber-banding**: Animals that fall too far behind teleport closer so they don't get lost.
-- **Obstacle handling**: If an animal gets stuck on a fence, tree, or rock, it teleports past the obstacle after a short delay.
+- **Smart pathfinding**: Animals route around fences, trees, and rocks instead of getting stuck. If something is blocking their path, they back off and try a different route.
+- **Formation walking**: When you're walking with multiple animals, they spread into a small group around you instead of stacking on the same tile.
+- **Sprint to catch up**: If an animal falls behind, it sprints back to you. Only animals that get really far behind (past twice the catch-up distance) teleport.
 
 ## Configuration
 
@@ -23,13 +24,13 @@ All options are available through [Generic Mod Config Menu](https://www.nexusmod
 |---|---|---|
 | Enabled | true | Toggle the mod on/off. When off, animals teleport to barns as usual. |
 | Follow Speed | 1.0 | Speed multiplier for catch-up when animals fall behind. |
-| Catch-up Distance | 10 | Tile distance before an animal rubber-bands to the player. |
+| Catch-up Distance | 10 | Tile distance before an animal starts sprinting to catch up. If the animal falls behind by more than twice this distance, it teleports to you. |
 | Auto-deliver Time | 2000 (8 PM) | Game time when undelivered animals are sent home automatically. |
 | Animal Sounds | true | Whether animals make sounds while following. |
 | Sound Interval | 15s | Seconds between animal sounds. |
 | Show Notifications | true | HUD messages for follow/delivery events. |
 | NPC Reactions | true | Nearby villagers react with speech bubbles when you escort animals. |
-| Debug Logging | true | Log debug messages to the SMAPI console. |
+| Debug Logging | false | Log debug messages to the SMAPI console. |
 | Grazing Happiness | 15 | Happiness gained per grass eaten during a walk (0-255 scale). |
 | Send Home Friendship | 750 (3 hearts) | Friendship points needed to send an animal home alone via the bell. |
 | Grazing Idle Time | 2s | Seconds you must stand still before walking animals start grazing. |
