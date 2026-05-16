@@ -32,7 +32,8 @@ internal static class AnimalSteering
         float arrivalPixels)
     {
         var animal = follow.Animal;
-        animal.speed = speed;
+        if (animal.speed != speed)
+            animal.speed = speed;
 
         Vector2 goalCenter = new(goal.X * 64f + 32f, goal.Y * 64f + 32f);
         float distance = Vector2.Distance(animal.Position, goalCenter);

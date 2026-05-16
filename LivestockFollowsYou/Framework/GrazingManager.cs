@@ -20,6 +20,7 @@ internal class GrazingManager
     private const float GrazeArrivalPixels = 48f;
     private const int EatingDurationTicks = 60;
     private const int GrassScanRadius = 5;
+    private const int GrazeRetryDelayFrames = 120;
 
     public GrazingManager(Func<ModConfig> getConfig)
     {
@@ -74,10 +75,15 @@ internal class GrazingManager
             if (follow.State != FollowState.FollowingPlayer)
                 continue;
 
-            if (idleTicks != requiredIdleTicks + i * 10)
+            // First attempt is staggered per follower (so 4 animals don't all pick grass on the same tick);
+            // later attempts use a fixed delay after the previous failure.
+            if (follow.GrazeRetryAt == int.MaxValue)
+                follow.GrazeRetryAt = requiredIdleTicks + i * 10;
+
+            if (idleTicks < follow.GrazeRetryAt)
                 continue;
 
-            var grassTile = FindNearestGrass(follow.Animal, player.Position, location, config);
+            var grassTile = FindNearestGrass(follow.Animal, player.Position, location, config, follow.AvoidTiles);
             if (grassTile.HasValue)
             {
                 follow.GrazeTarget = grassTile.Value;
@@ -87,6 +93,12 @@ internal class GrazingManager
                 follow.FramesSinceProgress = 0;
                 follow.ConsecutivePathFailures = 0;
                 follow.EatingFrames = -1;
+                follow.GrazeRetryAt = int.MaxValue;
+            }
+            else
+            {
+                // No reachable grass right now; check again later in case a blocker moves or the player stays put longer.
+                follow.GrazeRetryAt = idleTicks + GrazeRetryDelayFrames;
             }
         }
     }
@@ -114,9 +126,11 @@ internal class GrazingManager
 
         if (result == SteerResult.Stuck)
         {
-            // Grass is unreachable (locked behind a fence, blocked by another animal, etc).
-            // Give up on this grass and let the next idle tick pick a new target if any.
+            // Grass is unreachable (locked behind a fence, blocked by another animal, etc). Give up
+            // on this target and schedule another pick attempt; the avoid set will steer FindNearestGrass
+            // away from routes that just failed.
             FinishGrazing(follow);
+            follow.GrazeRetryAt = idleTicks + GrazeRetryDelayFrames;
             return;
         }
 
@@ -188,10 +202,11 @@ internal class GrazingManager
             }
 
             follow.HasGrazedThisStop = false;
+            follow.GrazeRetryAt = int.MaxValue;
         }
     }
 
-    private static Vector2? FindNearestGrass(FarmAnimal animal, Vector2 playerPosition, GameLocation location, ModConfig config)
+    private static Vector2? FindNearestGrass(FarmAnimal animal, Vector2 playerPosition, GameLocation location, ModConfig config, ISet<Point> avoid)
     {
         Point animalTile = animal.TilePoint;
         Point playerTile = new((int)(playerPosition.X / 64f), (int)(playerPosition.Y / 64f));
@@ -219,8 +234,9 @@ internal class GrazingManager
                     continue;
 
                 // Reachability: prefer a straight orthogonal line if there is one, otherwise BFS.
-                bool reachable = AnimalPathfinder.HasLineOfSight(location, animal, animalTile, checkTile)
-                    || AnimalPathfinder.FindPath(location, animal, animalTile, checkTile) != null;
+                // Avoid tiles ride along so we don't immediately pick grass whose route was just blocked.
+                bool reachable = AnimalPathfinder.HasLineOfSight(location, animal, animalTile, checkTile, avoid)
+                    || AnimalPathfinder.FindPath(location, animal, animalTile, checkTile, avoid) != null;
                 if (!reachable)
                     continue;
 
