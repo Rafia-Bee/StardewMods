@@ -462,6 +462,7 @@ internal class AnimalFollowManager
     }
 
     private const int DefaultAnimalSpeed = 2;
+    private const int SprintSpeed = DefaultAnimalSpeed * 3;
     private const float PlayerArrivalPixels = 96f;
 
     private void SteerAnimal(FollowingAnimal follow, ModConfig config)
@@ -472,8 +473,8 @@ internal class AnimalFollowManager
 
         float tileDistanceToPlayer = Vector2.Distance(animal.Position, player.Position) / 64f;
 
-        // Only teleport when the animal is genuinely lost (well past the rubber band).
-        if (tileDistanceToPlayer > config.RubberBandDistance * 1.6f)
+        // Teleport only when the player is genuinely far gone (past 2x the catch-up distance).
+        if (tileDistanceToPlayer > config.RubberBandDistance * 2f)
         {
             TeleportNearPlayer(follow);
             follow.Path = null;
@@ -483,7 +484,12 @@ internal class AnimalFollowManager
             return;
         }
 
-        int speed = Math.Max(1, (int)Math.Round(DefaultAnimalSpeed * config.FollowSpeedMultiplier));
+        // Past the catch-up distance but not yet far enough to teleport: sprint at 3x base speed
+        // (or the configured speed, whichever is faster) until the animal closes the gap.
+        int normalSpeed = Math.Max(1, (int)Math.Round(DefaultAnimalSpeed * config.FollowSpeedMultiplier));
+        bool sprint = tileDistanceToPlayer > config.RubberBandDistance;
+        int speed = sprint ? Math.Max(normalSpeed, SprintSpeed) : normalSpeed;
+
         var result = AnimalSteering.SteerAlongPath(
             follow, player.TilePoint, location, speed, PlayerArrivalPixels);
 
