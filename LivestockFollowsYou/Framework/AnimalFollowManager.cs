@@ -33,6 +33,12 @@ internal class FollowingAnimal
     /// <summary>Consecutive path rebuilds that didn't produce a path.</summary>
     public int ConsecutivePathFailures { get; set; }
 
+    /// <summary>Tiles BFS is told to avoid because trying to step into them just stalled the animal.</summary>
+    public HashSet<Point> AvoidTiles { get; } = new();
+
+    /// <summary>Frames left before the avoid set is cleared so the animal can try those tiles again.</summary>
+    public int AvoidExpiresFrames { get; set; }
+
     /// <summary>True if this animal is on a voluntary walk (Grazing Bell), false if purchase escort.</summary>
     public bool IsWalk { get; set; }
 
@@ -308,6 +314,8 @@ internal class AnimalFollowManager
             follow.FramesSincePathBuild = 0;
             follow.FramesSinceProgress = 0;
             follow.ConsecutivePathFailures = 0;
+            follow.AvoidTiles.Clear();
+            follow.AvoidExpiresFrames = 0;
 
             if (follow.State == FollowState.PendingSpawn)
             {
@@ -429,6 +437,7 @@ internal class AnimalFollowManager
     private const int PathRebuildInterval = 30;
     private const int MaxStallFrames = 20;
     private const int MaxConsecutivePathFailures = 3;
+    private const int AvoidExpiryFrames = 180;
 
     private void SteerAnimal(FollowingAnimal follow, Vector2 target, ModConfig config, GameTime time)
     {
@@ -464,6 +473,14 @@ internal class AnimalFollowManager
         Point animalTile = animal.TilePoint;
         Point goal = player.TilePoint;
 
+        // Age out avoid tiles so a blocker that's since moved doesn't stay banned forever.
+        if (follow.AvoidTiles.Count > 0)
+        {
+            follow.AvoidExpiresFrames--;
+            if (follow.AvoidExpiresFrames <= 0)
+                follow.AvoidTiles.Clear();
+        }
+
         bool needRebuild =
             follow.Path == null
             || follow.Path.Count == 0
@@ -473,20 +490,19 @@ internal class AnimalFollowManager
         if (needRebuild)
         {
             Queue<Point> path;
-            if (AnimalPathfinder.HasLineOfSight(location, animal, animalTile, goal))
+            if (AnimalPathfinder.HasLineOfSight(location, animal, animalTile, goal, follow.AvoidTiles))
             {
                 path = BuildStraightPath(animalTile, goal);
             }
             else
             {
-                path = AnimalPathfinder.FindPath(location, animal, animalTile, goal);
+                path = AnimalPathfinder.FindPath(location, animal, animalTile, goal, follow.AvoidTiles);
             }
 
             if (path != null && path.Count > 0)
             {
                 follow.Path = path;
                 follow.PathTarget = goal;
-                follow.ConsecutivePathFailures = 0;
             }
             else
             {
@@ -561,10 +577,16 @@ internal class AnimalFollowManager
         {
             follow.FramesSinceProgress = 0;
             follow.LastPosition = animal.Position;
+            follow.ConsecutivePathFailures = 0;
         }
 
         if (follow.FramesSinceProgress > MaxStallFrames)
         {
+            // Ban the tile we were trying to step into so BFS finds a detour next rebuild.
+            if (follow.Path != null && follow.Path.Count > 0)
+                follow.AvoidTiles.Add(follow.Path.Peek());
+            follow.AvoidExpiresFrames = AvoidExpiryFrames;
+
             follow.Path = null;
             follow.PathTarget = null;
             follow.FramesSinceProgress = 0;
