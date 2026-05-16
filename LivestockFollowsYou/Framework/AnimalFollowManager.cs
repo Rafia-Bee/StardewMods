@@ -15,8 +15,6 @@ internal class FollowingAnimal
     public FollowState State { get; set; }
     public float SoundTimer { get; set; }
     public Vector2 LastPosition { get; set; }
-    public int StuckTicks { get; set; }
-    public int DirectionCooldown { get; set; }
 
     /// <summary>Current path of tiles from the animal's tile to the goal (goal included, start excluded).</summary>
     public Queue<Point> Path { get; set; }
@@ -47,6 +45,9 @@ internal class FollowingAnimal
 
     /// <summary>Target grass tile the animal is walking toward (null when not grazing).</summary>
     public Vector2? GrazeTarget { get; set; }
+
+    /// <summary>Frames spent on the eating pause after reaching a grass tile (negative = not eating yet).</summary>
+    public int EatingFrames { get; set; } = -1;
 
     /// <summary>Current idle roaming activity when the player is standing still.</summary>
     public IdleActivity CurrentIdleActivity { get; set; }
@@ -92,6 +93,10 @@ internal class AnimalFollowManager
     private readonly Func<ModConfig> GetConfig;
 
     private readonly List<FollowingAnimal> following = new();
+    /// <summary>Mirror of <c>following</c> keyed by animal id. Kept in sync on every add/remove so
+    /// <see cref="IsFollowing"/> stays O(1); the Harmony prefixes call it for every animal on the map
+    /// every tick, so a linear scan over followers added up fast on large saves.</summary>
+    private readonly HashSet<long> followingIds = new();
 
     private Vector2 lastPlayerPos;
     private int playerIdleTicks;
@@ -106,7 +111,7 @@ internal class AnimalFollowManager
     /// <summary>Whether the given animal is currently being walked home by this mod.</summary>
     public bool IsFollowing(FarmAnimal animal)
     {
-        return following.Any(f => f.Animal == animal);
+        return animal != null && followingIds.Contains(animal.myID.Value);
     }
 
     /// <summary>Whether there are any animals currently following/pending.</summary>
@@ -123,7 +128,7 @@ internal class AnimalFollowManager
             interior.animals.Remove(animal.myID.Value);
 
         var follow = new FollowingAnimal(animal);
-        following.Add(follow);
+        AddFollower(follow);
         if (GetConfig().DebugLogging)
             Monitor.Log($"Queued {animal.displayName} ({animal.type.Value}) for follow.", LogLevel.Debug);
 
@@ -184,12 +189,30 @@ internal class AnimalFollowManager
             follow.State = FollowState.PendingSpawn;
         }
 
-        following.Add(follow);
+        AddFollower(follow);
 
         if (GetConfig().DebugLogging)
             Monitor.Log($"Started walk with {animal.displayName}.", LogLevel.Debug);
 
         return true;
+    }
+
+    private void AddFollower(FollowingAnimal follow)
+    {
+        following.Add(follow);
+        followingIds.Add(follow.Animal.myID.Value);
+    }
+
+    private void RemoveFollowerAt(int index)
+    {
+        followingIds.Remove(following[index].Animal.myID.Value);
+        following.RemoveAt(index);
+    }
+
+    private void RemoveFollower(FollowingAnimal follow)
+    {
+        if (following.Remove(follow))
+            followingIds.Remove(follow.Animal.myID.Value);
     }
 
     /// <summary>Attempt to send a walking animal home alone (requires friendship threshold).</summary>
@@ -204,7 +227,7 @@ internal class AnimalFollowManager
             return SendHomeResult.InsufficientFriendship;
 
         ForceDeliver(follow, isWalkEnd: true);
-        following.Remove(follow);
+        RemoveFollower(follow);
         return SendHomeResult.Success;
     }
 
@@ -239,14 +262,14 @@ internal class AnimalFollowManager
             if (!follow.IsWalk && animal.IsHome)
             {
                 OnDelivered(follow, wasAutoDelivered: false);
-                following.RemoveAt(i);
+                RemoveFollowerAt(i);
                 continue;
             }
 
             if (Game1.timeOfDay >= config.AutoDeliverTime && follow.State != FollowState.PendingSpawn)
             {
                 ForceDeliver(follow);
-                following.RemoveAt(i);
+                RemoveFollowerAt(i);
                 continue;
             }
 
@@ -296,7 +319,7 @@ internal class AnimalFollowManager
                 if (following[i].Animal.homeInterior == enteredHouse)
                 {
                     ForceDeliver(following[i]);
-                    following.RemoveAt(i);
+                    RemoveFollowerAt(i);
                 }
             }
             return;
@@ -384,12 +407,14 @@ internal class AnimalFollowManager
         foreach (var follow in following)
             ForceDeliver(follow, isDayEnd: true);
         following.Clear();
+        followingIds.Clear();
     }
 
     /// <summary>Clean up all state (called when returning to title).</summary>
     public void Reset()
     {
         following.Clear();
+        followingIds.Clear();
     }
 
     /// <summary>Clean up stray animals in non-home locations after loading a save.</summary>
@@ -476,8 +501,6 @@ internal class AnimalFollowManager
 
         animal.Position = teleportPos;
         animal.Halt();
-        follow.StuckTicks = 0;
-        follow.DirectionCooldown = 0;
         follow.LastPosition = teleportPos;
 
         if (GetConfig().DebugLogging)
@@ -492,7 +515,6 @@ internal class AnimalFollowManager
         float distToPlayer = Vector2.Distance(animal.Position, player.Position) / 64f;
 
         follow.LastPosition = animal.Position;
-        follow.StuckTicks = 0;
 
         if (distToPlayer > config.RubberBandDistance + 2)
         {

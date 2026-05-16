@@ -24,15 +24,14 @@ public class ModEntry : Mod
     {
         Config = helper.ReadConfig<ModConfig>();
         FollowManager = new AnimalFollowManager(Monitor, helper, () => Config);
-        NpcReactions = new NpcReactionManager(Monitor, helper, () => Config);
-        GrazingMgr = new GrazingManager(Monitor, helper, () => Config);
+        NpcReactions = new NpcReactionManager(helper, () => Config);
+        GrazingMgr = new GrazingManager(() => Config);
         GrazingBell = new GrazingBellItem(helper);
         GrazingBell.Register();
         Api = new LivestockFollowsYouApi(FollowManager);
 
         PurchasePatches.Manager = FollowManager;
         PurchasePatches.GetConfig = () => Config;
-        PurchasePatches.Monitor = Monitor;
 
         var harmony = new Harmony(ModManifest.UniqueID);
         PurchasePatches.Apply(harmony);

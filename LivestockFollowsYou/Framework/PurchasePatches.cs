@@ -1,6 +1,5 @@
 using System;
 using HarmonyLib;
-using StardewModdingAPI;
 using StardewValley;
 
 namespace LivestockFollowsYou.Framework;
@@ -10,7 +9,6 @@ internal static class PurchasePatches
 {
     internal static AnimalFollowManager Manager;
     internal static Func<ModConfig> GetConfig;
-    internal static IMonitor Monitor;
 
     /// <summary>Register all Harmony patches.</summary>
     public static void Apply(Harmony harmony)

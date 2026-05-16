@@ -11,7 +11,6 @@ namespace LivestockFollowsYou.Framework;
 /// <summary>Shows speech bubble reactions from nearby NPCs when the player is escorting animals.</summary>
 internal class NpcReactionManager
 {
-    private readonly IMonitor Monitor;
     private readonly IModHelper Helper;
     private readonly Func<ModConfig> GetConfig;
 
@@ -43,9 +42,8 @@ internal class NpcReactionManager
     private const int SnowSingleCount = 8;
     private const int SnowMultiCount = 5;
 
-    public NpcReactionManager(IMonitor monitor, IModHelper helper, Func<ModConfig> getConfig)
+    public NpcReactionManager(IModHelper helper, Func<ModConfig> getConfig)
     {
-        Monitor = monitor;
         Helper = helper;
         GetConfig = getConfig;
     }
