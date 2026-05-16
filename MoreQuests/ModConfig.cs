@@ -157,16 +157,21 @@ public sealed class ModConfig
     public int AlexProteinShakesBaseQty { get; set; } = 5;
     public int AlexProteinShakesPerChicken { get; set; } = 1;
 
-    /// Gold rebate paid on Marnie's Chicken Offer completion. Vanilla white chicken is 800g.
-    /// Done as a rebate since the framework doesn't currently hook PurchaseAnimalsMenu.
+    /// Gold paid out if the chicken-offer credit expires before the player redeems it at
+    /// Marnie's shop. 800g matches the vanilla White Chicken price.
     public int MarnieChickenOfferRebate { get; set; } = 800;
     /// Seed delivery qty for the chicken-offer quest. Picks one current-season seed.
     public int MarnieChickenOfferSeedQty { get; set; } = 15;
 
-    /// Gold rebate for Marnie's Cow Offer (vanilla cow is 1500g).
+    /// Gold paid out if the cow-offer credit expires before the player redeems it at Marnie's
+    /// shop. 1500g matches the vanilla Cow price.
     public int MarnieCowOfferRebate { get; set; } = 1500;
     /// Hay qty Marnie's Cow Offer asks for. Hay sells for 50g, so 50 hay is meaningful but not punishing.
     public int MarnieCowOfferHayQty { get; set; } = 50;
+
+    /// In-game days the chicken / cow purchase credit stays redeemable before it falls back
+    /// to the gold rebate.
+    public int MarnieCreditExpiryDays { get; set; } = 14;
 
     /// Egg qty for Marnie's Egg Request. Quest grants the Mayonnaise Machine recipe.
     public int MarnieEggRequestQty { get; set; } = 10;

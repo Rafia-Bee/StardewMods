@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
 using MoreQuests.Quests;
 using MoreQuestsFramework.Api;
@@ -32,8 +33,12 @@ public sealed class ModEntry : Mod
         Config = helper.ReadConfig<ModConfig>();
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
+        helper.Events.GameLoop.DayStarted += OnDayStarted;
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.World.BuildingListChanged += OnBuildingListChanged;
+
+        var harmony = new Harmony(ModManifest.UniqueID);
+        MarniePurchasePatches.Apply(harmony, Monitor);
     }
 
     internal const string AdventureBoardAssetRoot = "Mods/RafiaBee.MoreQuests/AdventureBoard";
@@ -156,6 +161,25 @@ public sealed class ModEntry : Mod
                     }
                 }
             }, AssetEditPriority.Default);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo("Data/FarmAnimals"))
+        {
+            if (Game1.player == null)
+                return;
+            bool hasChicken = Game1.player.modData.ContainsKey(MarniePurchasePatches.ChickenCreditKey);
+            bool hasCow = Game1.player.modData.ContainsKey(MarniePurchasePatches.CowCreditKey);
+            if (!hasChicken && !hasCow)
+                return;
+            e.Edit(asset =>
+            {
+                var data = asset.AsDictionary<string, StardewValley.GameData.FarmAnimals.FarmAnimalData>().Data;
+                if (hasChicken && data.TryGetValue(MarniePurchasePatches.FreeChickenAnimalType, out var chicken))
+                    chicken.PurchasePrice = 0;
+                if (hasCow && data.TryGetValue(MarniePurchasePatches.FreeCowAnimalType, out var cow))
+                    cow.PurchasePrice = 0;
+            }, AssetEditPriority.Late);
             return;
         }
 
@@ -393,9 +417,9 @@ public sealed class ModEntry : Mod
         if (e.DefinitionId == "Animal.GuntherDinosaurStudy")
             GrantUpgradedDinosaurEgg(e.Quest);
         if (e.DefinitionId == "Animal.MarnieChickenOffer")
-            GrantFreeChicken();
+            GrantMarnieChickenCredit();
         if (e.DefinitionId == "Animal.MarnieCowOffer")
-            GrantFreeCow();
+            GrantMarnieCowCredit();
         if (e.DefinitionId == "Animal.RobinSiloOfferCoop" || e.DefinitionId == "Animal.RobinSiloOfferBarn")
             GrantFreeSilo();
         if (e.DefinitionId == "Animal.LeahFarmPainting")
@@ -408,96 +432,63 @@ public sealed class ModEntry : Mod
         Helper.GameContent.InvalidateCache("Data/mail");
     }
 
-    /// Adopts a White Chicken into the first Coop with a free slot. Skips PurchaseAnimalsMenu,
-    /// so Livestock Bazaar compatibility comes for free (both menus go through AnimalHouse.adoptAnimal).
-    /// Falls back to a gold rebate when every coop is full.
-    private void GrantFreeChicken()
+    /// Stamps a "free White Chicken / White Cow at Marnie's shop" credit on the player's
+    /// modData. The asset edit on `Data/FarmAnimals` and the `AnimalHouse.adoptAnimal`
+    /// postfix in `MarniePurchasePatches` read this. Unredeemed credits expire after
+    /// `MarnieCreditExpiryDays` and pay out as gold via `OnDayStarted`.
+    private void GrantMarnieChickenCredit() => GrantMarnieCredit(
+        MarniePurchasePatches.ChickenCreditKey,
+        "quest.animal.marnieChickenOffer.creditIssued");
+
+    private void GrantMarnieCowCredit() => GrantMarnieCredit(
+        MarniePurchasePatches.CowCreditKey,
+        "quest.animal.marnieCowOffer.creditIssued");
+
+    private void GrantMarnieCredit(string modDataKey, string hudKey)
     {
-        var farm = Game1.getFarm();
-        if (farm == null)
+        var player = Game1.player;
+        if (player == null)
+            return;
+        int days = Math.Max(1, Config.MarnieCreditExpiryDays);
+        uint expiry = Game1.stats.DaysPlayed + (uint)days;
+        player.modData[modDataKey] = expiry.ToString();
+        Helper.GameContent.InvalidateCache("Data/FarmAnimals");
+        Game1.addHUDMessage(new HUDMessage(
+            I18n.Get(hudKey, new { days }).ToString(),
+            HUDMessage.newQuest_type));
+    }
+
+    private void OnDayStarted(object? sender, DayStartedEventArgs e)
+    {
+        var player = Game1.player;
+        if (player == null)
+            return;
+        TryExpireCredit(player, MarniePurchasePatches.ChickenCreditKey, Config.MarnieChickenOfferRebate, "quest.animal.marnieChickenOffer.creditExpired");
+        TryExpireCredit(player, MarniePurchasePatches.CowCreditKey, Config.MarnieCowOfferRebate, "quest.animal.marnieCowOffer.creditExpired");
+    }
+
+    private void TryExpireCredit(Farmer player, string key, int rebateAmount, string hudKey)
+    {
+        if (!player.modData.TryGetValue(key, out string? raw))
+            return;
+        if (!uint.TryParse(raw, out uint expiry))
         {
-            FallbackChickenRebate();
+            player.modData.Remove(key);
             return;
         }
+        if (Game1.stats.DaysPlayed < expiry)
+            return;
 
-        foreach (var building in farm.buildings)
+        player.modData.Remove(key);
+        Helper.GameContent.InvalidateCache("Data/FarmAnimals");
+        int rebate = Math.Max(0, rebateAmount);
+        if (rebate > 0)
         {
-            if (building?.GetIndoors() is not StardewValley.AnimalHouse animalHouse)
-                continue;
-            if (animalHouse.isFull())
-                continue;
-            if (!IsCoop(building))
-                continue;
-
-            var chicken = new StardewValley.FarmAnimal("White Chicken", Game1.Multiplayer.getNewID(), Game1.player.UniqueMultiplayerID);
-            animalHouse.adoptAnimal(chicken);
-            Monitor.Log($"Adopted a free White Chicken into '{building.buildingType.Value}' for Marnie's Chicken Offer.", LogLevel.Trace);
-            return;
+            player.Money += rebate;
+            Game1.addHUDMessage(new HUDMessage(
+                I18n.Get(hudKey, new { gold = rebate }).ToString(),
+                HUDMessage.achievement_type));
         }
-
-        FallbackChickenRebate();
-    }
-
-    private void FallbackChickenRebate()
-    {
-        int rebate = Math.Max(0, Config.MarnieChickenOfferRebate);
-        if (rebate <= 0)
-            return;
-        Game1.player.Money += rebate;
-        Game1.addHUDMessage(new StardewValley.HUDMessage(I18n.Get("quest.animal.marnieChickenOffer.coopFullFallback").ToString(), 1));
-        Monitor.Log("No empty coop slot at quest completion; paid out the Marnie chicken rebate instead.", LogLevel.Trace);
-    }
-
-    private static bool IsCoop(StardewValley.Buildings.Building building)
-    {
-        string type = building.buildingType.Value ?? string.Empty;
-        return type.IndexOf("Coop", StringComparison.OrdinalIgnoreCase) >= 0;
-    }
-
-    /// Adopts a random White/Brown cow into the first Barn with a free slot.
-    /// Mirrors GrantFreeChicken. Falls back to a gold rebate when every barn is full.
-    private void GrantFreeCow()
-    {
-        var farm = Game1.getFarm();
-        if (farm == null)
-        {
-            FallbackCowRebate();
-            return;
-        }
-
-        string cowType = Game1.random.NextDouble() < 0.5 ? "White Cow" : "Brown Cow";
-        foreach (var building in farm.buildings)
-        {
-            if (building?.GetIndoors() is not StardewValley.AnimalHouse animalHouse)
-                continue;
-            if (animalHouse.isFull())
-                continue;
-            if (!IsBarn(building))
-                continue;
-
-            var cow = new StardewValley.FarmAnimal(cowType, Game1.Multiplayer.getNewID(), Game1.player.UniqueMultiplayerID);
-            animalHouse.adoptAnimal(cow);
-            Monitor.Log($"Adopted a free {cowType} into '{building.buildingType.Value}' for Marnie's Cow Offer.", LogLevel.Trace);
-            return;
-        }
-
-        FallbackCowRebate();
-    }
-
-    private void FallbackCowRebate()
-    {
-        int rebate = Math.Max(0, Config.MarnieCowOfferRebate);
-        if (rebate <= 0)
-            return;
-        Game1.player.Money += rebate;
-        Game1.addHUDMessage(new StardewValley.HUDMessage(I18n.Get("quest.animal.marnieCowOffer.barnFullFallback").ToString(), 1));
-        Monitor.Log("No empty barn slot at quest completion; paid out the Marnie cow rebate instead.", LogLevel.Trace);
-    }
-
-    private static bool IsBarn(StardewValley.Buildings.Building building)
-    {
-        string type = building.buildingType.Value ?? string.Empty;
-        return type.IndexOf("Barn", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     /// ModData flag for Robin's free-silo voucher. Set on Silo Offer completion, cleared

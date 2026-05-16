@@ -764,9 +764,17 @@ public sealed class ModEntry : Mod
             {
                 var q = removed[i];
                 _seenInLog.Remove(q);
-                bool wasCompleted = _completedFired.Remove(q) || q.completed.Value;
-                if (_api.TryGetManaged(q, out var info))
-                    _api.FireQuestRemoved(q, info, wasCompleted);
+                bool firedCompletedThisRun = _completedFired.Remove(q);
+                bool wasCompleted = firedCompletedThisRun || q.completed.Value;
+                if (!_api.TryGetManaged(q, out var info))
+                    continue;
+                // Vanilla `Quest.questComplete` yanks reward-less quests out of `questLog`
+                // in the same call that flips `completed.Value`, so the in-log loop above
+                // never sees them as completed. Fire QuestCompleted here so subscribers still
+                // hear about it before the QuestRemoved that follows.
+                if (wasCompleted && !firedCompletedThisRun)
+                    _api.FireQuestCompleted(q, info);
+                _api.FireQuestRemoved(q, info, wasCompleted);
             }
         }
     }
