@@ -1,5 +1,6 @@
 using System;
 using StardewValley;
+using StardewValley.GameData.Characters;
 
 namespace MoreQuestsFramework;
 
@@ -20,6 +21,26 @@ public static class NpcDisplay
         if (string.IsNullOrWhiteSpace(display))
             return internalName;
         return display!;
+    }
+
+    // Mirrors vanilla's filter in ItemDeliveryQuest.GetValidTargetList: an NPC is
+    // eligible to post a daily-board / special-order quest only if CanSocialize is
+    // true, ItemDeliveryQuests passes (or HomeRegion is "Town" when the field is
+    // null), and the NPC is not a child. Used by QuestPoster to redirect non-human
+    // NPC postings (Duck2NPC, LexiMonster, etc.) from boards to mail.
+    public static bool IsBoardEligible(string? internalName)
+    {
+        if (string.IsNullOrEmpty(internalName)) return false;
+        if (Game1.characterData == null) return true;
+        if (!Game1.characterData.TryGetValue(internalName, out var data) || data == null)
+            return true;
+        if (data.Age == NpcAge.Child) return false;
+        if (!StardewValley.GameStateQuery.CheckConditions(data.CanSocialize))
+            return false;
+        bool itemDeliveryOk = data.ItemDeliveryQuests != null
+            ? StardewValley.GameStateQuery.CheckConditions(data.ItemDeliveryQuests)
+            : data.HomeRegion == "Town";
+        return itemDeliveryOk;
     }
 
     // Only sweeps when the text actually contains a dotted token, so the no-op

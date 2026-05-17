@@ -63,6 +63,24 @@ public sealed class QuestPoster
 
     public void Post(QuestPosting posting)
     {
+        // Non-human NPCs (friendable animals like East Scarp's Duck2NPC, LexiMonster,
+        // etc.) shouldn't appear on the daily board or special-orders board. Redirect
+        // DailyBoard postings to Mail and drop SpecialOrders that pick a non-eligible
+        // giver. Vanilla applies the same eligibility filter when assigning random
+        // ItemDeliveryQuests.
+        if ((posting.Kind == PostingKind.DailyBoard || posting.Kind == PostingKind.SpecialOrder)
+            && !string.IsNullOrEmpty(posting.QuestGiver)
+            && !NpcDisplay.IsBoardEligible(posting.QuestGiver))
+        {
+            if (posting.Kind == PostingKind.SpecialOrder)
+            {
+                _monitor.Log($"Dropped SpecialOrder {posting.DefinitionId}: giver '{posting.QuestGiver}' is not board-eligible.", LogLevel.Trace);
+                return;
+            }
+            _monitor.Log($"Redirected {posting.DefinitionId} from DailyBoard to Mail: giver '{posting.QuestGiver}' is not board-eligible.", LogLevel.Trace);
+            posting.Kind = PostingKind.Mail;
+        }
+
         switch (posting.Kind)
         {
             case PostingKind.DailyBoard:
