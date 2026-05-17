@@ -37,6 +37,7 @@ public sealed class ModEntry : Mod
     private GeneratorRegistry _generators = null!;
     private CustomStepRegistry _customSteps = null!;
     private CustomTriggerRegistry _customTriggers = null!;
+    private CustomRewardRegistry _customRewards = null!;
     private QuestPackLoader _loader = null!;
     private BoardRegistry _boards = null!;
     private BoardPackLoader _boardLoader = null!;
@@ -78,12 +79,14 @@ public sealed class ModEntry : Mod
         _generators = new GeneratorRegistry(Monitor);
         _customSteps = new CustomStepRegistry(Monitor);
         _customTriggers = new CustomTriggerRegistry(Monitor);
+        _customRewards = new CustomRewardRegistry(Monitor);
+        RewardApplier.CustomRewards = _customRewards;
         _loader = new QuestPackLoader(_registry, _generators, Monitor);
         _boards = new BoardRegistry(Monitor);
         _boardLoader = new BoardPackLoader(_boards, Monitor);
         Dispatch = new DispatchRegistry(helper.ModRegistry, Monitor);
         CombatFood = new CombatFoodRegistry(Monitor);
-        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers);
+        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers);
 
         _boardRenderer = new BoardWorldRenderer(helper, Monitor, _boards);
         _boardRenderer.Register();

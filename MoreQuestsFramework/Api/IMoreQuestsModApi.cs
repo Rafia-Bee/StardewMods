@@ -1,6 +1,7 @@
 using System;
 using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Quests;
+using MoreQuestsFramework.Rewards;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 
@@ -65,4 +66,15 @@ public interface IMoreQuestsModApi
     // bare names are looked up under the owning consumer mod's scope, "OtherMod/Name"
     // works for cross-mod references.
     void RegisterCustomTrigger(string name, Func<CustomTriggerContext, bool> handler);
+
+    // Handler for CustomReward kinds. Apply is called at questComplete with the raw
+    // payload string. Summarize (optional) is called when the billboard/journal
+    // renders the reward preview; return an empty string to skip the line. JSON
+    // quests refer to the handler by `Custom: "<name>"` plus an optional `Payload`
+    // string; bare names are scoped to the calling mod, "OtherMod/Name" works for
+    // cross-mod references.
+    void RegisterCustomReward(
+        string name,
+        Action<string> apply,
+        Func<string, string, ITranslationHelper, string>? summarize = null);
 }

@@ -40,6 +40,12 @@ public sealed record FestivalBiasReward(FestivalKind Festival, int Magnitude) : 
 
 public sealed record FairStarTokensReward(int Amount) : RewardSpec;
 
+// Escape hatch for consumer-mod reward kinds. Kind is the handler id registered
+// via IMoreQuestsModApi.RegisterCustomReward; Payload is arbitrary string data
+// the handler interprets (typically JSON or key=value). Both round-trip through
+// the codec base64-encoded so the payload can contain any character.
+public sealed record CustomReward(string Kind, string Payload) : RewardSpec;
+
 public enum RecipeKind { Cooking, Crafting }
 
 public enum MailWhen { Today, Tomorrow }

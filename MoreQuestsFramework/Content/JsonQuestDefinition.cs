@@ -307,6 +307,15 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
                 case "fairstartokens":
                     sink.Add(new FairStarTokensReward(r.Amount));
                     break;
+                case "custom":
+                    if (string.IsNullOrEmpty(r.Custom))
+                        _monitor.Log($"Quest '{Id}': Custom reward needs a Custom = handler id.", LogLevel.Warn);
+                    else
+                    {
+                        string handlerId = r.Custom.Contains('/') ? r.Custom : $"{_ownerUniqueId}/{r.Custom}";
+                        sink.Add(new CustomReward(handlerId, r.Payload ?? string.Empty));
+                    }
+                    break;
                 default:
                     _monitor.Log($"Quest '{Id}': unknown reward kind '{r.Kind}'.", LogLevel.Warn);
                     break;
