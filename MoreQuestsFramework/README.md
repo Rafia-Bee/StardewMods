@@ -96,6 +96,18 @@ This mod powers [More Quests](../MoreQuests/README.md) and ships four configurab
   | `Random` | A 0.0 to 1.0 chance gate rolled each evaluation. | `"0.25"`, `"0.5"` |
   | `GSQ` | A 1.6 `GameStateQuery` string, for anything the keys above don't cover. | `"PLAYER_HAS_PROFESSION Current Rancher"` |
 
+  Consumer mods can add their own condition keys with `IMoreQuestsModApi.RegisterCustomCondition(key, evaluator)`. The evaluator gets the raw value string and returns true / false; the `not:` prefix and `|` OR alternatives are applied above the evaluator, so they keep working for free. Pick a key name that won't collide with built-ins or other mods (prefixing with the mod's short name, e.g. `MyMod_HasFollower`, is a safe bet). Example:
+
+  ```csharp
+  scope.RegisterCustomCondition("MyMod_HasFollower", value =>
+  {
+      // value is the JSON string after the key. Parse however you like.
+      return MyMod.Followers.Contains(value);
+  });
+  ```
+
+  Then in JSON: `"Available": { "MyMod_HasFollower": "Junimo" }` or `"Available": { "not:MyMod_HasFollower": "Krobus" }`.
+
 - **Game-data cache.** `GameDataCache` reads `Data/Crops`, `Data/Fish`, `Data/Locations`, `Data/CookingRecipes`, `Data/NPCGiftTastes` once per day so generators don't pay the load cost on every Build call.
 - **Item resolver and NPC dispatch.** `ItemResolver` reads cached game data so modded items show up automatically. `DispatchRegistry` is a runtime role-keyed picker (saloon chefs, ecology-minded, conservation guides, etc.). The built-in vanilla and RSV / ESV / VMV / SVE seeds register through the same public `RegisterDispatchNpc` API that third parties use, and mod authors can define new role strings on the fly.
 - **Custom assets.** Pad and pin sprites for the billboard, loaded from `Mods/RafiaBee.MoreQuestsFramework/Pad` and `.../Pin` (resprite of Aedenthorn's Help Wanted pad and pin!).

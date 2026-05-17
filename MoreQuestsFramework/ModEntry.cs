@@ -4,6 +4,7 @@ using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
 using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Cache;
+using MoreQuestsFramework.Conditions;
 using MoreQuestsFramework.Config;
 using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Content;
@@ -38,6 +39,7 @@ public sealed class ModEntry : Mod
     private CustomStepRegistry _customSteps = null!;
     private CustomTriggerRegistry _customTriggers = null!;
     private CustomRewardRegistry _customRewards = null!;
+    private CustomConditionRegistry _customConditions = null!;
     private QuestPackLoader _loader = null!;
     private BoardRegistry _boards = null!;
     private BoardPackLoader _boardLoader = null!;
@@ -81,12 +83,14 @@ public sealed class ModEntry : Mod
         _customTriggers = new CustomTriggerRegistry(Monitor);
         _customRewards = new CustomRewardRegistry(Monitor);
         RewardApplier.CustomRewards = _customRewards;
+        _customConditions = new CustomConditionRegistry(Monitor);
+        ConditionEvaluator.CustomConditions = _customConditions;
         _loader = new QuestPackLoader(_registry, _generators, Monitor);
         _boards = new BoardRegistry(Monitor);
         _boardLoader = new BoardPackLoader(_boards, Monitor);
         Dispatch = new DispatchRegistry(helper.ModRegistry, Monitor);
         CombatFood = new CombatFoodRegistry(Monitor);
-        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers);
+        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers);
 
         _boardRenderer = new BoardWorldRenderer(helper, Monitor, _boards);
         _boardRenderer.Register();

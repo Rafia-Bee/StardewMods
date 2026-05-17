@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using MoreQuestsFramework.Conditions;
 using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Dispatch;
 using MoreQuestsFramework.Registry;
@@ -20,6 +21,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     private readonly CustomStepRegistry _customSteps;
     private readonly CustomTriggerRegistry _customTriggers;
     private readonly CustomRewardRegistry _customRewards;
+    private readonly CustomConditionRegistry _customConditions;
     private readonly QuestPackLoader _loader;
     private readonly BoardPackLoader _boardLoader;
     private readonly DispatchRegistry _dispatch;
@@ -46,6 +48,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         CustomStepRegistry customSteps,
         CustomTriggerRegistry customTriggers,
         CustomRewardRegistry customRewards,
+        CustomConditionRegistry customConditions,
         QuestPackLoader loader,
         BoardPackLoader boardLoader,
         DispatchRegistry dispatch,
@@ -60,6 +63,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         _customSteps = customSteps;
         _customTriggers = customTriggers;
         _customRewards = customRewards;
+        _customConditions = customConditions;
         _loader = loader;
         _boardLoader = boardLoader;
         _dispatch = dispatch;
@@ -76,7 +80,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
             throw new ArgumentNullException(nameof(mod));
         if (_modScopes.TryGetValue(mod.UniqueID, out var existing))
             return existing;
-        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _customTriggers, _customRewards, _loader, _dispatch, _boards, _boardLoader, _monitor, _spaceCore);
+        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _loader, _dispatch, _boards, _boardLoader, _monitor, _spaceCore);
         _modScopes[mod.UniqueID] = scope;
         return scope;
     }
@@ -87,6 +91,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     internal CustomStepRegistry CustomSteps => _customSteps;
     internal CustomTriggerRegistry CustomTriggers => _customTriggers;
     internal CustomRewardRegistry CustomRewards => _customRewards;
+    internal CustomConditionRegistry CustomConditions => _customConditions;
 
     public void RefreshOffers() => _refreshOffers();
 

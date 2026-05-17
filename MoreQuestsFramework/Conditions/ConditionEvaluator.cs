@@ -11,6 +11,10 @@ namespace MoreQuestsFramework.Conditions;
 // for backwards compat.
 public static class ConditionEvaluator
 {
+    // Set by ModEntry so the default case can dispatch into consumer-mod custom
+    // condition keys before falling through to the fail-closed false return.
+    public static CustomConditionRegistry? CustomConditions { get; set; }
+
     public static bool MatchesSeason(string season) =>
         string.Equals(Game1.currentSeason, season, StringComparison.OrdinalIgnoreCase);
 
@@ -174,6 +178,8 @@ public static class ConditionEvaluator
                 return GameStateQuery.CheckConditions(value);
 
             default:
+                if (CustomConditions != null && CustomConditions.TryEvaluate(key, value, out bool customResult))
+                    return customResult;
                 return false;
         }
     }
