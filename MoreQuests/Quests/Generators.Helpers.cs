@@ -185,7 +185,8 @@ internal static partial class Generators
     /// Met villagers narrowed to adult humans who can plausibly receive a quest gift.
     /// Filters: not a child, not Dwarvish-speaking, CanReceiveGifts is true, CanSocialize
     /// is true (excludes "friendable animal" NPCs like East Scarp's Duck2NPC whose
-    /// `CharacterData.CanSocialize` GSQ resolves to false).
+    /// `CharacterData.CanSocialize` GSQ resolves to false), and friendship.Points > 0 so
+    /// pre-seeded-but-never-actually-met NPCs (East Scarp's ToriLK) don't get picked.
     /// Krobus is excluded by name (passes every other filter but isn't human; vanilla data has
     /// no programmatic marker). Quests involving Krobus should reference him directly.
     private static List<string> MetAdultHumanGiftReceivers()
@@ -208,6 +209,8 @@ internal static partial class Generators
             if (data.Language == NpcLanguage.Dwarvish)
                 continue;
             if (!npc.CanReceiveGifts())
+                continue;
+            if (!Game1.player.friendshipData.TryGetValue(name, out var friendship) || friendship == null || friendship.Points <= 0)
                 continue;
             results.Add(name);
         }
