@@ -472,8 +472,12 @@ public sealed class ItemResolver
         return results;
     }
 
+    // Excludes inedible "forage" items like Nautilus Shell, Coral, Rainbow Shell
+    // (all tagged forage_item but Edibility == -300). Generators that just want a
+    // foraged decorative item can call GetBeachForageItems instead.
     public List<ResolvedItem> GetForageItems(string? season = null)
     {
+        const int inedible = -300;
         var results = new List<ResolvedItem>();
         string? seasonTag = season != null ? "season_" + season.ToLowerInvariant() : null;
         try
@@ -492,6 +496,8 @@ public sealed class ItemResolver
                     if (tags == null || !tags.Contains("forage_item"))
                         continue;
                     if (seasonTag != null && !tags.Contains(seasonTag))
+                        continue;
+                    if (obj.Edibility <= 0 || obj.Edibility == inedible)
                         continue;
                     var item = TryResolveItem(qualifiedId);
                     if (item != null)
