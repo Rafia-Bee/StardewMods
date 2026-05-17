@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using MoreQuestsFramework.Api;
 using StardewValley;
 using StardewValley.Menus;
@@ -190,12 +191,31 @@ internal sealed class CustomBoardMenu : IClickableMenu
 
     public override bool readyToClose()
     {
-        if (InnerAcceptPopup != null)
+        return InnerAcceptPopup == null;
+    }
+
+    // Vanilla's IClickableMenu Esc/menu-button handler calls readyToClose then exits the
+    // outer menu. With the popup open we want Esc to close the popup instead, so intercept
+    // here and route to the same close path the close button uses.
+    public override void receiveKeyPress(Keys key)
+    {
+        if (InnerAcceptPopup != null && IsMenuButton(key))
         {
-            InnerAcceptPopup = null;
-            return false;
+            OnInnerAcceptClosed(reopen: false);
+            return;
         }
-        return true;
+        base.receiveKeyPress(key);
+    }
+
+    private static bool IsMenuButton(Keys key)
+    {
+        var buttons = Game1.options.menuButton;
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            if (buttons[i].key == key)
+                return true;
+        }
+        return false;
     }
 
     public override void snapToDefaultClickableComponent()

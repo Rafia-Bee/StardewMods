@@ -1,6 +1,8 @@
 using HarmonyLib;
 using Microsoft.Xna.Framework;
+using MoreQuestsFramework.Conditions;
 using MoreQuestsFramework.Registry;
+using StardewModdingAPI;
 using StardewValley;
 
 namespace MoreQuestsFramework.Patches;
@@ -10,10 +12,12 @@ internal static class BoardCollisionPatches
 {
     private const int TilePixels = 64;
     private static BoardRegistry _registry = null!;
+    private static IModRegistry? _modRegistry;
 
-    public static void Apply(Harmony harmony, BoardRegistry registry)
+    public static void Apply(Harmony harmony, BoardRegistry registry, IModRegistry modRegistry)
     {
         _registry = registry;
+        _modRegistry = modRegistry;
         var method = AccessTools.Method(
             typeof(GameLocation),
             nameof(GameLocation.isCollidingPosition),
@@ -43,6 +47,10 @@ internal static class BoardCollisionPatches
             return;
         foreach (var board in _registry.InLocation(__instance.Name))
         {
+            // Sprite hides when Available fails, so blocking the tile would leave the
+            // player walking into an invisible wall.
+            if (!IsAvailable(board))
+                continue;
             var footprint = new Rectangle(
                 board.TileX * TilePixels + board.DrawOffsetX,
                 board.TileY * TilePixels + board.DrawOffsetY,
@@ -54,5 +62,12 @@ internal static class BoardCollisionPatches
                 return;
             }
         }
+    }
+
+    private static bool IsAvailable(Api.BoardDefinition board)
+    {
+        if (board.Available == null || board.Available.Count == 0)
+            return true;
+        return ConditionEvaluator.Evaluate(board.Available, _modRegistry);
     }
 }

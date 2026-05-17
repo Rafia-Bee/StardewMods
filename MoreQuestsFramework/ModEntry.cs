@@ -130,7 +130,7 @@ public sealed class ModEntry : Mod
 
         var harmony = new Harmony(ModManifest.UniqueID);
         BillboardPatches.Apply(harmony);
-        BoardCollisionPatches.Apply(harmony, _boards);
+        BoardCollisionPatches.Apply(harmony, _boards, helper.ModRegistry);
         MailQuestPatches.Apply(harmony, _mailQuests, _api, Monitor);
         AdventureQuestPatches.Apply(harmony);
         PlantTreesPatches.Apply(harmony, helper.ModRegistry);

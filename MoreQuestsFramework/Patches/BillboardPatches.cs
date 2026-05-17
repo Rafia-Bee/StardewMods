@@ -118,10 +118,12 @@ internal static class BillboardPatches
             if (__state)
             {
                 // Vanilla's accept hardcodes daysLeft=2; capture before AcceptSelected drops
-                // the slot so we can restore the configured deadline.
+                // the slot so we can restore the configured deadline. Pass the captured slot
+                // explicitly so a third-party Harmony patch swapping Selected mid-call can't
+                // route the deadline onto a different quest.
                 var sel = BillboardSlots.Selected;
                 int deadline = sel != null ? Math.Max(1, sel.Posting.DeadlineDays) : 2;
-                var accepted = BillboardSlots.AcceptSelected();
+                var accepted = BillboardSlots.AcceptSelected(sel);
                 // dailyQuest.Value=true (set by vanilla) is preserved so completion side
                 // effects fire: stats increment, prize ticket every 3rd quest, milestone mail.
                 if (accepted != null)
