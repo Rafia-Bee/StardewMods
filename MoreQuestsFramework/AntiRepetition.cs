@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MoreQuestsFramework.State;
 using StardewValley;
 
 namespace MoreQuestsFramework;
@@ -16,6 +17,14 @@ public sealed class AntiRepetition
     public bool ItemRecent(string id) => _recentItems.Contains(id);
     public bool NpcRecent(string name) => _recentNpcs.Contains(name);
 
+    // Switches the cooldown store from the in-memory placeholder to the persisted
+    // dict on FrameworkState so daily/custom-board cooldowns survive reloads.
+    public void WireState(FrameworkState state)
+    {
+        _lastPostedDay = state.AntiRepetitionLastPostedDay;
+        _dayStartSnapshot = new Dictionary<string, int>(_lastPostedDay);
+    }
+
     // Snapshot so mq_refresh same-day re-rolls don't block every just-posted
     // definition on its own freshly-recorded cooldown.
     public void BeginDay()
@@ -25,7 +34,9 @@ public sealed class AntiRepetition
 
     public void RewindToDayStart()
     {
-        _lastPostedDay = new Dictionary<string, int>(_dayStartSnapshot);
+        _lastPostedDay.Clear();
+        foreach (var kv in _dayStartSnapshot)
+            _lastPostedDay[kv.Key] = kv.Value;
     }
 
     public bool DefinitionOnCooldown(string id, int cooldownDays)

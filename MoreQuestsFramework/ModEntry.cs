@@ -223,6 +223,7 @@ public sealed class ModEntry : Mod
 
         _stateStore = new StateStore(Helper.Data, Monitor);
         _stateStore.Load();
+        _antiRepetition.WireState(_stateStore.State);
 
         _triggers = new TriggerEvaluator(_stateStore.State, Monitor);
         _pipeline = new QuestPipeline(ctx, _registry, _antiRepetition, _triggers);
