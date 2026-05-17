@@ -7,9 +7,14 @@ namespace MoreQuestsFramework.Api;
 
 // Lifecycle:
 //   1. SMAPI fires GameLaunched for every mod in dependency order.
-//   2. Framework fires RegistrationOpen during its own GameLaunched.
-//   3. One tick later, after owned content packs auto-load, RegistrationClosed fires
-//      and the registry freezes.
+//   2. On the framework's first UpdateTicking (one tick past its own GameLaunched, so every
+//      consumer mod has had a chance to subscribe), RegistrationOpen fires. All Open
+//      handlers run synchronously in subscription order during this call, then the
+//      framework auto-loads owned content packs.
+//   3. RegistrationClosed fires immediately after, in the same tick. The registry is
+//      frozen at this point, so this is the right event for "I want to inspect what
+//      everyone else registered" (e.g. building a quest browser or debug menu).
+// Pick Open if you're registering things, Closed if you're reading them.
 public interface IMoreQuestsApi
 {
     IMoreQuestsModApi GetModApi(IManifest mod);
@@ -47,8 +52,13 @@ public interface IMoreQuestsApi
     // id isn't in the pool or was added without a magnitude.
     int? GetCombatFoodMagnitude(string qualifiedItemId);
 
+    // Fires on the framework's first UpdateTicking. Subscribe here to register your
+    // own quests, generators, custom quest types, dispatch NPCs, etc.
     event EventHandler RegistrationOpen;
-    // Registry is frozen after this fires; further RegisterQuest calls log and no-op.
+    // Fires the same tick, right after every Open handler has run and the framework has
+    // loaded its owned content packs. The registry is frozen at this point, so this is
+    // the event to use if you want to inspect what other mods registered (quest browsers,
+    // debug menus, GMCM helpers). Further RegisterQuest calls log and no-op.
     event EventHandler RegistrationClosed;
     event EventHandler<QuestAcceptedArgs> QuestAccepted;
     event EventHandler<QuestCompletedArgs> QuestCompleted;
