@@ -11,6 +11,7 @@ using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Dispatch;
 using MoreQuestsFramework.Patches;
 using MoreQuestsFramework.Pipeline;
+using MoreQuestsFramework.Posting;
 using MoreQuestsFramework.Posting.Boards;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Quests.Vanilla;
@@ -40,6 +41,7 @@ public sealed class ModEntry : Mod
     private CustomTriggerRegistry _customTriggers = null!;
     private CustomRewardRegistry _customRewards = null!;
     private CustomConditionRegistry _customConditions = null!;
+    private CustomBoardQuestRegistry _customBoardQuests = null!;
     private QuestPackLoader _loader = null!;
     private BoardRegistry _boards = null!;
     private BoardPackLoader _boardLoader = null!;
@@ -85,12 +87,14 @@ public sealed class ModEntry : Mod
         RewardApplier.CustomRewards = _customRewards;
         _customConditions = new CustomConditionRegistry(Monitor);
         ConditionEvaluator.CustomConditions = _customConditions;
+        _customBoardQuests = new CustomBoardQuestRegistry(Monitor);
+        QuestFactory.CustomBoardQuests = _customBoardQuests;
         _loader = new QuestPackLoader(_registry, _generators, Monitor);
         _boards = new BoardRegistry(Monitor);
         _boardLoader = new BoardPackLoader(_boards, Monitor);
         Dispatch = new DispatchRegistry(helper.ModRegistry, Monitor);
         CombatFood = new CombatFoodRegistry(Monitor);
-        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers);
+        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers);
 
         _boardRenderer = new BoardWorldRenderer(helper, Monitor, _boards);
         _boardRenderer.Register();

@@ -38,6 +38,12 @@ public sealed class QuestPosting
     public DifficultyTier Tier { get; set; }
     public PostingKind Kind { get; set; } = PostingKind.DailyBoard;
     public BoardQuestType QuestType { get; set; }
+
+    // Set when QuestType == BoardQuestType.Custom. Handler id registered via
+    // IMoreQuestsModApi.RegisterCustomBoardQuestType. Bare names resolve under the
+    // owning consumer mod's UniqueID, "OtherMod/Name" works for cross-mod references.
+    public string CustomQuestType { get; set; } = "";
+
     public string QuestGiver { get; set; } = "";
 
     // Used by GiftDelivery where the requester is anonymous and the recipient is a

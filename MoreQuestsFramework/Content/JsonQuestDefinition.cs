@@ -232,6 +232,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             Category = Category,
             Tier = ParseEnum(_def.Tier, DifficultyTier.Beginner),
             QuestType = ParseObjectiveKind(obj.Kind),
+            CustomQuestType = obj.Custom ?? string.Empty,
             QuestGiver = _def.Giver ?? string.Empty,
             ObjectiveItemId = primary,
             ObjectiveItemName = primary,
@@ -431,6 +432,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             "resource" or "collect" or "resourcecollection" => BoardQuestType.ResourceCollection,
             "socialize" => BoardQuestType.Socialize,
             "ship" => BoardQuestType.Ship,
+            "custom" => BoardQuestType.Custom,
             _ => BoardQuestType.ItemDelivery
         };
 

@@ -13,6 +13,7 @@ public sealed class StashedMailQuest
 
     // Enums stored as int so JSON survives renames.
     public int QuestType { get; set; }
+    public string CustomQuestType { get; set; } = "";
     public int Category { get; set; }
     public int Tier { get; set; }
     public string QuestGiver { get; set; } = "";
