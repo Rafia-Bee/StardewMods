@@ -24,7 +24,7 @@ public static class ConditionEvaluator
         return false;
     }
 
-    public static bool MinDaysPlayed(int days) => Game1.stats.DaysPlayed > (uint)days;
+    public static bool MinDaysPlayed(int days) => Game1.stats.DaysPlayed >= (uint)days;
 
     public static int FarmingLevel => Game1.player.FarmingLevel;
     public static int FishingLevel => Game1.player.FishingLevel;
