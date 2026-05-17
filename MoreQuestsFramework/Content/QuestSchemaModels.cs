@@ -34,6 +34,8 @@ public sealed class QuestDef
     public string? TargetMessage { get; set; }
 
     public List<RewardDef> Rewards { get; set; } = new();
+
+    public ConsequenceDef? Consequence { get; set; }
 }
 
 public sealed class TriggerDef
@@ -169,4 +171,27 @@ public sealed class RewardDef
 
     public string? Festival { get; set; }
     public int Magnitude { get; set; }
+}
+
+public sealed class ConsequenceDef
+{
+    // Tier1 | Tier2 | Tier3 | Special. Default Tier0 (off).
+    public string Tier { get; set; } = "Tier0";
+
+    // GiftTastes | Static.
+    public string Source { get; set; } = "GiftTastes";
+
+    public string Subject { get; set; } = "";
+
+    [JsonConverter(typeof(StringOrArrayConverter))]
+    public List<string> Targets { get; set; } = new();
+
+    public int GoldDelta { get; set; }
+    public int FriendshipOverride { get; set; }
+    public int FriendshipPerDay { get; set; }
+    public int ChainDays { get; set; }
+
+    public string? LovedLine { get; set; }
+    public string? HatedLine { get; set; }
+    public List<string> ChainLines { get; set; } = new();
 }

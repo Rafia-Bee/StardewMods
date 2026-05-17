@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Rewards;
 using MoreQuestsFramework.Triggers;
@@ -160,6 +161,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             PreBuiltQuest = quest
         };
         BuildRewards(posting.Rewards, _def.Rewards);
+        posting.Consequence = BuildConsequence(_def.Consequence);
         return posting;
     }
 
@@ -247,6 +249,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         for (int i = 1; i < obj.Item.Count; i++)
             posting.AlternativeObjectiveItemIds.Add(obj.Item[i]);
         BuildRewards(posting.Rewards, _def.Rewards);
+        posting.Consequence = BuildConsequence(_def.Consequence);
         return posting;
     }
 
@@ -309,6 +312,40 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
                     break;
             }
         }
+    }
+
+    private ConsequenceSpec? BuildConsequence(ConsequenceDef? def)
+    {
+        if (def == null)
+            return null;
+        if (!Enum.TryParse<ConsequenceTier>(def.Tier, ignoreCase: true, out var tier) || tier == ConsequenceTier.Tier0)
+        {
+            if (!string.IsNullOrEmpty(def.Tier) && !string.Equals(def.Tier, "Tier0", StringComparison.OrdinalIgnoreCase))
+                _monitor.Log($"Quest '{Id}': unknown Consequence Tier '{def.Tier}'; ignoring.", LogLevel.Warn);
+            return null;
+        }
+        if (!Enum.TryParse<ConsequenceSource>(def.Source, ignoreCase: true, out var source))
+        {
+            _monitor.Log($"Quest '{Id}': unknown Consequence Source '{def.Source}'; defaulting to GiftTastes.", LogLevel.Warn);
+            source = ConsequenceSource.GiftTastes;
+        }
+
+        var spec = new ConsequenceSpec
+        {
+            Tier = tier,
+            Source = source,
+            Subject = def.Subject ?? string.Empty,
+            Targets = new List<string>(def.Targets),
+            GoldDelta = def.GoldDelta,
+            FriendshipOverride = def.FriendshipOverride,
+            FriendshipPerDay = def.FriendshipPerDay,
+            ChainDays = def.ChainDays,
+            LovedLine = Resolve(def.LovedLine),
+            HatedLine = Resolve(def.HatedLine)
+        };
+        foreach (var line in def.ChainLines)
+            spec.ChainLines.Add(Resolve(line));
+        return spec;
     }
 
     private string Resolve(string? input)
