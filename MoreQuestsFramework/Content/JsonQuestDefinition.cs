@@ -158,6 +158,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             Description = Resolve(_def.Description),
             CurrentObjective = Resolve(_def.CurrentObjective),
             TargetMessage = Resolve(_def.TargetMessage),
+            MailBody = string.IsNullOrEmpty(_def.MailBody) ? null : Resolve(_def.MailBody),
             PreBuiltQuest = quest
         };
         BuildRewards(posting.Rewards, _def.Rewards);
@@ -234,18 +235,24 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             QuestType = ParseObjectiveKind(obj.Kind),
             CustomQuestType = obj.Custom ?? string.Empty,
             QuestGiver = _def.Giver ?? string.Empty,
+            DeliveryTarget = _def.DeliveryTarget ?? string.Empty,
             ObjectiveItemId = primary,
             ObjectiveItemName = primary,
             ObjectiveQuantity = Math.Max(1, obj.Count),
             TargetMonster = obj.TargetMonster,
             CatchLocationName = obj.LocationName ?? string.Empty,
             CatchMinSize = Math.Max(0, obj.MinSize),
+            CatchMaxSize = Math.Max(0, obj.MaxSize),
+            CatchAnyFish = obj.AnyFish,
+            CatchProgressTemplate = string.IsNullOrEmpty(obj.ProgressTemplate) ? string.Empty : Resolve(obj.ProgressTemplate),
             CatchWeather = obj.Weather ?? string.Empty,
             DeadlineDays = Difficulty.Deadline(ParseEnum(_def.DeadlineDays, DeadlineKind.Short), ctx.Config),
             Title = Resolve(_def.Title),
             Description = Resolve(_def.Description),
             CurrentObjective = Resolve(_def.CurrentObjective),
-            TargetMessage = Resolve(_def.TargetMessage)
+            TargetMessage = Resolve(_def.TargetMessage),
+            MailBody = string.IsNullOrEmpty(_def.MailBody) ? null : Resolve(_def.MailBody),
+            AllowDecorShipping = _def.AllowDecorShipping
         };
         for (int i = 1; i < obj.Item.Count; i++)
             posting.AlternativeObjectiveItemIds.Add(obj.Item[i]);
