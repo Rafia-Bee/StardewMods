@@ -9,6 +9,11 @@ namespace MoreQuestsFramework.Conditions;
 // Top-level dictionary keys are AND-combined. Prefix a key with "not:" to negate.
 // Values may use "|" to OR alternatives. "Season" also accepts a space-separated list
 // for backwards compat.
+// TODO (post-1.0): the built-in checks read Game1.* directly, which means
+// IQuestDefinition.IsAvailable(ctx) doesn't actually honor its ctx parameter for JSON
+// quests. Plumbing QuestContext through here would let consumer-mod tests and UIs do
+// real dry-runs ("would this fire if it were winter and Leah were at 4 hearts?")
+// instead of just observing the live save. Holds back unit-testability of conditions.
 public static class ConditionEvaluator
 {
     // Set by ModEntry so the default case can dispatch into consumer-mod custom

@@ -32,6 +32,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     private readonly IMonitor _monitor;
     private readonly Func<ISpaceCoreApi?> _spaceCore;
     private readonly Action _refreshOffers;
+    private readonly Func<QuestContext?> _ctxProvider;
 
     private readonly ConditionalWeakTable<Quest, ManagedQuest> _managed = new();
     private readonly Dictionary<string, IMoreQuestsModApi> _modScopes
@@ -59,7 +60,8 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         CombatFoodRegistry combatFood,
         IMonitor monitor,
         Func<ISpaceCoreApi?> spaceCore,
-        Action refreshOffers)
+        Action refreshOffers,
+        Func<QuestContext?> ctxProvider)
     {
         _registry = registry;
         _generators = generators;
@@ -76,6 +78,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         _monitor = monitor;
         _spaceCore = spaceCore;
         _refreshOffers = refreshOffers;
+        _ctxProvider = ctxProvider;
     }
 
     public IMoreQuestsModApi GetModApi(IManifest mod)
@@ -93,6 +96,18 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         quest != null && _managed.TryGetValue(quest, out _);
 
     public IReadOnlyList<string> RegisteredQuestIds() => _registry.RegisteredIds();
+
+    public bool? IsQuestAvailable(string definitionId)
+    {
+        if (string.IsNullOrEmpty(definitionId))
+            return null;
+        if (!_registry.TryGet(definitionId, out var def) || def == null)
+            return null;
+        var ctx = _ctxProvider();
+        if (ctx == null)
+            return null;
+        return def.IsAvailable(ctx);
+    }
 
     public QuestInfo? GetQuestInfo(string definitionId)
     {

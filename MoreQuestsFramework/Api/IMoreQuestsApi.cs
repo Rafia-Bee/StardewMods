@@ -29,6 +29,12 @@ public interface IMoreQuestsApi
     // Read-only metadata for a registered quest. Null when the id is unknown.
     QuestInfo? GetQuestInfo(string definitionId);
 
+    // Dry-run the quest's IsAvailable(ctx) against the current save's context, useful
+    // for debug menus or quest browsers. Returns null when the id is unknown or no save
+    // is loaded. Note: built-in JSON conditions still read live Game1.* state today, so
+    // the result reflects the running game, not a hypothetical scenario.
+    bool? IsQuestAvailable(string definitionId);
+
     // Re-rolls today's daily-board batch. Mail-triggered postings are NOT re-rolled
     // (would risk double-posting mail flags).
     void RefreshOffers();
