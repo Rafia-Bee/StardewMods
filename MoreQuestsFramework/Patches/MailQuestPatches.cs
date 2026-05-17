@@ -38,10 +38,17 @@ internal static class MailQuestPatches
         // mods key off it normally.
         quest.id.Value = id;
         quest.showNew.Value = true;
-        _api.TrackPosted(quest, entry.OwnerUniqueId, entry.DefinitionId);
         __result = quest;
-        _registry.Remove(id);
-        _monitor.Log($"Mail-quest hand-off: returned framework Quest for id '{id}'.", LogLevel.Trace);
+
+        // Re-read of a saved letter still calls getQuestFromId. Keep the entry around so
+        // the second read returns the same instance, but only TrackPosted on first hand-off
+        // (the quest is already in the log after that, and TrackPosted would double-fire).
+        if (!_registry.IsHandedOff(id))
+        {
+            _api.TrackPosted(quest, entry.OwnerUniqueId, entry.DefinitionId);
+            _registry.MarkHandedOff(id);
+            _monitor.Log($"Mail-quest hand-off: returned framework Quest for id '{id}'.", LogLevel.Trace);
+        }
         return false;
     }
 }

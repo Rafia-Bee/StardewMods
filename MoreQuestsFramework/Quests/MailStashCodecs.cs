@@ -79,6 +79,8 @@ internal static class MoreQuestsShipQuestStashCodec
         list.Add(s.serializedRewards.Count.ToString(CultureInfo.InvariantCulture));
         for (int i = 0; i < s.serializedRewards.Count; i++)
             list.Add(s.serializedRewards[i] ?? string.Empty);
+        list.Add(s.objectiveItemName ?? string.Empty);
+        list.Add(s.targetMessage ?? string.Empty);
         return list;
     }
 
@@ -117,6 +119,12 @@ internal static class MoreQuestsShipQuestStashCodec
             if (i >= payload.Count) return null;
             s.serializedRewards.Add(payload[i++]);
         }
+        // Trailing optional fields. Pre-existing payloads from older saves won't have
+        // them, so missing entries fall back to the field defaults (empty strings).
+        if (i < payload.Count)
+            s.objectiveItemName = payload[i++];
+        if (i < payload.Count)
+            s.targetMessage = payload[i++];
         return s;
     }
 }
