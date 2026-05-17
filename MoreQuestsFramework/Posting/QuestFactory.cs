@@ -7,7 +7,9 @@ namespace MoreQuestsFramework.Posting;
 
 public static class QuestFactory
 {
-    // MH Quest Manager keys off this prefix to attribute quests back to the owning mod.
+    // Fallback prefix when a posting somehow lacks an OwnerUniqueId. The real owner
+    // (consumer mod) is used when available so trackers that key off id prefix
+    // attribute the quest to the mod that registered it, not to the framework.
     public const string IdPrefix = "RafiaBee.MoreQuestsFramework";
 
     public static Quest? Build(QuestPosting p)
@@ -59,7 +61,10 @@ public static class QuestFactory
         };
 
         if (quest != null)
-            quest.id.Value = $"{IdPrefix}.{p.DefinitionId}.{Guid.NewGuid():N}";
+        {
+            string ownerPrefix = string.IsNullOrEmpty(p.OwnerUniqueId) ? IdPrefix : p.OwnerUniqueId;
+            quest.id.Value = $"{ownerPrefix}.{p.DefinitionId}.{Guid.NewGuid():N}";
+        }
         return quest;
     }
 

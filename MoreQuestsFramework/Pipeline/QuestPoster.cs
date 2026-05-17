@@ -15,7 +15,8 @@ namespace MoreQuestsFramework.Pipeline;
 
 public sealed class QuestPoster
 {
-    private const string MailPrefix = "RafiaBee.MoreQuestsFramework.";
+    // Fallback prefix when a posting somehow lacks an OwnerUniqueId.
+    private const string MailFallbackPrefix = "RafiaBee.MoreQuestsFramework";
 
     private readonly IModHelper _helper;
     private readonly IMonitor _monitor;
@@ -176,7 +177,8 @@ public sealed class QuestPoster
 
         ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: ResolveMailDaysLeft(posting));
 
-        string mailKey = MailPrefix + posting.DefinitionId.Replace('.', '_') + "_" + Game1.Date.TotalDays;
+        string mailOwner = string.IsNullOrEmpty(posting.OwnerUniqueId) ? MailFallbackPrefix : posting.OwnerUniqueId;
+        string mailKey = mailOwner + "." + posting.DefinitionId.Replace('.', '_') + "_" + Game1.Date.TotalDays;
         // mailKey doubles as the Quest's id so the "%item quest <mailKey> 1 %%" token
         // resolves via our Harmony prefix on Quest.getQuestFromId.
         quest.id.Value = mailKey;
