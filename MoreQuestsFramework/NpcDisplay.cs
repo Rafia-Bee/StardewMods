@@ -43,17 +43,17 @@ public static class NpcDisplay
         return itemDeliveryOk;
     }
 
-    // Only sweeps when the text actually contains a dotted token, so the no-op
-    // path is one IndexOf. Modded IDs without a dot don't need substitution since
-    // their internal name typically equals their DisplayName already.
+    // Walks character data and replaces any internal name whose DisplayName differs.
+    // Catches both dotted IDs ("MadDog.HashtagBearFam.Sondra" -> "Sondra") and plain
+    // CamelCase ones ("MaddyPellegrinVMV" -> "Maddy"). Vanilla NPCs have internal name
+    // == DisplayName in English so they're skipped by the equality check.
     public static string SubstituteIn(string? text)
     {
         if (string.IsNullOrEmpty(text)) return text ?? string.Empty;
-        if (text.IndexOf('.') < 0) return text;
         if (Game1.characterData == null) return text;
         foreach (var (internalName, _) in Game1.characterData)
         {
-            if (string.IsNullOrEmpty(internalName) || internalName.IndexOf('.') < 0)
+            if (string.IsNullOrEmpty(internalName))
                 continue;
             if (text.IndexOf(internalName, StringComparison.Ordinal) < 0)
                 continue;
