@@ -77,6 +77,10 @@ public sealed class DispatchRegistry
         return met;
     }
 
+    // The IsBoardEligible filter (Age!=Child, CanSocialize, PerfectionScore, denylist)
+    // runs here so every generator that picks a target NPC honors the same rules as
+    // the posting filter. Friendable monsters that pass the IsVillager check (DuckNPC,
+    // Sen, Leximonster, etc.) get dropped here and never become a quest target.
     public static List<string> MetHumanNpcs()
     {
         var results = new List<string>();
@@ -84,6 +88,8 @@ public sealed class DispatchRegistry
         {
             var npc = Game1.getCharacterFromName(name);
             if (npc == null || npc.IsMonster || !npc.IsVillager)
+                continue;
+            if (!NpcDisplay.IsBoardEligible(name))
                 continue;
             results.Add(name);
         }

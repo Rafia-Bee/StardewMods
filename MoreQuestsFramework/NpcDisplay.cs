@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using StardewValley;
 using StardewValley.GameData.Characters;
 
@@ -23,24 +24,31 @@ public static class NpcDisplay
         return display!;
     }
 
-    // Mirrors vanilla's filter in ItemDeliveryQuest.GetValidTargetList: an NPC is
-    // eligible to post a daily-board / special-order quest only if CanSocialize is
-    // true, ItemDeliveryQuests passes (or HomeRegion is "Town" when the field is
-    // null), and the NPC is not a child. Used by QuestPoster to redirect non-human
-    // NPC postings (Duck2NPC, LexiMonster, etc.) from boards to mail.
+    // Used by QuestPoster to drop non-human NPC postings (Duck2NPC, LexiMonster, etc).
+    // Rejects when: NPC is in the config IneligibleGivers list, is a child, CanSocialize
+    // GSQ fails, or PerfectionScore is false. PerfectionScore catches the East Scarp
+    // friendable animals (DuckNPC / Duck2NPC / HappySlime) that explicitly opt out, but
+    // some packs (Leximonster, Sen from Lurking in the Dark) build their friendable
+    // monsters with full perfection / slideshow entries, so the heuristic can't tell
+    // them apart from a real human. IneligibleGivers is the manual override for those.
+    // SocialTab can't be used because SVE flags real adults like Lance / Susan / Gunther
+    // as HiddenUntilMet for narrative gating. ItemDeliveryQuests can't be used either
+    // because RSV / East Scarp adults set it "FALSE" to opt out of vanilla's random
+    // delivery rotation while still being valid hand-authored quest givers.
     public static bool IsBoardEligible(string? internalName)
     {
         if (string.IsNullOrEmpty(internalName)) return false;
+        var deny = ModEntry.Config?.IneligibleGivers;
+        if (deny != null && deny.Contains(internalName, StringComparer.OrdinalIgnoreCase))
+            return false;
         if (Game1.characterData == null) return true;
         if (!Game1.characterData.TryGetValue(internalName, out var data) || data == null)
             return true;
         if (data.Age == NpcAge.Child) return false;
         if (!StardewValley.GameStateQuery.CheckConditions(data.CanSocialize))
             return false;
-        bool itemDeliveryOk = data.ItemDeliveryQuests != null
-            ? StardewValley.GameStateQuery.CheckConditions(data.ItemDeliveryQuests)
-            : data.HomeRegion == "Town";
-        return itemDeliveryOk;
+        if (!data.PerfectionScore) return false;
+        return true;
     }
 
     // Walks character data and replaces any internal name whose DisplayName differs.

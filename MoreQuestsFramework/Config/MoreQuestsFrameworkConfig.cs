@@ -26,6 +26,19 @@ public sealed class MoreQuestsFrameworkConfig
     // Quests rewarding friendship to a *different* NPC than the giver still post.
     public bool SkipFriendshipQuestsAtMaxHeart { get; set; } = true;
 
+    // Internal NPC names that should never be a board / special-order quest giver,
+    // on top of the per-character heuristics in NpcDisplay.IsBoardEligible (child,
+    // CanSocialize=false, PerfectionScore=false). Use this for friendable monsters
+    // whose CharacterData is crafted like a real NPC (full perfection / slideshow
+    // entries), so the heuristic can't tell them apart from a real human. Defaults
+    // cover the friendable monsters / creatures that ship with my installed packs.
+    public List<string> IneligibleGivers { get; set; } = new()
+    {
+        "Krobus",
+        "Leximonster",
+        "SenS",
+    };
+
     // After this many days, a queued consequence dialogue line is dropped on DayStarted.
     public int ConsequenceGraceDays { get; set; } = 7;
 
