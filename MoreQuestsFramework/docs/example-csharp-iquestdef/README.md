@@ -33,7 +33,7 @@ Implementing `IQuestDefinition` means filling in:
 | `DefaultWeight` | Relative weight in the daily-board pool. 0 disables. |
 | `MaxPerDay` | Hard cap on copies of this definition per day. |
 | `CooldownDays` | Minimum days between successive postings. |
-| `IsAvailable(ctx)` | Cheap pre-check. Return false to skip without spending generator time. |
+| `IsAvailable(ctx)` | Cheap pre-check. Return false to skip without spending generator time. Prefer the `ctx` accessors (`Season`, `DayOfMonth`, `Year`, `Data`, etc.) over reading `Game1.*` directly so the same check can be dry-run via `IMoreQuestsApi.IsQuestAvailable`. |
 | `Build(ctx)` | Return a `QuestPosting`, or null if generation failed. |
 
 `Source` and `Trigger` are optional. The defaults (`TriggerSource.DailyBoard`, `TriggerInfo.Default`) cover most daily-board quests. Override them when you want `Mail`, `Periodic`, `DateLocked`, etc.

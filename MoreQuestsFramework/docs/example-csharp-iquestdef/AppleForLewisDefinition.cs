@@ -1,5 +1,4 @@
 using MoreQuestsFramework;
-using MoreQuestsFramework.Conditions;
 using MoreQuestsFramework.Pipeline;
 using MoreQuestsFramework.Rewards;
 using StardewModdingAPI;
@@ -10,7 +9,10 @@ namespace ExampleCSharpIQuestDef;
 /// framework's built-in `Vanilla.ItemDelivery`, just with our own fields.
 ///
 /// `IsAvailable` is the cheap pre-check that runs before the framework spends
-/// any time generating the posting. `Build` does the actual work.
+/// any time generating the posting. `Build` does the actual work. Prefer `ctx`
+/// (`ctx.Season`, `ctx.DayOfMonth`, `ctx.Year`, `ctx.Helper`, `ctx.Data`, etc.)
+/// over reading `Game1.*` so the same check can be dry-run via
+/// `IMoreQuestsApi.IsQuestAvailable`.
 public sealed class AppleForLewisDefinition : IQuestDefinition
 {
     private readonly IModHelper _helper;
@@ -29,8 +31,7 @@ public sealed class AppleForLewisDefinition : IQuestDefinition
 
     public bool IsAvailable(QuestContext ctx)
     {
-        return ConditionEvaluator.MatchesSeason("fall")
-            && ConditionEvaluator.NpcExists("Lewis");
+        return ctx.Season == "fall";
     }
 
     public QuestPosting? Build(QuestContext ctx)
