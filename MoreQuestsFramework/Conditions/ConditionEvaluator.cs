@@ -20,6 +20,12 @@ internal static class ConditionEvaluator
     // condition keys before falling through to the fail-closed false return.
     public static CustomConditionRegistry? CustomConditions { get; set; }
 
+    // Set by ModEntry so unknown condition keys can be flagged. Typos like
+    // "MailRecieved" otherwise fail closed in silence.
+    public static IMonitor? Monitor { get; set; }
+
+    private static readonly HashSet<string> _warnedUnknownKeys = new(StringComparer.OrdinalIgnoreCase);
+
     public static bool MatchesSeason(string season) =>
         string.Equals(Game1.currentSeason, season, StringComparison.OrdinalIgnoreCase);
 
@@ -185,6 +191,8 @@ internal static class ConditionEvaluator
             default:
                 if (CustomConditions != null && CustomConditions.TryEvaluate(key, value, out bool customResult))
                     return customResult;
+                if (Monitor != null && _warnedUnknownKeys.Add(key))
+                    Monitor.Log($"Unknown condition key '{key}'. Treating as false. Check for a typo or a missing custom-condition registration.", LogLevel.Warn);
                 return false;
         }
     }
