@@ -281,6 +281,29 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
                         sink.Add(new MailReward(r.Letter, when));
                     }
                     break;
+                case "shopdiscount":
+                    if (string.IsNullOrEmpty(r.ShopId))
+                        _monitor.Log($"Quest '{Id}': ShopDiscount reward needs a ShopId.", LogLevel.Warn);
+                    else
+                        sink.Add(new ShopDiscountReward(
+                            r.ShopId,
+                            r.PercentOff,
+                            Math.Max(1, r.DurationDays),
+                            r.AppliesTo.Count > 0 ? new List<string>(r.AppliesTo) : null,
+                            r.GuaranteedStock));
+                    break;
+                case "animalpurchasediscount":
+                    sink.Add(new AnimalPurchaseDiscountReward(r.PercentOff, Math.Max(1, r.DurationDays)));
+                    break;
+                case "festivalbias":
+                    if (!TryParseEnum(r.Festival, out FestivalKind fk))
+                        _monitor.Log($"Quest '{Id}': FestivalBias reward needs Festival = Luau or Fair.", LogLevel.Warn);
+                    else
+                        sink.Add(new FestivalBiasReward(fk, r.Magnitude));
+                    break;
+                case "fairstartokens":
+                    sink.Add(new FairStarTokensReward(r.Amount));
+                    break;
                 default:
                     _monitor.Log($"Quest '{Id}': unknown reward kind '{r.Kind}'.", LogLevel.Warn);
                     break;
@@ -365,6 +388,14 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
 
     private static T ParseEnum<T>(string? value, T fallback) where T : struct, Enum
         => Enum.TryParse<T>(value, ignoreCase: true, out var parsed) ? parsed : fallback;
+
+    private static bool TryParseEnum<T>(string? value, out T parsed) where T : struct, Enum
+    {
+        if (!string.IsNullOrEmpty(value) && Enum.TryParse<T>(value, ignoreCase: true, out parsed))
+            return true;
+        parsed = default;
+        return false;
+    }
 
     // Accepts Today (default) or Tomorrow / NextDay.
     private static MailWhen ParseMailWhen(string? value)
