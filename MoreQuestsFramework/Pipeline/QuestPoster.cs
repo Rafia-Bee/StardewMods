@@ -25,6 +25,7 @@ public sealed class QuestPoster
     private MailQuestRegistry? _mailRegistry;
     private FrameworkState? _state;
     private SpecialOrderWriter? _specialOrders;
+    private DialogueWatcher? _dialogueWatcher;
 
     public QuestPoster(IModHelper helper, IMonitor monitor, MoreQuestsApi api)
     {
@@ -42,6 +43,11 @@ public sealed class QuestPoster
     public void WireSpecialOrders(SpecialOrderWriter writer)
     {
         _specialOrders = writer;
+    }
+
+    public void WireDialogueWatcher(DialogueWatcher watcher)
+    {
+        _dialogueWatcher = watcher;
     }
 
     public void Register()
@@ -90,7 +96,7 @@ public sealed class QuestPoster
                     _specialOrders.Emit(posting);
                 break;
             case PostingKind.NpcDialogue:
-                _monitor.Log($"NpcDialogue posting for {posting.DefinitionId} skipped (not yet implemented).", LogLevel.Trace);
+                PostViaDialogue(posting);
                 break;
         }
     }
@@ -141,6 +147,22 @@ public sealed class QuestPoster
         _api.TrackPosted(quest, posting.OwnerUniqueId, posting.DefinitionId);
         _pendingBoard.Add((quest, posting));
         _monitor.Log($"Buffered {posting.DefinitionId} for billboard ({posting.QuestType}).", LogLevel.Trace);
+    }
+
+    private void PostViaDialogue(QuestPosting posting)
+    {
+        if (_dialogueWatcher == null)
+        {
+            _monitor.Log($"NpcDialogue posting for {posting.DefinitionId} dropped (watcher not wired).", LogLevel.Warn);
+            return;
+        }
+        string npc = posting.QuestGiver;
+        if (string.IsNullOrEmpty(npc))
+        {
+            _monitor.Log($"NpcDialogue posting for {posting.DefinitionId} dropped (no QuestGiver to wait for).", LogLevel.Warn);
+            return;
+        }
+        _dialogueWatcher.Enqueue(posting.DefinitionId, npc);
     }
 
     private void PostViaMail(QuestPosting posting)

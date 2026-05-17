@@ -266,6 +266,7 @@ public sealed class ModEntry : Mod
             _registry, ctx, _stateStore.State, _api, Monitor,
             posting => _poster!.PrepareQuest(posting, daysLeft: Math.Max(1, posting.DeadlineDays)));
         _dialogueWatcher.Reset();
+        _poster!.WireDialogueWatcher(_dialogueWatcher);
 
         // Engine exposed as a static so quest-subclass questComplete overrides can fire
         // it without threading an instance reference through every subclass.
