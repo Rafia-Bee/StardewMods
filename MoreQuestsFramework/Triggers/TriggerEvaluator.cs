@@ -149,7 +149,7 @@ internal sealed class TriggerEvaluator
             return true;
         if (!repeatYearly)
             return false;
-        int lastYear = (last - 1) / 112 + 1;
+        int lastYear = last / 112 + 1;
         return Game1.year > lastYear;
     }
 
