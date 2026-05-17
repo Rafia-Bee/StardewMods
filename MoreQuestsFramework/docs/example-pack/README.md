@@ -42,6 +42,19 @@ Single-step quests use `Objective`. Multi-step quests use `Steps[]` and can wire
 
 The `Custom` step kind is an escape hatch for consumer-mod code, not used in this pack.
 
+### Event-triggered quests (not on the daily board)
+
+Most quests above sit in the daily-board random pool. The four below show the other trigger sources that fire from save-state changes and land directly in the player's mailbox.
+
+| Quest | Trigger | What it shows |
+| --- | --- | --- |
+| `OneShot_FirstCabbage` | `OneShot` with `When: "FirstShipped 250"` | Fires once, ever, the first day the player has shipped a cabbage. Other `When` forms include `FirstStat <name> >= N`, `FirstHeldItem`, `FirstCraftingRecipe`, `FirstCookingRecipe`. |
+| `MailReceived_GuildFollowUp` | `MailReceived` with `Flag: "guildMember"` | Fires the morning after a specific vanilla (or mod) mail flag lands. Useful for follow-up quests gated on existing letters. |
+| `BuildingBuilt_SiloHousewarming` | `BuildingBuilt` with `Building: "Silo"` and `DayDelay: 1` | Fires when a new farm building of the named type appears. `DayDelay` defers the post to N days later so the letter isn't waiting on the same morning the build finishes. |
+| `WeatherForecast_RainPrep` | `WeatherForecast` with `Weather: "Rain"` and `CooldownDays: 14` | Fires the evening before rain (the in-game forecast for tomorrow). `CooldownDays` keeps it from spamming during a rainy stretch. |
+
+All four default to mail delivery; the framework auto-builds the letter body from `Description` plus a sign-off so you don't have to set `MailBody` unless you want a custom letter.
+
 For more advanced patterns (NPC dispatch pools, decor-shipping bypass, etc.), look at [`../../../MoreQuests/assets/quests.json`](../../../MoreQuests/assets/quests.json), the production quest list the More Quests content mod ships with.
 
 ## Schema reference

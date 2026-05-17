@@ -64,5 +64,25 @@
 
     "example.clearDebris.title": "Demetrius's backwoods clean-up",
     "example.clearDebris.description": "Demetrius is running an experiment in the Backwoods and needs the path cleared. Take down 5 resource clumps.",
-    "example.clearDebris.step": "Clear 5 resource clumps in the Backwoods."
+    "example.clearDebris.step": "Clear 5 resource clumps in the Backwoods.",
+
+    "example.oneShot.title": "Pierre wants more cabbages",
+    "example.oneShot.description": "Pierre saw your first cabbage in the shipping totals and wants to stock his shelves with three more. Bring them to him at the shop.",
+    "example.oneShot.objective": "Deliver 3 Cabbages to Pierre.",
+    "example.oneShot.targetMessage": "Perfect, these will look great on the shelf. Thanks!",
+
+    "example.mailReceived.title": "Marlon's first job",
+    "example.mailReceived.description": "Now that you've joined the guild, Marlon wants to see how you handle a small contract. Clear out five Green Slimes and report back.",
+    "example.mailReceived.objective": "Slay 5 Green Slimes.",
+    "example.mailReceived.targetMessage": "Good work. The guild stays a little quieter today.",
+
+    "example.buildingBuilt.title": "Marnie's hay top-up",
+    "example.buildingBuilt.description": "Marnie noticed you raised a Silo. She'll fill it for cheap, but she needs ten bales of Hay to get the run started. Drop them off at her ranch.",
+    "example.buildingBuilt.objective": "Deliver 10 Hay to Marnie.",
+    "example.buildingBuilt.targetMessage": "Great, that should get the silo properly seasoned.",
+
+    "example.weatherForecast.title": "Demetrius wants a rainy-day sample",
+    "example.weatherForecast.description": "The forecast says rain tomorrow. Demetrius is studying how the fish behave in the wet. Catch a Catfish while it's raining and bring it to him.",
+    "example.weatherForecast.objective": "Catch 1 Catfish in the rain.",
+    "example.weatherForecast.targetMessage": "Fantastic. They only show up when the water's stirred up like this."
 }
