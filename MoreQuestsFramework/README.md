@@ -338,6 +338,19 @@ Multi-step Adventure quests carry a `Steps[]` list. Each entry has a `Kind` driv
 
   Then in JSON: `{ "Name": "WaterCrops", "Kind": "Custom", "Targets": ["WateredCropsToday"], "Count": 10, "Description": "{i18n:my.step.water}" }`. A Custom step whose handler isn't registered (e.g. the consumer mod is uninstalled mid-save) sits idle, the framework doesn't bomb the save.
 
+  When polling isn't a fit (you want to credit progress off a specific game event instead of checking a counter every second), use `GetActiveCustomSteps(handlerName)` instead. The call returns every active Custom step whose `Targets[0]` resolves to that handler id; push progress into each handle from your event handler or Harmony patch. You don't have to call `RegisterCustomAdventureStep` if you're only using the push path. Example:
+
+  ```csharp
+  Helper.Events.World.NpcListChanged += (_, e) =>
+  {
+      if (!e.Removed.Any(npc => npc is GreenSlime { Name: "Mega Slime" })) return;
+      foreach (var handle in scope.GetActiveCustomSteps("MegaSlimeDown"))
+          handle.AddProgress(1);
+  };
+  ```
+
+  Handles are short-lived snapshots: re-query each event tick rather than caching a handle across days, and check `handle.IsActive` if there's any chance the underlying quest changed between query and write.
+
 Step ordering is enforced by `Requires[]` (other step `Name`s that must be Done before the step becomes active). `$giver` in `Targets[]` rewrites to the resolved giver at quest-creation time. None of the step observers add Harmony patches, every kind rides an existing SMAPI event or a framework-owned tick.
 
 ### Decor-shipping bypass

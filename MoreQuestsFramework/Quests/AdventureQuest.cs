@@ -492,6 +492,83 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
+    // Lookup seam for ICustomStepHandle. Walks every Custom step that's currently
+    // eligible to advance (not Done, Requires met, parent not completed) and yields
+    // the index plus the step's name and Targets[0] (handler id).
+    public IEnumerable<(int Index, string StepName, string HandlerName)> ActiveCustomStepInfos()
+    {
+        if (completed.Value)
+            yield break;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done) continue;
+            if (step.Kind != AdventureStepKind.Custom) continue;
+            if (!RequiresMet(steps, step)) continue;
+            string handler = step.Targets.Count > 0 ? step.Targets[0] : string.Empty;
+            yield return (i, step.Name, handler);
+        }
+    }
+
+    // Snapshot read for handle property getters. Returns null for an out-of-range
+    // index or a non-Custom step. Callers must treat the result as read-only.
+    public AdventureStepState? PeekCustomStep(int index)
+    {
+        var steps = Steps;
+        if (index < 0 || index >= steps.Count) return null;
+        var step = steps[index];
+        return step.Kind == AdventureStepKind.Custom ? step : null;
+    }
+
+    public bool IsCustomStepActive(int index)
+    {
+        if (completed.Value) return false;
+        var steps = Steps;
+        if (index < 0 || index >= steps.Count) return false;
+        var step = steps[index];
+        if (step.Done || step.Kind != AdventureStepKind.Custom) return false;
+        return RequiresMet(steps, step);
+    }
+
+    // Push-based credit for event-driven Custom steps. Returns the number of credits
+    // actually applied (0 when the step isn't active, isn't a Custom step, or is
+    // already full). Drives MarkStepDone + questComplete when Progress catches up.
+    public int TryAddCustomStepProgress(int index, int delta)
+    {
+        if (delta <= 0 || completed.Value) return 0;
+        var steps = Steps;
+        if (index < 0 || index >= steps.Count) return 0;
+        var step = steps[index];
+        if (step.Done || step.Kind != AdventureStepKind.Custom) return 0;
+        if (!RequiresMet(steps, step)) return 0;
+        int needed = Math.Max(1, step.Count);
+        int credit = Math.Min(delta, needed - step.Progress);
+        if (credit <= 0) return 0;
+        step.Progress += credit;
+        if (step.Progress >= needed)
+            MarkStepDone(index, step);
+        else
+        {
+            Persist(index, step);
+            reloadObjective();
+        }
+        return credit;
+    }
+
+    public bool TryMarkCustomStepDone(int index)
+    {
+        if (completed.Value) return false;
+        var steps = Steps;
+        if (index < 0 || index >= steps.Count) return false;
+        var step = steps[index];
+        if (step.Done || step.Kind != AdventureStepKind.Custom) return false;
+        if (!RequiresMet(steps, step)) return false;
+        step.Progress = Math.Max(step.Progress, step.Count);
+        MarkStepDone(index, step);
+        return true;
+    }
+
     public void ObserveDebrisCleared(string locationName, int delta)
     {
         if (completed.Value || delta <= 0 || string.IsNullOrEmpty(locationName))

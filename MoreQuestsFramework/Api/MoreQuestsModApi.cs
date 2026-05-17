@@ -10,6 +10,7 @@ using MoreQuestsFramework.Registry;
 using MoreQuestsFramework.Rewards;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
+using StardewValley;
 using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Api;
@@ -30,6 +31,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
     private readonly MailStashCodecRegistry _mailStashCodecs;
     private readonly IMonitor _monitor;
     private readonly Func<ISpaceCoreApi?> _spaceCore;
+    private readonly Func<Quest, string?> _resolveQuestOwner;
 
     public IManifest Owner { get; }
 
@@ -48,7 +50,8 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         BoardPackLoader boardLoader,
         MailStashCodecRegistry mailStashCodecs,
         IMonitor monitor,
-        Func<ISpaceCoreApi?> spaceCore)
+        Func<ISpaceCoreApi?> spaceCore,
+        Func<Quest, string?> resolveQuestOwner)
     {
         Owner = owner;
         _registry = registry;
@@ -65,6 +68,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         _mailStashCodecs = mailStashCodecs;
         _monitor = monitor;
         _spaceCore = spaceCore;
+        _resolveQuestOwner = resolveQuestOwner;
     }
 
     public bool RegisterQuest(IQuestDefinition definition) => _registry.Register(definition);
@@ -89,6 +93,34 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
 
     public void RegisterCustomAdventureStep(string name, Func<CustomStepContext, int> handler)
         => _customSteps.Register(Owner.UniqueID, name, handler);
+
+    public IReadOnlyList<ICustomStepHandle> GetActiveCustomSteps(string handlerName)
+    {
+        if (string.IsNullOrWhiteSpace(handlerName))
+            return Array.Empty<ICustomStepHandle>();
+        string fq = handlerName.Contains('/') ? handlerName : $"{Owner.UniqueID}/{handlerName}";
+        var log = Game1.player?.questLog;
+        if (log == null || log.Count == 0)
+            return Array.Empty<ICustomStepHandle>();
+        List<ICustomStepHandle>? results = null;
+        for (int i = 0; i < log.Count; i++)
+        {
+            if (log[i] is not AdventureQuest a || a.completed.Value)
+                continue;
+            string questOwner = _resolveQuestOwner(a) ?? Owner.UniqueID;
+            foreach (var (idx, stepName, handler) in a.ActiveCustomStepInfos())
+            {
+                if (string.IsNullOrEmpty(handler))
+                    continue;
+                string stepFq = handler.Contains('/') ? handler : $"{questOwner}/{handler}";
+                if (!string.Equals(stepFq, fq, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                results ??= new List<ICustomStepHandle>();
+                results.Add(new CustomStepHandle(a, idx, stepName, stepFq));
+            }
+        }
+        return (IReadOnlyList<ICustomStepHandle>?)results ?? Array.Empty<ICustomStepHandle>();
+    }
 
     public void RegisterCustomTrigger(string name, Func<CustomTriggerContext, bool> handler)
         => _customTriggers.Register(Owner.UniqueID, name, handler);
