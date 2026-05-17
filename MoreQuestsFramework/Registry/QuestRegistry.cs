@@ -48,6 +48,26 @@ public sealed class QuestRegistry
 
     public bool TryGet(string id, out IQuestDefinition? def) => _byId.TryGetValue(id, out def!);
 
+    // Allowed both during the registration window and after freeze. A removed quest
+    // stops appearing in pipeline draws on the next DayStarted, in-flight quests
+    // already in the player's journal keep working (their state lives on the Quest
+    // instance, not the registry).
+    public bool Unregister(string definitionId)
+    {
+        if (string.IsNullOrEmpty(definitionId))
+            return false;
+        if (!_byId.TryGetValue(definitionId, out var def))
+        {
+            _monitor.Log($"Unregister('{definitionId}') ignored: no such quest registered.", LogLevel.Warn);
+            return false;
+        }
+        _byId.Remove(definitionId);
+        _ordered.Remove(def);
+        _sourceOverrides.Remove(definitionId);
+        _monitor.Log($"Quest '{definitionId}' unregistered.", LogLevel.Trace);
+        return true;
+    }
+
     // Allowed both during the registration window and after freeze (metadata only,
     // doesn't add or remove definitions).
     public void OverrideSource(string definitionId, TriggerSource source)

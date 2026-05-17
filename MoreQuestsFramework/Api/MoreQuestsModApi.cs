@@ -136,6 +136,9 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
     public void OverrideTriggerSource(string definitionId, TriggerSource source)
         => _registry.OverrideSource(definitionId, source);
 
+    public void Unregister(string definitionId)
+        => _registry.Unregister(definitionId);
+
     public void RegisterConsequenceTier(ConsequenceTier tier, IConsequenceHandler handler)
     {
         if (handler == null)

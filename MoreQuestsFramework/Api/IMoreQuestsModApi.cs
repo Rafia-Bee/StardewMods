@@ -50,6 +50,13 @@ public interface IMoreQuestsModApi
     // No-ops with a warning if no quest with that id is registered.
     void OverrideTriggerSource(string definitionId, TriggerSource source);
 
+    // Removes a quest definition from the registry. Allowed both before and after
+    // freeze. Quests already in the player's journal keep working; the def just
+    // stops being a draw candidate on the next DayStarted. No-ops with a warning
+    // if no quest with that id is registered. The id is global, any mod can
+    // unregister any quest (the same posture as OverrideTriggerSource).
+    void Unregister(string definitionId);
+
     // Calls before the first save load are buffered and applied to each fresh engine
     // when it stands up.
     void RegisterConsequenceTier(ConsequenceTier tier, IConsequenceHandler handler);
