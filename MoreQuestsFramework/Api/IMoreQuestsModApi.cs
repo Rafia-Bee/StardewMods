@@ -77,4 +77,13 @@ public interface IMoreQuestsModApi
         string name,
         Action<string> apply,
         Func<string, string, ITranslationHelper, string>? summarize = null);
+
+    // Handler for a new condition key recognised inside the JSON `Available { ... }`
+    // block (the same dictionary the built-in `Season` / `NpcMet` / etc. keys live
+    // in). The evaluator gets the raw value string and returns true/false. Keys are
+    // case-insensitive, OR alternatives ("|"), and the "not:" prefix all work
+    // because they're applied above EvaluateOne. Keys must not collide with
+    // built-ins or with another mod's registration (first registration wins, the
+    // second is rejected with a Warn).
+    void RegisterCustomCondition(string key, Func<string, bool> evaluator);
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MoreQuestsFramework.Conditions;
 using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Dispatch;
@@ -18,6 +19,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
     private readonly CustomStepRegistry _customSteps;
     private readonly CustomTriggerRegistry _customTriggers;
     private readonly CustomRewardRegistry _customRewards;
+    private readonly CustomConditionRegistry _customConditions;
     private readonly QuestPackLoader _loader;
     private readonly DispatchRegistry _dispatch;
     private readonly BoardRegistry _boards;
@@ -34,6 +36,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
         CustomStepRegistry customSteps,
         CustomTriggerRegistry customTriggers,
         CustomRewardRegistry customRewards,
+        CustomConditionRegistry customConditions,
         QuestPackLoader loader,
         DispatchRegistry dispatch,
         BoardRegistry boards,
@@ -47,6 +50,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
         _customSteps = customSteps;
         _customTriggers = customTriggers;
         _customRewards = customRewards;
+        _customConditions = customConditions;
         _loader = loader;
         _dispatch = dispatch;
         _boards = boards;
@@ -90,6 +94,9 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
             name,
             payload => apply(payload),
             summarize == null ? null : new CustomRewardRegistry.SummarizeDelegate((p, g, t) => summarize(p, g, t)));
+
+    public void RegisterCustomCondition(string key, Func<string, bool> evaluator)
+        => _customConditions.Register(Owner.UniqueID, key, evaluator);
 
     public void LoadContentPack(IContentPack pack) => _loader.LoadContentPack(pack);
 
