@@ -208,6 +208,16 @@ Notes on the schema:
 - Step kinds available: `Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearWeeds`, `ClearDebris`, `Custom`. Independent steps (no `Requires[]`) are all active at once.
 - Single-objective `Ship` quests use `"Objective": { "Kind": "Ship", "Item": "(O)787", "Count": 1 }`. `Item` accepts a single string or an array, when an array, any id satisfies the delivery. Observed against `Game1.getFarm().getShippingBin(player)` at `DayEnding`.
 - `MailReward` accepts `"When": "Today"` (default), `"Tomorrow"`, or `"NextDay"` (alias for `Tomorrow`).
+- JSON reward fields per kind (everything in the "Reward kinds" list above is reachable from a content pack):
+  - `Money`: `Amount`.
+  - `Friendship`: `Npc`, `Points`.
+  - `Object`: `Item`, `Count`.
+  - `Recipe`: `Recipe`, `RecipeKind` (`Cooking` or `Crafting`, default `Cooking`).
+  - `Mail`: `Letter`, `When`.
+  - `ShopDiscount`: `ShopId`, `PercentOff`, `DurationDays`, optional `AppliesTo` (string or list), optional `GuaranteedStock`.
+  - `AnimalPurchaseDiscount`: `PercentOff`, `DurationDays`.
+  - `FestivalBias`: `Festival` (`Luau` or `Fair`), `Magnitude`.
+  - `FairStarTokens`: `Amount`.
 - **`SpecialOrder` source.** Trigger fires when `today == StartDate` (`<season> <day>`) and the cooldown has elapsed. The framework writes a vanilla `Data/SpecialOrders` entry (key namespaced as `<ownerUniqueId>.<defId>.<dayStamp>` so other mods' orders are never disturbed) for `Duration` days (`OneDay` / `TwoDays` / `ThreeDays` / `Week` / `TwoWeeks` / `Month`). The matching `Generator` returns a `QuestPosting` with `Kind = PostingKind.SpecialOrder` and a populated `SpecialOrder` block (`Name` / `Text` / `Requester` / `Duration` / `Objectives[]` / `Rewards[]`). Each `SpecialOrderObjectiveSpec.Type` / `SpecialOrderRewardSpec.Type` is the vanilla type name without the `Objective` / `Reward` suffix (e.g. `Ship`, `Money`, `Friendship`). Vanilla owns accept, objective tracking, and reward grant from there.
 
 ## Public API

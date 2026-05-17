@@ -145,7 +145,7 @@ public sealed class StepDef
 
 public sealed class RewardDef
 {
-    // Money | Friendship | Object | Recipe | Mail.
+    // Money | Friendship | Object | Recipe | Mail | ShopDiscount | AnimalPurchaseDiscount | FestivalBias | FairStarTokens.
     public string Kind { get; set; } = "Money";
 
     public int Amount { get; set; }
@@ -157,4 +157,16 @@ public sealed class RewardDef
     public string? RecipeKind { get; set; }
     public string? Letter { get; set; }
     public string? When { get; set; }
+
+    public string? ShopId { get; set; }
+    public int PercentOff { get; set; }
+    public int DurationDays { get; set; }
+
+    [JsonConverter(typeof(StringOrArrayConverter))]
+    public List<string> AppliesTo { get; set; } = new();
+
+    public int GuaranteedStock { get; set; }
+
+    public string? Festival { get; set; }
+    public int Magnitude { get; set; }
 }
