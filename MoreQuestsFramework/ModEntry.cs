@@ -71,7 +71,10 @@ public sealed class ModEntry : Mod
     internal AntiRepetition? Anti => _antiRepetition;
 
     private readonly HashSet<Quest> _watching = new();
-    private readonly HashSet<Quest> _seenInLog = new();
+    // Value is "was the quest timed when we first saw it in the log", used at removal
+    // time to tell expiration apart from a player cancel (both leave completed=false,
+    // but only an expiration zeros out daysLeft from a previously-positive value).
+    private readonly Dictionary<Quest, bool> _seenInLog = new();
     private readonly HashSet<Quest> _completedFired = new();
 
     public override void Entry(IModHelper helper)
@@ -699,8 +702,9 @@ public sealed class ModEntry : Mod
                 continue;
 
             seenThisTick.Add(q);
-            if (_seenInLog.Add(q))
+            if (!_seenInLog.ContainsKey(q))
             {
+                _seenInLog[q] = q.daysLeft.Value > 0 || q.dailyQuest.Value;
                 _api.FireQuestAccepted(q, info);
                 // Letter has been opened (vanilla addQuest pushed quest into the log).
                 if (!string.IsNullOrEmpty(q.id.Value))
@@ -714,14 +718,15 @@ public sealed class ModEntry : Mod
         if (_seenInLog.Count > 0)
         {
             var removed = new List<Quest>();
-            foreach (var q in _seenInLog)
+            foreach (var pair in _seenInLog)
             {
-                if (!seenThisTick.Contains(q))
-                    removed.Add(q);
+                if (!seenThisTick.Contains(pair.Key))
+                    removed.Add(pair.Key);
             }
             for (int i = 0; i < removed.Count; i++)
             {
                 var q = removed[i];
+                bool wasTimed = _seenInLog[q];
                 _seenInLog.Remove(q);
                 bool firedCompletedThisRun = _completedFired.Remove(q);
                 bool wasCompleted = firedCompletedThisRun || q.completed.Value;
@@ -732,7 +737,14 @@ public sealed class ModEntry : Mod
                 // them as completed; fire here before the QuestRemoved that follows.
                 if (wasCompleted && !firedCompletedThisRun)
                     _api.FireQuestCompleted(q, info);
-                _api.FireQuestRemoved(q, info, wasCompleted);
+                QuestRemovalReason reason;
+                if (wasCompleted)
+                    reason = QuestRemovalReason.Completed;
+                else if (wasTimed && q.daysLeft.Value <= 0)
+                    reason = QuestRemovalReason.Expired;
+                else
+                    reason = QuestRemovalReason.Cancelled;
+                _api.FireQuestRemoved(q, info, reason);
             }
         }
     }
