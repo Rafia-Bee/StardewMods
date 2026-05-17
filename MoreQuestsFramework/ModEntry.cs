@@ -50,6 +50,7 @@ public sealed class ModEntry : Mod
     private QuestPoster? _poster;
     private GameDataCache? _dataCache;
     private AntiRepetition? _antiRepetition;
+    private QuestContext? _ctx;
     private MoreQuestsApi _api = null!;
     private StateStore? _stateStore;
     private TriggerEvaluator? _triggers;
@@ -94,7 +95,7 @@ public sealed class ModEntry : Mod
         _boardLoader = new BoardPackLoader(_boards, Monitor);
         Dispatch = new DispatchRegistry(helper.ModRegistry, Monitor);
         CombatFood = new CombatFoodRegistry(Monitor);
-        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers);
+        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers, () => _ctx);
 
         _boardRenderer = new BoardWorldRenderer(helper, Monitor, _boards);
         _boardRenderer.Register();
@@ -234,6 +235,7 @@ public sealed class ModEntry : Mod
 
         var items = new ItemResolver(Monitor, _dataCache);
         var ctx = new QuestContext(Helper, Monitor, Config, items, _dataCache, Dispatch);
+        _ctx = ctx;
         _antiRepetition = new AntiRepetition();
 
         _stateStore = new StateStore(Helper.Data, Monitor);
