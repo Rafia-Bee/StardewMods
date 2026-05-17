@@ -55,8 +55,32 @@ public static class RewardCodec
         AnimalPurchaseDiscountReward a => $"AnimalPurchaseDiscount|Percent={a.PercentOff}|Days={a.DurationDays}",
         FestivalBiasReward fb => $"FestivalBias|Festival={fb.Festival}|Magnitude={fb.Magnitude}",
         FairStarTokensReward fst => $"FairStarTokens|Amount={fst.Amount}",
+        CustomReward c => $"Custom|Kind={c.Kind}|Payload={EncodeOpaque(c.Payload)}",
         _ => throw new ArgumentException($"Unknown reward spec: {spec.GetType()}")
     };
+
+    // Payload may contain "|" / "=" / line breaks; base64 round-trips arbitrary text
+    // through the flat codec without conflicting with the field separator.
+    private static string EncodeOpaque(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+        return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(value));
+    }
+
+    private static string DecodeOpaque(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+        try
+        {
+            return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(value));
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
 
     private static string JoinAppliesTo(System.Collections.Generic.List<string>? items)
     {
@@ -165,6 +189,14 @@ public static class RewardCodec
                     && fields.TryGetValue("Days", out var apdDys) && int.TryParse(apdDys, out int apdDays))
                 {
                     return new AnimalPurchaseDiscountReward(apdPercent, apdDays);
+                }
+                return null;
+
+            case "Custom":
+                if (fields.TryGetValue("Kind", out var customKind) && !string.IsNullOrEmpty(customKind))
+                {
+                    fields.TryGetValue("Payload", out var payloadEncoded);
+                    return new CustomReward(customKind, DecodeOpaque(payloadEncoded));
                 }
                 return null;
 

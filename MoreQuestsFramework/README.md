@@ -51,6 +51,18 @@ This mod powers [More Quests](../MoreQuests/README.md) and ships four configurab
   - `AnimalPurchaseDiscount`, the same concept but applied to every `Data/FarmAnimals` purchase price. Should be compatible with mods like Livestock Bazaar that patch onto the animal purchase UI, but needs testing.
   - `FestivalBias`, a one-shot bias on the Luau governor reaction or the Fair grange judging score.
   - `FairStarTokens`, adds tokens to the player's `festivalScore` at the start of the vanilla Stardew Valley Fair.
+  - `Custom`, escape hatch for consumer-mod reward kinds. The reward's `Custom` field is the handler id registered via `IMoreQuestsModApi.RegisterCustomReward`; `Payload` is an arbitrary string the handler interprets (anything, the framework just round-trips it). Example:
+
+    ```csharp
+    scope.RegisterCustomReward(
+        "GrantPetSlimeFollower",
+        payload => MySlimeMod.AttachFollower(payload),
+        summarize: (payload, giver, t) =>
+            t.Get("quest.reward.line.slimeFollower", new { color = payload, npc = giver })
+                .Default($"{giver} will introduce you to a {payload} slime").ToString());
+    ```
+
+    Then in JSON: `{ "Kind": "Custom", "Custom": "GrantPetSlimeFollower", "Payload": "blue" }`. Bare handler names resolve under the calling mod's UniqueID; pass `"OtherMod.UniqueID/Name"` for cross-mod references. A Custom reward with no registered handler is a no-op (no payout, no journal line).
 
   Discounts and biases persist per save, sweep off on `DayStarted` once expired, and a re-grant merges into the existing entry instead of stacking.
 - **Consequence engine.** Each `QuestPosting` can carry a `ConsequenceSpec` (`Tier1` to `Tier3`, or `Special`). `SpecialOrderSpec` carries a list (e.g. one entry per dish for Grand-Feast-style multi-dish orders). On `questComplete`, the engine resolves loved/hated NPCs via `Data/NPCGiftTastes` (or a static `Targets[]` for Tier 3 ecology chains), filters to met villagers, samples one NPC per side (one loved plus one hated for `GiftTastes` source, every static target for `Static` source), and queues a per-NPC dialogue line plus friendship delta. The persistent dialogue queue adds lines on the next chat with the affected NPC, capped at one pop per NPC per in-game day. Tier 3 chains step `EarliestFireDay` so one line shows up per day. If the player doesn't chat with the designated npc that day (or for a number of days), the queue drops earlier stale lines and shows the most recent elligible line so the narration stays immersive (I tried my best). Entries past `ConsequenceGraceDays` (default 7 days after the quest starts) silently expire on `DayStarted`, so if you avoid the affected NPC for the whole week, you won't face the consequence. Built-in handlers (`Tier1` = `±FriendshipBasic`, `Tier2` = loved `+FriendshipBasic` / hated `-(FriendshipBasic+FriendshipMid)/2`, `Tier3` = multi-day chain to ecology NPCs, `Special` = gold loss) can be replaced per-tier through `IMoreQuestsModApi.RegisterConsequenceTier`.
@@ -230,6 +242,7 @@ Notes on the schema:
   - `AnimalPurchaseDiscount`: `PercentOff`, `DurationDays`.
   - `FestivalBias`: `Festival` (`Luau` or `Fair`), `Magnitude`.
   - `FairStarTokens`: `Amount`.
+  - `Custom`: `Custom` (handler id), optional `Payload` (string the handler unpacks however it wants).
 - JSON quests can attach a consequence with a `Consequence` block on the quest:
   - `Tier`: `Tier1` / `Tier2` / `Tier3` / `Special`. Omit (or set `Tier0`) to skip.
   - `Source`: `GiftTastes` (scan `Data/NPCGiftTastes` for loved/hated picks on `Subject`) or `Static` (use `Targets[]` verbatim).

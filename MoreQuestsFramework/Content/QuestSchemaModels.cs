@@ -150,7 +150,7 @@ public sealed class StepDef
 
 public sealed class RewardDef
 {
-    // Money | Friendship | Object | Recipe | Mail | ShopDiscount | AnimalPurchaseDiscount | FestivalBias | FairStarTokens.
+    // Money | Friendship | Object | Recipe | Mail | ShopDiscount | AnimalPurchaseDiscount | FestivalBias | FairStarTokens | Custom.
     public string Kind { get; set; } = "Money";
 
     public int Amount { get; set; }
@@ -174,6 +174,9 @@ public sealed class RewardDef
 
     public string? Festival { get; set; }
     public int Magnitude { get; set; }
+
+    public string? Custom { get; set; }
+    public string? Payload { get; set; }
 }
 
 public sealed class ConsequenceDef

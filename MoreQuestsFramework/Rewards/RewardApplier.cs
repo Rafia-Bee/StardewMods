@@ -20,6 +20,11 @@ public static class RewardApplier
 
     public static System.Action<FairStarTokensReward>? OnFairStarTokensGranted { get; set; }
 
+    // Resolves a CustomReward.Kind to a registered handler. Set by ModEntry on entry
+    // so the static Apply / BuildRewardSummary paths can dispatch without each
+    // RewardSpec record having to know about it.
+    public static CustomRewardRegistry? CustomRewards { get; set; }
+
     public static void ApplyEncoded(IEnumerable<string> encoded)
     {
         foreach (var line in encoded)
@@ -161,6 +166,26 @@ public static class RewardApplier
                 .Default($"{giver} will tip you {r.Amount} extra star tokens on Fair day").ToString());
         }
 
+        foreach (var r in rewards.OfType<CustomReward>())
+        {
+            if (string.IsNullOrEmpty(r.Kind))
+                continue;
+            var entry = CustomRewards?.Resolve(r.Kind);
+            if (entry?.Summarize == null)
+                continue;
+            string line;
+            try
+            {
+                line = entry.Summarize(r.Payload ?? string.Empty, giver, translation);
+            }
+            catch
+            {
+                continue;
+            }
+            if (!string.IsNullOrEmpty(line))
+                lines.Add(line);
+        }
+
         if (lines.Count == 0)
             return string.Empty;
 
@@ -227,6 +252,22 @@ public static class RewardApplier
                 if (fst.Amount <= 0)
                     return;
                 OnFairStarTokensGranted?.Invoke(fst);
+                break;
+
+            case CustomReward cr:
+                if (string.IsNullOrEmpty(cr.Kind))
+                    return;
+                var crHandler = CustomRewards?.Resolve(cr.Kind);
+                if (crHandler == null)
+                    return;
+                try
+                {
+                    crHandler.Apply(cr.Payload ?? string.Empty);
+                }
+                catch
+                {
+                    // Swallow so a broken handler can't take down the questComplete path.
+                }
                 break;
 
             case MailReward ml:

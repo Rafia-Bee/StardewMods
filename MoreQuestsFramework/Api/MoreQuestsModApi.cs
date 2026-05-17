@@ -5,6 +5,7 @@ using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Dispatch;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Registry;
+using MoreQuestsFramework.Rewards;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 
@@ -16,6 +17,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
     private readonly GeneratorRegistry _generators;
     private readonly CustomStepRegistry _customSteps;
     private readonly CustomTriggerRegistry _customTriggers;
+    private readonly CustomRewardRegistry _customRewards;
     private readonly QuestPackLoader _loader;
     private readonly DispatchRegistry _dispatch;
     private readonly BoardRegistry _boards;
@@ -31,6 +33,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
         GeneratorRegistry generators,
         CustomStepRegistry customSteps,
         CustomTriggerRegistry customTriggers,
+        CustomRewardRegistry customRewards,
         QuestPackLoader loader,
         DispatchRegistry dispatch,
         BoardRegistry boards,
@@ -43,6 +46,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
         _generators = generators;
         _customSteps = customSteps;
         _customTriggers = customTriggers;
+        _customRewards = customRewards;
         _loader = loader;
         _dispatch = dispatch;
         _boards = boards;
@@ -76,6 +80,16 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
 
     public void RegisterCustomTrigger(string name, Func<CustomTriggerContext, bool> handler)
         => _customTriggers.Register(Owner.UniqueID, name, handler);
+
+    public void RegisterCustomReward(
+        string name,
+        Action<string> apply,
+        Func<string, string, ITranslationHelper, string>? summarize = null)
+        => _customRewards.Register(
+            Owner.UniqueID,
+            name,
+            payload => apply(payload),
+            summarize == null ? null : new CustomRewardRegistry.SummarizeDelegate((p, g, t) => summarize(p, g, t)));
 
     public void LoadContentPack(IContentPack pack) => _loader.LoadContentPack(pack);
 
