@@ -84,8 +84,16 @@ internal sealed class SpecialOrderWriter
 
     public void SweepExpired()
     {
-        if (_state == null || _state.EmittedSpecialOrders.Count == 0)
+        if (_state == null)
             return;
+        if (_state.EmittedSpecialOrders.Count == 0)
+        {
+            // No active orders means any leftover bookkeeping is stale (a save imported from
+            // an older build, or a path that registered a grant without an emit).
+            if (_state.FrameworkRewardsGranted.Count > 0)
+                _state.FrameworkRewardsGranted.Clear();
+            return;
+        }
 
         int today = Game1.Date.TotalDays;
         var inFlight = new HashSet<string>(StringComparer.Ordinal);
@@ -101,10 +109,19 @@ internal sealed class SpecialOrderWriter
         {
             if (e.ExpiresAfterDay > today || inFlight.Contains(e.OrderId))
                 return false;
-            // Clear bookkeeping so a future re-emit of the same definition re-grants.
             _state.FrameworkRewardsGranted.Remove(e.OrderId);
             return true;
         });
+
+        // Belt-and-suspenders: ensure FrameworkRewardsGranted never carries an entry
+        // without a matching emitted order, so the list stays bounded by what's tracked.
+        if (_state.FrameworkRewardsGranted.Count > 0)
+        {
+            var validIds = new HashSet<string>(_state.EmittedSpecialOrders.Count, StringComparer.Ordinal);
+            foreach (var e in _state.EmittedSpecialOrders)
+                validIds.Add(e.OrderId);
+            _state.FrameworkRewardsGranted.RemoveAll(id => !validIds.Contains(id));
+        }
 
         if (dropped > 0)
         {
