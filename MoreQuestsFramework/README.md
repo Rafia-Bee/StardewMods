@@ -16,7 +16,7 @@ This mod powers [More Quests](../MoreQuests/README.md) and ships four configurab
   - `DateLocked`, a specific date, optionally yearly.
   - `DateRange`, every day inside a closed date range.
   - `OneShot`, fires once per save when the `When` predicate first comes true.
-  - `BuildingBuilt`, the day a given farm building is added (with optional `DayDelay`).
+  - `BuildingBuilt`, the morning after a given farm building finishes construction (with optional `DayDelay`).
   - `MailReceived`, the day a given mail flag enters the player's received list (with optional `DayDelay`).
   - `WeatherForecast`, when tomorrow's weather matches. Handy for rainy-day mail that arrives the night before.
   - `NpcDialogue`, queues the posting until the player next speaks to the named NPC.

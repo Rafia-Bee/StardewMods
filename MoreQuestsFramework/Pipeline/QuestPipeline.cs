@@ -142,6 +142,8 @@ internal sealed class QuestPipeline
             // Mail / one-shot / dialogue channels don't have a separate accept step,
             // so start the definition cooldown immediately on post.
             _antiRepetition.RecordDefinitionAccepted(posting.DefinitionId);
+            if (src == TriggerSource.OneShot)
+                _triggers.MarkOneShotFired(def.Id);
         }
         return results;
     }
