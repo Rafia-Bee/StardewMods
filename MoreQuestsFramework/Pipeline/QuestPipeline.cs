@@ -97,7 +97,7 @@ public sealed class QuestPipeline
                 continue;
 
             _activePostings.Add(posting);
-            _antiRepetition.Record(posting);
+            _antiRepetition.RecordRecency(posting);
             defCounts[def.Id] = count + 1;
             if (!string.IsNullOrEmpty(posting.QuestGiver))
                 giversToday.Add(posting.QuestGiver);
@@ -138,7 +138,10 @@ public sealed class QuestPipeline
             // Generators sometimes leave Kind unset.
             posting.Kind = def.Kind;
             results.Add(posting);
-            _antiRepetition.Record(posting);
+            _antiRepetition.RecordRecency(posting);
+            // Mail / one-shot / dialogue channels don't have a separate accept step,
+            // so start the definition cooldown immediately on post.
+            _antiRepetition.RecordDefinitionAccepted(posting.DefinitionId);
         }
         return results;
     }
@@ -242,7 +245,7 @@ public sealed class QuestPipeline
                     posting.OwnerUniqueId = def.OwnerUniqueId;
 
                 picked.Add((posting, board));
-                _antiRepetition.Record(posting);
+                _antiRepetition.RecordRecency(posting);
                 defCounts[def.Id] = count + 1;
                 if (defCounts[def.Id] >= def.MaxPerDay)
                     pool.RemoveAll(x => x.Def.Id == def.Id);

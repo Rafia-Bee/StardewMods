@@ -60,6 +60,7 @@ public sealed class ModEntry : Mod
     internal DispatchRegistry Dispatch { get; private set; } = null!;
     internal CombatFoodRegistry CombatFood { get; private set; } = null!;
     internal MoreQuestsApi Api => _api;
+    internal AntiRepetition? Anti => _antiRepetition;
 
     private readonly HashSet<Quest> _watching = new();
     private readonly HashSet<Quest> _seenInLog = new();
