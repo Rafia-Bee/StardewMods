@@ -1,7 +1,12 @@
+using Newtonsoft.Json;
+
 namespace MoreQuestsFramework.Rewards;
 
 // Records stay tiny so RewardCodec can encode them into single text lines and
 // net-sync them as NetStringList entries without a polymorphic serializer.
+// The JsonConverter routes JSON persistence through the same codec, so save data
+// stores each reward as a string instead of an object that needs a $type tag.
+[JsonConverter(typeof(RewardSpecJsonConverter))]
 public abstract record RewardSpec;
 
 public sealed record MoneyReward(int Amount) : RewardSpec;
