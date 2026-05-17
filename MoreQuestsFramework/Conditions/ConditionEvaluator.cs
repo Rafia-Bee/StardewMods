@@ -165,7 +165,7 @@ public static class ConditionEvaluator
                 return int.TryParse(value, out int needed)
                     && modRegistry != null
                     && modRegistry.IsLoaded(ModCompat.LivestockFollowsYou)
-                    && needed <= 0;
+                    && FollowerApiBridge.CurrentCount() >= needed;
 
             case "random":
                 return float.TryParse(value, out float pct) && Game1.random.NextDouble() < pct;
