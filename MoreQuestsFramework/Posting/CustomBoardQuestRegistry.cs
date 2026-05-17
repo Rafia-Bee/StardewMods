@@ -9,7 +9,7 @@ namespace MoreQuestsFramework.Posting;
 // A QuestPosting with QuestType == BoardQuestType.Custom carries the handler id in
 // CustomQuestType; bare names resolve under the owning consumer mod, "OtherMod/Name"
 // references another mod's handler.
-public sealed class CustomBoardQuestRegistry
+internal sealed class CustomBoardQuestRegistry
 {
     private readonly IMonitor _monitor;
     private readonly Dictionary<string, Func<CustomBoardQuestContext, Quest?>> _handlers

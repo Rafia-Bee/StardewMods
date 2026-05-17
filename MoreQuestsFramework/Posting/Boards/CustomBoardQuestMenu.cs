@@ -6,7 +6,7 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Posting.Boards;
 
-public sealed class CustomBoardQuestMenu : IClickableMenu
+internal sealed class CustomBoardQuestMenu : IClickableMenu
 {
     private const int SourceWidth = 338;
     private const int SourceHeight = 198;

@@ -3,7 +3,7 @@ using StardewModdingAPI;
 namespace MoreQuestsFramework.State;
 
 // SMAPI scopes WriteSaveData to the host save, matching our host-only multiplayer stance.
-public sealed class StateStore
+internal sealed class StateStore
 {
     private const string Key = "MoreQuestsFrameworkState";
 

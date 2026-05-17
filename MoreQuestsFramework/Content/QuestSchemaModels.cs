@@ -3,13 +3,13 @@ using Newtonsoft.Json;
 
 namespace MoreQuestsFramework.Content;
 
-public sealed class QuestPackDocument
+internal sealed class QuestPackDocument
 {
     public string Schema { get; set; } = "1.0";
     public List<QuestDef> Quests { get; set; } = new();
 }
 
-public sealed class QuestDef
+internal sealed class QuestDef
 {
     public string? Name { get; set; }
     public string? Category { get; set; }
@@ -38,7 +38,7 @@ public sealed class QuestDef
     public ConsequenceDef? Consequence { get; set; }
 }
 
-public sealed class TriggerDef
+internal sealed class TriggerDef
 {
     public string Source { get; set; } = "DailyBoard";
     public int? Weight { get; set; }
@@ -96,7 +96,7 @@ public sealed class TriggerDef
     public string? Custom { get; set; }
 }
 
-public sealed class ObjectiveDef
+internal sealed class ObjectiveDef
 {
     // Deliver | Resource | Fish | Slay | Ship | Socialize | Custom.
     public string Kind { get; set; } = "Deliver";
@@ -123,7 +123,7 @@ public sealed class ObjectiveDef
     public string? Weather { get; set; }
 }
 
-public sealed class StepDef
+internal sealed class StepDef
 {
     public string? Name { get; set; }
 
@@ -153,7 +153,7 @@ public sealed class StepDef
     public string? Weather { get; set; }
 }
 
-public sealed class RewardDef
+internal sealed class RewardDef
 {
     // Money | Friendship | Object | Recipe | Mail | ShopDiscount | AnimalPurchaseDiscount | FestivalBias | FairStarTokens | Custom.
     public string Kind { get; set; } = "Money";
@@ -184,7 +184,7 @@ public sealed class RewardDef
     public string? Payload { get; set; }
 }
 
-public sealed class ConsequenceDef
+internal sealed class ConsequenceDef
 {
     // Tier1 | Tier2 | Tier3 | Special. Default Tier0 (off).
     public string Tier { get; set; } = "Tier0";

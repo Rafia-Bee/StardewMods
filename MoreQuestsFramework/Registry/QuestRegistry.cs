@@ -6,7 +6,7 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Registry;
 
-public sealed class QuestRegistry
+internal sealed class QuestRegistry
 {
     private readonly IMonitor _monitor;
     private readonly Dictionary<string, IQuestDefinition> _byId = new(StringComparer.OrdinalIgnoreCase);

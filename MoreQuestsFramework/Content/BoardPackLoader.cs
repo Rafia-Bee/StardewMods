@@ -5,7 +5,7 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Content;
 
-public sealed class BoardPackLoader
+internal sealed class BoardPackLoader
 {
     private readonly BoardRegistry _registry;
     private readonly IMonitor _monitor;

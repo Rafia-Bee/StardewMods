@@ -45,7 +45,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     public event EventHandler<QuestRemovedArgs>? QuestRemoved;
     public event EventHandler<DayRefreshedArgs>? DayRefreshed;
 
-    public MoreQuestsApi(
+    internal MoreQuestsApi(
         QuestRegistry registry,
         GeneratorRegistry generators,
         CustomStepRegistry customSteps,

@@ -8,7 +8,7 @@ namespace MoreQuestsFramework.Conditions;
 // don't collide with built-ins or with other mods (e.g. prefix the key with
 // the mod's short name: "MyMod_HasFriend"); collisions are rejected with a Warn
 // and the first registration wins.
-public sealed class CustomConditionRegistry
+internal sealed class CustomConditionRegistry
 {
     private readonly IMonitor _monitor;
     private readonly Dictionary<string, Func<string, bool>> _evaluators

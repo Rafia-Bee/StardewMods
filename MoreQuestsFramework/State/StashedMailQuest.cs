@@ -4,7 +4,7 @@ namespace MoreQuestsFramework.State;
 
 // Serializable mirror of a pending mail-quest posting. Only non-PreBuilt postings can
 // round-trip through this DTO (custom Quest subclasses with NetFields can't).
-public sealed class StashedMailQuest
+internal sealed class StashedMailQuest
 {
     public string MailKey { get; set; } = "";
     public string OwnerUniqueId { get; set; } = "";

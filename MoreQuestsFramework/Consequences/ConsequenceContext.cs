@@ -9,8 +9,8 @@ public sealed class ConsequenceContext
 {
     public ConsequenceSpec Spec { get; }
     public MoreQuestsFrameworkConfig Config { get; }
-    public GiftTastesScanner GiftTastes { get; }
-    public FrameworkState State { get; }
+    internal GiftTastesScanner GiftTastes { get; }
+    internal FrameworkState State { get; }
     public IMonitor Monitor { get; }
 
     public IReadOnlyList<string> LovedBy { get; }
@@ -19,7 +19,7 @@ public sealed class ConsequenceContext
     // the affected/hated side; no positive static-target use case today).
     public IReadOnlyList<string> HatedBy { get; }
 
-    public ConsequenceContext(
+    internal ConsequenceContext(
         ConsequenceSpec spec,
         MoreQuestsFrameworkConfig config,
         GiftTastesScanner giftTastes,

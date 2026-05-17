@@ -11,7 +11,7 @@ using StardewValley;
 namespace MoreQuestsFramework.Posting.Boards;
 
 // SMAPI-only (no Harmony). Boards failing Available are silently hidden.
-public sealed class BoardWorldRenderer
+internal sealed class BoardWorldRenderer
 {
     private const int TilePixels = 64;
     private const int IndicatorSourceX = 395;

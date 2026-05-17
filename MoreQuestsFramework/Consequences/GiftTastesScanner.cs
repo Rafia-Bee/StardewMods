@@ -7,7 +7,7 @@ namespace MoreQuestsFramework.Consequences;
 // Data/NPCGiftTastes row format (slash-separated): 0 universal-love, 1 loved ids,
 // 2 universal-like, 3 liked ids, 4 universal-dislike, 5 disliked ids, 6 universal-hate,
 // 7 hated ids, 8 universal-neutral, 9 neutral ids.
-public sealed class GiftTastesScanner
+internal sealed class GiftTastesScanner
 {
     private readonly GameDataCache _cache;
     private Dictionary<string, NpcTasteIndex>? _index;

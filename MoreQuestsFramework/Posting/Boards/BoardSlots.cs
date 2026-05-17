@@ -7,7 +7,7 @@ using StardewValley.Quests;
 namespace MoreQuestsFramework.Posting.Boards;
 
 // Mirrors BillboardSlots for the help-wanted board so BoardLayout can render either.
-public static class CustomBoardSlots
+internal static class CustomBoardSlots
 {
     private static readonly Dictionary<string, List<Slot>> _byBoardKey
         = new(StringComparer.OrdinalIgnoreCase);

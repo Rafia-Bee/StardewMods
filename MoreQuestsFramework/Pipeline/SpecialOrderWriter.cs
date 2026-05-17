@@ -14,7 +14,7 @@ namespace MoreQuestsFramework.Pipeline;
 // OrderId is namespaced as <ownerUniqueId>.<defId>.<dayStamp> so vanilla/third-party
 // SpecialOrders keys can't collide. SweepExpired only drops entries past expiry that
 // aren't in-flight in team.specialOrders, so accepted orders aren't yanked.
-public sealed class SpecialOrderWriter
+internal sealed class SpecialOrderWriter
 {
     private const string AssetName = "Data/SpecialOrders";
 

@@ -3,7 +3,7 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests.Vanilla;
 
-public sealed class VanillaSlayMonster : IQuestDefinition
+internal sealed class VanillaSlayMonster : IQuestDefinition
 {
     public string Id => "Vanilla.SlayMonster";
     public QuestCategory Category => QuestCategory.Mining;

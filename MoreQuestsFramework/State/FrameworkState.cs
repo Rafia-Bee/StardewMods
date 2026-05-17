@@ -4,7 +4,7 @@ using MoreQuestsFramework.Consequences;
 namespace MoreQuestsFramework.State;
 
 // Per-save persistent state. All dict keys are the JSON-Name verbatim of the quest def.
-public sealed class FrameworkState
+internal sealed class FrameworkState
 {
     // Bumped on incompatible shape changes so migrations can branch on it.
     public int Schema { get; set; } = 1;
@@ -46,7 +46,7 @@ public sealed class FrameworkState
     public List<ActiveFairStarTokens> ActiveFairStarTokens { get; set; } = new();
 }
 
-public sealed class ActiveFestivalBias
+internal sealed class ActiveFestivalBias
 {
     // Stringly-typed so the enum can move without breaking save compat.
     public string Festival { get; set; } = "";
@@ -57,13 +57,13 @@ public sealed class ActiveFestivalBias
     public int ExpiresAfterDay { get; set; }
 }
 
-public sealed class ActiveFairStarTokens
+internal sealed class ActiveFairStarTokens
 {
     public int Amount { get; set; }
     public int ExpiresAfterDay { get; set; }
 }
 
-public sealed class ActiveShopDiscount
+internal sealed class ActiveShopDiscount
 {
     public string ShopId { get; set; } = "";
     public int PercentOff { get; set; }
@@ -74,7 +74,7 @@ public sealed class ActiveShopDiscount
     public int GuaranteedStock { get; set; }
 }
 
-public sealed class ActiveAnimalPurchaseDiscount
+internal sealed class ActiveAnimalPurchaseDiscount
 {
     public int PercentOff { get; set; }
     public int ExpiresAfterDay { get; set; }
@@ -82,7 +82,7 @@ public sealed class ActiveAnimalPurchaseDiscount
 
 // Spec is the framework-neutral shape; the writer rebuilds the vanilla SpecialOrderData
 // instance per edit pass (avoids SMAPI's AsDictionary cast issue with pre-serialised JSON).
-public sealed class EmittedSpecialOrder
+internal sealed class EmittedSpecialOrder
 {
     public string OrderId { get; set; } = "";
 

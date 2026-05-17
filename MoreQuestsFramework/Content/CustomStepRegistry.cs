@@ -8,7 +8,7 @@ namespace MoreQuestsFramework.Content;
 // Names are namespaced as {ownerUniqueId}/{name}, mirroring GeneratorRegistry. A
 // Custom AdventureStep's Targets[0] is the handler id (literal "OtherMod/Name" or
 // a bare name resolved against the owning consumer mod's UniqueID).
-public sealed class CustomStepRegistry
+internal sealed class CustomStepRegistry
 {
     private readonly IMonitor _monitor;
     private readonly Dictionary<string, Func<CustomStepContext, int>> _handlers
