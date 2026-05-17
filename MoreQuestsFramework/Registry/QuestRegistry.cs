@@ -31,17 +31,20 @@ internal sealed class QuestRegistry
         }
     }
 
-    public void Register(IQuestDefinition def)
+    // Returns true when the def took. False means the call was rejected (frozen registry
+    // or duplicate id), with the reason logged at Warn. Consumer mods can branch on the
+    // return value to surface their own failures instead of guessing from log output.
+    public bool Register(IQuestDefinition def)
     {
         if (_frozen)
         {
             _monitor.Log($"QuestRegistry rejected '{def.Id}': registry is frozen for this session.", LogLevel.Warn);
-            return;
+            return false;
         }
         if (_byId.ContainsKey(def.Id))
         {
             _monitor.Log($"QuestRegistry rejected duplicate registration for '{def.Id}'.", LogLevel.Warn);
-            return;
+            return false;
         }
         _byId[def.Id] = def;
         _ordered.Add(def);
@@ -53,6 +56,7 @@ internal sealed class QuestRegistry
             _pendingOverrides.Remove(def.Id);
             _monitor.Log($"Applied buffered source override on '{def.Id}': {pending}.", LogLevel.Trace);
         }
+        return true;
     }
 
     public bool TryGet(string id, out IQuestDefinition? def) => _byId.TryGetValue(id, out def!);

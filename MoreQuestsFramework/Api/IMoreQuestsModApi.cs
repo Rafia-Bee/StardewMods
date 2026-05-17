@@ -15,7 +15,9 @@ public interface IMoreQuestsModApi
 {
     IManifest Owner { get; }
 
-    void RegisterQuest(IQuestDefinition definition);
+    // Returns true on success. False means the registration was rejected (duplicate id
+    // or the registration window has already closed); the reason is logged at Warn.
+    bool RegisterQuest(IQuestDefinition definition);
 
     // Registers a custom Quest subclass with SpaceCore's serializer factory so it
     // survives save/load. Wraps SpaceCore so consumers don't need their own reference.
