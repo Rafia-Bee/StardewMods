@@ -17,7 +17,7 @@
             "Name": "Mining.BasicSlimeClearing",
             "Category": "Mining",
             "Trigger": {
-                "Source": "DailyBoard",
+                "Source": "CustomBoard",
                 "Weight": 50,
                 "MaxPerDay": 1,
                 "CooldownTier": "Medium",
@@ -313,7 +313,7 @@
             "Name": "Mining.MonsterParts",
             "Category": "Mining",
             "Trigger": {
-                "Source": "DailyBoard",
+                "Source": "CustomBoard",
                 "Weight": 20,
                 "MaxPerDay": 1,
                 "CooldownTier": "Medium",
@@ -402,7 +402,7 @@
             "Name": "Mining.MonsterHunt",
             "Category": "Mining",
             "Trigger": {
-                "Source": "DailyBoard",
+                "Source": "CustomBoard",
                 "Weight": 25,
                 "MaxPerDay": 1,
                 "CooldownTier": "Medium",
@@ -426,7 +426,7 @@
             "Name": "Mining.RareMaterialRequest",
             "Category": "Mining",
             "Trigger": {
-                "Source": "DailyBoard",
+                "Source": "CustomBoard",
                 "Weight": 15,
                 "MaxPerDay": 1,
                 "CooldownTier": "Medium",
