@@ -157,11 +157,14 @@ internal sealed class StepDef
 
     public string? Description { get; set; }
 
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public List<string> Requires { get; set; } = new();
 
     // Supports $giver, rewritten at quest-creation time.
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public List<string> Targets { get; set; } = new();
 
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public List<string> Items { get; set; } = new();
 
     public int Count { get; set; } = 1;
