@@ -117,6 +117,12 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     private QuestPosting BuildAdventure(QuestContext ctx)
     {
         string giver = _def.Giver ?? string.Empty;
+        var stepNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var sd in _def.Steps)
+        {
+            if (!string.IsNullOrEmpty(sd.Name))
+                stepNames.Add(sd.Name);
+        }
         var steps = new List<AdventureStepState>(_def.Steps.Count);
         foreach (var sd in _def.Steps)
         {
@@ -124,6 +130,11 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             {
                 _monitor.Log($"Quest '{Id}': step '{sd.Name}' has unknown Kind '{sd.Kind}'; skipping.", LogLevel.Warn);
                 continue;
+            }
+            foreach (var req in sd.Requires)
+            {
+                if (!string.IsNullOrEmpty(req) && !stepNames.Contains(req))
+                    _monitor.Log($"Quest '{Id}': step '{sd.Name}' Requires '{req}', which is not a step name in this quest. That step will never unlock.", LogLevel.Warn);
             }
             steps.Add(new AdventureStepState
             {
