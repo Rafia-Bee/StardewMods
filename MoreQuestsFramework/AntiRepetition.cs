@@ -4,7 +4,7 @@ using StardewValley;
 
 namespace MoreQuestsFramework;
 
-public sealed class AntiRepetition
+internal sealed class AntiRepetition
 {
     private const int MaxItemHistory = 6;
     private const int MaxNpcHistory = 3;

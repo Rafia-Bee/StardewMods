@@ -7,7 +7,7 @@ namespace MoreQuestsFramework.Rewards;
 // rehydrate that without a $type discriminator, which would also tie the on-disk
 // shape to the C# type names. Instead we lean on RewardCodec (already used for mail
 // stashing / net-sync) to round-trip each spec as a single text line.
-public sealed class RewardSpecJsonConverter : JsonConverter<RewardSpec>
+internal sealed class RewardSpecJsonConverter : JsonConverter<RewardSpec>
 {
     public override void WriteJson(JsonWriter writer, RewardSpec? value, JsonSerializer serializer)
     {

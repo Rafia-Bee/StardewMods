@@ -5,7 +5,7 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Rewards;
 
-public sealed class FairStarTokensWriter
+internal sealed class FairStarTokensWriter
 {
     private const int LookaheadDays = 30;
 

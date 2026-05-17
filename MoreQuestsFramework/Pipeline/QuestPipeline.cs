@@ -9,7 +9,7 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Pipeline;
 
-public sealed class QuestPipeline
+internal sealed class QuestPipeline
 {
     private readonly QuestContext _ctx;
     private readonly QuestRegistry _registry;

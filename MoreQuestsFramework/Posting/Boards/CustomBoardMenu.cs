@@ -11,7 +11,7 @@ namespace MoreQuestsFramework.Posting.Boards;
 
 // Does NOT inherit vanilla Billboard. Shares scatter layout with MoreQuestsBillboard
 // via BoardLayout.
-public sealed class CustomBoardMenu : IClickableMenu
+internal sealed class CustomBoardMenu : IClickableMenu
 {
     private const int MenuWidth = 338 * 4;
     private const int MenuHeight = 198 * 4;

@@ -6,7 +6,7 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Content;
 
-public sealed class QuestPackLoader
+internal sealed class QuestPackLoader
 {
     private readonly QuestRegistry _registry;
     private readonly GeneratorRegistry _generators;

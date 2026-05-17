@@ -23,7 +23,7 @@ public static class RewardApplier
     // Resolves a CustomReward.Kind to a registered handler. Set by ModEntry on entry
     // so the static Apply / BuildRewardSummary paths can dispatch without each
     // RewardSpec record having to know about it.
-    public static CustomRewardRegistry? CustomRewards { get; set; }
+    internal static CustomRewardRegistry? CustomRewards { get; set; }
 
     public static void ApplyEncoded(IEnumerable<string> encoded)
     {

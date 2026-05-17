@@ -8,7 +8,7 @@ namespace MoreQuestsFramework;
 
 // Backs the custom Billboard menu and the Harmony patch that redirects
 // Game1.questOfTheDay getters to the currently-selected quest.
-public static class BillboardSlots
+internal static class BillboardSlots
 {
     private static readonly List<Slot> _slots = new();
 

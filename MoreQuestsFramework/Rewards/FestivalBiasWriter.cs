@@ -5,7 +5,7 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Rewards;
 
-public sealed class FestivalBiasWriter
+internal sealed class FestivalBiasWriter
 {
     private readonly IMonitor _monitor;
     private FrameworkState? _state;

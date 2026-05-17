@@ -2,7 +2,7 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests.Vanilla;
 
-public sealed class VanillaFishing : IQuestDefinition
+internal sealed class VanillaFishing : IQuestDefinition
 {
     public string Id => "Vanilla.Fishing";
     public QuestCategory Category => QuestCategory.Fishing;

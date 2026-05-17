@@ -8,7 +8,7 @@ using StardewValley.GameData.Shops;
 
 namespace MoreQuestsFramework.Rewards;
 
-public sealed class ShopDiscountWriter
+internal sealed class ShopDiscountWriter
 {
     private const string AssetName = "Data/Shops";
 

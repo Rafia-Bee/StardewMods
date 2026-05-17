@@ -4,7 +4,7 @@ using MoreQuestsFramework.Dispatch;
 namespace MoreQuestsFramework;
 
 /// Backcompat facade over IMoreQuestsApi for older consumer mods.
-public static class NpcDispatch
+internal static class NpcDispatch
 {
     public static string? Pick(string role) =>
         ModEntry.Instance.Dispatch.Pick(role);

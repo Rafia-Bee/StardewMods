@@ -10,7 +10,7 @@ namespace MoreQuestsFramework.Rewards;
 
 // Asset-edit approach so third-party menu rewrites (Livestock Bazaar etc) pick up
 // the discount without a per-menu patch.
-public sealed class AnimalPurchaseDiscountWriter
+internal sealed class AnimalPurchaseDiscountWriter
 {
     private const string AssetName = "Data/FarmAnimals";
 

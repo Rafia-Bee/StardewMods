@@ -2,7 +2,7 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests.Vanilla;
 
-public sealed class VanillaItemDelivery : IQuestDefinition
+internal sealed class VanillaItemDelivery : IQuestDefinition
 {
     public string Id => "Vanilla.ItemDelivery";
     public QuestCategory Category => QuestCategory.Social;

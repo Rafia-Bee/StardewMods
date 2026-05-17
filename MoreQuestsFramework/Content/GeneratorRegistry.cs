@@ -5,7 +5,7 @@ using StardewModdingAPI;
 namespace MoreQuestsFramework.Content;
 
 // Names are namespaced as {ownerUniqueId}/{name}.
-public sealed class GeneratorRegistry
+internal sealed class GeneratorRegistry
 {
     private readonly IMonitor _monitor;
     private readonly Dictionary<string, Func<QuestContext, QuestPosting?>> _generators

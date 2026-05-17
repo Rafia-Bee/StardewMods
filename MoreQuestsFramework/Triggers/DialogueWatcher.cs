@@ -9,7 +9,7 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Triggers;
 
-public sealed class DialogueWatcher
+internal sealed class DialogueWatcher
 {
     private readonly QuestRegistry _registry;
     private readonly QuestContext _ctx;

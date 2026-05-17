@@ -8,7 +8,7 @@ namespace MoreQuestsFramework;
 // Pool of qualified item ids offered as combat-food rewards. SaveLoaded auto-scans
 // Data/Objects for edibles with non-zero Attack/Defense buffs; consumers can also
 // call Register() to add items the scan misses.
-public sealed class CombatFoodRegistry
+internal sealed class CombatFoodRegistry
 {
     private readonly IMonitor _monitor;
     private readonly List<string> _items = new();

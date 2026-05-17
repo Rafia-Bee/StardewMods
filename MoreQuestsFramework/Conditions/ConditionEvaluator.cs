@@ -14,7 +14,7 @@ namespace MoreQuestsFramework.Conditions;
 // quests. Plumbing QuestContext through here would let consumer-mod tests and UIs do
 // real dry-runs ("would this fire if it were winter and Leah were at 4 hearts?")
 // instead of just observing the live save. Holds back unit-testability of conditions.
-public static class ConditionEvaluator
+internal static class ConditionEvaluator
 {
     // Set by ModEntry so the default case can dispatch into consumer-mod custom
     // condition keys before falling through to the fail-closed false return.

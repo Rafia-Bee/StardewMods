@@ -9,7 +9,7 @@ namespace MoreQuestsFramework.Triggers;
 // Non-pool triggers evaluated at DayStarted. Calendar triggers are per-day; event
 // triggers (Building/Mail/OneShot) are detected by diffing yesterday's snapshot.
 // NpcDialogue is the runtime-watcher exception, handled by DialogueWatcher.
-public sealed class TriggerEvaluator
+internal sealed class TriggerEvaluator
 {
     private readonly FrameworkState _state;
     private readonly IMonitor _monitor;

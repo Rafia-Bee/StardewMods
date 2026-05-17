@@ -7,7 +7,7 @@ namespace MoreQuestsFramework.Triggers;
 public readonly record struct MailQuestEntry(Quest Quest, string OwnerUniqueId, string DefinitionId);
 
 // Rebuilt from FrameworkState.PendingMailDeliveries at SaveLoaded.
-public sealed class MailQuestRegistry
+internal sealed class MailQuestRegistry
 {
     private readonly Dictionary<string, MailQuestEntry> _byId = new(StringComparer.Ordinal);
 

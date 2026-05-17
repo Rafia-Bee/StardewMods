@@ -7,7 +7,7 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Consequences;
 
-public sealed class ConsequenceEngine
+internal sealed class ConsequenceEngine
 {
     private readonly Dictionary<ConsequenceTier, IConsequenceHandler> _handlers = new();
     private readonly MoreQuestsFrameworkConfig _config;

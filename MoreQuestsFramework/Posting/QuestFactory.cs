@@ -5,7 +5,7 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Posting;
 
-public static class QuestFactory
+internal static class QuestFactory
 {
     // Fallback prefix when a posting somehow lacks an OwnerUniqueId. The real owner
     // (consumer mod) is used when available so trackers that key off id prefix

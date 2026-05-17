@@ -7,7 +7,7 @@ namespace MoreQuestsFramework.Consequences;
 
 // Pop rule: at most one line per NPC per chat session AND per in-game day. Without
 // the per-day clamp, a player who skips days gets every queued line back-to-back.
-public sealed class ConsequenceDialogueWatcher
+internal sealed class ConsequenceDialogueWatcher
 {
     private readonly FrameworkState _state;
     private readonly IMonitor _monitor;

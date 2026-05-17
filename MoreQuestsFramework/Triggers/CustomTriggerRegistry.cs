@@ -7,7 +7,7 @@ namespace MoreQuestsFramework.Triggers;
 // Names are namespaced as {ownerUniqueId}/{name}, mirroring GeneratorRegistry. A
 // JSON quest's Trigger.Custom field carries the handler id (literal "OtherMod/Name"
 // or a bare name resolved against the owning consumer mod's UniqueID).
-public sealed class CustomTriggerRegistry
+internal sealed class CustomTriggerRegistry
 {
     private readonly IMonitor _monitor;
     private readonly Dictionary<string, Func<CustomTriggerContext, bool>> _handlers

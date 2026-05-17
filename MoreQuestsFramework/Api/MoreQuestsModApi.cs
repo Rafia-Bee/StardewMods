@@ -14,7 +14,7 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Api;
 
-public sealed class MoreQuestsModApi : IMoreQuestsModApi
+internal sealed class MoreQuestsModApi : IMoreQuestsModApi
 {
     private readonly QuestRegistry _registry;
     private readonly GeneratorRegistry _generators;

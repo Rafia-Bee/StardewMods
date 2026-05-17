@@ -2,7 +2,7 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests.Vanilla;
 
-public sealed class VanillaResourceCollection : IQuestDefinition
+internal sealed class VanillaResourceCollection : IQuestDefinition
 {
     public string Id => "Vanilla.ResourceCollection";
     public QuestCategory Category => QuestCategory.Foraging;

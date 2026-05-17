@@ -12,7 +12,7 @@ namespace MoreQuestsFramework;
 // Cork-board of quest notes (pad + pin + portrait). Clicking spawns a vanilla
 // Billboard(true) overlay for accept-quest UI; Harmony redirects Game1.questOfTheDay
 // to the selected slot.
-public sealed class MoreQuestsBillboard : Billboard
+internal sealed class MoreQuestsBillboard : Billboard
 {
     private readonly List<Note> _notes = new();
     private readonly Dictionary<int, Note> _notesByCc = new();

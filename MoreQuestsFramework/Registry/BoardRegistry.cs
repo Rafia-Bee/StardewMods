@@ -5,7 +5,7 @@ using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Registry;
 
-public sealed class BoardRegistry
+internal sealed class BoardRegistry
 {
     private readonly IMonitor _monitor;
     private readonly Dictionary<string, BoardDefinition> _byKey

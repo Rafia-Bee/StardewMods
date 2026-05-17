@@ -7,7 +7,7 @@ namespace MoreQuestsFramework.Rewards;
 // Names are namespaced as {ownerUniqueId}/{name}, mirroring GeneratorRegistry. A
 // CustomReward's Kind field is the handler id (literal "OtherMod/Name" works for
 // cross-mod references, bare names resolve under the registering mod's UniqueID).
-public sealed class CustomRewardRegistry
+internal sealed class CustomRewardRegistry
 {
     public delegate void ApplyDelegate(string payload);
     public delegate string SummarizeDelegate(string payload, string questGiver, ITranslationHelper translation);

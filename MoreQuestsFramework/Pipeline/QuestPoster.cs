@@ -13,7 +13,7 @@ using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Pipeline;
 
-public sealed class QuestPoster
+internal sealed class QuestPoster
 {
     // Fallback prefix when a posting somehow lacks an OwnerUniqueId.
     private const string MailFallbackPrefix = "RafiaBee.MoreQuestsFramework";
