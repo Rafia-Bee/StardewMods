@@ -271,7 +271,11 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
                     sink.Add(new MoneyReward(r.Amount));
                     break;
                 case "friendship":
-                    if (!string.IsNullOrEmpty(r.Npc))
+                    if (string.IsNullOrEmpty(r.Npc))
+                        break;
+                    if (r.Points == 0)
+                        _monitor.Log($"Quest '{Id}': Friendship reward needs a non-zero Points value.", LogLevel.Warn);
+                    else
                         sink.Add(new FriendshipReward(r.Npc, r.Points));
                     break;
                 case "object":
