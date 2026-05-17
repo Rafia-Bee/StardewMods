@@ -243,6 +243,9 @@ public sealed class ModEntry : Mod
 
         _stateStore = new StateStore(Helper.Data, Monitor);
         _stateStore.Load();
+        int prunedDeadIds = _stateStore.State.PruneDeadDefIds(_registry.RegisteredIds());
+        if (prunedDeadIds > 0)
+            Monitor.Log($"Pruned {prunedDeadIds} stale save-state entr{(prunedDeadIds == 1 ? "y" : "ies")} for quests no longer registered.", LogLevel.Trace);
         _antiRepetition.WireState(_stateStore.State);
 
         _triggers = new TriggerEvaluator(_stateStore.State, Monitor, _customTriggers);
