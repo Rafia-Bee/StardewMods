@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MoreQuestsFramework.Consequences;
 
@@ -44,6 +45,38 @@ internal sealed class FrameworkState
     public List<ActiveFestivalBias> ActiveFestivalBiases { get; set; } = new();
 
     public List<ActiveFairStarTokens> ActiveFairStarTokens { get; set; } = new();
+
+    // Drops entries keyed by a defId that no longer maps to a registered quest, so
+    // uninstalling a consumer mod doesn't leave its keys lingering in the save forever.
+    // Returns the total number of entries removed across all collections.
+    public int PruneDeadDefIds(IReadOnlyCollection<string> registeredIds)
+    {
+        var live = new HashSet<string>(registeredIds, StringComparer.OrdinalIgnoreCase);
+        int removed = 0;
+        removed += DropMissing(LastFiredDay, live);
+        removed += DropMissing(AntiRepetitionLastPostedDay, live);
+        removed += DropMissing(OneShotFired, live);
+        removed += DropMissing(ScheduledFireDay, live);
+        removed += DropMissing(PendingDialogueQuests, live);
+        return removed;
+    }
+
+    private static int DropMissing<TValue>(Dictionary<string, TValue> dict, HashSet<string> live)
+    {
+        if (dict.Count == 0)
+            return 0;
+        List<string>? dead = null;
+        foreach (var key in dict.Keys)
+        {
+            if (!live.Contains(key))
+                (dead ??= new List<string>()).Add(key);
+        }
+        if (dead == null)
+            return 0;
+        foreach (var key in dead)
+            dict.Remove(key);
+        return dead.Count;
+    }
 }
 
 internal sealed class ActiveFestivalBias
