@@ -98,8 +98,13 @@ public sealed class TriggerDef
 
 public sealed class ObjectiveDef
 {
-    // Deliver | Resource | Fish | Slay | Ship.
+    // Deliver | Resource | Fish | Slay | Ship | Socialize | Custom.
     public string Kind { get; set; } = "Deliver";
+
+    // Used only when Kind = "Custom". Handler id registered via
+    // IMoreQuestsModApi.RegisterCustomBoardQuestType. Bare names resolve under the
+    // owning consumer mod, "OtherMod/Name" references another mod's handler.
+    public string? Custom { get; set; }
 
     // First entry is the primary (used for journal text); extras are OR-alternatives.
     [JsonConverter(typeof(StringOrArrayConverter))]

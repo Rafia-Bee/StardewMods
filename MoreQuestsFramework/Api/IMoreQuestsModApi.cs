@@ -1,9 +1,11 @@
 using System;
 using MoreQuestsFramework.Consequences;
+using MoreQuestsFramework.Posting;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Rewards;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
+using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Api;
 
@@ -86,4 +88,12 @@ public interface IMoreQuestsModApi
     // built-ins or with another mod's registration (first registration wins, the
     // second is rejected with a Warn).
     void RegisterCustomCondition(string key, Func<string, bool> evaluator);
+
+    // Handler for QuestPosting.QuestType == BoardQuestType.Custom. JSON quests
+    // declare `"Objective": { "Kind": "Custom", "Custom": "<handler>" }`; the
+    // framework calls the handler at posting time, takes the returned Quest
+    // instance, and applies the usual title/description/reward wiring on top.
+    // Bare names resolve under the calling mod's UniqueID; pass
+    // "OtherMod.UniqueID/Name" for cross-mod references.
+    void RegisterCustomBoardQuestType(string name, Func<CustomBoardQuestContext, Quest?> handler);
 }

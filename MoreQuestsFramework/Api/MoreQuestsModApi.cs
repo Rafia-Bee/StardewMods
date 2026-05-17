@@ -4,11 +4,13 @@ using MoreQuestsFramework.Conditions;
 using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Dispatch;
+using MoreQuestsFramework.Posting;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Registry;
 using MoreQuestsFramework.Rewards;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
+using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Api;
 
@@ -20,6 +22,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
     private readonly CustomTriggerRegistry _customTriggers;
     private readonly CustomRewardRegistry _customRewards;
     private readonly CustomConditionRegistry _customConditions;
+    private readonly CustomBoardQuestRegistry _customBoardQuests;
     private readonly QuestPackLoader _loader;
     private readonly DispatchRegistry _dispatch;
     private readonly BoardRegistry _boards;
@@ -37,6 +40,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
         CustomTriggerRegistry customTriggers,
         CustomRewardRegistry customRewards,
         CustomConditionRegistry customConditions,
+        CustomBoardQuestRegistry customBoardQuests,
         QuestPackLoader loader,
         DispatchRegistry dispatch,
         BoardRegistry boards,
@@ -51,6 +55,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
         _customTriggers = customTriggers;
         _customRewards = customRewards;
         _customConditions = customConditions;
+        _customBoardQuests = customBoardQuests;
         _loader = loader;
         _dispatch = dispatch;
         _boards = boards;
@@ -97,6 +102,9 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
 
     public void RegisterCustomCondition(string key, Func<string, bool> evaluator)
         => _customConditions.Register(Owner.UniqueID, key, evaluator);
+
+    public void RegisterCustomBoardQuestType(string name, Func<CustomBoardQuestContext, Quest?> handler)
+        => _customBoardQuests.Register(Owner.UniqueID, name, handler);
 
     public void LoadContentPack(IContentPack pack) => _loader.LoadContentPack(pack);
 

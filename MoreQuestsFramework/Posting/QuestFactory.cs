@@ -12,6 +12,10 @@ public static class QuestFactory
     // attribute the quest to the mod that registered it, not to the framework.
     public const string IdPrefix = "RafiaBee.MoreQuestsFramework";
 
+    // Set by ModEntry on entry so the static Build path can dispatch BoardQuestType.Custom
+    // without each posting having to know about the registry.
+    public static CustomBoardQuestRegistry? CustomBoardQuests { get; set; }
+
     public static Quest? Build(QuestPosting p)
     {
         // Must be qualified ("(O)334"): vanilla ItemDeliveryQuest/FishingQuest compare
@@ -57,6 +61,7 @@ public static class QuestFactory
             BoardQuestType.Ship => BuildShipQuest(p, itemId, giver),
             // Adventure quests are always PreBuiltQuest (step list lives on the subclass).
             BoardQuestType.Adventure => null,
+            BoardQuestType.Custom => BuildCustom(p, giver, deliveryTarget),
             _ => null
         };
 
@@ -66,6 +71,18 @@ public static class QuestFactory
             quest.id.Value = $"{ownerPrefix}.{p.DefinitionId}.{Guid.NewGuid():N}";
         }
         return quest;
+    }
+
+    private static Quest? BuildCustom(QuestPosting p, string giver, string deliveryTarget)
+    {
+        if (CustomBoardQuests == null || string.IsNullOrEmpty(p.CustomQuestType))
+            return null;
+        string owner = string.IsNullOrEmpty(p.OwnerUniqueId) ? IdPrefix : p.OwnerUniqueId;
+        var handler = CustomBoardQuests.Resolve(owner, p.CustomQuestType);
+        if (handler == null)
+            return null;
+        var ctx = new CustomBoardQuestContext(p, p.CustomQuestType, giver, deliveryTarget);
+        return handler(ctx);
     }
 
     private static MoreQuestsItemDeliveryQuest BuildItemDeliveryQuest(QuestPosting p, string itemId, string deliveryTarget)
