@@ -137,5 +137,5 @@ Multi-step quests run on the framework's `AdventureQuest`: Check on George (gift
 ## Notes
 
 - Framework engine code (registry, pipeline, billboard, condition evaluator, reward applier, item resolver, NPC dispatch, vanilla wrappers) lives in the [framework mod](../MoreQuestsFramework/README.md). This repo is content only.
-- Mail prefix for in-world quest letters is `RafiaBee.MoreQuestsFramework.` (the framework owns routing).
+- Mail prefix for in-world quest letters is `RafiaBee.MoreQuests.` (the framework names mail keys after the owning consumer mod, so trackers like Mail Services Mod attribute these quests to MoreQuests rather than to the framework).
 - Run `mq_refresh` in the SMAPI console to re-roll the daily board without reloading the save.
