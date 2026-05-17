@@ -445,6 +445,35 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return total;
     }
 
+    // Walks every active Custom step and runs the supplied resolver. The resolver
+    // returns the registered handler keyed by step.Targets[0] (or null when unknown);
+    // the framework's per-second tick wires this to CustomStepRegistry.
+    public void PollCustomSteps(Func<AdventureStepState, Func<CustomStepContext, int>?> resolver)
+    {
+        if (completed.Value || resolver == null)
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.Custom) continue;
+            var handler = resolver(step);
+            if (handler == null) continue;
+            int delta;
+            try
+            {
+                delta = handler(new CustomStepContext(this, step));
+            }
+            catch (Exception)
+            {
+                continue;
+            }
+            if (delta > 0)
+                CreditCount(i, step, delta);
+        }
+    }
+
     public void ObserveDebrisCleared(string locationName, int delta)
     {
         if (completed.Value || delta <= 0 || string.IsNullOrEmpty(locationName))

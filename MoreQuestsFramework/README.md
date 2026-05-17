@@ -264,7 +264,18 @@ Multi-step Adventure quests carry a `Steps[]` list. Each entry has a `Kind` driv
 - `ClearWeeds`, `World.ObjectListChanged` removed list filtered by `IsWeeds()`. `Targets[0]` = location, `Count` = weeds cleared.
 - `ClearDebris`, per-second poll of `location.resourceClumps`. `Targets[0]` = location, `Count` = clumps removed.
 - `Collect`, `Player.InventoryChanged` additions for matching item ids.
-- `Custom`, escape hatch for consumer-mod step handlers.
+- `Custom`, escape hatch for consumer-mod step handlers. `Targets[0]` is the handler id registered through `IMoreQuestsModApi.RegisterCustomAdventureStep`. The framework polls the handler once per second while the step is active; the handler reads `CustomStepContext` and returns an `int` delta to credit against `Step.Progress` (returning enough to reach `Count` marks the step Done). Bare names resolve under the calling mod's UniqueID; pass `"OtherMod.UniqueID/Name"` to reference another mod's handler. Example:
+
+  ```csharp
+  scope.RegisterCustomAdventureStep("WateredCropsToday", ctx =>
+  {
+      // award one tick the first time the player has watered N crops today.
+      int watered = Game1.stats.Get("cropsWateredToday");
+      return watered >= ctx.Count ? ctx.Count - ctx.Progress : 0;
+  });
+  ```
+
+  Then in JSON: `{ "Name": "WaterCrops", "Kind": "Custom", "Targets": ["WateredCropsToday"], "Count": 10, "Description": "{i18n:my.step.water}" }`. A Custom step whose handler isn't registered (e.g. the consumer mod is uninstalled mid-save) sits idle, the framework doesn't bomb the save.
 
 Step ordering is enforced by `Requires[]` (other step `Name`s that must be Done before the step becomes active). `$giver` in `Targets[]` rewrites to the resolved giver at quest-creation time. None of the step observers add Harmony patches, every kind rides an existing SMAPI event or a framework-owned tick.
 

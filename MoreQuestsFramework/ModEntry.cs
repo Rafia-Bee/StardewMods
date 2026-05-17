@@ -35,6 +35,7 @@ public sealed class ModEntry : Mod
 
     private QuestRegistry _registry = null!;
     private GeneratorRegistry _generators = null!;
+    private CustomStepRegistry _customSteps = null!;
     private QuestPackLoader _loader = null!;
     private BoardRegistry _boards = null!;
     private BoardPackLoader _boardLoader = null!;
@@ -74,12 +75,13 @@ public sealed class ModEntry : Mod
 
         _registry = new QuestRegistry(Monitor);
         _generators = new GeneratorRegistry(Monitor);
+        _customSteps = new CustomStepRegistry(Monitor);
         _loader = new QuestPackLoader(_registry, _generators, Monitor);
         _boards = new BoardRegistry(Monitor);
         _boardLoader = new BoardPackLoader(_boards, Monitor);
         Dispatch = new DispatchRegistry(helper.ModRegistry, Monitor);
         CombatFood = new CombatFoodRegistry(Monitor);
-        _api = new MoreQuestsApi(_registry, _generators, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers);
+        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers);
 
         _boardRenderer = new BoardWorldRenderer(helper, Monitor, _boards);
         _boardRenderer.Register();
@@ -550,7 +552,19 @@ public sealed class ModEntry : Mod
             // Polling at currentLocation handles the common case (player breaks a clump
             // where they stand). Multi-location quests re-baseline on the next warp.
             a.PollResourceClumps(Game1.currentLocation);
+            a.PollCustomSteps(step => ResolveCustomStepHandler(a, step));
         }
+    }
+
+    private Func<CustomStepContext, int>? ResolveCustomStepHandler(AdventureQuest quest, AdventureStepState step)
+    {
+        if (step.Targets.Count == 0)
+            return null;
+        string handlerName = step.Targets[0];
+        if (string.IsNullOrEmpty(handlerName))
+            return null;
+        string owner = _api.TryGetManaged(quest, out var info) ? info.OwnerUniqueId : ModManifest.UniqueID;
+        return _customSteps.Resolve(owner, handlerName);
     }
 
     private void SweepShopDiscounts()

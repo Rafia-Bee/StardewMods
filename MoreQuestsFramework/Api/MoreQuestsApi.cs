@@ -15,6 +15,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
 {
     private readonly QuestRegistry _registry;
     private readonly GeneratorRegistry _generators;
+    private readonly CustomStepRegistry _customSteps;
     private readonly QuestPackLoader _loader;
     private readonly BoardPackLoader _boardLoader;
     private readonly DispatchRegistry _dispatch;
@@ -38,6 +39,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     public MoreQuestsApi(
         QuestRegistry registry,
         GeneratorRegistry generators,
+        CustomStepRegistry customSteps,
         QuestPackLoader loader,
         BoardPackLoader boardLoader,
         DispatchRegistry dispatch,
@@ -49,6 +51,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     {
         _registry = registry;
         _generators = generators;
+        _customSteps = customSteps;
         _loader = loader;
         _boardLoader = boardLoader;
         _dispatch = dispatch;
@@ -65,13 +68,15 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
             throw new ArgumentNullException(nameof(mod));
         if (_modScopes.TryGetValue(mod.UniqueID, out var existing))
             return existing;
-        var scope = new MoreQuestsModApi(mod, _registry, _generators, _loader, _dispatch, _boards, _boardLoader, _monitor, _spaceCore);
+        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _loader, _dispatch, _boards, _boardLoader, _monitor, _spaceCore);
         _modScopes[mod.UniqueID] = scope;
         return scope;
     }
 
     public bool IsManagedQuest(Quest quest) =>
         quest != null && _managed.TryGetValue(quest, out _);
+
+    internal CustomStepRegistry CustomSteps => _customSteps;
 
     public void RefreshOffers() => _refreshOffers();
 
