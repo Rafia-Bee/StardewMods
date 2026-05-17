@@ -25,7 +25,9 @@
             "TargetMessage": "{i18n:example.deliver.targetMessage}",
             "Rewards": [
                 { "Kind": "Money", "Amount": 750 },
-                { "Kind": "Friendship", "Npc": "Lewis", "Points": 60 }
+                { "Kind": "Friendship", "Npc": "Lewis", "Points": 60 },
+                { "Kind": "FestivalBias", "Festival": "Fair", "Magnitude": 10 },
+                { "Kind": "FairStarTokens", "Amount": 50 }
             ]
         },
         {
@@ -52,7 +54,8 @@
             "TargetMessage": "{i18n:example.ship.targetMessage}",
             "Rewards": [
                 { "Kind": "Money", "Amount": 500 },
-                { "Kind": "Friendship", "Npc": "Marnie", "Points": 60 }
+                { "Kind": "Friendship", "Npc": "Marnie", "Points": 60 },
+                { "Kind": "AnimalPurchaseDiscount", "PercentOff": 10, "DurationDays": 7 }
             ]
         },
         {
@@ -243,7 +246,8 @@
             "Description": "{i18n:example.fishingTrip.description}",
             "Rewards": [
                 { "Kind": "Money", "Amount": 800 },
-                { "Kind": "Friendship", "Npc": "Willy", "Points": 80 }
+                { "Kind": "Friendship", "Npc": "Willy", "Points": 80 },
+                { "Kind": "ShopDiscount", "ShopId": "FishShop", "PercentOff": 25, "DurationDays": 3, "AppliesTo": [ "(O)685", "(O)703" ] }
             ]
         },
         {
