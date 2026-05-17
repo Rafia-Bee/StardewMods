@@ -39,8 +39,6 @@ public interface IMoreQuestsApi
     // (would risk double-posting mail flags).
     void RefreshOffers();
 
-    void RegisterDispatchNpc(string role, string npcName, string? requiredModUniqueId = null);
-
     // Returns null if no met NPC is in the pool or the role has no live entries.
     string? PickDispatchNpc(string role);
 
