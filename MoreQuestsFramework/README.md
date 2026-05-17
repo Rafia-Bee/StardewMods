@@ -218,6 +218,17 @@ Notes on the schema:
   - `AnimalPurchaseDiscount`: `PercentOff`, `DurationDays`.
   - `FestivalBias`: `Festival` (`Luau` or `Fair`), `Magnitude`.
   - `FairStarTokens`: `Amount`.
+- JSON quests can attach a consequence with a `Consequence` block on the quest:
+  - `Tier`: `Tier1` / `Tier2` / `Tier3` / `Special`. Omit (or set `Tier0`) to skip.
+  - `Source`: `GiftTastes` (scan `Data/NPCGiftTastes` for loved/hated picks on `Subject`) or `Static` (use `Targets[]` verbatim).
+  - `Subject`: item id used for the `GiftTastes` scan. Ignored when `Source = Static`.
+  - `Targets`: string or array. Appended to the resolved set for `GiftTastes`, the full affected set for `Static`.
+  - `GoldDelta`: `Special` tier only. Negative numbers take gold away from the player.
+  - `FriendshipOverride`: replaces the tier's default friendship change.
+  - `FriendshipPerDay`: `Tier3` only. Per-chain-day delta, used verbatim with no division.
+  - `ChainDays`: `Tier3` only. Defaults to 3 when 0.
+  - `LovedLine` / `HatedLine`: dialogue text queued for affected NPCs. `{i18n:key}` tokens are resolved.
+  - `ChainLines`: `Tier3` only. One line per chain day, in order.
 - **`SpecialOrder` source.** Trigger fires when `today == StartDate` (`<season> <day>`) and the cooldown has elapsed. The framework writes a vanilla `Data/SpecialOrders` entry (key namespaced as `<ownerUniqueId>.<defId>.<dayStamp>` so other mods' orders are never disturbed) for `Duration` days (`OneDay` / `TwoDays` / `ThreeDays` / `Week` / `TwoWeeks` / `Month`). The matching `Generator` returns a `QuestPosting` with `Kind = PostingKind.SpecialOrder` and a populated `SpecialOrder` block (`Name` / `Text` / `Requester` / `Duration` / `Objectives[]` / `Rewards[]`). Each `SpecialOrderObjectiveSpec.Type` / `SpecialOrderRewardSpec.Type` is the vanilla type name without the `Objective` / `Reward` suffix (e.g. `Ship`, `Money`, `Friendship`). Vanilla owns accept, objective tracking, and reward grant from there.
 
 ## Public API
