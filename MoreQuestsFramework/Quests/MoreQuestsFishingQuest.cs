@@ -60,8 +60,6 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
             Game1.dayTimeMoneyBox.pingQuest(this);
             if (numberFished.Value >= numberToFish.Value)
             {
-                if (target.Value == null)
-                    target.Value = "Willy";
                 NPC characterFromName = Game1.getCharacterFromName(target.Value);
                 objective.Value = new DescriptionElement(
                     "Strings\\Quests:ObjectiveReturnToNPC",

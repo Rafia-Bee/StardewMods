@@ -190,7 +190,10 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         if (completed.Value || npc == null || item == null)
             return false;
         // Walk every active step (not just the first) so the player can hand in items
-        // in any order (e.g. "deliver Flour + Sugar + Eggs to Evelyn").
+        // in any order (e.g. "deliver Flour + Sugar + Eggs to Evelyn"). The first matching
+        // active step consumes the offered stack and returns; if two steps accept the same
+        // item id (e.g. deliver 3 hardwood to Robin AND 3 hardwood to Lewis), the player
+        // needs to talk to each recipient separately to advance each step.
         var steps = Steps;
         for (int i = 0; i < steps.Count; i++)
         {
@@ -634,7 +637,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
 
         if (step.Progress >= step.Count)
         {
-            bool willComplete = WillStepCompleteQuest(idx);
+            bool willComplete = MarkStepDoneInternal(idx, step);
             if (willComplete && !string.IsNullOrEmpty(completionMessage.Value))
             {
                 npc.CurrentDialogue.Push(new Dialogue(npc, null, completionMessage.Value));
@@ -642,7 +645,10 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             }
             if (HasMultipleDeliverSteps())
                 Game1.playSound("give_gift");
-            MarkStepDone(idx, step);
+            if (willComplete)
+                questComplete();
+            else
+                reloadObjective();
         }
         else
         {
@@ -837,12 +843,16 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         step.Progress++;
         if (step.Progress >= step.Count)
         {
-            if (WillStepCompleteQuest(idx) && !string.IsNullOrEmpty(completionMessage.Value))
+            bool willComplete = MarkStepDoneInternal(idx, step);
+            if (willComplete && !string.IsNullOrEmpty(completionMessage.Value))
             {
                 npc.CurrentDialogue.Push(new Dialogue(npc, null, completionMessage.Value));
                 Game1.drawDialogue(npc);
             }
-            MarkStepDone(idx, step);
+            if (willComplete)
+                questComplete();
+            else
+                reloadObjective();
         }
         else
         {
@@ -852,24 +862,21 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return true;
     }
 
-    private bool WillStepCompleteQuest(int doneIdx)
-    {
-        var steps = Steps;
-        for (int i = 0; i < steps.Count; i++)
-        {
-            if (i == doneIdx) continue;
-            if (!steps[i].Done) return false;
-        }
-        return true;
-    }
-
-    private void MarkStepDone(int idx, AdventureStepState step)
+    // Sets the step's Done flag, persists it, and reports whether the quest is now
+    // complete. Callers that need to inject completion-time dialogue before the
+    // questComplete() UI fires should use this directly; everyone else can stay on
+    // the convenience wrapper below.
+    private bool MarkStepDoneInternal(int idx, AdventureStepState step)
     {
         step.Done = true;
         step.Progress = Math.Max(step.Progress, step.Count);
         Persist(idx, step);
+        return ActiveStepIndex() < 0;
+    }
 
-        if (ActiveStepIndex() < 0)
+    private void MarkStepDone(int idx, AdventureStepState step)
+    {
+        if (MarkStepDoneInternal(idx, step))
             questComplete();
         else
             reloadObjective();
