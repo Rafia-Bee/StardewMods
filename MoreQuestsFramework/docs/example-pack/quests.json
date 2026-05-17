@@ -28,7 +28,14 @@
                 { "Kind": "Friendship", "Npc": "Lewis", "Points": 60 },
                 { "Kind": "FestivalBias", "Festival": "Fair", "Magnitude": 10 },
                 { "Kind": "FairStarTokens", "Amount": 50 }
-            ]
+            ],
+            "Consequence": {
+                "Tier": "Tier1",
+                "Source": "GiftTastes",
+                "Subject": "(O)613",
+                "LovedLine": "{i18n:example.deliver.consequence.loved}",
+                "HatedLine": "{i18n:example.deliver.consequence.hated}"
+            }
         },
         {
             "Name": "ExamplePack.Ship_Eggs",
