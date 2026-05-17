@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using MoreQuestsFramework.Content;
+using Newtonsoft.Json;
 
 namespace MoreQuestsFramework.Api;
 
@@ -42,6 +44,7 @@ public sealed class BoardDefinition
     public string? Title { get; set; }
 
     // Evaluated by ConditionEvaluator. Empty/null = always available.
+    [JsonConverter(typeof(ScalarStringDictionaryConverter))]
     public Dictionary<string, string>? Available { get; set; }
 
     public BoardIndicator? Indicator { get; set; }

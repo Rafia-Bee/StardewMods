@@ -62,6 +62,8 @@ internal sealed class TriggerDef
     // (see IMoreQuestsModApi.LoadQuestsFromMod overload). Null/unknown falls back
     // to CooldownDays.
     public string? CooldownTier { get; set; }
+
+    [JsonConverter(typeof(ScalarStringDictionaryConverter))]
     public Dictionary<string, string>? Available { get; set; }
 
     // Mail | NpcDialogue | DailyBoard.
