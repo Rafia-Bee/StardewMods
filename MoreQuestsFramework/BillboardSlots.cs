@@ -51,6 +51,9 @@ public static class BillboardSlots
             return null;
         Selected.Accepted = true;
         Quest q = Selected.Quest;
+        // Start the per-definition cooldown only now that the player committed to the
+        // quest. Posting alone never trips it; an ignored board slot is free to re-roll.
+        ModEntry.Instance?.Anti?.RecordDefinitionAccepted(Selected.Posting.DefinitionId);
         _slots.Remove(Selected);
         Selected = null;
         return q;

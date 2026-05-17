@@ -69,6 +69,9 @@ public static class CustomBoardSlots
             return null;
         Selected.Accepted = true;
         var quest = Selected.Quest;
+        // Start the per-definition cooldown only now that the player committed to the
+        // quest. Posting alone never trips it; an ignored board slot is free to re-roll.
+        ModEntry.Instance?.Anti?.RecordDefinitionAccepted(Selected.Posting.DefinitionId);
         if (_byBoardKey.TryGetValue(Selected.BoardKey, out var list))
             list.Remove(Selected);
         Selected = null;

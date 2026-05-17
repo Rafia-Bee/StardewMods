@@ -37,14 +37,26 @@ public sealed class AntiRepetition
         return Game1.Date.TotalDays - lastDay < cooldownDays;
     }
 
-    public void Record(QuestPosting posting)
+    // Tracks recent item / NPC choices so back-to-back postings don't repeat the same
+    // target. Called at post time for every posting, board or not. Does NOT start the
+    // definition-level cooldown; that's RecordDefinitionAccepted's job.
+    public void RecordRecency(QuestPosting posting)
     {
         if (!string.IsNullOrEmpty(posting.ObjectiveItemId))
             Push(_recentItems, posting.ObjectiveItemId, MaxItemHistory);
         if (!string.IsNullOrEmpty(posting.QuestGiver))
             Push(_recentNpcs, posting.QuestGiver, MaxNpcHistory);
-        if (!string.IsNullOrEmpty(posting.DefinitionId))
-            _lastPostedDay[posting.DefinitionId] = Game1.Date.TotalDays;
+    }
+
+    // Starts the definition-level cooldown clock. For board postings this fires when
+    // the player actually accepts the slot, so an ignored quest stays re-rollable the
+    // next day. For mail / one-shot / dialogue postings the caller invokes this at
+    // post time since those channels don't have a separate accept step.
+    public void RecordDefinitionAccepted(string? definitionId)
+    {
+        if (string.IsNullOrEmpty(definitionId))
+            return;
+        _lastPostedDay[definitionId] = Game1.Date.TotalDays;
     }
 
     private static void Push(Queue<string> q, string v, int max)
