@@ -2,8 +2,9 @@ using System.Collections.Generic;
 
 namespace MoreQuestsFramework.State;
 
-// Serializable mirror of a pending mail-quest posting. Only non-PreBuilt postings can
-// round-trip through this DTO (custom Quest subclasses with NetFields can't).
+// Serializable mirror of a pending mail-quest posting. Custom Quest subclasses
+// (AdventureQuest, MoreQuestsShipQuest, consumer-mod types with extra NetFields)
+// piggyback on SubclassKind + SubclassPayload via the MailStashCodecRegistry.
 internal sealed class StashedMailQuest
 {
     public string MailKey { get; set; } = "";
@@ -34,4 +35,7 @@ internal sealed class StashedMailQuest
     public List<string> EncodedRewards { get; set; } = new();
 
     public string EncodedConsequence { get; set; } = "";
+
+    public string SubclassKind { get; set; } = "";
+    public List<string> SubclassPayload { get; set; } = new();
 }

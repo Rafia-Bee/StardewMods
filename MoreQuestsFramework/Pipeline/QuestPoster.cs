@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Posting;
+using MoreQuestsFramework.Registry;
 using MoreQuestsFramework.Rewards;
 using MoreQuestsFramework.State;
 using MoreQuestsFramework.Triggers;
@@ -27,6 +28,7 @@ internal sealed class QuestPoster
     private FrameworkState? _state;
     private SpecialOrderWriter? _specialOrders;
     private DialogueWatcher? _dialogueWatcher;
+    private MailStashCodecRegistry? _stashCodecs;
 
     public QuestPoster(IModHelper helper, IMonitor monitor, MoreQuestsApi api)
     {
@@ -49,6 +51,11 @@ internal sealed class QuestPoster
     public void WireDialogueWatcher(DialogueWatcher watcher)
     {
         _dialogueWatcher = watcher;
+    }
+
+    public void WireMailStashCodecs(MailStashCodecRegistry codecs)
+    {
+        _stashCodecs = codecs;
     }
 
     public void Register()
@@ -211,13 +218,29 @@ internal sealed class QuestPoster
         return body + "^^%item quest " + mailKey + " 1 %%";
     }
 
-    // PreBuilt postings (custom Quest subclasses with their own NetFields) can't
-    // round-trip through this DTO, so they skip the stash; the owner re-posts on
-    // the next trigger fire if the player reloaded before reading.
+    // PreBuilt postings carry extra NetFields the plain DTO can't see, so they go
+    // through MailStashCodecRegistry. The framework's two built-in subclass codecs
+    // are registered at startup; consumer mods register their own via the API. A
+    // PreBuilt subclass with no codec falls out with a Warn so the loss is visible.
     private void StashForReload(QuestPosting posting, string mailKey, string body)
     {
-        if (_state == null || posting.PreBuiltQuest != null)
+        if (_state == null)
             return;
+
+        string subclassKind = string.Empty;
+        List<string> subclassPayload = new();
+        if (posting.PreBuiltQuest != null)
+        {
+            if (_stashCodecs == null || !_stashCodecs.TryEncode(posting.PreBuiltQuest, out subclassKind, out subclassPayload))
+            {
+                _monitor.Log(
+                    $"Mail-delivered '{posting.DefinitionId}' uses Quest subclass '{posting.PreBuiltQuest.GetType().Name}' with no registered mail-stash codec. "
+                    + "If the player reloads before opening the letter the quest will be lost. "
+                    + "Register a codec via IMoreQuestsModApi.RegisterMailStashCodec.",
+                    LogLevel.Warn);
+                return;
+            }
+        }
 
         var stash = new StashedMailQuest
         {
@@ -249,6 +272,8 @@ internal sealed class QuestPoster
             stash.EncodedRewards.Add(RewardCodec.Encode(r));
         if (posting.Consequence != null && posting.Consequence.Tier != Consequences.ConsequenceTier.Tier0)
             stash.EncodedConsequence = RewardCodec.EncodeConsequence(posting.Consequence);
+        stash.SubclassKind = subclassKind;
+        stash.SubclassPayload = subclassPayload;
 
         _state.PendingMailDeliveries.RemoveAll(s => s.MailKey == mailKey);
         _state.PendingMailDeliveries.Add(stash);
@@ -287,9 +312,24 @@ internal sealed class QuestPoster
         if (!string.IsNullOrEmpty(stash.EncodedConsequence))
             posting.Consequence = RewardCodec.DecodeConsequence(new[] { stash.EncodedConsequence });
 
-        var quest = QuestFactory.Build(posting);
-        if (quest == null)
-            return null;
+        Quest? quest;
+        if (!string.IsNullOrEmpty(stash.SubclassKind))
+        {
+            if (_stashCodecs == null || !_stashCodecs.TryDecode(stash.SubclassKind, stash.SubclassPayload, out quest) || quest == null)
+            {
+                _monitor.Log(
+                    $"Mail-stash codec '{stash.SubclassKind}' is not registered (or returned null); "
+                    + $"'{stash.DefinitionId}' could not be rehydrated.",
+                    LogLevel.Warn);
+                return null;
+            }
+        }
+        else
+        {
+            quest = QuestFactory.Build(posting);
+            if (quest == null)
+                return null;
+        }
         ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: ResolveMailDaysLeft(posting));
         quest.id.Value = stash.MailKey;
         _pendingMail[stash.MailKey] = stash.MailBody;

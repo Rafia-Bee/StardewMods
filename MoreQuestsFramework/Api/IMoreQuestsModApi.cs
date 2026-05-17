@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Posting;
 using MoreQuestsFramework.Quests;
@@ -105,4 +106,21 @@ public interface IMoreQuestsModApi
     // Bare names resolve under the calling mod's UniqueID; pass
     // "OtherMod.UniqueID/Name" for cross-mod references.
     void RegisterCustomBoardQuestType(string name, Func<CustomBoardQuestContext, Quest?> handler);
+
+    // Lets the framework round-trip a custom Quest subclass through the mail-stash
+    // DTO so a mail-delivered quest survives a save+reload before the player opens
+    // the letter. `kind` is a stable string id stored alongside the stash, so don't
+    // rename it after release. `encode` is called with the live Quest at post-time
+    // and must return the subclass's variable state as a list of strings; `decode`
+    // is called at SaveLoaded with the same list and must return a fresh Quest with
+    // its NetFields populated. The framework re-applies title/description/daysLeft
+    // and the standard reward+consequence wiring on top of whatever `decode` returns,
+    // so codecs only have to cover their own extra fields. Quest subclasses with
+    // no registered codec still post, but they log a Warn and vanish if the player
+    // reloads before reading the letter.
+    void RegisterMailStashCodec(
+        string kind,
+        Type questType,
+        Func<Quest, IList<string>> encode,
+        Func<IList<string>, Quest?> decode);
 }

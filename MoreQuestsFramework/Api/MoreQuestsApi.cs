@@ -29,6 +29,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     private readonly DispatchRegistry _dispatch;
     private readonly BoardRegistry _boards;
     private readonly CombatFoodRegistry _combatFood;
+    private readonly MailStashCodecRegistry _mailStashCodecs;
     private readonly IMonitor _monitor;
     private readonly Func<ISpaceCoreApi?> _spaceCore;
     private readonly Action _refreshOffers;
@@ -58,6 +59,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         DispatchRegistry dispatch,
         BoardRegistry boards,
         CombatFoodRegistry combatFood,
+        MailStashCodecRegistry mailStashCodecs,
         IMonitor monitor,
         Func<ISpaceCoreApi?> spaceCore,
         Action refreshOffers,
@@ -75,6 +77,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         _dispatch = dispatch;
         _boards = boards;
         _combatFood = combatFood;
+        _mailStashCodecs = mailStashCodecs;
         _monitor = monitor;
         _spaceCore = spaceCore;
         _refreshOffers = refreshOffers;
@@ -87,7 +90,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
             throw new ArgumentNullException(nameof(mod));
         if (_modScopes.TryGetValue(mod.UniqueID, out var existing))
             return existing;
-        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _loader, _dispatch, _boards, _boardLoader, _monitor, _spaceCore);
+        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _loader, _dispatch, _boards, _boardLoader, _mailStashCodecs, _monitor, _spaceCore);
         _modScopes[mod.UniqueID] = scope;
         return scope;
     }
