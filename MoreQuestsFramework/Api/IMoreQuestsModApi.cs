@@ -72,6 +72,17 @@ public interface IMoreQuestsModApi
     // mod's scope, "OtherMod/Name" works for cross-mod references.
     void RegisterCustomAdventureStep(string name, Func<CustomStepContext, int> handler);
 
+    // Event-driven escape hatch for Custom steps. Returns a snapshot of every
+    // active Custom step whose Targets[0] resolves to the given handler name (bare
+    // names are scoped to the calling mod, "OtherMod/Name" works for cross-mod
+    // refs). Call from a Harmony patch or SMAPI event handler and invoke
+    // AddProgress / MarkDone on the returned handle(s). Handles are short-lived,
+    // re-query each event tick rather than caching them. Skips registration entirely:
+    // a step can be advanced this way without ever calling RegisterCustomAdventureStep,
+    // useful when polling isn't a fit (e.g. credit one tick per "boss slain"
+    // OnMonsterSlain event).
+    IReadOnlyList<ICustomStepHandle> GetActiveCustomSteps(string handlerName);
+
     // Handler for TriggerSource.Custom quests. The framework checks the definition's
     // CooldownDays first, then calls the handler at DayStarted to decide whether the
     // trigger fires today. The quest's Trigger.Custom field carries the handler id;

@@ -90,7 +90,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
             throw new ArgumentNullException(nameof(mod));
         if (_modScopes.TryGetValue(mod.UniqueID, out var existing))
             return existing;
-        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _loader, _dispatch, _boards, _boardLoader, _mailStashCodecs, _monitor, _spaceCore);
+        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _loader, _dispatch, _boards, _boardLoader, _mailStashCodecs, _monitor, _spaceCore, ResolveQuestOwner);
         _modScopes[mod.UniqueID] = scope;
         return scope;
     }
@@ -166,6 +166,9 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         info = default!;
         return false;
     }
+
+    private string? ResolveQuestOwner(Quest quest)
+        => TryGetManaged(quest, out var info) ? info.OwnerUniqueId : null;
 
     internal void FireRegistrationOpen() => RegistrationOpen?.Invoke(this, EventArgs.Empty);
     internal void FireRegistrationClosed() => RegistrationClosed?.Invoke(this, EventArgs.Empty);
