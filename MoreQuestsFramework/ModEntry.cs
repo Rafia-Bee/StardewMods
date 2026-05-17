@@ -695,12 +695,12 @@ public sealed class ModEntry : Mod
         _dialogueWatcher?.Tick();
         _consequenceWatcher?.Tick();
         PollClumpsOnQuestLog();
-        RecomputeDecorShippingCount();
         ApplyFairStarTokensIfFairActive();
         // Bypasses Data/SpecialOrders.Rewards entirely so third-party content packs
         // that mutate that array can't intercept the grant.
         _specialOrderWriter?.CheckCompletionsAndGrantRewards();
 
+        bool logChanged = false;
         var current = Game1.player.questLog;
         var seenThisTick = new HashSet<Quest>();
         for (int i = 0; i < current.Count; i++)
@@ -716,13 +716,17 @@ public sealed class ModEntry : Mod
             {
                 _seenInLog[q] = q.daysLeft.Value > 0 || q.dailyQuest.Value;
                 _api.FireQuestAccepted(q, info);
+                logChanged = true;
                 // Letter has been opened (vanilla addQuest pushed quest into the log).
                 if (!string.IsNullOrEmpty(q.id.Value))
                     _poster?.DropStash(q.id.Value);
             }
 
             if (q.completed.Value && _completedFired.Add(q))
+            {
                 _api.FireQuestCompleted(q, info);
+                logChanged = true;
+            }
         }
 
         if (_seenInLog.Count > 0)
@@ -742,6 +746,7 @@ public sealed class ModEntry : Mod
                 bool wasCompleted = firedCompletedThisRun || q.completed.Value;
                 if (!_api.TryGetManaged(q, out var info))
                     continue;
+                logChanged = true;
                 // Vanilla Quest.questComplete yanks reward-less quests out of questLog in
                 // the same call that flips completed.Value, so the in-log loop never sees
                 // them as completed; fire here before the QuestRemoved that follows.
@@ -757,5 +762,8 @@ public sealed class ModEntry : Mod
                 _api.FireQuestRemoved(q, info, reason);
             }
         }
+
+        if (logChanged)
+            RecomputeDecorShippingCount();
     }
 }
