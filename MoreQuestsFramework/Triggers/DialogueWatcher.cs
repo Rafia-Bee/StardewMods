@@ -76,6 +76,17 @@ internal sealed class DialogueWatcher
             _state.PendingDialogueQuests.Remove(defId);
             FireQueued(defId);
         }
+
+        // If a Build() side-effect enqueued more pending entries for this same speaker,
+        // let the next tick pick them up instead of waiting for the speaker to change.
+        foreach (var target in _state.PendingDialogueQuests.Values)
+        {
+            if (string.Equals(target, speakerName, StringComparison.OrdinalIgnoreCase))
+            {
+                _lastSpeaker = null;
+                break;
+            }
+        }
     }
 
     private void FireQueued(string defId)
