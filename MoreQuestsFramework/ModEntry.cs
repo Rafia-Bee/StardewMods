@@ -91,6 +91,7 @@ public sealed class ModEntry : Mod
         RewardApplier.CustomRewards = _customRewards;
         _customConditions = new CustomConditionRegistry(Monitor);
         ConditionEvaluator.CustomConditions = _customConditions;
+        ConditionEvaluator.Monitor = Monitor;
         _customBoardQuests = new CustomBoardQuestRegistry(Monitor);
         QuestFactory.CustomBoardQuests = _customBoardQuests;
         _loader = new QuestPackLoader(_registry, _generators, Monitor);
