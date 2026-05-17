@@ -26,11 +26,18 @@ internal static class ConditionEvaluator
 
     private static readonly HashSet<string> _warnedUnknownKeys = new(StringComparer.OrdinalIgnoreCase);
 
+    // Everything below reads live save state (Game1.player, Game1.stats, getFarm()).
+    // When no save is loaded, those reads NRE. Anything that can be called with no
+    // save (the public helpers, plus Evaluate itself in early-tick edge cases) goes
+    // through this gate and fails closed.
+    private static bool HasSave => Game1.player != null;
+
     public static bool MatchesSeason(string season) =>
-        string.Equals(Game1.currentSeason, season, StringComparison.OrdinalIgnoreCase);
+        HasSave && string.Equals(Game1.currentSeason, season, StringComparison.OrdinalIgnoreCase);
 
     public static bool MatchesAnySeason(params string[] seasons)
     {
+        if (!HasSave) return false;
         for (int i = 0; i < seasons.Length; i++)
         {
             if (string.Equals(Game1.currentSeason, seasons[i], StringComparison.OrdinalIgnoreCase))
@@ -39,25 +46,27 @@ internal static class ConditionEvaluator
         return false;
     }
 
-    public static bool MinDaysPlayed(int days) => Game1.stats.DaysPlayed >= (uint)days;
+    public static bool MinDaysPlayed(int days) => HasSave && Game1.stats.DaysPlayed >= (uint)days;
 
-    public static int FarmingLevel => Game1.player.FarmingLevel;
-    public static int FishingLevel => Game1.player.FishingLevel;
-    public static int MiningLevel => Game1.player.MiningLevel;
-    public static int ForagingLevel => Game1.player.ForagingLevel;
-    public static int CombatLevel => Game1.player.CombatLevel;
+    public static int FarmingLevel => Game1.player?.FarmingLevel ?? 0;
+    public static int FishingLevel => Game1.player?.FishingLevel ?? 0;
+    public static int MiningLevel => Game1.player?.MiningLevel ?? 0;
+    public static int ForagingLevel => Game1.player?.ForagingLevel ?? 0;
+    public static int CombatLevel => Game1.player?.CombatLevel ?? 0;
 
-    public static bool MinDeepestMineLevel(int level) => Game1.player.deepestMineLevel >= level;
+    public static bool MinDeepestMineLevel(int level) => HasSave && Game1.player.deepestMineLevel >= level;
     public static bool MineShaftReached(int level) => MineShaft.lowestLevelReached >= level;
 
-    public static bool NpcExists(string name) => Game1.getCharacterFromName(name) != null;
-    public static bool NpcMet(string name) => Game1.player.friendshipData.ContainsKey(name);
+    public static bool NpcExists(string name) => HasSave && Game1.getCharacterFromName(name) != null;
+    public static bool NpcMet(string name) => HasSave && Game1.player.friendshipData.ContainsKey(name);
 
     // Unknown keys evaluate false (fail closed).
     public static bool Evaluate(IReadOnlyDictionary<string, string>? conditions, IModRegistry? modRegistry = null)
     {
         if (conditions == null || conditions.Count == 0)
             return true;
+        if (!HasSave)
+            return false;
 
         foreach (var (key, value) in conditions)
         {
