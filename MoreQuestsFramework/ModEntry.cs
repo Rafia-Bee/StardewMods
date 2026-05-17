@@ -36,6 +36,7 @@ public sealed class ModEntry : Mod
     private QuestRegistry _registry = null!;
     private GeneratorRegistry _generators = null!;
     private CustomStepRegistry _customSteps = null!;
+    private CustomTriggerRegistry _customTriggers = null!;
     private QuestPackLoader _loader = null!;
     private BoardRegistry _boards = null!;
     private BoardPackLoader _boardLoader = null!;
@@ -76,12 +77,13 @@ public sealed class ModEntry : Mod
         _registry = new QuestRegistry(Monitor);
         _generators = new GeneratorRegistry(Monitor);
         _customSteps = new CustomStepRegistry(Monitor);
+        _customTriggers = new CustomTriggerRegistry(Monitor);
         _loader = new QuestPackLoader(_registry, _generators, Monitor);
         _boards = new BoardRegistry(Monitor);
         _boardLoader = new BoardPackLoader(_boards, Monitor);
         Dispatch = new DispatchRegistry(helper.ModRegistry, Monitor);
         CombatFood = new CombatFoodRegistry(Monitor);
-        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers);
+        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers);
 
         _boardRenderer = new BoardWorldRenderer(helper, Monitor, _boards);
         _boardRenderer.Register();
@@ -227,7 +229,7 @@ public sealed class ModEntry : Mod
         _stateStore.Load();
         _antiRepetition.WireState(_stateStore.State);
 
-        _triggers = new TriggerEvaluator(_stateStore.State, Monitor);
+        _triggers = new TriggerEvaluator(_stateStore.State, Monitor, _customTriggers);
         _pipeline = new QuestPipeline(ctx, _registry, _antiRepetition, _triggers);
 
         _poster!.WireMailDelivery(_mailQuests, _stateStore.State);

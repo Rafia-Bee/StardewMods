@@ -15,5 +15,6 @@ public enum TriggerSource
     WeatherForecast,
     NpcDialogue,
     SpecialOrder,
-    CustomBoard
+    CustomBoard,
+    Custom
 }

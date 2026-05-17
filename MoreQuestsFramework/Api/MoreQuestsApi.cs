@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Dispatch;
 using MoreQuestsFramework.Registry;
+using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 using StardewValley.Quests;
 
@@ -16,6 +17,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     private readonly QuestRegistry _registry;
     private readonly GeneratorRegistry _generators;
     private readonly CustomStepRegistry _customSteps;
+    private readonly CustomTriggerRegistry _customTriggers;
     private readonly QuestPackLoader _loader;
     private readonly BoardPackLoader _boardLoader;
     private readonly DispatchRegistry _dispatch;
@@ -40,6 +42,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         QuestRegistry registry,
         GeneratorRegistry generators,
         CustomStepRegistry customSteps,
+        CustomTriggerRegistry customTriggers,
         QuestPackLoader loader,
         BoardPackLoader boardLoader,
         DispatchRegistry dispatch,
@@ -52,6 +55,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         _registry = registry;
         _generators = generators;
         _customSteps = customSteps;
+        _customTriggers = customTriggers;
         _loader = loader;
         _boardLoader = boardLoader;
         _dispatch = dispatch;
@@ -68,7 +72,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
             throw new ArgumentNullException(nameof(mod));
         if (_modScopes.TryGetValue(mod.UniqueID, out var existing))
             return existing;
-        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _loader, _dispatch, _boards, _boardLoader, _monitor, _spaceCore);
+        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _customTriggers, _loader, _dispatch, _boards, _boardLoader, _monitor, _spaceCore);
         _modScopes[mod.UniqueID] = scope;
         return scope;
     }
@@ -77,6 +81,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         quest != null && _managed.TryGetValue(quest, out _);
 
     internal CustomStepRegistry CustomSteps => _customSteps;
+    internal CustomTriggerRegistry CustomTriggers => _customTriggers;
 
     public void RefreshOffers() => _refreshOffers();
 

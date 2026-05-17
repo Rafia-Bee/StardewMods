@@ -15,6 +15,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
     private readonly QuestRegistry _registry;
     private readonly GeneratorRegistry _generators;
     private readonly CustomStepRegistry _customSteps;
+    private readonly CustomTriggerRegistry _customTriggers;
     private readonly QuestPackLoader _loader;
     private readonly DispatchRegistry _dispatch;
     private readonly BoardRegistry _boards;
@@ -29,6 +30,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
         QuestRegistry registry,
         GeneratorRegistry generators,
         CustomStepRegistry customSteps,
+        CustomTriggerRegistry customTriggers,
         QuestPackLoader loader,
         DispatchRegistry dispatch,
         BoardRegistry boards,
@@ -40,6 +42,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
         _registry = registry;
         _generators = generators;
         _customSteps = customSteps;
+        _customTriggers = customTriggers;
         _loader = loader;
         _dispatch = dispatch;
         _boards = boards;
@@ -70,6 +73,9 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
 
     public void RegisterCustomAdventureStep(string name, Func<CustomStepContext, int> handler)
         => _customSteps.Register(Owner.UniqueID, name, handler);
+
+    public void RegisterCustomTrigger(string name, Func<CustomTriggerContext, bool> handler)
+        => _customTriggers.Register(Owner.UniqueID, name, handler);
 
     public void LoadContentPack(IContentPack pack) => _loader.LoadContentPack(pack);
 
