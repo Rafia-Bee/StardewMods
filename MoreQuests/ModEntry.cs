@@ -663,19 +663,25 @@ public sealed class ModEntry : Mod
     }
 
     /// Routes mining/monster quests to either the guild board or the help-wanted board
-    /// based on EnableAdventurersGuildBoard. When the guild is off, the deep-dive quests
-    /// flip back to DailyBoard so the content stays reachable.
+    /// based on EnableAdventurersGuildBoard. Every Mining-category quest except
+    /// Mining.BarDelivery defaults to CustomBoard in quests.json; when the guild is off
+    /// they flip back to DailyBoard so the content stays reachable. Vanilla.SlayMonster
+    /// is defined in code with a DailyBoard default, so it gets overridden the other way
+    /// when the guild is on.
     private void ApplyGuildBoardRouting(IMoreQuestsModApi scope)
     {
         if (Config.EnableAdventurersGuildBoard)
         {
             scope.LoadBoardsFromMod(Helper, "assets/boards.json");
-            scope.OverrideTriggerSource("Mining.BasicSlimeClearing", TriggerSource.CustomBoard);
             scope.OverrideTriggerSource("Vanilla.SlayMonster", TriggerSource.CustomBoard);
             ApplyAdventureBoardConfig();
         }
         else
         {
+            scope.OverrideTriggerSource("Mining.BasicSlimeClearing", TriggerSource.DailyBoard);
+            scope.OverrideTriggerSource("Mining.MonsterHunt", TriggerSource.DailyBoard);
+            scope.OverrideTriggerSource("Mining.MonsterParts", TriggerSource.DailyBoard);
+            scope.OverrideTriggerSource("Mining.RareMaterialRequest", TriggerSource.DailyBoard);
             scope.OverrideTriggerSource("Mining.SkullCavernDeepDive", TriggerSource.DailyBoard);
             scope.OverrideTriggerSource("Mining.MinesDeepDive", TriggerSource.DailyBoard);
         }

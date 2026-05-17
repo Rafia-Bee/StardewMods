@@ -6,8 +6,6 @@ public sealed class ModConfig
 {
     // ----- Master toggles -----
     public bool ConsequencesEnabled { get; set; } = true;
-    public bool IncludeModdedItems { get; set; } = true;
-    public bool IncludeModdedNPCs { get; set; } = true;
     public bool FestivalQuestsEnabled { get; set; } = true;
     public bool AnimalQuestsEnabled { get; set; } = true;
     public bool FarmingQuestsEnabled { get; set; } = true;

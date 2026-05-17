@@ -48,16 +48,6 @@ internal static class GmcmRegistration
             v => ModEntry.Config.ConsequencesEnabled = v,
             () => t.Get("config.consequences"),
             () => t.Get("config.consequences.tooltip"));
-        api.AddBoolOption(manifest,
-            () => ModEntry.Config.IncludeModdedItems,
-            v => ModEntry.Config.IncludeModdedItems = v,
-            () => t.Get("config.moddedItems"),
-            () => t.Get("config.moddedItems.tooltip"));
-        api.AddBoolOption(manifest,
-            () => ModEntry.Config.IncludeModdedNPCs,
-            v => ModEntry.Config.IncludeModdedNPCs = v,
-            () => t.Get("config.moddedNPCs"),
-            () => t.Get("config.moddedNPCs.tooltip"));
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.categories"));
         api.AddPageLink(manifest, PageFarming, () => t.Get("config.page.farming"), () => t.Get("config.page.farming.tooltip"));
