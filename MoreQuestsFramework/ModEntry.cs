@@ -77,6 +77,7 @@ public sealed class ModEntry : Mod
     // but only an expiration zeros out daysLeft from a previously-positive value).
     private readonly Dictionary<Quest, bool> _seenInLog = new();
     private readonly HashSet<Quest> _completedFired = new();
+    private readonly HashSet<Quest> _seenThisTick = new();
 
     public override void Entry(IModHelper helper)
     {
@@ -717,7 +718,7 @@ public sealed class ModEntry : Mod
 
         bool logChanged = false;
         var current = Game1.player.questLog;
-        var seenThisTick = new HashSet<Quest>();
+        _seenThisTick.Clear();
         for (int i = 0; i < current.Count; i++)
         {
             var q = current[i];
@@ -726,7 +727,7 @@ public sealed class ModEntry : Mod
             if (!_api.TryGetManaged(q, out var info))
                 continue;
 
-            seenThisTick.Add(q);
+            _seenThisTick.Add(q);
             if (!_seenInLog.ContainsKey(q))
             {
                 _seenInLog[q] = q.daysLeft.Value > 0 || q.dailyQuest.Value;
@@ -749,7 +750,7 @@ public sealed class ModEntry : Mod
             var removed = new List<Quest>();
             foreach (var pair in _seenInLog)
             {
-                if (!seenThisTick.Contains(pair.Key))
+                if (!_seenThisTick.Contains(pair.Key))
                     removed.Add(pair.Key);
             }
             for (int i = 0; i < removed.Count; i++)
