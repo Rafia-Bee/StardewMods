@@ -86,7 +86,8 @@ internal sealed class TriggerDef
     // "FirstItemOwned <itemId>".
     public string? When { get; set; }
 
-    // BuildingBuilt.
+    // BuildingBuilt. Fires the morning AFTER the building finishes construction
+    // (the diff is taken between yesterday's and today's farm snapshot at DayStarted).
     public string? Building { get; set; }
 
     // BuildingBuilt / MailReceived: days to wait after the event. 0 = same day.

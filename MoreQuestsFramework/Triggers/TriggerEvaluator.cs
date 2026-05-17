@@ -171,12 +171,21 @@ internal sealed class TriggerEvaluator
             return false;
         if (string.IsNullOrWhiteSpace(when))
             return false;
-        if (!EvaluateOneShotPredicate(when))
-            return false;
-        _state.OneShotFired[defId] = true;
-        return true;
+        return EvaluateOneShotPredicate(when);
     }
 
+    // Called by the pipeline after a OneShot posting actually builds. If we flipped the
+    // flag the moment the predicate matched, a generator returning null (or any later
+    // failure) would burn the one-and-only firing chance for this save.
+    public void MarkOneShotFired(string defId)
+    {
+        if (!string.IsNullOrEmpty(defId))
+            _state.OneShotFired[defId] = true;
+    }
+
+    // _newBuildingsToday is a diff of yesterday's farm-buildings snapshot vs this
+    // morning's, so this fires on the morning AFTER the build completes, not the
+    // same in-game day the player placed it.
     private bool BuildingTriggered(string defId, TriggerInfo info)
     {
         if (string.IsNullOrEmpty(info.Building))

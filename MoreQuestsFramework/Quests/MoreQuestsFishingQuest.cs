@@ -68,7 +68,9 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
                     characterFromName);
                 Game1.playSound("jingle1");
             }
-            return true;
+            // Mirrors AdventureQuest.OnFishCaught: return false so any other fishing
+            // quest in the log still gets to see this catch.
+            return false;
         }
         return base.OnFishCaught(fishId, numberCaught, size, probe);
     }
