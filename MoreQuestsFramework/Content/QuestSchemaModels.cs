@@ -160,7 +160,9 @@ internal sealed class StepDef
     [JsonConverter(typeof(StringOrArrayConverter))]
     public List<string> Requires { get; set; } = new();
 
-    // Supports $giver, rewritten at quest-creation time.
+    // Supports $giver (resolved giver name), $dispatcher.<role> (one NPC from the
+    // dispatch role), and $dispatcher.<role>[N] (N distinct NPCs from the role).
+    // All rewritten once at quest-creation time so picks stay stable across reloads.
     [JsonConverter(typeof(StringOrArrayConverter))]
     public List<string> Targets { get; set; } = new();
 
