@@ -240,7 +240,7 @@ Notes on the schema:
 
 - Each `QuestDef` sets either `Generator` (a name registered via `RegisterGenerator`) or a fully-declarative `Objective` (or `Steps[]` for multi-step).
 - `{i18n:key}` tokens in any string field resolve through the owning pack's translation helper.
-- `Available` accepts every key the condition evaluator knows about (table above). `not:` prefix negates. `|` inside a value is OR.
+- `Available` accepts every key the condition evaluator knows about (table above). `not:` prefix negates. `|` inside a value is OR. Values can be written as strings, plain numbers, or bools: `"MinDaysPlayed": 28` and `"MinDaysPlayed": "28"` both work, same for `"IsPlayerMarried": true`.
 - `Trigger.Delivery: "Mail" | "NpcDialogue" | "DailyBoard"` overrides the default channel.
 - Adventure (multi-step) quests use `Steps[]` instead of `Objective`. Each step has a `Name` (used by other steps' `Requires[]`), a `Kind`, a `Description`, and step-kind-specific targeting fields. `$giver` in `Targets[]` rewrites to the resolved giver name. `$dispatcher.<role>` resolves to one NPC from the named dispatch role, `$dispatcher.<role>[N]` to N distinct NPCs (clamped to whatever the pool has when smaller). Resolution happens once at quest-creation time so the picked names are stable across save/reload.
 - Step list fields (`Requires`, `Targets`, `Items`) accept either a single string or an array. `"Targets": "Sebastian"` and `"Targets": [ "Sebastian" ]` are equivalent. The same shorthand works on `Objective.Item`, `RewardDef.AppliesTo`, and `Consequence.Targets`.
