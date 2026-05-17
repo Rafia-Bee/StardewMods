@@ -277,7 +277,7 @@ Notes on the schema:
 
 Lifecycle events:
 
-- `RegistrationOpen` / `RegistrationClosed`, bracket the window in which `RegisterQuest` is accepted. The registry freezes after `RegistrationClosed`.
+- `RegistrationOpen` / `RegistrationClosed`, bracket the window in which `RegisterQuest` is accepted. Both fire on the framework's first update tick (one tick past every consumer mod's `GameLaunched`). Open handlers run inline in subscription order, then content packs auto-load, then Closed fires in the same tick. Subscribe to `Open` when you're registering your own quests, generators, or dispatch NPCs. Subscribe to `Closed` when you want to read what other mods registered (e.g. a quest browser or GMCM helper that calls `RegisteredQuestIds()`), since the registry is frozen by then and everyone else's Open handlers have already run.
 - `QuestAccepted` / `QuestCompleted` / `QuestRemoved`, fired only for framework-managed quests. Each event arg carries `Quest`, `OwnerUniqueId`, `DefinitionId`.
 - `DayRefreshed(dailyCount, mailCount)`, fires at the end of `OnDayStarted` and from `RefreshOffers()`.
 
