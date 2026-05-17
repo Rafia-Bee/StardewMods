@@ -27,6 +27,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
     private readonly DispatchRegistry _dispatch;
     private readonly BoardRegistry _boards;
     private readonly BoardPackLoader _boardLoader;
+    private readonly MailStashCodecRegistry _mailStashCodecs;
     private readonly IMonitor _monitor;
     private readonly Func<ISpaceCoreApi?> _spaceCore;
 
@@ -45,6 +46,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         DispatchRegistry dispatch,
         BoardRegistry boards,
         BoardPackLoader boardLoader,
+        MailStashCodecRegistry mailStashCodecs,
         IMonitor monitor,
         Func<ISpaceCoreApi?> spaceCore)
     {
@@ -60,6 +62,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         _dispatch = dispatch;
         _boards = boards;
         _boardLoader = boardLoader;
+        _mailStashCodecs = mailStashCodecs;
         _monitor = monitor;
         _spaceCore = spaceCore;
     }
@@ -138,6 +141,13 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
 
     public void Unregister(string definitionId)
         => _registry.Unregister(definitionId);
+
+    public void RegisterMailStashCodec(
+        string kind,
+        Type questType,
+        Func<Quest, IList<string>> encode,
+        Func<IList<string>, Quest?> decode)
+        => _mailStashCodecs.Register(kind, questType, encode, decode);
 
     public void RegisterConsequenceTier(ConsequenceTier tier, IConsequenceHandler handler)
     {

@@ -45,6 +45,7 @@ public sealed class ModEntry : Mod
     private QuestPackLoader _loader = null!;
     private BoardRegistry _boards = null!;
     private BoardPackLoader _boardLoader = null!;
+    private MailStashCodecRegistry _mailStashCodecs = null!;
     private BoardWorldRenderer? _boardRenderer;
     private QuestPipeline? _pipeline;
     private QuestPoster? _poster;
@@ -99,13 +100,17 @@ public sealed class ModEntry : Mod
         _boardLoader = new BoardPackLoader(_boards, Monitor);
         Dispatch = new DispatchRegistry(helper.ModRegistry, Monitor);
         CombatFood = new CombatFoodRegistry(Monitor);
-        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _loader, _boardLoader, Dispatch, _boards, CombatFood, Monitor, () => _spaceCore, RefreshOffers, () => _ctx);
+        _mailStashCodecs = new MailStashCodecRegistry(Monitor);
+        _mailStashCodecs.Register(AdventureQuestStashCodec.Kind, typeof(AdventureQuest), AdventureQuestStashCodec.Encode, AdventureQuestStashCodec.Decode);
+        _mailStashCodecs.Register(MoreQuestsShipQuestStashCodec.Kind, typeof(MoreQuestsShipQuest), MoreQuestsShipQuestStashCodec.Encode, MoreQuestsShipQuestStashCodec.Decode);
+        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _loader, _boardLoader, Dispatch, _boards, CombatFood, _mailStashCodecs, Monitor, () => _spaceCore, RefreshOffers, () => _ctx);
 
         _boardRenderer = new BoardWorldRenderer(helper, Monitor, _boards);
         _boardRenderer.Register();
 
         _poster = new QuestPoster(helper, Monitor, _api);
         _poster.Register();
+        _poster.WireMailStashCodecs(_mailStashCodecs);
 
         _specialOrderWriter = new SpecialOrderWriter(helper, Monitor);
         _specialOrderWriter.Register();

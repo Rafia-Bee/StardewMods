@@ -292,6 +292,18 @@ Lifecycle events:
 
 Custom `Quest` subclasses must carry a unique `[XmlType("Mods_<owner>_<name>")]` attribute and be registered via `RegisterCustomQuestType` so SpaceCore's serializer factory knows about them.
 
+Mail-delivered postings whose `PreBuiltQuest` is a custom `Quest` subclass also need a mail-stash codec, otherwise the quest is lost if the player saves before opening the letter. The framework ships codecs for its own `AdventureQuest` and `MoreQuestsShipQuest`; consumer mods register their own:
+
+```csharp
+scope.RegisterMailStashCodec(
+    kind: "MyMod.MyQuestSubclass",
+    questType: typeof(MyQuest),
+    encode: q => new List<string> { /* serialise variable NetField state */ },
+    decode: payload => new MyQuest { /* rebuild from payload */ });
+```
+
+`kind` is a stable string id stored alongside the stash, don't rename it after release. The framework re-applies title, description, daysLeft, and the standard reward/consequence wiring on top of whatever `decode` returns, so the codec only has to cover its own extra fields. Subclasses with no codec still post; they just log a Warn at stash time and vanish on reload.
+
 ### Quality-aware Deliver
 
 `ObjectiveDef.MinQuality` and `AdventureStep.MinQuality` gate item acceptance on `Object.Quality >= MinQuality` for `MoreQuestsItemDeliveryQuest` and AdventureQuest `Deliver` steps. Quality 0 = base (any quality accepted), 1 = silver, 2 = gold, 4 = iridium (vanilla skips 3). Non-Object items (rings, weapons, etc.) fail any non-zero gate. Quest descriptions render the requirement on the content side, the framework only enforces.
