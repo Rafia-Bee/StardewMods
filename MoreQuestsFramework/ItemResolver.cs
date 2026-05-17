@@ -49,6 +49,12 @@ public sealed class ItemResolver
         _cache = cache;
     }
 
+    // Modded Data/Crops entries occasionally map a "seed" to non-crop harvest items
+    // (e.g. Pearl, Category -4 Fish). Filter to vegetable / fruit / flower so callers
+    // get the real farm-grown crops only, not pond produce piggybacking on the crop
+    // pipeline.
+    private static readonly HashSet<int> CropProduceCategories = new() { -75, -79, -80 };
+
     public List<ResolvedItem> GetSeasonalCrops(string season)
     {
         var results = new List<ResolvedItem>();
@@ -59,8 +65,11 @@ public sealed class ItemResolver
                 if (data.Seasons == null || !data.Seasons.Any(s => string.Equals(s.ToString(), season, StringComparison.OrdinalIgnoreCase)))
                     continue;
                 var item = TryResolveItem(data.HarvestItemId);
-                if (item != null)
-                    results.Add(item);
+                if (item == null)
+                    continue;
+                if (!CropProduceCategories.Contains(item.Category))
+                    continue;
+                results.Add(item);
             }
         }
         catch (Exception ex)
