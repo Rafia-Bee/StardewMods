@@ -16,7 +16,8 @@ public sealed record TriggerInfo(
     string? Npc = null,
     string? StartDate = null,
     string? Duration = null,
-    int? Weight = null)
+    int? Weight = null,
+    string? Custom = null)
 {
     public static readonly TriggerInfo Default = new();
 }

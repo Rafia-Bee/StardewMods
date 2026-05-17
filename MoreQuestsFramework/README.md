@@ -22,6 +22,18 @@ This mod powers [More Quests](../MoreQuests/README.md) and ships four configurab
   - `NpcDialogue`, queues the posting until the player next speaks to the named NPC.
   - `SpecialOrder`, writes a `Data/SpecialOrders` entry on the matching `StartDate` for `Duration` days. Vanilla owns the accept and tracking flow from there.
   - `CustomBoard`, per-day weighted draw routed to a registered `BoardDefinition`'s slot list, filtered by the board's `AllowedCategories` and capped at its `PoolSize`.
+  - `Custom`, escape hatch for consumer-mod trigger sources. The quest's `Trigger.Custom` field is the handler id registered through `IMoreQuestsModApi.RegisterCustomTrigger`. The framework respects the definition's `CooldownDays` first (so the handler isn't even asked while the cooldown is active), then calls the handler at DayStarted to decide whether the trigger fires today. Bare names resolve under the calling mod's UniqueID; pass `"OtherMod.UniqueID/Name"` to reference another mod's handler. Example:
+
+    ```csharp
+    scope.RegisterCustomTrigger("PlayerHasAxeT4", ctx =>
+    {
+        // fires once after the player has bought the gold axe.
+        return Game1.player.toolBeingUpgraded?.Value == null
+            && Game1.player.Items.Any(i => i is StardewValley.Tools.Axe a && a.UpgradeLevel >= 3);
+    });
+    ```
+
+    Then in JSON: `"Trigger": { "Source": "Custom", "Custom": "PlayerHasAxeT4", "CooldownDays": 28 }`. A Custom trigger whose handler isn't registered (e.g. the consumer mod is uninstalled) silently never fires.
 
   The trigger and the delivery method are picked separately. The trigger says *when* the quest fires, and the delivery says *how* it reaches the player (mail letter, next NPC chat, daily board slot, etc.). For example, a `DateLocked` quest set to Winter 12 doesn't have to arrive as mail, you can set `Trigger.Delivery` to `NpcDialogue` and it'll instead wait until you talk to the giver. Non-board sources default to mail when `Delivery` isn't set. Fire history is saved per-save in `MoreQuestsFrameworkState`.
 - **Quest factory.** Builds the right `Quest` subclass per posting (`ItemDeliveryQuest`, `FishingQuest`, `SlayMonsterQuest`, `ResourceCollectionQuest`, plus the framework's own multi-step `AdventureQuest` and shipping-tracked `MoreQuestsShipQuest`).

@@ -13,6 +13,7 @@ public sealed class TriggerEvaluator
 {
     private readonly FrameworkState _state;
     private readonly IMonitor _monitor;
+    private readonly CustomTriggerRegistry? _customTriggers;
 
     private readonly HashSet<string> _newBuildingsToday = new(StringComparer.OrdinalIgnoreCase);
 
@@ -20,10 +21,11 @@ public sealed class TriggerEvaluator
 
     private readonly HashSet<string> _newMailFlagsToday = new(StringComparer.OrdinalIgnoreCase);
 
-    public TriggerEvaluator(FrameworkState state, IMonitor monitor)
+    public TriggerEvaluator(FrameworkState state, IMonitor monitor, CustomTriggerRegistry? customTriggers = null)
     {
         _state = state;
         _monitor = monitor;
+        _customTriggers = customTriggers;
     }
 
     public void BeginDay()
@@ -58,7 +60,7 @@ public sealed class TriggerEvaluator
         }
     }
 
-    public bool ShouldFireToday(string defId, TriggerSource source, TriggerInfo info, int cooldownDays)
+    public bool ShouldFireToday(string defId, string ownerUniqueId, TriggerSource source, TriggerInfo info, int cooldownDays)
     {
         int today = Game1.Date.TotalDays;
 
@@ -83,12 +85,36 @@ public sealed class TriggerEvaluator
             TriggerSource.WeatherForecast => WeatherForecastMatches(info.Weather),
             TriggerSource.NpcDialogue => false,
             TriggerSource.SpecialOrder => SpecialOrderReady(defId, info.StartDate, cooldownDays, info.Weight ?? 0),
+            TriggerSource.Custom => CustomTriggerFires(defId, ownerUniqueId, info, cooldownDays),
             _ => false
         };
 
         if (fired)
             RecordFire(defId, today);
         return fired;
+    }
+
+    private bool CustomTriggerFires(string defId, string ownerUniqueId, TriggerInfo info, int cooldownDays)
+    {
+        if (!RespectCooldown(defId, cooldownDays))
+            return false;
+        if (_customTriggers == null || string.IsNullOrEmpty(info.Custom))
+            return false;
+        var handler = _customTriggers.Resolve(ownerUniqueId, info.Custom);
+        if (handler == null)
+            return false;
+        int today = Game1.Date.TotalDays;
+        int lastFired = _state.LastFiredDay.TryGetValue(defId, out int last) ? last : -1;
+        var ctx = new CustomTriggerContext(defId, ownerUniqueId, today, lastFired);
+        try
+        {
+            return handler(ctx);
+        }
+        catch (Exception ex)
+        {
+            _monitor.Log($"Custom trigger '{info.Custom}' for '{defId}' threw: {ex.Message}", LogLevel.Warn);
+            return false;
+        }
     }
 
     private void RecordFire(string defId, int today) => _state.LastFiredDay[defId] = today;

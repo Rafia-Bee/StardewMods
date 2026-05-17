@@ -127,7 +127,7 @@ public sealed class QuestPipeline
                 continue;
             if (!def.IsAvailable(_ctx))
                 continue;
-            if (!_triggers.ShouldFireToday(def.Id, src, def.Trigger, def.CooldownDays))
+            if (!_triggers.ShouldFireToday(def.Id, def.OwnerUniqueId, src, def.Trigger, def.CooldownDays))
                 continue;
 
             var posting = def.Build(_ctx);
@@ -156,7 +156,7 @@ public sealed class QuestPipeline
                 continue;
             if (!def.IsAvailable(_ctx))
                 continue;
-            if (!_triggers.ShouldFireToday(def.Id, src, def.Trigger, def.CooldownDays))
+            if (!_triggers.ShouldFireToday(def.Id, def.OwnerUniqueId, src, def.Trigger, def.CooldownDays))
                 continue;
 
             var posting = def.Build(_ctx);

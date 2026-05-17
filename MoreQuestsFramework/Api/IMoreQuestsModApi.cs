@@ -58,4 +58,11 @@ public interface IMoreQuestsModApi
     // carries the handler id; bare names are looked up under the owning consumer
     // mod's scope, "OtherMod/Name" works for cross-mod references.
     void RegisterCustomAdventureStep(string name, Func<CustomStepContext, int> handler);
+
+    // Handler for TriggerSource.Custom quests. The framework checks the definition's
+    // CooldownDays first, then calls the handler at DayStarted to decide whether the
+    // trigger fires today. The quest's Trigger.Custom field carries the handler id;
+    // bare names are looked up under the owning consumer mod's scope, "OtherMod/Name"
+    // works for cross-mod references.
+    void RegisterCustomTrigger(string name, Func<CustomTriggerContext, bool> handler);
 }

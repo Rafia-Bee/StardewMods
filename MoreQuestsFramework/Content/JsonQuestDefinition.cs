@@ -365,6 +365,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             "npcdialogue" => TriggerSource.NpcDialogue,
             "specialorder" => TriggerSource.SpecialOrder,
             "customboard" => TriggerSource.CustomBoard,
+            "custom" => TriggerSource.Custom,
             _ => TriggerSource.DailyBoard
         };
 
@@ -409,7 +410,8 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             Npc: t.Npc,
             StartDate: t.StartDate,
             Duration: t.Duration,
-            Weight: t.Weight);
+            Weight: t.Weight,
+            Custom: t.Custom);
     }
 
     private static BoardQuestType ParseObjectiveKind(string kind)

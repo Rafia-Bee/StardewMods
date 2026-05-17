@@ -91,6 +91,9 @@ public sealed class TriggerDef
 
     // SpecialOrder. Vanilla QuestDuration names (OneDay/TwoDays/Week/TwoWeeks/Month).
     public string? Duration { get; set; }
+
+    // Custom. Handler id registered via IMoreQuestsModApi.RegisterCustomTrigger.
+    public string? Custom { get; set; }
 }
 
 public sealed class ObjectiveDef
