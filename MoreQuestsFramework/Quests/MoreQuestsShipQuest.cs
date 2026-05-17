@@ -33,6 +33,10 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
 
     public string targetMessage = string.Empty;
 
+    // Built lazily on first ObserveShippingBin call. NetFields are stamped at construction
+    // (factory or codec decode) and effectively frozen after, so caching is safe.
+    private Dictionary<string, int>? _weightLookup;
+
     protected override void initNetFields()
     {
         base.initNetFields();
@@ -106,13 +110,13 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
     {
         if (completed.Value || bin == null || bin.Count == 0)
             return;
-        int primaryWeight = Math.Max(1, itemWeight.Value);
+        var lookup = WeightLookup();
         int matched = 0;
         for (int i = 0; i < bin.Count; i++)
         {
             var item = bin[i];
             if (item == null) continue;
-            int w = MatchedWeight(item, primaryWeight);
+            int w = LookupWeight(lookup, item);
             if (w > 0)
                 matched += w * item.Stack;
         }
@@ -130,17 +134,46 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
             reloadObjective();
     }
 
-    private int MatchedWeight(Item item, int primaryWeight)
+    private Dictionary<string, int> WeightLookup()
     {
-        if (Matches(item, itemId.Value))
-            return primaryWeight;
+        if (_weightLookup != null)
+            return _weightLookup;
+        var dict = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        AddWeightKey(dict, itemId.Value, Math.Max(1, itemWeight.Value));
         for (int i = 0; i < alternativeItemIds.Count; i++)
         {
-            if (Matches(item, alternativeItemIds[i]))
-                return i < alternativeItemWeights.Count
-                    ? Math.Max(1, alternativeItemWeights[i])
-                    : 1;
+            int weight = i < alternativeItemWeights.Count
+                ? Math.Max(1, alternativeItemWeights[i])
+                : 1;
+            AddWeightKey(dict, alternativeItemIds[i], weight);
         }
+        _weightLookup = dict;
+        return dict;
+    }
+
+    private static void AddWeightKey(Dictionary<string, int> dict, string id, int weight)
+    {
+        if (string.IsNullOrEmpty(id))
+            return;
+        dict[id] = weight;
+        // Mirror the old Matches() third branch: a qualified id like "(O)174" should
+        // also resolve when the bin item only exposes the bare ItemId "174".
+        if (id.StartsWith("(", StringComparison.Ordinal))
+        {
+            int closeIdx = id.IndexOf(')');
+            if (closeIdx >= 0 && closeIdx + 1 < id.Length)
+                dict[id.Substring(closeIdx + 1)] = weight;
+        }
+    }
+
+    private static int LookupWeight(Dictionary<string, int> dict, Item item)
+    {
+        string qid = item.QualifiedItemId ?? string.Empty;
+        if (!string.IsNullOrEmpty(qid) && dict.TryGetValue(qid, out int w))
+            return w;
+        string id = item.ItemId ?? string.Empty;
+        if (!string.IsNullOrEmpty(id) && dict.TryGetValue(id, out w))
+            return w;
         return 0;
     }
 
