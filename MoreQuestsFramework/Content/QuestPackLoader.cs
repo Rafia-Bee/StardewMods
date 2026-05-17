@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Registry;
 using StardewModdingAPI;
 
@@ -116,6 +117,17 @@ internal sealed class QuestPackLoader
                 if (!IsKnownRewardKind(r?.Kind))
                 {
                     _monitor.Log($"'{ownerUniqueId}/{label}': unknown reward Kind '{r?.Kind}'. Skipping the whole quest so a typo doesn't ship a quest with missing rewards.", LogLevel.Warn);
+                    return false;
+                }
+            }
+        }
+        if (hasSteps)
+        {
+            foreach (var sd in def.Steps!)
+            {
+                if (!Enum.TryParse<AdventureStepKind>(sd?.Kind, ignoreCase: true, out _))
+                {
+                    _monitor.Log($"'{ownerUniqueId}/{label}': step '{sd?.Name}' has unknown Kind '{sd?.Kind}'. Skipping the whole quest so a typo doesn't ship a quest that can't be completed.", LogLevel.Warn);
                     return false;
                 }
             }
