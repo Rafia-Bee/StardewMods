@@ -1,5 +1,6 @@
 using System;
 using MoreQuestsFramework.Consequences;
+using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 
@@ -49,4 +50,12 @@ public interface IMoreQuestsModApi
     // Calls before the first save load are buffered and applied to each fresh engine
     // when it stands up.
     void RegisterConsequenceTier(ConsequenceTier tier, IConsequenceHandler handler);
+
+    // Handler for AdventureStepKind.Custom steps. The framework polls each active
+    // Custom step once per second, calls the handler with the step's context, and
+    // credits the returned int against step.Progress (returning 0 = no progress this
+    // tick, returning >= remaining marks the step Done). The step's Targets[0]
+    // carries the handler id; bare names are looked up under the owning consumer
+    // mod's scope, "OtherMod/Name" works for cross-mod references.
+    void RegisterCustomAdventureStep(string name, Func<CustomStepContext, int> handler);
 }

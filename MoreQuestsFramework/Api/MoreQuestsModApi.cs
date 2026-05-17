@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using MoreQuestsFramework.Consequences;
 using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Dispatch;
+using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Registry;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
@@ -13,6 +14,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
 {
     private readonly QuestRegistry _registry;
     private readonly GeneratorRegistry _generators;
+    private readonly CustomStepRegistry _customSteps;
     private readonly QuestPackLoader _loader;
     private readonly DispatchRegistry _dispatch;
     private readonly BoardRegistry _boards;
@@ -26,6 +28,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
         IManifest owner,
         QuestRegistry registry,
         GeneratorRegistry generators,
+        CustomStepRegistry customSteps,
         QuestPackLoader loader,
         DispatchRegistry dispatch,
         BoardRegistry boards,
@@ -36,6 +39,7 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
         Owner = owner;
         _registry = registry;
         _generators = generators;
+        _customSteps = customSteps;
         _loader = loader;
         _dispatch = dispatch;
         _boards = boards;
@@ -63,6 +67,9 @@ public sealed class MoreQuestsModApi : IMoreQuestsModApi
 
     public void RegisterGenerator(string name, Func<QuestContext, QuestPosting?> generator)
         => _generators.Register(Owner.UniqueID, name, generator);
+
+    public void RegisterCustomAdventureStep(string name, Func<CustomStepContext, int> handler)
+        => _customSteps.Register(Owner.UniqueID, name, handler);
 
     public void LoadContentPack(IContentPack pack) => _loader.LoadContentPack(pack);
 
