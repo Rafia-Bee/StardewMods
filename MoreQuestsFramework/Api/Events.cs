@@ -29,18 +29,26 @@ public sealed class QuestCompletedArgs : EventArgs
     }
 }
 
+public enum QuestRemovalReason
+{
+    Completed,
+    Expired,
+    Cancelled
+}
+
 public sealed class QuestRemovedArgs : EventArgs
 {
     public Quest Quest { get; }
     public string OwnerUniqueId { get; }
     public string DefinitionId { get; }
-    public bool WasCompleted { get; }
-    public QuestRemovedArgs(Quest quest, string ownerUniqueId, string definitionId, bool wasCompleted)
+    public QuestRemovalReason Reason { get; }
+    public bool WasCompleted => Reason == QuestRemovalReason.Completed;
+    public QuestRemovedArgs(Quest quest, string ownerUniqueId, string definitionId, QuestRemovalReason reason)
     {
         Quest = quest;
         OwnerUniqueId = ownerUniqueId;
         DefinitionId = definitionId;
-        WasCompleted = wasCompleted;
+        Reason = reason;
     }
 }
 

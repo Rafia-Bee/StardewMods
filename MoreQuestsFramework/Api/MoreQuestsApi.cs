@@ -173,8 +173,8 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         => QuestAccepted?.Invoke(this, new QuestAcceptedArgs(q, info.OwnerUniqueId, info.DefinitionId));
     internal void FireQuestCompleted(Quest q, ManagedQuest info)
         => QuestCompleted?.Invoke(this, new QuestCompletedArgs(q, info.OwnerUniqueId, info.DefinitionId));
-    internal void FireQuestRemoved(Quest q, ManagedQuest info, bool wasCompleted)
-        => QuestRemoved?.Invoke(this, new QuestRemovedArgs(q, info.OwnerUniqueId, info.DefinitionId, wasCompleted));
+    internal void FireQuestRemoved(Quest q, ManagedQuest info, QuestRemovalReason reason)
+        => QuestRemoved?.Invoke(this, new QuestRemovedArgs(q, info.OwnerUniqueId, info.DefinitionId, reason));
     internal void FireDayRefreshed(int dailyCount, int mailCount)
         => DayRefreshed?.Invoke(this, new DayRefreshedArgs(dailyCount, mailCount));
 
