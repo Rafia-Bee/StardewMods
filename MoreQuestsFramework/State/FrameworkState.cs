@@ -11,6 +11,8 @@ public sealed class FrameworkState
 
     public Dictionary<string, int> LastFiredDay { get; set; } = new();
 
+    public Dictionary<string, int> AntiRepetitionLastPostedDay { get; set; } = new();
+
     public Dictionary<string, bool> OneShotFired { get; set; } = new();
 
     public List<string> LastSeenBuildings { get; set; } = new();
