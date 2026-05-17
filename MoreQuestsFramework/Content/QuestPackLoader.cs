@@ -109,6 +109,39 @@ internal sealed class QuestPackLoader
             _monitor.Log($"'{ownerUniqueId}/{label}': declarative Objective is missing 'Item'. Skipping.", LogLevel.Warn);
             return false;
         }
+        if (def.Rewards != null)
+        {
+            foreach (var r in def.Rewards)
+            {
+                if (!IsKnownRewardKind(r?.Kind))
+                {
+                    _monitor.Log($"'{ownerUniqueId}/{label}': unknown reward Kind '{r?.Kind}'. Skipping the whole quest so a typo doesn't ship a quest with missing rewards.", LogLevel.Warn);
+                    return false;
+                }
+            }
+        }
         return true;
+    }
+
+    private static bool IsKnownRewardKind(string? kind)
+    {
+        if (string.IsNullOrEmpty(kind))
+            return false;
+        switch (kind.ToLowerInvariant())
+        {
+            case "money":
+            case "friendship":
+            case "object":
+            case "recipe":
+            case "mail":
+            case "shopdiscount":
+            case "animalpurchasediscount":
+            case "festivalbias":
+            case "fairstartokens":
+            case "custom":
+                return true;
+            default:
+                return false;
+        }
     }
 }
