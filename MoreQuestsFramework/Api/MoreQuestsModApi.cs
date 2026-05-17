@@ -64,7 +64,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         _spaceCore = spaceCore;
     }
 
-    public void RegisterQuest(IQuestDefinition definition) => _registry.Register(definition);
+    public bool RegisterQuest(IQuestDefinition definition) => _registry.Register(definition);
 
     public void RegisterCustomQuestType(Type questType)
     {

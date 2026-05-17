@@ -75,8 +75,8 @@ internal sealed class QuestPackLoader
                 continue;
 
             var jdef = new JsonQuestDefinition(def, ownerUniqueId, translation, _generators, _monitor, cooldownTierResolver);
-            _registry.Register(jdef);
-            registered++;
+            if (_registry.Register(jdef))
+                registered++;
         }
         _monitor.Log($"Loaded {registered}/{doc.Quests.Count} quests from '{ownerUniqueId}'.", LogLevel.Trace);
     }
