@@ -430,6 +430,106 @@
             "Rewards": [
                 { "Kind": "Money", "Amount": 500 }
             ]
+        },
+        {
+            "Name": "ExamplePack.OneShot_FirstCabbage",
+            "Category": "Farming",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "OneShot",
+                "When": "FirstShipped 250"
+            },
+            "Giver": "Pierre",
+            "DeadlineDays": "Medium",
+            "Objective": {
+                "Kind": "Deliver",
+                "Item": "(O)250",
+                "Count": 3
+            },
+            "Title": "{i18n:example.oneShot.title}",
+            "Description": "{i18n:example.oneShot.description}",
+            "CurrentObjective": "{i18n:example.oneShot.objective}",
+            "TargetMessage": "{i18n:example.oneShot.targetMessage}",
+            "Rewards": [
+                { "Kind": "Money", "Amount": 600 },
+                { "Kind": "Friendship", "Npc": "Pierre", "Points": 60 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.MailReceived_GuildFollowUp",
+            "Category": "Mining",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "MailReceived",
+                "Flag": "guildMember"
+            },
+            "Giver": "Marlon",
+            "DeadlineDays": "Medium",
+            "Objective": {
+                "Kind": "Slay",
+                "TargetMonster": "Green Slime",
+                "Count": 5
+            },
+            "Title": "{i18n:example.mailReceived.title}",
+            "Description": "{i18n:example.mailReceived.description}",
+            "CurrentObjective": "{i18n:example.mailReceived.objective}",
+            "TargetMessage": "{i18n:example.mailReceived.targetMessage}",
+            "Rewards": [
+                { "Kind": "Money", "Amount": 400 },
+                { "Kind": "Friendship", "Npc": "Marlon", "Points": 80 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.BuildingBuilt_SiloHousewarming",
+            "Category": "Animal",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "BuildingBuilt",
+                "Building": "Silo",
+                "DayDelay": 1
+            },
+            "Giver": "Marnie",
+            "DeadlineDays": "Medium",
+            "Objective": {
+                "Kind": "Deliver",
+                "Item": "(O)178",
+                "Count": 10
+            },
+            "Title": "{i18n:example.buildingBuilt.title}",
+            "Description": "{i18n:example.buildingBuilt.description}",
+            "CurrentObjective": "{i18n:example.buildingBuilt.objective}",
+            "TargetMessage": "{i18n:example.buildingBuilt.targetMessage}",
+            "Rewards": [
+                { "Kind": "Money", "Amount": 400 },
+                { "Kind": "Friendship", "Npc": "Marnie", "Points": 60 }
+            ]
+        },
+        {
+            "Name": "ExamplePack.WeatherForecast_RainPrep",
+            "Category": "Fishing",
+            "Tier": "Beginner",
+            "Trigger": {
+                "Source": "WeatherForecast",
+                "Weather": "Rain",
+                "CooldownDays": 14,
+                "Available": { "NpcMet": "Demetrius" }
+            },
+            "Giver": "Demetrius",
+            "DeadlineDays": "Short",
+            "Objective": {
+                "Kind": "Catch",
+                "Item": "(O)143",
+                "Count": 1,
+                "Weather": "Rain"
+            },
+            "Title": "{i18n:example.weatherForecast.title}",
+            "Description": "{i18n:example.weatherForecast.description}",
+            "CurrentObjective": "{i18n:example.weatherForecast.objective}",
+            "TargetMessage": "{i18n:example.weatherForecast.targetMessage}",
+            "Rewards": [
+                { "Kind": "Money", "Amount": 500 },
+                { "Kind": "Friendship", "Npc": "Demetrius", "Points": 60 }
+            ]
         }
     ]
 }
