@@ -132,9 +132,6 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
 
     public void RefreshOffers() => _refreshOffers();
 
-    public void RegisterDispatchNpc(string role, string npcName, string? requiredModUniqueId = null)
-        => _dispatch.Register(role, npcName, requiredModUniqueId);
-
     public string? PickDispatchNpc(string role) => _dispatch.Pick(role);
 
     public IReadOnlyList<string> GetDispatchPool(string role) => _dispatch.ResolvePool(role);
