@@ -44,6 +44,21 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
+    // Used by the shipping-bin Harmony postfix so vanilla only opens the shipping
+    // door for the specific item ids a live decor-shipping step actually wants.
+    public bool CanShipForDecor(Item item)
+    {
+        if (item == null || completed.Value) return false;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !step.AllowDecorShipping) continue;
+            if (ItemMatches(step, item)) return true;
+        }
+        return false;
+    }
+
     protected override void initNetFields()
     {
         base.initNetFields();

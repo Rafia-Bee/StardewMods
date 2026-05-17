@@ -331,7 +331,7 @@ Step ordering is enforced by `Requires[]` (other step `Name`s that must be Done 
 ### Decor-shipping bypass
 
 This is mainly for peeps who don't use [Ship Anything](https://www.nexusmods.com/stardewvalley/mods/3782) mod.
-My festival supply quests often want the player to ship items vanilla refuses to accept (Hay Bales, Wood Lamp-posts, table furniture, custom decor). Set `AllowDecorShipping = true` on a `QuestPosting` (single-step Ship quests) or any `AdventureStep` of `Kind: Ship` (multi-step Adventure quests) and the framework lifts the ban for as long as the quest is active. Implemented as a gated postfix on `Object.canBeShipped`, recomputed once a second from the player's quest log. Off-quest sessions pay one int compare. The bypass is total, every item becomes shippable while a decor-shipping quest is in the log, so authors should only enable it on quests where that trade-off is acceptable.
+My festival supply quests often want the player to ship items vanilla refuses to accept (Hay Bales, Wood Lamp-posts, table furniture, custom decor). Set `AllowDecorShipping = true` on a `QuestPosting` (single-step Ship quests) or any `AdventureStep` of `Kind: Ship` (multi-step Adventure quests) and the framework lifts the ban for as long as the quest is active. Implemented as a gated postfix on `Object.canBeShipped`. The override is scoped to the specific item ids each opted-in quest or step declared, so unrelated decor stays blocked from the bin. The postfix recomputes its predicate list whenever a managed quest is accepted, completed, or removed. Off-quest sessions pay one int compare.
 
 ### Debug
 
