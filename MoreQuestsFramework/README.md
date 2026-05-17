@@ -246,6 +246,14 @@ Notes on the schema:
 - Step kinds available: `Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearWeeds`, `ClearDebris`, `Custom`. Independent steps (no `Requires[]`) are all active at once.
 - Single-objective `Ship` quests use `"Objective": { "Kind": "Ship", "Item": "(O)787", "Count": 1 }`. `Item` accepts a single string or an array, when an array, any id satisfies the delivery. Observed against `Game1.getFarm().getShippingBin(player)` at `DayEnding`.
 - Single-objective `Custom` quests use `"Objective": { "Kind": "Custom", "Custom": "<handler>" }` and route through a handler the consumer mod registered via `IMoreQuestsModApi.RegisterCustomBoardQuestType`. The handler receives a `CustomBoardQuestContext` (definition id, owner, giver, primary / alternative item ids, count, quality gate, target message, deadline) and returns a `Quest` instance. The framework then applies title / description / money / reward encoding the same way it does for built-in board kinds. Bare handler names resolve under the calling mod's UniqueID, `"OtherMod.UniqueID/Name"` works for cross-mod references. A Custom-kind posting whose handler isn't registered (e.g. the consumer mod is uninstalled) drops with the same Warn line as any other failed Build.
+- Optional quest-level fields on single-step quests:
+  - `MailBody` (string, supports `{i18n:key}`): overrides the auto-generated letter body when the quest is delivered via mail. On Adventure quests it lives at the same `QuestDef` level. Null/empty falls back to the default body.
+  - `DeliveryTarget` (string): for `Deliver` quests where the requester (`Giver`) isn't the same NPC who accepts the hand-off (anonymous gift orders). Empty falls back to `Giver`.
+  - `AllowDecorShipping` (bool): single-step `Ship` quests only. Lifts vanilla's furniture/decor shipping ban while the quest is active. For Adventure quests, set this on the individual `Ship` step instead.
+- Optional fishing-objective fields on `Objective` (Kind = `Fish`/`Catch`):
+  - `MaxSize` (int, inches): upper bound on catch size. 0 = no cap.
+  - `AnyFish` (bool): counter-only mode. Any catch passing the location/size/weather filters counts toward the quota, no specific fish stack needed at turn-in.
+  - `ProgressTemplate` (string, supports `{i18n:key}`): replaces vanilla's `"0/5 Frog caught"` progress label for `AnyFish` quests. `{0}` is the current count, `{1}` is the quota.
 - `MailReward` accepts `"When": "Today"` (default), `"Tomorrow"`, or `"NextDay"` (alias for `Tomorrow`).
 - JSON reward fields per kind (everything in the "Reward kinds" list above is reachable from a content pack):
   - `Money`: `Amount`.

@@ -33,6 +33,19 @@ internal sealed class QuestDef
     public string? CurrentObjective { get; set; }
     public string? TargetMessage { get; set; }
 
+    // Mail-delivered quests only. Overrides the auto-generated letter body. Supports
+    // {i18n:key} tokens. Null/empty falls back to the framework's default body.
+    public string? MailBody { get; set; }
+
+    // Deliver-only. Recipient NPC when the requester (Giver) is not who actually
+    // accepts the item (anonymous gift orders). Empty falls back to Giver.
+    public string? DeliveryTarget { get; set; }
+
+    // Single-step Ship quests only. Lifts vanilla's furniture/decor shipping ban
+    // while the parent quest is active. (For Adventure quests, set this on the
+    // individual Ship step instead.)
+    public bool AllowDecorShipping { get; set; }
+
     public List<RewardDef> Rewards { get; set; } = new();
 
     public ConsequenceDef? Consequence { get; set; }
@@ -118,6 +131,17 @@ internal sealed class ObjectiveDef
     // Fishing filter: catch size in inches. Squid/Octopus/pond returns report -1
     // and fail this gate.
     public int MinSize { get; set; }
+
+    // Fishing filter: max catch size in inches. 0 = no upper bound.
+    public int MaxSize { get; set; }
+
+    // Fishing counter-only mode: any catch passing the filters counts, no specific
+    // stack needed at turn-in. Used by quests like Size Overpopulation.
+    public bool AnyFish { get; set; }
+
+    // Overrides vanilla's "0/5 Frog caught" progress label for AnyFish quests.
+    // {0} = current count, {1} = quota. Supports {i18n:key} tokens.
+    public string? ProgressTemplate { get; set; }
 
     // Sun/Rain/Storm/Snow/Wind (or sunny/rainy aliases). "Rain" matches Rain+Storm.
     public string? Weather { get; set; }
