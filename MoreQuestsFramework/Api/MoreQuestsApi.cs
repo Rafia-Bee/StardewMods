@@ -92,6 +92,23 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     public bool IsManagedQuest(Quest quest) =>
         quest != null && _managed.TryGetValue(quest, out _);
 
+    public IReadOnlyList<string> RegisteredQuestIds() => _registry.RegisteredIds();
+
+    public QuestInfo? GetQuestInfo(string definitionId)
+    {
+        if (string.IsNullOrEmpty(definitionId))
+            return null;
+        if (!_registry.TryGet(definitionId, out var def) || def == null)
+            return null;
+        return new QuestInfo(
+            def.Id,
+            def.OwnerUniqueId,
+            def.Category,
+            def.Kind,
+            def.Source,
+            _registry.EffectiveSource(def));
+    }
+
     internal CustomStepRegistry CustomSteps => _customSteps;
     internal CustomTriggerRegistry CustomTriggers => _customTriggers;
     internal CustomRewardRegistry CustomRewards => _customRewards;
