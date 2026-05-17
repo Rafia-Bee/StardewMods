@@ -104,6 +104,8 @@ public sealed class ItemResolver
                     continue;
                 if (IsNonFishFishEntry(item))
                     continue;
+                if (!IsFishCurrentlyCatchable(item.QualifiedItemId))
+                    continue;
                 if (int.TryParse(fields[1], out int difficulty))
                     item.Difficulty = difficulty;
                 results.Add(item);
@@ -114,6 +116,45 @@ public sealed class ItemResolver
             _monitor.Log($"GetSeasonalFish: {ex.Message}", LogLevel.Warn);
         }
         return results;
+    }
+
+    // Soft filter: a fish is considered currently uncatchable only if it has at least
+    // one Data/Locations spawn entry AND every spawn entry's Condition GSQ fails. So
+    // extended-family legendaries (Son of Crimsonfish etc., gated on
+    // PLAYER_SPECIAL_ORDER_RULE_ACTIVE LEGENDARY_FAMILY) drop out of the pool when Qi's
+    // special order isn't active. Fish with no Data/Locations spawn at all (RSV/FTM
+    // spawning) stay in since we can't tell whether they're catchable.
+    private bool IsFishCurrentlyCatchable(string qualifiedItemId)
+    {
+        if (string.IsNullOrEmpty(qualifiedItemId))
+            return true;
+        bool anySpawn = false;
+        try
+        {
+            foreach (var (_, locData) in _cache.Locations)
+            {
+                if (locData.Fish == null)
+                    continue;
+                foreach (var spawn in locData.Fish)
+                {
+                    if (spawn?.ItemId == null) continue;
+                    string qid = ItemRegistry.QualifyItemId(spawn.ItemId) ?? spawn.ItemId;
+                    if (!string.Equals(qid, qualifiedItemId, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    anySpawn = true;
+                    if (string.IsNullOrEmpty(spawn.Condition))
+                        return true;
+                    if (StardewValley.GameStateQuery.CheckConditions(spawn.Condition))
+                        return true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _monitor.Log($"IsFishCurrentlyCatchable({qualifiedItemId}): {ex.Message}", LogLevel.Warn);
+            return true;
+        }
+        return !anySpawn;
     }
 
     // Drops items that live in Data/Fish but aren't really fish (SVE's Dulse Seaweed,
@@ -149,6 +190,8 @@ public sealed class ItemResolver
 
     // Walks Data/Locations for SpawnFishData entries with IsBossFish=true. Picks up
     // vanilla and any modded fish (RSV, SVE, VMV, etc.) following the same convention.
+    // Returns every boss fish regardless of spawn Condition; callers that need only the
+    // currently-catchable ones should filter further (see GetCatchableBossFish).
     public List<ResolvedItem> GetBossFish()
     {
         var results = new List<ResolvedItem>();
@@ -183,6 +226,52 @@ public sealed class ItemResolver
         catch (Exception ex)
         {
             _monitor.Log($"GetBossFish: {ex.Message}", LogLevel.Warn);
+        }
+        return results;
+    }
+
+    // Subset of GetBossFish that the player could actually catch right now. Honors
+    // the spawn entry's Condition GSQ, so extended-family legendaries (Ms. Angler,
+    // Son of Crimsonfish, Glacierfish Jr., Radioactive Carp, Legend II) are excluded
+    // unless Qi's LEGENDARY_FAMILY special order is active. Used by LegendaryFishQuest
+    // so it doesn't ask the player to catch something that physically can't spawn.
+    public List<ResolvedItem> GetCatchableBossFish()
+    {
+        var results = new List<ResolvedItem>();
+        try
+        {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (_, data) in _cache.Locations)
+            {
+                if (data.Fish == null)
+                    continue;
+                foreach (var spawn in data.Fish)
+                {
+                    if (spawn?.ItemId == null || !spawn.IsBossFish)
+                        continue;
+                    if (!string.IsNullOrEmpty(spawn.Condition)
+                        && !StardewValley.GameStateQuery.CheckConditions(spawn.Condition))
+                        continue;
+                    string qualified = ItemRegistry.QualifyItemId(spawn.ItemId) ?? spawn.ItemId;
+                    if (!seen.Add(qualified))
+                        continue;
+                    var item = TryResolveItem(qualified);
+                    if (item == null)
+                        continue;
+                    string fishKey = qualified.StartsWith("(O)") ? qualified.Substring(3) : qualified;
+                    if (_cache.Fish.TryGetValue(fishKey, out var rawData))
+                    {
+                        var fields = rawData.Split('/');
+                        if (fields.Length >= 2 && int.TryParse(fields[1], out int difficulty))
+                            item.Difficulty = difficulty;
+                    }
+                    results.Add(item);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _monitor.Log($"GetCatchableBossFish: {ex.Message}", LogLevel.Warn);
         }
         return results;
     }

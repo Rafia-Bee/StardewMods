@@ -616,7 +616,7 @@ internal static partial class Generators
     {
         const string giver = "Willy";
 
-        var bosses = ctx.Items.GetBossFish();
+        var bosses = ctx.Items.GetCatchableBossFish();
         if (bosses.Count == 0)
             return null;
 
