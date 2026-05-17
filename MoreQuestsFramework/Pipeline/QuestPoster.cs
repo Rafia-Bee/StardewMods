@@ -24,6 +24,7 @@ internal sealed class QuestPoster
     private readonly MoreQuestsApi _api;
     private readonly Dictionary<string, string> _pendingMail = new();
     private readonly List<(Quest q, QuestPosting p)> _pendingBoard = new();
+    private bool _mailDirty;
     private MailQuestRegistry? _mailRegistry;
     private FrameworkState? _state;
     private SpecialOrderWriter? _specialOrders;
@@ -113,6 +114,15 @@ internal sealed class QuestPoster
     {
         foreach (var p in postings)
             Post(p);
+        FlushMailCacheIfDirty();
+    }
+
+    private void FlushMailCacheIfDirty()
+    {
+        if (!_mailDirty)
+            return;
+        _mailDirty = false;
+        _helper.GameContent.InvalidateCache("Data/mail");
     }
 
     public Quest? PrepareCustomBoardQuest(QuestPosting posting)
@@ -200,8 +210,7 @@ internal sealed class QuestPoster
             _monitor.Log("Mail-quest registry not wired; %item quest token will not resolve.", LogLevel.Warn);
 
         StashForReload(posting, mailKey, body);
-
-        _helper.GameContent.InvalidateCache("Data/mail");
+        _mailDirty = true;
 
         if (!Game1.player.mailReceived.Contains(mailKey) && !Game1.player.mailbox.Contains(mailKey))
             Game1.player.mailbox.Add(mailKey);

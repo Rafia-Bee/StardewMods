@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -185,8 +184,6 @@ internal sealed class CustomBoardMenu : IClickableMenu
                 return;
             }
         }
-
-        InvokeBaseLeftClick(x, y, playSound);
     }
 
     public override bool readyToClose()
@@ -233,14 +230,6 @@ internal sealed class CustomBoardMenu : IClickableMenu
         InnerAcceptPopup = null;
         if (reopen)
             Game1.activeClickableMenu = new CustomBoardMenu(_board);
-    }
-
-    private void InvokeBaseLeftClick(int x, int y, bool playSound)
-    {
-        var method = AccessTools.Method(typeof(IClickableMenu), nameof(IClickableMenu.receiveLeftClick));
-        var ftn = method.MethodHandle.GetFunctionPointer();
-        var func = (Action<int, int, bool>)Activator.CreateInstance(typeof(Action<int, int, bool>), this, ftn)!;
-        func.Invoke(x, y, playSound);
     }
 
     public override void draw(SpriteBatch b)
