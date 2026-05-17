@@ -356,6 +356,11 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || _pipeline == null || _poster == null)
             return;
+        // Host-only stance. Save data is host-scoped (see StateStore), so letting
+        // farmhands run any of this would mutate per-session state on their side
+        // that the host never agrees with.
+        if (!Game1.IsMasterGame)
+            return;
 
         _dataCache?.Refresh();
         _antiRepetition?.BeginDay();
@@ -399,8 +404,7 @@ public sealed class ModEntry : Mod
         }
 
         // Single source of truth on the board.
-        if (Game1.IsMasterGame)
-            Game1.netWorldState.Value.SetQuestOfTheDay(null);
+        Game1.netWorldState.Value.SetQuestOfTheDay(null);
 
         // Catches quests accepted on a previous session where the player already
         // descended past the target floor.
@@ -684,6 +688,8 @@ public sealed class ModEntry : Mod
     private void OnOneSecondTick(object? sender, OneSecondUpdateTickedEventArgs e)
     {
         if (!Context.IsWorldReady || Game1.player == null)
+            return;
+        if (!Game1.IsMasterGame)
             return;
 
         _dialogueWatcher?.Tick();
