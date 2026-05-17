@@ -16,6 +16,14 @@ public interface IMoreQuestsApi
 
     bool IsManagedQuest(Quest quest);
 
+    // Snapshot of every registered quest id in registration order. Consumer-mod
+    // debug menus and quest browsers can pair this with GetQuestInfo to build
+    // their own listings. Returns an empty list before RegistrationOpen fires.
+    IReadOnlyList<string> RegisteredQuestIds();
+
+    // Read-only metadata for a registered quest. Null when the id is unknown.
+    QuestInfo? GetQuestInfo(string definitionId);
+
     // Re-rolls today's daily-board batch. Mail-triggered postings are NOT re-rolled
     // (would risk double-posting mail flags).
     void RefreshOffers();
