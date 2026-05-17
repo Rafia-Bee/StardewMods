@@ -3,6 +3,8 @@
     "example.deliver.description": "Lewis is putting together a small fall display for the town square. Can you bring him a fresh Apple?",
     "example.deliver.objective": "Bring 1 Apple to Lewis.",
     "example.deliver.targetMessage": "Beautiful, that's exactly what I had in mind. Thanks!",
+    "example.deliver.consequence.loved": "Oh, you brought Lewis an apple? Those are my favorite, I hope he picks a nice spot for them.",
+    "example.deliver.consequence.hated": "An apple for the display? Ugh, I can't stand the smell of those.",
 
     "example.ship.title": "Marnie's egg order",
     "example.ship.description": "Marnie is short on eggs for her shop. Could you ship 10 of any kind?",

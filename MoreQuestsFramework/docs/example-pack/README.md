@@ -25,7 +25,7 @@ Single-step quests use `Objective`. Multi-step quests use `Steps[]` and can wire
 
 | Quest | Shape | Step kind | What it shows |
 | --- | --- | --- | --- |
-| `Deliver_Apple` | `Objective` | `Deliver` | The simplest case. One item handed to one giver. Also shows `FestivalBias` + `FairStarTokens` rewards tied to the Stardew Valley Fair. |
+| `Deliver_Apple` | `Objective` | `Deliver` | The simplest case. One item handed to one giver. Also shows `FestivalBias` + `FairStarTokens` rewards tied to the Stardew Valley Fair, and a `Tier1` `GiftTastes` consequence keyed off the apple itself. |
 | `Ship_Eggs` | `Objective` | `Ship` | Ship N of an item through the bin (DayEnding observer). Also shows an `AnimalPurchaseDiscount` reward you can layer on top of Money + Friendship. |
 | `Catch_LargemouthBass` | `Objective` | `Fish` / `Catch` | Catch N of one fish. Single-objective fishing quest. |
 | `Slay_Slimes` | `Objective` | `Slay` | Slay N of one monster type. |
@@ -42,7 +42,7 @@ Single-step quests use `Objective`. Multi-step quests use `Steps[]` and can wire
 
 The `Custom` step kind is an escape hatch for consumer-mod code, not used in this pack.
 
-For more advanced patterns (NPC dispatch pools, consequences, decor-shipping bypass, etc.), look at [`../../../MoreQuests/assets/quests.json`](../../../MoreQuests/assets/quests.json), the production quest list the More Quests content mod ships with.
+For more advanced patterns (NPC dispatch pools, decor-shipping bypass, etc.), look at [`../../../MoreQuests/assets/quests.json`](../../../MoreQuests/assets/quests.json), the production quest list the More Quests content mod ships with.
 
 ## Schema reference
 
