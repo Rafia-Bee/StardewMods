@@ -183,25 +183,18 @@ internal static partial class Generators
     // -------------------- Adult-human giver pools --------------------
 
     /// Met villagers narrowed to adult humans who can plausibly receive a quest gift.
-    /// Filters: not a child, not Dwarvish-speaking, CanReceiveGifts is true, CanSocialize
-    /// is true (excludes "friendable animal" NPCs like East Scarp's Duck2NPC whose
-    /// `CharacterData.CanSocialize` GSQ resolves to false), and friendship.Points > 0 so
-    /// pre-seeded-but-never-actually-met NPCs (East Scarp's ToriLK) don't get picked.
-    /// Krobus is excluded by name (passes every other filter but isn't human; vanilla data has
-    /// no programmatic marker). Quests involving Krobus should reference him directly.
+    /// The Age / CanSocialize / non-human checks (DuckNPC, Sen, Leximonster, Krobus...)
+    /// happen inside DispatchRegistry.MetHumanNpcs via NpcDisplay.IsBoardEligible. This
+    /// layer adds the gift-receiver specifics: not Dwarvish-speaking, CanReceiveGifts,
+    /// and friendship.Points > 0 so pre-seeded-but-never-actually-met NPCs (East Scarp's
+    /// ToriLK) don't get picked.
     private static List<string> MetAdultHumanGiftReceivers()
     {
         var results = new List<string>();
         foreach (var name in DispatchRegistry.MetHumanNpcs())
         {
-            if (string.Equals(name, "Krobus", StringComparison.OrdinalIgnoreCase))
-                continue;
             var npc = Game1.getCharacterFromName(name);
             if (npc == null)
-                continue;
-            if (npc.Age == 2)
-                continue;
-            if (!npc.CanSocialize)
                 continue;
             var data = npc.GetData();
             if (data == null)
