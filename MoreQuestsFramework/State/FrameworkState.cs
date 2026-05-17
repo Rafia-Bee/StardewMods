@@ -7,8 +7,10 @@ namespace MoreQuestsFramework.State;
 // Per-save persistent state. All dict keys are the JSON-Name verbatim of the quest def.
 internal sealed class FrameworkState
 {
-    // Bumped on incompatible shape changes so migrations can branch on it.
-    public int Schema { get; set; } = 1;
+    // Bumped on incompatible shape changes so StateStore.Load can branch and migrate.
+    public const int CurrentSchema = 1;
+
+    public int Schema { get; set; } = CurrentSchema;
 
     public Dictionary<string, int> LastFiredDay { get; set; } = new();
 
