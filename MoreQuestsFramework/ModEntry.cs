@@ -522,15 +522,18 @@ public sealed class ModEntry : Mod
     }
 
     // Keeps the gated canBeShipped postfix on a fast path when no decor-shipping quest
-    // is in the log.
+    // is in the log, and hands the postfix one predicate per active quest so only the
+    // item ids that quest actually wants get the shipping override.
     private static void RecomputeDecorShippingCount()
     {
         if (Game1.player == null)
         {
             Patches.DecorShippingPatches.ActiveCount = 0;
+            Patches.DecorShippingPatches.SetPredicates(System.Array.Empty<System.Func<StardewValley.Object, bool>>());
             return;
         }
         int count = 0;
+        var predicates = new List<System.Func<StardewValley.Object, bool>>();
         var log = Game1.player.questLog;
         for (int i = 0; i < log.Count; i++)
         {
@@ -538,11 +541,18 @@ public sealed class ModEntry : Mod
             if (q == null || q.completed.Value)
                 continue;
             if (q is Quests.AdventureQuest a && a.HasDecorShippingStep)
+            {
                 count++;
+                predicates.Add(a.CanShipForDecor);
+            }
             else if (q is Quests.MoreQuestsShipQuest s && s.allowDecorShipping.Value)
+            {
                 count++;
+                predicates.Add(s.MatchesItem);
+            }
         }
         Patches.DecorShippingPatches.ActiveCount = count;
+        Patches.DecorShippingPatches.SetPredicates(predicates);
     }
 
     // Idempotent across the festival session; writer's Consume also drops pending
