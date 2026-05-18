@@ -52,9 +52,15 @@ internal sealed class QuestRegistry
         // Drain any buffered override that targeted this id before its owner mod ran.
         if (_pendingOverrides.TryGetValue(def.Id, out var pending))
         {
-            _sourceOverrides[def.Id] = pending;
+            string? incompat = ValidateOverrideCompat(def, pending);
             _pendingOverrides.Remove(def.Id);
-            _monitor.Log($"Applied buffered source override on '{def.Id}': {pending}.", LogLevel.Trace);
+            if (incompat != null)
+                _monitor.Log($"Buffered OverrideSource for '{def.Id}' = {pending} dropped: {incompat}", LogLevel.Warn);
+            else
+            {
+                _sourceOverrides[def.Id] = pending;
+                _monitor.Log($"Applied buffered source override on '{def.Id}': {pending}.", LogLevel.Trace);
+            }
         }
         return true;
     }
@@ -87,12 +93,22 @@ internal sealed class QuestRegistry
     // target an id whose owner mod hasn't called RegisterQuest yet are buffered and
     // replayed when Register sees the matching id. Buffered overrides that never
     // resolve get a Warn at Freeze time.
+    //
+    // Rejects the override when the def's existing TriggerInfo can't support the new
+    // source (e.g. switching to NpcDialogue with no Trigger.Npc set). Otherwise the
+    // runtime would drop the posting silently each day with no obvious signal.
     public void OverrideSource(string definitionId, TriggerSource source)
     {
         if (string.IsNullOrEmpty(definitionId))
             return;
-        if (_byId.ContainsKey(definitionId))
+        if (_byId.TryGetValue(definitionId, out var def))
         {
+            string? incompat = ValidateOverrideCompat(def, source);
+            if (incompat != null)
+            {
+                _monitor.Log($"OverrideSource('{definitionId}', {source}) ignored: {incompat}", LogLevel.Warn);
+                return;
+            }
             _sourceOverrides[definitionId] = source;
             _monitor.Log($"Quest '{definitionId}' source override set to {source}.", LogLevel.Trace);
             return;
@@ -102,8 +118,39 @@ internal sealed class QuestRegistry
             _monitor.Log($"OverrideSource('{definitionId}', {source}) ignored: no such quest registered.", LogLevel.Warn);
             return;
         }
+        // Pending overrides can't validate against a TriggerInfo yet (the def isn't
+        // here). Compat check runs in Register when the buffered entry resolves.
         _pendingOverrides[definitionId] = source;
         _monitor.Log($"Buffered source override on '{definitionId}' = {source} until its owner registers.", LogLevel.Trace);
+    }
+
+    private static string? ValidateOverrideCompat(IQuestDefinition def, TriggerSource source)
+    {
+        var t = def.Trigger ?? Triggers.TriggerInfo.Default;
+        return source switch
+        {
+            TriggerSource.NpcDialogue when string.IsNullOrWhiteSpace(t.Npc)
+                => "NpcDialogue requires Trigger.Npc to be set on the definition.",
+            TriggerSource.BuildingBuilt when string.IsNullOrWhiteSpace(t.Building)
+                => "BuildingBuilt requires Trigger.Building to be set on the definition.",
+            TriggerSource.MailReceived when string.IsNullOrWhiteSpace(t.Flag)
+                => "MailReceived requires Trigger.Flag to be set on the definition.",
+            TriggerSource.WeatherForecast when string.IsNullOrWhiteSpace(t.Weather)
+                => "WeatherForecast requires Trigger.Weather to be set on the definition.",
+            TriggerSource.Periodic when (t.EveryDays ?? 0) <= 0
+                => "Periodic requires Trigger.EveryDays > 0 on the definition.",
+            TriggerSource.DateLocked when string.IsNullOrWhiteSpace(t.Date)
+                => "DateLocked requires Trigger.Date to be set on the definition.",
+            TriggerSource.DateRange when (string.IsNullOrWhiteSpace(t.From) || string.IsNullOrWhiteSpace(t.To))
+                => "DateRange requires both Trigger.From and Trigger.To to be set on the definition.",
+            TriggerSource.OneShot when string.IsNullOrWhiteSpace(t.When)
+                => "OneShot requires Trigger.When to be set on the definition.",
+            TriggerSource.SpecialOrder when string.IsNullOrWhiteSpace(t.StartDate) && (t.Weight ?? 0) <= 0
+                => "SpecialOrder requires either Trigger.StartDate, or Trigger.Weight > 0 for the cooldown-only Sunday roll path.",
+            TriggerSource.Custom when string.IsNullOrWhiteSpace(t.Custom)
+                => "Custom requires Trigger.Custom (handler id) to be set on the definition.",
+            _ => null,
+        };
     }
 
     public TriggerSource EffectiveSource(IQuestDefinition def)

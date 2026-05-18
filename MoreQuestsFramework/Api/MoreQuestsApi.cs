@@ -48,6 +48,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     public event EventHandler<QuestRemovedArgs>? QuestRemoved;
     public event EventHandler<DayRefreshedArgs>? DayRefreshed;
     public event EventHandler<QuestSkippedArgs>? QuestSkippedToday;
+    public event EventHandler? FrameworkShuttingDown;
 
     private FrameworkState? _state;
 
@@ -238,6 +239,8 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         => DayRefreshed?.Invoke(this, new DayRefreshedArgs(dailyCount, mailCount));
     internal void FireQuestSkippedToday(string defId, string ownerUniqueId, TriggerSource source, QuestSkipReason reason)
         => QuestSkippedToday?.Invoke(this, new QuestSkippedArgs(defId, ownerUniqueId, source, reason));
+    internal void FireFrameworkShuttingDown()
+        => FrameworkShuttingDown?.Invoke(this, EventArgs.Empty);
 
     internal sealed class ManagedQuest
     {
