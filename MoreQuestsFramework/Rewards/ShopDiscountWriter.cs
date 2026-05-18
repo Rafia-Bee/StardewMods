@@ -29,6 +29,12 @@ internal sealed class ShopDiscountWriter
         RewardApplier.OnShopDiscountGranted = Grant;
     }
 
+    public void ClearActive()
+    {
+        _state = null;
+        RewardApplier.OnShopDiscountGranted = null;
+    }
+
     public void Register()
     {
         if (_registered)

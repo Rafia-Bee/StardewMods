@@ -70,6 +70,10 @@ public interface IMoreQuestsModApi
     // tick, returning >= remaining marks the step Done). The step's Targets[0]
     // carries the handler id; bare names are looked up under the owning consumer
     // mod's scope, "OtherMod/Name" works for cross-mod references.
+    // Keep handlers cheap. They run every second for every active Custom step on
+    // every Adventure quest in the player's log, so an expensive scan adds up fast
+    // once a few quests stack. Cache anything that doesn't need a per-tick read,
+    // and prefer GetActiveCustomSteps for genuinely event-driven progress.
     void RegisterCustomAdventureStep(string name, Func<CustomStepContext, int> handler);
 
     // Event-driven escape hatch for Custom steps. Returns a snapshot of every

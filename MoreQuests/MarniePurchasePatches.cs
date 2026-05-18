@@ -2,6 +2,7 @@ using System;
 using HarmonyLib;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Menus;
 
 namespace MoreQuests;
 
@@ -48,13 +49,10 @@ internal static class MarniePurchasePatches
         var menu = Game1.activeClickableMenu;
         if (menu == null)
             return;
-        string menuType = menu.GetType().FullName ?? string.Empty;
-        if (menuType.Equals("StardewValley.Menus.NamingMenu", StringComparison.Ordinal))
-            return;
-        if (menuType.Equals("StardewValley.Menus.DialogueBox", StringComparison.Ordinal))
+        if (menu is NamingMenu || menu is DialogueBox)
             return;
 
-        bool isVanillaMenu = menuType.IndexOf("StardewValley.Menus.PurchaseAnimalsMenu", StringComparison.Ordinal) >= 0;
+        bool isVanillaMenu = menu is PurchaseAnimalsMenu;
         string type = animal.type?.Value ?? string.Empty;
         string house = animal.buildingTypeILiveIn?.Value ?? string.Empty;
         bool isCoopAnimal = house.IndexOf("Coop", StringComparison.OrdinalIgnoreCase) >= 0;
