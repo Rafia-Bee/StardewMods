@@ -58,9 +58,9 @@
 
     "config.section.adventureBoardPlacement": "Adventurer's Guild board placement",
     "config.AdventureBoardTileX": "Anchor tile X",
-    "config.AdventureBoardTileX.tooltip": "Tile X coordinate where the player walks to interact with the board (the click target).",
+    "config.AdventureBoardTileX.tooltip": "Tile X coordinate where the player walks to interact with the board. The board lives in the Mine entrance map. Default (20, 4) puts it on the right wall, near the ladder down.",
     "config.AdventureBoardTileY": "Anchor tile Y",
-    "config.AdventureBoardTileY.tooltip": "Tile Y coordinate of the click target.",
+    "config.AdventureBoardTileY.tooltip": "Tile Y coordinate of the click target. See Anchor tile X for default placement.",
     "config.AdventureBoardDrawOffsetX": "Sprite offset X (pixels)",
     "config.AdventureBoardDrawOffsetX.tooltip": "Pixel offset applied to the in-world board sprite. 1 tile = 64 pixels. Negative values move left. Lets you park the board on a wall while keeping the click target at a walkable tile.",
     "config.AdventureBoardDrawOffsetY": "Sprite offset Y (pixels)",
@@ -569,7 +569,7 @@
     "config.LeahPaintingFrame": "Painting frame style",
     "config.LeahPaintingFrame.tooltip": "Which frame Leah uses on the painting she sends you. The animal in the painting is always a surprise, only the frame is your choice.",
 
-    "item.leahPainting.frame.burgandy": "gold frame",
+    "item.leahPainting.frame.burgundy": "gold frame",
     "item.leahPainting.frame.night": "night frame",
     "item.leahPainting.frame.wood": "wood frame",
 

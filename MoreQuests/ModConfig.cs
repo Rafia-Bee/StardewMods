@@ -22,8 +22,10 @@ public sealed class ModConfig
     public bool EnableAdventurersGuildBoard { get; set; } = true;
 
     /// Tile X of the guild board's anchor (where the player walks to interact).
+    /// The board lives in the Mine entrance map. Default (20, 4) places it on the
+    /// right wall, just past the mine shaft, near the ladder down.
     public int AdventureBoardTileX { get; set; } = 20;
-    /// Tile Y of the guild board's anchor.
+    /// Tile Y of the guild board's anchor. See AdventureBoardTileX for default placement.
     public int AdventureBoardTileY { get; set; } = 4;
     /// Pixel X offset for the in-world sprite. 1 tile = 64px. Negative values move left.
     public int AdventureBoardDrawOffsetX { get; set; } = 0;
@@ -189,7 +191,7 @@ public sealed class ModConfig
     public int SpringCleaningCount { get; set; } = 8;
 
     /// Frame style the player wants on Leah's farm-animal painting reward.
-    /// Allowed values: "Wood", "Burgandy", "Night". The animal in the painting is
+    /// Allowed values: "Wood", "Burgundy", "Night". The animal in the painting is
     /// always random; only the frame is player-controlled.
     public string LeahPaintingFrame { get; set; } = "Wood";
 

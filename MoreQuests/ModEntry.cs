@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
 using MoreQuests.Quests;
@@ -31,6 +33,8 @@ public sealed class ModEntry : Mod
     {
         Instance = this;
         Config = helper.ReadConfig<ModConfig>();
+
+        ScanLeahPaintingAssets();
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
@@ -71,21 +75,45 @@ public sealed class ModEntry : Mod
     /// File-system folder (relative to the mod) holding the 51 painting PNGs.
     internal const string LeahPaintingAssetFolder = "assets/leahPaintings";
 
-    /// Animal sprite names. Matches the filename stem in assets/leahPaintings.
-    internal static readonly string[] LeahPaintingAnimals =
+    /// Animal sprite names. Populated at Entry() by scanning assets/leahPaintings/*.png.
+    internal static string[] LeahPaintingAnimals { get; private set; } = Array.Empty<string>();
+
+    /// Lowercase frame keys. Populated from the filename suffix.
+    internal static string[] LeahPaintingFrames { get; private set; } = Array.Empty<string>();
+
+    /// Title-cased frame options shown in GMCM. Derived from LeahPaintingFrames.
+    internal static string[] LeahPaintingFrameOptions { get; private set; } = Array.Empty<string>();
+
+    /// Walks assets/leahPaintings for `<Animal>_<frame>.png` filenames and fills the
+    /// animal / frame lists. New PNGs dropped into the folder show up without code changes.
+    private void ScanLeahPaintingAssets()
     {
-        "BabyBlueChicken", "BabyBrownChicken", "BabyBrownCow", "BabyGoat",
-        "BabyGoldenChicken", "BabyOstrich", "BabyPig", "BabyRabbit", "BabySheep",
-        "BabyVoidChicken", "BabyWhiteChicken", "BabyWhiteCow",
-        "BlueChicken", "BrownChicken", "BrownCow", "Dinosaur", "Duck"
-    };
+        string dir = Path.Combine(Helper.DirectoryPath, LeahPaintingAssetFolder);
+        if (!Directory.Exists(dir))
+        {
+            Monitor.Log($"Leah painting folder missing at '{dir}'.", LogLevel.Warn);
+            return;
+        }
 
-    /// Lowercase frame keys. Matches the filename suffix and the GMCM-stored config value
-    /// (stored title-cased; we lowercase before encoding into the key/path).
-    internal static readonly string[] LeahPaintingFrames = { "burgandy", "night", "wood" };
+        var animals = new SortedSet<string>(StringComparer.Ordinal);
+        var frames = new SortedSet<string>(StringComparer.Ordinal);
 
-    /// Title-cased frame options shown in GMCM. Stored values are case-insensitive.
-    internal static readonly string[] LeahPaintingFrameOptions = { "Wood", "Burgandy", "Night" };
+        foreach (string path in Directory.EnumerateFiles(dir, "*.png"))
+        {
+            string stem = Path.GetFileNameWithoutExtension(path);
+            int sep = stem.LastIndexOf('_');
+            if (sep <= 0 || sep == stem.Length - 1)
+                continue;
+            animals.Add(stem.Substring(0, sep));
+            frames.Add(stem.Substring(sep + 1).ToLowerInvariant());
+        }
+
+        LeahPaintingAnimals = animals.ToArray();
+        LeahPaintingFrames = frames.ToArray();
+        LeahPaintingFrameOptions = frames
+            .Select(f => char.ToUpperInvariant(f[0]) + f.Substring(1))
+            .ToArray();
+    }
 
     internal static string NormalizeLeahPaintingFrame(string? configValue)
     {
