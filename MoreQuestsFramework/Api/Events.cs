@@ -1,4 +1,5 @@
 using System;
+using MoreQuestsFramework.Triggers;
 using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Api;
@@ -60,5 +61,28 @@ public sealed class DayRefreshedArgs : EventArgs
     {
         DailyBoardCount = dailyBoardCount;
         MailCount = mailCount;
+    }
+}
+
+public enum QuestSkipReason
+{
+    // IsAvailable(ctx) returned false for the quest's JSON conditions.
+    ConditionsNotMet,
+    // The trigger gate (cooldown, predicate, building/mail diff, etc.) said no.
+    TriggerNotReady,
+}
+
+public sealed class QuestSkippedArgs : EventArgs
+{
+    public string DefinitionId { get; }
+    public string OwnerUniqueId { get; }
+    public TriggerSource Source { get; }
+    public QuestSkipReason Reason { get; }
+    public QuestSkippedArgs(string definitionId, string ownerUniqueId, TriggerSource source, QuestSkipReason reason)
+    {
+        DefinitionId = definitionId;
+        OwnerUniqueId = ownerUniqueId;
+        Source = source;
+        Reason = reason;
     }
 }

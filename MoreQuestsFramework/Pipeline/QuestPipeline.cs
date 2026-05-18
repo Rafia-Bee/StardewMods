@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -19,6 +20,8 @@ internal sealed class QuestPipeline
 
     public IReadOnlyList<QuestPosting> ActivePostings => _activePostings;
 
+    private Action<string, string, TriggerSource, QuestSkipReason>? _onSkipped;
+
     public QuestPipeline(QuestContext ctx, QuestRegistry registry, AntiRepetition antiRepetition, TriggerEvaluator triggers)
     {
         _ctx = ctx;
@@ -26,6 +29,9 @@ internal sealed class QuestPipeline
         _antiRepetition = antiRepetition;
         _triggers = triggers;
     }
+
+    public void WireSkipCallback(Action<string, string, TriggerSource, QuestSkipReason>? onSkipped)
+        => _onSkipped = onSkipped;
 
     public List<QuestPosting> GenerateDailyPostings()
     {
@@ -126,9 +132,15 @@ internal sealed class QuestPipeline
                 || src == TriggerSource.CustomBoard)
                 continue;
             if (!def.IsAvailable(_ctx))
+            {
+                _onSkipped?.Invoke(def.Id, def.OwnerUniqueId, src, QuestSkipReason.ConditionsNotMet);
                 continue;
+            }
             if (!_triggers.ShouldFireToday(def.Id, def.OwnerUniqueId, src, def.Trigger, def.CooldownDays))
+            {
+                _onSkipped?.Invoke(def.Id, def.OwnerUniqueId, src, QuestSkipReason.TriggerNotReady);
                 continue;
+            }
 
             var posting = def.Build(_ctx);
             if (posting == null)
@@ -157,9 +169,15 @@ internal sealed class QuestPipeline
             if (src != TriggerSource.SpecialOrder)
                 continue;
             if (!def.IsAvailable(_ctx))
+            {
+                _onSkipped?.Invoke(def.Id, def.OwnerUniqueId, src, QuestSkipReason.ConditionsNotMet);
                 continue;
+            }
             if (!_triggers.ShouldFireToday(def.Id, def.OwnerUniqueId, src, def.Trigger, def.CooldownDays))
+            {
+                _onSkipped?.Invoke(def.Id, def.OwnerUniqueId, src, QuestSkipReason.TriggerNotReady);
                 continue;
+            }
 
             var posting = def.Build(_ctx);
             if (posting == null)
