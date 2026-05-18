@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MoreQuestsFramework;
 using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Pipeline;
@@ -6,7 +7,6 @@ using MoreQuestsFramework.Rewards;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
-using System.Collections.Generic;
 
 namespace ExampleCSharpGenerators;
 
@@ -17,8 +17,10 @@ namespace ExampleCSharpGenerators;
 /// in the JSON's `Generator` field runs at trigger time and fills in the dynamic
 /// parts (random giver, random in-season crop, scaled quantity, sell-price-based gold).
 ///
-/// Use this pattern when you want declarative metadata for free (GMCM weights show up
-/// automatically) but still need runtime randomization for the body of the quest.
+/// This example also shows the three "escape hatch" registrations that need C# code
+/// but can be referenced from a content pack's JSON: `RegisterCustomTrigger` (a custom
+/// trigger source), `RegisterCustomReward` (a custom reward kind), and a `SpecialOrder`
+/// generator.
 public sealed class ModEntry : Mod
 {
     public override void Entry(IModHelper helper)
@@ -42,12 +44,34 @@ public sealed class ModEntry : Mod
         {
             var scope = fw.GetModApi(this.ModManifest);
 
-            // Register the named generator. The JSON file references this name in
-            // each quest entry's `Generator` field.
+            // Daily-board generator. JSON entry references this name in its `Generator` field.
             scope.RegisterGenerator("RandomCropDelivery", this.BuildRandomCropDelivery);
 
-            // Load the JSON quest list. The framework parses each entry, looks up the
-            // named generator, and stitches them together into a full quest definition.
+            // SpecialOrder generator. Trigger.Source = "SpecialOrder" routes through this
+            // and the returned QuestPosting carries a SpecialOrderSpec instead of an
+            // Objective. Vanilla owns accept, objective tracking, and reward grant from there.
+            scope.RegisterGenerator("MarnieEggDrive", this.BuildMarnieEggDrive);
+
+            // Custom trigger source. The handler is called once per DayStarted; the framework
+            // fires the quest the first day it returns true (subject to the def's CooldownDays).
+            scope.RegisterCustomTrigger("PlayerOwnsStardrop", _ =>
+                Game1.player.maxStamina.Value > 270);
+
+            // Custom reward kind. `apply` runs at questComplete with the raw payload string.
+            // `summarize` is optional and renders the reward preview line in the journal.
+            scope.RegisterCustomReward(
+                "RestoreHealthAndStamina",
+                _ =>
+                {
+                    Game1.player.health = Game1.player.maxHealth;
+                    Game1.player.Stamina = Game1.player.MaxStamina;
+                },
+                summarize: (_, giver, t) =>
+                    t.Get("example.customReward.summary", new { npc = giver })
+                        .Default($"{giver} will help you rest up").ToString());
+
+            // Read the JSON file. Each entry stitches its declarative trigger metadata
+            // to the named generator or to one of the registered Custom handlers above.
             scope.LoadQuestsFromMod(this.Helper, "assets/quests.json");
         };
     }
@@ -89,6 +113,51 @@ public sealed class ModEntry : Mod
             Description = this.Helper.Translation.Get("example.cropDelivery.description", new { npc = giver, qty, item = crop.DisplayName }),
             CurrentObjective = this.Helper.Translation.Get("example.cropDelivery.objective", new { npc = giver, qty, item = crop.DisplayName }),
             TargetMessage = this.Helper.Translation.Get("example.cropDelivery.targetMessage")
+        };
+    }
+
+    /// Generator for a SpecialOrder: Marnie asks the farmer to ship 20 eggs (any kind,
+    /// modded eggs included via the `egg_item` context tag). Money is paid via vanilla's
+    /// reward path so the standard reward-box UI shows it; friendship rides the framework
+    /// path so third-party Special Order tweak packs can't intercept it.
+    private QuestPosting? BuildMarnieEggDrive(QuestContext ctx)
+    {
+        return new QuestPosting
+        {
+            Category = QuestCategory.Animal,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Custom,
+            Kind = PostingKind.SpecialOrder,
+            QuestGiver = "Marnie",
+            SpecialOrder = new SpecialOrderSpec
+            {
+                Name = this.Helper.Translation.Get("example.specialOrder.title"),
+                Text = this.Helper.Translation.Get("example.specialOrder.text"),
+                Requester = "Marnie",
+                Duration = "Week",
+                Objectives = new List<SpecialOrderObjectiveSpec>
+                {
+                    new()
+                    {
+                        Type = "Ship",
+                        Text = this.Helper.Translation.Get("example.specialOrder.objective"),
+                        RequiredCount = 20,
+                        Data = { ["AcceptedContextTags"] = "egg_item" }
+                    }
+                },
+                Rewards = new List<SpecialOrderRewardSpec>
+                {
+                    new()
+                    {
+                        Type = "Money",
+                        Data = { ["Amount"] = "5000" }
+                    }
+                },
+                FrameworkRewards = new List<RewardSpec>
+                {
+                    new FriendshipReward("Marnie", 80)
+                }
+            }
         };
     }
 }

@@ -2,5 +2,16 @@
     "example.cropDelivery.title": "{{npc}}'s crop request",
     "example.cropDelivery.description": "{{npc}} wants {{qty}} {{item}} delivered.",
     "example.cropDelivery.objective": "Bring {{qty}} {{item}} to {{npc}}.",
-    "example.cropDelivery.targetMessage": "Thanks, this is exactly what I needed!"
+    "example.cropDelivery.targetMessage": "Thanks, this is exactly what I needed!",
+
+    "example.customTrigger.title": "A taste of starfruit",
+    "example.customTrigger.description": "The Wizard caught wind that you've found a Stardrop. He'd like to compare notes over five Starfruits.",
+    "example.customTrigger.objective": "Bring 5 Starfruit to the Wizard.",
+    "example.customTrigger.targetMessage": "Fascinating. Rest a moment, the conversation has tired you out.",
+
+    "example.customReward.summary": "{{npc}} will help you rest up",
+
+    "example.specialOrder.title": "Marnie's egg drive",
+    "example.specialOrder.text": "Marnie is short on eggs for her shop counter. Ship her 20 of any kind within the week.",
+    "example.specialOrder.objective": "Ship 20 eggs through the bin."
 }
