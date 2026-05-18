@@ -1,8 +1,8 @@
 {
-  "Name": "Smelt Lucky Rings",
+  "Name": "Smelt Rings",
   "Author": "Rafia",
-  "Version": "1.0.0",
-  "Description": "Smelt a Lucky Ring in the furnace for random ores.",
+  "Version": "1.1.0",
+  "Description": "Smelt any vanilla ring in the furnace for ore, gems, or crafting materials.",
   "UniqueID": "Rafia.SmeltLuckyRings",
   "MinimumApiVersion": "4.0.0",
   "UpdateKeys": [ "Nexus:46258" ],
