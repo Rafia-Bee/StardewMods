@@ -375,7 +375,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             LovedLine = Resolve(def.LovedLine),
             HatedLine = Resolve(def.HatedLine)
         };
-        foreach (var line in def.ChainLines)
+        foreach (var line in def.ChainLinesByDay)
             spec.ChainLines.Add(Resolve(line));
         return spec;
     }

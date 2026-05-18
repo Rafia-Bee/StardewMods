@@ -236,5 +236,7 @@ internal sealed class ConsequenceDef
 
     public string? LovedLine { get; set; }
     public string? HatedLine { get; set; }
-    public List<string> ChainLines { get; set; } = new();
+    // One line per chain day, in order. JSON name spells out the per-day intent
+    // so authors don't have to read the schema doc to find that out.
+    public List<string> ChainLinesByDay { get; set; } = new();
 }
