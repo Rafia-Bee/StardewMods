@@ -2,12 +2,16 @@
   "Format": "2.9.0",
   "Changes": [
     {
+      "LogName": "Furnace ring recipes",
       "Action": "EditData",
       "Target": "Data/Machines",
-      "TargetField": [ "(BC)13", "OutputRules" ],
+      "TargetField": [
+        "(BC)13",
+        "OutputRules"
+      ],
       "Entries": {
-        "Rafia.LuckyRing": {
-          "Id": "Rafia.LuckyRing",
+        "Rafia.SmeltRings.LuckyRing": {
+          "Id": "Rafia.SmeltRings.LuckyRing",
           "Triggers": [
             {
               "Id": "ItemPlaced",
@@ -17,21 +21,811 @@
             }
           ],
           "OutputItem": [
-            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 10, "Condition": "RANDOM 0.3333" },
-            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
-            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.SmallGlowRing": {
+          "Id": "Rafia.SmeltRings.SmallGlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)516",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.SmallMagnetRing": {
+          "Id": "Rafia.SmeltRings.SmallMagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)518",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.JukeboxRing": {
+          "Id": "Rafia.SmeltRings.JukeboxRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)528",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.GlowRing": {
+          "Id": "Rafia.SmeltRings.GlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)517",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.MagnetRing": {
+          "Id": "Rafia.SmeltRings.MagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)519",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.SlimeCharmerRing": {
+          "Id": "Rafia.SmeltRings.SlimeCharmerRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)520",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.VampireRing": {
+          "Id": "Rafia.SmeltRings.VampireRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)522",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.SavageRing": {
+          "Id": "Rafia.SmeltRings.SavageRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)523",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.BurglarsRing": {
+          "Id": "Rafia.SmeltRings.BurglarsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)526",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.CrabshellRing": {
+          "Id": "Rafia.SmeltRings.CrabshellRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)810",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.NapalmRing": {
+          "Id": "Rafia.SmeltRings.NapalmRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)811",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.HotJavaRing": {
+          "Id": "Rafia.SmeltRings.HotJavaRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)860",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.ProtectionRing": {
+          "Id": "Rafia.SmeltRings.ProtectionRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)861",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.SoulSapperRing": {
+          "Id": "Rafia.SmeltRings.SoulSapperRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)862",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.PhoenixRing": {
+          "Id": "Rafia.SmeltRings.PhoenixRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)863",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.ImmunityBand": {
+          "Id": "Rafia.SmeltRings.ImmunityBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)887",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.AmethystRing": {
+          "Id": "Rafia.SmeltRings.AmethystRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)529",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)66",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.TopazRing": {
+          "Id": "Rafia.SmeltRings.TopazRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)530",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)68",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.AquamarineRing": {
+          "Id": "Rafia.SmeltRings.AquamarineRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)531",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)62",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.JadeRing": {
+          "Id": "Rafia.SmeltRings.JadeRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)532",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)70",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.EmeraldRing": {
+          "Id": "Rafia.SmeltRings.EmeraldRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)533",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)60",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.RubyRing": {
+          "Id": "Rafia.SmeltRings.RubyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)534",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)64",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.SturdyRing": {
+          "Id": "Rafia.SmeltRings.SturdyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)525",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)334",
+              "MinStack": 2,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)684",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)766",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.WarriorRing": {
+          "Id": "Rafia.SmeltRings.WarriorRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)521",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)335",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)382",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)84",
+              "MinStack": 10
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.RingOfYoba": {
+          "Id": "Rafia.SmeltRings.RingOfYoba",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)524",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)336",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)72",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.IridiumBand": {
+          "Id": "Rafia.SmeltRings.IridiumBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)527",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)337",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)768",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)769",
+              "MinStack": 50
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.ThornsRing": {
+          "Id": "Rafia.SmeltRings.ThornsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)839",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)881",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)390",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)336",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.GlowstoneRing": {
+          "Id": "Rafia.SmeltRings.GlowstoneRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)888",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)768",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 5
+            }
           ],
           "MinutesUntilReady": 60
         }
       }
     },
     {
+      "LogName": "Heavy Furnace ring recipes",
       "Action": "EditData",
       "Target": "Data/Machines",
-      "TargetField": [ "(BC)HeavyFurnace", "OutputRules" ],
+      "TargetField": [
+        "(BC)HeavyFurnace",
+        "OutputRules"
+      ],
       "Entries": {
-        "Rafia.LuckyRing": {
-          "Id": "Rafia.LuckyRing",
+        "Rafia.SmeltRings.LuckyRing": {
+          "Id": "Rafia.SmeltRings.LuckyRing",
           "Triggers": [
             {
               "Id": "ItemPlaced",
@@ -41,140 +835,5701 @@
             }
           ],
           "OutputItem": [
-            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 50, "Condition": "RANDOM 0.3333" },
-            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 35, "Condition": "RANDOM 0.5" },
-            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 15 }
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.SmallGlowRing": {
+          "Id": "Rafia.SmeltRings.SmallGlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)516",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.SmallMagnetRing": {
+          "Id": "Rafia.SmeltRings.SmallMagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)518",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.JukeboxRing": {
+          "Id": "Rafia.SmeltRings.JukeboxRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)528",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.GlowRing": {
+          "Id": "Rafia.SmeltRings.GlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)517",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.MagnetRing": {
+          "Id": "Rafia.SmeltRings.MagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)519",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.SlimeCharmerRing": {
+          "Id": "Rafia.SmeltRings.SlimeCharmerRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)520",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.VampireRing": {
+          "Id": "Rafia.SmeltRings.VampireRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)522",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.SavageRing": {
+          "Id": "Rafia.SmeltRings.SavageRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)523",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.BurglarsRing": {
+          "Id": "Rafia.SmeltRings.BurglarsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)526",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.CrabshellRing": {
+          "Id": "Rafia.SmeltRings.CrabshellRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)810",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.NapalmRing": {
+          "Id": "Rafia.SmeltRings.NapalmRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)811",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.HotJavaRing": {
+          "Id": "Rafia.SmeltRings.HotJavaRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)860",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.ProtectionRing": {
+          "Id": "Rafia.SmeltRings.ProtectionRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)861",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.SoulSapperRing": {
+          "Id": "Rafia.SmeltRings.SoulSapperRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)862",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.PhoenixRing": {
+          "Id": "Rafia.SmeltRings.PhoenixRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)863",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.ImmunityBand": {
+          "Id": "Rafia.SmeltRings.ImmunityBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)887",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.AmethystRing": {
+          "Id": "Rafia.SmeltRings.AmethystRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)529",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)66",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.TopazRing": {
+          "Id": "Rafia.SmeltRings.TopazRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)530",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)68",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.AquamarineRing": {
+          "Id": "Rafia.SmeltRings.AquamarineRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)531",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)62",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.JadeRing": {
+          "Id": "Rafia.SmeltRings.JadeRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)532",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)70",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.EmeraldRing": {
+          "Id": "Rafia.SmeltRings.EmeraldRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)533",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)60",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.RubyRing": {
+          "Id": "Rafia.SmeltRings.RubyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)534",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)64",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.SturdyRing": {
+          "Id": "Rafia.SmeltRings.SturdyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)525",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)334",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)684",
+              "MinStack": 125,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)766",
+              "MinStack": 125
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.WarriorRing": {
+          "Id": "Rafia.SmeltRings.WarriorRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)521",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)335",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)382",
+              "MinStack": 125,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)84",
+              "MinStack": 50
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.RingOfYoba": {
+          "Id": "Rafia.SmeltRings.RingOfYoba",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)524",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)336",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)72",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.IridiumBand": {
+          "Id": "Rafia.SmeltRings.IridiumBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)527",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)337",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)768",
+              "MinStack": 250,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)769",
+              "MinStack": 250
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.ThornsRing": {
+          "Id": "Rafia.SmeltRings.ThornsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)839",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)881",
+              "MinStack": 250,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)390",
+              "MinStack": 250,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)336",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 60
+        },
+        "Rafia.SmeltRings.GlowstoneRing": {
+          "Id": "Rafia.SmeltRings.GlowstoneRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)888",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)768",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 25
+            }
           ],
           "MinutesUntilReady": 60
         }
       }
     },
-
     {
-      "LogName": "MPS Steel Furnace recipe",
+      "LogName": "MPS Steel Furnace ring recipes",
       "Action": "EditData",
       "Target": "Data/Machines",
-      "TargetField": [ "(BC)nachonline.mps_SteelFurnace", "OutputRules" ],
+      "TargetField": [
+        "(BC)nachonline.mps_SteelFurnace",
+        "OutputRules"
+      ],
       "Entries": {
-        "Rafia.LuckyRing": {
-          "Id": "Rafia.LuckyRing",
+        "Rafia.SmeltRings.LuckyRing": {
+          "Id": "Rafia.SmeltRings.LuckyRing",
           "Triggers": [
-            { "Id": "ItemPlaced", "Trigger": "ItemPlacedInMachine", "RequiredItemId": "(O)859", "RequiredCount": 1 }
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)859",
+              "RequiredCount": 1
+            }
           ],
           "OutputItem": [
-            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 10, "Condition": "RANDOM 0.3333" },
-            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
-            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.SmallGlowRing": {
+          "Id": "Rafia.SmeltRings.SmallGlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)516",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.SmallMagnetRing": {
+          "Id": "Rafia.SmeltRings.SmallMagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)518",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.JukeboxRing": {
+          "Id": "Rafia.SmeltRings.JukeboxRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)528",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.GlowRing": {
+          "Id": "Rafia.SmeltRings.GlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)517",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.MagnetRing": {
+          "Id": "Rafia.SmeltRings.MagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)519",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.SlimeCharmerRing": {
+          "Id": "Rafia.SmeltRings.SlimeCharmerRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)520",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.VampireRing": {
+          "Id": "Rafia.SmeltRings.VampireRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)522",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.SavageRing": {
+          "Id": "Rafia.SmeltRings.SavageRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)523",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.BurglarsRing": {
+          "Id": "Rafia.SmeltRings.BurglarsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)526",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.CrabshellRing": {
+          "Id": "Rafia.SmeltRings.CrabshellRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)810",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.NapalmRing": {
+          "Id": "Rafia.SmeltRings.NapalmRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)811",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.HotJavaRing": {
+          "Id": "Rafia.SmeltRings.HotJavaRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)860",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.ProtectionRing": {
+          "Id": "Rafia.SmeltRings.ProtectionRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)861",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.SoulSapperRing": {
+          "Id": "Rafia.SmeltRings.SoulSapperRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)862",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.PhoenixRing": {
+          "Id": "Rafia.SmeltRings.PhoenixRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)863",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.ImmunityBand": {
+          "Id": "Rafia.SmeltRings.ImmunityBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)887",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.AmethystRing": {
+          "Id": "Rafia.SmeltRings.AmethystRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)529",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)66",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.TopazRing": {
+          "Id": "Rafia.SmeltRings.TopazRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)530",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)68",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.AquamarineRing": {
+          "Id": "Rafia.SmeltRings.AquamarineRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)531",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)62",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.JadeRing": {
+          "Id": "Rafia.SmeltRings.JadeRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)532",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)70",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.EmeraldRing": {
+          "Id": "Rafia.SmeltRings.EmeraldRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)533",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)60",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.RubyRing": {
+          "Id": "Rafia.SmeltRings.RubyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)534",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)64",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.SturdyRing": {
+          "Id": "Rafia.SmeltRings.SturdyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)525",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)334",
+              "MinStack": 2,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)684",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)766",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.WarriorRing": {
+          "Id": "Rafia.SmeltRings.WarriorRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)521",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)335",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)382",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)84",
+              "MinStack": 10
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.RingOfYoba": {
+          "Id": "Rafia.SmeltRings.RingOfYoba",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)524",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)336",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)72",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.IridiumBand": {
+          "Id": "Rafia.SmeltRings.IridiumBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)527",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)337",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)768",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)769",
+              "MinStack": 50
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.ThornsRing": {
+          "Id": "Rafia.SmeltRings.ThornsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)839",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)881",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)390",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)336",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 50
+        },
+        "Rafia.SmeltRings.GlowstoneRing": {
+          "Id": "Rafia.SmeltRings.GlowstoneRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)888",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)768",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 5
+            }
           ],
           "MinutesUntilReady": 50
         }
       },
-      "When": { "HasMod": "nachonline.mps" }
+      "When": {
+        "HasMod": "nachonline.mps"
+      }
     },
     {
-      "LogName": "MPS Gold Furnace recipe",
+      "LogName": "MPS Gold Furnace ring recipes",
       "Action": "EditData",
       "Target": "Data/Machines",
-      "TargetField": [ "(BC)nachonline.mps_GoldFurnace", "OutputRules" ],
+      "TargetField": [
+        "(BC)nachonline.mps_GoldFurnace",
+        "OutputRules"
+      ],
       "Entries": {
-        "Rafia.LuckyRing": {
-          "Id": "Rafia.LuckyRing",
+        "Rafia.SmeltRings.LuckyRing": {
+          "Id": "Rafia.SmeltRings.LuckyRing",
           "Triggers": [
-            { "Id": "ItemPlaced", "Trigger": "ItemPlacedInMachine", "RequiredItemId": "(O)859", "RequiredCount": 1 }
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)859",
+              "RequiredCount": 1
+            }
           ],
           "OutputItem": [
-            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 10, "Condition": "RANDOM 0.3333" },
-            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
-            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.SmallGlowRing": {
+          "Id": "Rafia.SmeltRings.SmallGlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)516",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.SmallMagnetRing": {
+          "Id": "Rafia.SmeltRings.SmallMagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)518",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.JukeboxRing": {
+          "Id": "Rafia.SmeltRings.JukeboxRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)528",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.GlowRing": {
+          "Id": "Rafia.SmeltRings.GlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)517",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.MagnetRing": {
+          "Id": "Rafia.SmeltRings.MagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)519",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.SlimeCharmerRing": {
+          "Id": "Rafia.SmeltRings.SlimeCharmerRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)520",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.VampireRing": {
+          "Id": "Rafia.SmeltRings.VampireRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)522",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.SavageRing": {
+          "Id": "Rafia.SmeltRings.SavageRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)523",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.BurglarsRing": {
+          "Id": "Rafia.SmeltRings.BurglarsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)526",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.CrabshellRing": {
+          "Id": "Rafia.SmeltRings.CrabshellRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)810",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.NapalmRing": {
+          "Id": "Rafia.SmeltRings.NapalmRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)811",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.HotJavaRing": {
+          "Id": "Rafia.SmeltRings.HotJavaRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)860",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.ProtectionRing": {
+          "Id": "Rafia.SmeltRings.ProtectionRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)861",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.SoulSapperRing": {
+          "Id": "Rafia.SmeltRings.SoulSapperRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)862",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.PhoenixRing": {
+          "Id": "Rafia.SmeltRings.PhoenixRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)863",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.ImmunityBand": {
+          "Id": "Rafia.SmeltRings.ImmunityBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)887",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.AmethystRing": {
+          "Id": "Rafia.SmeltRings.AmethystRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)529",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)66",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.TopazRing": {
+          "Id": "Rafia.SmeltRings.TopazRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)530",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)68",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.AquamarineRing": {
+          "Id": "Rafia.SmeltRings.AquamarineRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)531",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)62",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.JadeRing": {
+          "Id": "Rafia.SmeltRings.JadeRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)532",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)70",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.EmeraldRing": {
+          "Id": "Rafia.SmeltRings.EmeraldRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)533",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)60",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.RubyRing": {
+          "Id": "Rafia.SmeltRings.RubyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)534",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)64",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.SturdyRing": {
+          "Id": "Rafia.SmeltRings.SturdyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)525",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)334",
+              "MinStack": 2,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)684",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)766",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.WarriorRing": {
+          "Id": "Rafia.SmeltRings.WarriorRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)521",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)335",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)382",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)84",
+              "MinStack": 10
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.RingOfYoba": {
+          "Id": "Rafia.SmeltRings.RingOfYoba",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)524",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)336",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)72",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.IridiumBand": {
+          "Id": "Rafia.SmeltRings.IridiumBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)527",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)337",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)768",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)769",
+              "MinStack": 50
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.ThornsRing": {
+          "Id": "Rafia.SmeltRings.ThornsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)839",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)881",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)390",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)336",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.GlowstoneRing": {
+          "Id": "Rafia.SmeltRings.GlowstoneRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)888",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)768",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 5
+            }
           ],
           "MinutesUntilReady": 40
         }
       },
-      "When": { "HasMod": "nachonline.mps" }
+      "When": {
+        "HasMod": "nachonline.mps"
+      }
     },
     {
-      "LogName": "MPS Diamond Furnace recipe",
+      "LogName": "MPS Diamond Furnace ring recipes",
       "Action": "EditData",
       "Target": "Data/Machines",
-      "TargetField": [ "(BC)nachonline.mps_DiamondFurnace", "OutputRules" ],
+      "TargetField": [
+        "(BC)nachonline.mps_DiamondFurnace",
+        "OutputRules"
+      ],
       "Entries": {
-        "Rafia.LuckyRing": {
-          "Id": "Rafia.LuckyRing",
+        "Rafia.SmeltRings.LuckyRing": {
+          "Id": "Rafia.SmeltRings.LuckyRing",
           "Triggers": [
-            { "Id": "ItemPlaced", "Trigger": "ItemPlacedInMachine", "RequiredItemId": "(O)859", "RequiredCount": 1 }
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)859",
+              "RequiredCount": 1
+            }
           ],
           "OutputItem": [
-            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 10, "Condition": "RANDOM 0.3333" },
-            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
-            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.SmallGlowRing": {
+          "Id": "Rafia.SmeltRings.SmallGlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)516",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.SmallMagnetRing": {
+          "Id": "Rafia.SmeltRings.SmallMagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)518",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.JukeboxRing": {
+          "Id": "Rafia.SmeltRings.JukeboxRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)528",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.GlowRing": {
+          "Id": "Rafia.SmeltRings.GlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)517",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.MagnetRing": {
+          "Id": "Rafia.SmeltRings.MagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)519",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.SlimeCharmerRing": {
+          "Id": "Rafia.SmeltRings.SlimeCharmerRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)520",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.VampireRing": {
+          "Id": "Rafia.SmeltRings.VampireRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)522",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.SavageRing": {
+          "Id": "Rafia.SmeltRings.SavageRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)523",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.BurglarsRing": {
+          "Id": "Rafia.SmeltRings.BurglarsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)526",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.CrabshellRing": {
+          "Id": "Rafia.SmeltRings.CrabshellRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)810",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.NapalmRing": {
+          "Id": "Rafia.SmeltRings.NapalmRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)811",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.HotJavaRing": {
+          "Id": "Rafia.SmeltRings.HotJavaRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)860",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.ProtectionRing": {
+          "Id": "Rafia.SmeltRings.ProtectionRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)861",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.SoulSapperRing": {
+          "Id": "Rafia.SmeltRings.SoulSapperRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)862",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.PhoenixRing": {
+          "Id": "Rafia.SmeltRings.PhoenixRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)863",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.ImmunityBand": {
+          "Id": "Rafia.SmeltRings.ImmunityBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)887",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.AmethystRing": {
+          "Id": "Rafia.SmeltRings.AmethystRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)529",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)66",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.TopazRing": {
+          "Id": "Rafia.SmeltRings.TopazRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)530",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)68",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.AquamarineRing": {
+          "Id": "Rafia.SmeltRings.AquamarineRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)531",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)62",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.JadeRing": {
+          "Id": "Rafia.SmeltRings.JadeRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)532",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)70",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.EmeraldRing": {
+          "Id": "Rafia.SmeltRings.EmeraldRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)533",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)60",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.RubyRing": {
+          "Id": "Rafia.SmeltRings.RubyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)534",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)64",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.SturdyRing": {
+          "Id": "Rafia.SmeltRings.SturdyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)525",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)334",
+              "MinStack": 2,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)684",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)766",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.WarriorRing": {
+          "Id": "Rafia.SmeltRings.WarriorRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)521",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)335",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)382",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)84",
+              "MinStack": 10
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.RingOfYoba": {
+          "Id": "Rafia.SmeltRings.RingOfYoba",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)524",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)336",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)72",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.IridiumBand": {
+          "Id": "Rafia.SmeltRings.IridiumBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)527",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)337",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)768",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)769",
+              "MinStack": 50
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.ThornsRing": {
+          "Id": "Rafia.SmeltRings.ThornsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)839",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)881",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)390",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)336",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 30
+        },
+        "Rafia.SmeltRings.GlowstoneRing": {
+          "Id": "Rafia.SmeltRings.GlowstoneRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)888",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)768",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 5
+            }
           ],
           "MinutesUntilReady": 30
         }
       },
-      "When": { "HasMod": "nachonline.mps" }
+      "When": {
+        "HasMod": "nachonline.mps"
+      }
     },
     {
-      "LogName": "MPS Iridium Furnace recipe",
+      "LogName": "MPS Iridium Furnace ring recipes",
       "Action": "EditData",
       "Target": "Data/Machines",
-      "TargetField": [ "(BC)nachonline.mps_IridiumFurnace", "OutputRules" ],
+      "TargetField": [
+        "(BC)nachonline.mps_IridiumFurnace",
+        "OutputRules"
+      ],
       "Entries": {
-        "Rafia.LuckyRing": {
-          "Id": "Rafia.LuckyRing",
+        "Rafia.SmeltRings.LuckyRing": {
+          "Id": "Rafia.SmeltRings.LuckyRing",
           "Triggers": [
-            { "Id": "ItemPlaced", "Trigger": "ItemPlacedInMachine", "RequiredItemId": "(O)859", "RequiredCount": 1 }
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)859",
+              "RequiredCount": 1
+            }
           ],
           "OutputItem": [
-            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 10, "Condition": "RANDOM 0.3333" },
-            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 7, "Condition": "RANDOM 0.5" },
-            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 3 }
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.SmallGlowRing": {
+          "Id": "Rafia.SmeltRings.SmallGlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)516",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.SmallMagnetRing": {
+          "Id": "Rafia.SmeltRings.SmallMagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)518",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.JukeboxRing": {
+          "Id": "Rafia.SmeltRings.JukeboxRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)528",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.GlowRing": {
+          "Id": "Rafia.SmeltRings.GlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)517",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.MagnetRing": {
+          "Id": "Rafia.SmeltRings.MagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)519",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.SlimeCharmerRing": {
+          "Id": "Rafia.SmeltRings.SlimeCharmerRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)520",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.VampireRing": {
+          "Id": "Rafia.SmeltRings.VampireRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)522",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.SavageRing": {
+          "Id": "Rafia.SmeltRings.SavageRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)523",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.BurglarsRing": {
+          "Id": "Rafia.SmeltRings.BurglarsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)526",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.CrabshellRing": {
+          "Id": "Rafia.SmeltRings.CrabshellRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)810",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 7,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 3
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.NapalmRing": {
+          "Id": "Rafia.SmeltRings.NapalmRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)811",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.HotJavaRing": {
+          "Id": "Rafia.SmeltRings.HotJavaRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)860",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.ProtectionRing": {
+          "Id": "Rafia.SmeltRings.ProtectionRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)861",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.SoulSapperRing": {
+          "Id": "Rafia.SmeltRings.SoulSapperRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)862",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.PhoenixRing": {
+          "Id": "Rafia.SmeltRings.PhoenixRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)863",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.ImmunityBand": {
+          "Id": "Rafia.SmeltRings.ImmunityBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)887",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.AmethystRing": {
+          "Id": "Rafia.SmeltRings.AmethystRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)529",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)66",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.TopazRing": {
+          "Id": "Rafia.SmeltRings.TopazRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)530",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)68",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.AquamarineRing": {
+          "Id": "Rafia.SmeltRings.AquamarineRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)531",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)62",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.JadeRing": {
+          "Id": "Rafia.SmeltRings.JadeRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)532",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)70",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.EmeraldRing": {
+          "Id": "Rafia.SmeltRings.EmeraldRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)533",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)60",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.RubyRing": {
+          "Id": "Rafia.SmeltRings.RubyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)534",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)64",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.SturdyRing": {
+          "Id": "Rafia.SmeltRings.SturdyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)525",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)334",
+              "MinStack": 2,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)684",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)766",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.WarriorRing": {
+          "Id": "Rafia.SmeltRings.WarriorRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)521",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)335",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)382",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)84",
+              "MinStack": 10
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.RingOfYoba": {
+          "Id": "Rafia.SmeltRings.RingOfYoba",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)524",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)336",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)72",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.IridiumBand": {
+          "Id": "Rafia.SmeltRings.IridiumBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)527",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)337",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)768",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)769",
+              "MinStack": 50
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.ThornsRing": {
+          "Id": "Rafia.SmeltRings.ThornsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)839",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)881",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)390",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)336",
+              "MinStack": 1
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.GlowstoneRing": {
+          "Id": "Rafia.SmeltRings.GlowstoneRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)888",
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)768",
+              "MinStack": 5,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 5
+            }
           ],
           "MinutesUntilReady": 20
         }
       },
-      "When": { "HasMod": "nachonline.mps" }
+      "When": {
+        "HasMod": "nachonline.mps"
+      }
     },
     {
-      "LogName": "MPS Radioactive Heavy Furnace recipe",
+      "LogName": "MPS Radioactive Heavy Furnace ring recipes",
       "Action": "EditData",
       "Target": "Data/Machines",
-      "TargetField": [ "(BC)nachonline.mps_RadioactiveHeavyFurnace", "OutputRules" ],
+      "TargetField": [
+        "(BC)nachonline.mps_RadioactiveHeavyFurnace",
+        "OutputRules"
+      ],
       "Entries": {
-        "Rafia.LuckyRing": {
-          "Id": "Rafia.LuckyRing",
+        "Rafia.SmeltRings.LuckyRing": {
+          "Id": "Rafia.SmeltRings.LuckyRing",
           "Triggers": [
-            { "Id": "ItemPlaced", "Trigger": "ItemPlacedInMachine", "RequiredItemId": "(O)859", "RequiredCount": 5 }
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)859",
+              "RequiredCount": 5
+            }
           ],
           "OutputItem": [
-            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 50, "Condition": "RANDOM 0.3333" },
-            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 35, "Condition": "RANDOM 0.5" },
-            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 15 }
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.SmallGlowRing": {
+          "Id": "Rafia.SmeltRings.SmallGlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)516",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.SmallMagnetRing": {
+          "Id": "Rafia.SmeltRings.SmallMagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)518",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.JukeboxRing": {
+          "Id": "Rafia.SmeltRings.JukeboxRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)528",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.GlowRing": {
+          "Id": "Rafia.SmeltRings.GlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)517",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.MagnetRing": {
+          "Id": "Rafia.SmeltRings.MagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)519",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.SlimeCharmerRing": {
+          "Id": "Rafia.SmeltRings.SlimeCharmerRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)520",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.VampireRing": {
+          "Id": "Rafia.SmeltRings.VampireRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)522",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.SavageRing": {
+          "Id": "Rafia.SmeltRings.SavageRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)523",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.BurglarsRing": {
+          "Id": "Rafia.SmeltRings.BurglarsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)526",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.CrabshellRing": {
+          "Id": "Rafia.SmeltRings.CrabshellRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)810",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.NapalmRing": {
+          "Id": "Rafia.SmeltRings.NapalmRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)811",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.HotJavaRing": {
+          "Id": "Rafia.SmeltRings.HotJavaRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)860",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.ProtectionRing": {
+          "Id": "Rafia.SmeltRings.ProtectionRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)861",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.SoulSapperRing": {
+          "Id": "Rafia.SmeltRings.SoulSapperRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)862",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.PhoenixRing": {
+          "Id": "Rafia.SmeltRings.PhoenixRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)863",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.ImmunityBand": {
+          "Id": "Rafia.SmeltRings.ImmunityBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)887",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.AmethystRing": {
+          "Id": "Rafia.SmeltRings.AmethystRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)529",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)66",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.TopazRing": {
+          "Id": "Rafia.SmeltRings.TopazRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)530",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)68",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.AquamarineRing": {
+          "Id": "Rafia.SmeltRings.AquamarineRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)531",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)62",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.JadeRing": {
+          "Id": "Rafia.SmeltRings.JadeRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)532",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)70",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.EmeraldRing": {
+          "Id": "Rafia.SmeltRings.EmeraldRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)533",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)60",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.RubyRing": {
+          "Id": "Rafia.SmeltRings.RubyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)534",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)64",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.SturdyRing": {
+          "Id": "Rafia.SmeltRings.SturdyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)525",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)334",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)684",
+              "MinStack": 125,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)766",
+              "MinStack": 125
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.WarriorRing": {
+          "Id": "Rafia.SmeltRings.WarriorRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)521",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)335",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)382",
+              "MinStack": 125,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)84",
+              "MinStack": 50
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.RingOfYoba": {
+          "Id": "Rafia.SmeltRings.RingOfYoba",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)524",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)336",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)72",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.IridiumBand": {
+          "Id": "Rafia.SmeltRings.IridiumBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)527",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)337",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)768",
+              "MinStack": 250,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)769",
+              "MinStack": 250
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.ThornsRing": {
+          "Id": "Rafia.SmeltRings.ThornsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)839",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)881",
+              "MinStack": 250,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)390",
+              "MinStack": 250,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)336",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 40
+        },
+        "Rafia.SmeltRings.GlowstoneRing": {
+          "Id": "Rafia.SmeltRings.GlowstoneRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)888",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)768",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 25
+            }
           ],
           "MinutesUntilReady": 40
         }
       },
-      "When": { "HasMod": "nachonline.mps" }
+      "When": {
+        "HasMod": "nachonline.mps"
+      }
     },
     {
-      "LogName": "MPS Prismatic Heavy Furnace recipe",
+      "LogName": "MPS Prismatic Heavy Furnace ring recipes",
       "Action": "EditData",
       "Target": "Data/Machines",
-      "TargetField": [ "(BC)nachonline.mps_PrismaticHeavyFurnace", "OutputRules" ],
+      "TargetField": [
+        "(BC)nachonline.mps_PrismaticHeavyFurnace",
+        "OutputRules"
+      ],
       "Entries": {
-        "Rafia.LuckyRing": {
-          "Id": "Rafia.LuckyRing",
+        "Rafia.SmeltRings.LuckyRing": {
+          "Id": "Rafia.SmeltRings.LuckyRing",
           "Triggers": [
-            { "Id": "ItemPlaced", "Trigger": "ItemPlacedInMachine", "RequiredItemId": "(O)859", "RequiredCount": 5 }
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)859",
+              "RequiredCount": 5
+            }
           ],
           "OutputItem": [
-            { "Id": "CopperOre", "ItemId": "(O)378", "MinStack": 50, "Condition": "RANDOM 0.3333" },
-            { "Id": "IronOre", "ItemId": "(O)380", "MinStack": 35, "Condition": "RANDOM 0.5" },
-            { "Id": "GoldOre", "ItemId": "(O)384", "MinStack": 15 }
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.SmallGlowRing": {
+          "Id": "Rafia.SmeltRings.SmallGlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)516",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.SmallMagnetRing": {
+          "Id": "Rafia.SmeltRings.SmallMagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)518",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.JukeboxRing": {
+          "Id": "Rafia.SmeltRings.JukeboxRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)528",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.GlowRing": {
+          "Id": "Rafia.SmeltRings.GlowRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)517",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.MagnetRing": {
+          "Id": "Rafia.SmeltRings.MagnetRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)519",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.SlimeCharmerRing": {
+          "Id": "Rafia.SmeltRings.SlimeCharmerRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)520",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.VampireRing": {
+          "Id": "Rafia.SmeltRings.VampireRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)522",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.SavageRing": {
+          "Id": "Rafia.SmeltRings.SavageRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)523",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.BurglarsRing": {
+          "Id": "Rafia.SmeltRings.BurglarsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)526",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.CrabshellRing": {
+          "Id": "Rafia.SmeltRings.CrabshellRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)810",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Copper",
+              "ItemId": "(O)378",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 35,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 15
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.NapalmRing": {
+          "Id": "Rafia.SmeltRings.NapalmRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)811",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.HotJavaRing": {
+          "Id": "Rafia.SmeltRings.HotJavaRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)860",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.ProtectionRing": {
+          "Id": "Rafia.SmeltRings.ProtectionRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)861",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.SoulSapperRing": {
+          "Id": "Rafia.SmeltRings.SoulSapperRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)862",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.PhoenixRing": {
+          "Id": "Rafia.SmeltRings.PhoenixRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)863",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.ImmunityBand": {
+          "Id": "Rafia.SmeltRings.ImmunityBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)887",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Iron",
+              "ItemId": "(O)380",
+              "MinStack": 75,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Gold",
+              "ItemId": "(O)384",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Iridium",
+              "ItemId": "(O)386",
+              "MinStack": 25
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.AmethystRing": {
+          "Id": "Rafia.SmeltRings.AmethystRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)529",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)66",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.TopazRing": {
+          "Id": "Rafia.SmeltRings.TopazRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)530",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)68",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.AquamarineRing": {
+          "Id": "Rafia.SmeltRings.AquamarineRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)531",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)62",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.JadeRing": {
+          "Id": "Rafia.SmeltRings.JadeRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)532",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)70",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.EmeraldRing": {
+          "Id": "Rafia.SmeltRings.EmeraldRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)533",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)60",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.RubyRing": {
+          "Id": "Rafia.SmeltRings.RubyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)534",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Gem",
+              "ItemId": "(O)64",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.SturdyRing": {
+          "Id": "Rafia.SmeltRings.SturdyRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)525",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)334",
+              "MinStack": 10,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)684",
+              "MinStack": 125,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)766",
+              "MinStack": 125
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.WarriorRing": {
+          "Id": "Rafia.SmeltRings.WarriorRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)521",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)335",
+              "MinStack": 50,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)382",
+              "MinStack": 125,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)84",
+              "MinStack": 50
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.RingOfYoba": {
+          "Id": "Rafia.SmeltRings.RingOfYoba",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)524",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)336",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)72",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.IridiumBand": {
+          "Id": "Rafia.SmeltRings.IridiumBand",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)527",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)337",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)768",
+              "MinStack": 250,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)769",
+              "MinStack": 250
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.ThornsRing": {
+          "Id": "Rafia.SmeltRings.ThornsRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)839",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)881",
+              "MinStack": 250,
+              "Condition": "RANDOM 0.3333"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)390",
+              "MinStack": 250,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat3",
+              "ItemId": "(O)336",
+              "MinStack": 5
+            }
+          ],
+          "MinutesUntilReady": 20
+        },
+        "Rafia.SmeltRings.GlowstoneRing": {
+          "Id": "Rafia.SmeltRings.GlowstoneRing",
+          "Triggers": [
+            {
+              "Id": "ItemPlaced",
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredItemId": "(O)888",
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "Mat1",
+              "ItemId": "(O)768",
+              "MinStack": 25,
+              "Condition": "RANDOM 0.5"
+            },
+            {
+              "Id": "Mat2",
+              "ItemId": "(O)335",
+              "MinStack": 25
+            }
           ],
           "MinutesUntilReady": 20
         }
       },
-      "When": { "HasMod": "nachonline.mps" }
+      "When": {
+        "HasMod": "nachonline.mps"
+      }
     }
   ]
 }
