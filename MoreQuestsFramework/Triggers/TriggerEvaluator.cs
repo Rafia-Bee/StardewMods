@@ -281,19 +281,19 @@ internal sealed class TriggerEvaluator
             case "firstshipped":
                 if (parts.Length < 2)
                     return false;
-                return Game1.player.basicShipped.ContainsKey(StripPrefix(parts[1]));
+                return Game1.player.basicShipped.ContainsKey(StripPrefix(JoinRest(parts)));
 
             case "firstitemowned":
                 if (parts.Length < 2)
                     return false;
-                string id = StripPrefix(parts[1]);
+                string id = StripPrefix(JoinRest(parts));
                 return Game1.player.basicShipped.ContainsKey(id)
                     || Game1.player.recipesCooked.ContainsKey(id);
 
             case "firsthelditem":
                 if (parts.Length < 2)
                     return false;
-                return PlayerInventoryContains(parts[1]);
+                return PlayerInventoryContains(JoinRest(parts));
 
             case "firstcraftingrecipe":
                 // Joins remaining tokens so multi-word names ("Preserves Jar") don't need quoting.
@@ -333,6 +333,12 @@ internal sealed class TriggerEvaluator
 
     private static string StripPrefix(string id) =>
         id.StartsWith("(O)", StringComparison.Ordinal) ? id[3..] : id;
+
+    // Rejoins all tokens after the predicate keyword so multi-word display names
+    // and ids with spaces survive the initial Split. Vanilla bare ids never have
+    // spaces, but custom-mod ids and FirstHeldItem matches by display name can.
+    private static string JoinRest(string[] parts) =>
+        parts.Length < 2 ? string.Empty : string.Join(' ', parts, 1, parts.Length - 1);
 
     private static bool ParseDate(string? value, out string season, out int day)
     {
