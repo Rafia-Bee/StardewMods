@@ -84,6 +84,10 @@
     "config.QuestCooldownLongDays": "Long cooldown (days)",
     "config.QuestCooldownLongDays.tooltip": "In-game days a quest in the 'long' cooldown bucket waits before re-rolling.",
 
+    "config.section.advanced": "Advanced",
+    "config.debugLogging": "Debug logging",
+    "config.debugLogging.tooltip": "Writes detailed diagnostic lines to the SMAPI log file. Off by default. Turn this on if you're chasing a bug and want to share a log; otherwise it just adds noise.",
+
     "config.section.quantities": "Quantity tunables",
     "config.RainyDayCatchMailChancePercent": "Rainy Day Catch mail chance %",
     "config.RainyDayCatchMailChancePercent.tooltip": "Probability (0 to 100) that the Rainy Day Catch quest mail arrives on a day where tomorrow is forecast as rain. 100 = always when rain is forecast, 0 disables the quest.",

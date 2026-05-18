@@ -444,6 +444,7 @@ The `quests.json` `Schema` field (currently `"1.0"`) is the source of truth for 
 - **Reward multipliers:** `RewardMultiplierBelowSell`, `RewardMultiplierAboveSell`, `RewardMultiplierFishPremium`.
 - **Deadlines:** short / medium / long / extended / none (in-game days).
 - **Consequences:** `ConsequenceGraceDays` (days past a queued reaction's fire day before it silently expires, default 7). Controls how long an NPC keeps a queued reaction alive when the player avoids them (i.e. how long Demetrious keeps a grudge when you catch too many fish).
+- **Advanced:** `DebugLogging` (off by default). Flip on to write detailed diagnostic lines to the SMAPI log when you're chasing a bug; otherwise leave off so the log stays quiet.
 
 GMCM registration is deferred until the first `UpdateTicking` so consumer-mod quests that register during their own `GameLaunched` show up in the per-quest weight list.
 

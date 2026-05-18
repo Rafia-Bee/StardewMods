@@ -73,7 +73,7 @@ internal static class FestivalBiasPatches
                 return;
             commands[currentCmd + 1] = prefix + boosted;
             writer.Consume(FestivalKind.Luau);
-            _monitor?.Log($"FestivalBias (Luau): governor reaction tier {tier} → {boosted}.", LogLevel.Trace);
+            ModEntry.LogDebug($"FestivalBias (Luau): governor reaction tier {tier} → {boosted}.");
         }
         catch (Exception ex)
         {
@@ -101,7 +101,7 @@ internal static class FestivalBiasPatches
             int boosted = score + bonus;
             grangeField.SetValue(__instance, boosted);
             writer.Consume(FestivalKind.Fair);
-            _monitor?.Log($"FestivalBias (Fair): grange score {score} → {boosted}.", LogLevel.Trace);
+            ModEntry.LogDebug($"FestivalBias (Fair): grange score {score} → {boosted}.");
         }
         catch (Exception ex)
         {

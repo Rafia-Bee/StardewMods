@@ -92,9 +92,8 @@ internal static class ConsequenceDialogueDispatcher
             int before = who.getFriendshipLevelForNPC(speaker.Name);
             who.changeFriendship(entry.FriendshipDelta, speaker);
             int after = who.getFriendshipLevelForNPC(speaker.Name);
-            monitor.Log(
-                $"{source}: {speaker.Name} friendship {before} -> {after} (delta {entry.FriendshipDelta:+#;-#;0}). If unchanged, check that 'no friendship decay' / friendship-clamp mods aren't intercepting changeFriendship.",
-                LogLevel.Debug);
+            ModEntry.LogDebug(
+                $"{source}: {speaker.Name} friendship {before} -> {after} (delta {entry.FriendshipDelta:+#;-#;0}). If unchanged, check that 'no friendship decay' / friendship-clamp mods aren't intercepting changeFriendship.");
         }
 
         if (!string.IsNullOrEmpty(entry.Line))

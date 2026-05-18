@@ -50,7 +50,7 @@ internal sealed class StateStore
                 LogLevel.Warn);
             return;
         }
-        _monitor.Log($"Migrating framework save data from schema v{loaded} to v{FrameworkState.CurrentSchema}.", LogLevel.Trace);
+        ModEntry.LogDebug($"Migrating framework save data from schema v{loaded} to v{FrameworkState.CurrentSchema}.");
         _state.Schema = FrameworkState.CurrentSchema;
     }
 

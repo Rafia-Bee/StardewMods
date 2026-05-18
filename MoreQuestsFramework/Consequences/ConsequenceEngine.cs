@@ -65,9 +65,7 @@ internal sealed class ConsequenceEngine
             }
         }
         if (dropped > 0)
-            _monitor.Log(
-                $"ConsequenceEngine: swept {dropped} stale pending dialogue entries (older than {grace} days past their fire day).",
-                LogLevel.Trace);
+            ModEntry.LogDebug($"ConsequenceEngine: swept {dropped} stale pending dialogue entries (older than {grace} days past their fire day).");
     }
 
     public void Apply(ConsequenceSpec? spec)

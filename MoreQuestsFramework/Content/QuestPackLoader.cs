@@ -79,7 +79,7 @@ internal sealed class QuestPackLoader
             if (_registry.Register(jdef))
                 registered++;
         }
-        _monitor.Log($"Loaded {registered}/{doc.Quests.Count} quests from '{ownerUniqueId}'.", LogLevel.Trace);
+        ModEntry.LogDebug($"Loaded {registered}/{doc.Quests.Count} quests from '{ownerUniqueId}'.");
     }
 
     private bool Validate(QuestDef def, string ownerUniqueId, HashSet<string> seen)

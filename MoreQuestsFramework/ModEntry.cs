@@ -173,6 +173,20 @@ public sealed class ModEntry : Mod
 
     public override object? GetApi() => _api;
 
+    // Gated diagnostic log. Off by default so the SMAPI log stays quiet in release.
+    // Enable via GMCM (Debug logging) when chasing a bug.
+    internal static void LogDebug(string message)
+    {
+        if (Config.DebugLogging && Instance != null)
+            Instance.Monitor.Log(message, LogLevel.Trace);
+    }
+
+    internal static void LogDebug(Func<string> messageFactory)
+    {
+        if (Config.DebugLogging && Instance != null)
+            Instance.Monitor.Log(messageFactory(), LogLevel.Trace);
+    }
+
     private ISpaceCoreApi? _spaceCore;
 
     // Without this, another mod invalidating Data/Crops or Data/CookingRecipes mid-day
@@ -215,7 +229,7 @@ public sealed class ModEntry : Mod
             _spaceCore.RegisterSerializerType(typeof(MoreQuestsFishingQuest));
             _spaceCore.RegisterSerializerType(typeof(AdventureQuest));
             _spaceCore.RegisterSerializerType(typeof(MoreQuestsShipQuest));
-            Monitor.Log("Registered framework Quest subclasses with SpaceCore.", LogLevel.Trace);
+            ModEntry.LogDebug("Registered framework Quest subclasses with SpaceCore.");
         }
         else
         {
@@ -264,7 +278,7 @@ public sealed class ModEntry : Mod
         _stateStore.Load();
         int prunedDeadIds = _stateStore.State.PruneDeadDefIds(_registry.RegisteredIds());
         if (prunedDeadIds > 0)
-            Monitor.Log($"Pruned {prunedDeadIds} stale save-state entr{(prunedDeadIds == 1 ? "y" : "ies")} for quests no longer registered.", LogLevel.Trace);
+            ModEntry.LogDebug($"Pruned {prunedDeadIds} stale save-state entr{(prunedDeadIds == 1 ? "y" : "ies")} for quests no longer registered.");
         _antiRepetition.WireState(_stateStore.State);
 
         _triggers = new TriggerEvaluator(_stateStore.State, Monitor, _customTriggers);
@@ -304,7 +318,7 @@ public sealed class ModEntry : Mod
         if (stillPending.Count > 0)
         {
             Helper.GameContent.InvalidateCache("Data/mail");
-            Monitor.Log($"Rehydrated {stillPending.Count} unread mail-quest letter(s) from save state.", LogLevel.Trace);
+            ModEntry.LogDebug($"Rehydrated {stillPending.Count} unread mail-quest letter(s) from save state.");
         }
 
         _dialogueWatcher = new DialogueWatcher(
@@ -614,7 +628,7 @@ public sealed class ModEntry : Mod
         Game1.player.festivalScore += amount;
         _fairStarTokensWriter.Consume();
         _fairTokensAppliedThisSession = true;
-        Monitor.Log($"FairStarTokens applied: +{amount} festivalScore.", LogLevel.Trace);
+        ModEntry.LogDebug($"FairStarTokens applied: +{amount} festivalScore.");
     }
 
     private void PollClumpsOnQuestLog()

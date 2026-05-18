@@ -79,7 +79,7 @@ internal sealed class SpecialOrderWriter
         _state.EmittedSpecialOrders.Add(entry);
 
         _helper.GameContent.InvalidateCache(AssetName);
-        _monitor.Log($"Emitted SpecialOrder '{orderId}' (definition '{posting.DefinitionId}', duration '{spec.Duration}').", LogLevel.Trace);
+        ModEntry.LogDebug($"Emitted SpecialOrder '{orderId}' (definition '{posting.DefinitionId}', duration '{spec.Duration}').");
     }
 
     public void SweepExpired()
@@ -126,7 +126,7 @@ internal sealed class SpecialOrderWriter
         if (dropped > 0)
         {
             _helper.GameContent.InvalidateCache(AssetName);
-            _monitor.Log($"Swept {dropped} expired SpecialOrder entr{(dropped == 1 ? "y" : "ies")}.", LogLevel.Trace);
+            ModEntry.LogDebug($"Swept {dropped} expired SpecialOrder entr{(dropped == 1 ? "y" : "ies")}.");
         }
     }
 
@@ -182,9 +182,7 @@ internal sealed class SpecialOrderWriter
                 }
 
                 _state.FrameworkRewardsGranted.Add(key);
-                _monitor.Log(
-                    $"Granted framework payload for completed SpecialOrder '{key}' ({emitted.Spec.FrameworkRewards.Count} reward(s), {firedConsequences} consequence(s)).",
-                    LogLevel.Trace);
+                ModEntry.LogDebug($"Granted framework payload for completed SpecialOrder '{key}' ({emitted.Spec.FrameworkRewards.Count} reward(s), {firedConsequences} consequence(s)).");
             }
             catch (Exception ex)
             {
@@ -285,9 +283,7 @@ internal sealed class SpecialOrderWriter
                 Data = rewardData
             });
             string dump = string.Join(", ", rewardData.Select(kv => $"{kv.Key}={kv.Value}"));
-            _monitor.Log(
-                $"SpecialOrder '{orderId}' reward '{r.Type}' Data: [{dump}]",
-                LogLevel.Trace);
+            ModEntry.LogDebug($"SpecialOrder '{orderId}' reward '{r.Type}' Data: [{dump}]");
         }
         return data;
     }

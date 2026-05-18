@@ -61,7 +61,7 @@ internal sealed class FestivalBiasWriter
             });
         }
 
-        _monitor.Log($"FestivalBias granted: +{reward.Magnitude} on {festName} until day {expiresAfter}.", LogLevel.Trace);
+        ModEntry.LogDebug($"FestivalBias granted: +{reward.Magnitude} on {festName} until day {expiresAfter}.");
     }
 
     public int PeekMagnitude(FestivalKind festival)

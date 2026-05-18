@@ -86,7 +86,7 @@ internal sealed class QuestPoster
             && !string.IsNullOrEmpty(posting.QuestGiver)
             && !NpcDisplay.IsBoardEligible(posting.QuestGiver))
         {
-            _monitor.Log($"Dropped {posting.Kind} posting {posting.DefinitionId}: giver '{posting.QuestGiver}' is not board-eligible.", LogLevel.Debug);
+            ModEntry.LogDebug($"Dropped {posting.Kind} posting {posting.DefinitionId}: giver '{posting.QuestGiver}' is not board-eligible.");
             return;
         }
 
@@ -164,7 +164,7 @@ internal sealed class QuestPoster
         ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: 0);
         _api.TrackPosted(quest, posting.OwnerUniqueId, posting.DefinitionId);
         _pendingBoard.Add((quest, posting));
-        _monitor.Log($"Buffered {posting.DefinitionId} for billboard ({posting.QuestType}).", LogLevel.Trace);
+        ModEntry.LogDebug($"Buffered {posting.DefinitionId} for billboard ({posting.QuestType}).");
     }
 
     private void PostViaDialogue(QuestPosting posting)
@@ -215,7 +215,7 @@ internal sealed class QuestPoster
         if (!Game1.player.mailReceived.Contains(mailKey) && !Game1.player.mailbox.Contains(mailKey))
             Game1.player.mailbox.Add(mailKey);
 
-        _monitor.Log($"Posted {posting.DefinitionId} via mail. Days left: {quest.daysLeft.Value}.", LogLevel.Trace);
+        ModEntry.LogDebug($"Posted {posting.DefinitionId} via mail. Days left: {quest.daysLeft.Value}.");
     }
 
     // Trailing 1 is vanilla's addImmediately flag (quest enters the journal at

@@ -6,7 +6,7 @@
     "UniqueID": "RafiaBee.MoreQuests",
     "Description": "Adds 70+ quests of different types, built on More Quests Framework.",
     "EntryDll": "MoreQuests.dll",
-    "UpdateKeys": [],
+    "UpdateKeys": [ "Nexus:46362" ],
     "Dependencies": [
         {
             "UniqueID": "RafiaBee.MoreQuestsFramework",

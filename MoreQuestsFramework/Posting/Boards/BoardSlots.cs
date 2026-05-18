@@ -47,7 +47,7 @@ internal static class CustomBoardSlots
         list.Clear();
         foreach (var (q, p) in entries)
             list.Add(new Slot(q, p, key));
-        monitor?.Log($"CustomBoardSlots[{key}] populated with {list.Count} quest(s).", LogLevel.Trace);
+        ModEntry.LogDebug($"CustomBoardSlots[{key}] populated with {list.Count} quest(s).");
     }
 
     public static void Clear(BoardDefinition board)

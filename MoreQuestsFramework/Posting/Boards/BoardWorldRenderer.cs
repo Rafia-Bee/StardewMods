@@ -127,7 +127,7 @@ internal sealed class BoardWorldRenderer
             Game1.activeClickableMenu = new CustomBoardMenu(board);
             Game1.playSound("bigSelect");
             _helper.Input.Suppress(e.Button);
-            _monitor.Log($"Opened CustomBoardMenu for '{board.OwnerUniqueId}/{board.Name}'.", LogLevel.Trace);
+            ModEntry.LogDebug($"Opened CustomBoardMenu for '{board.OwnerUniqueId}/{board.Name}'.");
             return;
         }
     }

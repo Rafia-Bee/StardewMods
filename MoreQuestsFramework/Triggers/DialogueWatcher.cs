@@ -42,7 +42,7 @@ internal sealed class DialogueWatcher
         if (_state.PendingDialogueQuests.ContainsKey(defId))
             return;
         _state.PendingDialogueQuests[defId] = npcName;
-        _monitor.Log($"DialogueWatcher: queued '{defId}' for next chat with {npcName}.", LogLevel.Trace);
+        ModEntry.LogDebug($"DialogueWatcher: queued '{defId}' for next chat with {npcName}.");
     }
 
     public void Reset()
@@ -99,7 +99,7 @@ internal sealed class DialogueWatcher
         var posting = def.Build(_ctx);
         if (posting == null)
         {
-            _monitor.Log($"DialogueWatcher: '{defId}' Build() returned null.", LogLevel.Trace);
+            ModEntry.LogDebug($"DialogueWatcher: '{defId}' Build() returned null.");
             return;
         }
         if (string.IsNullOrEmpty(posting.OwnerUniqueId))
@@ -107,7 +107,7 @@ internal sealed class DialogueWatcher
         var quest = _buildAndApply(posting);
         if (quest == null)
         {
-            _monitor.Log($"DialogueWatcher: '{defId}' produced no Quest; dropping.", LogLevel.Trace);
+            ModEntry.LogDebug($"DialogueWatcher: '{defId}' produced no Quest; dropping.");
             return;
         }
         _api.TrackPosted(quest, posting.OwnerUniqueId, posting.DefinitionId);

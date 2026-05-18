@@ -74,9 +74,7 @@ internal sealed class AnimalPurchaseDiscountWriter
         }
 
         _helper.GameContent.InvalidateCache(AssetName);
-        _monitor.Log(
-            $"AnimalPurchaseDiscount granted: {reward.PercentOff}% off animal purchases until day {expiresAfter} ({reward.DurationDays}d).",
-            LogLevel.Trace);
+        ModEntry.LogDebug($"AnimalPurchaseDiscount granted: {reward.PercentOff}% off animal purchases until day {expiresAfter} ({reward.DurationDays}d).");
     }
 
     public void SweepExpired()

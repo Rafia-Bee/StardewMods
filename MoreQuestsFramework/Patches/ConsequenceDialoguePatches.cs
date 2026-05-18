@@ -33,9 +33,7 @@ internal static class ConsequenceDialoguePatches
             return;
 
         if (dropped > 0)
-            _monitor.Log(
-                $"{Source}: dropped {dropped} stale chain entries for {__instance.Name} (player skipped earlier chat days).",
-                LogLevel.Trace);
+            ModEntry.LogDebug($"{Source}: dropped {dropped} stale chain entries for {__instance.Name} (player skipped earlier chat days).");
 
         ConsequenceDialogueDispatcher.ApplyEntry(__instance, who, chosen!, drawNow: false, _monitor, Source);
     }

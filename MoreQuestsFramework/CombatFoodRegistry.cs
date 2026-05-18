@@ -90,6 +90,6 @@ internal sealed class CombatFoodRegistry
         foreach (var (id, mag) in manualOverrides)
             Register(id, mag);
 
-        _monitor.Log($"Combat-food scan: registered {registered} food(s) from Data/Objects.", LogLevel.Trace);
+        ModEntry.LogDebug($"Combat-food scan: registered {registered} food(s) from Data/Objects.");
     }
 }

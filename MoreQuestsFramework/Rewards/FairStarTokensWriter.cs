@@ -56,7 +56,7 @@ internal sealed class FairStarTokensWriter
             });
         }
 
-        _monitor.Log($"FairStarTokens granted: +{reward.Amount} until day {expiresAfter}.", LogLevel.Trace);
+        ModEntry.LogDebug($"FairStarTokens granted: +{reward.Amount} until day {expiresAfter}.");
     }
 
     public int PeekAmount()

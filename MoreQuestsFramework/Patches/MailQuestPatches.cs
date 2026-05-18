@@ -47,7 +47,7 @@ internal static class MailQuestPatches
         {
             _api.TrackPosted(quest, entry.OwnerUniqueId, entry.DefinitionId);
             _registry.MarkHandedOff(id);
-            _monitor.Log($"Mail-quest hand-off: returned framework Quest for id '{id}'.", LogLevel.Trace);
+            ModEntry.LogDebug($"Mail-quest hand-off: returned framework Quest for id '{id}'.");
         }
         return false;
     }

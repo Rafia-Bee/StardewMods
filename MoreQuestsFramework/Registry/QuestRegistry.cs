@@ -59,7 +59,7 @@ internal sealed class QuestRegistry
             else
             {
                 _sourceOverrides[def.Id] = pending;
-                _monitor.Log($"Applied buffered source override on '{def.Id}': {pending}.", LogLevel.Trace);
+                ModEntry.LogDebug($"Applied buffered source override on '{def.Id}': {pending}.");
             }
         }
         return true;
@@ -84,7 +84,7 @@ internal sealed class QuestRegistry
         _ordered.Remove(def);
         _sourceOverrides.Remove(definitionId);
         _pendingOverrides.Remove(definitionId);
-        _monitor.Log($"Quest '{definitionId}' unregistered.", LogLevel.Trace);
+        ModEntry.LogDebug($"Quest '{definitionId}' unregistered.");
         return true;
     }
 
@@ -110,7 +110,7 @@ internal sealed class QuestRegistry
                 return;
             }
             _sourceOverrides[definitionId] = source;
-            _monitor.Log($"Quest '{definitionId}' source override set to {source}.", LogLevel.Trace);
+            ModEntry.LogDebug($"Quest '{definitionId}' source override set to {source}.");
             return;
         }
         if (_frozen)
@@ -121,7 +121,7 @@ internal sealed class QuestRegistry
         // Pending overrides can't validate against a TriggerInfo yet (the def isn't
         // here). Compat check runs in Register when the buffered entry resolves.
         _pendingOverrides[definitionId] = source;
-        _monitor.Log($"Buffered source override on '{definitionId}' = {source} until its owner registers.", LogLevel.Trace);
+        ModEntry.LogDebug($"Buffered source override on '{definitionId}' = {source} until its owner registers.");
     }
 
     private static string? ValidateOverrideCompat(IQuestDefinition def, TriggerSource source)
