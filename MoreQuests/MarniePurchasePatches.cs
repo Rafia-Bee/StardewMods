@@ -97,11 +97,15 @@ internal static class MarniePurchasePatches
     /// Vanilla's purchase menu warps the player back to Marnie after every buy, so the
     /// asset-cache invalidation lands on the next menu open. LB keeps its menu open and
     /// caches each entry's `TradePrice` at construction time, so we have to force-close
-    /// to make the next purchase rebuild entries at the post-credit price.
+    /// to make the next purchase rebuild entries at the post-credit price. The HUD hint
+    /// tells the player why their shop window just slammed shut.
     private static void ForceCloseMenuIfThirdParty(bool isVanillaMenu)
     {
         if (isVanillaMenu)
             return;
         Game1.activeClickableMenu?.exitThisMenu();
+        Game1.addHUDMessage(new HUDMessage(
+            ModEntry.I18n.Get("quest.animal.marnie.menuRefreshed").ToString(),
+            HUDMessage.newQuest_type));
     }
 }

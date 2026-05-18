@@ -6,6 +6,7 @@ using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Dispatch;
 using MoreQuestsFramework.Posting;
 using MoreQuestsFramework.Posting.Boards;
+using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Registry;
 using MoreQuestsFramework.Rewards;
 using MoreQuestsFramework.State;
@@ -103,6 +104,18 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
 
     public bool IsManagedQuest(Quest quest) =>
         quest != null && _managed.TryGetValue(quest, out _);
+
+    public int? GetDeliveredQuality(Quest quest)
+    {
+        return quest is MoreQuestsItemDeliveryQuest idq
+            ? idq.deliveredQuality.Value
+            : null;
+    }
+
+    public string? GetDefinitionId(Quest quest)
+    {
+        return TryGetManaged(quest, out var info) ? info.DefinitionId : null;
+    }
 
     public IReadOnlyList<string> RegisteredQuestIds() => _registry.RegisteredIds();
 

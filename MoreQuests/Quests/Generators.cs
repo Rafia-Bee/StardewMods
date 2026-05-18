@@ -21,81 +21,101 @@ internal static partial class Generators
 {
     public static void RegisterAll(IMoreQuestsModApi fw)
     {
-        Reg(fw, "BasicCropDelivery", BasicCropDelivery);
-        Reg(fw, "SimpleFishingRequest", SimpleFishingRequest);
-        Reg(fw, "BasicSlimeClearing", BasicSlimeClearing);
-        Reg(fw, "BarDelivery", BarDelivery);
-        Reg(fw, "SeasonalForaging", SeasonalForaging);
-        Reg(fw, "ElliottPoemInspiration", ElliottPoemInspiration);
-        Reg(fw, "CheckOnGeorge", CheckOnGeorge);
-        Reg(fw, "HaySupplyRun", HaySupplyRun);
-        Reg(fw, "BeachCleanup", BeachCleanup);
-        Reg(fw, "FloralTea", FloralTea);
-        Reg(fw, "CravingDish", CravingDishGenerator);
-        Reg(fw, "SubmarineFuel", SubmarineFuel);
-        Reg(fw, "WizardsRitualMaterials", WizardsRitualMaterials);
-        Reg(fw, "HolidayCookies", HolidayCookies);
-        Reg(fw, "CheckOnFriends", CheckOnFriends);
-        Reg(fw, "GusFestivalFeastSpring", GusFestivalFeastSpring);
-        Reg(fw, "GusFestivalFeastWinter", GusFestivalFeastWinter);
-        Reg(fw, "PreservesJarRequest", PreservesJarRequest);
-        Reg(fw, "KegRequest", KegRequest);
-        Reg(fw, "DehydratorRequest", DehydratorRequest);
-        Reg(fw, "FishSmokerRequest", FishSmokerRequest);
-        Reg(fw, "SkullCavernDeepDive", SkullCavernDeepDive);
-        Reg(fw, "MinesDeepDive", MinesDeepDive);
-        Reg(fw, "PierresStockUp", PierresStockUp);
-        Reg(fw, "MassiveHarvestRequest", MassiveHarvestRequest);
-        Reg(fw, "WeeklySpecialCommon", WeeklySpecialCommon);
-        Reg(fw, "WeeklySpecialComplex", WeeklySpecialComplex);
-        Reg(fw, "GrandFeast", GrandFeast);
-        Reg(fw, "MediumFishingHaul", MediumFishingHaul);
-        Reg(fw, "SeafoodNight", SeafoodNight);
-        Reg(fw, "MonsterParts", MonsterParts);
-        Reg(fw, "ForageWithLinus", ForageWithLinus);
-        Reg(fw, "GusFestivalFeastFall", GusFestivalFeastFall);
-        Reg(fw, "GusFestivalFeastSummer", GusFestivalFeastSummer);
-        Reg(fw, "GiftDelivery", GiftDelivery);
-        Reg(fw, "HeatWaveRelief", HeatWaveRelief);
-        Reg(fw, "JellyfishWatchPrep", JellyfishWatchPrep);
-        Reg(fw, "MerchantUnpacking", MerchantUnpacking);
-        Reg(fw, "MonsterHunt", MonsterHunt);
-        Reg(fw, "RareForageHunt", RareForageHunt);
-        Reg(fw, "RareMaterialRequest", RareMaterialRequest);
-        Reg(fw, "SecretGiftHint", SecretGiftHint);
-        Reg(fw, "WrappingPaper", WrappingPaper);
-        Reg(fw, "PremiumCropOrder", PremiumCropOrder);
-        Reg(fw, "QualityCropDelivery", QualityCropDelivery);
-        Reg(fw, "QualityFishDelivery", QualityFishDelivery);
-        Reg(fw, "MoonlightJelliesFestivalDecor", MoonlightJelliesFestivalDecor);
-        Reg(fw, "EggFestivalDecor", EggFestivalDecor);
-        Reg(fw, "DyeForEggs", DyeForEggs);
-        Reg(fw, "FairFestivalDecor", FairFestivalDecor);
-        Reg(fw, "LuauFestivalDecor", LuauFestivalDecor);
-        Reg(fw, "SpiritsEveDecor", SpiritsEveDecor);
-        Reg(fw, "EastScarpSpiritsEveDecor", EastScarpSpiritsEveDecor);
-        Reg(fw, "RidgesideGatheringDecor", RidgesideGatheringDecor);
-        Reg(fw, "LocationFishOverpopulation", LocationFishOverpopulation);
-        Reg(fw, "RainyDayCatch", RainyDayCatch);
-        Reg(fw, "SizeFishOverpopulation", SizeFishOverpopulation);
-        Reg(fw, "LegendaryFishQuest", LegendaryFishQuest);
-        Reg(fw, "RainbowPlatter", RainbowPlatter);
-        Reg(fw, "SquidFestShowcase", SquidFestShowcase);
+        // Grouped by QuestCategory, alphabetical within section. Keep new generators
+        // in their category and in order, otherwise this file just grows by accretion.
+
+        // Animal
         Reg(fw, "AlexProteinShakes", AlexProteinShakes);
         Reg(fw, "GuntherDinosaurStudy", GuntherDinosaurStudy);
+        Reg(fw, "HaySupplyRun", HaySupplyRun);
         Reg(fw, "KrobusVoidNote", KrobusVoidNote);
         Reg(fw, "LeahFarmPainting", LeahFarmPainting);
-        Reg(fw, "MarnieLivestockShow", MarnieLivestockShow);
         Reg(fw, "MarnieChickenOffer", MarnieChickenOffer);
         Reg(fw, "MarnieCowOffer", MarnieCowOffer);
         Reg(fw, "MarnieEggRequest", MarnieEggRequest);
+        Reg(fw, "MarnieLivestockShow", MarnieLivestockShow);
         Reg(fw, "MarnieMilkRequest", MarnieMilkRequest);
         Reg(fw, "RobinSiloOffer", RobinSiloOffer);
-        Reg(fw, "CarolineTeaGarden", CarolineTeaGarden);
-        Reg(fw, "ClearDebris", ClearDebris);
+
+        // Cooking
+        Reg(fw, "CravingDish", CravingDishGenerator);
         Reg(fw, "DinnerParty", DinnerParty);
+        Reg(fw, "GrandFeast", GrandFeast);
+        Reg(fw, "WeeklySpecialCommon", WeeklySpecialCommon);
+        Reg(fw, "WeeklySpecialComplex", WeeklySpecialComplex);
+
+        // Farming
+        Reg(fw, "BasicCropDelivery", BasicCropDelivery);
+        Reg(fw, "CarolineTeaGarden", CarolineTeaGarden);
+        Reg(fw, "DehydratorRequest", DehydratorRequest);
+        Reg(fw, "KegRequest", KegRequest);
+        Reg(fw, "MassiveHarvestRequest", MassiveHarvestRequest);
+        Reg(fw, "PierresStockUp", PierresStockUp);
+        Reg(fw, "PremiumCropOrder", PremiumCropOrder);
+        Reg(fw, "PreservesJarRequest", PreservesJarRequest);
+        Reg(fw, "QualityCropDelivery", QualityCropDelivery);
+
+        // Festival
+        Reg(fw, "DyeForEggs", DyeForEggs);
+        Reg(fw, "EastScarpSpiritsEveDecor", EastScarpSpiritsEveDecor);
+        Reg(fw, "EggFestivalDecor", EggFestivalDecor);
+        Reg(fw, "FairFestivalDecor", FairFestivalDecor);
+        Reg(fw, "GusFestivalFeastFall", GusFestivalFeastFall);
+        Reg(fw, "GusFestivalFeastSpring", GusFestivalFeastSpring);
+        Reg(fw, "GusFestivalFeastSummer", GusFestivalFeastSummer);
+        Reg(fw, "GusFestivalFeastWinter", GusFestivalFeastWinter);
+        Reg(fw, "JellyfishWatchPrep", JellyfishWatchPrep);
+        Reg(fw, "LuauFestivalDecor", LuauFestivalDecor);
+        Reg(fw, "MerchantUnpacking", MerchantUnpacking);
+        Reg(fw, "MoonlightJelliesFestivalDecor", MoonlightJelliesFestivalDecor);
+        Reg(fw, "RainbowPlatter", RainbowPlatter);
+        Reg(fw, "RidgesideGatheringDecor", RidgesideGatheringDecor);
+        Reg(fw, "SecretGiftHint", SecretGiftHint);
+        Reg(fw, "SpiritsEveDecor", SpiritsEveDecor);
+        Reg(fw, "SquidFestShowcase", SquidFestShowcase);
+        Reg(fw, "WrappingPaper", WrappingPaper);
+
+        // Fishing
+        Reg(fw, "FishSmokerRequest", FishSmokerRequest);
+        Reg(fw, "LegendaryFishQuest", LegendaryFishQuest);
+        Reg(fw, "LocationFishOverpopulation", LocationFishOverpopulation);
+        Reg(fw, "MediumFishingHaul", MediumFishingHaul);
+        Reg(fw, "QualityFishDelivery", QualityFishDelivery);
+        Reg(fw, "RainyDayCatch", RainyDayCatch);
+        Reg(fw, "SeafoodNight", SeafoodNight);
+        Reg(fw, "SimpleFishingRequest", SimpleFishingRequest);
+        Reg(fw, "SizeFishOverpopulation", SizeFishOverpopulation);
+
+        // Foraging
+        Reg(fw, "ClearDebris", ClearDebris);
+        Reg(fw, "ForageWithLinus", ForageWithLinus);
         Reg(fw, "PlantTrees", PlantTrees);
+        Reg(fw, "RareForageHunt", RareForageHunt);
+        Reg(fw, "SeasonalForaging", SeasonalForaging);
+
+        // Mining
+        Reg(fw, "BarDelivery", BarDelivery);
+        Reg(fw, "BasicSlimeClearing", BasicSlimeClearing);
+        Reg(fw, "MinesDeepDive", MinesDeepDive);
+        Reg(fw, "MonsterHunt", MonsterHunt);
+        Reg(fw, "MonsterParts", MonsterParts);
+        Reg(fw, "RareMaterialRequest", RareMaterialRequest);
+        Reg(fw, "SkullCavernDeepDive", SkullCavernDeepDive);
+
+        // Seasonal
+        Reg(fw, "BeachCleanup", BeachCleanup);
+        Reg(fw, "FloralTea", FloralTea);
+        Reg(fw, "HeatWaveRelief", HeatWaveRelief);
+        Reg(fw, "HolidayCookies", HolidayCookies);
         Reg(fw, "SpringCleaning", SpringCleaning);
+        Reg(fw, "SubmarineFuel", SubmarineFuel);
+        Reg(fw, "WizardsRitualMaterials", WizardsRitualMaterials);
+
+        // Social
+        Reg(fw, "CheckOnFriends", CheckOnFriends);
+        Reg(fw, "CheckOnGeorge", CheckOnGeorge);
+        Reg(fw, "ElliottPoemInspiration", ElliottPoemInspiration);
+        Reg(fw, "GiftDelivery", GiftDelivery);
     }
 
     /// Wraps fw.RegisterGenerator with a category master-toggle check. Drops the posting

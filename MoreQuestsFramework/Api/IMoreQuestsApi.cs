@@ -21,6 +21,20 @@ public interface IMoreQuestsApi
 
     bool IsManagedQuest(Quest quest);
 
+    // For an item-delivery managed quest, returns the quality tier of the item the
+    // player turned in. Vanilla quality ladder: 0 regular, 1 silver, 2 gold, 4 iridium.
+    // Captured at delivery time, so it's stable inside a QuestCompleted handler even
+    // though the player's inventory has already shed the stack. Returns null when the
+    // quest isn't a framework item-delivery quest (e.g. a vanilla quest, a fishing
+    // quest, an AdventureQuest, etc.).
+    int? GetDeliveredQuality(Quest quest);
+
+    // For a managed quest currently posted or in the player's log, returns the
+    // registered definition id. Null when the quest isn't framework-managed. Useful
+    // for content mods that want to identify a quest by id rather than by translated
+    // title (which can shift across i18n updates or translation packs).
+    string? GetDefinitionId(Quest quest);
+
     // Snapshot of every registered quest id in registration order. Consumer-mod
     // debug menus and quest browsers can pair this with GetQuestInfo to build
     // their own listings. Returns an empty list before RegistrationOpen fires.
