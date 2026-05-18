@@ -210,49 +210,124 @@ See the working example at [docs/example-csharp-iquestdef/](docs/example-csharp-
 }
 ```
 
-Notes on the schema:
+### Schema notes
 
-- Each `QuestDef` sets either `Generator` (a name registered via `RegisterGenerator`) or a fully-declarative `Objective` (or `Steps[]` for multi-step).
-- `{i18n:key}` tokens in any string field resolve through the owning pack's translation helper.
-- `Available` accepts every key the condition evaluator knows about (table above). `not:` prefix negates. `|` inside a value is OR. Values can be written as strings, plain numbers, or bools: `"MinDaysPlayed": 28` and `"MinDaysPlayed": "28"` both work, same for `"IsPlayerMarried": true`.
-- `Trigger.Delivery: "Mail" | "NpcDialogue" | "DailyBoard"` overrides the default channel. `NpcDialogue` needs a `Giver` set on the quest (the framework can't queue a chat-time post if it doesn't know who the player has to speak to); a `NpcDialogue` posting with no giver is dropped with a Warn line.
-- Adventure (multi-step) quests use `Steps[]` instead of `Objective`. Each step has a `Name` (used by other steps' `Requires[]`), a `Kind`, a `Description`, and step-kind-specific targeting fields. `$giver` in `Targets[]` rewrites to the resolved giver name. `$dispatcher.<role>` resolves to one NPC from the named dispatch role, `$dispatcher.<role>[N]` to N distinct NPCs (clamped to whatever the pool has when smaller). Resolution happens once at quest-creation time so the picked names are stable across save/reload.
-- Step list fields (`Requires`, `Targets`, `Items`) accept either a single string or an array. `"Targets": "Sebastian"` and `"Targets": [ "Sebastian" ]` are equivalent. The same shorthand works on `Objective.Item`, `RewardDef.AppliesTo`, and `Consequence.Targets`.
-- Step kinds available: `Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearWeeds`, `ClearDebris`, `Custom`. Independent steps (no `Requires[]`) are all active at once.
-- Single-objective `Ship` quests use `"Objective": { "Kind": "Ship", "Item": "(O)787", "Count": 1 }`. `Item` accepts a single string or an array, when an array, any id satisfies the delivery. Observed against `Game1.getFarm().getShippingBin(player)` at `DayEnding`. The bin sweep is observe-only: shipped items still sell at full price AND credit the quest, so a "ship 50 stone" quest pays the player the stone sell value on top of the quest reward. Price your rewards with that in mind.
-- Single-objective `Custom` quests use `"Objective": { "Kind": "Custom", "Custom": "<handler>" }` and route through a handler the consumer mod registered via `IMoreQuestsModApi.RegisterCustomBoardQuestType`. The handler receives a `CustomBoardQuestContext` (definition id, owner, giver, primary / alternative item ids, count, quality gate, target message, deadline) and returns a `Quest` instance. The framework then applies title / description / money / reward encoding the same way it does for built-in board kinds. Bare handler names resolve under the calling mod's UniqueID, `"OtherMod.UniqueID/Name"` works for cross-mod references. A Custom-kind posting whose handler isn't registered (e.g. the consumer mod is uninstalled) drops with the same Warn line as any other failed Build.
-- Optional quest-level fields on single-step quests:
-  - `MailBody` (string, supports `{i18n:key}`): overrides the auto-generated letter body when the quest is delivered via mail. On Adventure quests it lives at the same `QuestDef` level. Null/empty falls back to the default body.
-  - `DeliveryTarget` (string): for `Deliver` quests where the requester (`Giver`) isn't the same NPC who accepts the hand-off (anonymous gift orders). Empty falls back to `Giver`.
-  - `AllowDecorShipping` (bool): single-step `Ship` quests only. Lifts vanilla's furniture/decor shipping ban while the quest is active. For Adventure quests, set this on the individual `Ship` step instead.
-- Optional fishing-objective fields on `Objective` (Kind = `Fish`/`Catch`):
-  - `MaxSize` (int, inches): upper bound on catch size. 0 = no cap.
-  - `AnyFish` (bool): counter-only mode. Any catch passing the location/size/weather filters counts toward the quota, no specific fish stack needed at turn-in.
-  - `ProgressTemplate` (string, supports `{i18n:key}`): replaces vanilla's `"0/5 Frog caught"` progress label for `AnyFish` quests. `{0}` is the current count, `{1}` is the quota.
-- `MailReward` accepts `"When": "Today"` (default), `"Tomorrow"`, or `"NextDay"` (alias for `Tomorrow`).
-- JSON reward fields per kind (everything in the "Reward kinds" list above is reachable from a content pack):
-  - `Money`: `Amount`.
-  - `Friendship`: `Npc`, `Points`.
-  - `Object`: `Item`, `Count`.
-  - `Recipe`: `Recipe`, `RecipeKind` (`Cooking` or `Crafting`, default `Cooking`).
-  - `Mail`: `Letter`, `When`.
-  - `ShopDiscount`: `ShopId`, `PercentOff`, `DurationDays`, optional `AppliesTo` (string or list), optional `GuaranteedStock`.
-  - `AnimalPurchaseDiscount`: `PercentOff`, `DurationDays`.
-  - `FestivalBias`: `Festival` (`Luau` or `Fair`), `Magnitude`.
-  - `FairStarTokens`: `Amount`.
-  - `Custom`: `Custom` (handler id), optional `Payload` (string the handler unpacks however it wants).
-- JSON quests can attach a consequence with a `Consequence` block on the quest:
-  - `Tier`: `Tier1` / `Tier2` / `Tier3` / `Special`. Omit (or set `Tier0`) to skip.
-  - `Source`: `GiftTastes` (scan `Data/NPCGiftTastes` for loved/hated picks on `Subject`) or `Static` (use `Targets[]` verbatim).
-  - `Subject`: item id used for the `GiftTastes` scan. Ignored when `Source = Static`.
-  - `Targets`: string or array. Appended to the resolved set for `GiftTastes`, the full affected set for `Static`.
-  - `GoldDelta`: `Special` tier only. Negative numbers take gold away from the player.
-  - `FriendshipOverride`: replaces the tier's default friendship change.
-  - `FriendshipPerDay`: `Tier3` only. Per-chain-day delta, used verbatim with no division.
-  - `ChainDays`: `Tier3` only. Defaults to 3 when 0.
-  - `LovedLine` / `HatedLine`: dialogue text queued for affected NPCs. `{i18n:key}` tokens are resolved.
-  - `ChainLinesByDay`: `Tier3` only. One line per chain day, listed in order (first entry is day 1, second is day 2, etc.).
-- **`SpecialOrder` source.** Trigger fires when `today == StartDate` (`<season> <day>`) and the cooldown has elapsed. The framework writes a vanilla `Data/SpecialOrders` entry (key namespaced as `<ownerUniqueId>.<defId>.<dayStamp>` so other mods' orders are never disturbed) for `Duration` days (`OneDay` / `TwoDays` / `ThreeDays` / `Week` / `TwoWeeks` / `Month`). The matching `Generator` returns a `QuestPosting` with `Kind = PostingKind.SpecialOrder` and a populated `SpecialOrder` block (`Name` / `Text` / `Requester` / `Duration` / `Objectives[]` / `Rewards[]`). Each `SpecialOrderObjectiveSpec.Type` / `SpecialOrderRewardSpec.Type` is the vanilla type name without the `Objective` / `Reward` suffix (e.g. `Ship`, `Money`, `Friendship`). Vanilla owns accept, objective tracking, and reward grant from there.
+#### The basics
+
+- Each `QuestDef` sets one of: `Generator` (a name registered via `RegisterGenerator`), a declarative `Objective` (single-step), or `Steps[]` (multi-step Adventure quest).
+- `{i18n:key}` tokens work in any string field. They resolve through the owning pack's translation helper.
+- List fields (`Requires`, `Targets`, `Items`, `Objective.Item`, `RewardDef.AppliesTo`, `Consequence.Targets`) accept either a single string or an array. `"Targets": "Sebastian"` and `"Targets": [ "Sebastian" ]` mean the same thing.
+
+#### The `Available` block
+
+Accepts every key from the condition evaluator (see the table above).
+
+- `not:` prefix negates a key.
+- `|` inside a value is OR.
+- Values can be strings, plain numbers, or bools: `"MinDaysPlayed": 28` and `"MinDaysPlayed": "28"` both work, same for `"IsPlayerMarried": true`.
+
+#### Delivery
+
+`Trigger.Delivery` overrides the default channel. Accepted values: `"Mail"`, `"NpcDialogue"`, `"DailyBoard"`.
+
+`NpcDialogue` needs a `Giver` set on the quest. The framework can't queue a chat-time post if it doesn't know who the player has to speak to, so a `NpcDialogue` posting with no giver is dropped with a Warn line.
+
+#### Adventure quests (multi-step)
+
+Use `Steps[]` instead of `Objective`. Each step has:
+
+- `Name`, referenced by other steps' `Requires[]`.
+- `Kind`, one of: `Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearWeeds`, `ClearDebris`, `Custom`.
+- `Description`, the journal line.
+- Step-kind-specific targeting fields (`Targets[]`, `Items[]`, `Count`, etc.).
+
+Independent steps (no `Requires[]`) are all active at once. Tokens you can use in `Targets[]`:
+
+- `$giver` rewrites to the resolved giver name.
+- `$dispatcher.<role>` resolves to one NPC from a named dispatch role.
+- `$dispatcher.<role>[N]` resolves to N distinct NPCs (clamped to the pool size).
+
+NPC resolution happens once at quest-creation time, so the picked names are stable across save/reload.
+
+#### Single-objective `Ship`
+
+```jsonc
+"Objective": { "Kind": "Ship", "Item": "(O)787", "Count": 1 }
+```
+
+`Item` accepts a string or an array; in array form, any listed id satisfies the delivery. Observed against `Game1.getFarm().getShippingBin(player)` at `DayEnding`.
+
+The bin sweep is observe-only: shipped items still sell at full price AND credit the quest, so a "ship 50 stone" quest pays the player the stone sell value on top of the quest reward. Price your rewards with that in mind.
+
+#### Single-objective `Custom`
+
+```jsonc
+"Objective": { "Kind": "Custom", "Custom": "<handler>" }
+```
+
+The handler is registered via `IMoreQuestsModApi.RegisterCustomBoardQuestType`. It receives a `CustomBoardQuestContext` (definition id, owner, giver, primary / alternative item ids, count, quality gate, target message, deadline) and returns a `Quest` instance. The framework applies title / description / money / reward encoding the same way it does for built-in board kinds.
+
+Bare handler names resolve under the calling mod's UniqueID; `"OtherMod.UniqueID/Name"` works for cross-mod references. A Custom-kind posting whose handler isn't registered (consumer mod uninstalled) drops with the same Warn line as any other failed Build.
+
+#### Optional quest-level fields (single-step quests)
+
+| Field | Type | What it does |
+| --- | --- | --- |
+| `MailBody` | string, supports `{i18n:key}` | Overrides the auto-generated letter body when the quest is delivered via mail. On Adventure quests it lives at the same `QuestDef` level. Null/empty = use the default body. |
+| `DeliveryTarget` | string | For `Deliver` quests where the requester (`Giver`) isn't the NPC who accepts the hand-off (anonymous gift orders). Empty = use `Giver`. |
+| `AllowDecorShipping` | bool | Single-step `Ship` quests only. Lifts vanilla's furniture/decor shipping ban while the quest is active. For Adventure quests, set this on the individual `Ship` step instead. |
+
+#### Optional fishing fields (`Objective.Kind` = `Fish` / `Catch`)
+
+| Field | Type | What it does |
+| --- | --- | --- |
+| `MaxSize` | int (inches) | Upper bound on catch size. 0 = no cap. |
+| `AnyFish` | bool | Counter-only mode. Any catch passing the location/size/weather filters counts toward the quota; no specific stack needed at turn-in. |
+| `ProgressTemplate` | string, supports `{i18n:key}` | Replaces vanilla's `"0/5 Frog caught"` progress label for `AnyFish` quests. `{0}` is the current count, `{1}` is the quota. |
+
+#### Reward fields per kind
+
+Everything in the "Reward kinds" list above is reachable from a content pack.
+
+| Kind | Required fields | Optional fields |
+| --- | --- | --- |
+| `Money` | `Amount` | |
+| `Friendship` | `Npc`, `Points` | |
+| `Object` | `Item`, `Count` | |
+| `Recipe` | `Recipe` | `RecipeKind` (`Cooking` or `Crafting`, default `Cooking`) |
+| `Mail` | `Letter` | `When` (`"Today"` default / `"Tomorrow"` / `"NextDay"` alias for `Tomorrow`) |
+| `ShopDiscount` | `ShopId`, `PercentOff`, `DurationDays` | `AppliesTo` (string or list), `GuaranteedStock` |
+| `AnimalPurchaseDiscount` | `PercentOff`, `DurationDays` | |
+| `FestivalBias` | `Festival` (`Luau` or `Fair`), `Magnitude` | |
+| `FairStarTokens` | `Amount` | |
+| `Custom` | `Custom` (handler id) | `Payload` (string the handler unpacks however it wants) |
+
+#### Consequence block
+
+JSON quests can attach a `Consequence` block on the quest.
+
+| Field | Applies to | What it does |
+| --- | --- | --- |
+| `Tier` | All | `Tier1` / `Tier2` / `Tier3` / `Special`. Omit (or set `Tier0`) to skip. |
+| `Source` | All | `GiftTastes` (scan `Data/NPCGiftTastes` for loved/hated picks on `Subject`) or `Static` (use `Targets[]` verbatim). |
+| `Subject` | `GiftTastes` source | Item id used for the gift-tastes scan. Ignored when `Source = Static`. |
+| `Targets` | All | String or array. Appended to the resolved set for `GiftTastes`, the full affected set for `Static`. |
+| `GoldDelta` | `Special` tier only | Negative numbers take gold away from the player. |
+| `FriendshipOverride` | All | Replaces the tier's default friendship change. |
+| `FriendshipPerDay` | `Tier3` only | Per-chain-day delta, used verbatim with no division. |
+| `ChainDays` | `Tier3` only | Defaults to 3 when 0. |
+| `LovedLine` / `HatedLine` | All | Dialogue text queued for affected NPCs. `{i18n:key}` tokens resolve. |
+| `ChainLinesByDay` | `Tier3` only | One line per chain day, in order (first entry = day 1, second = day 2, etc.). |
+
+#### `SpecialOrder` source
+
+Trigger fires when `today == StartDate` (`<season> <day>`) and the cooldown has elapsed.
+
+The framework writes a vanilla `Data/SpecialOrders` entry (key namespaced as `<ownerUniqueId>.<defId>.<dayStamp>` so other mods' orders are never disturbed) for `Duration` days (`OneDay` / `TwoDays` / `ThreeDays` / `Week` / `TwoWeeks` / `Month`).
+
+The matching `Generator` returns a `QuestPosting` with `Kind = PostingKind.SpecialOrder` and a populated `SpecialOrder` block (`Name` / `Text` / `Requester` / `Duration` / `Objectives[]` / `Rewards[]`). Each `SpecialOrderObjectiveSpec.Type` / `SpecialOrderRewardSpec.Type` is the vanilla type name without the `Objective` / `Reward` suffix (e.g. `Ship`, `Money`, `Friendship`).
+
+Vanilla owns accept, objective tracking, and reward grant from there. See [docs/example-csharp-generators/](docs/example-csharp-generators/) for a working JSON + generator pair.
 
 ## Public API
 
