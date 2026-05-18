@@ -68,6 +68,6 @@ internal sealed class BoardPackLoader
             _registry.Register(def, ownerUniqueId);
             registered++;
         }
-        _monitor.Log($"Loaded {registered}/{doc.Boards.Count} boards from '{ownerUniqueId}'.", LogLevel.Trace);
+        ModEntry.LogDebug($"Loaded {registered}/{doc.Boards.Count} boards from '{ownerUniqueId}'.");
     }
 }

@@ -6,7 +6,7 @@
     "UniqueID": "RafiaBee.MoreQuestsFramework",
     "Description": "An extensive quest framework that lets you register custom quests, and additionally control vanilla help wanted quest weights.",
     "EntryDll": "MoreQuestsFramework.dll",
-    "UpdateKeys": [],
+    "UpdateKeys": [ "Nexus:46361" ],
     "Dependencies": [
         {
             "UniqueID": "spacechase0.SpaceCore",

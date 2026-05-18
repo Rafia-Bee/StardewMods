@@ -48,23 +48,23 @@ internal sealed class QuestPipeline
                 continue;
             if (!def.IsAvailable(_ctx))
             {
-                _ctx.Monitor.Log($"DailyBoard pool: '{def.Id}' unavailable today, skipping.", LogLevel.Debug);
+                ModEntry.LogDebug($"DailyBoard pool: '{def.Id}' unavailable today, skipping.");
                 continue;
             }
             if (_antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
             {
-                _ctx.Monitor.Log($"DailyBoard pool: '{def.Id}' on cooldown ({def.CooldownDays}d), skipping.", LogLevel.Debug);
+                ModEntry.LogDebug($"DailyBoard pool: '{def.Id}' on cooldown ({def.CooldownDays}d), skipping.");
                 continue;
             }
             int w = weights.TryGetValue(def.Id, out int configured) ? configured : def.DefaultWeight;
             if (w <= 0)
             {
-                _ctx.Monitor.Log($"DailyBoard pool: '{def.Id}' weight is 0, skipping.", LogLevel.Debug);
+                ModEntry.LogDebug($"DailyBoard pool: '{def.Id}' weight is 0, skipping.");
                 continue;
             }
             pool.Add((def, w));
         }
-        _ctx.Monitor.Log($"DailyBoard pool: {pool.Count} eligible definitions after availability/cooldown/weight filters.", LogLevel.Debug);
+        ModEntry.LogDebug($"DailyBoard pool: {pool.Count} eligible definitions after availability/cooldown/weight filters.");
 
         int initialPoolSize = pool.Count;
         var giversToday = new HashSet<string>();
@@ -113,9 +113,7 @@ internal sealed class QuestPipeline
         }
 
         sw.Stop();
-        _ctx.Monitor.Log(
-            $"Generated {_activePostings.Count}/{target} daily-board postings in {sw.Elapsed.TotalMilliseconds:F1} ms (pool size {initialPoolSize}).",
-            LogLevel.Trace);
+        ModEntry.LogDebug($"Generated {_activePostings.Count}/{target} daily-board postings in {sw.Elapsed.TotalMilliseconds:F1} ms (pool size {initialPoolSize}).");
         return _activePostings;
     }
 
@@ -276,9 +274,7 @@ internal sealed class QuestPipeline
 
         sw.Stop();
         int total = result.Sum(kv => kv.Value.Count);
-        _ctx.Monitor.Log(
-            $"Generated {total} custom-board posting(s) across {result.Count} board(s) in {sw.Elapsed.TotalMilliseconds:F1} ms.",
-            LogLevel.Trace);
+        ModEntry.LogDebug($"Generated {total} custom-board posting(s) across {result.Count} board(s) in {sw.Elapsed.TotalMilliseconds:F1} ms.");
         return result;
     }
 

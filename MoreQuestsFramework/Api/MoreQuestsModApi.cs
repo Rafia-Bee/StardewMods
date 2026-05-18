@@ -85,7 +85,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
             return;
         }
         sc.RegisterSerializerType(questType);
-        _monitor.Log($"Registered custom Quest type '{questType.Name}' from '{Owner.UniqueID}' with SpaceCore.", LogLevel.Trace);
+        ModEntry.LogDebug($"Registered custom Quest type '{questType.Name}' from '{Owner.UniqueID}' with SpaceCore.");
     }
 
     public void RegisterGenerator(string name, Func<QuestContext, QuestPosting?> generator)

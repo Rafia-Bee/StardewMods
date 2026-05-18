@@ -84,9 +84,7 @@ internal sealed class ShopDiscountWriter
         }
 
         _helper.GameContent.InvalidateCache(AssetName);
-        _monitor.Log(
-            $"ShopDiscount granted: {reward.PercentOff}% off shop '{reward.ShopId}' until day {expiresAfter} ({reward.DurationDays}d).",
-            LogLevel.Trace);
+        ModEntry.LogDebug($"ShopDiscount granted: {reward.PercentOff}% off shop '{reward.ShopId}' until day {expiresAfter} ({reward.DurationDays}d).");
     }
 
     private static bool SameItemFootprint(List<string> a, List<string>? b)

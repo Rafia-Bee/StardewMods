@@ -53,7 +53,7 @@ internal sealed class BoardRegistry
         def.OwnerUniqueId = ownerUniqueId;
         _byKey[key] = def;
         _ordered.Add(def);
-        _monitor.Log($"Registered board '{key}' at {def.Location} ({def.TileX}, {def.TileY}).", LogLevel.Trace);
+        ModEntry.LogDebug($"Registered board '{key}' at {def.Location} ({def.TileX}, {def.TileY}).");
     }
 
     public BoardDefinition? Find(string ownerUniqueId, string name)

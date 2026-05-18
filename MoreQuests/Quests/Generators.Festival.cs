@@ -814,7 +814,7 @@ internal static partial class Generators
         }
         catch (Exception ex)
         {
-            ctx.Monitor.Log($"SecretGiftHint: could not resolve Winter Star recipient: {ex.Message}", LogLevel.Trace);
+            ModEntry.LogDebug($"SecretGiftHint: could not resolve Winter Star recipient: {ex.Message}");
             return null;
         }
         if (recipient == null)
@@ -871,7 +871,7 @@ internal static partial class Generators
         var tape = ctx.Items.TryResolveItem(tapeId);
         if (paper == null || tape == null)
         {
-            ctx.Monitor.Log($"WrappingPaper: Paper ({paperId}) or Tape ({tapeId}) item not found in registry; skipping.", LogLevel.Trace);
+            ModEntry.LogDebug($"WrappingPaper: Paper ({paperId}) or Tape ({tapeId}) item not found in registry; skipping.");
             return null;
         }
 

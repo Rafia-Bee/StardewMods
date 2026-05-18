@@ -52,7 +52,7 @@ internal static partial class Generators
 
         if (candidates.Count == 0)
         {
-            ctx.Monitor.Log($"CravingDish: no NPC/recipe match across {npcs.Count} met NPCs and {knownRecipes.Count} known recipes.", LogLevel.Trace);
+            ModEntry.LogDebug($"CravingDish: no NPC/recipe match across {npcs.Count} met NPCs and {knownRecipes.Count} known recipes.");
             return null;
         }
 

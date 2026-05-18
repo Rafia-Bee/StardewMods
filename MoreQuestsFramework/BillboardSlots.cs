@@ -36,7 +36,7 @@ internal static class BillboardSlots
         Selected = null;
         foreach (var (q, p) in entries)
             _slots.Add(new Slot(q, p));
-        monitor?.Log($"BillboardSlots populated with {_slots.Count} quest(s).", LogLevel.Trace);
+        ModEntry.LogDebug($"BillboardSlots populated with {_slots.Count} quest(s).");
     }
 
     public static void Clear()

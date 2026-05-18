@@ -66,6 +66,13 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "QuestCooldownMediumDays", () => ModEntry.Config.QuestCooldownMediumDays, v => ModEntry.Config.QuestCooldownMediumDays = v, 1, 28);
         AddInt(api, manifest, t, "QuestCooldownLongDays", () => ModEntry.Config.QuestCooldownLongDays, v => ModEntry.Config.QuestCooldownLongDays = v, 1, 28);
 
+        api.AddSectionTitle(manifest, () => t.Get("config.section.advanced"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.DebugLogging,
+            v => ModEntry.Config.DebugLogging = v,
+            () => t.Get("config.debugLogging"),
+            () => t.Get("config.debugLogging.tooltip"));
+
         // ----- Farming -----
         api.AddPage(manifest, PageFarming, () => t.Get("config.page.farming"));
         api.AddBoolOption(manifest,

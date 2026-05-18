@@ -66,4 +66,8 @@ public sealed class MoreQuestsFrameworkConfig
     public int DeadlineLong { get; set; } = 7;
     public int DeadlineExtended { get; set; } = 14;
     public int DeadlineNone { get; set; } = 999;
+
+    // When on, internal diagnostic logs are written at Trace level. Off in release builds
+    // by default so the SMAPI log stays quiet; flip on if you're chasing a bug.
+    public bool DebugLogging { get; set; } = false;
 }

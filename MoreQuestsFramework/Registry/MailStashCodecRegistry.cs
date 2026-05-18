@@ -42,7 +42,7 @@ internal sealed class MailStashCodecRegistry
         }
         _byKind[kind] = new Codec(questType, encode, decode);
         _byType[questType] = kind;
-        _monitor.Log($"Mail-stash codec '{kind}' bound to Quest subclass '{questType.Name}'.", LogLevel.Trace);
+        ModEntry.LogDebug($"Mail-stash codec '{kind}' bound to Quest subclass '{questType.Name}'.");
     }
 
     public bool TryEncode(Quest quest, out string kind, out List<string> payload)

@@ -124,6 +124,13 @@ internal static class GmcmRegistration
         api.AddSectionTitle(manifest, () => t.Get("config.section.consequences"));
         AddInt(api, manifest, t, "ConsequenceGraceDays", () => ModEntry.Config.ConsequenceGraceDays, v => ModEntry.Config.ConsequenceGraceDays = v, 1, 60);
 
+        api.AddSectionTitle(manifest, () => t.Get("config.section.advanced"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.DebugLogging,
+            v => ModEntry.Config.DebugLogging = v,
+            () => t.Get("config.debugLogging"),
+            () => t.Get("config.debugLogging.tooltip"));
+
         foreach (var category in OrderedCategories(byCategory.Keys))
         {
             string pageId = "weights." + category.ToLowerInvariant();

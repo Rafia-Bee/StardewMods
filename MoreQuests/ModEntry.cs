@@ -29,6 +29,20 @@ public sealed class ModEntry : Mod
     /// i18n accessor for content-mod generators. Framework's QuestContext.Helper only sees framework keys.
     internal static ITranslationHelper I18n => Instance.Helper.Translation;
 
+    // Gated diagnostic log. Off by default so the SMAPI log stays quiet in release.
+    // Enable via GMCM (Debug logging) when chasing a bug.
+    internal static void LogDebug(string message)
+    {
+        if (Config.DebugLogging && Instance != null)
+            Instance.Monitor.Log(message, LogLevel.Trace);
+    }
+
+    internal static void LogDebug(Func<string> messageFactory)
+    {
+        if (Config.DebugLogging && Instance != null)
+            Instance.Monitor.Log(messageFactory(), LogLevel.Trace);
+    }
+
     public override void Entry(IModHelper helper)
     {
         Instance = this;
@@ -429,7 +443,7 @@ public sealed class ModEntry : Mod
         }
         Lfy = api;
         MoreQuestsFramework.FollowerApiBridge.AnimalFollowerCount = () => api.FollowingAnimalCount;
-        Monitor.Log("Wired LivestockFollowsYou follower count into the framework's FollowerApiBridge.", LogLevel.Trace);
+        ModEntry.LogDebug("Wired LivestockFollowsYou follower count into the framework's FollowerApiBridge.");
     }
 
     private void OnQuestRemoved(object? sender, QuestRemovedArgs e)
@@ -534,7 +548,7 @@ public sealed class ModEntry : Mod
             {
                 if (string.Equals(b.buildingType.Value, "Silo", StringComparison.OrdinalIgnoreCase))
                 {
-                    Monitor.Log("Player already has a Silo by quest completion; skipping free-silo voucher.", LogLevel.Trace);
+                    ModEntry.LogDebug("Player already has a Silo by quest completion; skipping free-silo voucher.");
                     return;
                 }
             }
@@ -543,7 +557,7 @@ public sealed class ModEntry : Mod
         Game1.player.modData[FreeSiloCreditModDataKey] = "true";
         Helper.GameContent.InvalidateCache("Data/Buildings");
         Game1.addHUDMessage(new StardewValley.HUDMessage(I18n.Get("quest.animal.robinSilo.voucher").ToString(), 1));
-        Monitor.Log("Set the Robin free-silo voucher; Silo in Robin's carpenter menu will cost 0g and no materials until built.", LogLevel.Trace);
+        ModEntry.LogDebug("Set the Robin free-silo voucher; Silo in Robin's carpenter menu will cost 0g and no materials until built.");
     }
 
     /// Clears the voucher flag when a Silo is built. One-shot per quest completion;
@@ -562,7 +576,7 @@ public sealed class ModEntry : Mod
             {
                 Game1.player.modData.Remove(FreeSiloCreditModDataKey);
                 Helper.GameContent.InvalidateCache("Data/Buildings");
-                Monitor.Log("Player built the Silo; clearing the Robin free-silo voucher and reverting Data/Buildings.", LogLevel.Trace);
+                ModEntry.LogDebug("Player built the Silo; clearing the Robin free-silo voucher and reverting Data/Buildings.");
                 return;
             }
         }
@@ -602,7 +616,7 @@ public sealed class ModEntry : Mod
         if (crafting == null || crafting.ContainsKey(recipe))
             return;
         crafting.Add(recipe, 0);
-        Monitor.Log($"Granted '{recipe}' crafting recipe for Ridgeside Gathering quest.", LogLevel.Trace);
+        ModEntry.LogDebug($"Granted '{recipe}' crafting recipe for Ridgeside Gathering quest.");
     }
 
     /// True when the player has an active Marnie hay-delivery quest. Matched by the

@@ -47,9 +47,7 @@ internal sealed class ConsequenceDialogueWatcher
             return;
 
         if (dropped > 0)
-            _monitor.Log(
-                $"{Source}: dropped {dropped} stale chain entries for {speaker.Name} (player skipped earlier chat days).",
-                LogLevel.Trace);
+            ModEntry.LogDebug($"{Source}: dropped {dropped} stale chain entries for {speaker.Name} (player skipped earlier chat days).");
 
         ConsequenceDialogueDispatcher.ApplyEntry(speaker, Game1.player, chosen!, drawNow: true, _monitor, Source);
     }
