@@ -141,6 +141,7 @@ public sealed class ModEntry : Mod
         WinterStarGiftPatch.Apply(harmony);
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
+        helper.Events.Content.AssetsInvalidated += OnAssetsInvalidated;
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
@@ -173,6 +174,16 @@ public sealed class ModEntry : Mod
     public override object? GetApi() => _api;
 
     private ISpaceCoreApi? _spaceCore;
+
+    // Without this, another mod invalidating Data/Crops or Data/CookingRecipes mid-day
+    // leaves the framework's snapshot stale until the next DayStarted refresh.
+    private void OnAssetsInvalidated(object? sender, AssetsInvalidatedEventArgs e)
+    {
+        if (_dataCache == null)
+            return;
+        foreach (var name in e.NamesWithoutLocale)
+            _dataCache.Invalidate(name.Name);
+    }
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
     {
@@ -367,6 +378,17 @@ public sealed class ModEntry : Mod
         // read whatever they need before everything clears.
         _api.FireFrameworkShuttingDown();
         _api.ClearState();
+
+        // Per-save state hygiene. Without these, loading a second save in the same
+        // session leaves the first save's mail registry entries and reward writers
+        // alive, so MailQuestPatches can hand back a quest from the wrong save and
+        // a granted reward routes into state that no longer belongs to the loaded
+        // farm.
+        _mailQuests.Clear();
+        _shopDiscountWriter?.ClearActive();
+        _animalPurchaseDiscountWriter?.ClearActive();
+        FestivalBiasWriter.ClearActive();
+        FairStarTokensWriter.ClearActive();
     }
 
     private void OnDayStarted(object? sender, DayStartedEventArgs e)
@@ -582,7 +604,9 @@ public sealed class ModEntry : Mod
             return;
         if (!Game1.isFestival())
             return;
-        if (!string.Equals(Game1.currentSeason, "fall", StringComparison.OrdinalIgnoreCase) || Game1.dayOfMonth != 16)
+        // Matches on the festival's name rather than the vanilla fall-16 slot so a
+        // content mod that moves the Fair to a different day still credits tokens.
+        if (!string.Equals(Game1.CurrentEvent?.FestivalName, "Stardew Valley Fair", StringComparison.Ordinal))
             return;
         int amount = _fairStarTokensWriter.PeekAmount();
         if (amount <= 0)

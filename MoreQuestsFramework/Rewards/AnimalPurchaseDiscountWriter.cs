@@ -31,6 +31,12 @@ internal sealed class AnimalPurchaseDiscountWriter
         RewardApplier.OnAnimalPurchaseDiscountGranted = Grant;
     }
 
+    public void ClearActive()
+    {
+        _state = null;
+        RewardApplier.OnAnimalPurchaseDiscountGranted = null;
+    }
+
     public void Register()
     {
         if (_registered)
