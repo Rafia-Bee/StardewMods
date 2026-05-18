@@ -92,4 +92,11 @@ public interface IMoreQuestsApi
     // already log skip reasons at Debug, so this event covers the event-driven and
     // SpecialOrder paths that don't have a log line.
     event EventHandler<QuestSkippedArgs> QuestSkippedToday;
+    // Fires when the player returns to title (leaves the loaded save). The framework's
+    // save-bound state is torn down right after, so consumer mods should drop any cached
+    // references to QuestInfo / IsManagedQuest / GetActiveCustomSteps results in this
+    // handler. Also fires from Dispose when SMAPI tears the mod down. Re-registration
+    // is NOT required between saves: quest definitions, generators, custom triggers,
+    // etc. survive across save loads in the same session.
+    event EventHandler FrameworkShuttingDown;
 }

@@ -25,6 +25,11 @@ internal sealed class MailStashCodecRegistry
             _monitor.Log("RegisterMailStashCodec called with null or empty argument; ignored.", LogLevel.Warn);
             return;
         }
+        if (!typeof(Quest).IsAssignableFrom(questType))
+        {
+            _monitor.Log($"RegisterMailStashCodec('{kind}') ignored: '{questType.FullName}' is not a Quest subclass.", LogLevel.Warn);
+            return;
+        }
         if (_byKind.ContainsKey(kind))
         {
             _monitor.Log($"RegisterMailStashCodec('{kind}') ignored: kind is already registered.", LogLevel.Warn);
@@ -37,6 +42,7 @@ internal sealed class MailStashCodecRegistry
         }
         _byKind[kind] = new Codec(questType, encode, decode);
         _byType[questType] = kind;
+        _monitor.Log($"Mail-stash codec '{kind}' bound to Quest subclass '{questType.Name}'.", LogLevel.Trace);
     }
 
     public bool TryEncode(Quest quest, out string kind, out List<string> payload)

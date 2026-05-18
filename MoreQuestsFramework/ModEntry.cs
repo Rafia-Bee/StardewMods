@@ -146,6 +146,7 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.DayStarted += OnDayStarted;
         helper.Events.GameLoop.DayEnding += OnDayEnding;
         helper.Events.GameLoop.Saving += OnSaving;
+        helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
         helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTick;
         helper.Events.Player.Warped += OnPlayerWarped;
         helper.Events.World.TerrainFeatureListChanged += OnTerrainFeatureListChanged;
@@ -358,6 +359,14 @@ public sealed class ModEntry : Mod
     private void OnSaving(object? sender, SavingEventArgs e)
     {
         _stateStore?.Save();
+    }
+
+    private void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
+    {
+        // Fire before tearing down save-bound state so consumer-mod handlers can still
+        // read whatever they need before everything clears.
+        _api.FireFrameworkShuttingDown();
+        _api.ClearState();
     }
 
     private void OnDayStarted(object? sender, DayStartedEventArgs e)
