@@ -6,6 +6,7 @@ using Netcode;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Quests;
+using SObject = StardewValley.Object;
 
 namespace MoreQuestsFramework.Quests;
 
@@ -36,6 +37,27 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
     // Built lazily on first ObserveShippingBin call. NetFields are stamped at construction
     // (factory or codec decode) and effectively frozen after, so caching is safe.
     private Dictionary<string, int>? _weightLookup;
+    private Dictionary<SObject.PreserveType, int>? _preserveLookup;
+
+    // Vanilla preserve outputs whose ItemId stays the same regardless of the source fruit
+    // or fish. Modded wines, jellies, etc, often ship as their own ItemId (e.g. Fairy Cap
+    // Wine is ItemId 358, not 348) but still set Object.preserve to the matching type.
+    // When a quest accepts one of these bases we also accept anything with that preserve
+    // tag so wines made from modded fruits count toward "ship wine" quests.
+    private static readonly Dictionary<string, SObject.PreserveType> VanillaPreserveBases =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["348"] = SObject.PreserveType.Wine,
+            ["350"] = SObject.PreserveType.Juice,
+            ["344"] = SObject.PreserveType.Jelly,
+            ["342"] = SObject.PreserveType.Pickle,
+            ["340"] = SObject.PreserveType.Honey,
+            ["447"] = SObject.PreserveType.AgedRoe,
+            ["812"] = SObject.PreserveType.Roe,
+            ["DriedFruit"] = SObject.PreserveType.DriedFruit,
+            ["DriedMushrooms"] = SObject.PreserveType.DriedMushroom,
+            ["SmokedFish"] = SObject.PreserveType.SmokedFish,
+        };
 
     protected override void initNetFields()
     {
@@ -87,7 +109,7 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
             if (Matches(item, alternativeItemIds[i]))
                 return true;
         }
-        return false;
+        return LookupWeight(WeightLookup(), item) > 0;
     }
 
     private static bool Matches(Item item, string author)
@@ -139,34 +161,42 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
         if (_weightLookup != null)
             return _weightLookup;
         var dict = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        AddWeightKey(dict, itemId.Value, Math.Max(1, itemWeight.Value));
+        var preserve = new Dictionary<SObject.PreserveType, int>();
+        AddWeightKey(dict, preserve, itemId.Value, Math.Max(1, itemWeight.Value));
         for (int i = 0; i < alternativeItemIds.Count; i++)
         {
             int weight = i < alternativeItemWeights.Count
                 ? Math.Max(1, alternativeItemWeights[i])
                 : 1;
-            AddWeightKey(dict, alternativeItemIds[i], weight);
+            AddWeightKey(dict, preserve, alternativeItemIds[i], weight);
         }
         _weightLookup = dict;
+        _preserveLookup = preserve;
         return dict;
     }
 
-    private static void AddWeightKey(Dictionary<string, int> dict, string id, int weight)
+    private static void AddWeightKey(Dictionary<string, int> dict, Dictionary<SObject.PreserveType, int> preserve, string id, int weight)
     {
         if (string.IsNullOrEmpty(id))
             return;
         dict[id] = weight;
+        string bareId = id;
         // Mirror the old Matches() third branch: a qualified id like "(O)174" should
         // also resolve when the bin item only exposes the bare ItemId "174".
         if (id.StartsWith("(", StringComparison.Ordinal))
         {
             int closeIdx = id.IndexOf(')');
             if (closeIdx >= 0 && closeIdx + 1 < id.Length)
-                dict[id.Substring(closeIdx + 1)] = weight;
+            {
+                bareId = id.Substring(closeIdx + 1);
+                dict[bareId] = weight;
+            }
         }
+        if (VanillaPreserveBases.TryGetValue(bareId, out var type) && !preserve.ContainsKey(type))
+            preserve[type] = weight;
     }
 
-    private static int LookupWeight(Dictionary<string, int> dict, Item item)
+    private int LookupWeight(Dictionary<string, int> dict, Item item)
     {
         string qid = item.QualifiedItemId ?? string.Empty;
         if (!string.IsNullOrEmpty(qid) && dict.TryGetValue(qid, out int w))
@@ -174,6 +204,10 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
         string id = item.ItemId ?? string.Empty;
         if (!string.IsNullOrEmpty(id) && dict.TryGetValue(id, out w))
             return w;
+        if (_preserveLookup != null && _preserveLookup.Count > 0
+            && item is SObject obj && obj.preserve.Value.HasValue
+            && _preserveLookup.TryGetValue(obj.preserve.Value.Value, out int pw))
+            return pw;
         return 0;
     }
 
