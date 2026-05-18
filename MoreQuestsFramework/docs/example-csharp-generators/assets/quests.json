@@ -12,6 +12,41 @@
                 "Available": { "Season": "spring|summer|fall" }
             },
             "Generator": "RandomCropDelivery"
+        },
+        {
+            "Name": "ExampleCSharpGenerators.StardropFollowUp",
+            "Category": "Foraging",
+            "Trigger": {
+                "Source": "Custom",
+                "Custom": "PlayerOwnsStardrop"
+            },
+            "Giver": "Wizard",
+            "DeadlineDays": "Medium",
+            "Objective": {
+                "Kind": "Deliver",
+                "Item": "(O)399",
+                "Count": 5
+            },
+            "Title": "{i18n:example.customTrigger.title}",
+            "Description": "{i18n:example.customTrigger.description}",
+            "CurrentObjective": "{i18n:example.customTrigger.objective}",
+            "TargetMessage": "{i18n:example.customTrigger.targetMessage}",
+            "Rewards": [
+                { "Kind": "Money", "Amount": 1500 },
+                { "Kind": "Friendship", "Npc": "Wizard", "Points": 60 },
+                { "Kind": "Custom", "Custom": "RestoreHealthAndStamina" }
+            ]
+        },
+        {
+            "Name": "ExampleCSharpGenerators.MarnieEggDrive",
+            "Category": "Animal",
+            "Trigger": {
+                "Source": "SpecialOrder",
+                "StartDate": "spring 7",
+                "Duration": "Week",
+                "CooldownDays": 28
+            },
+            "Generator": "MarnieEggDrive"
         }
     ]
 }

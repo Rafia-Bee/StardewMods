@@ -114,32 +114,6 @@ This mod powers [More Quests](../MoreQuests/README.md) and ships four configurab
 - **Item resolver and NPC dispatch.** `ItemResolver` reads cached game data so modded items show up automatically. `DispatchRegistry` is a runtime role-keyed picker (saloon chefs, ecology-minded, conservation guides, etc.). The built-in vanilla and RSV / ESV / VMV / SVE seeds register through the same public `RegisterDispatchNpc` API that third parties use, and mod authors can define new role strings on the fly.
 - **Custom assets.** Pad and pin sprites for the billboard, loaded from `Mods/RafiaBee.MoreQuestsFramework/Pad` and `.../Pin` (resprite of Aedenthorn's Help Wanted pad and pin!).
 
-## Dependencies
-
-**Required**
-
-- **SpaceCore** (`spacechase0.SpaceCore`), registers custom `Quest` subclasses with the serializer so saves round-trip cleanly.
-
-**Optional**
-
-- **Generic Mod Config Menu**
-
-## Configuration
-
-`Mods/MoreQuestsFramework/config.json`. Shows up in GMCM when installed:
-
-- **Quest board:** `QuestsPerDay`, `SpecialOrdersBoardPages`, `AllowDuplicateGiverPerDay`, `SkipFriendshipQuestsAtMaxHeart`.
-- **Master toggles:** `DifficultyScaling`, `FishingIgnoresVisitedLocations`, `ForagingIgnoresVisitedLocations`.
-- **Per-quest weights:** one entry per registered `IQuestDefinition` (built at runtime, so consumer mods' quests show up too).
-- **Vanilla wrappers:** toggle and tune the four bundled vanilla quest types.
-- **Friendship reward sizes:** `FriendshipBasic`, `FriendshipMid`, `FriendshipIntermediate`, `FriendshipLarge`, `FriendshipMultiSmall`, `FriendshipMultiHeart`.
-- **Gold reward bases:** beginner / basic / intermediate / advanced / expert tiers.
-- **Reward multipliers:** `RewardMultiplierBelowSell`, `RewardMultiplierAboveSell`, `RewardMultiplierFishPremium`.
-- **Deadlines:** short / medium / long / extended / none (in-game days).
-- **Consequences:** `ConsequenceGraceDays` (days past a queued reaction's fire day before it silently expires, default 7). Controls how long an NPC keeps a queued reaction alive when the player avoids them (i.e. how long Demetrious keeps a grudge when you catch too many fish).
-
-GMCM registration is deferred until the first `UpdateTicking` so consumer-mod quests that register during their own `GameLaunched` show up in the per-quest weight list.
-
 ## For Mod Authors: registering quests from another mod
 
 There are three entry points, depending on whether your mod is a SMAPI content pack, a C# mod with bundled JSON, or a C# mod with imperative quest definitions.
@@ -241,7 +215,7 @@ Notes on the schema:
 - Each `QuestDef` sets either `Generator` (a name registered via `RegisterGenerator`) or a fully-declarative `Objective` (or `Steps[]` for multi-step).
 - `{i18n:key}` tokens in any string field resolve through the owning pack's translation helper.
 - `Available` accepts every key the condition evaluator knows about (table above). `not:` prefix negates. `|` inside a value is OR. Values can be written as strings, plain numbers, or bools: `"MinDaysPlayed": 28` and `"MinDaysPlayed": "28"` both work, same for `"IsPlayerMarried": true`.
-- `Trigger.Delivery: "Mail" | "NpcDialogue" | "DailyBoard"` overrides the default channel.
+- `Trigger.Delivery: "Mail" | "NpcDialogue" | "DailyBoard"` overrides the default channel. `NpcDialogue` needs a `Giver` set on the quest (the framework can't queue a chat-time post if it doesn't know who the player has to speak to); a `NpcDialogue` posting with no giver is dropped with a Warn line.
 - Adventure (multi-step) quests use `Steps[]` instead of `Objective`. Each step has a `Name` (used by other steps' `Requires[]`), a `Kind`, a `Description`, and step-kind-specific targeting fields. `$giver` in `Targets[]` rewrites to the resolved giver name. `$dispatcher.<role>` resolves to one NPC from the named dispatch role, `$dispatcher.<role>[N]` to N distinct NPCs (clamped to whatever the pool has when smaller). Resolution happens once at quest-creation time so the picked names are stable across save/reload.
 - Step list fields (`Requires`, `Targets`, `Items`) accept either a single string or an array. `"Targets": "Sebastian"` and `"Targets": [ "Sebastian" ]` are equivalent. The same shorthand works on `Objective.Item`, `RewardDef.AppliesTo`, and `Consequence.Targets`.
 - Step kinds available: `Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearWeeds`, `ClearDebris`, `Custom`. Independent steps (no `Requires[]`) are all active at once.
@@ -372,17 +346,35 @@ The framework follows semver from 1.0 onward.
 
 The `quests.json` `Schema` field (currently `"1.0"`) is the source of truth for what JSON keys mean. Bumping the framework's major bumps this number; the loader warns when a pack declares a schema it doesn't recognize (rather than refusing the pack) so authors can see the mismatch and update at their own pace.
 
-## Notes for consumer mods
+## Dependencies
 
-- Declare `RafiaBee.MoreQuestsFramework` as a `Dependencies` entry with `IsRequired: true` so your mod loads after the framework.
-- For shared types (`IQuestDefinition`, `QuestPosting`, `QuestContext`), use a `<ProjectReference>` with `<Private>false</Private>` and `<ExcludeAssets>runtime</ExcludeAssets>` so the framework DLL isn't copied into the consumer mod's deploy folder. SMAPI's `AssemblyResolve` finds the engine types in the framework's loaded assembly at runtime.
-- `Game1.questOfTheDay` is null on framework-board days. The billboard is driven by the currently-selected slot, and reads inside the vanilla `Billboard` constructor, draw, click and hover paths are rewritten to point at that slot. Anything else that reads `Game1.questOfTheDay` directly (third-party HUD overlays, quest trackers) will see null. If your mod needs the active board quest, ask the framework via `IMoreQuestsApi` rather than reading `Game1.questOfTheDay` directly.
+**Required**
 
-## Notes for mods that deliver items on the player's behalf (Mail Services Mod, etc.)
+- **SpaceCore** (`spacechase0.SpaceCore`), registers custom `Quest` subclasses with the serializer so saves round-trip cleanly.
 
-The framework's gift-step quests (`Gift`, `GiftUniqueNpcs` in `AdventureQuest`, plus the vanilla `ItemDeliveryQuest`-style turn-ins) advance via `Quest.OnItemOfferedToNpc`. Mods that mail items on the player's behalf skip that hook because no in-person interaction happens, so steps that count gifted items don't tick.
+**Optional**
 
-If your mod delivers items to NPCs outside the in-person flow, call `quest.OnItemOfferedToNpc(npc, item, probe: false)` on each in-progress quest in `Game1.player.questLog` after the delivery succeeds. The framework's quest subclasses respond to the call, gift steps tick, friendship rewards land, and the consequence (if any) fires on completion. Probe-mode (`probe: true`) returns whether the quest accepts the item without consuming it, which mirrors vanilla's accept-check pattern.
+- **Generic Mod Config Menu**
+
+## Configuration
+
+`Mods/MoreQuestsFramework/config.json`. Shows up in GMCM when installed:
+
+- **Quest board:** `QuestsPerDay`, `SpecialOrdersBoardPages`, `AllowDuplicateGiverPerDay`, `SkipFriendshipQuestsAtMaxHeart`.
+- **Master toggles:** `DifficultyScaling`, `FishingIgnoresVisitedLocations`, `ForagingIgnoresVisitedLocations`.
+- **Per-quest weights:** one entry per registered `IQuestDefinition` (built at runtime, so consumer mods' quests show up too).
+- **Vanilla wrappers:** toggle and tune the four bundled vanilla quest types.
+- **Friendship reward sizes:** `FriendshipBasic`, `FriendshipMid`, `FriendshipIntermediate`, `FriendshipLarge`, `FriendshipMultiSmall`, `FriendshipMultiHeart`.
+- **Gold reward bases:** beginner / basic / intermediate / advanced / expert tiers.
+- **Reward multipliers:** `RewardMultiplierBelowSell`, `RewardMultiplierAboveSell`, `RewardMultiplierFishPremium`.
+- **Deadlines:** short / medium / long / extended / none (in-game days).
+- **Consequences:** `ConsequenceGraceDays` (days past a queued reaction's fire day before it silently expires, default 7). Controls how long an NPC keeps a queued reaction alive when the player avoids them (i.e. how long Demetrious keeps a grudge when you catch too many fish).
+
+GMCM registration is deferred until the first `UpdateTicking` so consumer-mod quests that register during their own `GameLaunched` show up in the per-quest weight list.
+
+## See also
+
+- [docs/integration.md](docs/integration.md) covers the smaller integration caveats: how to declare the dependency, how to share types without copying the DLL, how the framework interacts with `Game1.questOfTheDay`, and how mods that deliver items on the player's behalf (Mail Services Mod, etc.) should call into the framework so gift-step quests still tick.
 
 ## Credits
 
