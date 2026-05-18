@@ -97,7 +97,14 @@ internal sealed class ConsequenceEngine
         // Static routes to hated (no positive static use case today). Tier 3 chains
         // come through here and rely on every static target reacting, no sampling.
         if (spec.Source == ConsequenceSource.Static)
+        {
+            // Static + no targets resolves to an empty hated list, so the handler runs
+            // and quietly does nothing. Flag the no-op so authors don't lose hours
+            // wondering why their consequence never lands.
+            if (spec.Targets.Count == 0)
+                _monitor.Log($"Consequence Source=Static with empty Targets has no NPCs to affect; tier {spec.Tier} will no-op.", LogLevel.Warn);
             return (Array.Empty<string>(), MetOnly(spec.Targets));
+        }
 
         // Filter to met NPCs so we never queue a line for an unencountered one.
         var loved = MetOnly(_scanner.NpcsWhoLove(spec.Subject));

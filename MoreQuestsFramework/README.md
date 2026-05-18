@@ -277,7 +277,7 @@ Notes on the schema:
   - `FriendshipPerDay`: `Tier3` only. Per-chain-day delta, used verbatim with no division.
   - `ChainDays`: `Tier3` only. Defaults to 3 when 0.
   - `LovedLine` / `HatedLine`: dialogue text queued for affected NPCs. `{i18n:key}` tokens are resolved.
-  - `ChainLines`: `Tier3` only. One line per chain day, in order.
+  - `ChainLinesByDay`: `Tier3` only. One line per chain day, listed in order (first entry is day 1, second is day 2, etc.).
 - **`SpecialOrder` source.** Trigger fires when `today == StartDate` (`<season> <day>`) and the cooldown has elapsed. The framework writes a vanilla `Data/SpecialOrders` entry (key namespaced as `<ownerUniqueId>.<defId>.<dayStamp>` so other mods' orders are never disturbed) for `Duration` days (`OneDay` / `TwoDays` / `ThreeDays` / `Week` / `TwoWeeks` / `Month`). The matching `Generator` returns a `QuestPosting` with `Kind = PostingKind.SpecialOrder` and a populated `SpecialOrder` block (`Name` / `Text` / `Requester` / `Duration` / `Objectives[]` / `Rewards[]`). Each `SpecialOrderObjectiveSpec.Type` / `SpecialOrderRewardSpec.Type` is the vanilla type name without the `Objective` / `Reward` suffix (e.g. `Ship`, `Money`, `Friendship`). Vanilla owns accept, objective tracking, and reward grant from there.
 
 ## Public API

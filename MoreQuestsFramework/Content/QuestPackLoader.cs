@@ -105,10 +105,14 @@ internal sealed class QuestPackLoader
         {
             _monitor.Log($"'{ownerUniqueId}/{label}': has 'Generator' alongside declarative fields; declarative fields are ignored.", LogLevel.Warn);
         }
-        if (def.Objective != null && (def.Objective.Item == null || def.Objective.Item.Count == 0) && def.Objective.Kind?.ToLowerInvariant() != "slay")
+        if (def.Objective != null && (def.Objective.Item == null || def.Objective.Item.Count == 0))
         {
-            _monitor.Log($"'{ownerUniqueId}/{label}': declarative Objective is missing 'Item'. Skipping.", LogLevel.Warn);
-            return false;
+            string kindLower = def.Objective.Kind?.ToLowerInvariant() ?? "";
+            if (kindLower != "slay" && kindLower != "custom")
+            {
+                _monitor.Log($"'{ownerUniqueId}/{label}': declarative Objective is missing 'Item'. Skipping.", LogLevel.Warn);
+                return false;
+            }
         }
         if (def.Rewards != null)
         {
