@@ -238,5 +238,6 @@ internal sealed class ConsequenceDef
     public string? HatedLine { get; set; }
     // One line per chain day, in order. JSON name spells out the per-day intent
     // so authors don't have to read the schema doc to find that out.
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public List<string> ChainLinesByDay { get; set; } = new();
 }

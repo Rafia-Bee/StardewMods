@@ -21,6 +21,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     private readonly IMonitor _monitor;
     private readonly Func<string, int?>? _cooldownTierResolver;
     private readonly int _cooldownDaysFallback;
+    private readonly HashSet<string> _warnedUnknownTiers = new(StringComparer.OrdinalIgnoreCase);
 
     public JsonQuestDefinition(
         QuestDef def,
@@ -68,6 +69,11 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
                 int? resolved = _cooldownTierResolver(tier);
                 if (resolved.HasValue)
                     return resolved.Value;
+                // Typo in a tier name silently falls through to CooldownDays, which can
+                // mask intent (a "Mediuum" cooldown bypasses the tier system entirely).
+                // One Warn per (definition, tier) pair, so live GMCM edits don't spam.
+                if (_warnedUnknownTiers.Add(tier))
+                    _monitor.Log($"Quest '{Id}': CooldownTier '{tier}' is not recognised by the consumer mod's resolver. Falling back to CooldownDays={_cooldownDaysFallback}.", LogLevel.Warn);
             }
             return _cooldownDaysFallback;
         }

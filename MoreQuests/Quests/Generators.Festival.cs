@@ -800,6 +800,13 @@ internal static partial class Generators
         if (!ModEntry.Config.SecretGiftHintEnabled)
             return null;
 
+        // Hint text resolves item names via Data/Objects, which MoreQuests edits at
+        // SaveLoaded. Pre-save Build (a future quest-browser preview, a dry-run tool)
+        // would render with the fallback string instead of an actual loved item. Bail
+        // rather than ship a half-resolved posting.
+        if (!Context.IsWorldReady)
+            return null;
+
         NPC? recipient;
         try
         {
