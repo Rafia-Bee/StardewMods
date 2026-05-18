@@ -438,26 +438,23 @@ public sealed class ModEntry : Mod
             Helper.GameContent.InvalidateCache("Data/Shops");
     }
 
+    private static readonly Dictionary<string, Action<ModEntry, StardewValley.Quests.Quest>> QuestCompletionHandlers = new(StringComparer.Ordinal)
+    {
+        ["Animal.HaySupplyRun"]         = (m, _) => m.Helper.GameContent.InvalidateCache("Data/Shops"),
+        ["Animal.GuntherDinosaurStudy"] = (m, q) => m.GrantUpgradedDinosaurEgg(q),
+        ["Animal.MarnieChickenOffer"]   = (m, _) => m.GrantMarnieChickenCredit(),
+        ["Animal.MarnieCowOffer"]       = (m, _) => m.GrantMarnieCowCredit(),
+        ["Animal.RobinSiloOfferCoop"]   = (m, _) => m.GrantFreeSilo(),
+        ["Animal.RobinSiloOfferBarn"]   = (m, _) => m.GrantFreeSilo(),
+        ["Animal.LeahFarmPainting"]     = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
+        ["Mining.SkullCavernDeepDive"]  = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
+        ["Mining.MinesDeepDive"]        = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
+    };
+
     private void OnQuestCompleted(object? sender, QuestCompletedArgs e)
     {
-        if (e.DefinitionId == "Animal.HaySupplyRun")
-            Helper.GameContent.InvalidateCache("Data/Shops");
-        if (e.DefinitionId == "Animal.GuntherDinosaurStudy")
-            GrantUpgradedDinosaurEgg(e.Quest);
-        if (e.DefinitionId == "Animal.MarnieChickenOffer")
-            GrantMarnieChickenCredit();
-        if (e.DefinitionId == "Animal.MarnieCowOffer")
-            GrantMarnieCowCredit();
-        if (e.DefinitionId == "Animal.RobinSiloOfferCoop" || e.DefinitionId == "Animal.RobinSiloOfferBarn")
-            GrantFreeSilo();
-        if (e.DefinitionId == "Animal.LeahFarmPainting")
-        {
-            Helper.GameContent.InvalidateCache("Data/mail");
-            return;
-        }
-        if (e.DefinitionId != "Mining.SkullCavernDeepDive" && e.DefinitionId != "Mining.MinesDeepDive")
-            return;
-        Helper.GameContent.InvalidateCache("Data/mail");
+        if (QuestCompletionHandlers.TryGetValue(e.DefinitionId, out var handler))
+            handler(this, e.Quest);
     }
 
     /// Stamps a "free White Chicken / White Cow at Marnie's shop" credit on the player's
@@ -575,7 +572,7 @@ public sealed class ModEntry : Mod
     /// Vanilla ladder: 0 regular, 1 silver, 2 gold, 4 iridium (3 is skipped). Iridium stays iridium.
     private void GrantUpgradedDinosaurEgg(StardewValley.Quests.Quest quest)
     {
-        int delivered = quest is MoreQuestsItemDeliveryQuest idq ? idq.deliveredQuality.Value : 0;
+        int delivered = Framework?.GetDeliveredQuality(quest) ?? 0;
         int upgraded = delivered switch
         {
             <= 0 => 1,
@@ -608,21 +605,20 @@ public sealed class ModEntry : Mod
         Monitor.Log($"Granted '{recipe}' crafting recipe for Ridgeside Gathering quest.", LogLevel.Trace);
     }
 
-    /// True when the player has an active Marnie hay-delivery quest. Matched by title
-    /// since Marnie's Cow Offer also asks for Hay (O)178.
+    /// True when the player has an active Marnie hay-delivery quest. Matched by the
+    /// framework's definition id, not the translated title (Marnie's Cow Offer also
+    /// asks for Hay (O)178, so the items overlap and the title is a translation pack
+    /// away from drifting).
     private bool IsHaySupplyRunActive()
     {
         var log = Game1.player?.questLog;
-        if (log == null || log.Count == 0)
-            return false;
-        string hayTitle = I18n.Get("quest.animal.hay.title").ToString();
-        if (string.IsNullOrEmpty(hayTitle))
+        if (log == null || log.Count == 0 || Framework == null)
             return false;
         foreach (var q in log)
         {
             if (q == null || q.completed.Value)
                 continue;
-            if (string.Equals(q.questTitle, hayTitle, StringComparison.Ordinal))
+            if (Framework.GetDefinitionId(q) == "Animal.HaySupplyRun")
                 return true;
         }
         return false;

@@ -512,6 +512,8 @@
     "quest.animal.marnieCowOffer.creditRedeemed": "Enjoy your new cow. Marnie's covered it.",
     "quest.animal.marnieCowOffer.creditExpired": "You didn't visit Marnie in time. She sent over {{gold}}g instead.",
 
+    "quest.animal.marnie.menuRefreshed": "Marnie's shop needs to refresh after the freebie. Open it again to keep shopping.",
+
     "quest.animal.marnieEgg.title": "First eggs for Marnie",
     "quest.animal.marnieEgg.description": "Congratulations on your first eggs! If you can spare {{qty}} of them through the shipping bin, I'd love to send a Mayonnaise Machine recipe your way and pay the going rate. The hens will give you plenty more.",
     "quest.animal.marnieEgg.objective": "Ship eggs.",
