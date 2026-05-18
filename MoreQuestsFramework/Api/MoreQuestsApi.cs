@@ -5,8 +5,10 @@ using MoreQuestsFramework.Conditions;
 using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Dispatch;
 using MoreQuestsFramework.Posting;
+using MoreQuestsFramework.Posting.Boards;
 using MoreQuestsFramework.Registry;
 using MoreQuestsFramework.Rewards;
+using MoreQuestsFramework.State;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 using StardewValley.Quests;
@@ -45,6 +47,9 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     public event EventHandler<QuestCompletedArgs>? QuestCompleted;
     public event EventHandler<QuestRemovedArgs>? QuestRemoved;
     public event EventHandler<DayRefreshedArgs>? DayRefreshed;
+    public event EventHandler<QuestSkippedArgs>? QuestSkippedToday;
+
+    private FrameworkState? _state;
 
     internal MoreQuestsApi(
         QuestRegistry registry,
@@ -127,6 +132,57 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
             _registry.EffectiveSource(def));
     }
 
+    public int? GetLastFiredDay(string definitionId)
+    {
+        if (string.IsNullOrEmpty(definitionId) || _state == null)
+            return null;
+        if (!_registry.TryGet(definitionId, out _))
+            return null;
+        return _state.LastFiredDay.TryGetValue(definitionId, out int day) ? day : (int?)null;
+    }
+
+    public bool? GetOneShotFired(string definitionId)
+    {
+        if (string.IsNullOrEmpty(definitionId) || _state == null)
+            return null;
+        if (!_registry.TryGet(definitionId, out _))
+            return null;
+        return _state.OneShotFired.TryGetValue(definitionId, out bool fired) && fired;
+    }
+
+    public IReadOnlyList<CustomBoardSlotInfo> GetCustomBoardSlots(string? boardOwnerUniqueId = null, string? boardName = null)
+    {
+        var list = new List<CustomBoardSlotInfo>();
+        bool filtered = !string.IsNullOrEmpty(boardOwnerUniqueId) && !string.IsNullOrEmpty(boardName);
+        foreach (var slot in CustomBoardSlots.AllSlots())
+        {
+            if (filtered)
+            {
+                string key = (boardOwnerUniqueId ?? "") + "/" + (boardName ?? "");
+                if (!string.Equals(slot.BoardKey, key, StringComparison.OrdinalIgnoreCase))
+                    continue;
+            }
+            int slash = slot.BoardKey.IndexOf('/');
+            string owner = slash >= 0 ? slot.BoardKey.Substring(0, slash) : "";
+            string name = slash >= 0 ? slot.BoardKey.Substring(slash + 1) : slot.BoardKey;
+            list.Add(new CustomBoardSlotInfo(
+                slot.SyncId,
+                slot.Quest,
+                owner,
+                name,
+                slot.Posting.DefinitionId,
+                slot.Posting.OwnerUniqueId,
+                slot.Accepted));
+        }
+        return list;
+    }
+
+    // Called from ModEntry once StateStore has finished loading. Before this call,
+    // the LastFiredDay / OneShotFired lookups return null (no save loaded yet).
+    internal void WireState(FrameworkState state) => _state = state;
+
+    internal void ClearState() => _state = null;
+
     internal CustomStepRegistry CustomSteps => _customSteps;
     internal CustomTriggerRegistry CustomTriggers => _customTriggers;
     internal CustomRewardRegistry CustomRewards => _customRewards;
@@ -180,6 +236,8 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         => QuestRemoved?.Invoke(this, new QuestRemovedArgs(q, info.OwnerUniqueId, info.DefinitionId, reason));
     internal void FireDayRefreshed(int dailyCount, int mailCount)
         => DayRefreshed?.Invoke(this, new DayRefreshedArgs(dailyCount, mailCount));
+    internal void FireQuestSkippedToday(string defId, string ownerUniqueId, TriggerSource source, QuestSkipReason reason)
+        => QuestSkippedToday?.Invoke(this, new QuestSkippedArgs(defId, ownerUniqueId, source, reason));
 
     internal sealed class ManagedQuest
     {

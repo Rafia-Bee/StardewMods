@@ -257,6 +257,8 @@ public sealed class ModEntry : Mod
 
         _triggers = new TriggerEvaluator(_stateStore.State, Monitor, _customTriggers);
         _pipeline = new QuestPipeline(ctx, _registry, _antiRepetition, _triggers);
+        _pipeline.WireSkipCallback(_api.FireQuestSkippedToday);
+        _api.WireState(_stateStore.State);
 
         _poster!.WireMailDelivery(_mailQuests, _stateStore.State);
         _specialOrderWriter?.WireState(_stateStore.State);

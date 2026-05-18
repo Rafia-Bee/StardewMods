@@ -63,6 +63,15 @@ internal static class CustomBoardSlots
         Selected = null;
     }
 
+    // Walks every populated board. Used by the public API to surface a snapshot
+    // without exposing the internal dictionary.
+    public static IEnumerable<Slot> AllSlots()
+    {
+        foreach (var list in _byBoardKey.Values)
+            foreach (var slot in list)
+                yield return slot;
+    }
+
     public static Quest? AcceptSelected()
     {
         if (Selected == null)

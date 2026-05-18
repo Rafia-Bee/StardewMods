@@ -35,6 +35,23 @@ public interface IMoreQuestsApi
     // the result reflects the running game, not a hypothetical scenario.
     bool? IsQuestAvailable(string definitionId);
 
+    // Total-days value of the last day this definition's trigger fired, or null if
+    // it has never fired (or no save is loaded). Pair with Game1.Date.TotalDays to
+    // compute "days since last fire" for tooltips or "next fire in N days" hints.
+    int? GetLastFiredDay(string definitionId);
+
+    // True when this OneShot quest has already burned its one firing for the save.
+    // Returns null if the id is unknown or no save is loaded. Always false for
+    // non-OneShot quests since they don't use this flag.
+    bool? GetOneShotFired(string definitionId);
+
+    // Snapshot of every quest currently posted on a custom board. Mirrors
+    // RegisteredQuestIds in that it's safe to call from anywhere after RegistrationClosed.
+    // Pass an owner+name pair to filter to a single board, or leave both null/empty
+    // to enumerate every board. Slots refresh at day-start and when a board is forced
+    // to re-roll, so callers should re-query rather than caching.
+    IReadOnlyList<CustomBoardSlotInfo> GetCustomBoardSlots(string? boardOwnerUniqueId = null, string? boardName = null);
+
     // Re-rolls today's daily-board batch. Mail-triggered postings are NOT re-rolled
     // (would risk double-posting mail flags).
     void RefreshOffers();
@@ -68,4 +85,11 @@ public interface IMoreQuestsApi
     event EventHandler<QuestCompletedArgs> QuestCompleted;
     event EventHandler<QuestRemovedArgs> QuestRemoved;
     event EventHandler<DayRefreshedArgs> DayRefreshed;
+    // Fires when a registered quest definition was considered for a daily fire but
+    // skipped, either because its JSON conditions came back false or because the
+    // trigger gate (cooldown, predicate, building/mail diff) didn't fire today.
+    // Useful for "why didn't quest X show up?" debug menus. Daily-board pool picks
+    // already log skip reasons at Debug, so this event covers the event-driven and
+    // SpecialOrder paths that don't have a log line.
+    event EventHandler<QuestSkippedArgs> QuestSkippedToday;
 }
