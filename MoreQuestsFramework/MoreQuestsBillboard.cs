@@ -86,7 +86,7 @@ internal sealed class MoreQuestsBillboard : Billboard
                 ?? BoardLayout.FallbackGridBounds(xPositionOnScreen, yPositionOnScreen, i, slots.Count, side);
             placed.Add(bounds);
 
-            (Color padColor, Color pinColor) = BoardLayout.ColorsFor(slot.Posting.QuestType);
+            (Color padColor, Color pinColor) = BoardLayout.ColorsFor(slot.Posting.Category);
 
             var cc = new ClickableTextureComponent(
                 bounds,

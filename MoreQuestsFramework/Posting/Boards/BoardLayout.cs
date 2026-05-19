@@ -11,16 +11,29 @@ internal static class BoardLayout
     public static readonly Rectangle BoardRect = new(78 * 4, 58 * 4, 184 * 4, 96 * 4);
     public const int PadSpriteSize = 64;
 
-    public static readonly Color ItemDeliveryPadColor = new(244, 212, 130);
-    public static readonly Color ItemDeliveryPinColor = new(200, 126, 52);
-    public static readonly Color ResourceCollectionPadColor = new(182, 223, 158);
-    public static readonly Color ResourceCollectionPinColor = new(98, 157, 86);
-    public static readonly Color SlayMonsterPadColor = new(231, 166, 166);
-    public static readonly Color SlayMonsterPinColor = new(173, 79, 79);
-    public static readonly Color FishingPadColor = new(173, 207, 235);
-    public static readonly Color FishingPinColor = new(85, 137, 186);
-    public static readonly Color SocialPadColor = new(229, 200, 232);
-    public static readonly Color SocialPinColor = new(151, 96, 175);
+    // One distinct pad/pin pair per QuestCategory. Pad is the light note paper,
+    // pin is the darker tack. Pairs are picked so the nine categories stay
+    // visually separable on the cork board even at small scales.
+    // Pins are picked from a contrasting hue family from their pad (warm pad =
+    // cool pin and vice versa) so the tack always pops off the note paper.
+    public static readonly Color AnimalPadColor = new(244, 195, 155);
+    public static readonly Color AnimalPinColor = new(35, 75, 100);
+    public static readonly Color CookingPadColor = new(250, 215, 140);
+    public static readonly Color CookingPinColor = new(95, 45, 115);
+    public static readonly Color FarmingPadColor = new(210, 225, 140);
+    public static readonly Color FarmingPinColor = new(130, 40, 80);
+    public static readonly Color FestivalPadColor = new(240, 175, 175);
+    public static readonly Color FestivalPinColor = new(50, 95, 70);
+    public static readonly Color FishingPadColor = new(175, 210, 235);
+    public static readonly Color FishingPinColor = new(160, 75, 30);
+    public static readonly Color ForagingPadColor = new(180, 220, 165);
+    public static readonly Color ForagingPinColor = new(140, 50, 80);
+    public static readonly Color MiningPadColor = new(210, 205, 200);
+    public static readonly Color MiningPinColor = new(130, 35, 50);
+    public static readonly Color SeasonalPadColor = new(175, 225, 220);
+    public static readonly Color SeasonalPinColor = new(155, 60, 45);
+    public static readonly Color SocialPadColor = new(235, 195, 225);
+    public static readonly Color SocialPinColor = new(50, 110, 75);
 
     public static float ChooseScale(int count) =>
         count switch
@@ -79,14 +92,18 @@ internal static class BoardLayout
         return new Rectangle(x, y, side, side);
     }
 
-    public static (Color pad, Color pin) ColorsFor(BoardQuestType type) =>
-        type switch
+    public static (Color pad, Color pin) ColorsFor(QuestCategory category) =>
+        category switch
         {
-            BoardQuestType.ResourceCollection => (ResourceCollectionPadColor, ResourceCollectionPinColor),
-            BoardQuestType.SlayMonster => (SlayMonsterPadColor, SlayMonsterPinColor),
-            BoardQuestType.Fishing => (FishingPadColor, FishingPinColor),
-            BoardQuestType.Socialize => (SocialPadColor, SocialPinColor),
-            _ => (ItemDeliveryPadColor, ItemDeliveryPinColor)
+            QuestCategory.Animal => (AnimalPadColor, AnimalPinColor),
+            QuestCategory.Cooking => (CookingPadColor, CookingPinColor),
+            QuestCategory.Farming => (FarmingPadColor, FarmingPinColor),
+            QuestCategory.Festival => (FestivalPadColor, FestivalPinColor),
+            QuestCategory.Fishing => (FishingPadColor, FishingPinColor),
+            QuestCategory.Foraging => (ForagingPadColor, ForagingPinColor),
+            QuestCategory.Mining => (MiningPadColor, MiningPinColor),
+            QuestCategory.Seasonal => (SeasonalPadColor, SeasonalPinColor),
+            _ => (SocialPadColor, SocialPinColor)
         };
 
     public static Texture2D? TryGetPortrait(string npcName)
