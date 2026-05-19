@@ -8,7 +8,7 @@ namespace MoreQuestsFramework.Content;
 // Accepts a JSON object whose values may be string, number, or bool, and stores
 // each value as its string form. Lets content packs write "MinDaysPlayed": 28 or
 // "IsPlayerMarried": false without forcing string quotes for every condition value.
-internal sealed class ScalarStringDictionaryConverter : JsonConverter<Dictionary<string, string>>
+public sealed class ScalarStringDictionaryConverter : JsonConverter<Dictionary<string, string>>
 {
     public override Dictionary<string, string>? ReadJson(JsonReader reader, Type objectType, Dictionary<string, string>? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
