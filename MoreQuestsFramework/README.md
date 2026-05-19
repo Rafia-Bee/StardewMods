@@ -232,6 +232,18 @@ Accepts every key from the condition evaluator (see the table above).
 
 `NpcDialogue` needs a `Giver` set on the quest. The framework can't queue a chat-time post if it doesn't know who the player has to speak to, so a `NpcDialogue` posting with no giver is dropped with a Warn line.
 
+#### Excluded quest givers
+
+The framework keeps an `IneligibleGivers` list in config (default: `Krobus`, `Leximonster`, `SenS`). Players can edit it from GMCM to keep specific NPCs off the help-wanted board and the special-orders board. The list is also consulted by `DispatchRegistry.MetHumanNpcs`, so any quest that picks a giver dynamically from the dispatch helper already skips excluded NPCs automatically.
+
+If your quest hardcodes a `Giver` that ends up on the exclusion list (either because it's one of the defaults or because the player added it), the framework will:
+
+- **DailyBoard postings**: log a `WARN` line and (when the `MailFallbackForExcludedGivers` config toggle is on, the default) redirect the posting to **mail** (`PostingKind.Mail`) so the player still receives the quest. The mail body uses your `MailBody` field if you set one, otherwise the default `Dear @, <description> -<giver>` template. With the toggle off, the posting is dropped instead and the player loses that quest for the day.
+- **SpecialOrder postings**: log a `WARN` line and drop the posting. Special orders can't be redirected (vanilla owns the UI and tracking flow), so pick a giver who's unlikely to be on a player's exclusion list, or use a different trigger source.
+- **Mail / NpcDialogue / Custom postings**: not affected. Mail is treated as an explicit author-driven channel; the framework respects the author's choice.
+
+If you want a quest to survive any exclusion list without falling back to mail, set `Trigger.Delivery = "Mail"` on the quest definition directly. The redirect-warning won't fire and the mail delivery is the documented behavior.
+
 #### Adventure quests (multi-step)
 
 Use `Steps[]` instead of `Objective`. Each step has:
