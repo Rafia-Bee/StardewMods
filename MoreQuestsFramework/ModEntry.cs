@@ -270,11 +270,12 @@ public sealed class ModEntry : Mod
         // during their own GameLaunched (after ours) actually receive these events.
         _api.FireRegistrationOpen();
 
-        foreach (var pack in Helper.ContentPacks.GetOwned())
-        {
-            _loader.LoadContentPack(pack);
-            _boardLoader.LoadContentPack(pack);
-        }
+        var tiersAsset = Helper.GameContent.Load<Dictionary<string, int>>(CooldownTiersAssetName);
+        var questsAsset = Helper.GameContent.Load<Dictionary<string, QuestDef>>(QuestsAssetName);
+        _loader.LoadFromAsset(questsAsset, tiersAsset, Helper.Translation);
+
+        var boardsAsset = Helper.GameContent.Load<Dictionary<string, BoardDefinition>>(BoardsAssetName);
+        _boardLoader.LoadFromAsset(boardsAsset);
 
         _api.FireRegistrationClosed();
         _registry.Freeze();
