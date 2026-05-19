@@ -6,6 +6,7 @@ using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
 using MoreQuests.Quests;
 using MoreQuestsFramework.Api;
+using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
@@ -61,6 +62,13 @@ public sealed class ModEntry : Mod
 
     internal const string AdventureBoardAssetRoot = "Mods/RafiaBee.MoreQuests/AdventureBoard";
     internal const string AdventureBoardBackgroundAssetRoot = "Mods/RafiaBee.MoreQuests/AdventureBoardBackground";
+
+    private const string MqfQuestsAsset = "Mods/RafiaBee.MoreQuestsFramework/Quests";
+    private const string MqfBoardsAsset = "Mods/RafiaBee.MoreQuestsFramework/Boards";
+    private const string MqfCooldownTiersAsset = "Mods/RafiaBee.MoreQuestsFramework/CooldownTiers";
+
+    private QuestPackDocument? _cachedQuests;
+    private BoardPackDocument? _cachedBoards;
 
     internal const string EggBasketCreamId = "RafiaBee.MoreQuests.EggBasketCream";
     internal const string EggBasketPinkId = "RafiaBee.MoreQuests.EggBasketPink";
@@ -143,6 +151,52 @@ public sealed class ModEntry : Mod
     /// AdventureBoard wall sprite, and its menu background.
     private void OnAssetRequested(object? sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
     {
+        if (e.NameWithoutLocale.IsEquivalentTo(MqfQuestsAsset))
+        {
+            e.Edit(asset =>
+            {
+                var dict = asset.AsDictionary<string, QuestDef>().Data;
+                foreach (var def in LoadQuestsCached().Quests)
+                {
+                    if (string.IsNullOrWhiteSpace(def.Name))
+                        continue;
+                    def.Owner = ModManifest.UniqueID;
+                    dict[def.Name] = def;
+                }
+            }, AssetEditPriority.Early);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(MqfBoardsAsset))
+        {
+            if (!Config.EnableAdventurersGuildBoard)
+                return;
+            e.Edit(asset =>
+            {
+                var dict = asset.AsDictionary<string, BoardDefinition>().Data;
+                foreach (var def in LoadBoardsCached().Boards)
+                {
+                    if (string.IsNullOrWhiteSpace(def.Name))
+                        continue;
+                    def.OwnerUniqueId = ModManifest.UniqueID;
+                    dict[def.Name] = def;
+                }
+            }, AssetEditPriority.Early);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(MqfCooldownTiersAsset))
+        {
+            e.Edit(asset =>
+            {
+                var dict = asset.AsDictionary<string, int>().Data;
+                dict["Short"] = Config.QuestCooldownShortDays;
+                dict["Medium"] = Config.QuestCooldownMediumDays;
+                dict["Long"] = Config.QuestCooldownLongDays;
+            }, AssetEditPriority.Early);
+            return;
+        }
+
         if (e.NameWithoutLocale.IsEquivalentTo(AdventureBoardAssetRoot))
         {
             e.LoadFromModFile<Texture2D>("assets/AdventureBoard.png", AssetLoadPriority.Low);
@@ -678,26 +732,19 @@ public sealed class ModEntry : Mod
 
         Generators.RegisterAll(scope);
 
-        // ResolveCooldownTier maps the Short/Medium/Long buckets in quests.json to current
-        // ModConfig values, so GMCM edits apply on the next trigger eval without reloading.
-        scope.LoadQuestsFromMod(Helper, "assets/quests.json", ResolveCooldownTier);
-
         ApplyGuildBoardRouting(scope);
 
         GmcmRegistration.Register(Helper, ModManifest);
     }
 
-    /// Maps a Trigger.CooldownTier name from quests.json to the current ModConfig day count.
-    /// Case-insensitive. Unknown tier names fall back to the JSON's CooldownDays literal.
-    private int? ResolveCooldownTier(string tier)
+    private QuestPackDocument LoadQuestsCached()
     {
-        return tier?.Trim().ToLowerInvariant() switch
-        {
-            "short" => Config.QuestCooldownShortDays,
-            "medium" => Config.QuestCooldownMediumDays,
-            "long" => Config.QuestCooldownLongDays,
-            _ => null
-        };
+        return _cachedQuests ??= Helper.Data.ReadJsonFile<QuestPackDocument>("assets/quests.json") ?? new QuestPackDocument();
+    }
+
+    private BoardPackDocument LoadBoardsCached()
+    {
+        return _cachedBoards ??= Helper.Data.ReadJsonFile<BoardPackDocument>("assets/boards.json") ?? new BoardPackDocument();
     }
 
     /// Routes mining/monster quests to either the guild board or the help-wanted board
@@ -710,7 +757,6 @@ public sealed class ModEntry : Mod
     {
         if (Config.EnableAdventurersGuildBoard)
         {
-            scope.LoadBoardsFromMod(Helper, "assets/boards.json");
             scope.OverrideTriggerSource("Vanilla.SlayMonster", TriggerSource.CustomBoard);
             ApplyAdventureBoardConfig();
         }
