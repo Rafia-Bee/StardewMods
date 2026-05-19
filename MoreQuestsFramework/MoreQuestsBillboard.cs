@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using MoreQuestsFramework.Posting.Boards;
 using StardewValley;
 using StardewValley.Menus;
@@ -22,6 +23,16 @@ internal sealed class MoreQuestsBillboard : Billboard
     public static Billboard? InnerBillboard { get; set; }
 
     private const int CcIndexBase = -42000;
+    // IClickableMenu has no named constant for this; -99998 routes to automaticSnapBehavior,
+    // which picks the nearest CC in the requested direction. Lets D-pad navigate scattered notes.
+    private const int SnapAutomatic = -99998;
+
+    // Tracks the frame InnerBillboard was closed via menu-button (B/Esc/Start). Better Crafting
+    // and other mods call readyToClose() every frame on every button, so readyToClose itself
+    // must stay pure. Instead, the close-on-menu-button logic lives in receiveKeyPress, and this
+    // counter blocks the same-frame line 13402 path (activeMenu.readyToClose then exitActiveMenu)
+    // from then closing the outer board in the same press.
+    private int _innerClosedFrame = -1;
 
     private string _hoverTitle = "";
     private string _hoverText = "";
@@ -84,10 +95,10 @@ internal sealed class MoreQuestsBillboard : Billboard
                 scale)
             {
                 myID = CcIndexBase - i,
-                leftNeighborID = -7777,
-                rightNeighborID = -7777,
-                upNeighborID = -7777,
-                downNeighborID = -7777
+                leftNeighborID = SnapAutomatic,
+                rightNeighborID = SnapAutomatic,
+                upNeighborID = SnapAutomatic,
+                downNeighborID = SnapAutomatic
             };
 
             var note = new Note
@@ -144,6 +155,12 @@ internal sealed class MoreQuestsBillboard : Billboard
                 InnerBillboard = new Billboard(true);
                 InnerBillboard.acceptQuestButton.visible = true;
                 Game1.playSound("smallSelect");
+                if (Game1.options.SnappyMenus)
+                {
+                    InnerBillboard.snapToDefaultClickableComponent();
+                    currentlySnappedComponent = InnerBillboard.currentlySnappedComponent;
+                    snapCursorToCurrentSnappedComponent();
+                }
                 return;
             }
         }
@@ -161,13 +178,27 @@ internal sealed class MoreQuestsBillboard : Billboard
 
     public override bool readyToClose()
     {
-        if (InnerBillboard != null)
+        // Pure query. Other mods (Better Crafting's ClickRecycle, for one) call this every
+        // frame on every button press, so any side effect here corrupts our state.
+        if (InnerBillboard != null) return false;
+        // Block the same-frame cascade where the menu button both closes inner (in
+        // receiveKeyPress) and then closes outer (Game1's flag4 → activeMenu.readyToClose).
+        if (_innerClosedFrame == Game1.ticks) return false;
+        return true;
+    }
+
+    public override void receiveKeyPress(Keys key)
+    {
+        if (InnerBillboard != null && Game1.options.doesInputListContain(Game1.options.menuButton, key))
         {
             InnerBillboard = null;
             BillboardSlots.Selected = null;
-            return false;
+            _innerClosedFrame = Game1.ticks;
+            if (Game1.options.SnappyMenus)
+                snapToDefaultClickableComponent();
+            return;
         }
-        return true;
+        base.receiveKeyPress(key);
     }
 
     public override void snapToDefaultClickableComponent()
@@ -175,6 +206,7 @@ internal sealed class MoreQuestsBillboard : Billboard
         if (InnerBillboard != null)
         {
             InnerBillboard.snapToDefaultClickableComponent();
+            currentlySnappedComponent = InnerBillboard.currentlySnappedComponent;
             return;
         }
         if (_notes.Count > 0)
@@ -182,6 +214,42 @@ internal sealed class MoreQuestsBillboard : Billboard
             currentlySnappedComponent = getComponentWithID(_notes[0].Cc.myID);
             snapCursorToCurrentSnappedComponent();
         }
+    }
+
+    // Reflection-based base impl can't find the note CCs (they live inside private Note
+    // wrappers), so register them manually for gamepad snap navigation.
+    public override void populateClickableComponentList()
+    {
+        allClickableComponents = new List<ClickableComponent>();
+        foreach (var note in _notes)
+            allClickableComponents.Add(note.Cc);
+        if (upperRightCloseButton != null)
+        {
+            upperRightCloseButton.leftNeighborID = SnapAutomatic;
+            upperRightCloseButton.downNeighborID = SnapAutomatic;
+            allClickableComponents.Add(upperRightCloseButton);
+        }
+    }
+
+    public override void applyMovementKey(int direction)
+    {
+        if (InnerBillboard != null)
+        {
+            InnerBillboard.applyMovementKey(direction);
+            currentlySnappedComponent = InnerBillboard.currentlySnappedComponent;
+            return;
+        }
+        base.applyMovementKey(direction);
+    }
+
+    public override void receiveGamePadButton(Buttons b)
+    {
+        if (InnerBillboard != null)
+        {
+            InnerBillboard.receiveGamePadButton(b);
+            return;
+        }
+        base.receiveGamePadButton(b);
     }
 
     public override void draw(SpriteBatch b)
