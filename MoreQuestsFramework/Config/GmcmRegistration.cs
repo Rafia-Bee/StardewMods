@@ -85,6 +85,19 @@ internal static class GmcmRegistration
             () => t.Get("config.skipFriendshipQuestsAtMaxHeart"),
             () => t.Get("config.skipFriendshipQuestsAtMaxHeart.tooltip"));
 
+        api.AddSectionTitle(manifest, () => t.Get("config.section.exclusions"),
+            () => t.Get("config.section.exclusions.tooltip"));
+        api.AddTextOption(manifest,
+            () => JoinIneligibleGivers(ModEntry.Config.IneligibleGivers),
+            v => ModEntry.Config.IneligibleGivers = ParseIneligibleGivers(v),
+            () => t.Get("config.ineligibleGivers"),
+            () => t.Get("config.ineligibleGivers.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.MailFallbackForExcludedGivers,
+            v => ModEntry.Config.MailFallbackForExcludedGivers = v,
+            () => t.Get("config.mailFallbackForExcludedGivers"),
+            () => t.Get("config.mailFallbackForExcludedGivers.tooltip"));
+
         api.AddSectionTitle(manifest, () => t.Get("config.section.weights"),
             () => t.Get("config.section.weights.tooltip"));
         foreach (var category in OrderedCategories(byCategory.Keys))
@@ -174,6 +187,29 @@ internal static class GmcmRegistration
         if (!constraint.HasValue())
             return baseLine;
         return baseLine + "\n\n" + t.Get("config.weight.constraintsLabel").Default("Requirements:") + " " + constraint;
+    }
+
+    private static string JoinIneligibleGivers(List<string>? list)
+    {
+        if (list == null || list.Count == 0)
+            return string.Empty;
+        return string.Join(", ", list);
+    }
+
+    private static List<string> ParseIneligibleGivers(string? raw)
+    {
+        var result = new List<string>();
+        if (string.IsNullOrWhiteSpace(raw))
+            return result;
+        var seen = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+        foreach (var part in raw.Split(new[] { ',', ';', '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            string trimmed = part.Trim();
+            if (trimmed.Length == 0) continue;
+            if (seen.Add(trimmed))
+                result.Add(trimmed);
+        }
+        return result;
     }
 
     private static void AddInt(IGenericModConfigMenuApi api, IManifest manifest, ITranslationHelper t,

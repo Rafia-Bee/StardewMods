@@ -78,16 +78,46 @@ internal sealed class QuestPoster
 
     public void Post(QuestPosting posting)
     {
-        // Non-human NPCs (friendable animals like East Scarp's Duck2NPC, LexiMonster,
-        // etc.) shouldn't appear on the daily board or special-orders board. Drop the
-        // posting instead of rerouting it: mail is never an implicit fallback, only an
-        // explicit Trigger.Source.
-        if ((posting.Kind == PostingKind.DailyBoard || posting.Kind == PostingKind.SpecialOrder)
-            && !string.IsNullOrEmpty(posting.QuestGiver)
+        // Excluded givers can't go on the daily board or special-orders board. The
+        // heuristic side of IsBoardEligible (Age=Child, !CanSocialize, !PerfectionScore)
+        // catches non-human NPCs like East Scarp's Duck2NPC, LexiMonster, etc. The
+        // IneligibleGivers config list is the manual override the player edits for
+        // anyone the heuristic can't catch (friendable monsters built like real NPCs)
+        // or for any villager they personally don't want quests from.
+        if (!string.IsNullOrEmpty(posting.QuestGiver)
             && !NpcDisplay.IsBoardEligible(posting.QuestGiver))
         {
-            ModEntry.LogDebug($"Dropped {posting.Kind} posting {posting.DefinitionId}: giver '{posting.QuestGiver}' is not board-eligible.");
-            return;
+            if (posting.Kind == PostingKind.DailyBoard)
+            {
+                if (ModEntry.Config?.MailFallbackForExcludedGivers ?? true)
+                {
+                    _monitor.Log(
+                        $"Daily-board posting {posting.DefinitionId} has a hardcoded giver '{posting.QuestGiver}' who is on the exclusion list. "
+                        + "Redirecting to mail. "
+                        + $"Remove {posting.QuestGiver} from your exclusion list for the quest to post normally on the billboard, as the mod author intended.",
+                        LogLevel.Warn);
+                    posting.Kind = PostingKind.Mail;
+                    PostViaMail(posting);
+                }
+                else
+                {
+                    _monitor.Log(
+                        $"Dropped daily-board posting {posting.DefinitionId}: hardcoded giver '{posting.QuestGiver}' is on the exclusion list "
+                        + "and MailFallbackForExcludedGivers is off. "
+                        + $"Remove {posting.QuestGiver} from your exclusion list for the quest to post normally on the billboard, as the mod author intended.",
+                        LogLevel.Warn);
+                }
+                return;
+            }
+            if (posting.Kind == PostingKind.SpecialOrder)
+            {
+                _monitor.Log(
+                    $"Dropped special-order posting {posting.DefinitionId}: hardcoded giver '{posting.QuestGiver}' is on the exclusion list. "
+                    + "Special orders can't fall back to mail. "
+                    + $"Remove {posting.QuestGiver} from your exclusion list for the quest to post normally on the billboard, as the mod author intended.",
+                    LogLevel.Warn);
+                return;
+            }
         }
 
         switch (posting.Kind)

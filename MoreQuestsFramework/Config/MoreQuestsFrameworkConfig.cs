@@ -39,6 +39,12 @@ public sealed class MoreQuestsFrameworkConfig
         "SenS",
     };
 
+    // When a daily-board posting has a hardcoded giver who's on the exclusion list,
+    // on (default) redirects it to mail so the player still receives the quest. Off
+    // drops it entirely. Either path also logs a WARN line so mod authors notice.
+    // Special-order postings always drop because vanilla owns that UI.
+    public bool MailFallbackForExcludedGivers { get; set; } = true;
+
     // After this many days, a queued consequence dialogue line is dropped on DayStarted.
     public int ConsequenceGraceDays { get; set; } = 7;
 

@@ -101,6 +101,13 @@
     "config.skipFriendshipQuestsAtMaxHeart": "Skip friendship quests at max hearts",
     "config.skipFriendshipQuestsAtMaxHeart.tooltip": "When on (default), quests that reward friendship to a specific villager are hidden once you've maxed out their hearts.",
 
+    "config.section.exclusions": "Excluded quest givers",
+    "config.section.exclusions.tooltip": "NPCs listed here will never post quests on the help-wanted board or the special orders board. Useful for friendable monsters or pets that ship as if they were real villagers, or just for any NPC you'd rather not get quests from.",
+    "config.ineligibleGivers": "Excluded NPCs",
+    "config.ineligibleGivers.tooltip": "Comma-separated list of internal NPC names (e.g. Krobus, Leximonster, SenS). Use the internal name from the game data, not the display name. Defaults cover friendable monsters from common packs.",
+    "config.mailFallbackForExcludedGivers": "Mail fallback for excluded givers",
+    "config.mailFallbackForExcludedGivers.tooltip": "When on (default), a daily-board quest with a hardcoded giver who's on the excluded list is sent to your mailbox instead of being dropped. You still get the quest, just by letter. When off, the quest is skipped entirely. Either way, a warning line is written to the SMAPI log so mod authors notice. Special-order quests can never fall back to mail, so this setting doesn't affect them.",
+
     "config.section.friendship": "Friendship reward sizes",
     "config.FriendshipBasic": "Basic friendship",
     "config.FriendshipBasic.tooltip": "Small reward (default 30, about 12% of a heart).",
