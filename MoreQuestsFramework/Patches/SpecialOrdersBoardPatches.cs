@@ -26,6 +26,11 @@ internal static class SpecialOrdersBoardPatches
     private static readonly Rectangle BackArrowSrc = new(352, 495, 12, 11);
     private static readonly Rectangle ForwardArrowSrc = new(365, 495, 12, 11);
 
+    // Picked far from vanilla's 0/1 (accept buttons) so getComponentWithID lookups can't collide.
+    private const int PrevButtonId = -42100;
+    private const int NextButtonId = -42101;
+    private const int SnapAutomatic = -99998;
+
     public static void Apply(Harmony harmony, IMonitor monitor, SpecialOrderWriter writer)
     {
         _monitor = monitor;
@@ -42,6 +47,13 @@ internal static class SpecialOrdersBoardPatches
         harmony.Patch(
             original: AccessTools.Method(typeof(SpecialOrdersBoard), nameof(SpecialOrdersBoard.receiveLeftClick)),
             prefix: new HarmonyMethod(typeof(SpecialOrdersBoardPatches), nameof(ReceiveLeftClick_Prefix)));
+
+        // populateClickableComponentList is declared on IClickableMenu, not overridden on
+        // SpecialOrdersBoard, so Harmony makes us patch the declaring type. The postfix filters
+        // by instance type so we don't touch other menus.
+        harmony.Patch(
+            original: AccessTools.Method(typeof(IClickableMenu), nameof(IClickableMenu.populateClickableComponentList)),
+            postfix: new HarmonyMethod(typeof(SpecialOrdersBoardPatches), nameof(Populate_Postfix)));
     }
 
     private sealed class BoardState
@@ -150,6 +162,15 @@ internal static class SpecialOrdersBoardPatches
             BuildPagerButtons(__instance, state);
             ApplyPage(__instance, state);
             _state.AddOrUpdate(__instance, state);
+
+            // Vanilla's ctor already ran populateClickableComponentList before we existed in
+            // _state, so the pager buttons aren't in the menu's CC list yet. Adding them now
+            // means controller D-pad can auto-snap up from the accept buttons to Prev/Next.
+            if (Game1.options.SnappyMenus && state.ShouldShow && __instance.allClickableComponents != null)
+            {
+                __instance.allClickableComponents.Add(state.PrevButton!);
+                __instance.allClickableComponents.Add(state.NextButton!);
+            }
         }
         catch (Exception ex)
         {
@@ -242,10 +263,50 @@ internal static class SpecialOrdersBoardPatches
 
         state.PrevButton = new ClickableTextureComponent(
             new Rectangle(prevX, rowY, 48, 44),
-            Game1.mouseCursors, BackArrowSrc, 4f);
+            Game1.mouseCursors, BackArrowSrc, 4f)
+        {
+            myID = PrevButtonId,
+            leftNeighborID = SnapAutomatic,
+            rightNeighborID = SnapAutomatic,
+            upNeighborID = SnapAutomatic,
+            downNeighborID = SnapAutomatic
+        };
         state.NextButton = new ClickableTextureComponent(
             new Rectangle(nextX, rowY, 48, 44),
-            Game1.mouseCursors, ForwardArrowSrc, 4f);
+            Game1.mouseCursors, ForwardArrowSrc, 4f)
+        {
+            myID = NextButtonId,
+            leftNeighborID = SnapAutomatic,
+            rightNeighborID = SnapAutomatic,
+            upNeighborID = SnapAutomatic,
+            downNeighborID = SnapAutomatic
+        };
+    }
+
+    // Vanilla's populateClickableComponentList uses reflection over the SpecialOrdersBoard's own
+    // fields, so our pager buttons (held in BoardState, not on the menu) never get picked up.
+    // Append them after vanilla finishes so gamepad auto-snap can land on them. Patches the
+    // IClickableMenu declaring type since SOB doesn't override it; filter here so we don't
+    // touch unrelated menus.
+    public static void Populate_Postfix(IClickableMenu __instance)
+    {
+        if (__instance is not SpecialOrdersBoard board)
+            return;
+        try
+        {
+            if (!_state.TryGetValue(board, out var state))
+                return;
+            if (!state.ShouldShow || state.PrevButton == null || state.NextButton == null)
+                return;
+            if (board.allClickableComponents == null)
+                return;
+            board.allClickableComponents.Add(state.PrevButton);
+            board.allClickableComponents.Add(state.NextButton);
+        }
+        catch (Exception ex)
+        {
+            _monitor?.Log($"SpecialOrdersBoard pagination populate failed: {ex.Message}", LogLevel.Warn);
+        }
     }
 
     private static void DrawArrow(SpriteBatch b, ClickableTextureComponent button, Rectangle sourceRect, bool enabled)
