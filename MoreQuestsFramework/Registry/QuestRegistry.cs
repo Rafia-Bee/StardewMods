@@ -170,11 +170,12 @@ internal sealed class QuestRegistry
         }
     }
 
+    // Keeps _sourceOverrides intact: those were set by consumer mods during their
+    // one-time GameLaunched and don't get re-applied on hot reload of CP assets.
     public void Clear()
     {
         _byId.Clear();
         _ordered.Clear();
-        _sourceOverrides.Clear();
         _pendingOverrides.Clear();
         _frozen = false;
     }

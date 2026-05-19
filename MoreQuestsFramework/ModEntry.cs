@@ -194,12 +194,48 @@ public sealed class ModEntry : Mod
 
     // Without this, another mod invalidating Data/Crops or Data/CookingRecipes mid-day
     // leaves the framework's snapshot stale until the next DayStarted refresh.
+    private bool _pendingAssetReload;
+
     private void OnAssetsInvalidated(object? sender, AssetsInvalidatedEventArgs e)
     {
-        if (_dataCache == null)
-            return;
+        bool oursTouched = false;
         foreach (var name in e.NamesWithoutLocale)
-            _dataCache.Invalidate(name.Name);
+        {
+            _dataCache?.Invalidate(name.Name);
+            if (name.IsEquivalentTo(QuestsAssetName) || name.IsEquivalentTo(BoardsAssetName) || name.IsEquivalentTo(CooldownTiersAssetName))
+                oursTouched = true;
+        }
+        if (!oursTouched)
+            return;
+
+        if (Context.IsWorldReady)
+        {
+            _pendingAssetReload = true;
+            Monitor.Log("CP invalidated an MQF asset mid-save. Quest pool will refresh after returning to title.", LogLevel.Info);
+            return;
+        }
+
+        ReloadFromAssets();
+    }
+
+    private void LoadAssetsAndRegister()
+    {
+        var tiersAsset = Helper.GameContent.Load<Dictionary<string, int>>(CooldownTiersAssetName);
+        var questsAsset = Helper.GameContent.Load<Dictionary<string, QuestDef>>(QuestsAssetName);
+        _loader.LoadFromAsset(questsAsset, tiersAsset, Helper.Translation);
+
+        var boardsAsset = Helper.GameContent.Load<Dictionary<string, BoardDefinition>>(BoardsAssetName);
+        _boardLoader.LoadFromAsset(boardsAsset);
+    }
+
+    private void ReloadFromAssets()
+    {
+        _registry.Clear();
+        _boards.Clear();
+        LoadAssetsAndRegister();
+        _registry.Freeze();
+        _boards.Freeze();
+        Monitor.Log("Reloaded quests and boards from MQF assets.", LogLevel.Info);
     }
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
@@ -269,14 +305,7 @@ public sealed class ModEntry : Mod
         // Deferred one tick past GameLaunched so consumer-mod subscribers registered
         // during their own GameLaunched (after ours) actually receive these events.
         _api.FireRegistrationOpen();
-
-        var tiersAsset = Helper.GameContent.Load<Dictionary<string, int>>(CooldownTiersAssetName);
-        var questsAsset = Helper.GameContent.Load<Dictionary<string, QuestDef>>(QuestsAssetName);
-        _loader.LoadFromAsset(questsAsset, tiersAsset, Helper.Translation);
-
-        var boardsAsset = Helper.GameContent.Load<Dictionary<string, BoardDefinition>>(BoardsAssetName);
-        _boardLoader.LoadFromAsset(boardsAsset);
-
+        LoadAssetsAndRegister();
         _api.FireRegistrationClosed();
         _registry.Freeze();
         _boards.Freeze();
@@ -425,6 +454,12 @@ public sealed class ModEntry : Mod
         _animalPurchaseDiscountWriter?.ClearActive();
         FestivalBiasWriter.ClearActive();
         FairStarTokensWriter.ClearActive();
+
+        if (_pendingAssetReload)
+        {
+            _pendingAssetReload = false;
+            ReloadFromAssets();
+        }
     }
 
     private void OnDayStarted(object? sender, DayStartedEventArgs e)
