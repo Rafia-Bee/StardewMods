@@ -341,6 +341,40 @@ The matching `Generator` returns a `QuestPosting` with `Kind = PostingKind.Speci
 
 Vanilla owns accept, objective tracking, and reward grant from there. See [docs/example-csharp-generators/](docs/example-csharp-generators/) for a working JSON + generator pair.
 
+## Retexturing the pad and pin
+
+The cork-board notes are drawn from two textures the framework loads as game assets:
+
+- `Mods/RafiaBee.MoreQuestsFramework/Pad`
+- `Mods/RafiaBee.MoreQuestsFramework/Pin`
+
+Both are loaded at low priority, so a Content Patcher pack can swap them with a couple of lines. In your pack's `content.json`:
+
+```json
+{
+    "Format": "2.0.0",
+    "Changes": [
+        {
+            "Action": "Load",
+            "Target": "Mods/RafiaBee.MoreQuestsFramework/Pad",
+            "FromFile": "assets/my-pad.png"
+        },
+        {
+            "Action": "Load",
+            "Target": "Mods/RafiaBee.MoreQuestsFramework/Pin",
+            "FromFile": "assets/my-pin.png"
+        }
+    ]
+}
+```
+
+Use `"Action": "EditImage"` instead if you just want to recolor part of the sprite.
+
+A couple of things to know about the art:
+
+- Both sprites are drawn as squares, so keep the replacement square too. The vanilla sprites are 16x16.
+- The framework tints each pad and pin with a per-quest-category color at draw time. Paint your art in mostly white or light neutrals if you want that tint to keep showing through. If you'd rather lock in your own colors, paint them in the final color and the tint will multiply over them (so you'll get a slightly darker shade than what you painted).
+
 ## Public API
 
 `IMoreQuestsApi` ([Api/IMoreQuestsApi.cs](Api/IMoreQuestsApi.cs)) is the public registration seam, marked Beta until framework v1.0. Fetch it once via `helper.ModRegistry.GetApi<IMoreQuestsApi>(...)`, then narrow to a per-mod scope through `GetModApi(ModManifest)`.
