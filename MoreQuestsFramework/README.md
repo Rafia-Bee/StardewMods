@@ -215,7 +215,7 @@ See the working example at [docs/example-csharp-iquestdef/](docs/example-csharp-
 #### The basics
 
 - Each `QuestDef` sets one of: `Generator` (a name registered via `RegisterGenerator`), a declarative `Objective` (single-step), or `Steps[]` (multi-step Adventure quest).
-- `{i18n:key}` tokens work in any string field. They resolve through the owning pack's translation helper.
+- `{i18n:key}` tokens work in any string field for SMAPI content packs / C# mods that ship a `quests.json`. They resolve through the owning pack's translation helper. If you're authoring via a Content Patcher pack instead, use `{{i18n:key}}` (CP's double-brace syntax). CP resolves those against your CP pack's own `i18n/` folder before MQF reads the data, so they work everywhere a string field is accepted.
 - List fields (`Requires`, `Targets`, `Items`, `Objective.Item`, `RewardDef.AppliesTo`, `Consequence.Targets`) accept either a single string or an array. `"Targets": "Sebastian"` and `"Targets": [ "Sebastian" ]` mean the same thing.
 
 #### The `Available` block
