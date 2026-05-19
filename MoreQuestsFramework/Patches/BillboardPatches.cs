@@ -136,6 +136,9 @@ internal static class BillboardPatches
             {
                 MoreQuestsBillboard.InnerBillboard = null;
                 BillboardSlots.Selected = null;
+                // Re-snap so gamepad nav recovers from the orphaned accept-button snap.
+                if (Game1.options.SnappyMenus && Game1.activeClickableMenu is MoreQuestsBillboard outer)
+                    outer.snapToDefaultClickableComponent();
             }
         }
     }
