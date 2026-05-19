@@ -34,6 +34,9 @@ public sealed class ModEntry : Mod
 
     internal const string PadAssetRoot = "Mods/RafiaBee.MoreQuestsFramework/Pad";
     internal const string PinAssetRoot = "Mods/RafiaBee.MoreQuestsFramework/Pin";
+    internal const string QuestsAssetName = "Mods/RafiaBee.MoreQuestsFramework/Quests";
+    internal const string BoardsAssetName = "Mods/RafiaBee.MoreQuestsFramework/Boards";
+    internal const string CooldownTiersAssetName = "Mods/RafiaBee.MoreQuestsFramework/CooldownTiers";
 
     private QuestRegistry _registry = null!;
     private GeneratorRegistry _generators = null!;
@@ -210,6 +213,24 @@ public sealed class ModEntry : Mod
         if (e.NameWithoutLocale.IsEquivalentTo(PinAssetRoot))
         {
             e.LoadFromModFile<Texture2D>("assets/pin.png", AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(QuestsAssetName))
+        {
+            e.LoadFrom(() => new Dictionary<string, QuestDef>(StringComparer.OrdinalIgnoreCase), AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(BoardsAssetName))
+        {
+            e.LoadFrom(() => new Dictionary<string, BoardDefinition>(StringComparer.OrdinalIgnoreCase), AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(CooldownTiersAssetName))
+        {
+            e.LoadFrom(() => new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase), AssetLoadPriority.Low);
         }
     }
 
