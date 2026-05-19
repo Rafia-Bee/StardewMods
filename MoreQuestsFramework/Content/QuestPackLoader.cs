@@ -40,6 +40,37 @@ internal sealed class QuestPackLoader
         Apply(doc, pack.Manifest.UniqueID, pack.Translation, cooldownTierResolver);
     }
 
+    public void LoadFromAsset(IDictionary<string, QuestDef> entries, IDictionary<string, int> cooldownTiers, ITranslationHelper translation)
+    {
+        Func<string, int?>? resolver = cooldownTiers.Count > 0
+            ? name => cooldownTiers.TryGetValue(name, out var days) ? days : null
+            : null;
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        int registered = 0;
+        foreach (var (id, def) in entries)
+        {
+            if (string.IsNullOrWhiteSpace(id) || def == null)
+            {
+                _monitor.Log($"Skipping empty quest entry (id='{id}').", LogLevel.Warn);
+                continue;
+            }
+
+            if (!id.Contains('.') && !id.Contains('_'))
+                _monitor.Log($"Quest id '{id}' has no namespace separator. Two packs using this id will collide. Use '{{{{ModId}}}}_Name' in your CP pack.", LogLevel.Warn);
+
+            def.Name = id;
+
+            if (!Validate(def, id, seen))
+                continue;
+
+            var jdef = new JsonQuestDefinition(def, id, translation, _generators, _monitor, resolver);
+            if (_registry.Register(jdef))
+                registered++;
+        }
+        ModEntry.LogDebug($"Loaded {registered}/{entries.Count} quests from CP asset.");
+    }
+
     public void LoadFromMod(IModHelper helper, IManifest manifest, string relativePath, Func<string, int?>? cooldownTierResolver = null)
     {
         QuestPackDocument? doc;

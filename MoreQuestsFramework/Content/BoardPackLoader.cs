@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using MoreQuestsFramework.Api;
 using MoreQuestsFramework.Registry;
 using StardewModdingAPI;
 
@@ -32,6 +34,27 @@ internal sealed class BoardPackLoader
             return;
 
         Apply(doc, pack.Manifest.UniqueID);
+    }
+
+    public void LoadFromAsset(IDictionary<string, BoardDefinition> entries)
+    {
+        int registered = 0;
+        foreach (var (id, def) in entries)
+        {
+            if (string.IsNullOrWhiteSpace(id) || def == null)
+            {
+                _monitor.Log($"Skipping empty board entry (id='{id}').", LogLevel.Warn);
+                continue;
+            }
+
+            if (!id.Contains('.') && !id.Contains('_'))
+                _monitor.Log($"Board id '{id}' has no namespace separator. Two packs using this id will collide. Use '{{{{ModId}}}}_Name' in your CP pack.", LogLevel.Warn);
+
+            def.Name = id;
+            _registry.Register(def, id);
+            registered++;
+        }
+        ModEntry.LogDebug($"Loaded {registered}/{entries.Count} boards from CP asset.");
     }
 
     public void LoadFromMod(IModHelper helper, IManifest manifest, string relativePath)
