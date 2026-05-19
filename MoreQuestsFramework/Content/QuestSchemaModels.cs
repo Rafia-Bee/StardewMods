@@ -3,15 +3,22 @@ using Newtonsoft.Json;
 
 namespace MoreQuestsFramework.Content;
 
-internal sealed class QuestPackDocument
+public sealed class QuestPackDocument
 {
     public string Schema { get; set; } = "1.0";
     public List<QuestDef> Quests { get; set; } = new();
 }
 
-internal sealed class QuestDef
+public sealed class QuestDef
 {
     public string? Name { get; set; }
+
+    // Mod-scoped lookups (generators, custom triggers/steps/rewards/conditions/board types)
+    // resolve against this UniqueID. When unset, the loader infers it from the dict key
+    // (everything before the first '_', if that prefix contains '.'). CP authors typically
+    // set "Owner": "{{ModId}}" explicitly; DLL mods set it in their IAssetRequested.Edit handler.
+    public string? Owner { get; set; }
+
     public string? Category { get; set; }
     public string? Tier { get; set; }
 
@@ -51,7 +58,7 @@ internal sealed class QuestDef
     public ConsequenceDef? Consequence { get; set; }
 }
 
-internal sealed class TriggerDef
+public sealed class TriggerDef
 {
     public string Source { get; set; } = "DailyBoard";
     public int? Weight { get; set; }
@@ -112,7 +119,7 @@ internal sealed class TriggerDef
     public string? Custom { get; set; }
 }
 
-internal sealed class ObjectiveDef
+public sealed class ObjectiveDef
 {
     // Deliver | Resource | Fish | Slay | Ship | Socialize | Custom.
     public string Kind { get; set; } = "Deliver";
@@ -150,7 +157,7 @@ internal sealed class ObjectiveDef
     public string? Weather { get; set; }
 }
 
-internal sealed class StepDef
+public sealed class StepDef
 {
     public string? Name { get; set; }
 
@@ -185,7 +192,7 @@ internal sealed class StepDef
     public string? Weather { get; set; }
 }
 
-internal sealed class RewardDef
+public sealed class RewardDef
 {
     // Money | Friendship | Object | Recipe | Mail | ShopDiscount | AnimalPurchaseDiscount | FestivalBias | FairStarTokens | Custom.
     public string Kind { get; set; } = "Money";
@@ -216,7 +223,7 @@ internal sealed class RewardDef
     public string? Payload { get; set; }
 }
 
-internal sealed class ConsequenceDef
+public sealed class ConsequenceDef
 {
     // Tier1 | Tier2 | Tier3 | Special. Default Tier0 (off).
     public string Tier { get; set; } = "Tier0";

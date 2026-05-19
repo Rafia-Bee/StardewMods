@@ -47,14 +47,33 @@ internal sealed class BoardPackLoader
                 continue;
             }
 
-            if (!id.Contains('.') && !id.Contains('_'))
-                _monitor.Log($"Board id '{id}' has no namespace separator. Two packs using this id will collide. Use '{{{{ModId}}}}_Name' in your CP pack.", LogLevel.Warn);
+            string owner;
+            if (!string.IsNullOrWhiteSpace(def.OwnerUniqueId))
+                owner = def.OwnerUniqueId;
+            else
+            {
+                owner = InferOwner(id);
+                if (owner == id && !id.Contains('.') && !id.Contains('_'))
+                    _monitor.Log($"Board id '{id}' has no namespace separator and no explicit OwnerUniqueId. Two packs using this id will collide. Use '{{{{ModId}}}}_Name' in your CP pack or set OwnerUniqueId.", LogLevel.Warn);
+            }
 
             def.Name = id;
-            _registry.Register(def, id);
+            _registry.Register(def, owner);
             registered++;
         }
         ModEntry.LogDebug($"Loaded {registered}/{entries.Count} boards from CP asset.");
+    }
+
+    private static string InferOwner(string id)
+    {
+        int underscore = id.IndexOf('_');
+        if (underscore > 0)
+        {
+            string prefix = id.Substring(0, underscore);
+            if (prefix.Contains('.'))
+                return prefix;
+        }
+        return id;
     }
 
     public void LoadFromMod(IModHelper helper, IManifest manifest, string relativePath)

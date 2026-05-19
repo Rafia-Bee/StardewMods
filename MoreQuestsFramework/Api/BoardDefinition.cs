@@ -60,7 +60,7 @@ public sealed class BoardDefinition
 
     public List<string>? AllowedCategories { get; set; }
 
-    public string OwnerUniqueId { get; internal set; } = "";
+    public string OwnerUniqueId { get; set; } = "";
 
     public int TileX => Tile.Length >= 1 ? Tile[0] : 0;
     public int TileY => Tile.Length >= 2 ? Tile[1] : 0;

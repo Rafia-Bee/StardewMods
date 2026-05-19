@@ -64,11 +64,26 @@ internal sealed class QuestPackLoader
             if (!Validate(def, id, seen))
                 continue;
 
-            var jdef = new JsonQuestDefinition(def, id, translation, _generators, _monitor, resolver);
+            string owner = !string.IsNullOrWhiteSpace(def.Owner) ? def.Owner! : InferOwner(id);
+            var jdef = new JsonQuestDefinition(def, owner, translation, _generators, _monitor, resolver);
             if (_registry.Register(jdef))
                 registered++;
         }
         ModEntry.LogDebug($"Loaded {registered}/{entries.Count} quests from CP asset.");
+    }
+
+    // Splits on the first '_'; the prefix is treated as a SMAPI UniqueID when it
+    // contains a '.'. Matches the "{{ModId}}_Name" convention CP authors follow.
+    private static string InferOwner(string id)
+    {
+        int underscore = id.IndexOf('_');
+        if (underscore > 0)
+        {
+            string prefix = id.Substring(0, underscore);
+            if (prefix.Contains('.'))
+                return prefix;
+        }
+        return id;
     }
 
     public void LoadFromMod(IModHelper helper, IManifest manifest, string relativePath, Func<string, int?>? cooldownTierResolver = null)
