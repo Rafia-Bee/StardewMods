@@ -107,7 +107,7 @@ public sealed class ModEntry : Mod
         _mailStashCodecs = new MailStashCodecRegistry(Monitor);
         _mailStashCodecs.Register(AdventureQuestStashCodec.Kind, typeof(AdventureQuest), AdventureQuestStashCodec.Encode, AdventureQuestStashCodec.Decode);
         _mailStashCodecs.Register(MoreQuestsShipQuestStashCodec.Kind, typeof(MoreQuestsShipQuest), MoreQuestsShipQuestStashCodec.Encode, MoreQuestsShipQuestStashCodec.Decode);
-        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _loader, _boardLoader, Dispatch, _boards, CombatFood, _mailStashCodecs, Monitor, () => _spaceCore, RefreshOffers, () => _ctx);
+        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, Dispatch, _boards, CombatFood, _mailStashCodecs, Monitor, () => _spaceCore, RefreshOffers, () => _ctx);
 
         _boardRenderer = new BoardWorldRenderer(helper, Monitor, _boards);
         _boardRenderer.Register();
@@ -198,14 +198,17 @@ public sealed class ModEntry : Mod
 
     private void OnAssetsInvalidated(object? sender, AssetsInvalidatedEventArgs e)
     {
-        bool oursTouched = false;
+        bool questsOrBoardsTouched = false;
         foreach (var name in e.NamesWithoutLocale)
         {
             _dataCache?.Invalidate(name.Name);
-            if (name.IsEquivalentTo(QuestsAssetName) || name.IsEquivalentTo(BoardsAssetName) || name.IsEquivalentTo(CooldownTiersAssetName))
-                oursTouched = true;
+            if (name.IsEquivalentTo(QuestsAssetName) || name.IsEquivalentTo(BoardsAssetName))
+                questsOrBoardsTouched = true;
         }
-        if (!oursTouched)
+        // CooldownTiers invalidation needs no action: the per-quest cooldown lookup
+        // re-reads the asset on every CooldownDays access, so the next trigger pass
+        // automatically picks up new tier values.
+        if (!questsOrBoardsTouched)
             return;
 
         if (Context.IsWorldReady)
@@ -220,9 +223,16 @@ public sealed class ModEntry : Mod
 
     private void LoadAssetsAndRegister()
     {
-        var tiersAsset = Helper.GameContent.Load<Dictionary<string, int>>(CooldownTiersAssetName);
+        // Live lookup so GMCM edits to tier days (which invalidate the CooldownTiers asset)
+        // take effect on the next CooldownDays read, no save reload needed.
+        Func<string, int?> cooldownTierLookup = name =>
+        {
+            var dict = Helper.GameContent.Load<Dictionary<string, int>>(CooldownTiersAssetName);
+            return dict.TryGetValue(name, out var days) ? days : null;
+        };
+
         var questsAsset = Helper.GameContent.Load<Dictionary<string, QuestDef>>(QuestsAssetName);
-        _loader.LoadFromAsset(questsAsset, tiersAsset, Helper.Translation);
+        _loader.LoadFromAsset(questsAsset, cooldownTierLookup);
 
         var boardsAsset = Helper.GameContent.Load<Dictionary<string, BoardDefinition>>(BoardsAssetName);
         _boardLoader.LoadFromAsset(boardsAsset);

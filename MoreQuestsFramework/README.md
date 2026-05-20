@@ -116,11 +116,37 @@ This mod powers [More Quests](../MoreQuests/README.md) and ships four configurab
 
 ## For Mod Authors: registering quests from another mod
 
-There are three entry points, depending on whether your mod is a SMAPI content pack, a C# mod with bundled JSON, or a C# mod with imperative quest definitions.
+Quests live in a Content Patcher-editable game-content asset: `Mods/RafiaBee.MoreQuestsFramework/Quests`, a `Dictionary<string, QuestDef>`. Anything that can edit a game asset can contribute quests, so there are three entry points to pick from depending on whether your mod is a CP pack, a C# mod with bundled data, or a C# mod with pure-code definitions.
 
-### A. SMAPI content pack (no code)
+### A. Content Patcher pack (no code)
 
-Drop a folder under `Mods/` with a `manifest.json` declaring `"ContentPackFor": { "UniqueID": "RafiaBee.MoreQuestsFramework" }` and a `quests.json` with it. The framework auto-loads every owned content pack at startup. See the working example at [docs/example-pack/](docs/example-pack/).
+Drop a folder under `Mods/` with a `manifest.json` declaring `"ContentPackFor": { "UniqueID": "Pathoschild.ContentPatcher" }` and a `content.json` that `EditData`s the Quests asset:
+
+```jsonc
+{
+    "Format": "2.9.1",
+    "Changes": [
+        {
+            "Action": "EditData",
+            "Target": "Mods/RafiaBee.MoreQuestsFramework/Quests",
+            "Entries": {
+                "{{ModId}}_HarvestRun": {
+                    "Category": "Farming",
+                    "Trigger": { "Source": "DailyBoard", "Weight": 30, "MaxPerDay": 1, "CooldownDays": 7 },
+                    "Giver": "Lewis",
+                    "Objective": { "Kind": "Deliver", "Item": "(O)276", "Count": 5 },
+                    "Title": "{{i18n:my.quest.title}}",
+                    "Rewards": [ { "Kind": "Money", "Amount": 500 } ]
+                }
+            }
+        }
+    ]
+}
+```
+
+CP's `{{ModId}}` token expands to your pack's UniqueID so every dict key is automatically namespaced. Title/description `{{i18n:key}}` tokens are CP's built-in i18n, resolved against your pack's own `i18n/<locale>.json` before MQF reads the data, so localization rides the same machinery any other CP pack uses.
+
+You get the rest of CP for free: `When` conditions on each entry, dynamic tokens, `patch reload` to re-apply edits without restarting SMAPI, `patch summary` to see what's editing what. See the working example at [docs/example-pack/](docs/example-pack/).
 
 ### B. C# mod with bundled JSON + generators
 
@@ -137,13 +163,29 @@ private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
 
         scope.RegisterCustomQuestType(typeof(MyCustomQuestSubclass));
         scope.RegisterGenerator("MyQuest", ctx => new QuestPosting { /* ... */ });
-        scope.LoadQuestsFromMod(Helper, "assets/quests.json");
         scope.RegisterDispatchNpc(DispatchRoles.SaloonChef, "MyChef", "MyMod.UniqueId");
+    };
+
+    // Inject the JSON quest data into the framework's asset. CP packs from third
+    // parties layer their edits on top at the same priority.
+    Helper.Events.Content.AssetRequested += (_, e2) =>
+    {
+        if (!e2.NameWithoutLocale.IsEquivalentTo("Mods/RafiaBee.MoreQuestsFramework/Quests"))
+            return;
+        e2.Edit(asset =>
+        {
+            var dict = asset.AsDictionary<string, QuestDef>().Data;
+            foreach (var def in MyQuests)
+            {
+                def.Owner = ModManifest.UniqueID;
+                dict[def.Name] = def;
+            }
+        }, AssetEditPriority.Early);
     };
 }
 ```
 
-`quests.json` carries metadata, the C# generator owns runtime randomization. `RegistrationOpen` fires from the framework's first update tick (after every consumer mod's `GameLaunched` runs), so subscribing inside your own `GameLaunched` is the right timing. See the working example at [docs/example-csharp-generators/](docs/example-csharp-generators/).
+`MyQuests` can come from any source you like (a JSON file you read with `helper.Data.ReadJsonFile`, a static C# list, etc.). Resolve `{i18n:key}` tokens against your own `Helper.Translation` before stamping the entries into the dict; MQF no longer expands string tokens itself. `RegistrationOpen` fires from the framework's first update tick, before MQF reads the assets, so registering generators in that handler is the right timing. See the working example at [docs/example-csharp-generators/](docs/example-csharp-generators/).
 
 ### C. C# mod with `IQuestDefinition` instances
 
@@ -155,67 +197,78 @@ scope.RegisterQuest(new MyQuestDefinition());
 
 See the working example at [docs/example-csharp-iquestdef/](docs/example-csharp-iquestdef/).
 
-### Schema
+### Schema (QuestDef shape)
 
 ```jsonc
 {
-    "Schema": "1.0",
-    "Quests": [
-        {
-            "Name": "MyMod.MyQuest",
-            "Category": "Farming",
-            "Trigger": {
-                "Source": "DailyBoard",
-                "Weight": 30,
-                "MaxPerDay": 1,
-                "CooldownDays": 7,
-                "Available": { "Season": "spring|fall", "NpcMet": "Lewis" }
-            },
-            "Generator": "MyQuest"
+    "{{ModId}}_HarvestRun": {
+        "Category": "Farming",
+        "Trigger": {
+            "Source": "DailyBoard",
+            "Weight": 30,
+            "MaxPerDay": 1,
+            "CooldownDays": 7,
+            "Available": { "Season": "spring|fall", "NpcMet": "Lewis" }
         },
-        {
-            "Name": "MyMod.StaticQuest",
-            "Category": "Foraging",
-            "Trigger": { "Source": "DailyBoard", "Weight": 10, "MaxPerDay": 1, "CooldownDays": 14 },
-            "Giver": "Lewis",
-            "Objective": { "Kind": "Deliver", "Item": "(O)628", "Count": 1 },
-            "Title": "{i18n:my.quest.title}",
-            "Rewards": [ { "Kind": "Money", "Amount": 500 } ]
-        },
-        {
-            "Name": "MyMod.YearlyHarvestFestival",
-            "Trigger": { "Source": "DateLocked", "Date": "fall 14", "RepeatYearly": true },
-            "Giver": "Lewis",
-            "Objective": { "Kind": "Deliver", "Item": "(O)276", "Count": 5 },
-            "Rewards": [ { "Kind": "Money", "Amount": 1000 } ]
-        },
-        {
-            "Name": "MyMod.CheckOnFriend",
-            "Trigger": { "Source": "DailyBoard", "Weight": 20, "MaxPerDay": 1, "CooldownDays": 7 },
-            "Giver": "Lewis",
-            "Steps": [
-                { "Name": "GiftFriend", "Kind": "Gift", "Targets": [ "Sebastian" ], "Description": "{i18n:my.checkon.gift}" },
-                { "Name": "TalkFriend", "Kind": "Talk", "Targets": [ "Sebastian" ], "Requires": [ "GiftFriend" ], "Description": "{i18n:my.checkon.talk}" },
-                { "Name": "Report",     "Kind": "Talk", "Targets": [ "$giver" ],    "Requires": [ "TalkFriend" ], "Description": "{i18n:my.checkon.report}" }
-            ],
-            "Rewards": [ { "Kind": "Friendship", "Npc": "Lewis", "Points": 80 } ]
-        },
-        {
-            "Name": "MyMod.PreservesOrder",
-            "Category": "Seasonal",
-            "Trigger": { "Source": "SpecialOrder", "StartDate": "fall 1", "Duration": "Month", "CooldownDays": 21 },
-            "Generator": "PreservesOrder"
-        }
-    ]
+        "Generator": "MyQuest"
+    },
+
+    "{{ModId}}_StaticQuest": {
+        "Category": "Foraging",
+        "Trigger": { "Source": "DailyBoard", "Weight": 10, "MaxPerDay": 1, "CooldownDays": 14 },
+        "Giver": "Lewis",
+        "Objective": { "Kind": "Deliver", "Item": "(O)628", "Count": 1 },
+        "Title": "{{i18n:my.quest.title}}",
+        "Rewards": [ { "Kind": "Money", "Amount": 500 } ]
+    },
+
+    "{{ModId}}_YearlyHarvestFestival": {
+        "Trigger": { "Source": "DateLocked", "Date": "fall 14", "RepeatYearly": true },
+        "Giver": "Lewis",
+        "Objective": { "Kind": "Deliver", "Item": "(O)276", "Count": 5 },
+        "Rewards": [ { "Kind": "Money", "Amount": 1000 } ]
+    },
+
+    "{{ModId}}_CheckOnFriend": {
+        "Trigger": { "Source": "DailyBoard", "Weight": 20, "MaxPerDay": 1, "CooldownDays": 7 },
+        "Giver": "Lewis",
+        "Steps": [
+            { "Name": "GiftFriend", "Kind": "Gift", "Targets": [ "Sebastian" ], "Description": "{{i18n:my.checkon.gift}}" },
+            { "Name": "TalkFriend", "Kind": "Talk", "Targets": [ "Sebastian" ], "Requires": [ "GiftFriend" ], "Description": "{{i18n:my.checkon.talk}}" },
+            { "Name": "Report",     "Kind": "Talk", "Targets": [ "$giver" ],    "Requires": [ "TalkFriend" ], "Description": "{{i18n:my.checkon.report}}" }
+        ],
+        "Rewards": [ { "Kind": "Friendship", "Npc": "Lewis", "Points": 80 } ]
+    },
+
+    "{{ModId}}_PreservesOrder": {
+        "Category": "Seasonal",
+        "Trigger": { "Source": "SpecialOrder", "StartDate": "fall 1", "Duration": "Month", "CooldownDays": 21 },
+        "Generator": "PreservesOrder"
+    }
 }
 ```
+
+The dict key is the quest's id. Set `Owner` explicitly (or let the framework infer it from the `{{ModId}}_` prefix) so mod-scoped lookups (generators, custom triggers/rewards/conditions/board types) resolve against the right consumer mod.
+
+### Migrating a 1.x consumer to 2.0
+
+1.x packs used a `quests.json` (`{ "Schema": "1.0", "Quests": [ ... ] }`) loaded automatically via the `ContentPackFor: RafiaBee.MoreQuestsFramework` declaration, or `scope.LoadQuestsFromMod(helper, "assets/quests.json")` from a C# mod. Both paths are gone in 2.0.
+
+Mechanical conversion:
+
+1. Change `manifest.json`'s `ContentPackFor.UniqueID` to `Pathoschild.ContentPatcher`, bump `MinimumVersion` to `2.0.0`, and add `RafiaBee.MoreQuestsFramework` as a `Dependencies` entry with `MinimumVersion: 2.0.0`.
+2. Rename `quests.json` to `content.json`. Wrap the contents in CP's envelope: `{ "Format": "2.9.1", "Changes": [ { "Action": "EditData", "Target": "Mods/RafiaBee.MoreQuestsFramework/Quests", "Entries": { ... } } ] }`.
+3. Each entry's key becomes `"{{ModId}}_" + previous Name`. Drop the inline `Name` field; the dict key is the id.
+4. Replace every `{i18n:foo}` token with `{{i18n:foo}}` (CP's double-brace syntax). Your existing `i18n/default.json` keys keep working.
+5. If you defined cooldown tiers via `LoadContentPack(pack, resolver)`, add a second `EditData` block targeting `Mods/RafiaBee.MoreQuestsFramework/CooldownTiers` with `{ "{{ModId}}_short": 3, ... }` entries, and reference the tier in quests as `"CooldownTier": "{{ModId}}_short"`.
+6. C# mods that called `LoadQuestsFromMod` / `LoadBoardsFromMod` should subscribe to `AssetRequested` instead and inject entries via `e.Edit(...)`. See [docs/example-csharp-generators/](docs/example-csharp-generators/) for the pattern. Generator registration via `RegisterGenerator` is unchanged.
 
 ### Schema notes
 
 #### The basics
 
 - Each `QuestDef` sets one of: `Generator` (a name registered via `RegisterGenerator`), a declarative `Objective` (single-step), or `Steps[]` (multi-step Adventure quest).
-- `{i18n:key}` tokens work in any string field for SMAPI content packs / C# mods that ship a `quests.json`. They resolve through the owning pack's translation helper. If you're authoring via a Content Patcher pack instead, use `{{i18n:key}}` (CP's double-brace syntax). CP resolves those against your CP pack's own `i18n/` folder before MQF reads the data, so they work everywhere a string field is accepted.
+- String fields (titles, descriptions, mail bodies, step descriptions, consequence lines) are passed through to vanilla as-is. Localization is the author's problem now: Content Patcher packs use `{{i18n:key}}` tokens that CP resolves before MQF reads the data; C# mods resolve their own `{i18n:key}` against `Helper.Translation` before writing entries into the asset.
 - List fields (`Requires`, `Targets`, `Items`, `Objective.Item`, `RewardDef.AppliesTo`, `Consequence.Targets`) accept either a single string or an array. `"Targets": "Sebastian"` and `"Targets": [ "Sebastian" ]` mean the same thing.
 
 #### The `Available` block
@@ -285,7 +338,7 @@ Bare handler names resolve under the calling mod's UniqueID; `"OtherMod.UniqueID
 
 | Field | Type | What it does |
 | --- | --- | --- |
-| `MailBody` | string, supports `{i18n:key}` | Overrides the auto-generated letter body when the quest is delivered via mail. On Adventure quests it lives at the same `QuestDef` level. Null/empty = use the default body. |
+| `MailBody` | string | Overrides the auto-generated letter body when the quest is delivered via mail. On Adventure quests it lives at the same `QuestDef` level. Null/empty = use the default body. Supports CP `{{i18n:key}}` or pre-resolved strings. |
 | `DeliveryTarget` | string | For `Deliver` quests where the requester (`Giver`) isn't the NPC who accepts the hand-off (anonymous gift orders). Empty = use `Giver`. |
 | `AllowDecorShipping` | bool | Single-step `Ship` quests only. Lifts vanilla's furniture/decor shipping ban while the quest is active. For Adventure quests, set this on the individual `Ship` step instead. |
 
@@ -295,7 +348,7 @@ Bare handler names resolve under the calling mod's UniqueID; `"OtherMod.UniqueID
 | --- | --- | --- |
 | `MaxSize` | int (inches) | Upper bound on catch size. 0 = no cap. |
 | `AnyFish` | bool | Counter-only mode. Any catch passing the location/size/weather filters counts toward the quota; no specific stack needed at turn-in. |
-| `ProgressTemplate` | string, supports `{i18n:key}` | Replaces vanilla's `"0/5 Frog caught"` progress label for `AnyFish` quests. `{0}` is the current count, `{1}` is the quota. |
+| `ProgressTemplate` | string | Replaces vanilla's `"0/5 Frog caught"` progress label for `AnyFish` quests. `{0}` is the current count, `{1}` is the quota. Supports CP `{{i18n:key}}` or pre-resolved strings. |
 
 #### Reward fields per kind
 
@@ -328,7 +381,7 @@ JSON quests can attach a `Consequence` block on the quest.
 | `FriendshipOverride` | All | Replaces the tier's default friendship change. |
 | `FriendshipPerDay` | `Tier3` only | Per-chain-day delta, used verbatim with no division. |
 | `ChainDays` | `Tier3` only | Defaults to 3 when 0. |
-| `LovedLine` / `HatedLine` | All | Dialogue text queued for affected NPCs. `{i18n:key}` tokens resolve. |
+| `LovedLine` / `HatedLine` | All | Dialogue text queued for affected NPCs. Supports CP `{{i18n:key}}` or pre-resolved strings. |
 | `ChainLinesByDay` | `Tier3` only | One line per chain day, in order (first entry = day 1, second = day 2, etc.). |
 
 #### `SpecialOrder` source
@@ -461,11 +514,11 @@ The framework registers an `mq_refresh` SMAPI console command that re-rolls toda
 
 The framework follows semver from 1.0 onward.
 
-- **Major** bumps when the public API in `Api/` changes in a backwards-incompatible way, when the `quests.json` schema breaks, or when a built-in reward / objective / trigger kind is renamed or removed. Consumer mods should expect to update.
+- **Major** bumps when the public API in `Api/` changes in a backwards-incompatible way, when the QuestDef schema breaks, or when a built-in reward / objective / trigger kind is renamed or removed. Consumer mods should expect to update.
 - **Minor** bumps when new public API, new schema fields, new reward / objective / trigger kinds, or new built-in conditions land. Consumer mods written against the previous minor keep working.
 - **Patch** bumps for bug fixes, performance work, or internal refactors with no API-visible change.
 
-The `quests.json` `Schema` field (currently `"1.0"`) is the source of truth for what JSON keys mean. Bumping the framework's major bumps this number; the loader warns when a pack declares a schema it doesn't recognize (rather than refusing the pack) so authors can see the mismatch and update at their own pace.
+2.0 is the cutover from the old `quests.json` / `LoadQuestsFromMod` path to the Content Patcher-editable asset path. Asset names (`Mods/RafiaBee.MoreQuestsFramework/Quests`, `.../Boards`, `.../CooldownTiers`) are part of the public contract; renaming them would be a major bump.
 
 ## Dependencies
 

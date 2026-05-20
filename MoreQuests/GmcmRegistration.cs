@@ -38,6 +38,10 @@ internal static class GmcmRegistration
             {
                 helper.WriteConfig(ModEntry.Config);
                 ModEntry.ApplyAdventureBoardConfig();
+                // Force the framework's CooldownTiers asset to re-run our IAssetRequested.Edit,
+                // which pulls the latest Short/Medium/Long values straight from ModConfig.
+                // Without this, mid-session tier edits won't apply until a save reload.
+                helper.GameContent.InvalidateCache("Mods/RafiaBee.MoreQuestsFramework/CooldownTiers");
             }
         );
 

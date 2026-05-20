@@ -4,14 +4,16 @@ Pattern B from the framework README. A C# SMAPI mod that:
 
 1. Subscribes to the framework's `RegistrationOpen` event.
 2. Registers one or more named C# generator functions.
-3. Calls `LoadQuestsFromMod` to read its `assets/quests.json`. Each JSON entry references a generator by name.
+3. Subscribes to SMAPI's `AssetRequested` and injects its `assets/quests.json` entries straight into `Mods/RafiaBee.MoreQuestsFramework/Quests` via `e.Edit(...)`. Each JSON entry can reference a registered generator by name, or describe the quest declaratively.
 
 Use this pattern when you want declarative metadata (trigger, weight, cooldown, conditions) handled by JSON, plus runtime randomization done in C#.
+
+Third-party Content Patcher packs can still layer their own `EditData` patches on top of the asset alongside this mod's edits, with normal CP priority rules deciding who wins on conflicts.
 
 ## What it ships
 
 - `manifest.json`, declares the mod as a SMAPI mod (not a content pack) with `RafiaBee.MoreQuestsFramework` as a required dependency.
-- `ModEntry.cs`, the SMAPI entry point. Fetches the framework API on `GameLaunched`, subscribes to `RegistrationOpen`, registers the generators and custom-trigger / custom-reward handlers, and loads the JSON.
+- `ModEntry.cs`, the SMAPI entry point. Fetches the framework API on `GameLaunched`, registers the generators and custom-trigger / custom-reward handlers, and edits the framework's Quests asset on `AssetRequested`. Title/description `{i18n:key}` tokens are resolved against this mod's own `Helper.Translation` before the entries land in the asset.
 - `assets/quests.json`, three quest entries (a daily-board crop run, a Custom-trigger one-off, and a SpecialOrder).
 - `i18n/default.json`, the strings the generator passes through the translation helper.
 

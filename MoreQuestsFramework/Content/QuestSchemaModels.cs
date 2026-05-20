@@ -65,8 +65,8 @@ public sealed class TriggerDef
     public int? MaxPerDay { get; set; }
     public int? CooldownDays { get; set; }
 
-    // Named cooldown bucket resolved by the consumer mod's cooldown-tier resolver
-    // (see IMoreQuestsModApi.LoadQuestsFromMod overload). Null/unknown falls back
+    // Named cooldown bucket resolved against the CooldownTiers asset
+    // (`Mods/RafiaBee.MoreQuestsFramework/CooldownTiers`). Null/unknown falls back
     // to CooldownDays.
     public string? CooldownTier { get; set; }
 

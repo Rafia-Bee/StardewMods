@@ -24,10 +24,8 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
     private readonly CustomRewardRegistry _customRewards;
     private readonly CustomConditionRegistry _customConditions;
     private readonly CustomBoardQuestRegistry _customBoardQuests;
-    private readonly QuestPackLoader _loader;
     private readonly DispatchRegistry _dispatch;
     private readonly BoardRegistry _boards;
-    private readonly BoardPackLoader _boardLoader;
     private readonly MailStashCodecRegistry _mailStashCodecs;
     private readonly IMonitor _monitor;
     private readonly Func<ISpaceCoreApi?> _spaceCore;
@@ -44,10 +42,8 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         CustomRewardRegistry customRewards,
         CustomConditionRegistry customConditions,
         CustomBoardQuestRegistry customBoardQuests,
-        QuestPackLoader loader,
         DispatchRegistry dispatch,
         BoardRegistry boards,
-        BoardPackLoader boardLoader,
         MailStashCodecRegistry mailStashCodecs,
         IMonitor monitor,
         Func<ISpaceCoreApi?> spaceCore,
@@ -61,10 +57,8 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         _customRewards = customRewards;
         _customConditions = customConditions;
         _customBoardQuests = customBoardQuests;
-        _loader = loader;
         _dispatch = dispatch;
         _boards = boards;
-        _boardLoader = boardLoader;
         _mailStashCodecs = mailStashCodecs;
         _monitor = monitor;
         _spaceCore = spaceCore;
@@ -141,17 +135,6 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
     public void RegisterCustomBoardQuestType(string name, Func<CustomBoardQuestContext, Quest?> handler)
         => _customBoardQuests.Register(Owner.UniqueID, name, handler);
 
-    public void LoadContentPack(IContentPack pack) => _loader.LoadContentPack(pack);
-
-    public void LoadContentPack(IContentPack pack, Func<string, int?> cooldownTierResolver)
-        => _loader.LoadContentPack(pack, cooldownTierResolver);
-
-    public void LoadQuestsFromMod(IModHelper helper, string relativePath)
-        => _loader.LoadFromMod(helper, Owner, relativePath);
-
-    public void LoadQuestsFromMod(IModHelper helper, string relativePath, Func<string, int?> cooldownTierResolver)
-        => _loader.LoadFromMod(helper, Owner, relativePath, cooldownTierResolver);
-
     public void RegisterDispatchNpc(string role, string npcName, string? requiredModUniqueId = null)
         => _dispatch.Register(role, npcName, requiredModUniqueId);
 
@@ -161,9 +144,6 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
             throw new ArgumentNullException(nameof(board));
         _boards.Register(board, Owner.UniqueID);
     }
-
-    public void LoadBoardsFromMod(IModHelper helper, string relativePath)
-        => _boardLoader.LoadFromMod(helper, Owner, relativePath);
 
     public BoardDefinition? FindBoard(string name)
         => _boards.Find(Owner.UniqueID, name);

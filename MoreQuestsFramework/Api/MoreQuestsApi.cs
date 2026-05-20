@@ -27,8 +27,6 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     private readonly CustomRewardRegistry _customRewards;
     private readonly CustomConditionRegistry _customConditions;
     private readonly CustomBoardQuestRegistry _customBoardQuests;
-    private readonly QuestPackLoader _loader;
-    private readonly BoardPackLoader _boardLoader;
     private readonly DispatchRegistry _dispatch;
     private readonly BoardRegistry _boards;
     private readonly CombatFoodRegistry _combatFood;
@@ -61,8 +59,6 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         CustomRewardRegistry customRewards,
         CustomConditionRegistry customConditions,
         CustomBoardQuestRegistry customBoardQuests,
-        QuestPackLoader loader,
-        BoardPackLoader boardLoader,
         DispatchRegistry dispatch,
         BoardRegistry boards,
         CombatFoodRegistry combatFood,
@@ -79,8 +75,6 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         _customRewards = customRewards;
         _customConditions = customConditions;
         _customBoardQuests = customBoardQuests;
-        _loader = loader;
-        _boardLoader = boardLoader;
         _dispatch = dispatch;
         _boards = boards;
         _combatFood = combatFood;
@@ -97,7 +91,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
             throw new ArgumentNullException(nameof(mod));
         if (_modScopes.TryGetValue(mod.UniqueID, out var existing))
             return existing;
-        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _loader, _dispatch, _boards, _boardLoader, _mailStashCodecs, _monitor, _spaceCore, ResolveQuestOwner);
+        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _dispatch, _boards, _mailStashCodecs, _monitor, _spaceCore, ResolveQuestOwner);
         _modScopes[mod.UniqueID] = scope;
         return scope;
     }

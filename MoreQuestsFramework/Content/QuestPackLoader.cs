@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Registry;
 using StardewModdingAPI;
@@ -20,32 +19,11 @@ internal sealed class QuestPackLoader
         _monitor = monitor;
     }
 
-    public void LoadContentPack(IContentPack pack, Func<string, int?>? cooldownTierResolver = null)
+    // cooldownTierLookup is expected to re-read its backing dict (the CooldownTiers
+    // asset) on every call, so GMCM edits that invalidate the asset take effect
+    // without a save reload. Pass null when the consumer mod doesn't use named tiers.
+    public void LoadFromAsset(IDictionary<string, QuestDef> entries, Func<string, int?>? cooldownTierLookup)
     {
-        QuestPackDocument? doc;
-        try
-        {
-            doc = pack.ReadJsonFile<QuestPackDocument>("quests.json");
-        }
-        catch (Exception ex)
-        {
-            _monitor.Log($"Content pack '{pack.Manifest.UniqueID}': failed to read quests.json, {ex.Message}", LogLevel.Error);
-            return;
-        }
-        if (doc == null)
-        {
-            _monitor.Log($"Content pack '{pack.Manifest.UniqueID}': no quests.json found.", LogLevel.Warn);
-            return;
-        }
-        Apply(doc, pack.Manifest.UniqueID, pack.Translation, cooldownTierResolver);
-    }
-
-    public void LoadFromAsset(IDictionary<string, QuestDef> entries, IDictionary<string, int> cooldownTiers, ITranslationHelper translation)
-    {
-        Func<string, int?>? resolver = cooldownTiers.Count > 0
-            ? name => cooldownTiers.TryGetValue(name, out var days) ? days : null
-            : null;
-
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         int registered = 0;
         foreach (var (id, def) in entries)
@@ -65,7 +43,7 @@ internal sealed class QuestPackLoader
                 continue;
 
             string owner = !string.IsNullOrWhiteSpace(def.Owner) ? def.Owner! : InferOwner(id);
-            var jdef = new JsonQuestDefinition(def, owner, translation, _generators, _monitor, resolver);
+            var jdef = new JsonQuestDefinition(def, owner, _generators, _monitor, cooldownTierLookup);
             if (_registry.Register(jdef))
                 registered++;
         }
@@ -84,48 +62,6 @@ internal sealed class QuestPackLoader
                 return prefix;
         }
         return id;
-    }
-
-    public void LoadFromMod(IModHelper helper, IManifest manifest, string relativePath, Func<string, int?>? cooldownTierResolver = null)
-    {
-        QuestPackDocument? doc;
-        try
-        {
-            doc = helper.Data.ReadJsonFile<QuestPackDocument>(relativePath);
-        }
-        catch (Exception ex)
-        {
-            _monitor.Log($"Mod '{manifest.UniqueID}': failed to read '{relativePath}', {ex.Message}", LogLevel.Error);
-            return;
-        }
-        if (doc == null)
-        {
-            string fullPath = Path.Combine(helper.DirectoryPath, relativePath);
-            _monitor.Log($"Mod '{manifest.UniqueID}': '{relativePath}' not found at '{fullPath}'.", LogLevel.Warn);
-            return;
-        }
-        Apply(doc, manifest.UniqueID, helper.Translation, cooldownTierResolver);
-    }
-
-    private void Apply(QuestPackDocument doc, string ownerUniqueId, ITranslationHelper translation, Func<string, int?>? cooldownTierResolver)
-    {
-        if (!string.Equals(doc.Schema, "1.0", StringComparison.OrdinalIgnoreCase))
-        {
-            _monitor.Log($"'{ownerUniqueId}': unknown quests.json Schema '{doc.Schema}'. Expected '1.0'. Continuing.", LogLevel.Warn);
-        }
-
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        int registered = 0;
-        foreach (var def in doc.Quests)
-        {
-            if (!Validate(def, ownerUniqueId, seen))
-                continue;
-
-            var jdef = new JsonQuestDefinition(def, ownerUniqueId, translation, _generators, _monitor, cooldownTierResolver);
-            if (_registry.Register(jdef))
-                registered++;
-        }
-        ModEntry.LogDebug($"Loaded {registered}/{doc.Quests.Count} quests from '{ownerUniqueId}'.");
     }
 
     private bool Validate(QuestDef def, string ownerUniqueId, HashSet<string> seen)
