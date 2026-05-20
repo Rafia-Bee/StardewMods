@@ -629,6 +629,22 @@ internal static partial class Generators
         if (pool.Count == 0)
             return null;
 
+        // Legendaries are once-per-save by vanilla design (CatchLimit=1 on their
+        // spawn row, and fishCaught is keyed by qualified id), so don't ask for one
+        // the player has already landed. Modded legendaries (SVE Turret Fish etc.)
+        // follow the same pattern and get the same treatment.
+        pool.RemoveAll(f => Game1.player.fishCaught.ContainsKey(f.QualifiedItemId));
+        if (pool.Count == 0)
+            return null;
+
+        // Drop fish that were targeted by a recent posting so the quest doesn't ask
+        // for the same legendary twice in a row. If filtering empties the pool (only
+        // one legendary in season), fall back to the original list so the quest can
+        // still post.
+        var freshPool = pool.Where(f => !ctx.IsItemRecent(f.QualifiedItemId)).ToList();
+        if (freshPool.Count > 0)
+            pool = freshPool;
+
         var target = pool[Game1.random.Next(pool.Count)];
 
         int gold = ctx.Config.GoldExpertBase;

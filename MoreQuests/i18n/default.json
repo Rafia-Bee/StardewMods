@@ -386,7 +386,7 @@
     "quest.festival.moonlightJellies.step.wood": "Ship {{count}} wood.",
 
     "quest.festival.eggFestivalDecor.title": "Hay for the Egg Festival",
-    "quest.festival.eggFestivalDecor.description": "Farmer, I need your help decorating the town for the upcoming Egg festival. The rest of the townsfolk have helped out a ton, I just need a few haybales to complete the look. Ship me {{count}} when you can.",
+    "quest.festival.eggFestivalDecor.description": "Farmer, I need your help decorating the town for the upcoming Egg festival. The rest of the townsfolk have helped out a ton, I just need a few haybales to complete the look. Ship me {{count}} when you can. P.S. Marnie keeps hay bales in stock at the ranch if you're short. The town will reimburse you.",
     "quest.festival.eggFestivalDecor.step.hayBales": "Ship {{count}} hay bales.",
 
     "quest.festival.dyeForEggs.title": "Dye for the Egg Festival",
@@ -409,13 +409,13 @@
     "item.eggBasket.rustic.description": "A sturdy brown basket made from hardwood splints. The kind of thing you'd grab on the way out to gather eggs at dawn.",
 
     "quest.festival.fairDecor.title": "Fair grounds preparation",
-    "quest.festival.fairDecor.description": "Farmer, could you spare {{flowers}} fall flowers, {{wood}} wood, and {{signs}} signs for the upcoming Fair decorations? I will remember your favor when judging the grange displays...",
+    "quest.festival.fairDecor.description": "Farmer, could you spare {{flowers}} fall flowers, {{wood}} wood, and {{signs}} signs for the upcoming Fair decorations? I will remember your favor when judging the grange displays... Any kind of sign works (wood, stone, or dark).",
     "quest.festival.fairDecor.step.wood": "Ship {{count}} wood.",
     "quest.festival.fairDecor.step.signs": "Ship {{count}} signs (wood, stone, or dark).",
     "quest.festival.fairDecor.step.flowers": "Ship {{count}} fall flowers.",
 
     "quest.festival.luauDecor.title": "Luau setup",
-    "quest.festival.luauDecor.description": "Farmer, I've outpaced the Luau decor budget and I need your help. Ship {{fiber}} fiber, {{hardwood}} hardwood, and {{lamps}} lamps and I'll get Pierre to send you something from his Luau shop stock as a thank you.",
+    "quest.festival.luauDecor.description": "Farmer, I've outpaced the Luau decor budget and I need your help. Ship {{fiber}} fiber, {{hardwood}} hardwood, and {{lamps}} lamps and I'll get Pierre to send you something from his Luau shop stock as a thank you. The wood lamp-posts are craftable, Robin sells the recipes.",
     "quest.festival.luauDecor.step.fiber": "Ship {{count}} fiber.",
     "quest.festival.luauDecor.step.hardwood": "Ship {{count}} hardwood.",
     "quest.festival.luauDecor.step.lampPost": "Ship {{count}} wood lamp-posts.",
@@ -433,7 +433,7 @@
     "quest.festival.esvSpiritsEve.step.stone": "Ship {{count}} stone.",
 
     "quest.festival.rsvGathering.title": "Ridgeside Gathering setup",
-    "quest.festival.rsvGathering.description": "{{farmer}}! I need to dress up the town square for the upcoming gathering and ran short of some stuff. Could you ship {{tubs}} Tub o' Flowers, {{wood}} wood, and {{tables}} tables before the gathering? I'll give you due credit and I'm sure everyone would appreciate you more for helping out. P.S. I snagged this instruction manual for the tubs from Pierre the other day.",
+    "quest.festival.rsvGathering.description": "{{farmer}}! I need to dress up the town square for the upcoming gathering and ran short of some stuff. Could you ship {{tubs}} Tub o' Flowers, {{wood}} wood, and {{tables}} tables before the gathering? I'll give you due credit and I'm sure everyone would appreciate you more for helping out. P.S. I snagged this instruction manual for the tubs from Pierre the other day. Robin usually has a few tables in her rotation at the carpenter's shop if you're short.",
     "quest.festival.rsvGathering.step.tub": "Ship {{count}} Tub o' Flowers.",
     "quest.festival.rsvGathering.step.wood": "Ship {{count}} wood.",
     "quest.festival.rsvGathering.step.table": "Ship {{count}} tables (any kind).",
