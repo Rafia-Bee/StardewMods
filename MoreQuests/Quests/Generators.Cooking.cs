@@ -373,7 +373,7 @@ internal static partial class Generators
             return Game1.random.Next(1, 5);
         if (ModCompat.HasCookingSkill(ctx.Helper.ModRegistry))
         {
-            int level = SpaceCoreSkills.GetLevel(Game1.player, "spacechase0.Cooking");
+            int level = ModCompat.GetCookingLevel(ctx.Helper.ModRegistry);
             int upper = Math.Max(2, level / 2);
             return Game1.random.Next(2, upper + 1);
         }
@@ -600,7 +600,7 @@ internal static partial class Generators
             return Game1.random.Next(2, 7);
         if (ModCompat.HasCookingSkill(ctx.Helper.ModRegistry))
         {
-            int level = SpaceCoreSkills.GetLevel(Game1.player, "spacechase0.Cooking");
+            int level = ModCompat.GetCookingLevel(ctx.Helper.ModRegistry);
             return Math.Max(1, level * 3 / 2);
         }
         return Game1.random.Next(3, 15);
@@ -648,7 +648,7 @@ internal static partial class Generators
 
         bool cookingSkillLoaded = ModCompat.HasCookingSkill(ctx.Helper.ModRegistry);
         int cookingLevel = cookingSkillLoaded
-            ? SpaceCoreSkills.GetLevel(Game1.player, "spacechase0.Cooking")
+            ? ModCompat.GetCookingLevel(ctx.Helper.ModRegistry)
             : 0;
 
         int wanted = ResolveDinnerPartyDishCount(ctx, cookingSkillLoaded, cookingLevel);
