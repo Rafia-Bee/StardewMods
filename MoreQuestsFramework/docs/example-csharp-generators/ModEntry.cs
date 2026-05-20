@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using MoreQuestsFramework;
 using MoreQuestsFramework.Api;
+using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Pipeline;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Rewards;
@@ -18,14 +21,19 @@ namespace ExampleCSharpGenerators;
 /// parts (random giver, random in-season crop, scaled quantity, sell-price-based gold).
 ///
 /// This example also shows the three "escape hatch" registrations that need C# code
-/// but can be referenced from a content pack's JSON: `RegisterCustomTrigger` (a custom
-/// trigger source), `RegisterCustomReward` (a custom reward kind), and a `SpecialOrder`
-/// generator.
+/// but can be referenced from JSON: `RegisterCustomTrigger` (a custom trigger source),
+/// `RegisterCustomReward` (a custom reward kind), and a `SpecialOrder` generator.
 public sealed class ModEntry : Mod
 {
+    private const string MqfQuestsAsset = "Mods/RafiaBee.MoreQuestsFramework/Quests";
+    private static readonly Regex I18nToken = new(@"\{i18n:([^}]+)\}", RegexOptions.Compiled);
+
+    private QuestPackDocument? _cachedQuests;
+
     public override void Entry(IModHelper helper)
     {
         helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
+        helper.Events.Content.AssetRequested += this.OnAssetRequested;
     }
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
@@ -39,7 +47,7 @@ public sealed class ModEntry : Mod
 
         // The framework fires RegistrationOpen on its own first update tick (after every
         // consumer mod's GameLaunched runs), so subscribing in our GameLaunched is the
-        // right timing. The framework freezes the registry on RegistrationClosed.
+        // right timing. The framework reads the Quests asset shortly after.
         fw.RegistrationOpen += (_, _) =>
         {
             var scope = fw.GetModApi(this.ModManifest);
@@ -69,11 +77,65 @@ public sealed class ModEntry : Mod
                 summarize: (_, giver, t) =>
                     t.Get("example.customReward.summary", new { npc = giver })
                         .Default($"{giver} will help you rest up").ToString());
-
-            // Read the JSON file. Each entry stitches its declarative trigger metadata
-            // to the named generator or to one of the registered Custom handlers above.
-            scope.LoadQuestsFromMod(this.Helper, "assets/quests.json");
         };
+    }
+
+    /// Injects this mod's quest definitions into the framework's Quests asset. CP packs
+    /// from other authors layer their edits on top at the same priority. The dict key
+    /// is the registered quest id, so each entry gets a stable namespaced id derived
+    /// from this mod's UniqueID + the quest's short name.
+    private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
+    {
+        if (!e.NameWithoutLocale.IsEquivalentTo(MqfQuestsAsset))
+            return;
+        e.Edit(asset =>
+        {
+            var dict = asset.AsDictionary<string, QuestDef>().Data;
+            foreach (var def in this.LoadQuestsCached().Quests)
+            {
+                if (string.IsNullOrWhiteSpace(def.Name))
+                    continue;
+                // i18n tokens get resolved against this mod's own ITranslationHelper here,
+                // since the framework no longer expands {i18n:key} on its behalf.
+                this.ResolveI18nTokens(def);
+                def.Owner = this.ModManifest.UniqueID;
+                dict[def.Name] = def;
+            }
+        }, AssetEditPriority.Early);
+    }
+
+    private QuestPackDocument LoadQuestsCached()
+        => this._cachedQuests ??= this.Helper.Data.ReadJsonFile<QuestPackDocument>("assets/quests.json") ?? new QuestPackDocument();
+
+    /// Walks a QuestDef and rewrites every {i18n:key} token to the localized string.
+    /// Keeps the JSON shape, lets translators contribute via i18n/<locale>.json the
+    /// same way they would in any SMAPI mod.
+    private void ResolveI18nTokens(QuestDef def)
+    {
+        def.Title = this.Resolve(def.Title);
+        def.Description = this.Resolve(def.Description);
+        def.CurrentObjective = this.Resolve(def.CurrentObjective);
+        def.TargetMessage = this.Resolve(def.TargetMessage);
+        def.MailBody = this.Resolve(def.MailBody);
+        if (def.Objective != null)
+            def.Objective.ProgressTemplate = this.Resolve(def.Objective.ProgressTemplate);
+        if (def.Steps != null)
+        {
+            foreach (var step in def.Steps)
+                step.Description = this.Resolve(step.Description);
+        }
+    }
+
+    private string? Resolve(string? input)
+    {
+        if (string.IsNullOrEmpty(input) || !input.Contains("{i18n:"))
+            return input;
+        return I18nToken.Replace(input, m =>
+        {
+            string key = m.Groups[1].Value.Trim();
+            var t = this.Helper.Translation.Get(key);
+            return t.HasValue() ? t.ToString() : m.Value;
+        });
     }
 
     /// Generator: a random met villager wants a random in-season crop delivered.

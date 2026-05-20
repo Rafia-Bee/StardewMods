@@ -16,27 +16,26 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
 {
     private readonly QuestDef _def;
     private readonly string _ownerUniqueId;
-    private readonly ITranslationHelper _translation;
     private readonly GeneratorRegistry _generators;
     private readonly IMonitor _monitor;
-    private readonly Func<string, int?>? _cooldownTierResolver;
+    // Re-read on every CooldownDays access so GMCM edits to tier days (which invalidate
+    // the CooldownTiers asset) apply mid-session without needing a save reload.
+    private readonly Func<string, int?>? _cooldownTierLookup;
     private readonly int _cooldownDaysFallback;
     private readonly HashSet<string> _warnedUnknownTiers = new(StringComparer.OrdinalIgnoreCase);
 
     public JsonQuestDefinition(
         QuestDef def,
         string ownerUniqueId,
-        ITranslationHelper translation,
         GeneratorRegistry generators,
         IMonitor monitor,
-        Func<string, int?>? cooldownTierResolver = null)
+        Func<string, int?>? cooldownTierLookup = null)
     {
         _def = def;
         _ownerUniqueId = ownerUniqueId;
-        _translation = translation;
         _generators = generators;
         _monitor = monitor;
-        _cooldownTierResolver = cooldownTierResolver;
+        _cooldownTierLookup = cooldownTierLookup;
 
         // Raw JSON Name preserves existing QuestWeights config keys for in-flight
         // saves. Collisions are logged + rejected by QuestRegistry.Register.
@@ -64,16 +63,16 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         get
         {
             string? tier = _def.Trigger?.CooldownTier;
-            if (!string.IsNullOrEmpty(tier) && _cooldownTierResolver != null)
+            if (!string.IsNullOrEmpty(tier) && _cooldownTierLookup != null)
             {
-                int? resolved = _cooldownTierResolver(tier);
+                int? resolved = _cooldownTierLookup(tier);
                 if (resolved.HasValue)
                     return resolved.Value;
                 // Typo in a tier name silently falls through to CooldownDays, which can
                 // mask intent (a "Mediuum" cooldown bypasses the tier system entirely).
                 // One Warn per (definition, tier) pair, so live GMCM edits don't spam.
                 if (_warnedUnknownTiers.Add(tier))
-                    _monitor.Log($"Quest '{Id}': CooldownTier '{tier}' is not recognised by the consumer mod's resolver. Falling back to CooldownDays={_cooldownDaysFallback}.", LogLevel.Warn);
+                    _monitor.Log($"Quest '{Id}': CooldownTier '{tier}' is not in the CooldownTiers asset. Falling back to CooldownDays={_cooldownDaysFallback}.", LogLevel.Warn);
             }
             return _cooldownDaysFallback;
         }
@@ -386,8 +385,10 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         return spec;
     }
 
-    private string Resolve(string? input)
-        => I18nResolver.Resolve(input ?? string.Empty, _translation);
+    // CP packs resolve {{i18n:key}} via Content Patcher before the asset reaches MQF,
+    // and DLL mods inject already-localized strings via IAssetRequested.Edit, so MQF
+    // doesn't do any token expansion of its own. Kept as a helper for symmetry.
+    private static string Resolve(string? input) => input ?? string.Empty;
 
     private static TriggerSource ParseSource(string? source)
         => source?.ToLowerInvariant() switch

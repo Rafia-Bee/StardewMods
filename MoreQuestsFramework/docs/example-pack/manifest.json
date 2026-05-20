@@ -1,12 +1,19 @@
 {
     "Name": "More Quests Framework: Example Pack",
     "Author": "Rafia-Bee",
-    "Version": "1.0.0",
+    "Version": "2.0.0",
     "MinimumApiVersion": "4.1.0",
     "UniqueID": "RafiaBee.MoreQuestsFramework.ExamplePack",
-    "Description": "Demonstrates a fully-declarative quests.json content pack for the More Quests Framework. Drop this folder into Mods/ to add the example quests to the daily board.",
+    "Description": "Demonstrates a Content Patcher pack that adds quests to the More Quests Framework. Drop this folder into Mods/ to add the example quests to the daily board.",
     "ContentPackFor": {
-        "UniqueID": "RafiaBee.MoreQuestsFramework",
-        "MinimumVersion": "0.1.0"
-    }
+        "UniqueID": "Pathoschild.ContentPatcher",
+        "MinimumVersion": "2.0.0"
+    },
+    "Dependencies": [
+        {
+            "UniqueID": "RafiaBee.MoreQuestsFramework",
+            "MinimumVersion": "2.0.0",
+            "IsRequired": true
+        }
+    ]
 }

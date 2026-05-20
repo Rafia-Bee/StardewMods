@@ -28,22 +28,10 @@ public interface IMoreQuestsModApi
     // Names are namespaced as {ownerUniqueId}/{name}.
     void RegisterGenerator(string name, Func<QuestContext, QuestPosting?> generator);
 
-    void LoadContentPack(IContentPack pack);
-
-    // Resolver is called at trigger time with the quest's Trigger.CooldownTier string
-    // and should return an in-game day count (or null to fall back to JSON's CooldownDays).
-    void LoadContentPack(IContentPack pack, Func<string, int?> cooldownTierResolver);
-
-    void LoadQuestsFromMod(IModHelper helper, string relativePath);
-
-    void LoadQuestsFromMod(IModHelper helper, string relativePath, Func<string, int?> cooldownTierResolver);
-
     // Optional requiredModUniqueId filters the entry out unless that mod is loaded.
     void RegisterDispatchNpc(string role, string npcName, string? requiredModUniqueId = null);
 
     void RegisterBoard(BoardDefinition board);
-
-    void LoadBoardsFromMod(IModHelper helper, string relativePath);
 
     // Returned BoardDefinition is the live registry instance; mutating fields like
     // Tile/DrawOffset takes effect on the next render.
