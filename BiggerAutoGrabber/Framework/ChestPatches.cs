@@ -316,6 +316,20 @@ internal static class ChestPatches
         if (rawInventory is InventorySlice existingSlice)
             rawInventory = existingSlice.Source;
 
+        // Mobile (Android) doesn't have RepositionSideButtons. Replacing
+        // ItemsToGrabMenu there breaks slot rendering completely, so we
+        // keep the vanilla grid intact and only wrap actualInventory with
+        // a scrolling slice when needed.
+        bool isMobile = typeof(ItemGrabMenu).GetMethod(
+            "RepositionSideButtons",
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) == null;
+
+        if (isMobile)
+        {
+            ResizeMenuMobile(menu, old, rawInventory);
+            return;
+        }
+
         // Use the larger of configured cap or actual item count so items
         // that exceed a reduced capacity are still reachable via scroll.
         int effectiveCap = Math.Max(cap, rawInventory.Count);
@@ -416,6 +430,42 @@ internal static class ChestPatches
         {
             ClearScrollState();
         }
+    }
+
+    /// <summary>
+    /// Mobile-safe resize path. The vanilla ItemGrabMenu / InventoryMenu
+    /// on Android does its own custom drawing, so we leave the grid
+    /// completely untouched and only swap the underlying item list for an
+    /// <see cref="InventorySlice"/> when the chest has more items than the
+    /// visible window. Players scroll through the full inventory via the
+    /// up / down arrow buttons drawn on the right side of the grid.
+    /// </summary>
+    private static void ResizeMenuMobile(ItemGrabMenu menu, InventoryMenu grid, IList<Item> rawInventory)
+    {
+        int vanillaCap = grid.capacity > 0 ? grid.capacity : grid.rows * 12;
+        bool needsScrolling = rawInventory.Count > vanillaCap;
+
+        if (!needsScrolling)
+        {
+            // No scrolling needed, make sure we're using the raw list.
+            grid.actualInventory = rawInventory;
+            ClearScrollState();
+            return;
+        }
+
+        var slice = new InventorySlice(rawInventory, vanillaCap);
+        grid.actualInventory = slice;
+
+        _scrollMenu = menu;
+        _activeSlice = slice;
+
+        int arrowX = grid.xPositionOnScreen + grid.width + 16;
+        _upArrow = new ClickableTextureComponent(
+            new Rectangle(arrowX, grid.yPositionOnScreen - 12, 44, 48),
+            Game1.mouseCursors, new Rectangle(421, 459, 11, 12), 4f);
+        _downArrow = new ClickableTextureComponent(
+            new Rectangle(arrowX, grid.yPositionOnScreen + grid.height - 48, 44, 48),
+            Game1.mouseCursors, new Rectangle(421, 472, 11, 12), 4f);
     }
 
     // ── Scroll state management ─────────────────────────────────────
