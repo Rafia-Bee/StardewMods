@@ -334,6 +334,7 @@ public sealed class ModEntry : Mod
         var ctx = new QuestContext(Helper, Monitor, Config, items, _dataCache, Dispatch);
         _ctx = ctx;
         _antiRepetition = new AntiRepetition();
+        ctx.AttachAntiRepetition(_antiRepetition);
 
         _stateStore = new StateStore(Helper.Data, Monitor);
         _stateStore.Load();

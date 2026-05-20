@@ -1,4 +1,5 @@
 using StardewModdingAPI;
+using StardewValley;
 
 namespace MoreQuestsFramework;
 
@@ -19,9 +20,14 @@ public static class ModCompat
     public const string SiExtraCraftingMaterials = "Si.ExtraCraftingMaterials";
     public const string GenericModConfigMenu = "spacechase0.GenericModConfigMenu";
     public const string SpaceCore = "spacechase0.SpaceCore";
-    // Custom SpaceCore skill id is "spacechase0.Cooking" (inherited from the original
-    // unmaintained Spacechase0 mod for save compat).
+    // moonslime's Cooking Skill Redux (a SpaceCore continuation of Spacechase0's
+    // original mod). Custom SpaceCore skill id is "spacechase0.Cooking" for save compat.
     public const string CookingSkillRedux = "moonslime.CookingSkill";
+    internal const string CookingSkillReduxSkillId = "spacechase0.Cooking";
+    // b-b-blueberry's Love of Cooking, also SpaceCore-based. Registers its skill
+    // under the prefixed id below (see LoveOfCooking/Objects/CookingSkill.cs).
+    public const string LoveOfCooking = "blueberry.LoveOfCooking";
+    internal const string LoveOfCookingSkillId = "blueberry.LoveOfCooking.CookingSkill";
 
     public static bool IsLoaded(IModRegistry registry, string uniqueId) => registry.IsLoaded(uniqueId);
 
@@ -30,5 +36,25 @@ public static class ModCompat
     public static bool HasVmv(IModRegistry registry) => registry.IsLoaded(VisitMountVapius);
     public static bool HasSve(IModRegistry registry) => registry.IsLoaded(StardewValleyExpanded);
     public static bool HasLfy(IModRegistry registry) => registry.IsLoaded(LivestockFollowsYou);
-    public static bool HasCookingSkill(IModRegistry registry) => registry.IsLoaded(CookingSkillRedux);
+
+    // True when any supported cooking-skill mod is installed (Love of Cooking or
+    // moonslime's CookingSkillRedux). Both store their skill in SpaceCore, so the
+    // level lookup just picks the right skill id (see GetCookingLevel).
+    public static bool HasCookingSkill(IModRegistry registry)
+        => registry.IsLoaded(LoveOfCooking) || registry.IsLoaded(CookingSkillRedux);
+
+    public static bool HasLoveOfCooking(IModRegistry registry) => registry.IsLoaded(LoveOfCooking);
+
+    // Returns the current player's cooking skill level from whichever supported
+    // cooking-skill mod is installed. Love of Cooking wins when both are present
+    // (it's the more focused cooking overhaul of the two). Returns 0 when neither
+    // is loaded so fail-closed "Cooking N" checks still fail.
+    public static int GetCookingLevel(IModRegistry registry)
+    {
+        if (registry.IsLoaded(LoveOfCooking))
+            return SpaceCoreSkills.GetLevel(Game1.player, LoveOfCookingSkillId);
+        if (registry.IsLoaded(CookingSkillRedux))
+            return SpaceCoreSkills.GetLevel(Game1.player, CookingSkillReduxSkillId);
+        return 0;
+    }
 }
