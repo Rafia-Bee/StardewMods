@@ -133,7 +133,7 @@ internal static class ConditionEvaluator
                 return ParseBool(value) == Game1.player.hasCompletedCommunityCenter();
 
             case "skilllevel":
-                return MatchesSkillLevel(value);
+                return MatchesSkillLevel(value, modRegistry);
 
             case "mindeepestminelevel":
                 return int.TryParse(value, out int dml) && MinDeepestMineLevel(dml);
@@ -284,9 +284,10 @@ internal static class ConditionEvaluator
         return string.Equals(actual, norm, StringComparison.OrdinalIgnoreCase);
     }
 
-    // "Farming 5". "cooking" reads SpaceCore's spacechase0.Cooking and returns 0 when
-    // no cooking-skill mod is installed (so "Cooking N" with N>=1 fails closed).
-    private static bool MatchesSkillLevel(string value)
+    // "Farming 5". "cooking" reads whichever supported cooking-skill mod is loaded
+    // (Love of Cooking or moonslime's CookingSkillRedux) and returns 0 when neither
+    // is installed (so "Cooking N" with N>=1 fails closed).
+    private static bool MatchesSkillLevel(string value, IModRegistry? modRegistry)
     {
         var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length != 2 || !int.TryParse(parts[1], out int min))
@@ -298,7 +299,7 @@ internal static class ConditionEvaluator
             "mining" => MiningLevel,
             "foraging" => ForagingLevel,
             "combat" => CombatLevel,
-            "cooking" => SpaceCoreSkills.GetLevel(Game1.player, "spacechase0.Cooking"),
+            "cooking" => modRegistry != null ? ModCompat.GetCookingLevel(modRegistry) : 0,
             _ => -1
         };
         return actual >= min;

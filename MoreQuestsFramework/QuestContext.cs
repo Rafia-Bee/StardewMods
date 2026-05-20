@@ -19,6 +19,8 @@ public sealed class QuestContext
     public int DayOfMonth => Game1.dayOfMonth;
     public int Year => Game1.year;
 
+    private AntiRepetition? _anti;
+
     public QuestContext(IModHelper helper, IMonitor monitor, MoreQuestsFrameworkConfig config, ItemResolver items, GameDataCache data, DispatchRegistry dispatch)
     {
         Helper = helper;
@@ -28,4 +30,13 @@ public sealed class QuestContext
         Data = data;
         Dispatch = dispatch;
     }
+
+    internal void AttachAntiRepetition(AntiRepetition anti) => _anti = anti;
+
+    /// True when the framework recently posted a quest whose objective targeted this
+    /// item id. Generators can use this to avoid back-to-back duplicates within the
+    /// last ~6 postings (the AntiRepetition window). Returns false if anti-repetition
+    /// hasn't been wired yet (e.g. dry-run preview).
+    public bool IsItemRecent(string qualifiedItemId)
+        => !string.IsNullOrEmpty(qualifiedItemId) && (_anti?.ItemRecent(qualifiedItemId) ?? false);
 }

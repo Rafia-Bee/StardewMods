@@ -119,11 +119,15 @@ public sealed class ItemResolver
     }
 
     // Soft filter: a fish is considered currently uncatchable only if it has at least
-    // one Data/Locations spawn entry AND every spawn entry's Condition GSQ fails. So
-    // extended-family legendaries (Son of Crimsonfish etc., gated on
-    // PLAYER_SPECIAL_ORDER_RULE_ACTIVE LEGENDARY_FAMILY) drop out of the pool when Qi's
-    // special order isn't active. Fish with no Data/Locations spawn at all (RSV/FTM
-    // spawning) stay in since we can't tell whether they're catchable.
+    // one Data/Locations spawn entry AND every spawn entry's per-spawn Season filter
+    // and Condition GSQ fail. Both `spawn.Season` (the per-spawn season enum) and
+    // `spawn.Condition` (GSQ) gate spawns independently in vanilla, so honoring only
+    // the latter lets fall-only legendaries like Angler slip through in winter.
+    // Extended-family legendaries (Son of Crimsonfish etc., gated on
+    // PLAYER_SPECIAL_ORDER_RULE_ACTIVE LEGENDARY_FAMILY) still drop out via the
+    // Condition check when Qi's special order isn't active. Fish with no
+    // Data/Locations spawn at all (RSV/FTM spawning) stay in since we can't tell
+    // whether they're catchable.
     private bool IsFishCurrentlyCatchable(string qualifiedItemId)
     {
         if (string.IsNullOrEmpty(qualifiedItemId))
@@ -142,6 +146,8 @@ public sealed class ItemResolver
                     if (!string.Equals(qid, qualifiedItemId, StringComparison.OrdinalIgnoreCase))
                         continue;
                     anySpawn = true;
+                    if (spawn.Season.HasValue && !string.Equals(spawn.Season.Value.ToString(), Game1.currentSeason, StringComparison.OrdinalIgnoreCase))
+                        continue;
                     if (string.IsNullOrEmpty(spawn.Condition))
                         return true;
                     if (StardewValley.GameStateQuery.CheckConditions(spawn.Condition))
@@ -230,11 +236,51 @@ public sealed class ItemResolver
         return results;
     }
 
+    // Vanilla extended-family legendaries. All five gate their default spawn rows on
+    // Qi's LEGENDARY_FAMILY special order, but some mods (Visit Mount Vapius is the
+    // known offender) re-expose the same item ids under different gates. Listing them
+    // by id catches both cases. The id also doubles as the fishCaught key, so vanilla's
+    // once-per-save flag is shared even when the alternate gate fires.
+    private static readonly HashSet<string> ExtendedFamilyLegendaryIds = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "(O)898", // Son of Crimsonfish
+        "(O)899", // Ms. Angler
+        "(O)900", // Legend II
+        "(O)901", // Glacierfish Jr.
+        "(O)902"  // Radioactive Carp
+    };
+
+    // True if any clause in the GSQ condition string positively requires Qi's
+    // LEGENDARY_FAMILY special order to be active. Negated clauses ("!PLAYER_..." ),
+    // which the *regular* Crimsonfish / Angler / etc. spawn rows use to opt out
+    // during the family order, do not count and must not be matched. Catches modded
+    // analogues that follow the vanilla family pattern.
+    private static bool RequiresLegendaryFamily(string? condition)
+    {
+        if (string.IsNullOrEmpty(condition))
+            return false;
+        foreach (var rawClause in condition.Split(','))
+        {
+            var clause = rawClause.Trim();
+            if (clause.Length == 0 || clause[0] == '!')
+                continue;
+            if (clause.IndexOf("PLAYER_SPECIAL_ORDER_RULE_ACTIVE", StringComparison.OrdinalIgnoreCase) < 0)
+                continue;
+            if (clause.IndexOf("LEGENDARY_FAMILY", StringComparison.OrdinalIgnoreCase) < 0)
+                continue;
+            return true;
+        }
+        return false;
+    }
+
     // Subset of GetBossFish that the player could actually catch right now. Honors
-    // the spawn entry's Condition GSQ, so extended-family legendaries (Ms. Angler,
-    // Son of Crimsonfish, Glacierfish Jr., Radioactive Carp, Legend II) are excluded
-    // unless Qi's LEGENDARY_FAMILY special order is active. Used by LegendaryFishQuest
-    // so it doesn't ask the player to catch something that physically can't spawn.
+    // both `spawn.Season` (the per-spawn season enum) and the spawn entry's Condition
+    // GSQ. Without the season check, fall-only Angler slips through in winter because
+    // Data/Fish lists all four seasons and the only Fall restriction is on the
+    // location-spawn row. Extended-family legendaries (vanilla ids 898-902 + any
+    // modded analog that gates on LEGENDARY_FAMILY) are skipped outright: they're
+    // only catchable while Qi's order is active, and that flag can flip off before
+    // a quest deadline, leaving the player stuck on an uncatchable target.
     public List<ResolvedItem> GetCatchableBossFish()
     {
         var results = new List<ResolvedItem>();
@@ -249,10 +295,16 @@ public sealed class ItemResolver
                 {
                     if (spawn?.ItemId == null || !spawn.IsBossFish)
                         continue;
+                    string qualified = ItemRegistry.QualifyItemId(spawn.ItemId) ?? spawn.ItemId;
+                    if (ExtendedFamilyLegendaryIds.Contains(qualified))
+                        continue;
+                    if (RequiresLegendaryFamily(spawn.Condition))
+                        continue;
+                    if (spawn.Season.HasValue && !string.Equals(spawn.Season.Value.ToString(), Game1.currentSeason, StringComparison.OrdinalIgnoreCase))
+                        continue;
                     if (!string.IsNullOrEmpty(spawn.Condition)
                         && !StardewValley.GameStateQuery.CheckConditions(spawn.Condition))
                         continue;
-                    string qualified = ItemRegistry.QualifyItemId(spawn.ItemId) ?? spawn.ItemId;
                     if (!seen.Add(qualified))
                         continue;
                     var item = TryResolveItem(qualified);
