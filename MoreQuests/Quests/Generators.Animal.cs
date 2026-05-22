@@ -364,28 +364,85 @@ internal static partial class Generators
         };
     }
 
-    /// BuildingBuilt(Barn)+1 day. ItemDelivery whose ask flips on LFY: with LFY, Marnie wants
-    /// a Grazing Bell (queried via LFY's API); without LFY, a Milk Pail. Reward: a free Dairy
-    /// Cow adopted into the player's barn (see GrantFreeCow). MarnieCowOfferRebate is the
-    /// fallback when every barn is full.
+    /// BuildingBuilt(Barn)+1 day. With LFY installed, Marnie wants a Grazing Bell delivered
+    /// (regular Object, vanilla ItemDelivery path). Without LFY, she wants the player to pick
+    /// up a Milk Pail (Tool, can't be gifted to NPCs), routed through PurchaseFromShopQuest
+    /// and completed via the AnimalShop purchase hook. If the player already owns a Milk
+    /// Pail when the quest posts, the vanilla shop hides it (the shop entry is gated on
+    /// "!PLAYER_HAS_ITEM"), so we fall back to CollectAndReportQuest, where the player just
+    /// shows the Milk Pail to Marnie. Reward: a free Dairy Cow adopted into the player's
+    /// barn (see GrantFreeCow). MarnieCowOfferRebate is the fallback when every barn is full.
     private static QuestPosting? MarnieCowOffer(QuestContext ctx)
     {
         if (Game1.getCharacterFromName("Marnie") == null)
             return null;
 
         bool lfyLoaded = ctx.Helper.ModRegistry.IsLoaded(MoreQuestsFramework.ModCompat.LivestockFollowsYou);
-        string objectiveId;
-        string objectiveName;
         if (lfyLoaded && !string.IsNullOrEmpty(ModEntry.Lfy?.GrazingBellQualifiedItemId))
         {
-            objectiveId = ModEntry.Lfy!.GrazingBellQualifiedItemId;
-            objectiveName = "Grazing Bell";
+            string bellId = ModEntry.Lfy!.GrazingBellQualifiedItemId;
+            const string bellName = "Grazing Bell";
+            return new QuestPosting
+            {
+                Category = QuestCategory.Animal,
+                Tier = DifficultyTier.Beginner,
+                QuestType = BoardQuestType.ItemDelivery,
+                QuestGiver = "Marnie",
+                ObjectiveItemId = bellId,
+                ObjectiveItemName = bellName,
+                ObjectiveQuantity = 1,
+                DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+                Rewards = { new FriendshipReward("Marnie", ctx.Config.FriendshipBasic) },
+                Title = ModEntry.I18n.Get("quest.animal.marnieCowOffer.title"),
+                Description = ModEntry.I18n.Get("quest.animal.marnieCowOffer.description", new { item = bellName }),
+                CurrentObjective = ModEntry.I18n.Get("quest.animal.marnieCowOffer.objective", new { item = bellName }),
+                TargetMessage = ModEntry.I18n.Get("quest.animal.marnieCowOffer.targetMessage")
+            };
         }
-        else
+
+        const string pailId = "(T)MilkPail";
+        const string pailName = "Milk Pail";
+        string targetMsg = ModEntry.I18n.Get("quest.animal.marnieCowOffer.targetMessage");
+        var rewards = new System.Collections.Generic.List<RewardSpec>
         {
-            objectiveId = "(T)MilkPail";
-            objectiveName = "Milk Pail";
+            new FriendshipReward("Marnie", ctx.Config.FriendshipBasic)
+        };
+
+        if (PlayerOwnsMilkPail())
+        {
+            var report = new CollectAndReportQuest
+            {
+                talkToNpc = { Value = "Marnie" },
+                requiredCount = { Value = 1 },
+                reportMessage = { Value = targetMsg }
+            };
+            report.itemIds.Add(pailId);
+
+            return new QuestPosting
+            {
+                Category = QuestCategory.Animal,
+                Tier = DifficultyTier.Beginner,
+                QuestType = BoardQuestType.ItemDelivery,
+                QuestGiver = "Marnie",
+                ObjectiveItemId = pailId,
+                ObjectiveItemName = pailName,
+                ObjectiveQuantity = 1,
+                DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
+                Rewards = rewards,
+                Title = ModEntry.I18n.Get("quest.animal.marnieCowOffer.title"),
+                Description = ModEntry.I18n.Get("quest.animal.marnieCowOffer.descriptionShow", new { item = pailName }),
+                CurrentObjective = ModEntry.I18n.Get("quest.animal.marnieCowOffer.objectiveShow", new { item = pailName }),
+                TargetMessage = targetMsg,
+                PreBuiltQuest = report
+            };
         }
+
+        var purchase = new PurchaseFromShopQuest
+        {
+            itemId = { Value = pailId },
+            shopOwnerNpc = { Value = "Marnie" },
+            targetMessage = { Value = targetMsg }
+        };
 
         return new QuestPosting
         {
@@ -393,19 +450,36 @@ internal static partial class Generators
             Tier = DifficultyTier.Beginner,
             QuestType = BoardQuestType.ItemDelivery,
             QuestGiver = "Marnie",
-            ObjectiveItemId = objectiveId,
-            ObjectiveItemName = objectiveName,
+            ObjectiveItemId = pailId,
+            ObjectiveItemName = pailName,
             ObjectiveQuantity = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
-            Rewards =
-            {
-                new FriendshipReward("Marnie", ctx.Config.FriendshipBasic)
-            },
+            Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.animal.marnieCowOffer.title"),
-            Description = ModEntry.I18n.Get("quest.animal.marnieCowOffer.description", new { item = objectiveName }),
-            CurrentObjective = ModEntry.I18n.Get("quest.animal.marnieCowOffer.objective", new { item = objectiveName }),
-            TargetMessage = ModEntry.I18n.Get("quest.animal.marnieCowOffer.targetMessage")
+            Description = ModEntry.I18n.Get("quest.animal.marnieCowOffer.descriptionBuy", new { item = pailName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.animal.marnieCowOffer.objectiveBuy", new { item = pailName }),
+            TargetMessage = targetMsg,
+            PreBuiltQuest = purchase
         };
+    }
+
+    /// True if the player has a Milk Pail in their normal inventory. Vanilla's AnimalShop
+    /// gates the Milk Pail entry on this, so if the player already owns one the shop won't
+    /// list it for purchase. Tools live in the same `Items` collection as objects.
+    private static bool PlayerOwnsMilkPail()
+    {
+        var player = Game1.player;
+        if (player?.Items == null)
+            return false;
+        foreach (var item in player.Items)
+        {
+            if (item == null) continue;
+            if (string.Equals(item.QualifiedItemId, "(T)MilkPail", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (string.Equals(item.ItemId, "MilkPail", StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
     }
 
     /// OneShot on first egg laid. Ship quest. Alternatives populated from a live scan of
