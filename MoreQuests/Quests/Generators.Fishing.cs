@@ -505,7 +505,7 @@ internal static partial class Generators
             ObjectiveItemName = target.DisplayName,
             ObjectiveQuantity = qty,
             CatchWeather = "Rain",
-            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.fishing.rainyDay.title"),
             Description = ModEntry.I18n.Get("quest.fishing.rainyDay.description", new { qty, item = target.DisplayName }),
