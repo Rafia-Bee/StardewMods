@@ -98,6 +98,13 @@ internal static class GmcmRegistration
             () => t.Get("config.mailFallbackForExcludedGivers"),
             () => t.Get("config.mailFallbackForExcludedGivers.tooltip"));
 
+        var mailDefs = new List<IQuestDefinition>();
+        foreach (var def in registry.All)
+        {
+            if (def.Kind == PostingKind.Mail)
+                mailDefs.Add(def);
+        }
+
         api.AddSectionTitle(manifest, () => t.Get("config.section.weights"),
             () => t.Get("config.section.weights.tooltip"));
         foreach (var category in OrderedCategories(byCategory.Keys))
@@ -106,6 +113,12 @@ internal static class GmcmRegistration
             api.AddPageLink(manifest, pageId,
                 () => t.Get($"config.page.weights.{category.ToLowerInvariant()}", new { category }).Default($"{category} quest weights"),
                 () => t.Get("config.page.weights.tooltip", new { category }));
+        }
+        if (mailDefs.Count > 0)
+        {
+            api.AddPageLink(manifest, "mailChances",
+                () => t.Get("config.page.mailChances"),
+                () => t.Get("config.page.mailChances.tooltip"));
         }
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.friendship"));
@@ -161,6 +174,23 @@ internal static class GmcmRegistration
                     v => ModEntry.Config.QuestWeights[id] = v,
                     () => t.Get($"config.weight.{id}", new { fallback = id }),
                     () => BuildWeightTooltip(t, id),
+                    min: 0, max: 100);
+            }
+        }
+
+        if (mailDefs.Count > 0)
+        {
+            api.AddPage(manifest, "mailChances", () => t.Get("config.page.mailChances"));
+            foreach (var def in mailDefs)
+            {
+                string id = def.Id;
+                api.AddNumberOption(manifest,
+                    () => ModEntry.Config.MailQuestChancePercent.TryGetValue(id, out int p) ? p : 100,
+                    v => ModEntry.Config.MailQuestChancePercent[id] = v,
+                    () => t.Get($"config.mailChance.{id}", new { fallback = id })
+                        .Default($"{id} mail chance %"),
+                    () => t.Get($"config.mailChance.{id}.tooltip", new { id })
+                        .Default($"Chance (0 to 100) that {id} mail fires when its trigger condition matches. 100 = always, 0 disables the quest."),
                     min: 0, max: 100);
             }
         }

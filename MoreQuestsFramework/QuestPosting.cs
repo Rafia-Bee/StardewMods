@@ -85,6 +85,11 @@ public sealed class QuestPosting
     // would render "0/5 Frog caught" from the placeholder). {0} = counter, {1} = quota.
     public string CatchProgressTemplate { get; set; } = string.Empty;
 
+    // True = "show the catch and report back", not a delivery. Legendary fish quests
+    // and similar use this to keep the journal on vanilla "Return to <npc>" instead of
+    // the "Deliver X to Y" override that real delivery fishing quests get.
+    public bool IsReportBack { get; set; }
+
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
     public string CurrentObjective { get; set; } = "";

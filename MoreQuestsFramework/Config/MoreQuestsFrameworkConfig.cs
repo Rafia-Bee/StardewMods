@@ -13,6 +13,13 @@ public sealed class MoreQuestsFrameworkConfig
     // Keys are definition IDs. 0 disables. Missing keys use DefaultWeight.
     public Dictionary<string, int> QuestWeights { get; set; } = new();
 
+    // Per-mail-quest probability gate (0-100). Used by Mail-kind quest definitions
+    // that want an extra chance roll on top of their trigger (e.g. Rainy Day Catch,
+    // which only fires when tomorrow is forecast rain, gated further by this value).
+    // Keys are definition IDs. Missing keys default to 100 (always fire when the
+    // trigger condition matches). 0 disables the quest entirely.
+    public Dictionary<string, int> MailQuestChancePercent { get; set; } = new();
+
     public bool DifficultyScaling { get; set; } = true;
 
     // When false (default), the candidate pool is filtered to locations the player

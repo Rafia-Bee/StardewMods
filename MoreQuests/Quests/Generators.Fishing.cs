@@ -377,18 +377,6 @@ internal static partial class Generators
     /// Vanilla rare/ancient seeds for the Premium Crop Order reward. Resolved at
     /// pick-time so a missing modded id falls through to the next entry.
 
-    /// Curated rare-tackle pool for the Rainy Day Catch reward. All vanilla qualified ids;
-    /// modded saves get the same pool unless the picker resolves to a missing id, in which
-    /// case the pick falls through.
-    private static readonly (string Id, string Name)[] RainyDayTacklePool =
-    {
-        ("(O)694", "Spinner"),
-        ("(O)695", "Trap Bobber"),
-        ("(O)691", "Barbed Hook"),
-        ("(O)693", "Treasure Hunter"),
-        ("(O)877", "Curiosity Lure")
-    };
-
     /// Vanilla 1.6 Challenge Bait, high-attract bait used as the location-overpopulation
     /// quest reward (qty * 2 per quest). String-id item, so the qualified form is
     /// `(O)ChallengeBait`. If a content pack removes the item the resolver returns null
@@ -475,9 +463,12 @@ internal static partial class Generators
     /// Mail quest when tomorrow is forecast rain. RainyDayCatchMailChancePercent gates each
     /// qualifying day. Filters to rainy Data/Fish entries with a runtime gate that the player
     /// is actually fishing in rain. Reward: GoldIntermediateBase + one rare tackle.
+    private const string RainyDayCatchMailDefId = "Fishing.RainyDayCatchMail";
+
     private static QuestPosting? RainyDayCatch(QuestContext ctx)
     {
-        int chance = Math.Clamp(ModEntry.Config.RainyDayCatchMailChancePercent, 0, 100);
+        int chance = ctx.Config.MailQuestChancePercent.TryGetValue(RainyDayCatchMailDefId, out int p) ? p : 100;
+        chance = Math.Clamp(chance, 0, 100);
         if (chance <= 0 || Game1.random.Next(100) >= chance)
             return null;
 
@@ -494,12 +485,15 @@ internal static partial class Generators
         int qty = ctx.Config.DifficultyScaling
             ? Math.Max(1, Game1.player.FishingLevel + Game1.random.Next(1, 5))
             : Game1.random.Next(1, 5);
-        int gold = ctx.Config.GoldIntermediateBase;
+        int gold = (int)(target.SellPrice * qty * ctx.Config.RewardMultiplierBelowSell);
 
         var rewards = new List<RewardSpec> { new MoneyReward(gold) };
-        var tackle = PickResolved(ctx, RainyDayTacklePool);
-        if (tackle != null)
+        var tackles = ctx.Items.GetTackles();
+        if (tackles.Count > 0)
+        {
+            var tackle = tackles[Game1.random.Next(tackles.Count)];
             rewards.Add(new ObjectReward(tackle.QualifiedItemId));
+        }
 
         return new QuestPosting
         {
@@ -664,6 +658,7 @@ internal static partial class Generators
             ObjectiveQuantity = 1,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.Long, ctx.Config),
             Rewards = rewards,
+            IsReportBack = true,
             Title = ModEntry.I18n.Get("quest.fishing.legendary.title", new { item = target.DisplayName }),
             Description = ModEntry.I18n.Get("quest.fishing.legendary.description", new { item = target.DisplayName }),
             CurrentObjective = ModEntry.I18n.Get("quest.fishing.legendary.objective", new { item = target.DisplayName }),

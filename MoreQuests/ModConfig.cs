@@ -98,10 +98,6 @@ public sealed class ModConfig
     public string RsvTubOFlowersRecipeName { get; set; } = "Tub o' Flowers";
 
     // ----- Fishing-track tunables -----
-    /// Chance (0 to 100) that Rainy Day Catch mail lands when tomorrow is forecast rain.
-    /// 100 = always when rain is forecast, 0 = disables the quest.
-    public int RainyDayCatchMailChancePercent { get; set; } = 100;
-
     /// Trout Derby recipe for Gus / vanilla saloon. Vanilla Rainbow Trout recipe is Trout Soup.
     public string TroutDerbyRecipeGus { get; set; } = "Trout Soup";
     /// Trout Derby recipe for Pika (RSV).

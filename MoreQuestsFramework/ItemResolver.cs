@@ -653,6 +653,39 @@ public sealed class ItemResolver
         return results;
     }
 
+    // Every Data/Objects row with the tackle category. Modded tackles must use the same
+    // category for the fishing rod to mount them, so the filter picks up tackles from
+    // any installed content pack.
+    public List<ResolvedItem> GetTackles()
+    {
+        var results = new List<ResolvedItem>();
+        try
+        {
+            foreach (var itemType in ItemRegistry.ItemTypes)
+            {
+                if (itemType.Identifier != "(O)")
+                    continue;
+                foreach (var id in itemType.GetAllIds())
+                {
+                    string qualifiedId = itemType.Identifier + id;
+                    var parsed = ItemRegistry.GetData(qualifiedId);
+                    if (parsed?.RawData is not ObjectData obj)
+                        continue;
+                    if (obj.Category != StardewValley.Object.tackleCategory)
+                        continue;
+                    var item = TryResolveItem(qualifiedId);
+                    if (item != null)
+                        results.Add(item);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _monitor.Log($"GetTackles: {ex.Message}", LogLevel.Warn);
+        }
+        return results;
+    }
+
     public ResolvedItem? TryResolveItem(string itemId)
     {
         if (string.IsNullOrEmpty(itemId))
