@@ -98,6 +98,10 @@ internal sealed class QuestPoster
                         LogLevel.Warn);
                     posting.Kind = PostingKind.Mail;
                     PostViaMail(posting);
+                    // Mail has no accept step, so start the definition cooldown now.
+                    // Without this the redirected posting re-rolls into the pool every
+                    // morning (it never got "accepted" off the board).
+                    ModEntry.Instance?.Anti?.RecordDefinitionAccepted(posting.DefinitionId);
                 }
                 else
                 {
