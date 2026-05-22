@@ -14,7 +14,7 @@ A SMAPI content mod for Stardew Valley that adds a big batch of new daily-board,
 
 - **[Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098)**, for an in-game config page with the per-quest toggles.
 - **[Ridgeside Village](https://www.nexusmods.com/stardewvalley/mods/7286)**, **[East Scarp](https://www.nexusmods.com/stardewvalley/mods/5787)**, **[Visit Mount Vapius](https://www.nexusmods.com/stardewvalley/mods/9600)**, **[Stardew Valley Expanded](https://www.nexusmods.com/stardewvalley/mods/3753)**, **[Eli and Dylan - Custom NPCs for East Scarp](https://www.nexusmods.com/stardewvalley/mods/13883)**, **[Arumi the Actress](https://www.nexusmods.com/stardewvalley/mods/44286)**, **[Lurking in the Dark - NPC Sen (East Scarp)](https://www.nexusmods.com/stardewvalley/mods/10770)**, and **[The Bear Family - East Scarp](https://www.nexusmods.com/stardewvalley/mods/16197)** add modded NPCs into the quest-giver and reaction pools (saloon chefs, ecology folks, conservation guides, fishermen, underground-NPC reactions etc.) so the quests pick from a wider roster.
-- **[Livestock Follows You](https://www.nexusmods.com/stardewvalley/mods/44349)**, needed for Marnie's Cow Offer, Marnie's Livestock Show, and Leah's Farm Painting.
+- **[Livestock Follows You](https://www.nexusmods.com/stardewvalley/mods/44349)**, needed for Marnie's Livestock Show and Leah's Farm Painting, and flips Marnie's Cow Offer to ask for a Grazing Bell instead of a Milk Pail.
 - **[Si's Extra Crafting Materials](https://www.nexusmods.com/stardewvalley/mods/25467)**, needed for the Winter Star Wrapping Paper quest.
 - **[Catch of the Day](https://www.nexusmods.com/stardewvalley/mods/43668)**, pairs nicely with fishing quests since it lets you track time/season/weather-specific fish.
 - **[Love of Cooking](https://www.nexusmods.com/stardewvalley/mods/6830)** or **[CookingSkill Redux (YACS)](https://www.nexusmods.com/stardewvalley/mods/22681)**, either one lets the cooking quests scale their ingredient counts off your cooking level. Without one of these the quests still work, they just fall back to a flat baseline.
@@ -43,7 +43,7 @@ Quests are grouped by category below and listed alphabetically within each group
 | Krobus's Void Note | First Void Egg held (mail) | Krobus | Deliver one Void Egg to Krobus | Friendship + Book of the Void | One-time, needs Krobus around at 1+ hearts |
 | Leah's Farm Painting | Every 21 days (mail) | Leah | Visit Leah's house with an animal following you | A 2x2 painting of a random farm animal, frame style picked in GMCM, mailed the next morning + Friendship | Needs Livestock Follows You, single-player, and 2+ hearts with Leah |
 | Marnie's Chicken Offer | Day after building a Coop (mail) | Marnie | Bring Mixed Seeds | A free White Chicken at Marnie's shop (or 800g if you don't visit in 14 days) + Friendship. With Livestock Bazaar, picking any chicken variant from her shop counts. | One-time |
-| Marnie's Cow Offer | Day after building a Barn (mail) | Marnie | Bring a Grazing Bell (with Livestock Follows You) or a Milk Pail (without) | A free White Cow at Marnie's shop (or 1500g if you don't visit in 14 days) + Friendship. With Livestock Bazaar, picking any cow variant counts. | One-time |
+| Marnie's Cow Offer | Day after building a Barn (mail) | Marnie | With Livestock Follows You, bring her a Grazing Bell. Without it, buy a Milk Pail from her shop (or show her the one you already own) | A free White Cow at Marnie's shop (or 1500g if you don't visit in 14 days) + Friendship. With Livestock Bazaar, picking any cow variant counts. | One-time |
 | Marnie's Egg Request | After your first egg is laid (mail) | Marnie | Ship 10 of any edible egg (vanilla and modded) through the bin | Gold + Mayonnaise Machine recipe + Friendship | One-time |
 | Marnie's Livestock Show | After your Deluxe Barn is built with 2+ animals (mail) | Marnie | Walk into Town with 2+ animals following you | Big friendship bump with Marnie | One-time, needs Livestock Follows You, single-player, and non-winter |
 | Marnie's Milk Request | After your first milk is produced (mail) | Marnie | Ship 10 of any milk (cow, goat, modded buffalo / llama / etc.) through the bin | Gold + Cheese Press recipe + Friendship | One-time |
@@ -170,10 +170,11 @@ These were on the original list but we decided to skip them for now:
 
 ## Custom completion logic
 
-Two quests use special `Quest` subclasses:
+A few quests use special `Quest` subclasses:
 
 - **`AnySlimeQuest`**, backs Basic Slime Clearing. Counts any slime kill, not just one species.
 - **`CollectAndReportQuest`**, backs Beach Cleanup. You gather the items in the world, then talk to the giver to hand the stack in.
+- **`PurchaseFromShopQuest`**, backs Marnie's Cow Offer when she's asking for a Milk Pail. The pail is a tool so it can't be gifted to her like a regular delivery item, the quest just clears when you buy one from her shop. If you already own a Milk Pail when the quest posts, it switches to "show it to Marnie" (talk to her with the pail in your inventory) since vanilla's shop won't list a second one.
 
 Multi-step quests run on the framework's `AdventureQuest`: Check on George (gift, chat, report), the festival mail quests (Submarine Fuel, Wizard's Ritual, Holiday Cookies), Check on Friends, the Gus festival feasts, Skull Cavern Deep Dive, Mines Deep Dive, Pierre's Stock-Up, the Weekly Specials, the Grand Feast (Special Order), Dinner Party, Clear Debris, Plant Trees, Spring Cleaning, and several others. All other quests use the framework's `MoreQuestsItemDeliveryQuest`, `MoreQuestsFishingQuest`, or `MoreQuestsShipQuest`, built by the framework's `QuestFactory`.
 

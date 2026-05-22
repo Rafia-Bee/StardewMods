@@ -55,6 +55,7 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.DayStarted += OnDayStarted;
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.World.BuildingListChanged += OnBuildingListChanged;
+        helper.Events.Player.InventoryChanged += MarnieMilkPailHook.OnInventoryChanged;
 
         var harmony = new Harmony(ModManifest.UniqueID);
         MarniePurchasePatches.Apply(harmony, Monitor);
@@ -729,6 +730,7 @@ public sealed class ModEntry : Mod
         scope.RegisterCustomQuestType(typeof(AnySlimeQuest));
         scope.RegisterCustomQuestType(typeof(AnyMonsterQuest));
         scope.RegisterCustomQuestType(typeof(CollectAndReportQuest));
+        scope.RegisterCustomQuestType(typeof(PurchaseFromShopQuest));
 
         Generators.RegisterAll(scope);
 
