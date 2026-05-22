@@ -169,6 +169,15 @@ public sealed class ModEntry : Mod
             + "board after running to see the entries (requires SpecialOrdersBoardPages >= 2 "
             + "if vanilla's two slots are already filled by other mods' picks).",
             (_, _) => ReemitSpecialOrders());
+
+        helper.ConsoleCommands.Add(
+            "mq_trigger",
+            "Force-posts a quest by definition id, bypassing IsAvailable conditions and "
+            + "the trigger gate (cooldown, OneShot flag, BuildingBuilt diff, mail prereqs, etc). "
+            + "Mail-kind quests are re-queued into mailForTomorrow so the letter arrives next "
+            + "morning after sleeping. Usage: mq_trigger <DefinitionId>. Example: "
+            + "mq_trigger Animal.MarnieCowOffer.",
+            (_, args) => TriggerByDefinitionId(args));
         // Defer GMCM + content-pack loading + RegistrationClosed until after every consumer
         // mod's GameLaunched has run.
         helper.Events.GameLoop.UpdateTicking += OnFirstTick;
@@ -791,6 +800,59 @@ public sealed class ModEntry : Mod
         }
 
         Monitor.Log($"mq_reemit_specialorders: emitted {emitted}, skipped {skipped}. Open the SpecialOrders board to view.", LogLevel.Info);
+    }
+
+    private void TriggerByDefinitionId(string[] args)
+    {
+        if (args.Length < 1)
+        {
+            Monitor.Log("Usage: mq_trigger <DefinitionId>. Tip: mq_refresh re-rolls daily-board picks; this command targets the triggered path (mail, OneShot, BuildingBuilt, etc).", LogLevel.Info);
+            return;
+        }
+        if (!Context.IsWorldReady || _poster == null || _ctx == null)
+        {
+            Monitor.Log("mq_trigger ignored: load a save first.", LogLevel.Warn);
+            return;
+        }
+
+        string id = args[0];
+        if (!_registry.TryGet(id, out var def) || def == null)
+        {
+            Monitor.Log($"mq_trigger: no quest definition registered with id '{id}'. Run with a valid id from `RegisteredQuestIds()` or your content pack.", LogLevel.Warn);
+            return;
+        }
+
+        var posting = def.Build(_ctx);
+        if (posting == null)
+        {
+            Monitor.Log($"mq_trigger: '{id}'.Build returned null. The generator may need specific live conditions (e.g. an NPC present, a pool of items, etc) that pre-req bypass can't fix.", LogLevel.Warn);
+            return;
+        }
+        if (string.IsNullOrEmpty(posting.OwnerUniqueId))
+            posting.OwnerUniqueId = def.OwnerUniqueId;
+        posting.Kind = def.Kind;
+
+        var preMailbox = new HashSet<string>(Game1.player.mailbox);
+        _poster.PostBatch(new[] { posting });
+
+        if (posting.Kind == PostingKind.Mail)
+        {
+            string? newKey = null;
+            foreach (string key in Game1.player.mailbox)
+            {
+                if (!preMailbox.Contains(key)) { newKey = key; break; }
+            }
+            if (newKey != null)
+            {
+                Game1.player.mailbox.Remove(newKey);
+                if (!Game1.player.mailForTomorrow.Contains(newKey))
+                    Game1.player.mailForTomorrow.Add(newKey);
+                Monitor.Log($"mq_trigger: posted '{id}' as mail. Letter queued for tomorrow's mailbox (key '{newKey}').", LogLevel.Info);
+                return;
+            }
+        }
+
+        Monitor.Log($"mq_trigger: posted '{id}' ({posting.Kind}).", LogLevel.Info);
     }
 
     private void RefreshOffers()
