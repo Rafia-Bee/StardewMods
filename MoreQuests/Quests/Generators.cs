@@ -88,6 +88,7 @@ internal static partial class Generators
 
         // Foraging
         Reg(fw, "ClearDebris", ClearDebris);
+        Reg(fw, "FeedWildCritters", FeedWildCritters);
         Reg(fw, "ForageWithLinus", ForageWithLinus);
         Reg(fw, "PlantTrees", PlantTrees);
         Reg(fw, "RareForageHunt", RareForageHunt);

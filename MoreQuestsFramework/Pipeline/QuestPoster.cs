@@ -85,7 +85,7 @@ internal sealed class QuestPoster
         // anyone the heuristic can't catch (friendable monsters built like real NPCs)
         // or for any villager they personally don't want quests from.
         if (!string.IsNullOrEmpty(posting.QuestGiver)
-            && !NpcDisplay.IsBoardEligible(posting.QuestGiver))
+            && !NpcDisplay.IsBoardEligible(posting.QuestGiver, posting.AllowChildGiver))
         {
             if (posting.Kind == PostingKind.DailyBoard)
             {

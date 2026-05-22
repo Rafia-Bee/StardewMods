@@ -118,6 +118,7 @@ Quests are grouped by category below and listed alphabetically within each group
 | Quest | When | Quest Giver | Objective | Reward | Notes |
 | --- | --- | --- | --- | --- | --- |
 | Clear Debris | Daily board | Any adult villager | Clear 5 to 20 resource clumps anywhere except the farm | Friendship | Cooldown Long |
+| Feed Wild Critters | Daily board | Any child villager (Jas, Vincent, Leo, etc.) | Drop 3 to 6 of one current-season forage in Cindersap Forest. The items vanish as you drop them | Friendship + every 3rd completion, Marnie gives a discount on your next pet | Cooldown Long |
 | Forage with Linus | Daily board | Linus | Gift loved or liked forage to a few different villagers (count scales with Foraging) | Big friendship bump with Linus | Cooldown Long, needs Linus met |
 | Plant Trees | Daily board | A conservation NPC (Linus, Demetrius, Dylan, Kimpoi, Aster, etc.) | Plant X trees anywhere outside the farm | Friendship | Cooldown Long |
 | Rare Forage Hunt | Daily board | Any met villager | Gather a few rare forageables (Rainbow Shell, Cactus Fruit, Magma Cap, plus any modded forage that isn't in this season) | Gold + 2x count of one in-season seed | Cooldown Medium, needs Foraging 1 |

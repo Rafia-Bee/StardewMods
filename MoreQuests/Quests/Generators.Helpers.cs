@@ -180,6 +180,28 @@ internal static partial class Generators
         _ => ModEntry.I18n.Get("quest.quality.normal")
     };
 
+    /// Met villagers whose `Age == Child`, with positive friendship. Used by the child-only
+    /// daily-board quests (Feed Wild Critters). Vanilla returns Jas / Vincent / Leo when met;
+    /// modded child NPCs come along for free. Friendable monsters with a NpcAge.Child data
+    /// row don't sneak in because of the IsMonster / IsVillager check.
+    private static List<string> MetChildHumanGivers()
+    {
+        var results = new List<string>();
+        foreach (var (name, _) in Game1.player.friendshipData.Pairs)
+        {
+            var npc = Game1.getCharacterFromName(name);
+            if (npc == null || npc.IsMonster || !npc.IsVillager)
+                continue;
+            var data = npc.GetData();
+            if (data == null || data.Age != NpcAge.Child)
+                continue;
+            if (!Game1.player.friendshipData.TryGetValue(name, out var friendship) || friendship == null || friendship.Points <= 0)
+                continue;
+            results.Add(name);
+        }
+        return results;
+    }
+
     // -------------------- Adult-human giver pools --------------------
 
     /// Met villagers narrowed to adult humans who can plausibly receive a quest gift.

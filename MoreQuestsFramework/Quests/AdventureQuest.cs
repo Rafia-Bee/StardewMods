@@ -584,6 +584,34 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
+    /// DropItemsPatches calls this when a player-dropped Debris hits the ground. Drops
+    /// of a stack create one Debris carrying the whole stack, so the listener passes
+    /// `available = item.Stack` and gets back how many were actually consumed. The
+    /// listener then either removes the Debris (consumed == available) or reduces its
+    /// stack by the consumed amount (player wanted to drop more than the step needed,
+    /// so the leftover stays on the ground).
+    public int TryConsumeDroppedItem(string locationName, Item item, int available)
+    {
+        if (completed.Value || item == null || string.IsNullOrEmpty(locationName) || available <= 0)
+            return 0;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.DropItems) continue;
+            if (!LocationMatches(step, locationName)) continue;
+            if (!ItemMatches(step, item)) continue;
+            int needed = Math.Max(1, step.Count);
+            int remaining = needed - step.Progress;
+            if (remaining <= 0) continue;
+            int take = Math.Min(available, remaining);
+            CreditCount(i, step, take);
+            return take;
+        }
+        return 0;
+    }
+
     private void CreditCount(int idx, AdventureStepState step, int delta)
     {
         int needed = Math.Max(1, step.Count);

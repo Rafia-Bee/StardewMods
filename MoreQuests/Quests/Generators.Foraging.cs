@@ -249,6 +249,58 @@ internal static partial class Generators
         };
     }
 
+    /// A met child NPC asks the player to leave some current-season forage in Cindersap
+    /// Forest so the wild critters can eat. Single-step DropItems AdventureQuest: drop N
+    /// of one specific seasonal forage item in `Forest`. DropItemsPatches eats each
+    /// matching drop, so the items visibly disappear (no leftover debris). Completing
+    /// three of these bumps the WildCrittersFedCount; on the 3rd, Marnie issues a
+    /// pet-license discount (see ModEntry.GrantMarniePetCredit).
+    private static QuestPosting? FeedWildCritters(QuestContext ctx)
+    {
+        var givers = MetChildHumanGivers();
+        if (givers.Count == 0)
+            return null;
+        string giver = givers[Game1.random.Next(givers.Count)];
+
+        var pool = ctx.Items.GetForageItems(ctx.Season);
+        if (pool.Count == 0)
+            return null;
+        var pick = pool[Game1.random.Next(pool.Count)];
+
+        int count = Game1.random.Next(3, 7);
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "FeedWildCritters",
+                Kind = AdventureStepKind.DropItems,
+                Targets = new List<string> { "Forest" },
+                Items = new List<string> { pick.QualifiedItemId },
+                Count = count,
+                Description = ModEntry.I18n.Get("quest.foraging.feedWildCritters.step", new { count, item = pick.DisplayName })
+            }
+        }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.foraging.feedWildCritters.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Foraging,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            AllowChildGiver = true,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipMid) },
+            Title = ModEntry.I18n.Get("quest.foraging.feedWildCritters.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.foraging.feedWildCritters.description", new { npc = giver, count, item = pick.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.foraging.feedWildCritters.objective", new { count, item = pick.DisplayName }),
+            TargetMessage = ModEntry.I18n.Get("quest.foraging.feedWildCritters.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
     /// Single-step Plant AdventureQuest from a ConservationGuide role NPC. Player plants a
     /// scaled number of trees anywhere outside the farm. Reward: FriendshipIntermediate.
     /// PlantTreesPatches opens the CanPlantTreesHere gate on every non-Farm location while

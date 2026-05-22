@@ -3,18 +3,20 @@ using HarmonyLib;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
+using StardewValley.Objects;
 
 namespace MoreQuests;
 
-/// Harmony patch that consumes the Marnie chicken / cow purchase credit on adoption.
-/// The price discount itself is applied via an asset edit on `Data/FarmAnimals` (see
-/// `ModEntry.OnAssetRequested`). Patches `AnimalHouse.adoptAnimal` rather than the
-/// vanilla `PurchaseAnimalsMenu` flow so Livestock Bazaar's replacement menu also
-/// funnels through.
+/// Harmony patch that consumes the Marnie chicken / cow / pet purchase credit on adoption.
+/// The price discount itself is applied via an asset edit on `Data/FarmAnimals` (chicken/cow)
+/// or `Data/Pets` (pet license). Patches `AnimalHouse.adoptAnimal` for the chicken/cow flow
+/// (also covers Livestock Bazaar's replacement menu), and `PetLicense.actionWhenPurchased`
+/// for the pet license flow.
 internal static class MarniePurchasePatches
 {
     internal const string ChickenCreditKey = "RafiaBee.MoreQuests.MarnieChickenCreditExpiry";
     internal const string CowCreditKey = "RafiaBee.MoreQuests.MarnieCowCreditExpiry";
+    internal const string PetCreditKey = "RafiaBee.MoreQuests.MarniePetCreditExpiry";
     internal const string FreeChickenAnimalType = "White Chicken";
     internal const string FreeCowAnimalType = "White Cow";
 
@@ -24,9 +26,35 @@ internal static class MarniePurchasePatches
         if (target == null)
         {
             monitor.Log("Couldn't find AnimalHouse.adoptAnimal; Marnie credit redemption disabled.", LogLevel.Warn);
-            return;
         }
-        harmony.Patch(target, postfix: new HarmonyMethod(typeof(MarniePurchasePatches), nameof(AfterAdoptAnimal)));
+        else
+        {
+            harmony.Patch(target, postfix: new HarmonyMethod(typeof(MarniePurchasePatches), nameof(AfterAdoptAnimal)));
+        }
+
+        var petTarget = AccessTools.Method(typeof(PetLicense), nameof(PetLicense.actionWhenPurchased));
+        if (petTarget == null)
+        {
+            monitor.Log("Couldn't find PetLicense.actionWhenPurchased; Marnie pet credit redemption disabled.", LogLevel.Warn);
+        }
+        else
+        {
+            harmony.Patch(petTarget, postfix: new HarmonyMethod(typeof(MarniePurchasePatches), nameof(AfterPetLicensePurchased)));
+        }
+    }
+
+    private static void AfterPetLicensePurchased()
+    {
+        var player = Game1.player;
+        if (player == null)
+            return;
+        if (!player.modData.ContainsKey(PetCreditKey))
+            return;
+        player.modData.Remove(PetCreditKey);
+        ModEntry.Instance.Helper.GameContent.InvalidateCache("Data/Pets");
+        Game1.addHUDMessage(new HUDMessage(
+            ModEntry.I18n.Get("quest.foraging.feedWildCritters.creditRedeemed").ToString(),
+            HUDMessage.achievement_type));
     }
 
     private static void AfterAdoptAnimal(FarmAnimal animal)
