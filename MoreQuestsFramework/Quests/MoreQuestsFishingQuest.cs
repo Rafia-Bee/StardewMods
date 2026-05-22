@@ -30,6 +30,12 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
     // {0} = catch counter, {1} = quota.
     public readonly NetString catchProgressTemplate = new();
 
+    // True = report-back, not a delivery. Even though the fish is in inventory, the
+    // narrative is "show the catch / tell the story" (legendary fish, ecology reports).
+    // Suppresses the "Deliver X to Y" post-catch override so the journal stays on
+    // vanilla "Return to <npc>".
+    public readonly NetBool isReportBack = new();
+
     public NetStringList SerializedRewards => serializedRewards;
 
     protected override void initNetFields()
@@ -42,7 +48,8 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
             .AddField(catchMaxSize, "catchMaxSize")
             .AddField(catchWeather, "catchWeather")
             .AddField(catchAnyFish, "catchAnyFish")
-            .AddField(catchProgressTemplate, "catchProgressTemplate");
+            .AddField(catchProgressTemplate, "catchProgressTemplate")
+            .AddField(isReportBack, "isReportBack");
     }
 
     public override bool OnFishCaught(string fishId, int numberCaught, int size, bool probe = false)
@@ -70,7 +77,48 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
             // quest in the log still gets to see this catch.
             return false;
         }
-        return base.OnFishCaught(fishId, numberCaught, size, probe);
+        bool wasComplete = numberFished.Value >= numberToFish.Value;
+        bool result = base.OnFishCaught(fishId, numberCaught, size, probe);
+        // Base sets "Return to <npc>" the moment the quota fills. For real delivery
+        // quests (no location filter), swap to a clearer "Deliver X to Y" line.
+        // Location-filtered quests (ecological pop control) stay on the vanilla
+        // "Return to" line since they're narratively report-backs, not deliveries.
+        if (!probe
+            && !wasComplete
+            && numberFished.Value >= numberToFish.Value
+            && !string.IsNullOrEmpty(target.Value)
+            && IsDeliveryStyle())
+        {
+            currentObjective = BuildDeliveryObjective();
+        }
+        return result;
+    }
+
+    // True for the simple "catch N, hand them over" quests. False for ecology / report
+    // quests (size overpop = catchAnyFish; location overpop = location-filtered) and
+    // explicitly report-back quests like the legendary fish chase.
+    private bool IsDeliveryStyle()
+    {
+        return !catchAnyFish.Value
+            && string.IsNullOrEmpty(catchLocationName.Value)
+            && !isReportBack.Value;
+    }
+
+    private string BuildDeliveryObjective()
+    {
+        string npcDisplay = NpcDisplay.Resolve(target.Value);
+        int qty = numberToFish.Value;
+        string itemName = ResolveItemDisplayName();
+        var t = ModEntry.Translation?.Get("quest.fishing.deliverAfterCatch", new { qty, item = itemName, npc = npcDisplay });
+        return t?.ToString() ?? $"Deliver {qty} {itemName} to {npcDisplay}.";
+    }
+
+    private string ResolveItemDisplayName()
+    {
+        if (string.IsNullOrEmpty(ItemId.Value))
+            return string.Empty;
+        var data = ItemRegistry.GetData(ItemId.Value);
+        return data?.DisplayName ?? string.Empty;
     }
 
     private bool CatchFiltersPass(string fishId, int size)
@@ -146,6 +194,16 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
             return;
         }
         base.reloadObjective();
+        // Override vanilla's post-catch "Return to <npc>" with a clearer delivery line
+        // for true delivery quests. Skip ecology/report quests (location-filtered or
+        // catchAnyFish), which stay on the vanilla "Return to" wording.
+        if (!completed.Value
+            && numberFished.Value >= numberToFish.Value
+            && !string.IsNullOrEmpty(target.Value)
+            && IsDeliveryStyle())
+        {
+            currentObjective = BuildDeliveryObjective();
+        }
     }
 
     public override bool OnNpcSocialized(NPC npc, bool probe = false)
@@ -156,14 +214,15 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
         if (numberFished.Value < numberToFish.Value)
             return false;
 
+        bool delivery = IsDeliveryStyle();
         int needed = numberToFish.Value;
-        if (!catchAnyFish.Value && CountInInventory(ItemId.Value) < needed)
+        if (delivery && CountInInventory(ItemId.Value) < needed)
             return false;
 
         if (probe)
             return true;
 
-        if (!catchAnyFish.Value)
+        if (delivery)
             ConsumeFish(ItemId.Value, needed);
         npc.CurrentDialogue.Push(new Dialogue(npc, null, targetMessage));
         moneyReward.Value = reward.Value;
@@ -174,7 +233,8 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
 
     // Right-click-with-fish path. Vanilla FishingQuest doesn't override so it'd fall
     // through to the gift flow (donating one fish). Intercept like CollectAndReportQuest
-    // but consume the requested count. catchAnyFish quests fall back to vanilla gifting.
+    // but only consume on real delivery quests. Report-back quests (legendary, location
+    // overpop, size overpop) complete without consuming the catch.
     public override bool OnItemOfferedToNpc(NPC npc, Item item, bool probe = false)
     {
         if (catchAnyFish.Value)
@@ -186,14 +246,16 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
         if (numberFished.Value < numberToFish.Value)
             return false;
 
+        bool delivery = IsDeliveryStyle();
         int needed = numberToFish.Value;
-        if (CountInInventory(ItemId.Value) < needed)
+        if (delivery && CountInInventory(ItemId.Value) < needed)
             return false;
 
         if (probe)
             return true;
 
-        ConsumeFish(ItemId.Value, needed);
+        if (delivery)
+            ConsumeFish(ItemId.Value, needed);
         npc.CurrentDialogue.Push(new Dialogue(npc, null, targetMessage));
         moneyReward.Value = reward.Value;
         questComplete();

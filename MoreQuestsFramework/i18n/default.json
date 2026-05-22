@@ -173,6 +173,18 @@
     "quest.reward.line.mail": "{{npc}} will send you a letter in the next few days",
     "quest.reward.line.shopDiscount": "{{npc}} will mark down their shop {{percent}}% for {{days}} day(s)",
     "quest.reward.line.animalPurchaseDiscount": "{{npc}} will mark down livestock {{percent}}% for {{days}} day(s)",
+    "quest.reward.line.festivalBias.luau": "{{npc}} will put in a good word for you with the governor at the Luau",
+    "quest.reward.line.festivalBias.fair": "{{npc}} says your contribution will give the grange judges something to talk about",
+    "quest.reward.line.fairStarTokens": "{{npc}} will slip you {{amount}} extra star tokens to spend at the Fair",
 
-    "quest.itemDelivery.partial.thanks": "Thanks! Bring me {{remaining}} more when you can."
+    "quest.itemDelivery.partial.thanks": "Thanks! Bring me {{remaining}} more when you can.",
+
+    "quest.fishing.deliverAfterCatch": "Deliver {{qty}} {{item}} to {{npc}}.",
+
+    "config.section.mailQuestChances": "Mail quest chances",
+    "config.section.mailQuestChances.tooltip": "Per-quest chance (0 to 100) for mail-delivered quests that gate on a trigger condition. 100 = always fire when the trigger matches, 0 disables the quest.",
+    "config.page.mailChances": "Mail quest chances",
+    "config.page.mailChances.tooltip": "Open the per-quest mail chance sliders.",
+    "config.mailChance.Fishing.RainyDayCatchMail": "Rainy Day Catch chance %",
+    "config.mailChance.Fishing.RainyDayCatchMail.tooltip": "Chance (0 to 100) that the Rainy Day Catch quest mail arrives on a day where tomorrow is forecast as rain. 100 = always when rain is forecast, 0 disables the quest."
 }

@@ -24,7 +24,6 @@
     "config.section.massiveHarvest": "Massive Harvest",
     "config.section.pierresStockUp": "Pierre's Stock-Up",
     "config.section.fishHauls": "Fishing hauls",
-    "config.section.rainyDayCatch": "Rainy Day Catch",
     "config.section.skullCavernDeepDive": "Skull Cavern deep dive",
     "config.section.weeklySpecial": "Saloon weekly special",
     "config.section.checkOnFriends": "Check on Friends",
@@ -66,7 +65,6 @@
     "config.AdventureBoardDrawOffsetY": "Sprite offset Y (pixels)",
     "config.AdventureBoardDrawOffsetY.tooltip": "Pixel offset applied to the in-world board sprite. Negative values move up.",
 
-    "config.section.discounts": "Shop discounts",
     "config.ShopDiscountPercent": "Festival shop discount %",
     "config.ShopDiscountPercent.tooltip": "Discount applied to a shop after a fishing festival quest.",
     "config.ShopDiscountDurationDays": "Festival shop discount days",
@@ -88,9 +86,6 @@
     "config.debugLogging": "Debug logging",
     "config.debugLogging.tooltip": "Writes detailed diagnostic lines to the SMAPI log file. Off by default. Turn this on if you're chasing a bug and want to share a log; otherwise it just adds noise.",
 
-    "config.section.quantities": "Quantity tunables",
-    "config.RainyDayCatchMailChancePercent": "Rainy Day Catch mail chance %",
-    "config.RainyDayCatchMailChancePercent.tooltip": "Probability (0 to 100) that the Rainy Day Catch quest mail arrives on a day where tomorrow is forecast as rain. 100 = always when rain is forecast, 0 disables the quest.",
     "config.FishHaulMediumQty": "Medium fish haul quantity",
     "config.FishHaulMediumQty.tooltip": "Catch count for medium-tier fishing hauls.",
     "config.FishHaulLargeQty": "Large fish haul quantity",
@@ -300,10 +295,6 @@
     "quest.foraging.forageWithLinus.title": "Forage gifts for the valley",
     "quest.foraging.forageWithLinus.description": "The best way to appreciate what nature gives us is to give it back to the people. Find {{count}} folks in town and gift each of them a forage they will like.",
     "quest.foraging.forageWithLinus.step.gift": "Gift loved or liked forage to {{count}} different villagers.",
-
-    "quest.reward.line.festivalBias.luau": "{{npc}} will put in a good word for you with the governor at the Luau",
-    "quest.reward.line.festivalBias.fair": "{{npc}} says your contribution will give the grange judges something to talk about",
-    "quest.reward.line.fairStarTokens": "{{npc}} will slip you {{amount}} extra star tokens to spend at the Fair",
 
     "quest.festival.gusFall.title": "Gus's Fair feast prep",
     "quest.festival.gusFall.description": "I'm putting up the saloon's spread for the Fair and the prep list isn't small. Bring me {{ingredients}} when you can. I'll fix you a sample plate, and I'll talk Lewis into giving you a few extra tickets for that prize wheel of his.",
@@ -561,8 +552,6 @@
     "quest.seasonal.springCleaning.objective": "Clear weeds from anywhere but the farm.",
     "quest.seasonal.springCleaning.step": "Clear weeds.",
     "quest.seasonal.springCleaning.targetMessage": "Much tidier. Thanks for taking the time!",
-
-    "quest.reward.line.shopDiscount": "{{npc}} will mark down their shop {{percent}}% for {{days}} day(s)",
 
     "quest.cooking.weeklySpecial.common.category.egg": "any egg",
     "quest.cooking.weeklySpecial.common.category.milk": "any milk",

@@ -41,6 +41,7 @@ internal static class QuestFactory
                 catchWeather = { Value = p.CatchWeather ?? string.Empty },
                 catchAnyFish = { Value = p.CatchAnyFish },
                 catchProgressTemplate = { Value = p.CatchProgressTemplate ?? string.Empty },
+                isReportBack = { Value = p.IsReportBack },
                 targetMessage = p.TargetMessage
             },
             BoardQuestType.SlayMonster => new SlayMonsterQuest
