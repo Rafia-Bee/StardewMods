@@ -142,6 +142,7 @@ public sealed class ModEntry : Mod
         FestivalBiasPatches.Apply(harmony, Monitor);
         DecorShippingPatches.Apply(harmony, Monitor);
         WinterStarGiftPatch.Apply(harmony);
+        DropItemsPatches.Subscribe(helper);
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.Content.AssetsInvalidated += OnAssetsInvalidated;

@@ -280,6 +280,30 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        if (e.NameWithoutLocale.IsEquivalentTo("Data/Pets"))
+        {
+            if (Game1.player == null)
+                return;
+            if (!Game1.player.modData.ContainsKey(MarniePurchasePatches.PetCreditKey))
+                return;
+            int percent = Math.Clamp(Config.MarniePetDiscountPercent, 1, 100);
+            float multiplier = (100 - percent) / 100f;
+            e.Edit(asset =>
+            {
+                var data = asset.AsDictionary<string, StardewValley.GameData.Pets.PetData>().Data;
+                foreach (var (_, pet) in data)
+                {
+                    if (pet?.Breeds == null) continue;
+                    foreach (var breed in pet.Breeds)
+                    {
+                        if (breed == null || !breed.CanBeAdoptedFromMarnie) continue;
+                        breed.AdoptionPrice = Math.Max(0, (int)(breed.AdoptionPrice * multiplier));
+                    }
+                }
+            }, AssetEditPriority.Late);
+            return;
+        }
+
         if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))
         {
             e.Edit(asset =>
@@ -518,6 +542,7 @@ public sealed class ModEntry : Mod
         ["Animal.LeahFarmPainting"]     = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
         ["Mining.SkullCavernDeepDive"]  = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
         ["Mining.MinesDeepDive"]        = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
+        ["Foraging.FeedWildCritters"]   = (m, _) => m.OnFeedWildCrittersCompleted(),
     };
 
     private void OnQuestCompleted(object? sender, QuestCompletedArgs e)
@@ -559,6 +584,66 @@ public sealed class ModEntry : Mod
             return;
         TryExpireCredit(player, MarniePurchasePatches.ChickenCreditKey, Config.MarnieChickenOfferRebate, "quest.animal.marnieChickenOffer.creditExpired");
         TryExpireCredit(player, MarniePurchasePatches.CowCreditKey, Config.MarnieCowOfferRebate, "quest.animal.marnieCowOffer.creditExpired");
+        TryExpirePetCredit(player);
+    }
+
+    private void TryExpirePetCredit(Farmer player)
+    {
+        if (!player.modData.TryGetValue(MarniePurchasePatches.PetCreditKey, out string? raw))
+            return;
+        if (!uint.TryParse(raw, out uint expiry))
+        {
+            player.modData.Remove(MarniePurchasePatches.PetCreditKey);
+            return;
+        }
+        if (Game1.stats.DaysPlayed < expiry)
+            return;
+        player.modData.Remove(MarniePurchasePatches.PetCreditKey);
+        Helper.GameContent.InvalidateCache("Data/Pets");
+        Game1.addHUDMessage(new HUDMessage(
+            I18n.Get("quest.foraging.feedWildCritters.creditExpired").ToString(),
+            HUDMessage.achievement_type));
+    }
+
+    /// Persists across saves on `Game1.player.modData`. Bumped when Foraging.FeedWildCritters
+    /// completes; on the Nth completion (Config.FeedWildCrittersPerPetCredit) Marnie issues
+    /// the pet discount credit and the counter resets to 0.
+    internal const string WildCrittersFedCountKey = "RafiaBee.MoreQuests.WildCrittersFedCount";
+
+    private void OnFeedWildCrittersCompleted()
+    {
+        var player = Game1.player;
+        if (player == null)
+            return;
+        int required = Math.Max(1, Config.FeedWildCrittersPerPetCredit);
+        int count = 0;
+        if (player.modData.TryGetValue(WildCrittersFedCountKey, out string? raw))
+            int.TryParse(raw, out count);
+        count++;
+        if (count >= required)
+        {
+            player.modData.Remove(WildCrittersFedCountKey);
+            GrantMarniePetCredit();
+        }
+        else
+        {
+            player.modData[WildCrittersFedCountKey] = count.ToString();
+        }
+    }
+
+    private void GrantMarniePetCredit()
+    {
+        var player = Game1.player;
+        if (player == null)
+            return;
+        int days = Math.Max(1, Config.MarniePetCreditExpiryDays);
+        int percent = Math.Clamp(Config.MarniePetDiscountPercent, 1, 100);
+        uint expiry = Game1.stats.DaysPlayed + (uint)days;
+        player.modData[MarniePurchasePatches.PetCreditKey] = expiry.ToString();
+        Helper.GameContent.InvalidateCache("Data/Pets");
+        Game1.addHUDMessage(new HUDMessage(
+            I18n.Get("quest.foraging.feedWildCritters.creditIssued", new { percent, days }).ToString(),
+            HUDMessage.newQuest_type));
     }
 
     private void TryExpireCredit(Farmer player, string key, int rebateAmount, string hudKey)

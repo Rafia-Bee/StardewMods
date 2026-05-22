@@ -785,6 +785,17 @@
             "Generator": "ClearDebris"
         },
         {
+            "Name": "Foraging.FeedWildCritters",
+            "Category": "Foraging",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 12,
+                "MaxPerDay": 1,
+                "CooldownTier": "Long"
+            },
+            "Generator": "FeedWildCritters"
+        },
+        {
             "Name": "Cooking.DinnerParty",
             "Category": "Cooking",
             "Trigger": {

@@ -169,6 +169,16 @@ public sealed class ModConfig
     /// to the gold rebate.
     public int MarnieCreditExpiryDays { get; set; } = 14;
 
+    /// Percent off the pet license adoption price Marnie gives after the player completes
+    /// three Feed Wild Critters quests. Clamped 1..100 at read time. Applies to every breed
+    /// in Data/Pets while the credit is active, consumed on the next pet purchase.
+    public int MarniePetDiscountPercent { get; set; } = 25;
+    /// In-game days the Marnie pet discount credit stays redeemable before it silently expires.
+    public int MarniePetCreditExpiryDays { get; set; } = 14;
+    /// How many Feed Wild Critters completions earn one pet discount credit. Bumped on
+    /// quest completion; on the Nth, Marnie issues the credit and the counter resets.
+    public int FeedWildCrittersPerPetCredit { get; set; } = 3;
+
     /// Egg qty for Marnie's Egg Request. Quest grants the Mayonnaise Machine recipe.
     public int MarnieEggRequestQty { get; set; } = 10;
     /// Milk qty for Marnie's Milk Request. Quest grants the Cheese Press recipe.

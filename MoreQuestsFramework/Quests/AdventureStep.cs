@@ -23,6 +23,7 @@ public enum AdventureStepKind
     Collect,
     ClearDebris,
     ClearWeeds,
+    DropItems,
     Custom
 }
 

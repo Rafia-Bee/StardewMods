@@ -35,7 +35,12 @@ public static class NpcDisplay
     // as HiddenUntilMet for narrative gating. ItemDeliveryQuests can't be used either
     // because RSV / East Scarp adults set it "FALSE" to opt out of vanilla's random
     // delivery rotation while still being valid hand-authored quest givers.
-    public static bool IsBoardEligible(string? internalName)
+    public static bool IsBoardEligible(string? internalName) => IsBoardEligible(internalName, allowChild: false);
+
+    /// `allowChild` lets postings written for child givers (Feed Wild Critters) skip the
+    /// Age=Child gate while still honoring the manual denylist and CanSocialize /
+    /// PerfectionScore heuristics.
+    public static bool IsBoardEligible(string? internalName, bool allowChild)
     {
         if (string.IsNullOrEmpty(internalName)) return false;
         var deny = ModEntry.Config?.IneligibleGivers;
@@ -44,7 +49,7 @@ public static class NpcDisplay
         if (Game1.characterData == null) return true;
         if (!Game1.characterData.TryGetValue(internalName, out var data) || data == null)
             return true;
-        if (data.Age == NpcAge.Child) return false;
+        if (!allowChild && data.Age == NpcAge.Child) return false;
         if (!StardewValley.GameStateQuery.CheckConditions(data.CanSocialize))
             return false;
         if (!data.PerfectionScore) return false;

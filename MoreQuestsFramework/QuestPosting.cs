@@ -46,6 +46,13 @@ public sealed class QuestPosting
 
     public string QuestGiver { get; set; } = "";
 
+    // Opt-in for child givers. NpcDisplay.IsBoardEligible rejects Age=Child by default
+    // so the help-wanted board doesn't get cluttered with kids asking for chores; the
+    // few quests that are written specifically for child givers (Feed Wild Critters)
+    // set this true so the posting skips the Age=Child gate. The IneligibleGivers
+    // denylist and CanSocialize / PerfectionScore checks still apply.
+    public bool AllowChildGiver { get; set; }
+
     // Used by GiftDelivery where the requester is anonymous and the recipient is a
     // third NPC. Empty falls back to QuestGiver.
     public string DeliveryTarget { get; set; } = "";

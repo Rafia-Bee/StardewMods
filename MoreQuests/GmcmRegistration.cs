@@ -119,6 +119,10 @@ internal static class GmcmRegistration
             v => ModEntry.Config.ForagingQuestsEnabled = v,
             () => t.Get("config.foragingQuests"),
             () => t.Get("config.foragingQuests.tooltip"));
+        api.AddSectionTitle(manifest, () => t.Get("config.section.feedWildCritters"));
+        AddInt(api, manifest, t, "FeedWildCrittersPerPetCredit", () => ModEntry.Config.FeedWildCrittersPerPetCredit, v => ModEntry.Config.FeedWildCrittersPerPetCredit = v, 1, 20);
+        AddInt(api, manifest, t, "MarniePetDiscountPercent", () => ModEntry.Config.MarniePetDiscountPercent, v => ModEntry.Config.MarniePetDiscountPercent = v, 1, 100);
+        AddInt(api, manifest, t, "MarniePetCreditExpiryDays", () => ModEntry.Config.MarniePetCreditExpiryDays, v => ModEntry.Config.MarniePetCreditExpiryDays = v, 1, 56);
 
         // ----- Cooking -----
         api.AddPage(manifest, PageCooking, () => t.Get("config.page.cooking"));
