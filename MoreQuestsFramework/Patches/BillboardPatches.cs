@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Menus;
@@ -22,7 +23,7 @@ internal static class BillboardPatches
         harmony.Patch(
             original: AccessTools.Method(typeof(Billboard), nameof(Billboard.draw), new[] { typeof(SpriteBatch) }),
             prefix: new HarmonyMethod(typeof(BillboardPatches), nameof(Draw_Prefix)),
-            transpiler: new HarmonyMethod(typeof(BillboardPatches), nameof(Generic_Transpiler)));
+            transpiler: new HarmonyMethod(typeof(BillboardPatches), nameof(Draw_Transpiler)));
 
         harmony.Patch(
             original: AccessTools.Method(typeof(Billboard), nameof(Billboard.receiveLeftClick)),
@@ -60,6 +61,68 @@ internal static class BillboardPatches
 
     public static IEnumerable<CodeInstruction> Generic_Transpiler(IEnumerable<CodeInstruction> instructions)
         => RedirectQuestOfTheDay(instructions);
+
+    // First redirect questOfTheDay (like the other patched methods), then redirect the
+    // description draw so long quest text shrinks to fit instead of spilling past the panel.
+    public static IEnumerable<CodeInstruction> Draw_Transpiler(IEnumerable<CodeInstruction> instructions)
+        => FitDescription(RedirectQuestOfTheDay(instructions));
+
+    private static IEnumerable<CodeInstruction> FitDescription(IEnumerable<CodeInstruction> instructions)
+    {
+        var codes = new List<CodeInstruction>(instructions);
+        var parseText = AccessTools.Method(typeof(Game1), nameof(Game1.parseText),
+            new[] { typeof(string), typeof(SpriteFont), typeof(int) });
+        var replacement = AccessTools.Method(typeof(BillboardPatches), nameof(DrawFittedDescription));
+
+        int parseIndex = -1;
+        for (int i = 0; i < codes.Count; i++)
+        {
+            if (parseIndex < 0)
+            {
+                if (codes[i].Calls(parseText))
+                    parseIndex = i;
+                continue;
+            }
+
+            if (codes[i].opcode == OpCodes.Call
+                && codes[i].operand is System.Reflection.MethodInfo mi
+                && mi.DeclaringType == typeof(Utility)
+                && mi.Name == nameof(Utility.drawTextWithShadow))
+            {
+                codes[i] = new CodeInstruction(OpCodes.Call, replacement) { labels = codes[i].labels };
+                break;
+            }
+        }
+        return codes;
+    }
+
+    // Drop-in for Utility.drawTextWithShadow's 11-arg string overload. Shrinks the rendered
+    // quest description until it fits the vertical space between yPos+256 (text top) and the
+    // accept button / reward icon area. Width was already constrained by parseText(.., 640),
+    // so a uniform scale just shrinks lines further into the same column.
+    public static void DrawFittedDescription(SpriteBatch b, string text, SpriteFont font,
+        Vector2 position, Color color, float scale, float layerDepth,
+        int horizontalShadowOffset, int verticalShadowOffset,
+        float shadowIntensity, int numShadows)
+    {
+        // The reward icon is drawn at yPos+576 (panel-relative) when BillboardQuestsDone % 3 == 2.
+        // Without the icon, we have until the accept button at yPos+664. Description top is at
+        // yPos+256, so usable height is 320 (with icon) or 408 (without).
+        bool rewardIconShowing = Game1.stats.Get("BillboardQuestsDone") % 3 == 2;
+        float maxHeight = rewardIconShowing ? 320f : 408f;
+
+        float drawScale = scale;
+        if (!string.IsNullOrEmpty(text))
+        {
+            Vector2 size = font.MeasureString(text) * scale;
+            if (size.Y > maxHeight)
+                drawScale = Math.Max(0.55f, scale * (maxHeight / size.Y));
+        }
+
+        Utility.drawTextWithShadow(b, text, font, position, color, drawScale,
+            layerDepth, horizontalShadowOffset, verticalShadowOffset,
+            shadowIntensity, numShadows);
+    }
 
     public static Quest? GetSelectedQuest()
     {
