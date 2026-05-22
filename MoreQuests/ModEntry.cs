@@ -732,6 +732,19 @@ public sealed class ModEntry : Mod
         scope.RegisterCustomQuestType(typeof(CollectAndReportQuest));
         scope.RegisterCustomQuestType(typeof(PurchaseFromShopQuest));
 
+        // Mail-stash codecs for the two subclasses MarnieCowOffer can post via mail.
+        // Without these, a save+reload before opening the letter loses the quest.
+        scope.RegisterMailStashCodec(
+            PurchaseFromShopQuestStashCodec.Kind,
+            typeof(PurchaseFromShopQuest),
+            PurchaseFromShopQuestStashCodec.Encode,
+            PurchaseFromShopQuestStashCodec.Decode);
+        scope.RegisterMailStashCodec(
+            CollectAndReportQuestStashCodec.Kind,
+            typeof(CollectAndReportQuest),
+            CollectAndReportQuestStashCodec.Encode,
+            CollectAndReportQuestStashCodec.Decode);
+
         Generators.RegisterAll(scope);
 
         ApplyGuildBoardRouting(scope);
