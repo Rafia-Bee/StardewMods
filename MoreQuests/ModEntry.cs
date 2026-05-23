@@ -635,6 +635,8 @@ public sealed class ModEntry : Mod
         {
             if (string.Equals(name, "Vincent", StringComparison.OrdinalIgnoreCase))
                 continue;
+            if (!MoreQuestsFramework.NpcDisplay.IsBoardEligible(name, allowChild: true))
+                continue;
             var npc = Game1.getCharacterFromName(name);
             if (npc == null) continue;
             int variant = Math.Abs(StringComparer.Ordinal.GetHashCode(name) ^ Game1.Date.TotalDays) % EggHuntSabotageDialogueVariants;
@@ -717,6 +719,8 @@ public sealed class ModEntry : Mod
             const int penalty = -30;
             foreach (var kid in MetChildHumanGivers(player))
             {
+                if (!MoreQuestsFramework.NpcDisplay.IsBoardEligible(kid, allowChild: true))
+                    continue;
                 var npc = Game1.getCharacterFromName(kid);
                 if (npc == null) continue;
                 player.changeFriendship(penalty, npc);

@@ -1143,7 +1143,11 @@ internal static partial class Generators
             new MailReward(ModEntry.EggHuntSabotageRewardMailKey, MailWhen.Tomorrow)
         };
         foreach (var kid in kids)
+        {
+            if (!MoreQuestsFramework.NpcDisplay.IsBoardEligible(kid, allowChild: true))
+                continue;
             rewards.Add(new FriendshipReward(kid, ctx.Config.FriendshipMid));
+        }
 
         // Spring 10 trigger needs daysLeft = 4 to auto-fail Spring 14 morning. Trigger
         // on Spring 12 needs daysLeft = 2.
