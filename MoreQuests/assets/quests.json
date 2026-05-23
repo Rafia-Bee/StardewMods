@@ -378,6 +378,17 @@
             "Generator": "GiftDelivery"
         },
         {
+            "Name": "Social.GuntherMuseumDonation",
+            "Category": "Social",
+            "Trigger": {
+                "Source": "NpcDialogue",
+                "Npc": "GuntherSilvian",
+                "CooldownTier": "Long",
+                "Available": { "NpcExists": "GuntherSilvian", "HasMod": "FlashShifter.SVECode" }
+            },
+            "Generator": "GuntherMuseumDonation"
+        },
+        {
             "Name": "Seasonal.HeatWaveRelief",
             "Category": "Seasonal",
             "Trigger": {

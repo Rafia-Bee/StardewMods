@@ -25,6 +25,7 @@ public enum AdventureStepKind
     ClearWeeds,
     DropItems,
     DigArtifactSpot,
+    DonateMuseum,
     Custom
 }
 

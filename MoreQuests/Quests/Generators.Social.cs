@@ -215,4 +215,109 @@ internal static partial class Generators
         };
     }
 
+    /// Dialogue-triggered Adventure quest from SVE's friendable Gunther (GuntherSilvian).
+    /// Vanilla Gunther isn't a normal NPC (right-click opens the museum donation menu, not
+    /// dialogue), so the framework's NpcDialogue trigger can never fire on him. SVE swaps
+    /// him for GuntherSilvian who behaves like a regular speaker. The quest is gated on SVE
+    /// being loaded; on a no-SVE save it never posts. One DonateMuseum step (any item
+    /// suitable for the museum counts). Reward is a random furniture item from the
+    /// Data/MuseumRewards pool, picked at posting time. Prefers items the player hasn't
+    /// yet collected from the museum directly, but falls back to picking any furniture
+    /// reward (the duplicate is harmless for a quest mail grant).
+    private static QuestPosting? GuntherMuseumDonation(QuestContext ctx)
+    {
+        if (!ctx.Helper.ModRegistry.IsLoaded(ModCompat.StardewValleyExpanded))
+            return null;
+        if (Game1.getCharacterFromName("GuntherSilvian") == null)
+            return null;
+        // Museum is full, so no item the player could find is donatable. The DonateMuseum
+        // step would be impossible and the quest would auto-fail on the deadline. Skip.
+        int donated = Game1.netWorldState?.Value?.MuseumPieces?.Length ?? 0;
+        if (donated >= StardewValley.Locations.LibraryMuseum.totalArtifacts)
+            return null;
+
+        string? rewardItemId = PickRandomMuseumDecorReward(ctx);
+        if (rewardItemId == null)
+            return null;
+        var rewardItem = ctx.Items.TryResolveItem(rewardItemId);
+        if (rewardItem == null)
+            return null;
+
+        const string giver = "GuntherSilvian";
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "DonateOne",
+                Kind = AdventureStepKind.DonateMuseum,
+                Count = 1,
+                Description = ModEntry.I18n.Get("quest.social.guntherMuseum.step.donate")
+            },
+            new AdventureStepState
+            {
+                Name = "ReportBack",
+                Kind = AdventureStepKind.Talk,
+                Count = 1,
+                Requires = new List<string> { "DonateOne" },
+                Description = ModEntry.I18n.Get("quest.social.guntherMuseum.step.report")
+            }
+        }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.social.guntherMuseum.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Social,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards = { new ObjectReward(rewardItem.QualifiedItemId, 1) },
+            Title = ModEntry.I18n.Get("quest.social.guntherMuseum.title"),
+            Description = ModEntry.I18n.Get("quest.social.guntherMuseum.description", new { item = rewardItem.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.social.guntherMuseum.step.donate"),
+            TargetMessage = ModEntry.I18n.Get("quest.social.guntherMuseum.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
+    private static string? PickRandomMuseumDecorReward(QuestContext ctx)
+    {
+        Dictionary<string, StardewValley.GameData.Museum.MuseumRewards> data;
+        try
+        {
+            data = ctx.Helper.GameContent.Load<Dictionary<string, StardewValley.GameData.Museum.MuseumRewards>>("Data/MuseumRewards");
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+
+        var pool = new List<string>();
+        var freshPool = new List<string>();
+        foreach (var entry in data.Values)
+        {
+            if (entry?.RewardItemId == null || entry.RewardItemIsRecipe)
+                continue;
+            if (!entry.RewardItemId.StartsWith("(F)", StringComparison.Ordinal))
+                continue;
+            pool.Add(entry.RewardItemId);
+            var probe = StardewValley.ItemRegistry.Create(entry.RewardItemId, 1, 0, allowNull: true);
+            if (probe == null)
+                continue;
+            // Must match LibraryMuseum.getRewardItemKey exactly; that vanilla method still
+            // calls Utility.getStandardDescriptionFromItem so we follow suit.
+#pragma warning disable CS0618
+            string key = "museumCollectedReward" + StardewValley.Utility.getStandardDescriptionFromItem(probe, 1, '_');
+#pragma warning restore CS0618
+            if (Game1.player == null || !Game1.player.mailReceived.Contains(key))
+                freshPool.Add(entry.RewardItemId);
+        }
+
+        var chosen = freshPool.Count > 0 ? freshPool : pool;
+        if (chosen.Count == 0)
+            return null;
+        return chosen[Game1.random.Next(chosen.Count)];
+    }
 }
