@@ -326,7 +326,7 @@
     "quest.social.giftDelivery.targetMessage": "Oh! Thank you. That's so thoughtful.",
 
     "quest.social.guntherMuseum.title": "A piece for the museum",
-    "quest.social.guntherMuseum.description": "I've been short on new finds lately. If you could spare just one item the museum doesn't already have, I'd be happy to give you one of our spare display pieces as a thank you. A {{item}}, perhaps. Come find me once you've made the donation.",
+    "quest.social.guntherMuseum.description": "I've been short on new finds lately. If you could spare just one item the museum doesn't already have, I'd be happy to give you one of our spare display pieces as a thank you. Come find me once you've made the donation.",
     "quest.social.guntherMuseum.step.donate": "Donate any item to the museum.",
     "quest.social.guntherMuseum.step.report": "Speak to Gunther to collect your reward.",
     "quest.social.guntherMuseum.targetMessage": "Wonderful! Here's that display piece I promised. Thank you again.",

@@ -214,7 +214,7 @@ internal sealed class QuestPoster
             _monitor.Log($"NpcDialogue posting for {posting.DefinitionId} dropped (no QuestGiver to wait for).", LogLevel.Warn);
             return;
         }
-        _dialogueWatcher.Enqueue(posting.DefinitionId, npc);
+        _dialogueWatcher.Enqueue(posting.DefinitionId, npc, posting.DialogueText, posting);
     }
 
     private void PostViaMail(QuestPosting posting)

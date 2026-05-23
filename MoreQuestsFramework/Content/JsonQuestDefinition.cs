@@ -175,6 +175,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             CurrentObjective = Resolve(_def.CurrentObjective),
             TargetMessage = Resolve(_def.TargetMessage),
             MailBody = string.IsNullOrEmpty(_def.MailBody) ? null : Resolve(_def.MailBody),
+            DialogueText = string.IsNullOrEmpty(_def.Trigger?.DialogueText) ? string.Empty : Resolve(_def.Trigger.DialogueText),
             PreBuiltQuest = quest
         };
         BuildRewards(posting.Rewards, _def.Rewards);
@@ -268,6 +269,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             CurrentObjective = Resolve(_def.CurrentObjective),
             TargetMessage = Resolve(_def.TargetMessage),
             MailBody = string.IsNullOrEmpty(_def.MailBody) ? null : Resolve(_def.MailBody),
+            DialogueText = string.IsNullOrEmpty(_def.Trigger?.DialogueText) ? string.Empty : Resolve(_def.Trigger.DialogueText),
             AllowDecorShipping = _def.AllowDecorShipping
         };
         for (int i = 1; i < obj.Item.Count; i++)
@@ -450,7 +452,8 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             StartDate: t.StartDate,
             Duration: t.Duration,
             Weight: t.Weight,
-            Custom: t.Custom);
+            Custom: t.Custom,
+            DialogueText: t.DialogueText);
     }
 
     private static BoardQuestType ParseObjectiveKind(string kind)
