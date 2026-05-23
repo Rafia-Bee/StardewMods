@@ -1108,6 +1108,63 @@ internal static partial class Generators
         };
     }
 
+    /// NpcDialogue, Spring 10-12. Vincent pulls the farmer into a "let's beat Abigail"
+    /// plan during the Egg Festival lead-up. The single Custom step is the egg hunt
+    /// itself, marked done at Spring 13 day-end based on festivalScore. The "talk to
+    /// the other kids" flavor happens via dialogue lines pushed onto each met child
+    /// from ModEntry.OnDayStarted; framework AdventureQuest doesn't expose force-mark
+    /// for non-Custom steps, so per-kid steps stay out of the journal. Win path:
+    /// per-kid FriendshipMid + thank-you mail Spring 14 + an iridium-quality egg
+    /// granted in code (mail attachments don't carry quality). Loss path: per-kid
+    /// -FriendshipMultiSmall and the quest is removed silently.
+    private static QuestPosting? EggHuntSabotage(QuestContext ctx)
+    {
+        const string giver = "Vincent";
+
+        var kids = MetChildHumanGivers();
+        if (!kids.Contains("Vincent", StringComparer.OrdinalIgnoreCase) || !kids.Contains("Jas", StringComparer.OrdinalIgnoreCase))
+            return null;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "WinTheHunt",
+                Kind = AdventureStepKind.Custom,
+                Targets = new List<string> { ModEntry.EggHuntSabotageStepHandler },
+                Count = 1,
+                Description = ModEntry.I18n.Get("quest.festival.eggHuntSabotage.step.win")
+            }
+        }, giver: giver);
+
+        var rewards = new List<RewardSpec>
+        {
+            new MailReward(ModEntry.EggHuntSabotageRewardMailKey, MailWhen.Tomorrow)
+        };
+        foreach (var kid in kids)
+            rewards.Add(new FriendshipReward(kid, ctx.Config.FriendshipMid));
+
+        // Spring 10 trigger needs daysLeft = 4 to auto-fail Spring 14 morning. Trigger
+        // on Spring 12 needs daysLeft = 2.
+        int daysLeft = Math.Max(2, 14 - Game1.dayOfMonth);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Festival,
+            Tier = DifficultyTier.Beginner,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = daysLeft,
+            Rewards = rewards,
+            Title = ModEntry.I18n.Get("quest.festival.eggHuntSabotage.title"),
+            Description = ModEntry.I18n.Get("quest.festival.eggHuntSabotage.description"),
+            DialogueText = ModEntry.I18n.Get("quest.festival.eggHuntSabotage.offer"),
+            PreBuiltQuest = quest
+        };
+    }
+
     /// Fair decor: Lewis, Fall 12. Three Ship steps: Wood, any Sign BC (Wood/Stone/Dark),
     /// fall flowers (scanned from Data/Crops so modded fall flowers come along). Reward
     /// depends on FairFestivalRewardKind: GrangeScoreBonus adds flat grange points, StarTokens

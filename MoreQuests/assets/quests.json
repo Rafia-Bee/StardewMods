@@ -537,6 +537,18 @@
             "Generator": "EggFestivalDecor"
         },
         {
+            "Name": "Festival.EggHuntSabotage",
+            "Category": "Festival",
+            "Trigger": {
+                "Source": "NpcDialogue",
+                "Npc": "Vincent",
+                "CooldownDays": 250,
+                "Available": { "Date": "spring 10-12", "NpcMet": "Vincent Jas" },
+                "DialogueText": "{{i18n:quest.festival.eggHuntSabotage.offer}}"
+            },
+            "Generator": "EggHuntSabotage"
+        },
+        {
             "Name": "Festival.DyeForEggs",
             "Category": "Festival",
             "Trigger": {
