@@ -19,7 +19,7 @@ This mod powers [More Quests](../MoreQuests/README.md) and ships four configurab
   - `BuildingBuilt`, the morning after a given farm building finishes construction (with optional `DayDelay`).
   - `MailReceived`, the day a given mail flag enters the player's received list (with optional `DayDelay`).
   - `WeatherForecast`, when tomorrow's weather matches. Handy for rainy-day mail that arrives the night before.
-  - `NpcDialogue`, queues the posting until the player next speaks to the named NPC.
+  - `NpcDialogue`, queues the posting until the player next speaks to the named NPC. By default the quest is added to the journal silently on the first chat. If the trigger also sets `DialogueText`, the quest waits for the SECOND chat that day instead: the NPC says their normal scheduled line on the first interaction, the framework injects the offer line onto their dialogue stack right after, and the player sees that line and gets the quest on the next chat. Cutscenes and festival dialogue don't count toward the chat counter. Chat counts reset at the start of each day. When `AllowDuplicateGiverPerDay` is off (the default), only one offer-line quest fires per NPC per day even if several are pending; the rest wait for tomorrow's chat sequence.
   - `SpecialOrder`, writes a `Data/SpecialOrders` entry on the matching `StartDate` for `Duration` days. Vanilla owns the accept and tracking flow from there.
   - `CustomBoard`, per-day weighted draw routed to a registered `BoardDefinition`'s slot list, filtered by the board's `AllowedCategories` and capped at its `PoolSize`.
   - `Custom`, escape hatch for consumer-mod trigger sources. The quest's `Trigger.Custom` field is the handler id registered through `IMoreQuestsModApi.RegisterCustomTrigger`. The framework respects the definition's `CooldownDays` first (so the handler isn't even asked while the cooldown is active), then calls the handler at DayStarted to decide whether the trigger fires today. Bare names resolve under the calling mod's UniqueID; pass `"OtherMod.UniqueID/Name"` to reference another mod's handler. Example:
@@ -244,6 +244,17 @@ See the working example at [docs/example-csharp-iquestdef/](docs/example-csharp-
         "Category": "Seasonal",
         "Trigger": { "Source": "SpecialOrder", "StartDate": "fall 1", "Duration": "Month", "CooldownDays": 21 },
         "Generator": "PreservesOrder"
+    },
+
+    "{{ModId}}_GuntherFavor": {
+        "Category": "Social",
+        "Trigger": {
+            "Source": "NpcDialogue",
+            "Npc": "GuntherSilvian",
+            "CooldownTier": "Long",
+            "DialogueText": "{{i18n:my.gunther.offerLine}}"
+        },
+        "Generator": "GuntherFavor"
     }
 }
 ```

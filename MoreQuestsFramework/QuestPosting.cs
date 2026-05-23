@@ -103,6 +103,11 @@ public sealed class QuestPosting
     public string TargetMessage { get; set; } = "";
     public string? MailBody { get; set; }
 
+    // NpcDialogue postings only. When set, the NPC says this line the second time the
+    // player chats with them today; the quest is added to the journal at that moment.
+    // When empty, the quest is added silently on the first chat (the legacy behavior).
+    public string DialogueText { get; set; } = "";
+
     public int DeadlineDays { get; set; } = 5;
 
     // Bypass vanilla's decor/furniture shipping ban while the quest is active. Used by

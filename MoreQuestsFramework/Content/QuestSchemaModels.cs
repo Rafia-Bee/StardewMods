@@ -109,6 +109,11 @@ public sealed class TriggerDef
     // NpcDialogue.
     public string? Npc { get; set; }
 
+    // NpcDialogue. Optional offer line. When set, the NPC says this the second time the
+    // player chats with them today, and the quest lands in the journal at that moment.
+    // When empty, the quest is added silently on the first chat.
+    public string? DialogueText { get; set; }
+
     // SpecialOrder.
     public string? StartDate { get; set; }
 

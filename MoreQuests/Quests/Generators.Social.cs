@@ -278,6 +278,7 @@ internal static partial class Generators
             Description = ModEntry.I18n.Get("quest.social.guntherMuseum.description", new { item = rewardItem.DisplayName }),
             CurrentObjective = ModEntry.I18n.Get("quest.social.guntherMuseum.step.donate"),
             TargetMessage = ModEntry.I18n.Get("quest.social.guntherMuseum.targetMessage"),
+            DialogueText = ModEntry.I18n.Get("quest.social.guntherMuseum.description", new { item = rewardItem.DisplayName }),
             PreBuiltQuest = quest
         };
     }

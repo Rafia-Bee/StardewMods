@@ -396,7 +396,8 @@ public sealed class ModEntry : Mod
 
         _dialogueWatcher = new DialogueWatcher(
             _registry, ctx, _stateStore.State, _api, Monitor,
-            posting => _poster!.PrepareQuest(posting, daysLeft: Math.Max(1, posting.DeadlineDays)));
+            posting => _poster!.PrepareQuest(posting, daysLeft: Math.Max(1, posting.DeadlineDays)),
+            _antiRepetition!);
         _dialogueWatcher.Reset();
         _poster!.WireDialogueWatcher(_dialogueWatcher);
 
@@ -498,6 +499,7 @@ public sealed class ModEntry : Mod
         _antiRepetition?.BeginDay();
         _triggers?.BeginDay();
         _poster.BeginDay();
+        _dialogueWatcher?.ResetDay();
 
         ObserveBuildOnQuestLog();
 
