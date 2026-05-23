@@ -20,7 +20,7 @@ public sealed class MoreQuestsFrameworkConfig
     // trigger condition matches). 0 disables the quest entirely.
     public Dictionary<string, int> MailQuestChancePercent { get; set; } = new();
 
-    public bool DifficultyScaling { get; set; } = true;
+    public bool DifficultyScaling { get; set; } = false;
 
     // When false (default), the candidate pool is filtered to locations the player
     // has visited at least once.
