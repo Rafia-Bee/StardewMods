@@ -614,10 +614,12 @@ public sealed class ModEntry : Mod
         TryGrantEggHuntSabotageEgg();
     }
 
-    /// Spring 10-13, when Festival.EggHuntSabotage is active, push the per-kid "remember
-    /// the plan" line onto each met child's CurrentDialogue (Vincent excluded since he's
+    /// Spring 10-13, when Festival.EggHuntSabotage is active, push a randomly-picked
+    /// "plan" line onto each met child's CurrentDialogue (Vincent excluded since he's
     /// the giver). Pure flavor: no quest step advances from these lines. Vanilla clears
     /// CurrentDialogue on day rollover, so re-pushing every morning doesn't stack.
+    /// Each kid picks independently so the lines vary across the group; reseeded each
+    /// day via the current date so the picks are stable within a save day.
     private void PushEggHuntSabotageChildLines()
     {
         if (!IsEggHuntSabotageDialogueWindow())
@@ -631,13 +633,13 @@ public sealed class ModEntry : Mod
                 continue;
             var npc = Game1.getCharacterFromName(name);
             if (npc == null) continue;
-            string key = string.Equals(name, "Jas", StringComparison.OrdinalIgnoreCase)
-                ? "quest.festival.eggHuntSabotage.dialogue.jas"
-                : "quest.festival.eggHuntSabotage.dialogue.kid";
-            string text = I18n.Get(key, new { npc = npc.displayName }).ToString();
+            int variant = Math.Abs(StringComparer.Ordinal.GetHashCode(name) ^ Game1.Date.TotalDays) % EggHuntSabotageDialogueVariants;
+            string text = I18n.Get($"quest.festival.eggHuntSabotage.dialogue.kid{variant + 1}", new { npc = npc.displayName }).ToString();
             npc.CurrentDialogue.Push(new StardewValley.Dialogue(npc, null, text));
         }
     }
+
+    private const int EggHuntSabotageDialogueVariants = 5;
 
     private static bool IsEggHuntSabotageDialogueWindow()
     {
