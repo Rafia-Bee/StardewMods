@@ -227,6 +227,17 @@
             "Generator": "MinesDeepDive"
         },
         {
+            "Name": "Mining.ArchaeologyDig",
+            "Category": "Mining",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 30,
+                "MaxPerDay": 1,
+                "CooldownTier": "Medium"
+            },
+            "Generator": "ArchaeologyDig"
+        },
+        {
             "Name": "Farming.PierresStockUp",
             "Category": "Farming",
             "Trigger": {

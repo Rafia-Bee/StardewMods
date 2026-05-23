@@ -601,6 +601,7 @@ public sealed class ModEntry : Mod
         bool outdoors = e.Location.IsOutdoors;
         int weeds = 0;
         int debris = 0;
+        int artifactSpots = 0;
         foreach (var pair in e.Removed)
         {
             var obj = pair.Value;
@@ -611,8 +612,10 @@ public sealed class ModEntry : Mod
                 debris++;
             else if (outdoors && obj.IsBreakableStone())
                 debris++;
+            else if (obj.QualifiedItemId == "(O)590")
+                artifactSpots++;
         }
-        if (weeds == 0 && debris == 0)
+        if (weeds == 0 && debris == 0 && artifactSpots == 0)
             return;
         string locName = e.Location.Name;
         var log = Game1.player.questLog;
@@ -621,6 +624,7 @@ public sealed class ModEntry : Mod
             if (log[i] is not AdventureQuest a || a.completed.Value) continue;
             if (weeds > 0) a.ObserveWeedsCleared(locName, weeds);
             if (debris > 0) a.ObserveDebrisCleared(locName, debris);
+            if (artifactSpots > 0) a.ObserveArtifactSpotDug(locName, artifactSpots);
         }
     }
 

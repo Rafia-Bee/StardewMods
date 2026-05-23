@@ -584,6 +584,21 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
+    public void ObserveArtifactSpotDug(string locationName, int delta)
+    {
+        if (completed.Value || delta <= 0 || string.IsNullOrEmpty(locationName))
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.DigArtifactSpot) continue;
+            if (!LocationMatches(step, locationName)) continue;
+            CreditCount(i, step, delta);
+        }
+    }
+
     /// DropItemsPatches calls this when a player-dropped Debris hits the ground. Drops
     /// of a stack create one Debris carrying the whole stack, so the listener passes
     /// `available = item.Stack` and gets back how many were actually consumed. The

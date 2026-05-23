@@ -28,6 +28,10 @@ public static class ModCompat
     // under the prefixed id below (see LoveOfCooking/Objects/CookingSkill.cs).
     public const string LoveOfCooking = "blueberry.LoveOfCooking";
     internal const string LoveOfCookingSkillId = "blueberry.LoveOfCooking.CookingSkill";
+    // moonslime's Archaeology Skill, also SpaceCore-based. The skill is registered
+    // under "moonslime.Archaeology" (no trailing "Skill").
+    public const string ArchaeologySkill = "moonslime.ArchaeologySkill";
+    internal const string ArchaeologySkillId = "moonslime.Archaeology";
 
     public static bool IsLoaded(IModRegistry registry, string uniqueId) => registry.IsLoaded(uniqueId);
 
@@ -44,6 +48,13 @@ public static class ModCompat
         => registry.IsLoaded(LoveOfCooking) || registry.IsLoaded(CookingSkillRedux);
 
     public static bool HasLoveOfCooking(IModRegistry registry) => registry.IsLoaded(LoveOfCooking);
+
+    public static bool HasArchaeologySkill(IModRegistry registry) => registry.IsLoaded(ArchaeologySkill);
+
+    public static int GetArchaeologyLevel(IModRegistry registry)
+        => registry.IsLoaded(ArchaeologySkill)
+            ? SpaceCoreSkills.GetLevel(Game1.player, ArchaeologySkillId)
+            : 0;
 
     // Returns the current player's cooking skill level from whichever supported
     // cooking-skill mod is installed. Love of Cooking wins when both are present

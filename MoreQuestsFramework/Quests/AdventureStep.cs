@@ -24,6 +24,7 @@ public enum AdventureStepKind
     ClearDebris,
     ClearWeeds,
     DropItems,
+    DigArtifactSpot,
     Custom
 }
 

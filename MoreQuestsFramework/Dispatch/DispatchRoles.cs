@@ -16,4 +16,5 @@ public static class DispatchRoles
     public const string BulkFishBuyer = "BulkFishBuyer";
     public const string FishermenNpcs = "FishermenNpcs";
     public const string BlacksmithNpcs = "BlacksmithNpcs";
+    public const string ArchaeologyNpcs = "ArchaeologyNpcs";
 }
