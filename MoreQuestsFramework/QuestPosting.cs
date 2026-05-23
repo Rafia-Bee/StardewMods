@@ -108,6 +108,13 @@ public sealed class QuestPosting
     // When empty, the quest is added silently on the first chat (the legacy behavior).
     public string DialogueText { get; set; } = "";
 
+    // Optional replacement for the per-NPC / collapsed friendship lines in the journal
+    // reward summary. When non-empty, BuildRewardSummary drops the auto-built friendship
+    // lines and uses this string instead. Useful when a quest's friendship pool is a
+    // themed group (the kids, the saloon crowd, the wizard tower) and the generic
+    // "word will get around" line reads wrong.
+    public string FriendshipSummaryOverride { get; set; } = "";
+
     public int DeadlineDays { get; set; } = 5;
 
     // Bypass vanilla's decor/furniture shipping ban while the quest is active. Used by

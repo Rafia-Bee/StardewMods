@@ -73,7 +73,7 @@ public static class RewardApplier
         return total;
     }
 
-    public static string BuildRewardSummary(IReadOnlyList<RewardSpec> rewards, string questGiver, ITranslationHelper translation)
+    public static string BuildRewardSummary(IReadOnlyList<RewardSpec> rewards, string questGiver, ITranslationHelper translation, string friendshipSummaryOverride = "")
     {
         if (rewards.Count == 0)
             return string.Empty;
@@ -86,13 +86,19 @@ public static class RewardApplier
             lines.Add(translation.Get("quest.reward.line.money", new { npc = giver, gold })
                 .Default($"{giver} will give you {gold}g in return").ToString());
 
-        // 3+ named NPCs collapse to one line: the summary doubles as a tip sheet for
-        // who's about to react, so listing every loved-by villager spoils the consequence pool.
         var friendshipRewards = rewards.OfType<FriendshipReward>()
             .Where(f => f.Points > 0 && !string.IsNullOrEmpty(f.Npc))
             .ToList();
-        if (friendshipRewards.Count >= 3)
+        if (friendshipRewards.Count > 0 && !string.IsNullOrEmpty(friendshipSummaryOverride))
         {
+            // Themed override: replaces both the per-NPC and the collapsed lines.
+            lines.Add(friendshipSummaryOverride);
+        }
+        else if (friendshipRewards.Count >= 3)
+        {
+            // 3+ named NPCs collapse to one line: the summary doubles as a tip sheet
+            // for who's about to react, so listing every loved-by villager spoils the
+            // consequence pool.
             lines.Add(translation.Get("quest.reward.line.friendship.collapsed")
                 .Default("Word will get around, a few villagers will warm up to you").ToString());
         }

@@ -1161,6 +1161,7 @@ internal static partial class Generators
             Title = ModEntry.I18n.Get("quest.festival.eggHuntSabotage.title"),
             Description = ModEntry.I18n.Get("quest.festival.eggHuntSabotage.description"),
             DialogueText = ModEntry.I18n.Get("quest.festival.eggHuntSabotage.offer"),
+            FriendshipSummaryOverride = ModEntry.I18n.Get("quest.festival.eggHuntSabotage.reward.friendship").ToString(),
             PreBuiltQuest = quest
         };
     }

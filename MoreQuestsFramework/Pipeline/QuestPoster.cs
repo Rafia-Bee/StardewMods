@@ -427,7 +427,7 @@ internal sealed class QuestPoster
 
     private string AppendRewardLine(string description, QuestPosting posting)
     {
-        string summary = RewardApplier.BuildRewardSummary(posting.Rewards, posting.QuestGiver, _helper.Translation);
+        string summary = RewardApplier.BuildRewardSummary(posting.Rewards, posting.QuestGiver, _helper.Translation, posting.FriendshipSummaryOverride);
         if (string.IsNullOrEmpty(summary))
             return description;
         // Quest descriptions use \n (Game1.parseText). "^" is mail-only and renders as ~~.
