@@ -118,6 +118,7 @@ internal static partial class Generators
         Reg(fw, "CheckOnGeorge", CheckOnGeorge);
         Reg(fw, "ElliottPoemInspiration", ElliottPoemInspiration);
         Reg(fw, "GiftDelivery", GiftDelivery);
+        Reg(fw, "GuntherMuseumDonation", GuntherMuseumDonation);
     }
 
     /// Wraps fw.RegisterGenerator with a category master-toggle check. Drops the posting

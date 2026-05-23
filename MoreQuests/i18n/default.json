@@ -325,6 +325,12 @@
     "quest.social.giftDelivery.objective": "Deliver a {{item}} to {{recipient}}.",
     "quest.social.giftDelivery.targetMessage": "Oh! Thank you. That's so thoughtful.",
 
+    "quest.social.guntherMuseum.title": "A piece for the museum",
+    "quest.social.guntherMuseum.description": "I've been short on new finds lately. If you could spare just one item the museum doesn't already have, I'd be happy to give you one of our spare display pieces as a thank you. A {{item}}, perhaps. Come find me once you've made the donation.",
+    "quest.social.guntherMuseum.step.donate": "Donate any item to the museum.",
+    "quest.social.guntherMuseum.step.report": "Speak to Gunther to collect your reward.",
+    "quest.social.guntherMuseum.targetMessage": "Wonderful! Here's that display piece I promised. Thank you again.",
+
     "quest.seasonal.heatWaveRelief.title": "{{npc}}'s heat wave relief",
     "quest.seasonal.heatWaveRelief.description": "The clinic is full of folks half-fainted from the heat. {{npc}} is asking for {{qty}} {{item}} to keep around for anyone who comes in dehydrated. Drop them off when you can and there's something for the trouble.",
     "quest.seasonal.heatWaveRelief.objective": "Bring {{item}} to {{npc}}.",

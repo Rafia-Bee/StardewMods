@@ -599,6 +599,23 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         }
     }
 
+    // Fired by the framework when the player closes the museum donation menu with a
+    // net-positive change in museum piece count. Museum is one fixed location, so no
+    // Targets filter is needed; any DonateMuseum step on this quest credits.
+    public void ObserveMuseumDonation(int delta)
+    {
+        if (completed.Value || delta <= 0)
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.DonateMuseum) continue;
+            CreditCount(i, step, delta);
+        }
+    }
+
     /// DropItemsPatches calls this when a player-dropped Debris hits the ground. Drops
     /// of a stack create one Debris carrying the whole stack, so the listener passes
     /// `available = item.Stack` and gets back how many were actually consumed. The

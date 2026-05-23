@@ -156,6 +156,7 @@ public sealed class ModEntry : Mod
         helper.Events.Player.Warped += OnPlayerWarped;
         helper.Events.World.TerrainFeatureListChanged += OnTerrainFeatureListChanged;
         helper.Events.World.ObjectListChanged += OnObjectListChanged;
+        helper.Events.Display.MenuChanged += OnMenuChanged;
 
         helper.ConsoleCommands.Add(
             "mq_refresh",
@@ -591,6 +592,36 @@ public sealed class ModEntry : Mod
         {
             if (log[i] is AdventureQuest a && !a.completed.Value)
                 a.ObservePlantedTree(locName, trees);
+        }
+    }
+
+    // Snapshot of museumPieces.Length captured when MuseumMenu opens. On menu close,
+    // a positive delta means the player donated that many pieces. Rearranging is a
+    // remove-then-re-add inside the same menu session, so it nets to zero.
+    private int? _museumPieceCountOnMenuOpen;
+
+    private void OnMenuChanged(object? sender, StardewModdingAPI.Events.MenuChangedEventArgs e)
+    {
+        if (e.NewMenu is StardewValley.Menus.MuseumMenu)
+        {
+            _museumPieceCountOnMenuOpen = Game1.netWorldState?.Value?.MuseumPieces?.Length ?? 0;
+            return;
+        }
+
+        if (e.OldMenu is StardewValley.Menus.MuseumMenu && _museumPieceCountOnMenuOpen.HasValue)
+        {
+            int before = _museumPieceCountOnMenuOpen.Value;
+            _museumPieceCountOnMenuOpen = null;
+            int after = Game1.netWorldState?.Value?.MuseumPieces?.Length ?? 0;
+            int delta = after - before;
+            if (delta <= 0 || Game1.player?.questLog == null)
+                return;
+            var log = Game1.player.questLog;
+            for (int i = 0; i < log.Count; i++)
+            {
+                if (log[i] is AdventureQuest a && !a.completed.Value)
+                    a.ObserveMuseumDonation(delta);
+            }
         }
     }
 
