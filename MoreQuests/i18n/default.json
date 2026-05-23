@@ -138,6 +138,13 @@
     "quest.mining.bar.objective": "Bring {{item}} to {{npc}}.",
     "quest.mining.bar.targetMessage": "These are perfect, thanks for getting them so fast.",
 
+    "quest.mining.archaeologyDig.title": "{{npc}}'s dig request",
+    "quest.mining.archaeologyDig.description": "{{npc}} is hoping someone can hunt down {{count}} artifact spots and dig them up. Keep whatever you find, and report back when you're done. They're offering {{reward}} of the {{item}} as a thank you.",
+    "quest.mining.archaeologyDig.step.dig": "Find and dig up {{count}} artifact spots.",
+    "quest.mining.archaeologyDig.step.report": "Report back to {{npc}}.",
+    "quest.mining.archaeologyDig.objective": "Dig up {{count}} artifact spots, then talk to {{npc}}.",
+    "quest.mining.archaeologyDig.targetMessage": "Wonderful work. Whatever you turned up should make for a great study.",
+
     "quest.foraging.seasonal.title": "{{npc}}'s foraging request",
     "quest.foraging.seasonal.description": "I've been looking for some {{item}} but to no luck. I really want to make some salad with them. If someone finds {{qty}} {{item}}, please bring them by. Thanks! - {{npc}}",
     "quest.foraging.seasonal.objective": "Bring {{item}} to {{npc}}.",

@@ -84,5 +84,11 @@ internal static class NpcDispatch
         registry.Register(DispatchRoles.BlacksmithNpcs, "Lola", ModCompat.RidgesideVillage);
         registry.Register(DispatchRoles.BlacksmithNpcs, "Jio", ModCompat.RidgesideVillage);
         registry.Register(DispatchRoles.BlacksmithNpcs, "Daia", ModCompat.RidgesideVillage);
+
+        // ArchaeologyNpcs: vanilla Gunther isn't friendable (right-click opens the museum
+        // donation menu instead of dialogue), so social-flow handlers never fire on him.
+        // SVE swaps him for "GuntherSilvian", who is friendable.
+        registry.Register(DispatchRoles.ArchaeologyNpcs, "GuntherSilvian", ModCompat.StardewValleyExpanded);
+        registry.Register(DispatchRoles.ArchaeologyNpcs, "Jasper", ModCompat.EastScarp);
     }
 }

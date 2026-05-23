@@ -636,4 +636,100 @@ internal static partial class Generators
         return null;
     }
 
+    // Fixed Hardwood Display item from moonslime's Archaeology Skill content pack. Used
+    // as the per-dig reward when the mod is installed; without the mod, the quest falls
+    // back to a random geode/trove from the pool below.
+    private const string HardwoodDisplayItemId = "(O)moonslime.Archaeology.h_display";
+
+    // Geode-style fallback rewards when the Archaeology Skill mod isn't installed.
+    // Mixes the four geode types + Artifact Trove so the haul still feels like a
+    // dig-themed prize even without the hardwood-display item.
+    private static readonly string[] ArchaeologyFallbackRewards =
+    {
+        "(O)535", // Geode
+        "(O)536", // Frozen Geode
+        "(O)537", // Magma Geode
+        "(O)749", // Omni Geode
+        "(O)275"  // Artifact Trove
+    };
+
+    // Two-step Adventure: dig X artifact spots anywhere, then report back to the
+    // giver. The player keeps every artifact they dug up; the reward is paid by the
+    // giver on the report-back. X scales: Archaeology Skill mod installed + scaling
+    // on -> 1 + rand(1, max(1, archLevel/2)); no mod + scaling on -> 1 + rand(1,
+    // max(1, miningLevel/2)); scaling off -> rand(1, 3). Reward: Y = 2 * X items, of
+    // the Hardwood Display (mod installed) or one random geode/trove (mod missing).
+    // Giver comes from the ArchaeologyNpcs dispatch pool (SVE's friendable Gunther
+    // + East Scarp's Jasper).
+    private static QuestPosting? ArchaeologyDig(QuestContext ctx)
+    {
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.ArchaeologyNpcs);
+        if (giver == null)
+            return null;
+
+        bool modLoaded = ctx.Helper.ModRegistry.IsLoaded(ModCompat.ArchaeologySkill);
+
+        int x;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int skill = modLoaded
+                ? ModCompat.GetArchaeologyLevel(ctx.Helper.ModRegistry)
+                : Game1.player.MiningLevel;
+            int upper = Math.Max(1, skill / 2);
+            x = 1 + Game1.random.Next(1, upper + 1);
+        }
+        else
+        {
+            x = Game1.random.Next(1, 4);
+        }
+
+        int y = 2 * x;
+
+        ResolvedItem? rewardItem = modLoaded
+            ? ctx.Items.TryResolveItem(HardwoodDisplayItemId)
+            : ctx.Items.TryResolveItem(ArchaeologyFallbackRewards[Game1.random.Next(ArchaeologyFallbackRewards.Length)]);
+        if (rewardItem == null)
+            rewardItem = ctx.Items.TryResolveItem("(O)749"); // Omni Geode safety net
+        if (rewardItem == null)
+            return null;
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "DigArtifactSpots",
+                Kind = AdventureStepKind.DigArtifactSpot,
+                Targets = new List<string> { "*" },
+                Count = x,
+                Description = ModEntry.I18n.Get("quest.mining.archaeologyDig.step.dig", new { count = x })
+            },
+            new AdventureStepState
+            {
+                Name = "ReportBack",
+                Kind = AdventureStepKind.Talk,
+                // Empty Targets falls through to the giver in AdventureQuest.TargetMatches.
+                Count = 1,
+                Requires = new List<string> { "DigArtifactSpots" },
+                Description = ModEntry.I18n.Get("quest.mining.archaeologyDig.step.report", new { npc = giver })
+            }
+        }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.mining.archaeologyDig.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Mining,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = x,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards = { new ObjectReward(rewardItem.QualifiedItemId, y) },
+            Title = ModEntry.I18n.Get("quest.mining.archaeologyDig.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.mining.archaeologyDig.description", new { npc = giver, count = x, reward = y, item = rewardItem.DisplayName }),
+            CurrentObjective = ModEntry.I18n.Get("quest.mining.archaeologyDig.objective", new { count = x, npc = giver }),
+            TargetMessage = ModEntry.I18n.Get("quest.mining.archaeologyDig.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
 }

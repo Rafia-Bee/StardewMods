@@ -95,6 +95,7 @@ internal static partial class Generators
         Reg(fw, "SeasonalForaging", SeasonalForaging);
 
         // Mining
+        Reg(fw, "ArchaeologyDig", ArchaeologyDig);
         Reg(fw, "BarDelivery", BarDelivery);
         Reg(fw, "BasicSlimeClearing", BasicSlimeClearing);
         Reg(fw, "MinesDeepDive", MinesDeepDive);

@@ -162,7 +162,7 @@ public sealed class StepDef
     public string? Name { get; set; }
 
     // Deliver | Talk | Gift | Catch | Slay | Ship | Visit | Build | ReachLevel |
-    // Plant | Collect | ClearDebris | ClearWeeds | Custom.
+    // Plant | Collect | ClearDebris | ClearWeeds | DropItems | DigArtifactSpot | Custom.
     public string Kind { get; set; } = "Talk";
 
     public string? Description { get; set; }
