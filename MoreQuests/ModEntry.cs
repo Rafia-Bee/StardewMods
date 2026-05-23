@@ -707,14 +707,9 @@ public sealed class ModEntry : Mod
                 }
             }
             if (!marked)
-            {
-                Monitor.Log("EggHuntSabotage: no active Custom step handle matched; applying rewards directly.", LogLevel.Warn);
-                ApplyEggHuntSabotageWinFallback(player, quest);
-            }
+                Monitor.Log("EggHuntSabotage: win condition met but MarkDone failed; rewards may not have applied. Bug.", LogLevel.Warn);
             else
-            {
                 Helper.GameContent.InvalidateCache("Data/mail");
-            }
             player.modData[EggHuntSabotageWonModDataKey] = "true";
         }
         else
@@ -732,26 +727,6 @@ public sealed class ModEntry : Mod
                 HUDMessage.error_type));
             Monitor.Log("EggHuntSabotage: applied loss path (kids -30 friendship, quest removed).", LogLevel.Info);
         }
-    }
-
-    /// Belt-and-braces win-reward application. The Custom-step MarkDone path normally
-    /// fires questComplete which runs the framework's reward pipeline (mail + friendship)
-    /// synchronously. If that path didn't take (handle not found, quest already torn down,
-    /// reward encoding skipped), this applies the per-kid friendship + the thank-you mail
-    /// directly so the player still gets what they earned.
-    private void ApplyEggHuntSabotageWinFallback(Farmer player, StardewValley.Quests.Quest quest)
-    {
-        const int friendshipMid = 80;
-        foreach (var kid in MetChildHumanGivers(player))
-        {
-            var npc = Game1.getCharacterFromName(kid);
-            if (npc == null) continue;
-            player.changeFriendship(friendshipMid, npc);
-        }
-        if (!player.mailForTomorrow.Contains(EggHuntSabotageRewardMailKey))
-            player.mailForTomorrow.Add(EggHuntSabotageRewardMailKey);
-        Helper.GameContent.InvalidateCache("Data/mail");
-        player.questLog.Remove(quest);
     }
 
     private StardewValley.Quests.Quest? FindActiveEggHuntSabotageQuest()
