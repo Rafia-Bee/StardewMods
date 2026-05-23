@@ -6,8 +6,11 @@ using StardewValley;
 
 namespace MoreQuestsFramework.Patches;
 
-// Luau: bumps "switchEvent governorReactionN" (N=0..6) by the bias magnitude, clamping
-// to 5. Never overwrites 6 (Mayor's Shorts gag).
+// Luau: bumps "switchEvent governorReactionN" by the bias magnitude. In vanilla,
+// lower N is a better reaction (0=Disgusting .. 4=Loved it). N=5 is the sentinel
+// for "not enough ingredients" and N=6 is the Mayor's Shorts gag. So we clamp the
+// boosted tier to 4 (Loved it) and skip the patch entirely when the queued tier
+// is 5 or 6, otherwise we'd turn a great reaction into "Something is Missing".
 // Fair: adds the bias to grangeScore, except when score < 0 (Mayor's Shorts -666).
 internal static class FestivalBiasPatches
 {
@@ -66,9 +69,12 @@ internal static class FestivalBiasPatches
             if (!int.TryParse(tail, out int tier))
                 return;
 
-            if (tier == 6)
+            // Tier 5 = "Something is Missing" (vanilla sets this when ingredients < player
+            // count). Tier 6 = Mayor's Shorts gag. Either way, the player either didn't
+            // earn the bump or we'd overwrite a special outcome. Skip both.
+            if (tier >= 5)
                 return;
-            int boosted = Math.Min(5, tier + bump);
+            int boosted = Math.Min(4, tier + bump);
             if (boosted == tier)
                 return;
             commands[currentCmd + 1] = prefix + boosted;

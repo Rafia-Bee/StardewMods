@@ -185,7 +185,7 @@ internal static class GmcmRegistration
         api.AddSectionTitle(manifest, () => t.Get("config.section.gusFeasts"));
         AddInt(api, manifest, t, "GusFestivalFeastIngredientCount", () => ModEntry.Config.GusFestivalFeastIngredientCount, v => ModEntry.Config.GusFestivalFeastIngredientCount = v, 1, 6);
         api.AddSectionTitle(manifest, () => t.Get("config.section.luauFairBias"));
-        AddInt(api, manifest, t, "FestivalBiasLuauMagnitude", () => ModEntry.Config.FestivalBiasLuauMagnitude, v => ModEntry.Config.FestivalBiasLuauMagnitude = v, 0, 5);
+        AddInt(api, manifest, t, "FestivalBiasLuauMagnitude", () => ModEntry.Config.FestivalBiasLuauMagnitude, v => ModEntry.Config.FestivalBiasLuauMagnitude = v, 0, 4);
         AddInt(api, manifest, t, "FestivalBiasFairMagnitude", () => ModEntry.Config.FestivalBiasFairMagnitude, v => ModEntry.Config.FestivalBiasFairMagnitude = v, 0, 100);
         api.AddTextOption(manifest,
             getValue: () => ModEntry.Config.FairFestivalRewardKind,

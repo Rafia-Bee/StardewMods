@@ -110,7 +110,7 @@
     "config.GusFestivalFeastIngredientCount": "Gus's festival feast ingredient count",
     "config.GusFestivalFeastIngredientCount.tooltip": "Number of distinct ingredient kinds Gus's Fall and Summer festival feasts ask for.",
     "config.FestivalBiasLuauMagnitude": "Luau bias tier bump",
-    "config.FestivalBiasLuauMagnitude.tooltip": "How many tiers higher the governor's Luau reaction lands when you've completed Gus's Summer prep quest. Capped at 5 (loved it); the Mayor's Shorts disqualification is never overwritten.",
+    "config.FestivalBiasLuauMagnitude.tooltip": "How many tiers higher the governor's Luau reaction lands when you've completed Gus's Summer prep quest. Capped at 4 (loved it). The 'not enough ingredients' line and the Mayor's Shorts gag are never overwritten.",
     "config.FestivalBiasFairMagnitude": "Fair grange score bonus",
     "config.FestivalBiasFairMagnitude.tooltip": "Flat bonus added to your Fair grange score before judging when you've completed the Fair decor supply quest. Podium thresholds are 60, 75, and 90, so 15 lifts most submissions one place up. Only applied when 'Fair reward kind' is set to GrangeScoreBonus.",
     "config.FairFestivalRewardKind": "Fair reward kind",

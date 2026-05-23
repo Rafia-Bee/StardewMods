@@ -86,7 +86,9 @@ internal sealed class ActiveFestivalBias
     // Stringly-typed so the enum can move without breaking save compat.
     public string Festival { get; set; } = "";
 
-    // Luau: tier-bump steps (clamped 0..5). Fair: added directly to grangeScore.
+    // Luau: tier-bump steps. Vanilla reaction tiers are 0=Disgusting through 4=Loved
+    // it (5 is "missing ingredients", 6 is the Mayor's Shorts gag), so the patch caps
+    // the boosted tier at 4. Fair: added directly to grangeScore.
     public int Magnitude { get; set; }
 
     public int ExpiresAfterDay { get; set; }
