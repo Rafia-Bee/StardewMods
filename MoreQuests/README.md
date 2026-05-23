@@ -18,6 +18,7 @@ A SMAPI content mod for Stardew Valley that adds a big batch of new daily-board,
 - **[Si's Extra Crafting Materials](https://www.nexusmods.com/stardewvalley/mods/25467)**, needed for the Winter Star Wrapping Paper quest.
 - **[Catch of the Day](https://www.nexusmods.com/stardewvalley/mods/43668)**, pairs nicely with fishing quests since it lets you track time/season/weather-specific fish.
 - **[Love of Cooking](https://www.nexusmods.com/stardewvalley/mods/6830)** or **[CookingSkill Redux (YACS)](https://www.nexusmods.com/stardewvalley/mods/22681)**, either one lets the cooking quests scale their ingredient counts off your cooking level. Without one of these the quests still work, they just fall back to a flat baseline.
+- **[Archaeology Skill](https://www.nexusmods.com/stardewvalley/mods/22199)**, makes the Archaeology Dig quest scale with your archaeology level and pay out in Hardwood Displays. Without it the quest still works (scales off Mining instead) and pays in geodes / troves.
 
 ## Configuration
 
@@ -128,6 +129,7 @@ Quests are grouped by category below and listed alphabetically within each group
 
 | Quest | When | Quest Giver | Objective | Reward | Notes |
 | --- | --- | --- | --- | --- | --- |
+| Archaeology Dig | Daily board | SVE Gunther or Jasper from East Scarp | Find and dig up X artifact spots anywhere, keep what you find, then report back | 2X Hardwood Displays (with Archaeology Skill installed) or 2X random geodes / troves otherwise | Cooldown Medium. Quest only shows up if at least one of the eligible NPCs is around (vanilla Gunther isn't friendable so he doesn't count). X scales with your Archaeology level (or Mining level without the mod) when Difficulty Scaling is on. |
 | Bar Delivery | Daily board | A blacksmith (Clint or modded equivalents) | Deliver X metal bars (tier scales with mine depth, up to Radioactive on Ginger Island unlock) | Gold + a random geode or trove | Cooldown Medium, needs Mining 1 and mine floor 40+ |
 | Basic Slime Clearing | Adventurer's Guild board | Marlon (or modded combat NPCs) | Slay X slimes in the mines | Gold | Cooldown Medium |
 | Mines Deep Dive | Adventurer's Guild board | Marlon | Reach floor X in The Mines (max 120) and ship an ore or stone haul | Gold + bars matching the floor band | Cooldown Short, needs Mining 1 and mine floor 5+ |
@@ -136,7 +138,7 @@ Quests are grouped by category below and listed alphabetically within each group
 | Rare Material Request | Adventurer's Guild board | A blacksmith (Clint or modded equivalents) | Deliver X of a random gem (vanilla or modded) | Gold + Artifact Trove count matching the gems | Cooldown Medium, needs Mining 7 |
 | Skull Cavern Deep Dive | Adventurer's Guild board | Marlon | Reach floor X in Skull Cavern and ship a Mining-scaled ore haul | Radioactive Bars in the mail next morning (1 per 5 ores, min 2) | Cooldown Long, needs Skull Cavern unlocked, max floor configurable |
 
-> The Mining-category quests above (everything except Bar Delivery) post to the Adventurer's Guild board by default. When the guild board is turned off in config, they fall back to the help-wanted board instead.
+> The Mining-category quests above (everything except Bar Delivery and Archaeology Dig) post to the Adventurer's Guild board by default. When the guild board is turned off in config, they fall back to the help-wanted board instead.
 
 ### Seasonal
 
