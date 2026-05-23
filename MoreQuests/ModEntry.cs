@@ -628,7 +628,7 @@ public sealed class ModEntry : Mod
     {
         if (!IsEggHuntSabotageDialogueWindow())
             return;
-        if (FindActiveEggHuntSabotageQuest() == null)
+        if (!IsEggHuntSabotageQuestActive())
             return;
 
         foreach (var name in MetChildHumanGivers(Game1.player))
@@ -690,24 +690,19 @@ public sealed class ModEntry : Mod
         var player = Game1.player;
         if (player == null || ModScope == null) return;
 
-        var quest = FindActiveEggHuntSabotageQuest();
-        if (quest == null) return;
+        // GetActiveCustomSteps walks the questLog directly looking for our handler id, so
+        // it survives save/load. Framework.GetDefinitionId uses a weak table that doesn't.
+        var handles = ModScope.GetActiveCustomSteps(EggHuntSabotageStepHandler);
+        if (handles.Count == 0) return;
+        var handle = handles[0];
+        var quest = handle.Quest;
 
         Monitor.Log($"EggHuntSabotage: resolving on Spring 13 evening. festivalScore={player.festivalScore}, threshold={EggHuntSingleplayerWinThreshold}.", LogLevel.Info);
 
         if (player.festivalScore >= EggHuntSingleplayerWinThreshold)
         {
-            var handles = ModScope.GetActiveCustomSteps(EggHuntSabotageStepHandler);
-            bool marked = false;
-            foreach (var h in handles)
-            {
-                if (h.Quest == quest)
-                {
-                    marked = h.MarkDone();
-                    Monitor.Log($"EggHuntSabotage: MarkDone returned {marked}. quest.completed={quest.completed.Value}.", LogLevel.Info);
-                    break;
-                }
-            }
+            bool marked = handle.MarkDone();
+            Monitor.Log($"EggHuntSabotage: MarkDone returned {marked}. quest.completed={quest.completed.Value}.", LogLevel.Info);
             if (!marked)
                 Monitor.Log("EggHuntSabotage: win condition met but MarkDone failed; rewards may not have applied. Bug.", LogLevel.Warn);
             else
@@ -733,17 +728,13 @@ public sealed class ModEntry : Mod
         }
     }
 
-    private StardewValley.Quests.Quest? FindActiveEggHuntSabotageQuest()
+    /// True when a Festival.EggHuntSabotage quest is currently in the player's journal.
+    /// Looks for the Custom Win step's handler id so the check survives save/load (the
+    /// framework's GetDefinitionId weak table doesn't).
+    private bool IsEggHuntSabotageQuestActive()
     {
-        if (Framework == null || Game1.player?.questLog == null) return null;
-        for (int i = 0; i < Game1.player.questLog.Count; i++)
-        {
-            var q = Game1.player.questLog[i];
-            if (q == null || q.completed.Value) continue;
-            if (string.Equals(Framework.GetDefinitionId(q), EggHuntSabotageDefinitionId, StringComparison.Ordinal))
-                return q;
-        }
-        return null;
+        if (ModScope == null) return false;
+        return ModScope.GetActiveCustomSteps(EggHuntSabotageStepHandler).Count > 0;
     }
 
     private static List<string> MetChildHumanGivers(Farmer player)
