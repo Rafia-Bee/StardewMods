@@ -567,6 +567,10 @@ public sealed class ModEntry : Mod
         ["Mining.SkullCavernDeepDive"]  = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
         ["Mining.MinesDeepDive"]        = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
         ["Foraging.FeedWildCritters"]   = (m, _) => m.OnFeedWildCrittersCompleted(),
+        // Belt-and-braces invalidation. The DayEnding resolver already invalidates on
+        // the win path, but a completion via any other route still needs the static
+        // body to land in the asset cache before vanilla reads it on Spring 14 open.
+        [EggHuntSabotageDefinitionId]   = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
     };
 
     private void OnQuestCompleted(object? sender, QuestCompletedArgs e)
@@ -687,16 +691,29 @@ public sealed class ModEntry : Mod
         var quest = FindActiveEggHuntSabotageQuest();
         if (quest == null) return;
 
+        Monitor.Log($"EggHuntSabotage: resolving on Spring 13 evening. festivalScore={player.festivalScore}, threshold={EggHuntSingleplayerWinThreshold}.", LogLevel.Info);
+
         if (player.festivalScore >= EggHuntSingleplayerWinThreshold)
         {
             var handles = ModScope.GetActiveCustomSteps(EggHuntSabotageStepHandler);
+            bool marked = false;
             foreach (var h in handles)
             {
                 if (h.Quest == quest)
                 {
-                    h.MarkDone();
+                    marked = h.MarkDone();
+                    Monitor.Log($"EggHuntSabotage: MarkDone returned {marked}. quest.completed={quest.completed.Value}.", LogLevel.Info);
                     break;
                 }
+            }
+            if (!marked)
+            {
+                Monitor.Log("EggHuntSabotage: no active Custom step handle matched; applying rewards directly.", LogLevel.Warn);
+                ApplyEggHuntSabotageWinFallback(player, quest);
+            }
+            else
+            {
+                Helper.GameContent.InvalidateCache("Data/mail");
             }
             player.modData[EggHuntSabotageWonModDataKey] = "true";
         }
@@ -713,7 +730,28 @@ public sealed class ModEntry : Mod
             Game1.addHUDMessage(new HUDMessage(
                 I18n.Get("quest.festival.eggHuntSabotage.hud.lost").ToString(),
                 HUDMessage.error_type));
+            Monitor.Log("EggHuntSabotage: applied loss path (kids -30 friendship, quest removed).", LogLevel.Info);
         }
+    }
+
+    /// Belt-and-braces win-reward application. The Custom-step MarkDone path normally
+    /// fires questComplete which runs the framework's reward pipeline (mail + friendship)
+    /// synchronously. If that path didn't take (handle not found, quest already torn down,
+    /// reward encoding skipped), this applies the per-kid friendship + the thank-you mail
+    /// directly so the player still gets what they earned.
+    private void ApplyEggHuntSabotageWinFallback(Farmer player, StardewValley.Quests.Quest quest)
+    {
+        const int friendshipMid = 80;
+        foreach (var kid in MetChildHumanGivers(player))
+        {
+            var npc = Game1.getCharacterFromName(kid);
+            if (npc == null) continue;
+            player.changeFriendship(friendshipMid, npc);
+        }
+        if (!player.mailForTomorrow.Contains(EggHuntSabotageRewardMailKey))
+            player.mailForTomorrow.Add(EggHuntSabotageRewardMailKey);
+        Helper.GameContent.InvalidateCache("Data/mail");
+        player.questLog.Remove(quest);
     }
 
     private StardewValley.Quests.Quest? FindActiveEggHuntSabotageQuest()
