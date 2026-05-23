@@ -53,6 +53,7 @@ public sealed class ModEntry : Mod
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
+        helper.Events.GameLoop.DayEnding += OnDayEnding;
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.World.BuildingListChanged += OnBuildingListChanged;
         helper.Events.Player.InventoryChanged += MarnieMilkPailHook.OnInventoryChanged;
@@ -70,6 +71,24 @@ public sealed class ModEntry : Mod
 
     private QuestPackDocument? _cachedQuests;
     private BoardPackDocument? _cachedBoards;
+
+    /// Custom step handler id for the final "win the egg hunt" step on Festival.EggHuntSabotage.
+    /// The handler isn't registered as a polling handler. We drive it via the framework's
+    /// GetActiveCustomSteps from OnDayEnding on Spring 13.
+    internal const string EggHuntSabotageStepHandler = "EggHuntSabotage.WinHunt";
+
+    internal const string EggHuntSabotageRewardMailKey = "RafiaBee.MoreQuests.EggHuntSabotageReward";
+
+    /// ModData flag set on Spring 13 when the player wins the egg hunt while the
+    /// Festival.EggHuntSabotage quest is active. Picked up on Spring 14 morning to grant
+    /// the iridium-quality egg directly (mail attachments can't carry quality).
+    internal const string EggHuntSabotageWonModDataKey = "RafiaBee.MoreQuests.EggHuntSabotageWonThisYear";
+
+    private const string EggHuntSabotageDefinitionId = "Festival.EggHuntSabotage";
+
+    // Vanilla single-player threshold from Event.eggHuntWinner. Stays a constant since
+    // the festival data isn't moddable here without rewriting Event.cs.
+    private const int EggHuntSingleplayerWinThreshold = 9;
 
     internal const string EggBasketCreamId = "RafiaBee.MoreQuests.EggBasketCream";
     internal const string EggBasketPinkId = "RafiaBee.MoreQuests.EggBasketPink";
@@ -376,6 +395,11 @@ public sealed class ModEntry : Mod
             string wizardBody = I18n.Get("mail.festival.wizardsRitualReward.body").ToString();
             mail["RafiaBee.MoreQuests.WizardsRitualReward"] = wizardBody + "%item object Book_Mystery 1 %%";
 
+            // Thank-you note from the kids the day after winning the egg hunt. No attachment;
+            // the iridium egg is granted in code on Spring 14 morning since mail tokens don't
+            // carry item quality.
+            mail[EggHuntSabotageRewardMailKey] = I18n.Get("mail.festival.eggHuntSabotageReward.body").ToString();
+
             PopulateDeepDiveRewardLetters(mail);
             PopulateLeahPaintingRewardLetters(mail);
         });
@@ -585,6 +609,138 @@ public sealed class ModEntry : Mod
         TryExpireCredit(player, MarniePurchasePatches.ChickenCreditKey, Config.MarnieChickenOfferRebate, "quest.animal.marnieChickenOffer.creditExpired");
         TryExpireCredit(player, MarniePurchasePatches.CowCreditKey, Config.MarnieCowOfferRebate, "quest.animal.marnieCowOffer.creditExpired");
         TryExpirePetCredit(player);
+
+        PushEggHuntSabotageChildLines();
+        TryGrantEggHuntSabotageEgg();
+    }
+
+    /// Spring 10-13, when Festival.EggHuntSabotage is active, push the per-kid "remember
+    /// the plan" line onto each met child's CurrentDialogue (Vincent excluded since he's
+    /// the giver). Pure flavor: no quest step advances from these lines. Vanilla clears
+    /// CurrentDialogue on day rollover, so re-pushing every morning doesn't stack.
+    private void PushEggHuntSabotageChildLines()
+    {
+        if (!IsEggHuntSabotageDialogueWindow())
+            return;
+        if (FindActiveEggHuntSabotageQuest() == null)
+            return;
+
+        foreach (var name in MetChildHumanGivers(Game1.player))
+        {
+            if (string.Equals(name, "Vincent", StringComparison.OrdinalIgnoreCase))
+                continue;
+            var npc = Game1.getCharacterFromName(name);
+            if (npc == null) continue;
+            string key = string.Equals(name, "Jas", StringComparison.OrdinalIgnoreCase)
+                ? "quest.festival.eggHuntSabotage.dialogue.jas"
+                : "quest.festival.eggHuntSabotage.dialogue.kid";
+            string text = I18n.Get(key, new { npc = npc.displayName }).ToString();
+            npc.CurrentDialogue.Push(new StardewValley.Dialogue(npc, null, text));
+        }
+    }
+
+    private static bool IsEggHuntSabotageDialogueWindow()
+    {
+        return string.Equals(Game1.currentSeason, "spring", StringComparison.Ordinal)
+               && Game1.dayOfMonth >= 10 && Game1.dayOfMonth <= 13;
+    }
+
+    /// On Spring 14 morning, if the win flag is set, hand the iridium egg over with a
+    /// HUDMessage. Done in code because mail attachments don't carry item quality.
+    private void TryGrantEggHuntSabotageEgg()
+    {
+        var player = Game1.player;
+        if (player == null) return;
+        if (!player.modData.TryGetValue(EggHuntSabotageWonModDataKey, out _))
+            return;
+        player.modData.Remove(EggHuntSabotageWonModDataKey);
+
+        var egg = StardewValley.ItemRegistry.Create<StardewValley.Object>("(O)176", 1, 4);
+        if (egg == null)
+            return;
+        Game1.player.addItemByMenuIfNecessary(egg);
+        Game1.addHUDMessage(new HUDMessage(
+            I18n.Get("quest.festival.eggHuntSabotage.hud.eggDelivered").ToString(),
+            HUDMessage.achievement_type));
+    }
+
+    private void OnDayEnding(object? sender, DayEndingEventArgs e)
+    {
+        ResolveEggHuntSabotageOutcome();
+    }
+
+    /// On Spring 13 evening, resolve any active Festival.EggHuntSabotage quest by the
+    /// player's festivalScore (vanilla's single-player win threshold is 9). Win: mark the
+    /// Custom Win step done via the framework handle so the standard reward pipeline fires
+    /// (mail + friendship), and stamp a modData flag so the iridium egg is granted on the
+    /// next morning. Loss: -FriendshipMultiSmall to every met child and quietly remove
+    /// the quest from the log.
+    private void ResolveEggHuntSabotageOutcome()
+    {
+        if (!string.Equals(Game1.currentSeason, "spring", StringComparison.Ordinal)) return;
+        if (Game1.dayOfMonth != 13) return;
+        var player = Game1.player;
+        if (player == null || ModScope == null) return;
+
+        var quest = FindActiveEggHuntSabotageQuest();
+        if (quest == null) return;
+
+        if (player.festivalScore >= EggHuntSingleplayerWinThreshold)
+        {
+            var handles = ModScope.GetActiveCustomSteps(EggHuntSabotageStepHandler);
+            foreach (var h in handles)
+            {
+                if (h.Quest == quest)
+                {
+                    h.MarkDone();
+                    break;
+                }
+            }
+            player.modData[EggHuntSabotageWonModDataKey] = "true";
+        }
+        else
+        {
+            const int penalty = -30;
+            foreach (var kid in MetChildHumanGivers(player))
+            {
+                var npc = Game1.getCharacterFromName(kid);
+                if (npc == null) continue;
+                player.changeFriendship(penalty, npc);
+            }
+            player.questLog.Remove(quest);
+            Game1.addHUDMessage(new HUDMessage(
+                I18n.Get("quest.festival.eggHuntSabotage.hud.lost").ToString(),
+                HUDMessage.error_type));
+        }
+    }
+
+    private StardewValley.Quests.Quest? FindActiveEggHuntSabotageQuest()
+    {
+        if (Framework == null || Game1.player?.questLog == null) return null;
+        for (int i = 0; i < Game1.player.questLog.Count; i++)
+        {
+            var q = Game1.player.questLog[i];
+            if (q == null || q.completed.Value) continue;
+            if (string.Equals(Framework.GetDefinitionId(q), EggHuntSabotageDefinitionId, StringComparison.Ordinal))
+                return q;
+        }
+        return null;
+    }
+
+    private static List<string> MetChildHumanGivers(Farmer player)
+    {
+        var result = new List<string>();
+        foreach (var (name, _) in player.friendshipData.Pairs)
+        {
+            var npc = Game1.getCharacterFromName(name);
+            if (npc == null || npc.IsMonster || !npc.IsVillager) continue;
+            var data = npc.GetData();
+            if (data == null || data.Age != StardewValley.GameData.Characters.NpcAge.Child) continue;
+            if (!player.friendshipData.TryGetValue(name, out var friendship) || friendship == null || friendship.Points <= 0)
+                continue;
+            result.Add(name);
+        }
+        return result;
     }
 
     private void TryExpirePetCredit(Farmer player)

@@ -59,6 +59,7 @@ internal static partial class Generators
         Reg(fw, "DyeForEggs", DyeForEggs);
         Reg(fw, "EastScarpSpiritsEveDecor", EastScarpSpiritsEveDecor);
         Reg(fw, "EggFestivalDecor", EggFestivalDecor);
+        Reg(fw, "EggHuntSabotage", EggHuntSabotage);
         Reg(fw, "FairFestivalDecor", FairFestivalDecor);
         Reg(fw, "GusFestivalFeastFall", GusFestivalFeastFall);
         Reg(fw, "GusFestivalFeastSpring", GusFestivalFeastSpring);

@@ -400,6 +400,17 @@
     "quest.festival.eggFestivalDecor.description": "Farmer, I need your help decorating the town for the upcoming Egg festival. The rest of the townsfolk have helped out a ton, I just need a few haybales to complete the look. Ship me {{count}} when you can. P.S. Marnie keeps hay bales in stock at the ranch if you're short. The town will reimburse you.",
     "quest.festival.eggFestivalDecor.step.hayBales": "Ship {{count}} hay bales.",
 
+    "quest.festival.eggHuntSabotage.title": "The kids' big plan",
+    "quest.festival.eggHuntSabotage.description": "Vincent and Jas have decided that Abigail wins the Egg Hunt every single year and someone has to put a stop to it. That someone, apparently, is you. Talk to the other kids to keep everyone in on the secret, then go beat Abigail at her own game when the hunt starts.",
+    "quest.festival.eggHuntSabotage.offer": "@! @! Listen. Me and Jas have this whole plan. Abigail wins the Egg Hunt every year and it's NOT FAIR. So this year, you're going to win for us. Pretty please? Go tell Jas you're in, and don't say a word to the grown-ups.",
+    "quest.festival.eggHuntSabotage.step.talk": "Fill {{npc}} in on the plan.",
+    "quest.festival.eggHuntSabotage.step.win": "Win the Egg Hunt on Spring 13.",
+    "quest.festival.eggHuntSabotage.dialogue.jas": "Did Vincent tell you the plan, @? Keep it quiet, alright? This is a secret between us kids. You're going to win, right? Right?!",
+    "quest.festival.eggHuntSabotage.dialogue.kid": "Remember the plan, @! We can't let Abigail win this year. She always hoards the eggs and we never get a turn.",
+    "quest.festival.eggHuntSabotage.hud.lost": "The kids look heartbroken. You let Abigail win again...",
+    "quest.festival.eggHuntSabotage.hud.eggDelivered": "The kids dropped off a fancy egg at the farm this morning.",
+    "mail.festival.eggHuntSabotageReward.body": "Dear @,^^You did it!! You really did it!!^^We all pitched in our allowance and got Marnie to sell us the fanciest egg she had. Look outside, we left it on your porch this morning. We promise it's not a prank.^^Thanks for sticking it to Abigail. She was SO MAD.^^  -Vincent, Jas, and the kids",
+
     "quest.festival.dyeForEggs.title": "Dye for the Egg Festival",
     "quest.festival.dyeForEggs.description": "Farmer, Emily, Leah and Elliot are helping me paint the eggs for the Egg Festival and they complained that the current dye options are - in their words - 'insulting'. If you can, please provide {{countPer}} items in each of these {{colorCount}} colors so we can mix proper paints: {{colors}}. Get them in before festival day and I'll send a little something I had Robin help me put together.",
     "quest.festival.dyeForEggs.step": "Ship {{count}} {{color}} items.",

@@ -80,6 +80,7 @@ Quests are grouped by category below and listed alphabetically within each group
 | --- | --- | --- | --- | --- | --- |
 | Evelyn's Holiday Cookies | Winter 21 mail | Evelyn | Deliver Flour, Sugar, and any edible egg | Big friendship bump + 6 cookies | One-time per year |
 | Festival Decor: East Scarp Spirit's Eve | Fall 24 | Rosa | Ship purple-dye items, slime, and stone | Friendship with the ES festival NPCs | One-time per year, 3-day deadline, needs ES / Eli and Dylan / Lurking in the Dark |
+| Egg Hunt Sabotage | Talk to Vincent Spring 10 to 12 | Vincent | Win the Egg Festival hunt for the kids | Big friendship bump with every kid you've met + a thank-you letter the next morning + a fancy egg | One-time per year, fails on Spring 14 if you don't win |
 | Festival Decor: Egg Festival | Spring 10 | Lewis | Ship hay bales | Gold + a random Pierre Egg Festival stall item | One-time per year, 3-day deadline |
 | Festival Decor: Fair | Fall 12 | Lewis | Ship Wood, any sign (Wood / Stone / Dark), and fall flowers (scales with Farming and Foraging) | A bump to your grange score OR extra Fair star tokens (pick which in GMCM) | One-time per year, 3-day deadline |
 | Festival Decor: Luau | Summer 6 | Lewis | Ship Fiber, Hardwood, and Wood Lamp-posts (qty scales with Foraging) | Gold + a random Pierre Luau stall item | One-time per year, 4-day deadline |
