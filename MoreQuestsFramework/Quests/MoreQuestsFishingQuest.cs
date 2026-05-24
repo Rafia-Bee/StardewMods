@@ -36,6 +36,7 @@ public sealed class MoreQuestsFishingQuest : FishingQuest, IRewardedQuest
     // vanilla "Return to <npc>".
     public readonly NetBool isReportBack = new();
 
+    [XmlIgnore]
     public NetStringList SerializedRewards => serializedRewards;
 
     protected override void initNetFields()

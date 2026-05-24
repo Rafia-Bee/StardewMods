@@ -414,6 +414,41 @@ public sealed class ModEntry : Mod
         _seenInLog.Clear();
         _completedFired.Clear();
         Patches.DecorShippingPatches.ActiveCount = 0;
+
+        DedupeQuestSerializedRewards();
+    }
+
+    // Saves written before the SerializedRewards XmlIgnore fix (commit added 2026-05-24)
+    // came back from XmlSerializer with the field's NetStringList doubled, because the
+    // PascalCase property aliased the camelCase field and both members were emitted
+    // and round-tripped. Pre-fix saves have already-doubled (and on each save+load
+    // cycle, recursively more-doubled) lists. Dedupe in place on load so existing
+    // saves heal themselves; the fix prevents future doubling.
+    private void DedupeQuestSerializedRewards()
+    {
+        if (Game1.player == null) return;
+        var log = Game1.player.questLog;
+        for (int i = 0; i < log.Count; i++)
+        {
+            if (log[i] is not Rewards.IRewardedQuest rq) continue;
+            var list = rq.SerializedRewards;
+            if (list.Count < 2) continue;
+            var seen = new HashSet<string>(System.StringComparer.Ordinal);
+            var keep = new List<string>(list.Count);
+            foreach (var line in list)
+            {
+                if (string.IsNullOrEmpty(line)) continue;
+                if (seen.Add(line))
+                    keep.Add(line);
+            }
+            if (keep.Count == list.Count) continue;
+            int removed = list.Count - keep.Count;
+            list.Clear();
+            foreach (var line in keep) list.Add(line);
+            Monitor.Log(
+                $"Healed quest '{log[i].questTitle}': removed {removed} duplicate serializedRewards entr{(removed == 1 ? "y" : "ies")}.",
+                LogLevel.Info);
+        }
     }
 
     private void OnDayEnding(object? sender, DayEndingEventArgs e)

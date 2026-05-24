@@ -38,6 +38,7 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
     // Captured on first journal read so reloadObjective can rebuild "<base> (X/Y)".
     public readonly NetString baseObjective = new();
 
+    [XmlIgnore]
     public NetStringList SerializedRewards => serializedRewards;
 
     protected override void initNetFields()

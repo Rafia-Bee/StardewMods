@@ -23,6 +23,12 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     // gift-reaction line takes priority.
     public readonly NetString completionMessage = new();
 
+    // [XmlIgnore] prevents XmlSerializer from emitting a second <SerializedRewards>
+    // element that aliases the same NetStringList as <serializedRewards>. Without it,
+    // every save/load round-trip doubles serializedRewards: XmlSerializer would write
+    // both members and on load Add into the same backing list for each one. See
+    // RewardApplier.ApplyEncoded for the dedupe that used to mitigate the symptom.
+    [System.Xml.Serialization.XmlIgnore]
     public NetStringList SerializedRewards => serializedRewards;
 
     private List<AdventureStepState>? _decoded;
