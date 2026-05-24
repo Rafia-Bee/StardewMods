@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using QuestJournal.Api;
 using QuestJournal.Integrations;
 using StardewModdingAPI;
 using StardewValley;
@@ -15,6 +16,7 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     public ObservableCollection<TabRow> Tabs { get; } = new();
     public ObservableCollection<QuestRow> Quests { get; } = new();
+    public ObservableCollection<RewardLineRow> SelectedRewards { get; } = new();
 
     private QuestRow? _selectedQuest;
     public QuestRow? SelectedQuest
@@ -25,6 +27,7 @@ public sealed class JournalContext : INotifyPropertyChanged
             if (_selectedQuest == value) return;
             _selectedQuest = value;
             Raise(nameof(SelectedQuest));
+            RebuildSelectedRewards();
             RaiseSelectionDependents();
         }
     }
@@ -35,7 +38,6 @@ public sealed class JournalContext : INotifyPropertyChanged
     public string SelectedTitle => _selectedQuest?.Title ?? string.Empty;
     public string SelectedDescription => _selectedQuest?.Description ?? string.Empty;
     public string SelectedObjective => _selectedQuest?.Objective ?? string.Empty;
-    public string SelectedRewardSummary => _selectedQuest?.RewardSummary ?? string.Empty;
     public string SelectedGiverDisplay => _selectedQuest?.GiverDisplay ?? string.Empty;
     public string SelectedDaysLeftDisplay => _selectedQuest?.DaysLeftDisplay ?? string.Empty;
     public string SelectedSourceDisplay => _selectedQuest?.SourceDisplay ?? string.Empty;
@@ -54,6 +56,7 @@ public sealed class JournalContext : INotifyPropertyChanged
     private List<QuestRow> _historyRows = new();
 
     private readonly IViewEngine? _viewEngine;
+    private readonly IMoreQuestsApi? _mqfApi;
     private readonly IModHelper _helper;
     private readonly string _viewPrefix;
 
@@ -61,10 +64,11 @@ public sealed class JournalContext : INotifyPropertyChanged
     private const string TabCompleted = "completed";
     private const string TabAll = "all";
 
-    public JournalContext(IModHelper helper, IViewEngine? viewEngine, string viewPrefix)
+    public JournalContext(IModHelper helper, IViewEngine? viewEngine, IMoreQuestsApi? mqfApi, string viewPrefix)
     {
         _helper = helper;
         _viewEngine = viewEngine;
+        _mqfApi = mqfApi;
         _viewPrefix = viewPrefix;
         Tabs.Add(new TabRow(TabActive, "Active", id => SelectTab(id)));
         Tabs.Add(new TabRow(TabCompleted, "Completed", id => SelectTab(id)));
@@ -220,11 +224,12 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     private QuestRow BuildActiveRow(Quest q)
     {
+        var rewards = BuildRewardLines(q);
         return new QuestRow(
             title: q.questTitle ?? string.Empty,
             description: q.questDescription ?? string.Empty,
             objective: q.currentObjective ?? string.Empty,
-            rewardSummary: BuildVanillaRewardSummary(q),
+            rewardLines: rewards,
             giverDisplay: ResolveGiverDisplay(q),
             daysLeftDisplay: BuildDaysLeftDisplay(q),
             sourceDisplay: ResolveSourceDisplay(q),
@@ -238,11 +243,37 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     private QuestRow BuildHistoryRow(CompletedQuestRecord r)
     {
+        var rewards = new List<RewardLineRow>();
+        if (r.RewardLines != null && r.RewardLines.Count > 0)
+        {
+            foreach (var l in r.RewardLines)
+            {
+                rewards.Add(new RewardLineRow(
+                    kind: l.Kind ?? string.Empty,
+                    summary: l.Summary ?? string.Empty,
+                    itemId: l.ItemId,
+                    npcName: l.NpcName,
+                    amount: l.Amount,
+                    durationDays: l.DurationDays));
+            }
+        }
+        else if (!string.IsNullOrEmpty(r.RewardSummary))
+        {
+            // Older history records (pre Step 5) only stored an aggregate
+            // string. Surface it as a single "Custom" line so the panel still
+            // renders something readable.
+            rewards.Add(new RewardLineRow(kind: "Custom", summary: r.RewardSummary));
+        }
+        else
+        {
+            rewards.Add(new RewardLineRow(kind: "None", summary: "(none)"));
+        }
+
         return new QuestRow(
             title: r.Title,
             description: r.Description,
             objective: r.Objective,
-            rewardSummary: r.RewardSummary,
+            rewardLines: rewards,
             giverDisplay: string.IsNullOrEmpty(r.Giver) ? "Unknown" : r.Giver,
             daysLeftDisplay: "Completed",
             sourceDisplay: string.IsNullOrEmpty(r.Source) ? "Unknown" : r.Source,
@@ -256,12 +287,26 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     private static CompletedQuestRecord BuildRecordFrom(QuestRow row)
     {
+        var stored = new List<StoredRewardLine>();
+        foreach (var l in row.RewardLines)
+        {
+            stored.Add(new StoredRewardLine
+            {
+                Kind = l.Kind,
+                Summary = l.Summary,
+                ItemId = l.ItemId,
+                NpcName = l.NpcName,
+                Amount = l.Amount,
+                DurationDays = l.DurationDays
+            });
+        }
         return new CompletedQuestRecord
         {
             Title = row.Title,
             Description = row.Description,
             Objective = row.Objective,
-            RewardSummary = row.RewardSummary,
+            RewardSummary = row.RewardSummaryAggregate,
+            RewardLines = stored,
             Giver = row.GiverDisplay,
             Source = row.SourceDisplay,
             CompletedOnTotalDays = Game1.Date?.TotalDays ?? 0
@@ -274,12 +319,118 @@ public sealed class JournalContext : INotifyPropertyChanged
             t.IsActive = (t.Id == _activeTabId);
     }
 
-    private static string BuildVanillaRewardSummary(Quest q)
+    // Itemised reward derivation. For MQF-managed quests we ask the framework
+    // (declarative rewards walk SerializedRewards through RewardCodec); for
+    // vanilla quests we synthesise money + rewardDescription + the +255
+    // friendship bump baked into the matching Quest subclass.
+    private List<RewardLineRow> BuildRewardLines(Quest q)
     {
-        int gold = q.moneyReward.Value;
-        if (gold > 0) return $"{gold}g";
-        return string.IsNullOrEmpty(q.rewardDescription.Value) ? "(none)" : q.rewardDescription.Value;
+        var lines = new List<RewardLineRow>();
+
+        // Always ask MQF first, regardless of IsManagedQuest. The framework's
+        // _managed table is a ConditionalWeakTable populated only at quest
+        // creation, so save-reloaded quests fall out of it even though their
+        // SerializedRewards (NetStringList) survives the save trip. Gating
+        // here on IsManagedQuest would silently drop the MQF lines for every
+        // quest that pre-existed the current session. GetRewardLines itself
+        // already returns an empty array for non-IRewardedQuest quests, so
+        // calling it unconditionally is safe for vanilla quests too.
+        if (_mqfApi != null)
+        {
+            var mqfLines = SafeGetRewardLines(q);
+            if (mqfLines != null)
+            {
+                foreach (var l in mqfLines)
+                {
+                    lines.Add(new RewardLineRow(
+                        kind: l.Kind ?? string.Empty,
+                        summary: l.Summary ?? string.Empty,
+                        itemId: l.ItemId,
+                        npcName: l.NpcName,
+                        amount: l.Amount,
+                        durationDays: l.DurationDays));
+                }
+            }
+        }
+
+        // Vanilla quests, or MQF quests that didn't declare any SerializedRewards,
+        // both end up here. Synthesise from the Quest object's own fields so
+        // billboard "Help Wanted" deliveries and MoreQuests-content-pack quests
+        // without a declarative Reward block still render their money + friendship.
+        if (lines.Count == 0)
+            SynthesiseVanillaRewardLines(q, lines);
+
+        if (lines.Count == 0)
+            lines.Add(new RewardLineRow(kind: "None", summary: "(none)"));
+
+        return lines;
     }
+
+    private static void SynthesiseVanillaRewardLines(Quest q, List<RewardLineRow> lines)
+    {
+        // GetMoneyReward() is virtual on Quest; ItemDeliveryQuest overrides
+        // it to fall back to `item.Price * 3` when moneyReward.Value hasn't
+        // been materialised. Other subclasses (ResourceCollection, Fishing,
+        // SlayMonster) don't override and instead store their payout in a
+        // sibling `reward` NetInt, so we have to probe those explicitly.
+        int gold = q.GetMoneyReward();
+        if (gold <= 0)
+            gold = ResolveSubclassReward(q);
+        if (gold > 0)
+            lines.Add(new RewardLineRow(kind: "Money", summary: $"{gold}g", amount: gold));
+
+        string? desc = q.rewardDescription.Value;
+        // Vanilla quest data uses "-1" as the "no reward description" sentinel
+        // (see Data/Quests). Suppress it so the panel doesn't show "- -1".
+        if (!string.IsNullOrEmpty(desc) && desc != "-1")
+            lines.Add(new RewardLineRow(kind: "Custom", summary: desc!));
+
+        string? friend = ResolveVanillaFriendshipTarget(q);
+        if (!string.IsNullOrEmpty(friend))
+            lines.Add(new RewardLineRow(
+                kind: "Friendship",
+                summary: $"+250 friendship with {friend}",
+                npcName: friend,
+                amount: 250));
+    }
+
+    private IReadOnlyList<IQuestRewardLine>? SafeGetRewardLines(Quest q)
+    {
+        try { return _mqfApi!.GetRewardLines(q); }
+        catch { return null; }
+    }
+
+    private void RebuildSelectedRewards()
+    {
+        SelectedRewards.Clear();
+        if (_selectedQuest == null) return;
+        foreach (var line in _selectedQuest.RewardLines)
+            SelectedRewards.Add(line);
+    }
+
+    // ResourceCollectionQuest, FishingQuest and SlayMonsterQuest each hold their
+    // gold payout in a sibling `reward` NetInt rather than in Quest.moneyReward.
+    // Base Quest.GetMoneyReward() doesn't know about that field, so we have to
+    // pick it up per subclass when the base virtual returns 0.
+    private static int ResolveSubclassReward(Quest q) => q switch
+    {
+        ResourceCollectionQuest rcq => rcq.reward.Value,
+        FishingQuest fq => fq.reward.Value,
+        SlayMonsterQuest smq => smq.reward.Value,
+        _ => 0
+    };
+
+    // Vanilla Quest subclasses pay a baked-in friendship bump to a target NPC
+    // on completion. Mirror the subclass set here so the journal can show it
+    // alongside money / rewardDescription instead of hiding it behind silence.
+    // Amount is +250 (vanilla's questComplete adds 250 to the target).
+    private static string? ResolveVanillaFriendshipTarget(Quest q) => q switch
+    {
+        ItemDeliveryQuest idq when !string.IsNullOrEmpty(idq.target.Value) => idq.target.Value,
+        ResourceCollectionQuest rcq when !string.IsNullOrEmpty(rcq.target.Value) => rcq.target.Value,
+        SlayMonsterQuest smq when !string.IsNullOrEmpty(smq.target.Value) && smq.target.Value != "null" => smq.target.Value,
+        _ => null
+    };
 
     private static string BuildDaysLeftDisplay(Quest q)
     {
@@ -319,7 +470,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedTitle));
         Raise(nameof(SelectedDescription));
         Raise(nameof(SelectedObjective));
-        Raise(nameof(SelectedRewardSummary));
         Raise(nameof(SelectedGiverDisplay));
         Raise(nameof(SelectedDaysLeftDisplay));
         Raise(nameof(SelectedSourceDisplay));
@@ -367,7 +517,7 @@ public sealed class QuestRow : INotifyPropertyChanged
     public string Title { get; }
     public string Description { get; }
     public string Objective { get; }
-    public string RewardSummary { get; }
+    public IReadOnlyList<RewardLineRow> RewardLines { get; }
     public string GiverDisplay { get; }
     public string DaysLeftDisplay { get; }
     public string SourceDisplay { get; }
@@ -391,11 +541,28 @@ public sealed class QuestRow : INotifyPropertyChanged
     public bool HasWarpTarget => !string.IsNullOrEmpty(WarpTarget);
     public string WarpLabel => HasWarpTarget ? $"Warp to {WarpTarget}" : "No warp target";
 
+    // Aggregate text capture for legacy CompletedQuestRecord.RewardSummary so
+    // pre-Step-5 saves still render readable history rows after this change.
+    public string RewardSummaryAggregate
+    {
+        get
+        {
+            if (RewardLines.Count == 0) return string.Empty;
+            var parts = new List<string>(RewardLines.Count);
+            foreach (var r in RewardLines)
+            {
+                if (!string.IsNullOrEmpty(r.Summary))
+                    parts.Add(r.Summary);
+            }
+            return string.Join(", ", parts);
+        }
+    }
+
     public QuestRow(
         string title,
         string description,
         string objective,
-        string rewardSummary,
+        IReadOnlyList<RewardLineRow> rewardLines,
         string giverDisplay,
         string daysLeftDisplay,
         string sourceDisplay,
@@ -409,7 +576,7 @@ public sealed class QuestRow : INotifyPropertyChanged
         Title = title;
         Description = description;
         Objective = objective;
-        RewardSummary = rewardSummary;
+        RewardLines = rewardLines ?? new List<RewardLineRow>();
         GiverDisplay = giverDisplay;
         DaysLeftDisplay = daysLeftDisplay;
         SourceDisplay = sourceDisplay;
