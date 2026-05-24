@@ -53,7 +53,7 @@ public sealed class ModEntry : Mod
             {
                 new BgmIntegration(
                     bgm,
-                    BuildJournalForContainer,
+                    BuildJournalMenu,
                     () => Helper.Translation.Get("journal.tab.tooltip").Default("Quest Journal").ToString()
                 ).Register();
                 Monitor.Log("Registered Quest Journal as a Better Game Menu tab.", LogLevel.Trace);
@@ -96,5 +96,4 @@ public sealed class ModEntry : Mod
         return _viewEngine.CreateMenuFromAsset($"{_viewPrefix}/journal", ctx);
     }
 
-    private IClickableMenu? BuildJournalForContainer(IClickableMenu _container) => BuildJournalMenu();
 }
