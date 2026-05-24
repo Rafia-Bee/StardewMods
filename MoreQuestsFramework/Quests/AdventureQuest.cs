@@ -136,6 +136,35 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return -1;
     }
 
+    // Read-only step snapshot for the API surface. Returns a fresh list of
+    // shallow projections so callers can't mutate internal state.
+    internal List<Api.AdventureStepInfo> BuildStepInfos()
+    {
+        var steps = Steps;
+        var infos = new List<Api.AdventureStepInfo>(steps.Count);
+        int active = ActiveStepIndex();
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var s = steps[i];
+            infos.Add(new Api.AdventureStepInfo(
+                s.Name,
+                s.Kind.ToString(),
+                s.Progress,
+                s.Count,
+                s.Done,
+                i == active,
+                s.Description,
+                new List<string>(s.Requires),
+                new List<string>(s.Targets),
+                new List<string>(s.Items),
+                s.LocationName,
+                s.Weather,
+                s.MinSize,
+                s.MinQuality));
+        }
+        return infos;
+    }
+
     private static bool RequiresMet(List<AdventureStepState> steps, AdventureStepState step)
     {
         if (step.Requires.Count == 0) return true;

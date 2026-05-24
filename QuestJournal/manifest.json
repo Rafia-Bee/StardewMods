@@ -1,0 +1,29 @@
+{
+    "Name": "Quest Journal",
+    "Author": "Rafia-Bee",
+    "Version": "1.0.0",
+    "MinimumApiVersion": "4.1.0",
+    "UniqueID": "RafiaBee.QuestJournal",
+    "Description": "Richer quest journal with multi-step view, HUD pins, complete/cancel, and Lookup Anything + warp integration.",
+    "EntryDll": "QuestJournal.dll",
+    "UpdateKeys": [ "Nexus:00000" ],
+    "Dependencies": [
+        {
+            "UniqueID": "focustense.StardewUI",
+            "IsRequired": true
+        },
+        {
+            "UniqueID": "RafiaBee.MoreQuestsFramework",
+            "MinimumVersion": "2.2.0",
+            "IsRequired": false
+        },
+        {
+            "UniqueID": "Pathoschild.LookupAnything",
+            "IsRequired": false
+        },
+        {
+            "UniqueID": "spacechase0.GenericModConfigMenu",
+            "IsRequired": false
+        }
+    ]
+}

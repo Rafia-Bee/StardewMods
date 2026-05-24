@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>QuestJournal</AssemblyName>
+    <RootNamespace>QuestJournal</RootNamespace>
+    <Version>1.0.0</Version>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <TargetFramework>net6.0</TargetFramework>
+    <EnableHarmony>true</EnableHarmony>
+    <ModFolderName>QuestJournal</ModFolderName>
+    <EnableModZip>true</EnableModZip>
+    <IgnoreModFilePaths>config.json</IgnoreModFilePaths>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="hiddenDocs\**" />
+    <None Remove="hiddenDocs\**" />
+    <EmbeddedResource Remove="hiddenDocs\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="assets\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
