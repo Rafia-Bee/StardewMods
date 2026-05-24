@@ -91,7 +91,7 @@ public sealed class ModEntry : Mod
     private IClickableMenu? BuildJournalMenu()
     {
         if (_viewEngine == null) return null;
-        var ctx = new JournalContext();
+        var ctx = new JournalContext(Helper, _viewEngine, _viewPrefix);
         ctx.Refresh();
         return _viewEngine.CreateMenuFromAsset($"{_viewPrefix}/journal", ctx);
     }

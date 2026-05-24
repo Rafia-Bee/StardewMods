@@ -1,3 +1,4 @@
 {
-    "journal.tab.tooltip": "Quest Journal"
+    "journal.tab.tooltip": "Quest Journal",
+    "journal.cancel.confirm": "Cancel this quest?"
 }
