@@ -52,71 +52,79 @@
                        margin="8, 0"
                        padding="16, 12"
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
-                    <lane *context={SelectedQuest} orientation="vertical" layout="stretch content">
+                    <lane orientation="vertical" layout="stretch content">
                         <banner layout="stretch content"
                                 margin="0, 0, 0, 12"
                                 background={@Mods/StardewUI/Sprites/BannerBackground}
                                 background-border-thickness="48, 0"
                                 padding="12"
-                                text={:Title} />
-                        <label margin="0, 4" text={:Description} />
+                                text={SelectedTitle} />
+                        <label margin="0, 4" text={SelectedDescription} />
                         <label margin="0, 12, 0, 4" color="#136" text="Objective" />
-                        <label margin="8, 0" text={:Objective} />
+                        <label margin="8, 0" text={SelectedObjective} />
                         <label margin="0, 12, 0, 4" color="#136" text="Rewards" />
-                        <label margin="8, 0" text={:RewardSummary} />
+                        <label margin="8, 0" text={SelectedRewardSummary} />
                         <label margin="0, 12, 0, 4" color="#136" text="Giver" />
-                        <label margin="8, 0" text={:GiverDisplay} />
+                        <label margin="8, 0" text={SelectedGiverDisplay} />
                         <label margin="0, 12, 0, 4" color="#136" text="Days Left" />
-                        <label margin="8, 0" text={:DaysLeftDisplay} />
+                        <label margin="8, 0" text={SelectedDaysLeftDisplay} />
                         <label margin="0, 12, 0, 4" color="#136" text="Source" />
-                        <label margin="8, 0" text={:SourceDisplay} />
+                        <label margin="8, 0" text={SelectedSourceDisplay} />
                     </lane>
                 </frame>
 
                 <frame layout="220px 580px"
                        padding="12"
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
-                    <lane *context={SelectedQuest} orientation="vertical" layout="stretch content" horizontal-content-alignment="middle">
-                        <frame layout="stretch 48px" margin="0, 4" padding="8, 0"
+                    <lane orientation="vertical" layout="stretch content" horizontal-content-alignment="middle">
+                        <label *if={SelectedIsCompleted} margin="0, 12" color="#136" text="Quest complete" />
+
+                        <frame *if={SelectedShowActions} layout="stretch 48px" margin="0, 4" padding="8, 0"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
-                               focusable="true">
+                               focusable="true"
+                               click=|ShowDetailsSelected()|>
                             <label text="Details" />
                         </frame>
-                        <frame layout="stretch 48px" margin="0, 4" padding="8, 0"
+                        <frame *if={SelectedShowActions} layout="stretch 48px" margin="0, 4" padding="8, 0"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
-                               focusable="true">
+                               focusable="true"
+                               click=|PinSelected()|>
                             <label text="Pin" />
                         </frame>
-                        <frame layout="stretch 48px" margin="0, 4" padding="8, 0"
+                        <frame *if={SelectedShowComplete} layout="stretch 48px" margin="0, 4" padding="8, 0"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
-                               focusable="true">
+                               focusable="true"
+                               click=|CompleteSelected()|>
                             <label text="Complete Quest" />
                         </frame>
-                        <frame layout="stretch 48px" margin="0, 4" padding="8, 0"
+                        <frame *if={SelectedShowActions} layout="stretch 48px" margin="0, 4" padding="8, 0"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
-                               focusable="true">
-                            <label text={:WarpLabel} />
+                               focusable="true"
+                               click=|WarpSelected()|>
+                            <label text={SelectedWarpLabel} />
                         </frame>
-                        <frame layout="stretch 48px" margin="0, 4" padding="8, 0"
+                        <frame *if={SelectedShowPostpone} layout="stretch 48px" margin="0, 4" padding="8, 0"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
-                               focusable="true">
-                            <label text="Reset Deadline" />
+                               focusable="true"
+                               click=|PostponeSelected()|>
+                            <label text="Postpone (+7 days)" />
                         </frame>
-                        <frame layout="stretch 48px" margin="0, 4" padding="8, 0"
+                        <frame *if={SelectedShowCancel} layout="stretch 48px" margin="0, 4" padding="8, 0"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
-                               focusable="true">
+                               focusable="true"
+                               click=|RequestCancelSelected()|>
                             <label text="Cancel" />
                         </frame>
                     </lane>
