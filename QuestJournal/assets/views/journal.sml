@@ -9,7 +9,7 @@
         <lane orientation="vertical" horizontal-content-alignment="middle">
 
             <lane orientation="horizontal" margin="0, 0, 0, 8">
-                <frame *repeat={Tabs}
+                <frame *repeat={:Tabs}
                        layout="140px 56px"
                        margin="0, 0, 8, 0"
                        padding="12, 0"
@@ -32,7 +32,7 @@
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
                     <scrollable layout="stretch stretch">
                         <lane orientation="vertical" layout="stretch content">
-                            <frame *repeat={Quests}
+                            <frame *repeat={:Quests}
                                    layout="stretch 48px"
                                    margin="0, 2"
                                    padding="6, 4"
@@ -58,18 +58,18 @@
                                 background={@Mods/StardewUI/Sprites/BannerBackground}
                                 background-border-thickness="48, 0"
                                 padding="12"
-                                text={Title} />
-                        <label margin="0, 4" text={Description} />
+                                text={:Title} />
+                        <label margin="0, 4" text={:Description} />
                         <label margin="0, 12, 0, 4" color="#136" text="Objective" />
-                        <label margin="8, 0" text={Objective} />
+                        <label margin="8, 0" text={:Objective} />
                         <label margin="0, 12, 0, 4" color="#136" text="Rewards" />
-                        <label margin="8, 0" text={RewardSummary} />
+                        <label margin="8, 0" text={:RewardSummary} />
                         <label margin="0, 12, 0, 4" color="#136" text="Giver" />
-                        <label margin="8, 0" text={GiverDisplay} />
+                        <label margin="8, 0" text={:GiverDisplay} />
                         <label margin="0, 12, 0, 4" color="#136" text="Days Left" />
-                        <label margin="8, 0" text={DaysLeftDisplay} />
+                        <label margin="8, 0" text={:DaysLeftDisplay} />
                         <label margin="0, 12, 0, 4" color="#136" text="Source" />
-                        <label margin="8, 0" text={SourceDisplay} />
+                        <label margin="8, 0" text={:SourceDisplay} />
                     </lane>
                 </frame>
 
@@ -103,7 +103,7 @@
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
                                focusable="true">
-                            <label text={WarpLabel} />
+                            <label text={:WarpLabel} />
                         </frame>
                         <frame layout="stretch 48px" margin="0, 4" padding="8, 0"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
