@@ -158,6 +158,188 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         return _state.OneShotFired.TryGetValue(definitionId, out bool fired) && fired;
     }
 
+    public IReadOnlyList<AdventureStepInfo>? GetAdventureSteps(Quest quest)
+    {
+        return quest is AdventureQuest aq ? aq.BuildStepInfos() : null;
+    }
+
+    public int? GetActiveStepIndex(Quest quest)
+    {
+        if (quest is not AdventureQuest aq)
+            return null;
+        int idx = aq.ActiveStepIndex();
+        return idx < 0 ? null : idx;
+    }
+
+    public string? GetGiverNpc(Quest quest)
+    {
+        if (quest == null)
+            return null;
+        if (quest is AdventureQuest aq)
+        {
+            string g = aq.giverNpc.Value;
+            return string.IsNullOrEmpty(g) ? null : g;
+        }
+        switch (quest)
+        {
+            case StardewValley.Quests.ItemDeliveryQuest idq:
+                return string.IsNullOrEmpty(idq.target.Value) ? null : idq.target.Value;
+            case StardewValley.Quests.SlayMonsterQuest smq:
+                return string.IsNullOrEmpty(smq.target.Value) || smq.target.Value == "null" ? null : smq.target.Value;
+        }
+        return null;
+    }
+
+    public IReadOnlyList<QuestRewardLine> GetRewardLines(Quest quest)
+    {
+        if (quest is not Rewards.IRewardedQuest rq)
+            return System.Array.Empty<QuestRewardLine>();
+
+        var specs = new List<Rewards.RewardSpec>();
+        foreach (var line in rq.SerializedRewards)
+        {
+            if (Rewards.RewardCodec.IsConsequenceLine(line))
+                continue;
+            var spec = Rewards.RewardCodec.Decode(line);
+            if (spec != null)
+                specs.Add(spec);
+        }
+
+        if (quest.moneyReward.Value > 0)
+            specs.Insert(0, new Rewards.MoneyReward(quest.moneyReward.Value));
+
+        string giver = GetGiverNpc(quest) ?? string.Empty;
+        var translation = ModEntry.Instance?.Helper.Translation;
+        var lines = new List<QuestRewardLine>(specs.Count);
+        foreach (var spec in specs)
+        {
+            var line = ProjectRewardLine(spec, giver, translation);
+            if (line != null)
+                lines.Add(line);
+        }
+        return lines;
+    }
+
+    private static QuestRewardLine? ProjectRewardLine(Rewards.RewardSpec spec, string giver, StardewModdingAPI.ITranslationHelper? translation)
+    {
+        string giverDisplay = string.IsNullOrEmpty(giver) ? "They" : NpcDisplay.Resolve(giver);
+        switch (spec)
+        {
+            case Rewards.MoneyReward m when m.Amount > 0:
+                return new QuestRewardLine(
+                    "Money",
+                    translation?.Get("quest.reward.line.money", new { npc = giverDisplay, gold = m.Amount })
+                        .Default($"{giverDisplay} will give you {m.Amount}g in return").ToString()
+                        ?? $"{m.Amount}g",
+                    amount: m.Amount);
+
+            case Rewards.FriendshipReward f when f.Points > 0 && !string.IsNullOrEmpty(f.Npc):
+            {
+                string npcDisplay = NpcDisplay.Resolve(f.Npc);
+                return new QuestRewardLine(
+                    "Friendship",
+                    translation?.Get("quest.reward.line.friendship", new { npc = npcDisplay })
+                        .Default($"{npcDisplay} will like you more").ToString()
+                        ?? $"+{f.Points} friendship with {npcDisplay}",
+                    npcName: f.Npc,
+                    amount: f.Points);
+            }
+
+            case Rewards.ObjectReward o when !string.IsNullOrEmpty(o.ItemId) && o.Count > 0:
+            {
+                var item = StardewValley.ItemRegistry.Create(o.ItemId, o.Count);
+                string name = item?.DisplayName ?? o.ItemId;
+                string itemPhrase = o.Count > 1 ? $"{o.Count}x {name}" : name;
+                return new QuestRewardLine(
+                    "Object",
+                    translation?.Get("quest.reward.line.item", new { item = itemPhrase, count = o.Count, npc = giverDisplay })
+                        .Default($"You will get {itemPhrase} as a thank you").ToString()
+                        ?? itemPhrase,
+                    itemId: o.ItemId,
+                    amount: o.Count);
+            }
+
+            case Rewards.RecipeReward r when !string.IsNullOrEmpty(r.RecipeName):
+                return new QuestRewardLine(
+                    "Recipe",
+                    translation?.Get("quest.reward.line.recipe", new { recipe = r.RecipeName, npc = giverDisplay })
+                        .Default($"You will learn the {r.RecipeName} recipe").ToString()
+                        ?? $"Recipe: {r.RecipeName}",
+                    payload: r.RecipeName);
+
+            case Rewards.MailReward mr when !string.IsNullOrEmpty(mr.LetterKey):
+                return new QuestRewardLine(
+                    "Mail",
+                    translation?.Get("quest.reward.line.mail", new { npc = giverDisplay })
+                        .Default($"{giverDisplay} will send you a letter").ToString()
+                        ?? $"Letter: {mr.LetterKey}",
+                    payload: mr.LetterKey);
+
+            case Rewards.ShopDiscountReward sd when !string.IsNullOrEmpty(sd.ShopId) && sd.PercentOff > 0 && sd.DurationDays > 0:
+                return new QuestRewardLine(
+                    "ShopDiscount",
+                    translation?.Get("quest.reward.line.shopDiscount", new { percent = sd.PercentOff, days = sd.DurationDays, npc = giverDisplay })
+                        .Default($"{giverDisplay} will mark down their shop {sd.PercentOff}% for {sd.DurationDays} day(s)").ToString()
+                        ?? $"{sd.PercentOff}% off shop for {sd.DurationDays}d",
+                    payload: sd.ShopId,
+                    amount: sd.PercentOff,
+                    durationDays: sd.DurationDays);
+
+            case Rewards.AnimalPurchaseDiscountReward ap when ap.PercentOff > 0 && ap.DurationDays > 0:
+                return new QuestRewardLine(
+                    "AnimalPurchaseDiscount",
+                    translation?.Get("quest.reward.line.animalPurchaseDiscount", new { percent = ap.PercentOff, days = ap.DurationDays, npc = giverDisplay })
+                        .Default($"{giverDisplay} will mark down livestock {ap.PercentOff}% for {ap.DurationDays} day(s)").ToString()
+                        ?? $"{ap.PercentOff}% off livestock for {ap.DurationDays}d",
+                    amount: ap.PercentOff,
+                    durationDays: ap.DurationDays);
+
+            case Rewards.FestivalBiasReward fb when fb.Magnitude > 0:
+            {
+                string festivalKey = fb.Festival == Rewards.FestivalKind.Luau ? "luau" : "fair";
+                return new QuestRewardLine(
+                    "FestivalBias",
+                    translation?.Get($"quest.reward.line.festivalBias.{festivalKey}", new { npc = giverDisplay })
+                        .Default($"{giverDisplay}'s help will tilt the {festivalKey} judging in your favour").ToString()
+                        ?? $"Festival bias: {festivalKey} +{fb.Magnitude}",
+                    payload: festivalKey,
+                    amount: fb.Magnitude);
+            }
+
+            case Rewards.FairStarTokensReward ft when ft.Amount > 0:
+                return new QuestRewardLine(
+                    "FairStarTokens",
+                    translation?.Get("quest.reward.line.fairStarTokens", new { amount = ft.Amount, npc = giverDisplay })
+                        .Default($"{giverDisplay} will tip you {ft.Amount} extra star tokens on Fair day").ToString()
+                        ?? $"+{ft.Amount} star tokens",
+                    amount: ft.Amount);
+
+            case Rewards.CustomReward cr when !string.IsNullOrEmpty(cr.Kind):
+            {
+                var entry = Rewards.RewardApplier.CustomRewards?.Resolve(cr.Kind);
+                string summary = string.Empty;
+                if (entry?.Summarize != null && translation != null)
+                {
+                    try { summary = entry.Summarize(cr.Payload ?? string.Empty, giverDisplay, translation); }
+                    catch { summary = string.Empty; }
+                }
+                if (string.IsNullOrEmpty(summary))
+                    return null;
+                return new QuestRewardLine("Custom", summary, payload: cr.Payload);
+            }
+        }
+        return null;
+    }
+
+    public bool TryAdvanceCustomStep(Quest quest, int stepIndex, int amount)
+    {
+        if (quest is not AdventureQuest aq)
+            return false;
+        if (amount < 0)
+            return aq.TryMarkCustomStepDone(stepIndex);
+        return aq.TryAddCustomStepProgress(stepIndex, amount) > 0;
+    }
+
     public IReadOnlyList<CustomBoardSlotInfo> GetCustomBoardSlots(string? boardOwnerUniqueId = null, string? boardName = null)
     {
         var list = new List<CustomBoardSlotInfo>();

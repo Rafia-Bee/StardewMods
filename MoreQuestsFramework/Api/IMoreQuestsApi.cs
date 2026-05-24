@@ -66,6 +66,35 @@ public interface IMoreQuestsApi
     // to re-roll, so callers should re-query rather than caching.
     IReadOnlyList<CustomBoardSlotInfo> GetCustomBoardSlots(string? boardOwnerUniqueId = null, string? boardName = null);
 
+    // Read-only snapshot of every step on an AdventureQuest. Null when the quest
+    // isn't an AdventureQuest. Each AdventureStepInfo carries name, kind, progress,
+    // count, done/active flags, description, and the raw Requires/Targets/Items
+    // lists so a journal UI can render multi-step quests without reflection.
+    IReadOnlyList<AdventureStepInfo>? GetAdventureSteps(Quest quest);
+
+    // Index of the first not-Done step whose Requires[] are all Done, or null when
+    // the quest is vanilla / not an AdventureQuest, or every step is done.
+    int? GetActiveStepIndex(Quest quest);
+
+    // Best-effort NPC name for the quest's giver. Reads AdventureQuest.giverNpc
+    // for framework Adventure quests; falls back to vanilla subclass target fields
+    // (ItemDeliveryQuest.target, SlayMonsterQuest.target). Returns null when no
+    // giver can be inferred.
+    string? GetGiverNpc(Quest quest);
+
+    // Itemised reward lines for a quest carrying an IRewardedQuest payload (i.e.
+    // any framework quest). Empty for vanilla quests. Each line is pre-translated
+    // and carries enough side data (ItemId, NpcName, Amount, DurationDays, ...)
+    // for a UI to render an icon or chip beside the text.
+    IReadOnlyList<QuestRewardLine> GetRewardLines(Quest quest);
+
+    // Cheat / debug helper: advances a Custom-kind AdventureStep by `amount`.
+    // Returns false (no-op) for vanilla quests, non-Adventure quests, out-of-range
+    // indices, non-Custom step kinds, completed quests, or steps whose Requires
+    // aren't met yet. For amount < 0 the step is force-completed (Progress jumps
+    // to Count). For amount >= remaining, the step is marked done.
+    bool TryAdvanceCustomStep(Quest quest, int stepIndex, int amount);
+
     // Re-rolls today's daily-board batch. Mail-triggered postings are NOT re-rolled
     // (would risk double-posting mail flags).
     void RefreshOffers();
