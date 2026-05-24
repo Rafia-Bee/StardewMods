@@ -219,9 +219,7 @@ internal static partial class Generators
             if (npc == null)
                 continue;
             var data = npc.GetData();
-            if (data == null)
-                continue;
-            if (data.Language == NpcLanguage.Dwarvish)
+            if (data == null || data.Language == NpcLanguage.Dwarvish)
                 continue;
             if (!npc.CanReceiveGifts())
                 continue;
