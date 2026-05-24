@@ -25,33 +25,18 @@ public static class RewardApplier
     // RewardSpec record having to know about it.
     internal static CustomRewardRegistry? CustomRewards { get; set; }
 
-    // Dedupes identical encoded reward lines before applying so a corrupt save (where
-    // the same friendship/object/etc entry got written N times into a single quest's
-    // serializedRewards) can't pay out N rewards on completion. Consequence lines are
-    // handled separately by FireEncodedConsequence and skipped here.
     public static void ApplyEncoded(IEnumerable<string> encoded)
     {
-        var seen = new HashSet<string>(System.StringComparer.Ordinal);
-        int duplicates = 0;
         foreach (var line in encoded)
         {
             if (RewardCodec.IsConsequenceLine(line))
                 continue;
             if (string.IsNullOrEmpty(line))
                 continue;
-            if (!seen.Add(line))
-            {
-                duplicates++;
-                continue;
-            }
             var spec = RewardCodec.Decode(line);
             if (spec != null)
                 ApplyOne(spec);
         }
-        if (duplicates > 0)
-            ModEntry.Instance?.Monitor.Log(
-                $"ApplyEncoded skipped {duplicates} duplicate reward line(s) (kept {seen.Count} unique). Likely a save migrated from an older mod version with corrupt serializedRewards.",
-                LogLevel.Warn);
     }
 
     public static void FireEncodedConsequence(IEnumerable<string> encoded)

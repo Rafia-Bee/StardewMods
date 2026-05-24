@@ -28,6 +28,7 @@ public sealed class MoreQuestsShipQuest : Quest, IRewardedQuest
 
     public readonly NetString baseObjective = new();
 
+    [XmlIgnore]
     public NetStringList SerializedRewards => serializedRewards;
 
     public string objectiveItemName = string.Empty;
