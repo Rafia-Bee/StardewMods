@@ -63,7 +63,10 @@
                         <label margin="0, 12, 0, 4" color="#136" text="Objective" />
                         <label margin="8, 0" text={SelectedObjective} />
                         <label margin="0, 12, 0, 4" color="#136" text="Rewards" />
-                        <label margin="8, 0" text={SelectedRewardSummary} />
+                        <lane *repeat={:SelectedRewards} orientation="horizontal" margin="8, 1" vertical-content-alignment="middle">
+                            <label text="- " />
+                            <label text={:Summary} />
+                        </lane>
                         <label margin="0, 12, 0, 4" color="#136" text="Giver" />
                         <label margin="8, 0" text={SelectedGiverDisplay} />
                         <label margin="0, 12, 0, 4" color="#136" text="Days Left" />

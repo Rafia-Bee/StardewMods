@@ -43,10 +43,24 @@ public sealed class CompletedQuestRecord
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Objective { get; set; } = string.Empty;
+    // Aggregate text summary kept for backwards-compat with pre Step 5 saves.
+    // New completions write the itemised list into RewardLines below as well,
+    // so this field is just a fallback for old history rows.
     public string RewardSummary { get; set; } = string.Empty;
+    public List<StoredRewardLine> RewardLines { get; set; } = new();
     public string Giver { get; set; } = string.Empty;
     public string Source { get; set; } = string.Empty;
     // Total in-game days at the time of completion. Lets us display
     // "completed Spring 14, Y2" later without storing a string.
     public int CompletedOnTotalDays { get; set; }
+}
+
+public sealed class StoredRewardLine
+{
+    public string Kind { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public string? ItemId { get; set; }
+    public string? NpcName { get; set; }
+    public int Amount { get; set; }
+    public int DurationDays { get; set; }
 }

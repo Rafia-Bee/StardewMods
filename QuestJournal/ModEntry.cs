@@ -1,3 +1,4 @@
+using QuestJournal.Api;
 using QuestJournal.Integrations;
 using QuestJournal.Menu;
 using StardewModdingAPI;
@@ -13,6 +14,7 @@ public sealed class ModEntry : Mod
     internal static ModConfig Config { get; private set; } = new();
 
     private IViewEngine? _viewEngine;
+    private IMoreQuestsApi? _mqfApi;
     private string _viewPrefix = null!;
     private GameMenuTabOverlay? _tabOverlay;
 
@@ -35,6 +37,12 @@ public sealed class ModEntry : Mod
             return;
         }
         _viewEngine.RegisterViews(_viewPrefix, "assets/views");
+
+        // MoreQuestsFramework is optional. Resolve once; null when not loaded.
+        // Reward itemisation falls back to vanilla synthesis in that case.
+        _mqfApi = Helper.ModRegistry.GetApi<IMoreQuestsApi>("RafiaBee.MoreQuestsFramework");
+        if (_mqfApi == null)
+            Monitor.Log("MoreQuestsFramework not loaded. Reward itemisation will use vanilla synthesis only.", LogLevel.Trace);
         // Sprite registration deferred: we don't ship custom sprites yet, and
         // StardewUI's preloader throws DirectoryNotFoundException when the
         // assets/sprites folder doesn't exist. Re-enable in step 13's art pass.
@@ -91,7 +99,7 @@ public sealed class ModEntry : Mod
     private IClickableMenu? BuildJournalMenu()
     {
         if (_viewEngine == null) return null;
-        var ctx = new JournalContext(Helper, _viewEngine, _viewPrefix);
+        var ctx = new JournalContext(Helper, _viewEngine, _mqfApi, _viewPrefix);
         ctx.Refresh();
         return _viewEngine.CreateMenuFromAsset($"{_viewPrefix}/journal", ctx);
     }
