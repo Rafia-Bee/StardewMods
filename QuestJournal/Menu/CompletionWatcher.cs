@@ -127,7 +127,7 @@ public sealed class CompletionWatcher
             Objective = q.currentObjective ?? string.Empty,
             Rewards = rewards,
             Giver = QuestSnapshotBuilder.ResolveGiverDisplay(q),
-            Source = QuestSnapshotBuilder.ResolveSourceDisplay(q),
+            Source = QuestSnapshotBuilder.ResolveSourceDisplay(q, _mqfApi, _helper),
             LastSeenCompleted = q.completed.Value
         };
     }

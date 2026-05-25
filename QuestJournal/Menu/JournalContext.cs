@@ -437,7 +437,7 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     private static string ResolveGiverDisplay(Quest q) => QuestSnapshotBuilder.ResolveGiverDisplay(q);
     private static string? ResolveGiverNpcName(Quest q) => QuestSnapshotBuilder.ResolveGiverNpcName(q);
-    private static string ResolveSourceDisplay(Quest q) => QuestSnapshotBuilder.ResolveSourceDisplay(q);
+    private string ResolveSourceDisplay(Quest q) => QuestSnapshotBuilder.ResolveSourceDisplay(q, _mqfApi, _helper);
 
     private void RaiseSelectionDependents()
     {

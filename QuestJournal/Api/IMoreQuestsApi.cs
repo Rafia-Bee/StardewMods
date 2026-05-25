@@ -15,4 +15,8 @@ public interface IMoreQuestsApi
     IReadOnlyList<IAdventureStepInfo>? GetAdventureSteps(Quest quest);
 
     int? GetActiveStepIndex(Quest quest);
+
+    string? GetDefinitionId(Quest quest);
+
+    IQuestInfo? GetQuestInfo(string definitionId);
 }

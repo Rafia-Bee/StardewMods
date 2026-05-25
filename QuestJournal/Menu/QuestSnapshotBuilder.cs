@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using QuestJournal.Api;
+using StardewModdingAPI;
 using StardewValley.Quests;
 
 namespace QuestJournal.Menu;
@@ -108,15 +110,60 @@ internal static class QuestSnapshotBuilder
         return string.IsNullOrEmpty(name) ? "Unknown" : name!;
     }
 
-    public static string ResolveSourceDisplay(Quest q)
+    public static string ResolveSourceDisplay(Quest q, IMoreQuestsApi? mqfApi, IModHelper helper)
     {
-        return q switch
+        // MQF first. Many framework quests run as vanilla subclasses at
+        // runtime (a MoreQuests "bring 10 potatoes to Robin" is still an
+        // ItemDeliveryQuest), so the subclass check below would
+        // misattribute them to vanilla if we ran it first. GetDefinitionId
+        // returns null for anything MQF doesn't claim, so falling through
+        // for vanilla billboard quests is safe.
+        if (mqfApi != null)
         {
-            ItemDeliveryQuest => "Stardew Valley",
-            FishingQuest => "Stardew Valley",
-            ResourceCollectionQuest => "Stardew Valley",
-            SlayMonsterQuest => "Stardew Valley",
-            _ => "Modded"
-        };
+            try
+            {
+                string? defId = mqfApi.GetDefinitionId(q);
+                if (!string.IsNullOrEmpty(defId))
+                {
+                    var info = mqfApi.GetQuestInfo(defId!);
+                    string? ownerId = info?.OwnerUniqueId;
+                    if (!string.IsNullOrEmpty(ownerId))
+                    {
+                        var modInfo = helper.ModRegistry.Get(ownerId!);
+                        return modInfo?.Manifest?.Name ?? ownerId!;
+                    }
+                }
+            }
+            catch { }
+        }
+
+        // Vanilla quest subclasses + base Quest. Story quests (Getting Started,
+        // Mr. Qi's Plane Ride, etc.) are plain Quest instances with no
+        // subclass, so we have to whitelist the bare type, not just the
+        // subclasses.
+        if (q is ItemDeliveryQuest or FishingQuest or ResourceCollectionQuest or SlayMonsterQuest)
+            return "Stardew Valley";
+        if (q.GetType() == typeof(Quest))
+            return "Stardew Valley";
+
+        // Other modded Quest subclass. Best-effort: match the defining
+        // assembly's short name against each loaded mod's manifest name
+        // or UniqueID. Falls back to the assembly name itself (better than
+        // a bare "Modded") and only "Modded" when even that's empty.
+        string? asmName = q.GetType().Assembly.GetName().Name;
+        if (string.IsNullOrEmpty(asmName)) return "Modded";
+
+        foreach (var mod in helper.ModRegistry.GetAll())
+        {
+            var m = mod.Manifest;
+            if (m == null) continue;
+            if (string.Equals(m.Name, asmName, StringComparison.OrdinalIgnoreCase))
+                return m.Name;
+            if (string.Equals(m.UniqueID, asmName, StringComparison.OrdinalIgnoreCase))
+                return m.Name;
+            if (m.UniqueID.EndsWith("." + asmName, StringComparison.OrdinalIgnoreCase))
+                return m.Name;
+        }
+        return asmName!;
     }
 }
