@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using QuestJournal.Api;
 using StardewModdingAPI;
 using StardewValley.Quests;
+using StardewValley.SpecialOrders;
 
 namespace QuestJournal.Menu;
 
@@ -165,5 +166,53 @@ internal static class QuestSnapshotBuilder
                 return m.Name;
         }
         return asmName!;
+    }
+
+    // Special Orders don't go through MQF, so we can't ask the framework
+    // who owns them. The next-best thing is the questKey itself: most
+    // modded SOs prefix the key with their UniqueID or namespace
+    // (e.g. "Lumisteria.MtVapiusSpecialOrders.MtVapiusFlowers",
+    // "RSV.SpecialOrder.BugSteak"). Vanilla keys are unprefixed plain
+    // strings ("Caroline", "Lewis", "Wizard2", ...), so a dot in the
+    // key is a strong signal it's modded. Match against loaded mods by
+    // longest-UniqueID-prefix.
+    public static string ResolveSpecialOrderSource(SpecialOrder so, IModHelper helper)
+    {
+        if (so == null) return "Stardew Valley";
+
+        // Qi board first; orderType.Value == "Qi" is set by vanilla.
+        if (so.orderType.Value == "Qi") return "Mr. Qi";
+
+        string key = so.questKey.Value ?? string.Empty;
+        if (string.IsNullOrEmpty(key) || !key.Contains('.'))
+            return "Stardew Valley";
+
+        IModInfo? bestMatch = null;
+        int bestLen = 0;
+        foreach (var mod in helper.ModRegistry.GetAll())
+        {
+            var m = mod.Manifest;
+            if (m == null || string.IsNullOrEmpty(m.UniqueID)) continue;
+            string uid = m.UniqueID;
+            // Prefix match at a "." boundary so "RSV" doesn't accidentally
+            // claim "RSVMod.Other.Thing". Also accept exact match.
+            if (key.Equals(uid, StringComparison.OrdinalIgnoreCase)
+                || key.StartsWith(uid + ".", StringComparison.OrdinalIgnoreCase))
+            {
+                if (uid.Length > bestLen)
+                {
+                    bestMatch = mod;
+                    bestLen = uid.Length;
+                }
+            }
+        }
+        if (bestMatch?.Manifest != null)
+            return bestMatch.Manifest.Name;
+
+        // Dot present but no mod claimed it. Best effort: surface the
+        // first dotted segment so the player at least sees the namespace
+        // rather than a wrong "Stardew Valley" attribution.
+        int dot = key.IndexOf('.');
+        return dot > 0 ? key.Substring(0, dot) : "Stardew Valley";
     }
 }

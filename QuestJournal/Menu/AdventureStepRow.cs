@@ -19,6 +19,23 @@ public sealed class AdventureStepRow
     public string ProgressLabel => ShowProgress ? $"{Progress}/{Count}" : string.Empty;
     public string DisplayText => string.IsNullOrEmpty(Description) ? Kind : Description;
 
+    // Combined "[x] 1. description 0/2" string. Long descriptions cause
+    // StardewUI's layout to loop infinitely when split across a horizontal
+    // lane of multiple labels (seen on Lumisteria's Fancy Goods SO with
+    // 60-char step descriptions). Rendering as a single label inside a
+    // vertical lane lets StardewUI wrap naturally with the parent's width
+    // constraint.
+    public string RowText
+    {
+        get
+        {
+            var sb = new System.Text.StringBuilder(64);
+            sb.Append(DoneMarker).Append(' ').Append(IndexLabel).Append(' ').Append(DisplayText);
+            if (ShowProgress) sb.Append("  ").Append(ProgressLabel);
+            return sb.ToString();
+        }
+    }
+
     public AdventureStepRow(
         int index,
         string description,
