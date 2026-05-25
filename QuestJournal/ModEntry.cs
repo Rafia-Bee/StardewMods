@@ -38,6 +38,7 @@ public sealed class ModEntry : Mod
             return;
         }
         _viewEngine.RegisterViews(_viewPrefix, "assets/views");
+        _viewEngine.RegisterSprites($"Mods/{ModManifest.UniqueID}/Sprites", "assets/sprites");
 
         // MoreQuestsFramework is optional. Resolve once; null when not loaded.
         // Reward itemisation falls back to vanilla synthesis in that case.
@@ -50,9 +51,6 @@ public sealed class ModEntry : Mod
         // to journal-Complete-button history.
         _completionWatcher = new CompletionWatcher(Helper, _mqfApi);
         _completionWatcher.Register();
-        // Sprite registration deferred: we don't ship custom sprites yet, and
-        // StardewUI's preloader throws DirectoryNotFoundException when the
-        // assets/sprites folder doesn't exist. Re-enable in step 13's art pass.
         if (Config.HotReloadViews)
             _viewEngine.EnableHotReloading();
         _viewEngine.PreloadAssets();
