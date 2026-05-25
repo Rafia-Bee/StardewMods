@@ -5,8 +5,9 @@
            background={@Mods/StardewUI/Sprites/MenuBackground}
            border={@Mods/StardewUI/Sprites/MenuBorder}
            border-thickness="36, 36, 40, 36"
-           padding="20, 12">
-        <lane orientation="vertical" horizontal-content-alignment="middle">
+           padding="20, 12"
+           horizontal-content-alignment="middle">
+        <lane orientation="vertical" layout="stretch content" horizontal-content-alignment="middle">
 
             <lane orientation="horizontal" margin="0, 0, 0, 8">
                 <frame *repeat={:Tabs}
@@ -25,10 +26,10 @@
                 </frame>
             </lane>
 
-            <lane orientation="horizontal" layout="content content">
+            <lane orientation="horizontal" layout="content 580px" vertical-content-alignment="start">
 
                 <frame layout="240px 580px"
-                       padding="8"
+                       padding="20"
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
                     <scrollable layout="stretch stretch"
                                 scrollbar-visibility="visible"
@@ -56,7 +57,7 @@
 
                 <frame layout="484px 580px"
                        margin="8, 0"
-                       padding="16, 12"
+                       padding="20"
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
                     <scrollable layout="stretch stretch"
                                 scrollbar-visibility="visible"
@@ -66,12 +67,19 @@
                                 scrollbar-down-sprite={@Mods/RafiaBee.QuestJournal/Sprites/down_arrow:Arrow}
                                 scrollbar-thumb-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}>
                         <lane orientation="vertical" layout="stretch content" margin="0, 0, 40, 0">
-                            <banner layout="stretch content"
-                                    margin="0, 0, 0, 12"
-                                    background={@Mods/StardewUI/Sprites/BannerBackground}
-                                    background-border-thickness="48, 0"
-                                    padding="12"
-                                    text={SelectedTitle} />
+                            <frame layout="stretch content"
+                                   margin="0, 0, 0, 12"
+                                   background={@Mods/StardewUI/Sprites/BannerBackground}
+                                   border-thickness="48, 12"
+                                   padding="0, 4"
+                                   horizontal-content-alignment="middle"
+                                   vertical-content-alignment="middle">
+                                <label layout="stretch content"
+                                       bold="true"
+                                       horizontal-alignment="middle"
+                                       max-lines="2"
+                                       text={SelectedTitle} />
+                            </frame>
                             <label margin="0, 4" text={SelectedDescription} />
                             <label *if={SelectedShowObjective} margin="0, 12, 0, 4" color="#136" text="Objective" />
                             <label *if={SelectedShowObjective} margin="8, 0" text={SelectedObjective} />
@@ -95,7 +103,13 @@
                 <frame layout="236px 580px"
                        padding="20"
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
-                    <lane orientation="vertical" layout="stretch content" horizontal-content-alignment="middle">
+                    <scrollable layout="stretch stretch"
+                                scrollbar-visibility="hidden"
+                                scrollbar-track-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}
+                                scrollbar-up-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}
+                                scrollbar-down-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}
+                                scrollbar-thumb-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}>
+                        <lane orientation="vertical" layout="stretch 540px" horizontal-content-alignment="middle">
                         <label *if={SelectedIsCompleted} margin="0, 12" color="#136" text="Quest complete" />
 
                         <frame *if={SelectedShowActions} layout="stretch 48px" margin="0, 4" padding="8, 0"
@@ -146,7 +160,8 @@
                                click=|RequestCancelSelected()|>
                             <label text="Cancel" />
                         </frame>
-                    </lane>
+                        </lane>
+                    </scrollable>
                 </frame>
 
             </lane>
