@@ -17,6 +17,7 @@ public sealed class JournalContext : INotifyPropertyChanged
     public ObservableCollection<TabRow> Tabs { get; } = new();
     public ObservableCollection<QuestRow> Quests { get; } = new();
     public ObservableCollection<RewardLineRow> SelectedRewards { get; } = new();
+    public ObservableCollection<AdventureStepRow> SelectedSteps { get; } = new();
 
     private QuestRow? _selectedQuest;
     public QuestRow? SelectedQuest
@@ -28,6 +29,7 @@ public sealed class JournalContext : INotifyPropertyChanged
             _selectedQuest = value;
             Raise(nameof(SelectedQuest));
             RebuildSelectedRewards();
+            RebuildSelectedSteps();
             RaiseSelectionDependents();
         }
     }
@@ -47,6 +49,11 @@ public sealed class JournalContext : INotifyPropertyChanged
     public bool SelectedShowComplete => SelectedShowActions;
     public bool SelectedShowCancel => _selectedQuest != null && _selectedQuest.CanCancel;
     public bool SelectedShowPostpone => _selectedQuest != null && _selectedQuest.CanPostpone;
+    // SML swaps between the single Objective line and the multi-step list
+    // based on these. A stepped Adventure quest renders the step list and
+    // hides the objective; everything else keeps the single objective.
+    public bool SelectedHasSteps => _selectedQuest?.AdventureSteps.Count > 0;
+    public bool SelectedShowObjective => !SelectedHasSteps && !string.IsNullOrEmpty(SelectedObjective);
 
     public bool HasSelection => _selectedQuest != null;
     public bool IsEmpty => Quests.Count == 0;
@@ -59,17 +66,19 @@ public sealed class JournalContext : INotifyPropertyChanged
     private readonly IMoreQuestsApi? _mqfApi;
     private readonly IModHelper _helper;
     private readonly string _viewPrefix;
+    private readonly CompletionWatcher? _completionWatcher;
 
     private const string TabActive = "active";
     private const string TabCompleted = "completed";
     private const string TabAll = "all";
 
-    public JournalContext(IModHelper helper, IViewEngine? viewEngine, IMoreQuestsApi? mqfApi, string viewPrefix)
+    public JournalContext(IModHelper helper, IViewEngine? viewEngine, IMoreQuestsApi? mqfApi, string viewPrefix, CompletionWatcher? completionWatcher)
     {
         _helper = helper;
         _viewEngine = viewEngine;
         _mqfApi = mqfApi;
         _viewPrefix = viewPrefix;
+        _completionWatcher = completionWatcher;
         Tabs.Add(new TabRow(TabActive, "Active", id => SelectTab(id)));
         Tabs.Add(new TabRow(TabCompleted, "Completed", id => SelectTab(id)));
         Tabs.Add(new TabRow(TabAll, "All", id => SelectTab(id)));
@@ -124,6 +133,9 @@ public sealed class JournalContext : INotifyPropertyChanged
         // player.questLog if it has no money + no rewardDescription, so we'd
         // lose the chance to read its state afterward.
         CompletedQuestStore.Add(BuildRecordFrom(_selectedQuest));
+        // Tell the watcher we already handled this one so it doesn't write a
+        // duplicate row when it later sees the completed.Value flip.
+        _completionWatcher?.MarkRecorded(quest);
 
         quest.questComplete();
 
@@ -155,6 +167,10 @@ public sealed class JournalContext : INotifyPropertyChanged
             message,
             _ =>
             {
+                // The watcher would otherwise see the disappearance and
+                // record this as Failed. The player chose to drop it,
+                // so mark it ignored before the actual removal.
+                _completionWatcher?.MarkIgnore(quest);
                 Game1.player.questLog.Remove(quest);
                 if (savedMenu != null)
                     Game1.activeClickableMenu = savedMenu;
@@ -225,11 +241,13 @@ public sealed class JournalContext : INotifyPropertyChanged
     private QuestRow BuildActiveRow(Quest q)
     {
         var rewards = BuildRewardLines(q);
+        var steps = BuildAdventureSteps(q);
         return new QuestRow(
             title: q.questTitle ?? string.Empty,
             description: q.questDescription ?? string.Empty,
             objective: q.currentObjective ?? string.Empty,
             rewardLines: rewards,
+            adventureSteps: steps,
             giverDisplay: ResolveGiverDisplay(q),
             daysLeftDisplay: BuildDaysLeftDisplay(q),
             sourceDisplay: ResolveSourceDisplay(q),
@@ -243,6 +261,14 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     private QuestRow BuildHistoryRow(CompletedQuestRecord r)
     {
+        bool failed = string.Equals(r.Status, "Failed", System.StringComparison.OrdinalIgnoreCase);
+        string statusLabel = failed ? "Failed" : "Completed";
+        // CompletedOnTotalDays==0 happens on pre-fix records where we never
+        // wrote the field. Fall back to the bare status string so old rows
+        // still read sanely instead of saying "Completed Spring 1, Y1".
+        string dateSlot = r.CompletedOnTotalDays > 0
+            ? $"{statusLabel} {BuildHistoryDateDisplay(r.CompletedOnTotalDays)}"
+            : statusLabel;
         var rewards = new List<RewardLineRow>();
         if (r.RewardLines != null && r.RewardLines.Count > 0)
         {
@@ -274,8 +300,9 @@ public sealed class JournalContext : INotifyPropertyChanged
             description: r.Description,
             objective: r.Objective,
             rewardLines: rewards,
+            adventureSteps: new List<AdventureStepRow>(),
             giverDisplay: string.IsNullOrEmpty(r.Giver) ? "Unknown" : r.Giver,
-            daysLeftDisplay: "Completed",
+            daysLeftDisplay: dateSlot,
             sourceDisplay: string.IsNullOrEmpty(r.Source) ? "Unknown" : r.Source,
             warpTarget: null,
             isCompleted: true,
@@ -319,85 +346,47 @@ public sealed class JournalContext : INotifyPropertyChanged
             t.IsActive = (t.Id == _activeTabId);
     }
 
-    // Itemised reward derivation. For MQF-managed quests we ask the framework
-    // (declarative rewards walk SerializedRewards through RewardCodec); for
-    // vanilla quests we synthesise money + rewardDescription + the +255
-    // friendship bump baked into the matching Quest subclass.
     private List<RewardLineRow> BuildRewardLines(Quest q)
+        => QuestSnapshotBuilder.BuildRewardLines(q, _mqfApi);
+
+    private IReadOnlyList<IAdventureStepInfo>? SafeGetAdventureSteps(Quest q)
     {
-        var lines = new List<RewardLineRow>();
-
-        // Always ask MQF first, regardless of IsManagedQuest. The framework's
-        // _managed table is a ConditionalWeakTable populated only at quest
-        // creation, so save-reloaded quests fall out of it even though their
-        // SerializedRewards (NetStringList) survives the save trip. Gating
-        // here on IsManagedQuest would silently drop the MQF lines for every
-        // quest that pre-existed the current session. GetRewardLines itself
-        // already returns an empty array for non-IRewardedQuest quests, so
-        // calling it unconditionally is safe for vanilla quests too.
-        if (_mqfApi != null)
-        {
-            var mqfLines = SafeGetRewardLines(q);
-            if (mqfLines != null)
-            {
-                foreach (var l in mqfLines)
-                {
-                    lines.Add(new RewardLineRow(
-                        kind: l.Kind ?? string.Empty,
-                        summary: l.Summary ?? string.Empty,
-                        itemId: l.ItemId,
-                        npcName: l.NpcName,
-                        amount: l.Amount,
-                        durationDays: l.DurationDays));
-                }
-            }
-        }
-
-        // Vanilla quests, or MQF quests that didn't declare any SerializedRewards,
-        // both end up here. Synthesise from the Quest object's own fields so
-        // billboard "Help Wanted" deliveries and MoreQuests-content-pack quests
-        // without a declarative Reward block still render their money + friendship.
-        if (lines.Count == 0)
-            SynthesiseVanillaRewardLines(q, lines);
-
-        if (lines.Count == 0)
-            lines.Add(new RewardLineRow(kind: "None", summary: "(none)"));
-
-        return lines;
-    }
-
-    private static void SynthesiseVanillaRewardLines(Quest q, List<RewardLineRow> lines)
-    {
-        // GetMoneyReward() is virtual on Quest; ItemDeliveryQuest overrides
-        // it to fall back to `item.Price * 3` when moneyReward.Value hasn't
-        // been materialised. Other subclasses (ResourceCollection, Fishing,
-        // SlayMonster) don't override and instead store their payout in a
-        // sibling `reward` NetInt, so we have to probe those explicitly.
-        int gold = q.GetMoneyReward();
-        if (gold <= 0)
-            gold = ResolveSubclassReward(q);
-        if (gold > 0)
-            lines.Add(new RewardLineRow(kind: "Money", summary: $"{gold}g", amount: gold));
-
-        string? desc = q.rewardDescription.Value;
-        // Vanilla quest data uses "-1" as the "no reward description" sentinel
-        // (see Data/Quests). Suppress it so the panel doesn't show "- -1".
-        if (!string.IsNullOrEmpty(desc) && desc != "-1")
-            lines.Add(new RewardLineRow(kind: "Custom", summary: desc!));
-
-        string? friend = ResolveVanillaFriendshipTarget(q);
-        if (!string.IsNullOrEmpty(friend))
-            lines.Add(new RewardLineRow(
-                kind: "Friendship",
-                summary: $"+250 friendship with {friend}",
-                npcName: friend,
-                amount: 250));
-    }
-
-    private IReadOnlyList<IQuestRewardLine>? SafeGetRewardLines(Quest q)
-    {
-        try { return _mqfApi!.GetRewardLines(q); }
+        try { return _mqfApi!.GetAdventureSteps(q); }
         catch { return null; }
+    }
+
+    private int? SafeGetActiveStepIndex(Quest q)
+    {
+        try { return _mqfApi!.GetActiveStepIndex(q); }
+        catch { return null; }
+    }
+
+    private List<AdventureStepRow> BuildAdventureSteps(Quest q)
+    {
+        var rows = new List<AdventureStepRow>();
+        if (_mqfApi == null) return rows;
+
+        var steps = SafeGetAdventureSteps(q);
+        if (steps == null || steps.Count == 0) return rows;
+
+        // GetActiveStepIndex flags the row to highlight. Null means every
+        // step is done; we'll fall back to whichever step still reports
+        // Active so a finished-but-not-cleared quest still renders sanely.
+        int? activeIdx = SafeGetActiveStepIndex(q);
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var s = steps[i];
+            bool active = activeIdx.HasValue ? i == activeIdx.Value : s.Active;
+            rows.Add(new AdventureStepRow(
+                index: i,
+                description: s.Description,
+                progress: s.Progress,
+                count: s.Count,
+                done: s.Done,
+                active: active && !s.Done,
+                kind: s.Kind));
+        }
+        return rows;
     }
 
     private void RebuildSelectedRewards()
@@ -408,62 +397,47 @@ public sealed class JournalContext : INotifyPropertyChanged
             SelectedRewards.Add(line);
     }
 
-    // ResourceCollectionQuest, FishingQuest and SlayMonsterQuest each hold their
-    // gold payout in a sibling `reward` NetInt rather than in Quest.moneyReward.
-    // Base Quest.GetMoneyReward() doesn't know about that field, so we have to
-    // pick it up per subclass when the base virtual returns 0.
-    private static int ResolveSubclassReward(Quest q) => q switch
+    private void RebuildSelectedSteps()
     {
-        ResourceCollectionQuest rcq => rcq.reward.Value,
-        FishingQuest fq => fq.reward.Value,
-        SlayMonsterQuest smq => smq.reward.Value,
-        _ => 0
-    };
-
-    // Vanilla Quest subclasses pay a baked-in friendship bump to a target NPC
-    // on completion. Mirror the subclass set here so the journal can show it
-    // alongside money / rewardDescription instead of hiding it behind silence.
-    // Amount is +250 (vanilla's questComplete adds 250 to the target).
-    private static string? ResolveVanillaFriendshipTarget(Quest q) => q switch
-    {
-        ItemDeliveryQuest idq when !string.IsNullOrEmpty(idq.target.Value) => idq.target.Value,
-        ResourceCollectionQuest rcq when !string.IsNullOrEmpty(rcq.target.Value) => rcq.target.Value,
-        SlayMonsterQuest smq when !string.IsNullOrEmpty(smq.target.Value) && smq.target.Value != "null" => smq.target.Value,
-        _ => null
-    };
+        SelectedSteps.Clear();
+        if (_selectedQuest == null) return;
+        foreach (var s in _selectedQuest.AdventureSteps)
+            SelectedSteps.Add(s);
+    }
 
     private static string BuildDaysLeftDisplay(Quest q)
     {
         int d = q.daysLeft.Value;
         if (d <= 0) return "No deadline";
-        if (d == 1) return "1 day left";
+        // Vanilla yanks the quest the first morning daysLeft hits 0, so
+        // daysLeft==1 means "you sleep tonight and it expires", not "you
+        // have a full day". Flag it so the player notices before sleeping.
+        if (d == 1) return "Due tomorrow!";
         return $"{d} days left";
     }
 
-    private static string ResolveGiverDisplay(Quest q)
+    private static string BuildHistoryDateDisplay(int totalDays)
     {
-        string? name = ResolveGiverNpcName(q);
-        return string.IsNullOrEmpty(name) ? "Unknown" : name!;
-    }
-
-    private static string? ResolveGiverNpcName(Quest q) => q switch
-    {
-        ItemDeliveryQuest idq => string.IsNullOrEmpty(idq.target.Value) ? null : idq.target.Value,
-        SlayMonsterQuest smq when !string.IsNullOrEmpty(smq.target.Value) && smq.target.Value != "null" => smq.target.Value,
-        _ => null
-    };
-
-    private static string ResolveSourceDisplay(Quest q)
-    {
-        return q switch
+        // Inverse of WorldDate.TotalDays: (year-1)*112 + season*28 + (day-1).
+        // 4 seasons of 28 days each. TotalDays==0 == Spring 1, Y1.
+        if (totalDays < 0) totalDays = 0;
+        int year = totalDays / 112 + 1;
+        int remainder = totalDays % 112;
+        int seasonIdx = remainder / 28;
+        int day = remainder % 28 + 1;
+        string season = seasonIdx switch
         {
-            ItemDeliveryQuest => "Stardew Valley",
-            FishingQuest => "Stardew Valley",
-            ResourceCollectionQuest => "Stardew Valley",
-            SlayMonsterQuest => "Stardew Valley",
-            _ => "Modded"
+            0 => "Spring",
+            1 => "Summer",
+            2 => "Fall",
+            _ => "Winter"
         };
+        return $"{season} {day}, Y{year}";
     }
+
+    private static string ResolveGiverDisplay(Quest q) => QuestSnapshotBuilder.ResolveGiverDisplay(q);
+    private static string? ResolveGiverNpcName(Quest q) => QuestSnapshotBuilder.ResolveGiverNpcName(q);
+    private static string ResolveSourceDisplay(Quest q) => QuestSnapshotBuilder.ResolveSourceDisplay(q);
 
     private void RaiseSelectionDependents()
     {
@@ -479,6 +453,8 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedShowComplete));
         Raise(nameof(SelectedShowCancel));
         Raise(nameof(SelectedShowPostpone));
+        Raise(nameof(SelectedHasSteps));
+        Raise(nameof(SelectedShowObjective));
         Raise(nameof(HasSelection));
     }
 
@@ -518,6 +494,7 @@ public sealed class QuestRow : INotifyPropertyChanged
     public string Description { get; }
     public string Objective { get; }
     public IReadOnlyList<RewardLineRow> RewardLines { get; }
+    public IReadOnlyList<AdventureStepRow> AdventureSteps { get; }
     public string GiverDisplay { get; }
     public string DaysLeftDisplay { get; }
     public string SourceDisplay { get; }
@@ -563,6 +540,7 @@ public sealed class QuestRow : INotifyPropertyChanged
         string description,
         string objective,
         IReadOnlyList<RewardLineRow> rewardLines,
+        IReadOnlyList<AdventureStepRow> adventureSteps,
         string giverDisplay,
         string daysLeftDisplay,
         string sourceDisplay,
@@ -577,6 +555,7 @@ public sealed class QuestRow : INotifyPropertyChanged
         Description = description;
         Objective = objective;
         RewardLines = rewardLines ?? new List<RewardLineRow>();
+        AdventureSteps = adventureSteps ?? new List<AdventureStepRow>();
         GiverDisplay = giverDisplay;
         DaysLeftDisplay = daysLeftDisplay;
         SourceDisplay = sourceDisplay;

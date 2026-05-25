@@ -60,8 +60,18 @@
                                 padding="12"
                                 text={SelectedTitle} />
                         <label margin="0, 4" text={SelectedDescription} />
-                        <label margin="0, 12, 0, 4" color="#136" text="Objective" />
-                        <label margin="8, 0" text={SelectedObjective} />
+                        <label *if={SelectedShowObjective} margin="0, 12, 0, 4" color="#136" text="Objective" />
+                        <label *if={SelectedShowObjective} margin="8, 0" text={SelectedObjective} />
+                        <label *if={SelectedHasSteps} margin="0, 12, 0, 4" color="#136" text="Steps" />
+                        <lane *repeat={:SelectedSteps} orientation="horizontal" margin="8, 1" vertical-content-alignment="middle">
+                            <label text={:DoneMarker} />
+                            <label text=" " />
+                            <label text={:IndexLabel} />
+                            <label text=" " />
+                            <label text={:DisplayText} />
+                            <label text=" " />
+                            <label text={:ProgressLabel} />
+                        </lane>
                         <label margin="0, 12, 0, 4" color="#136" text="Rewards" />
                         <lane *repeat={:SelectedRewards} orientation="horizontal" margin="8, 1" vertical-content-alignment="middle">
                             <label text="- " />

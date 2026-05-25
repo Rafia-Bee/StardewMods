@@ -53,6 +53,11 @@ public sealed class CompletedQuestRecord
     // Total in-game days at the time of completion. Lets us display
     // "completed Spring 14, Y2" later without storing a string.
     public int CompletedOnTotalDays { get; set; }
+    // "Completed" for natural / button completions, "Failed" when the
+    // quest disappeared without finishing (e.g. deadline expired
+    // overnight). Default keeps pre-existing records readable as
+    // completions since that's all we recorded before.
+    public string Status { get; set; } = "Completed";
 }
 
 public sealed class StoredRewardLine
