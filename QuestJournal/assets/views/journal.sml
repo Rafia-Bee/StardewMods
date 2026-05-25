@@ -25,13 +25,19 @@
                 </frame>
             </lane>
 
-            <lane orientation="horizontal" layout="stretch content">
+            <lane orientation="horizontal" layout="content content">
 
-                <frame layout="280px 580px"
+                <frame layout="240px 580px"
                        padding="8"
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
-                    <scrollable layout="stretch stretch">
-                        <lane orientation="vertical" layout="stretch content">
+                    <scrollable layout="stretch stretch"
+                                scrollbar-visibility="visible"
+                                scrollbar-margin="-44, 16, 0, 16"
+                                scrollbar-track-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}
+                                scrollbar-up-sprite={@Mods/RafiaBee.QuestJournal/Sprites/up_arrow:Arrow}
+                                scrollbar-down-sprite={@Mods/RafiaBee.QuestJournal/Sprites/down_arrow:Arrow}
+                                scrollbar-thumb-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}>
+                        <lane orientation="vertical" layout="stretch content" margin="0, 0, 40, 0">
                             <frame *repeat={:Quests}
                                    layout="stretch 48px"
                                    margin="0, 2"
@@ -48,12 +54,18 @@
                     </scrollable>
                 </frame>
 
-                <frame layout="520px 580px"
+                <frame layout="484px 580px"
                        margin="8, 0"
                        padding="16, 12"
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
-                    <scrollable layout="stretch stretch">
-                        <lane orientation="vertical" layout="stretch content">
+                    <scrollable layout="stretch stretch"
+                                scrollbar-visibility="visible"
+                                scrollbar-margin="-44, 16, 0, 16"
+                                scrollbar-track-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}
+                                scrollbar-up-sprite={@Mods/RafiaBee.QuestJournal/Sprites/up_arrow:Arrow}
+                                scrollbar-down-sprite={@Mods/RafiaBee.QuestJournal/Sprites/down_arrow:Arrow}
+                                scrollbar-thumb-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}>
+                        <lane orientation="vertical" layout="stretch content" margin="0, 0, 40, 0">
                             <banner layout="stretch content"
                                     margin="0, 0, 0, 12"
                                     background={@Mods/StardewUI/Sprites/BannerBackground}
@@ -80,8 +92,8 @@
                     </scrollable>
                 </frame>
 
-                <frame layout="220px 580px"
-                       padding="12"
+                <frame layout="236px 580px"
+                       padding="20"
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
                     <lane orientation="vertical" layout="stretch content" horizontal-content-alignment="middle">
                         <label *if={SelectedIsCompleted} margin="0, 12" color="#136" text="Quest complete" />
