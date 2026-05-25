@@ -52,38 +52,32 @@
                        margin="8, 0"
                        padding="16, 12"
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
-                    <lane orientation="vertical" layout="stretch content">
-                        <banner layout="stretch content"
-                                margin="0, 0, 0, 12"
-                                background={@Mods/StardewUI/Sprites/BannerBackground}
-                                background-border-thickness="48, 0"
-                                padding="12"
-                                text={SelectedTitle} />
-                        <label margin="0, 4" text={SelectedDescription} />
-                        <label *if={SelectedShowObjective} margin="0, 12, 0, 4" color="#136" text="Objective" />
-                        <label *if={SelectedShowObjective} margin="8, 0" text={SelectedObjective} />
-                        <label *if={SelectedHasSteps} margin="0, 12, 0, 4" color="#136" text="Steps" />
-                        <lane *repeat={:SelectedSteps} orientation="horizontal" margin="8, 1" vertical-content-alignment="middle">
-                            <label text={:DoneMarker} />
-                            <label text=" " />
-                            <label text={:IndexLabel} />
-                            <label text=" " />
-                            <label text={:DisplayText} />
-                            <label text=" " />
-                            <label text={:ProgressLabel} />
+                    <scrollable layout="stretch stretch">
+                        <lane orientation="vertical" layout="stretch content">
+                            <banner layout="stretch content"
+                                    margin="0, 0, 0, 12"
+                                    background={@Mods/StardewUI/Sprites/BannerBackground}
+                                    background-border-thickness="48, 0"
+                                    padding="12"
+                                    text={SelectedTitle} />
+                            <label margin="0, 4" text={SelectedDescription} />
+                            <label *if={SelectedShowObjective} margin="0, 12, 0, 4" color="#136" text="Objective" />
+                            <label *if={SelectedShowObjective} margin="8, 0" text={SelectedObjective} />
+                            <label *if={SelectedHasSteps} margin="0, 12, 0, 4" color="#136" text="Steps" />
+                            <label *repeat={:SelectedSteps} margin="8, 1" text={:RowText} />
+                            <label margin="0, 12, 0, 4" color="#136" text="Rewards" />
+                            <lane *repeat={:SelectedRewards} orientation="horizontal" margin="8, 1" vertical-content-alignment="middle">
+                                <label text="- " />
+                                <label text={:Summary} />
+                            </lane>
+                            <label margin="0, 12, 0, 4" color="#136" text="Giver" />
+                            <label margin="8, 0" text={SelectedGiverDisplay} />
+                            <label margin="0, 12, 0, 4" color="#136" text="Days Left" />
+                            <label margin="8, 0" text={SelectedDaysLeftDisplay} />
+                            <label margin="0, 12, 0, 4" color="#136" text="Source" />
+                            <label margin="8, 0" text={SelectedSourceDisplay} />
                         </lane>
-                        <label margin="0, 12, 0, 4" color="#136" text="Rewards" />
-                        <lane *repeat={:SelectedRewards} orientation="horizontal" margin="8, 1" vertical-content-alignment="middle">
-                            <label text="- " />
-                            <label text={:Summary} />
-                        </lane>
-                        <label margin="0, 12, 0, 4" color="#136" text="Giver" />
-                        <label margin="8, 0" text={SelectedGiverDisplay} />
-                        <label margin="0, 12, 0, 4" color="#136" text="Days Left" />
-                        <label margin="8, 0" text={SelectedDaysLeftDisplay} />
-                        <label margin="0, 12, 0, 4" color="#136" text="Source" />
-                        <label margin="8, 0" text={SelectedSourceDisplay} />
-                    </lane>
+                    </scrollable>
                 </frame>
 
                 <frame layout="220px 580px"

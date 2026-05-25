@@ -7,6 +7,10 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Quests;
+using StardewValley.ItemTypeDefinitions;
+using StardewValley.SpecialOrders;
+using StardewValley.SpecialOrders.Objectives;
+using StardewValley.SpecialOrders.Rewards;
 
 namespace QuestJournal.Menu;
 
@@ -61,6 +65,7 @@ public sealed class JournalContext : INotifyPropertyChanged
     private string _activeTabId = TabActive;
     private List<QuestRow> _activeRows = new();
     private List<QuestRow> _historyRows = new();
+    private List<QuestRow> _specialOrderRows = new();
 
     private readonly IViewEngine? _viewEngine;
     private readonly IMoreQuestsApi? _mqfApi;
@@ -69,6 +74,7 @@ public sealed class JournalContext : INotifyPropertyChanged
     private readonly CompletionWatcher? _completionWatcher;
 
     private const string TabActive = "active";
+    private const string TabSpecial = "special";
     private const string TabCompleted = "completed";
     private const string TabAll = "all";
 
@@ -80,6 +86,7 @@ public sealed class JournalContext : INotifyPropertyChanged
         _viewPrefix = viewPrefix;
         _completionWatcher = completionWatcher;
         Tabs.Add(new TabRow(TabActive, "Active", id => SelectTab(id)));
+        Tabs.Add(new TabRow(TabSpecial, "Special Orders", id => SelectTab(id)));
         Tabs.Add(new TabRow(TabCompleted, "Completed", id => SelectTab(id)));
         Tabs.Add(new TabRow(TabAll, "All", id => SelectTab(id)));
         UpdateTabSelection();
@@ -94,6 +101,22 @@ public sealed class JournalContext : INotifyPropertyChanged
             var q = log[i];
             if (q == null || q.completed.Value) continue;
             _activeRows.Add(BuildActiveRow(q));
+        }
+
+        _specialOrderRows.Clear();
+        // Special Orders live in player.team.specialOrders, not questLog, so
+        // they need a parallel pass. Only in-progress orders go in the tab;
+        // completed/failed ones are removed by vanilla within a day or two
+        // and don't need a separate history bucket (yet).
+        var orders = Game1.player?.team?.specialOrders;
+        if (orders != null)
+        {
+            foreach (var so in orders)
+            {
+                if (so == null) continue;
+                if (so.questState.Value != SpecialOrderStatus.InProgress) continue;
+                _specialOrderRows.Add(BuildSpecialOrderRow(so));
+            }
         }
 
         _historyRows.Clear();
@@ -216,11 +239,15 @@ public sealed class JournalContext : INotifyPropertyChanged
             case TabActive:
                 foreach (var r in _activeRows) Quests.Add(r);
                 break;
+            case TabSpecial:
+                foreach (var r in _specialOrderRows) Quests.Add(r);
+                break;
             case TabCompleted:
                 foreach (var r in _historyRows) Quests.Add(r);
                 break;
             case TabAll:
                 foreach (var r in _activeRows) Quests.Add(r);
+                foreach (var r in _specialOrderRows) Quests.Add(r);
                 foreach (var r in _historyRows) Quests.Add(r);
                 break;
         }
@@ -257,6 +284,192 @@ public sealed class JournalContext : INotifyPropertyChanged
             canPostpone: q.daysLeft.Value > 0,
             quest: q,
             host: this);
+    }
+
+    private QuestRow BuildSpecialOrderRow(SpecialOrder so)
+    {
+        // SOs use OrderObjective lists; render them through the existing
+        // AdventureStepRow surface so the SML view doesn't have to learn a
+        // third row type. Active highlighting is off because SO objectives
+        // can complete in any order (no Requires graph).
+        var steps = new List<AdventureStepRow>();
+        int idx = 0;
+        foreach (OrderObjective obj in so.objectives)
+        {
+            if (obj == null) continue;
+            string desc = SafeParse(so, obj.GetDescription());
+            steps.Add(new AdventureStepRow(
+                index: idx++,
+                description: desc,
+                progress: obj.GetCount(),
+                count: obj.GetMaxCount(),
+                done: obj.IsComplete(),
+                active: false,
+                kind: "Objective"));
+        }
+
+        var rewards = BuildSpecialOrderRewards(so);
+        if (rewards.Count == 0)
+            rewards.Add(new RewardLineRow(kind: "None", summary: "(none)"));
+
+        string source = QuestSnapshotBuilder.ResolveSpecialOrderSource(so, _helper);
+        string giver = ResolveNpcDisplayName(so.requester.Value);
+
+        return new QuestRow(
+            title: so.GetName() ?? string.Empty,
+            description: so.GetDescription() ?? string.Empty,
+            objective: string.Empty,
+            rewardLines: rewards,
+            adventureSteps: steps,
+            giverDisplay: giver,
+            daysLeftDisplay: BuildSpecialOrderDaysLeft(so),
+            sourceDisplay: source,
+            warpTarget: null,
+            isCompleted: false,
+            canCancel: false,
+            canPostpone: false,
+            quest: null,
+            host: this);
+    }
+
+    private static List<RewardLineRow> BuildSpecialOrderRewards(SpecialOrder so)
+    {
+        // SO rewards are an OrderReward polymorphic list rather than a single
+        // money payout. Vanilla ships five concrete subclasses; we render the
+        // four that are player-facing (Money / Gems / Friendship / Object)
+        // and skip Mail and ResetEvent since they're internal mechanics with
+        // no useful surface for the journal. Each branch is wrapped so a
+        // modded subclass throwing on a getter can't take the whole journal
+        // down; on failure we add a placeholder line so the player sees
+        // there's something there.
+        var lines = new List<RewardLineRow>();
+        foreach (OrderReward reward in so.rewards)
+        {
+            if (reward == null) continue;
+            try
+            {
+            switch (reward)
+            {
+                case MoneyReward mr:
+                {
+                    int amt = mr.GetRewardMoneyAmount();
+                    if (amt > 0)
+                        lines.Add(new RewardLineRow(kind: "Money", summary: $"{amt}g", amount: amt));
+                    break;
+                }
+                case GemsReward gr:
+                {
+                    int amt = gr.amount.Value;
+                    if (amt > 0)
+                        lines.Add(new RewardLineRow(kind: "Gems", summary: $"{amt} Qi Gems", amount: amt));
+                    break;
+                }
+                case FriendshipReward fr:
+                {
+                    string target = ResolveNpcDisplayName(fr.targetName.Value);
+                    int amt = fr.amount.Value;
+                    if (amt != 0)
+                        lines.Add(new RewardLineRow(
+                            kind: "Friendship",
+                            summary: $"+{amt} friendship with {target}",
+                            npcName: fr.targetName.Value,
+                            amount: amt));
+                    break;
+                }
+                case ObjectReward objRew:
+                {
+                    string itemKey = objRew.itemKey.Value ?? string.Empty;
+                    int amt = objRew.amount.Value;
+                    if (string.IsNullOrEmpty(itemKey) || amt <= 0) break;
+                    string itemName = ResolveItemDisplayName(itemKey);
+                    string summary = amt > 1 ? $"{amt} {itemName}" : itemName;
+                    lines.Add(new RewardLineRow(
+                        kind: "Item",
+                        summary: summary,
+                        itemId: itemKey,
+                        amount: amt));
+                    break;
+                }
+            }
+            }
+            catch (System.Exception ex)
+            {
+                ModEntry.Instance?.Monitor?.Log(
+                    $"Failed to render SO reward of type {reward.GetType().Name} for quest '{so.questKey.Value}': {ex.Message}",
+                    StardewModdingAPI.LogLevel.Warn);
+                lines.Add(new RewardLineRow(kind: "Other", summary: "(extra reward)"));
+            }
+        }
+        return lines;
+    }
+
+    private static string ResolveNpcDisplayName(string? internalName)
+    {
+        if (string.IsNullOrEmpty(internalName)) return "Unknown";
+        try
+        {
+            var npc = Game1.getCharacterFromName(internalName);
+            if (npc != null && !string.IsNullOrEmpty(npc.displayName))
+                return AsciiFold(npc.displayName);
+        }
+        catch { }
+        return AsciiFold(internalName!);
+    }
+
+    // StardewUI's text rendering hangs the game when it encounters glyphs
+    // missing from the SpriteFont atlas (seen with the modded NPC name
+    // "Adelaide" written as "Adélaïde"). Stripping diacritics via
+    // Unicode FormD decomposition gives us plain ASCII fallbacks the font
+    // is guaranteed to have. Applied only to strings we generate or
+    // surface in our own rendered content; vanilla strings (descriptions,
+    // parsed objectives) pass through untouched since vanilla renders them
+    // fine on its own.
+    private static string AsciiFold(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return s;
+        bool anyHighChar = false;
+        for (int i = 0; i < s.Length; i++) { if (s[i] > 127) { anyHighChar = true; break; } }
+        if (!anyHighChar) return s;
+        string decomposed = s.Normalize(System.Text.NormalizationForm.FormD);
+        var sb = new System.Text.StringBuilder(decomposed.Length);
+        foreach (char c in decomposed)
+        {
+            var cat = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
+            if (cat == System.Globalization.UnicodeCategory.NonSpacingMark) continue;
+            sb.Append(c);
+        }
+        return sb.ToString().Normalize(System.Text.NormalizationForm.FormC);
+    }
+
+    private static string ResolveItemDisplayName(string itemKey)
+    {
+        try
+        {
+            ParsedItemData? data = ItemRegistry.GetData(itemKey);
+            if (data != null && !string.IsNullOrEmpty(data.DisplayName))
+                return data.DisplayName;
+        }
+        catch { }
+        return itemKey;
+    }
+
+    private static string SafeParse(SpecialOrder so, string? raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return string.Empty;
+        try { return so.Parse(raw) ?? raw!; }
+        catch { return raw!; }
+    }
+
+    private static string BuildSpecialOrderDaysLeft(SpecialOrder so)
+    {
+        // SpecialOrder.dueDate.Value is absolute TotalDays (when the order
+        // expires), not a countdown. Subtract Game1.Date.TotalDays to get
+        // remaining days.
+        int totalDays = Game1.Date?.TotalDays ?? 0;
+        int daysLeft = so.dueDate.Value - totalDays;
+        if (daysLeft <= 0) return "Due today!";
+        if (daysLeft == 1) return "Due tomorrow!";
+        return $"{daysLeft} days left";
     }
 
     private QuestRow BuildHistoryRow(CompletedQuestRecord r)
