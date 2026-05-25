@@ -11,4 +11,8 @@ namespace QuestJournal.Api;
 public interface IMoreQuestsApi
 {
     IReadOnlyList<IQuestRewardLine> GetRewardLines(Quest quest);
+
+    IReadOnlyList<IAdventureStepInfo>? GetAdventureSteps(Quest quest);
+
+    int? GetActiveStepIndex(Quest quest);
 }

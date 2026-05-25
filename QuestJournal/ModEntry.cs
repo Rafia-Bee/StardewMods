@@ -17,6 +17,7 @@ public sealed class ModEntry : Mod
     private IMoreQuestsApi? _mqfApi;
     private string _viewPrefix = null!;
     private GameMenuTabOverlay? _tabOverlay;
+    private CompletionWatcher? _completionWatcher;
 
     public override void Entry(IModHelper helper)
     {
@@ -43,6 +44,12 @@ public sealed class ModEntry : Mod
         _mqfApi = Helper.ModRegistry.GetApi<IMoreQuestsApi>("RafiaBee.MoreQuestsFramework");
         if (_mqfApi == null)
             Monitor.Log("MoreQuestsFramework not loaded. Reward itemisation will use vanilla synthesis only.", LogLevel.Trace);
+
+        // The watcher captures natural completions (delivery, fishing, slay,
+        // etc.) into CompletedQuestStore so the Completed tab isn't limited
+        // to journal-Complete-button history.
+        _completionWatcher = new CompletionWatcher(Helper, _mqfApi);
+        _completionWatcher.Register();
         // Sprite registration deferred: we don't ship custom sprites yet, and
         // StardewUI's preloader throws DirectoryNotFoundException when the
         // assets/sprites folder doesn't exist. Re-enable in step 13's art pass.
@@ -99,7 +106,7 @@ public sealed class ModEntry : Mod
     private IClickableMenu? BuildJournalMenu()
     {
         if (_viewEngine == null) return null;
-        var ctx = new JournalContext(Helper, _viewEngine, _mqfApi, _viewPrefix);
+        var ctx = new JournalContext(Helper, _viewEngine, _mqfApi, _viewPrefix, _completionWatcher);
         ctx.Refresh();
         return _viewEngine.CreateMenuFromAsset($"{_viewPrefix}/journal", ctx);
     }
