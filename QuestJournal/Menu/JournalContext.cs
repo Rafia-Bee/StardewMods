@@ -223,9 +223,13 @@ public sealed class JournalContext : INotifyPropertyChanged
         var detailsCtx = new QuestDetailsPopupContext(
             _selectedQuest.Title,
             _selectedQuest.Description);
-        var popup = _viewEngine.CreateMenuFromAsset($"{_viewPrefix}/quest_details", detailsCtx);
-        if (popup != null)
-            Game1.activeClickableMenu?.SetChildMenu(popup);
+        var popupController = _viewEngine.CreateMenuControllerFromAsset($"{_viewPrefix}/quest_details", detailsCtx);
+        if (popupController != null)
+        {
+            popupController.DimmingAmount = 0f;
+            popupController.Closed += () => popupController.Dispose();
+            Game1.activeClickableMenu?.SetChildMenu(popupController.Menu);
+        }
     }
 
     public void PinSelected() { }
