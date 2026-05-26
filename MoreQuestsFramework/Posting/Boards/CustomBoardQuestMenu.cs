@@ -118,12 +118,22 @@ internal sealed class CustomBoardQuestMenu : IClickableMenu
             ? Game1.smallFont
             : Game1.dialogueFont;
         string description = Game1.parseText(_slot.Quest.questDescription, font, 640);
+        // Custom fonts can have taller line metrics, which makes the wrapped
+        // description overflow past the parchment art and under the Accept button.
+        // Measure the wrapped text and shrink it just enough to fit if needed.
+        const float textTopOffset = 180f;
+        const float bottomPadding = 24f;
+        float availableHeight = height - 128f - textTopOffset - bottomPadding;
+        float textScale = 1f;
+        Vector2 textSize = font.MeasureString(description);
+        if (textSize.Y > availableHeight && textSize.Y > 0f)
+            textScale = availableHeight / textSize.Y;
         Utility.drawTextWithShadow(
             b,
             description,
             font,
-            new Vector2(xPositionOnScreen + 320 + 32, yPositionOnScreen + 256),
-            Game1.textColor, 1f, -1f, -1, -1, 0.5f);
+            new Vector2(xPositionOnScreen + 320 + 32, yPositionOnScreen + textTopOffset),
+            Game1.textColor, textScale, -1f, -1, -1, 0.5f);
 
         if (acceptQuestButton.visible)
         {
