@@ -18,5 +18,11 @@ public interface IMoreQuestsApi
 
     string? GetDefinitionId(Quest quest);
 
+    // Best-effort NPC name for the quest's giver. Reads AdventureQuest.giverNpc
+    // for framework Adventure / mail / board quests and falls back to vanilla
+    // subclass target fields (ItemDeliveryQuest.target, SlayMonsterQuest.target).
+    // Null when the framework can't infer a giver.
+    string? GetGiverNpc(Quest quest);
+
     IQuestInfo? GetQuestInfo(string definitionId);
 }
