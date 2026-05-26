@@ -1,7 +1,7 @@
 <lane orientation="vertical"
       horizontal-content-alignment="middle"
       vertical-content-alignment="middle">
-    <frame layout="1100px 680px"
+    <frame layout="1100px 720px"
            background={@Mods/StardewUI/Sprites/MenuBackground}
            border={@Mods/StardewUI/Sprites/MenuBorder}
            border-thickness="36, 36, 40, 36"
@@ -11,9 +11,9 @@
 
             <lane orientation="horizontal" margin="0, 0, 0, 8">
                 <frame *repeat={:Tabs}
-                       layout="140px 56px"
+                       layout="140px 76px"
                        margin="0, 0, 8, 0"
-                       padding="12, 0"
+                       padding="12, 8"
                        horizontal-content-alignment="middle"
                        vertical-content-alignment="middle"
                        background={@Mods/StardewUI/Sprites/ControlBorder}
@@ -40,9 +40,9 @@
                                 scrollbar-thumb-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}>
                         <lane orientation="vertical" layout="stretch content" margin="0, 0, 40, 0">
                             <frame *repeat={:Quests}
-                                   layout="stretch 48px"
+                                   layout="stretch content"
                                    margin="0, 2"
-                                   padding="6, 4"
+                                   padding="6, 8"
                                    focusable="true"
                                    click=|Select()|>
                                 <lane orientation="horizontal" vertical-content-alignment="middle">
@@ -112,7 +112,7 @@
                         <lane orientation="vertical" layout="stretch 540px" horizontal-content-alignment="middle">
                         <label *if={SelectedIsCompleted} margin="0, 12" color="#136" text="Quest complete" />
 
-                        <frame *if={SelectedShowActions} layout="stretch 48px" margin="0, 4" padding="8, 0"
+                        <frame *if={SelectedShowActions} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
@@ -120,7 +120,7 @@
                                click=|ShowDetailsSelected()|>
                             <label text="Details" />
                         </frame>
-                        <frame *if={SelectedShowActions} layout="stretch 48px" margin="0, 4" padding="8, 0"
+                        <frame *if={SelectedShowActions} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
@@ -128,7 +128,7 @@
                                click=|PinSelected()|>
                             <label text="Pin" />
                         </frame>
-                        <frame *if={SelectedShowComplete} layout="stretch 48px" margin="0, 4" padding="8, 0"
+                        <frame *if={SelectedShowComplete} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
@@ -136,7 +136,7 @@
                                click=|CompleteSelected()|>
                             <label text="Complete Quest" />
                         </frame>
-                        <frame *if={SelectedShowActions} layout="stretch 48px" margin="0, 4" padding="8, 0"
+                        <frame *if={SelectedShowActions} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
@@ -144,7 +144,7 @@
                                click=|WarpSelected()|>
                             <label text={SelectedWarpLabel} />
                         </frame>
-                        <frame *if={SelectedShowPostpone} layout="stretch 48px" margin="0, 4" padding="8, 0"
+                        <frame *if={SelectedShowPostpone} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
@@ -152,7 +152,7 @@
                                click=|PostponeSelected()|>
                             <label text="Postpone (+7 days)" />
                         </frame>
-                        <frame *if={SelectedShowCancel} layout="stretch 48px" margin="0, 4" padding="8, 0"
+                        <frame *if={SelectedShowCancel} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
