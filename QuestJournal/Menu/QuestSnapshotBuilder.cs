@@ -98,16 +98,165 @@ internal static class QuestSnapshotBuilder
         _ => null
     };
 
-    public static string? ResolveGiverNpcName(Quest q) => q switch
+    public static string? ResolveGiverNpcName(Quest q, IMoreQuestsApi? mqfApi = null)
     {
-        ItemDeliveryQuest idq => string.IsNullOrEmpty(idq.target.Value) ? null : idq.target.Value,
-        SlayMonsterQuest smq when !string.IsNullOrEmpty(smq.target.Value) && smq.target.Value != "null" => smq.target.Value,
-        _ => null
-    };
+        if (q == null) return null;
 
-    public static string ResolveGiverDisplay(Quest q)
+        // MQF first. AdventureQuest stores the giver in giverNpc.Value (a NetString that
+        // survives save reload), and MQF's GetGiverNpc also returns the vanilla subclass
+        // fields when applicable. Doing this first means save-reloaded MQF mail/board
+        // quests don't fall through to a null giver.
+        if (mqfApi != null)
+        {
+            string? fromMqf = null;
+            try { fromMqf = mqfApi.GetGiverNpc(q); } catch { }
+            if (!string.IsNullOrEmpty(fromMqf))
+                return fromMqf;
+        }
+
+        switch (q)
+        {
+            case ItemDeliveryQuest idq when !string.IsNullOrEmpty(idq.target.Value):
+                return idq.target.Value;
+            case SlayMonsterQuest smq when !string.IsNullOrEmpty(smq.target.Value) && smq.target.Value != "null":
+                return smq.target.Value;
+            case LostItemQuest liq when !string.IsNullOrEmpty(liq.npcName.Value):
+                return liq.npcName.Value;
+            case SecretLostItemQuest sliq when !string.IsNullOrEmpty(sliq.npcName.Value):
+                return sliq.npcName.Value;
+        }
+
+        // Data/Quests fallback. Vanilla ItemDelivery / LostItem / SecretLostItem /
+        // Monster all carry the giver NPC in the first conditions field. This
+        // catches cases where the subclass field is empty (Basic quest type
+        // overriding a row that originally had an NPC, scripted quest creation
+        // that bypassed loadQuestInfo, etc.).
+        string? fromData = ResolveGiverFromQuestData(q.id?.Value);
+        if (!string.IsNullOrEmpty(fromData)) return fromData;
+
+        // Heuristic last resort: story quests (base Quest, ItemHarvestQuest,
+        // CraftingQuest, SocializeQuest, ...) don't have an NPC field at all,
+        // but the title and description nearly always name the giver in plain
+        // text. Scan the combined text for any string that matches a known NPC
+        // (internal name) and return the first one found. Falls back to the
+        // possessive form ("Marnie's") so "Marnie's Request" resolves to Marnie.
+        string? fromText = ResolveGiverFromText(q);
+        if (!string.IsNullOrEmpty(fromText)) return fromText;
+
+        // Diagnostic: log the quest type + id when we can't infer a giver, so
+        // future bug reports include enough info to extend this resolver.
+        try
+        {
+            ModEntry.Instance?.Monitor?.Log(
+                $"No giver inferred for quest type={q.GetType().Name} id='{q.id?.Value ?? "(none)"}' title='{q.questTitle ?? "(none)"}'.",
+                LogLevel.Trace);
+        }
+        catch { }
+        return null;
+    }
+
+    private static string? ResolveGiverFromText(Quest q)
     {
-        string? name = ResolveGiverNpcName(q);
+        string title;
+        string description;
+        try { title = q.questTitle ?? string.Empty; } catch { title = string.Empty; }
+        try { description = q.questDescription ?? string.Empty; } catch { description = string.Empty; }
+        if (string.IsNullOrEmpty(title) && string.IsNullOrEmpty(description))
+            return null;
+
+        // Game1.characterData keys are NPC internal names ("Marnie", "Marlon",
+        // "Clint", ...) plus Pet/Horse template ids we want to skip. Match each
+        // candidate as a whole word, allowing an optional possessive "'s" suffix
+        // so titles like "Marnie's Request" resolve. Title is searched first so
+        // a quest titled after one NPC but mentioning others in the body still
+        // attributes to the title NPC.
+        IEnumerable<string> candidates;
+        try
+        {
+            candidates = StardewValley.Game1.characterData?.Keys
+                ?? System.Linq.Enumerable.Empty<string>();
+        }
+        catch { return null; }
+
+        string titleMatch = MatchNpcInText(title, candidates);
+        if (!string.IsNullOrEmpty(titleMatch)) return titleMatch;
+        return MatchNpcInText(description, candidates);
+    }
+
+    private static string MatchNpcInText(string text, IEnumerable<string> npcs)
+    {
+        if (string.IsNullOrEmpty(text)) return string.Empty;
+        // Track the earliest index so we return the first-mentioned NPC, not
+        // whatever the dictionary happened to enumerate first.
+        string best = string.Empty;
+        int bestIdx = int.MaxValue;
+        foreach (string name in npcs)
+        {
+            if (string.IsNullOrEmpty(name)) continue;
+            if (name.Length < 3) continue; // skip stub ids ("X1", "Pet", etc.)
+            int idx = IndexOfWholeWord(text, name);
+            if (idx >= 0 && idx < bestIdx)
+            {
+                best = name;
+                bestIdx = idx;
+            }
+        }
+        return best;
+    }
+
+    private static int IndexOfWholeWord(string haystack, string needle)
+    {
+        int from = 0;
+        while (from <= haystack.Length - needle.Length)
+        {
+            int found = haystack.IndexOf(needle, from, StringComparison.OrdinalIgnoreCase);
+            if (found < 0) return -1;
+            // Require a non-letter boundary on both sides. Trailing apostrophe
+            // ("Marnie's") counts as a non-letter so possessives still match.
+            bool leftOk = found == 0 || !char.IsLetter(haystack[found - 1]);
+            int after = found + needle.Length;
+            bool rightOk = after >= haystack.Length || !char.IsLetter(haystack[after]);
+            if (leftOk && rightOk) return found;
+            from = found + 1;
+        }
+        return -1;
+    }
+
+    private static string? ResolveGiverFromQuestData(string? id)
+    {
+        if (string.IsNullOrEmpty(id)) return null;
+        try
+        {
+            string[]? fields = Quest.GetRawQuestFields(id);
+            if (fields == null || fields.Length < 5) return null;
+            string type = fields[0];
+            string conditions = fields[4];
+            if (string.IsNullOrEmpty(conditions)) return null;
+            string[] split = conditions.Split(' ');
+            if (split.Length == 0) return null;
+            // First conditions token is the NPC name for the quest types that name one.
+            switch (type)
+            {
+                case "ItemDelivery":
+                case "LostItem":
+                case "SecretLostItem":
+                    return string.IsNullOrEmpty(split[0]) ? null : split[0];
+                case "Monster":
+                    // Monster quests: conditions are "<monster> <count> [<targetNpc> [<ignoreFarm>]]".
+                    // The optional target NPC is the giver; fall back to null when it's missing.
+                    if (split.Length >= 3 && !string.IsNullOrEmpty(split[2]) && split[2] != "null")
+                        return split[2];
+                    return null;
+                default:
+                    return null;
+            }
+        }
+        catch { return null; }
+    }
+
+    public static string ResolveGiverDisplay(Quest q, IMoreQuestsApi? mqfApi = null)
+    {
+        string? name = ResolveGiverNpcName(q, mqfApi);
         return string.IsNullOrEmpty(name) ? "Unknown" : name!;
     }
 
@@ -138,14 +287,55 @@ internal static class QuestSnapshotBuilder
             catch { }
         }
 
+        // Modded quest id by dotted-prefix convention. Both mod-authored vanilla
+        // quests (e.g. "TheLimeyDragon.Ayeisha_Quest2") and most CP quest packs
+        // namespace their ids with the author/mod prefix. Try longest-UniqueID
+        // prefix match first so "RSV.Foo.Bar" doesn't get claimed by a plain
+        // "RSV" mod when a more specific "RSV.Foo" pack is loaded.
+        string? questId = q.id?.Value;
+        if (!string.IsNullOrEmpty(questId) && questId!.Contains('.'))
+        {
+            IModInfo? bestMatch = null;
+            int bestLen = 0;
+            foreach (var mod in helper.ModRegistry.GetAll())
+            {
+                var m = mod.Manifest;
+                if (m == null || string.IsNullOrEmpty(m.UniqueID)) continue;
+                string uid = m.UniqueID;
+                if (questId.Equals(uid, StringComparison.OrdinalIgnoreCase)
+                    || questId.StartsWith(uid + ".", StringComparison.OrdinalIgnoreCase)
+                    || questId.StartsWith(uid + "_", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (uid.Length > bestLen)
+                    {
+                        bestMatch = mod;
+                        bestLen = uid.Length;
+                    }
+                }
+            }
+            if (bestMatch?.Manifest != null)
+                return bestMatch.Manifest.Name;
+        }
+
         // Vanilla quest subclasses + base Quest. Story quests (Getting Started,
         // Mr. Qi's Plane Ride, etc.) are plain Quest instances with no
         // subclass, so we have to whitelist the bare type, not just the
-        // subclasses.
-        if (q is ItemDeliveryQuest or FishingQuest or ResourceCollectionQuest or SlayMonsterQuest)
+        // subclasses. For these types we still have to decide whether the
+        // entry came from vanilla Data/Quests or from a mod that edited the
+        // same asset. We don't have a clean signal for that without scanning
+        // content packs, so we lean on the id shape: pure-numeric ids ("1",
+        // "21", "126") are how vanilla story / billboard quests are keyed, so
+        // those stay "Stardew Valley". An id that contains any letter
+        // ("VincentCheezeQuest") is almost certainly a mod-injected row, so
+        // we surface the id verbatim. The player gets a hint that something
+        // outside vanilla is involved without us guessing the wrong mod.
+        if (q is ItemDeliveryQuest or FishingQuest or ResourceCollectionQuest or SlayMonsterQuest
+            || q.GetType() == typeof(Quest))
+        {
+            if (LooksLikeModdedDataQuestId(questId))
+                return questId!;
             return "Stardew Valley";
-        if (q.GetType() == typeof(Quest))
-            return "Stardew Valley";
+        }
 
         // Other modded Quest subclass. Best-effort: match the defining
         // assembly's short name against each loaded mod's manifest name
@@ -166,6 +356,16 @@ internal static class QuestSnapshotBuilder
                 return m.Name;
         }
         return asmName!;
+    }
+
+    private static bool LooksLikeModdedDataQuestId(string? id)
+    {
+        if (string.IsNullOrEmpty(id)) return false;
+        foreach (char c in id)
+        {
+            if (char.IsLetter(c)) return true;
+        }
+        return false;
     }
 
     // Special Orders don't go through MQF, so we can't ask the framework

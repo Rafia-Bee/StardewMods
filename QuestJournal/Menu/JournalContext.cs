@@ -652,8 +652,8 @@ public sealed class JournalContext : INotifyPropertyChanged
         return $"{season} {day}, Y{year}";
     }
 
-    private static string ResolveGiverDisplay(Quest q) => QuestSnapshotBuilder.ResolveGiverDisplay(q);
-    private static string? ResolveGiverNpcName(Quest q) => QuestSnapshotBuilder.ResolveGiverNpcName(q);
+    private string ResolveGiverDisplay(Quest q) => QuestSnapshotBuilder.ResolveGiverDisplay(q, _mqfApi);
+    private string? ResolveGiverNpcName(Quest q) => QuestSnapshotBuilder.ResolveGiverNpcName(q, _mqfApi);
     private string ResolveSourceDisplay(Quest q) => QuestSnapshotBuilder.ResolveSourceDisplay(q, _mqfApi, _helper);
 
     private void RaiseSelectionDependents()
