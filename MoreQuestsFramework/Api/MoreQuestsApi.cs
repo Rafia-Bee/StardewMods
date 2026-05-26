@@ -182,10 +182,20 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         }
         switch (quest)
         {
+            // MoreQuestsItemDeliveryQuest and MoreQuestsFishingQuest extend the
+            // vanilla subclasses, so they hit the ItemDeliveryQuest / FishingQuest
+            // arms by inheritance. MoreQuestsShipQuest extends base Quest and
+            // carries its own `target` NetString, so it needs its own arm.
+            case MoreQuestsShipQuest msq:
+                return string.IsNullOrEmpty(msq.target.Value) ? null : msq.target.Value;
             case StardewValley.Quests.ItemDeliveryQuest idq:
                 return string.IsNullOrEmpty(idq.target.Value) ? null : idq.target.Value;
+            case StardewValley.Quests.FishingQuest fq:
+                return string.IsNullOrEmpty(fq.target.Value) ? null : fq.target.Value;
             case StardewValley.Quests.SlayMonsterQuest smq:
                 return string.IsNullOrEmpty(smq.target.Value) || smq.target.Value == "null" ? null : smq.target.Value;
+            case StardewValley.Quests.ResourceCollectionQuest rcq:
+                return string.IsNullOrEmpty(rcq.target.Value) ? null : rcq.target.Value;
         }
         return null;
     }
@@ -393,6 +403,12 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
 
     public int? GetCombatFoodMagnitude(string qualifiedItemId) => _combatFood.GetMagnitude(qualifiedItemId);
 
+    // modData keys that mirror the in-memory _managed entry onto the Quest itself,
+    // so the owner / definition id survive a save + reload (the ConditionalWeakTable
+    // does not, since the deserialized Quest is a fresh instance).
+    internal const string ModDataOwnerKey = "RafiaBee.MoreQuestsFramework/Owner";
+    internal const string ModDataDefinitionKey = "RafiaBee.MoreQuestsFramework/Definition";
+
     internal void TrackPosted(Quest quest, string ownerUniqueId, string definitionId)
     {
         if (quest == null)
@@ -400,17 +416,55 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         if (_managed.TryGetValue(quest, out _))
             return;
         _managed.Add(quest, new ManagedQuest(ownerUniqueId, definitionId));
+        WriteOwnerToModData(quest, ownerUniqueId, definitionId);
     }
 
     internal bool TryGetManaged(Quest quest, out ManagedQuest info)
     {
-        if (quest != null && _managed.TryGetValue(quest, out var found))
+        if (quest == null)
+        {
+            info = default!;
+            return false;
+        }
+        if (_managed.TryGetValue(quest, out var found))
         {
             info = found;
             return true;
         }
+        // Fall back to modData. Save-reloaded quests deserialise as fresh instances
+        // that fall out of _managed, but their modData survives the round trip.
+        // Re-register them so the next call hits the fast path.
+        if (TryReadOwnerFromModData(quest, out string? owner, out string? defId))
+        {
+            info = new ManagedQuest(owner!, defId!);
+            _managed.Add(quest, info);
+            return true;
+        }
         info = default!;
         return false;
+    }
+
+    private static void WriteOwnerToModData(Quest quest, string ownerUniqueId, string definitionId)
+    {
+        if (quest?.modData == null) return;
+        if (!string.IsNullOrEmpty(ownerUniqueId))
+            quest.modData[ModDataOwnerKey] = ownerUniqueId;
+        if (!string.IsNullOrEmpty(definitionId))
+            quest.modData[ModDataDefinitionKey] = definitionId;
+    }
+
+    private static bool TryReadOwnerFromModData(Quest quest, out string? ownerUniqueId, out string? definitionId)
+    {
+        ownerUniqueId = null;
+        definitionId = null;
+        if (quest?.modData == null) return false;
+        if (!quest.modData.TryGetValue(ModDataOwnerKey, out var owner) || string.IsNullOrEmpty(owner))
+            return false;
+        if (!quest.modData.TryGetValue(ModDataDefinitionKey, out var defId) || string.IsNullOrEmpty(defId))
+            return false;
+        ownerUniqueId = owner;
+        definitionId = defId;
+        return true;
     }
 
     private string? ResolveQuestOwner(Quest quest)
