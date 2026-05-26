@@ -40,6 +40,19 @@ internal static class HarvestInterceptor
         return items ?? new List<Item>();
     }
 
+    // For third-party compatibility patches that build the harvest item themselves
+    // (e.g. Agromancy's CropManager.createObjectDebrisWithEssence path) instead of
+    // routing it through Game1.createItemDebris / createObjectDebris. Lets the
+    // integration drop the item straight into the active intercept list.
+    internal static bool TryInterceptItem(Item item)
+    {
+        if (!_intercepting || _interceptedItems == null || item == null)
+            return false;
+
+        _interceptedItems.Add(item);
+        return true;
+    }
+
     // Belt-and-suspenders cleanup. Every grabber call site already wraps Begin/End in
     // try/finally, but if a future caller forgets, GrabSession.Dispose calls this so a
     // leaked _intercepting flag never survives past one grab cycle. Without this, a

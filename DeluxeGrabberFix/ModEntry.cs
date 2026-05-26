@@ -517,6 +517,8 @@ public class ModEntry : Mod
         if (SpaceCoreIntegration.ArchaeologyLoaded)
             LogDebug("Archaeology Skill detected -- modded skill XP will be granted from artifact spots and ore pans.");
 
+        AgromancyIntegration.Initialize(Helper.ModRegistry, harmony, this);
+
         _gmcm = new GmcmRegistration(this, _locations);
         _gmcm.Initialize();
     }

@@ -127,6 +127,7 @@ Individual toggles (all default On when machines enabled): Crab Pots, Fish Ponds
 - Compatible with [Smart Filtered Hopper](https://github.com/yxlimo/StardewValleyMods) — hoppers are no longer treated as chest connectors during Automate chain scanning
 - Compatible with [Wild Flowers](https://www.nexusmods.com/stardewvalley/mods/9535) — harvests fully grown wildflowers from grass tiles. Respects the Harvest Flowers setting
 - Compatible with [Custom Bush](https://www.nexusmods.com/stardewvalley/mods/20791) — bushes from Custom Bush produce the correct items with proper quality
+- Compatible with [Agromancy](https://www.nexusmods.com/stardewvalley/mods/43202) — extra crop yield and bonus seeds from yield-boosted crops (e.g. grape trellises) go into the auto-grabber instead of falling on the ground
 - Collects roe and other produce from Fish Ponds automatically
 - Provides a mod API (`IDeluxeGrabberFixApi`) for other mods to override mushroom, berry bush, fruit tree, and slime harvest behavior, plus an `OnItemGrabbed` event and `IsGrabberActive` query
 
