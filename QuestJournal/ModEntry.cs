@@ -18,6 +18,7 @@ public sealed class ModEntry : Mod
     private string _viewPrefix = null!;
     private GameMenuTabOverlay? _tabOverlay;
     private CompletionWatcher? _completionWatcher;
+    private IClickableMenu? _journalMenu;
 
     public override void Entry(IModHelper helper)
     {
@@ -27,6 +28,19 @@ public sealed class ModEntry : Mod
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.Input.ButtonsChanged += OnButtonsChanged;
+        helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
+    }
+
+    // StardewUI's ViewMenu hides the corner HUD on construct. A per-tick reset
+    // is needed because something also stomps displayHUD between our override
+    // and the first frame draw on initial open.
+    private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
+    {
+        if (_journalMenu == null) return;
+        if (ReferenceEquals(Game1.activeClickableMenu, _journalMenu))
+            Game1.displayHUD = true;
+        else if (Game1.activeClickableMenu == null)
+            _journalMenu = null;
     }
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
@@ -106,7 +120,18 @@ public sealed class ModEntry : Mod
         if (_viewEngine == null) return null;
         var ctx = new JournalContext(Helper, _viewEngine, _mqfApi, _viewPrefix, _completionWatcher);
         ctx.Refresh();
-        return _viewEngine.CreateMenuFromAsset($"{_viewPrefix}/journal", ctx);
+        // Zero the dim underlay so the game world stays visible behind the journal.
+        var controller = _viewEngine.CreateMenuControllerFromAsset($"{_viewPrefix}/journal", ctx);
+        controller.DimmingAmount = 0f;
+        var menu = controller.Menu;
+        controller.Closed += () =>
+        {
+            if (ReferenceEquals(_journalMenu, menu))
+                _journalMenu = null;
+            controller.Dispose();
+        };
+        _journalMenu = menu;
+        return menu;
     }
 
 }

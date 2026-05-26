@@ -1,3 +1,4 @@
+using System;
 using StardewValley.Menus;
 
 namespace QuestJournal.Integrations;
@@ -13,4 +14,14 @@ public interface IViewEngine
     void PreloadAssets();
 
     IClickableMenu CreateMenuFromAsset(string assetName, object? context = null);
+    IMenuController CreateMenuControllerFromAsset(string assetName, object? context = null);
+}
+
+// Local mirror of StardewUI's IMenuController. Only the bits we touch are
+// declared; SMAPI duck-types this against the real one.
+public interface IMenuController : IDisposable
+{
+    IClickableMenu Menu { get; }
+    float DimmingAmount { get; set; }
+    event Action Closed;
 }
