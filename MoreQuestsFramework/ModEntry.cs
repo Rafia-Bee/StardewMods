@@ -137,6 +137,8 @@ public sealed class ModEntry : Mod
         MailQuestPatches.Apply(harmony, _mailQuests, _api, Monitor);
         AdventureQuestPatches.Apply(harmony);
         PlantTreesPatches.Apply(harmony, helper.ModRegistry);
+        CropHarvestPatches.Apply(harmony, Monitor);
+        CropHarvestPatches.CropHarvested += info => _api?.FireCropHarvested(info);
         SpecialOrdersBoardPatches.Apply(harmony, Monitor, _specialOrderWriter);
         ConsequenceDialoguePatches.Apply(harmony, Monitor);
         FestivalBiasPatches.Apply(harmony, Monitor);

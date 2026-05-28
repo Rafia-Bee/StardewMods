@@ -54,6 +54,7 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
         helper.Events.GameLoop.DayEnding += OnDayEnding;
+        helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTick;
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.World.BuildingListChanged += OnBuildingListChanged;
         helper.Events.Player.InventoryChanged += MarnieMilkPailHook.OnInventoryChanged;
@@ -76,6 +77,14 @@ public sealed class ModEntry : Mod
     /// The handler isn't registered as a polling handler. We drive it via the framework's
     /// GetActiveCustomSteps from OnDayEnding on Spring 13.
     internal const string EggHuntSabotageStepHandler = "EggHuntSabotage.WinHunt";
+
+    /// Custom step handler ids for Farming.CropCycleQuest. Sow + Water are polled from a
+    /// OneSecondUpdateTicked sweep of farm HoeDirt; Harvest is push-driven by the
+    /// framework's CropHarvested event. All three dedupe by tile coords via the step's
+    /// CreditedKeys (Sow + Water) or by `Loc|x|y|day` (Harvest, to count regrowths).
+    internal const string CropCycleSowHandler = "CropCycle.Sow";
+    internal const string CropCycleWaterHandler = "CropCycle.Water";
+    internal const string CropCycleHarvestHandler = "CropCycle.Harvest";
 
     internal const string EggHuntSabotageRewardMailKey = "RafiaBee.MoreQuests.EggHuntSabotageReward";
 
@@ -524,6 +533,7 @@ public sealed class ModEntry : Mod
         // doesn't have to hunt down the recipe mid-quest.
         fw.QuestAccepted += OnQuestAccepted;
         fw.QuestRemoved += OnQuestRemoved;
+        fw.CropHarvested += OnCropHarvested;
 
         WireLivestockFollowsYou();
     }
@@ -603,6 +613,103 @@ public sealed class ModEntry : Mod
         Game1.addHUDMessage(new HUDMessage(
             I18n.Get(hudKey, new { days }).ToString(),
             HUDMessage.newQuest_type));
+    }
+
+    /// Polls every active Crop Cycle Sow and Water step once a second. Cheaper than a
+    /// Harmony patch on HoeDirt because sprinklers + rain + Junimo activity all set
+    /// state.Value transparently, so a single tile-scan picks every path up. Dedupes
+    /// per-tile via the step's CreditedKeys so re-watering a tile next day doesn't
+    /// re-credit, and the scan stops early once a step's quota fills.
+    private void OnOneSecondTick(object? sender, OneSecondUpdateTickedEventArgs e)
+    {
+        if (Game1.player == null || ModScope == null)
+            return;
+
+        var sow = ModScope.GetActiveCustomSteps(CropCycleSowHandler);
+        var water = ModScope.GetActiveCustomSteps(CropCycleWaterHandler);
+        if (sow.Count == 0 && water.Count == 0)
+            return;
+
+        foreach (var location in Game1.locations)
+        {
+            if (location?.terrainFeatures == null || location.terrainFeatures.Count() == 0)
+                continue;
+            foreach (var pair in location.terrainFeatures.Pairs)
+            {
+                var feature = pair.Value;
+                if (feature is not StardewValley.TerrainFeatures.HoeDirt hd)
+                    continue;
+                if (hd.crop == null)
+                    continue;
+                string harvestId = hd.crop.indexOfHarvest.Value ?? string.Empty;
+                if (string.IsNullOrEmpty(harvestId))
+                    continue;
+                int tileX = (int)pair.Key.X;
+                int tileY = (int)pair.Key.Y;
+                string locName = location.NameOrUniqueName ?? string.Empty;
+                string tileKey = locName + "|" + tileX + "|" + tileY;
+
+                if (sow.Count > 0)
+                {
+                    foreach (var handle in sow)
+                    {
+                        if (!handle.IsActive) continue;
+                        if (!CropCycleStepMatchesHarvestId(handle, harvestId, sowStep: true)) continue;
+                        handle.AddProgressOnceForKey(tileKey);
+                    }
+                }
+                if (water.Count > 0 && hd.state.Value == 1)
+                {
+                    foreach (var handle in water)
+                    {
+                        if (!handle.IsActive) continue;
+                        if (!CropCycleStepMatchesHarvestId(handle, harvestId, sowStep: false)) continue;
+                        handle.AddProgressOnceForKey(tileKey);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Sow step's Items[] is [seedId, cropQualifiedId]; the crop's indexOfHarvest matches
+    /// the bare cropId. Water step's Items[] leads with cropQualifiedId. Bare-id comparison
+    /// covers both qualified and unqualified entries.
+    private static bool CropCycleStepMatchesHarvestId(MoreQuestsFramework.Quests.ICustomStepHandle handle, string harvestBareId, bool sowStep)
+    {
+        var items = handle.Items;
+        if (items == null || items.Count == 0)
+            return false;
+        int cropIdx = sowStep && items.Count >= 2 ? 1 : 0;
+        string raw = items[cropIdx] ?? string.Empty;
+        if (string.IsNullOrEmpty(raw))
+            return false;
+        string bare = raw.StartsWith("(O)", StringComparison.Ordinal) ? raw.Substring(3) : raw;
+        return string.Equals(bare, harvestBareId, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// Crop Cycle's Harvest step is push-driven by the framework's CropHarvested event.
+    /// Each harvest is one credit per matching active step. Dedupes by `Loc|x|y|day` so a
+    /// regrowth on day 2 of the same tile counts as a separate harvest event. Player and
+    /// Junimo harvests both fire the event.
+    private void OnCropHarvested(object? sender, MoreQuestsFramework.Api.CropHarvestInfo info)
+    {
+        if (ModScope == null)
+            return;
+        var handles = ModScope.GetActiveCustomSteps(CropCycleHarvestHandler);
+        if (handles.Count == 0)
+            return;
+
+        string bareHarvest = info.CropQualifiedId.StartsWith("(O)", StringComparison.Ordinal)
+            ? info.CropQualifiedId.Substring(3)
+            : info.CropQualifiedId;
+        string dedupeKey = info.LocationName + "|" + info.TileX + "|" + info.TileY + "|" + Game1.Date.TotalDays;
+
+        foreach (var handle in handles)
+        {
+            if (!handle.IsActive) continue;
+            if (!CropCycleStepMatchesHarvestId(handle, bareHarvest, sowStep: false)) continue;
+            handle.AddProgressOnceForKey(dedupeKey);
+        }
     }
 
     private void OnDayStarted(object? sender, DayStartedEventArgs e)

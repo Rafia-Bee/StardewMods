@@ -17,6 +17,8 @@ public static class ModCompat
     public const string LurkingInTheDark = "7thAxis.LitD.CP";
     public const string AikawaAsakaiCP = "NassiLove.AikawaAsakaiCP";
     public const string HashtagBearFamGunnar = "MadDog.HashtagBearFam";
+    public const string CoalPointFarm = "AndrewJC.CoalPointFarm";
+    public const string Ripley = "Clara.Ripley";
     public const string SiExtraCraftingMaterials = "Si.ExtraCraftingMaterials";
     public const string GenericModConfigMenu = "spacechase0.GenericModConfigMenu";
     public const string SpaceCore = "spacechase0.SpaceCore";

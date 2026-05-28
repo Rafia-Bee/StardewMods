@@ -490,4 +490,118 @@ internal static partial class Generators
         return all.Take(idx).ToList();
     }
 
+    /// "Grow a crop start to finish" multistep quest. A FarmerNPCs role giver asks the
+    /// player to sow N seeds, water them, harvest the crop, and deliver the haul. 28d
+    /// hardcoded deadline (longest-running daily-board quest in the framework). The
+    /// crop is picked from the seasonal pool filtered by maturity-fits-in-window so
+    /// late-season acceptances don't roll a crop that can't mature in time.
+    /// Reward: gold = max(sellPrice, 20) * qty * RewardMultiplierBelowSell, plus
+    /// Hyper Speed-Gro x (qty * 2).
+    private static QuestPosting? CropCycleQuest(QuestContext ctx)
+    {
+        if (Game1.player.FarmingLevel < ModEntry.Config.CropCycleMinFarmingLevel)
+            return null;
+
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.FarmerNPCs);
+        if (giver == null)
+            return null;
+
+        const int questDeadline = 28;
+        int daysLeftInSeason = 28 - Game1.dayOfMonth + 1;
+        int harvestWindow = Math.Min(questDeadline, daysLeftInSeason);
+
+        var viable = FilterCropsByGrowthWindow(ctx, harvestWindow);
+        if (viable.Count == 0)
+            return null;
+        var crop = viable[Game1.random.Next(viable.Count)];
+
+        string? seedId = ResolveSeedIdForHarvest(ctx, crop.QualifiedItemId);
+        if (string.IsNullOrEmpty(seedId))
+            return null;
+        var seed = ctx.Items.TryResolveItem(seedId!);
+        if (seed == null)
+            return null;
+
+        int qty;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int farming = Game1.player.FarmingLevel;
+            int upper = Math.Max(4, farming * 2);
+            qty = 5 + Game1.random.Next(3, upper + 1);
+        }
+        else
+        {
+            qty = Game1.random.Next(1, 11);
+        }
+
+        int basePrice = Math.Max(crop.SellPrice, 20);
+        int gold = (int)(basePrice * qty * ctx.Config.RewardMultiplierBelowSell);
+        int hyperSpeedGroCount = qty * 2;
+
+        var steps = new List<AdventureStepState>
+        {
+            new()
+            {
+                Name = "Sow",
+                Kind = AdventureStepKind.Custom,
+                Targets = new List<string> { ModEntry.CropCycleSowHandler },
+                Items = new List<string> { seedId!, crop.QualifiedItemId },
+                Count = qty,
+                Description = ModEntry.I18n.Get("quest.farming.cropCycle.step.sow", new { qty, item = crop.DisplayName })
+            },
+            new()
+            {
+                Name = "Water",
+                Kind = AdventureStepKind.Custom,
+                Targets = new List<string> { ModEntry.CropCycleWaterHandler },
+                Items = new List<string> { crop.QualifiedItemId, seedId! },
+                Count = qty,
+                Requires = new List<string> { "Sow" },
+                Description = ModEntry.I18n.Get("quest.farming.cropCycle.step.water", new { qty, item = crop.DisplayName })
+            },
+            new()
+            {
+                Name = "Harvest",
+                Kind = AdventureStepKind.Custom,
+                Targets = new List<string> { ModEntry.CropCycleHarvestHandler },
+                Items = new List<string> { crop.QualifiedItemId },
+                Count = qty,
+                Requires = new List<string> { "Water" },
+                Description = ModEntry.I18n.Get("quest.farming.cropCycle.step.harvest", new { qty, item = crop.DisplayName })
+            },
+            new()
+            {
+                Name = "Deliver",
+                Kind = AdventureStepKind.Deliver,
+                Targets = new List<string> { giver },
+                Items = new List<string> { crop.QualifiedItemId },
+                Count = qty,
+                Requires = new List<string> { "Harvest" },
+                Description = ModEntry.I18n.Get("quest.farming.cropCycle.step.deliver", new { qty, item = crop.DisplayName, npc = giver })
+            }
+        };
+
+        var quest = new AdventureQuest();
+        quest.Initialize(steps, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.farming.cropCycle.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Farming,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = questDeadline,
+            Rewards =
+            {
+                new MoneyReward(gold),
+                new ObjectReward("(O)918", hyperSpeedGroCount)
+            },
+            Title = ModEntry.I18n.Get("quest.farming.cropCycle.title", new { npc = giver }),
+            Description = ModEntry.I18n.Get("quest.farming.cropCycle.description", new { npc = giver, qty, item = crop.DisplayName, seed = seed.DisplayName }),
+            TargetMessage = ModEntry.I18n.Get("quest.farming.cropCycle.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
 }

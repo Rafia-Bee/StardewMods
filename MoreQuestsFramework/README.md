@@ -449,6 +449,7 @@ Lifecycle events:
 - `RegistrationOpen` / `RegistrationClosed`, bracket the window in which `RegisterQuest` is accepted. Both fire on the framework's first update tick (one tick past every consumer mod's `GameLaunched`). Open handlers run inline in subscription order, then content packs auto-load, then Closed fires in the same tick. Subscribe to `Open` when you're registering your own quests, generators, or dispatch NPCs. Subscribe to `Closed` when you want to read what other mods registered (e.g. a quest browser or GMCM helper that calls `RegisteredQuestIds()`), since the registry is frozen by then and everyone else's Open handlers have already run.
 - `QuestAccepted` / `QuestCompleted` / `QuestRemoved`, fired only for framework-managed quests. Each event arg carries `Quest`, `OwnerUniqueId`, `DefinitionId`. `QuestRemovedArgs` also carries `Reason` (`Completed` / `Expired` / `Cancelled`) so reward trackers can tell a deadline timeout apart from a player cancel. `WasCompleted` is kept as a convenience getter for the `Reason == Completed` case.
 - `DayRefreshed(dailyCount, mailCount)`, fires at the end of `OnDayStarted` and from `RefreshOffers()`.
+- `CropHarvested(CropHarvestInfo)`, fires on every successful `Crop.harvest` call (player or Junimo, grab or scythe, single-harvest or multi-harvest perennial regrowth). The payload carries the harvest item's qualified id, the location NameOrUniqueName, the tile coords, and a `ByJunimo` flag. Subscribe for quests that need to credit on harvest events. Cheap to subscribe but the handler runs inline inside the harvest call on the game thread, so keep work light.
 
 Custom `Quest` subclasses must carry a unique `[XmlType("Mods_<owner>_<name>")]` attribute and be registered via `RegisterCustomQuestType` so SpaceCore's serializer factory knows about them.
 
@@ -512,6 +513,8 @@ Multi-step Adventure quests carry a `Steps[]` list. Each entry has a `Kind` driv
   ```
 
   Handles are short-lived snapshots: re-query each event tick rather than caching a handle across days, and check `handle.IsActive` if there's any chance the underlying quest changed between query and write.
+
+  Push-driven Custom steps often need to dedupe by some game-state key (a tile coord, a unique entity id, a kill event identifier) so the same source event firing twice doesn't double-credit. Use `handle.AddProgressOnceForKey(key)` (or `AdventureQuest.TryAddCustomStepProgressOnceForKey` directly) instead of `AddProgress`. The key is stored in the step's `CreditedKeys` list (the same NetStringList Talk and GiftUniqueNpcs steps already use), so dedupe survives save/reload at no extra storage cost.
 
 Step ordering is enforced by `Requires[]` (other step `Name`s that must be Done before the step becomes active). `$giver` in `Targets[]` rewrites to the resolved giver at quest-creation time. None of the step observers add Harmony patches, every kind rides an existing SMAPI event or a framework-owned tick.
 

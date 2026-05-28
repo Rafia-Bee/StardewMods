@@ -34,6 +34,13 @@ public interface ICustomStepHandle
     // step, calls questComplete().
     int AddProgress(int delta);
 
+    // Like AddProgress, but also dedupes by a caller-supplied key (e.g. a tile coord
+    // or unique entity id). Returns 0 when the key has already been credited on this
+    // step. Keys persist in the step's CreditedKeys list and survive save/reload, so
+    // the same event source (e.g. a Harmony patch firing on the same tile twice)
+    // can't double-count across a reload.
+    int AddProgressOnceForKey(string key, int delta = 1);
+
     // Force the step to Done regardless of remaining count. Returns false when the
     // step isn't currently active.
     bool MarkDone();

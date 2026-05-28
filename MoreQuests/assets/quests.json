@@ -250,6 +250,18 @@
             "Generator": "PierresStockUp"
         },
         {
+            "Name": "Farming.CropCycleQuest",
+            "Category": "Farming",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 12,
+                "MaxPerDay": 1,
+                "CooldownTier": "Long",
+                "Available": { "SkillLevel": "Farming 4" }
+            },
+            "Generator": "CropCycleQuest"
+        },
+        {
             "Name": "Farming.MassiveHarvest",
             "Category": "Farming",
             "Trigger": {

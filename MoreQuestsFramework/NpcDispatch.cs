@@ -90,5 +90,21 @@ internal static class NpcDispatch
         // SVE swaps him for "GuntherSilvian", who is friendable.
         registry.Register(DispatchRoles.ArchaeologyNpcs, "GuntherSilvian", ModCompat.StardewValleyExpanded);
         registry.Register(DispatchRoles.ArchaeologyNpcs, "Jasper", ModCompat.EastScarp);
+
+        // FarmerNPCs: villagers who farm or run a farm-adjacent shop. Pierre runs the
+        // seed store; Evelyn keeps her town garden; the modded entries are each farm
+        // owners in their own packs. CoalPointFarm uses prefixed ids (APTAshida,
+        // APTIsaacI); Ripley's id includes the author prefix (Clara.Ripley).
+        registry.Register(DispatchRoles.FarmerNPCs, "Pierre");
+        registry.Register(DispatchRoles.FarmerNPCs, "Evelyn");
+        registry.Register(DispatchRoles.FarmerNPCs, "Andy", ModCompat.StardewValleyExpanded);
+        registry.Register(DispatchRoles.FarmerNPCs, "Sophia", ModCompat.StardewValleyExpanded);
+        registry.Register(DispatchRoles.FarmerNPCs, "Susan", ModCompat.StardewValleyExpanded);
+        registry.Register(DispatchRoles.FarmerNPCs, "Jeric", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.FarmerNPCs, "Alissa", ModCompat.RidgesideVillage);
+        registry.Register(DispatchRoles.FarmerNPCs, "Jessie", ModCompat.EastScarp);
+        registry.Register(DispatchRoles.FarmerNPCs, "APTAshida", ModCompat.CoalPointFarm);
+        registry.Register(DispatchRoles.FarmerNPCs, "APTIsaacI", ModCompat.CoalPointFarm);
+        registry.Register(DispatchRoles.FarmerNPCs, "Clara.Ripley", ModCompat.Ripley);
     }
 }
