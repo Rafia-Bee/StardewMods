@@ -127,10 +127,14 @@ A second `EditData` block targeting `Mods/RafiaBee.MoreQuestsFramework/Boards` a
         "{{ModId}}_HuntingBoard": {
             "Location": "AdventurersGuild",
             "Tile": [20, 4],
+            "BoardSize": [2, 2],
+            "Texture": "{{InternalAssetKey: assets/board.png}}",
             "Categories": ["Mining", "Adventure"]
         }
     }
 }
 ```
+
+`Tile` is the floor tile the player stands on to interact (always walkable). The sprite renders directly above that tile, centered horizontally, scaled to `BoardSize` tiles wide and tall. Collision matches the sprite rect exactly, so the player blocks against the visible board. `BoardSize` defaults to `[1, 1]` if omitted.
 
 Quests with `Trigger.Source: "CustomBoard"` are eligible for these boards instead of the help-wanted billboard.

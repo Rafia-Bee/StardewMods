@@ -58,13 +58,9 @@
 
     "config.section.adventureBoardPlacement": "Adventurer's Guild board placement",
     "config.AdventureBoardTileX": "Anchor tile X",
-    "config.AdventureBoardTileX.tooltip": "Tile X coordinate where the player walks to interact with the board. The board lives in the Mine entrance map. Default (20, 4) puts it on the right wall, near the ladder down.",
+    "config.AdventureBoardTileX.tooltip": "Tile X coordinate where the player walks to interact with the board. The board sprite renders directly above this tile. The board lives in the Mine entrance map. Default (20, 4) puts the player on the right wall, near the ladder down.",
     "config.AdventureBoardTileY": "Anchor tile Y",
-    "config.AdventureBoardTileY.tooltip": "Tile Y coordinate of the click target. See Anchor tile X for default placement.",
-    "config.AdventureBoardDrawOffsetX": "Sprite offset X (pixels)",
-    "config.AdventureBoardDrawOffsetX.tooltip": "Pixel offset applied to the in-world board sprite. 1 tile = 64 pixels. Negative values move left. Lets you park the board on a wall while keeping the click target at a walkable tile.",
-    "config.AdventureBoardDrawOffsetY": "Sprite offset Y (pixels)",
-    "config.AdventureBoardDrawOffsetY.tooltip": "Pixel offset applied to the in-world board sprite. Negative values move up.",
+    "config.AdventureBoardTileY.tooltip": "Tile Y coordinate of the floor the player stands on to interact. See Anchor tile X for default placement.",
 
     "config.ShopDiscountPercent": "Festival shop discount %",
     "config.ShopDiscountPercent.tooltip": "Discount applied to a shop after a fishing festival quest.",

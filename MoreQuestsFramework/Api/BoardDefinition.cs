@@ -6,8 +6,13 @@ using Newtonsoft.Json;
 namespace MoreQuestsFramework.Api;
 
 // Authoring spec for a custom pin-board. Registered via IMoreQuestsModApi.RegisterBoard
-// or auto-loaded from a pack's boards.json. Texture/Pin/Pad name content assets the
-// registering mod is responsible for serving; omitted ones fall back to framework defaults.
+// or auto-loaded from a pack's boards.json. The owning mod is responsible for serving
+// the texture asset; an omitted Texture renders nothing in the world but still leaves
+// the anchor tile clickable.
+//
+// Placement model: the anchor `Tile` is the floor tile the player stands on to interact.
+// The sprite renders directly above that tile, horizontally centered on it, scaled to
+// `BoardSize` tiles. The same pixel rect drives collision and click hit-testing.
 public sealed class BoardDefinition
 {
     public string Name { get; set; } = "";
@@ -15,7 +20,7 @@ public sealed class BoardDefinition
     // GameLocation.Name, case-sensitive.
     public string Location { get; set; } = "";
 
-    // [x, y] anchor tile.
+    // [x, y] floor tile the player stands on to interact. Always walkable.
     public int[] Tile { get; set; } = Array.Empty<int>();
 
     // In-world sprite (wall painting / sign). Not the menu skin (that's Background).
@@ -24,22 +29,13 @@ public sealed class BoardDefinition
     // Menu skin, sheet layout matches vanilla LooseSprites/Billboard (top 338x198 at 4x).
     public string? Background { get; set; }
 
-    // World-render scale for the in-world sprite. Doesn't affect the menu.
-    public float WorldScale { get; set; } = 2f;
+    // [width, height] of the rendered board in tiles. Sprite renders this many tiles up
+    // from the anchor and is centered horizontally on it. Drives collision and click
+    // hit-testing. Defaults to 1x1.
+    public int[] BoardSize { get; set; } = Array.Empty<int>();
 
-    // [x, y] pixel offset for the in-world sprite, lets authors park art on a wall
-    // while keeping the click-target tile walkable.
-    public int[] DrawOffset { get; set; } = Array.Empty<int>();
-
-    public int DrawOffsetX => DrawOffset.Length >= 1 ? DrawOffset[0] : 0;
-    public int DrawOffsetY => DrawOffset.Length >= 2 ? DrawOffset[1] : 0;
-
-    // [width, height] in tiles. Drives both collision and click hit-testing so the
-    // action button on any tile inside the footprint opens the board.
-    public int[] FootprintTiles { get; set; } = Array.Empty<int>();
-
-    public int FootprintWidth => FootprintTiles.Length >= 1 && FootprintTiles[0] > 0 ? FootprintTiles[0] : 1;
-    public int FootprintHeight => FootprintTiles.Length >= 2 && FootprintTiles[1] > 0 ? FootprintTiles[1] : 1;
+    public int BoardWidth => BoardSize.Length >= 1 && BoardSize[0] > 0 ? BoardSize[0] : 1;
+    public int BoardHeight => BoardSize.Length >= 2 && BoardSize[1] > 0 ? BoardSize[1] : 1;
 
     public string? Title { get; set; }
 

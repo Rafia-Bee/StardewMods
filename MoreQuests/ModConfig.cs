@@ -21,16 +21,13 @@ public sealed class ModConfig
     /// mining/monster quests. When off, those quests fall back to the help-wanted board.
     public bool EnableAdventurersGuildBoard { get; set; } = true;
 
-    /// Tile X of the guild board's anchor (where the player walks to interact).
-    /// The board lives in the Mine entrance map. Default (20, 4) places it on the
-    /// right wall, just past the mine shaft, near the ladder down.
+    /// Tile X of the guild board's anchor (the floor tile the player stands on to interact).
+    /// The board lives in the Mine entrance map. Default (20, 4) places the player on the
+    /// right wall, just past the mine shaft, near the ladder down. The board sprite renders
+    /// directly above this tile.
     public int AdventureBoardTileX { get; set; } = 20;
     /// Tile Y of the guild board's anchor. See AdventureBoardTileX for default placement.
     public int AdventureBoardTileY { get; set; } = 4;
-    /// Pixel X offset for the in-world sprite. 1 tile = 64px. Negative values move left.
-    public int AdventureBoardDrawOffsetX { get; set; } = 0;
-    /// Pixel Y offset for the in-world sprite. Negative values move up.
-    public int AdventureBoardDrawOffsetY { get; set; } = -197;
 
     // ----- Shop discounts -----
     public int ShopDiscountPercent { get; set; } = 50;
