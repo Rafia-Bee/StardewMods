@@ -134,6 +134,22 @@ internal sealed class QuestPipeline
                 _onSkipped?.Invoke(def.Id, def.OwnerUniqueId, src, QuestSkipReason.ConditionsNotMet);
                 continue;
             }
+            // Rolled before ShouldFireToday so a failed roll doesn't burn the trigger's
+            // cooldown / yearly date / OneShot flag. BuildingBuilt and MailReceived are
+            // skipped because their diff snapshots update unconditionally, so a fail
+            // there loses the quest forever instead of retrying.
+            if (def.Kind == PostingKind.Mail
+                && src != TriggerSource.BuildingBuilt
+                && src != TriggerSource.MailReceived)
+            {
+                int chance = _ctx.Config.MailQuestChancePercent.TryGetValue(def.Id, out int p) ? p : 100;
+                chance = System.Math.Clamp(chance, 0, 100);
+                if (chance == 0 || (chance < 100 && Game1.random.Next(100) >= chance))
+                {
+                    _onSkipped?.Invoke(def.Id, def.OwnerUniqueId, src, QuestSkipReason.TriggerNotReady);
+                    continue;
+                }
+            }
             if (!_triggers.ShouldFireToday(def.Id, def.OwnerUniqueId, src, def.Trigger, def.CooldownDays))
             {
                 _onSkipped?.Invoke(def.Id, def.OwnerUniqueId, src, QuestSkipReason.TriggerNotReady);
