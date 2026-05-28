@@ -34,7 +34,7 @@ public interface IMoreQuestsModApi
     void RegisterBoard(BoardDefinition board);
 
     // Returned BoardDefinition is the live registry instance; mutating fields like
-    // Tile/DrawOffset takes effect on the next render.
+    // Tile or BoardSize takes effect on the next render.
     BoardDefinition? FindBoard(string name);
 
     // Re-routes an already-registered quest to a different TriggerSource at runtime.

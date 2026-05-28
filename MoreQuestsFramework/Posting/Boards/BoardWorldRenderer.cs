@@ -7,10 +7,10 @@ using MoreQuestsFramework.Registry;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Mods;
 
 namespace MoreQuestsFramework.Posting.Boards;
 
-// SMAPI-only (no Harmony). Boards failing Available are silently hidden.
 internal sealed class BoardWorldRenderer
 {
     private const int TilePixels = 64;
@@ -33,12 +33,29 @@ internal sealed class BoardWorldRenderer
 
     public void Register()
     {
-        _helper.Events.Display.RenderedWorld += OnRenderedWorld;
+        // World_Sorted uses FrontToBack so the board sorts correctly against characters.
+        // RenderedWorld would always paint on top because it fires in a fresh batch.
+        _helper.Events.Display.RenderedStep += OnRenderedStep;
         _helper.Events.Input.ButtonPressed += OnButtonPressed;
     }
 
-    private void OnRenderedWorld(object? sender, RenderedWorldEventArgs e)
+    // Sprite bottom sits this many tiles above the anchor so the player's standing
+    // sprite doesn't fully overlap the board.
+    private const int WallGapTiles = 2;
+    public static Rectangle GetSpriteRect(BoardDefinition board)
     {
+        int widthPx = board.BoardWidth * TilePixels;
+        int heightPx = board.BoardHeight * TilePixels;
+        int anchorCenterX = board.TileX * TilePixels + TilePixels / 2;
+        int x = anchorCenterX - widthPx / 2;
+        int y = (board.TileY - WallGapTiles) * TilePixels - heightPx;
+        return new Rectangle(x, y, widthPx, heightPx);
+    }
+
+    private void OnRenderedStep(object? sender, RenderedStepEventArgs e)
+    {
+        if (e.Step != RenderSteps.World_Sorted)
+            return;
         if (!Context.IsWorldReady || Game1.currentLocation == null || Game1.eventUp || Game1.activeClickableMenu != null)
             return;
 
@@ -49,27 +66,26 @@ internal sealed class BoardWorldRenderer
                 continue;
 
             var texture = GetTextureFor(board);
+            var rect = GetSpriteRect(board);
             if (texture != null)
             {
-                var worldPos = new Vector2(
-                    board.TileX * TilePixels + board.DrawOffsetX,
-                    board.TileY * TilePixels + board.DrawOffsetY);
-                var screenPos = Game1.GlobalToLocal(Game1.viewport, worldPos);
-                float scale = board.WorldScale > 0 ? board.WorldScale : 2f;
+                var screenPos = Game1.GlobalToLocal(Game1.viewport, new Vector2(rect.X, rect.Y));
+                float scaleX = rect.Width / (float)texture.Width;
+                float scaleY = rect.Height / (float)texture.Height;
                 e.SpriteBatch.Draw(
                     texture,
-                    screenPos,
+                    new Vector2(screenPos.X, screenPos.Y),
                     null,
                     Color.White,
                     0f,
                     Vector2.Zero,
-                    scale,
+                    new Vector2(scaleX, scaleY),
                     SpriteEffects.None,
-                    layerDepth: (board.TileY + 1) * TilePixels / 10000f + 0.001f);
+                    layerDepth: rect.Bottom / 10000f);
             }
 
             if (ShouldDrawIndicator(board))
-                DrawIndicator(e.SpriteBatch, board);
+                DrawIndicator(e.SpriteBatch, board, rect);
         }
     }
 
@@ -80,11 +96,11 @@ internal sealed class BoardWorldRenderer
         return CustomBoardSlots.SlotsFor(board).Count > 0;
     }
 
-    private static void DrawIndicator(SpriteBatch b, BoardDefinition board)
+    private static void DrawIndicator(SpriteBatch b, BoardDefinition board, Rectangle spriteRect)
     {
         var anchor = new Vector2(
-            board.TileX * TilePixels + board.DrawOffsetX,
-            board.TileY * TilePixels + board.DrawOffsetY);
+            spriteRect.X + spriteRect.Width / 2f,
+            spriteRect.Y);
         if (board.Indicator != null)
             anchor += new Vector2(board.Indicator.OffsetX, board.Indicator.OffsetY);
         var screenPos = Game1.GlobalToLocal(Game1.viewport, anchor);
@@ -92,7 +108,7 @@ internal sealed class BoardWorldRenderer
         float bob = 4f * (float)System.Math.Sin(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 250.0);
         b.Draw(
             Game1.mouseCursors,
-            screenPos + new Vector2(28, -32 + bob),
+            screenPos + new Vector2(-IndicatorSourceW * 4 / 2f, -32 + bob),
             new Rectangle(IndicatorSourceX, IndicatorSourceY, IndicatorSourceW, IndicatorSourceH),
             Color.White,
             0f,
@@ -132,21 +148,16 @@ internal sealed class BoardWorldRenderer
         }
     }
 
-    // Anchor tile is always clickable, even when the footprint floats off-grid
-    // (sub-tile pixel DrawOffset).
-    private static bool IsClickInFootprint(Api.BoardDefinition board, int tileX, int tileY)
+    private static bool IsClickInFootprint(BoardDefinition board, int tileX, int tileY)
     {
         if (board.TileX == tileX && board.TileY == tileY)
             return true;
-        int fpX = board.TileX + (board.DrawOffsetX / TilePixels);
-        int fpY = board.TileY + (board.DrawOffsetY / TilePixels);
-        return tileX >= fpX
-            && tileY >= fpY
-            && tileX < fpX + board.FootprintWidth
-            && tileY < fpY + board.FootprintHeight;
+        var rect = GetSpriteRect(board);
+        var tilePx = new Rectangle(tileX * TilePixels, tileY * TilePixels, TilePixels, TilePixels);
+        return rect.Intersects(tilePx);
     }
 
-    private static bool IsPlayerWithinReach(Api.BoardDefinition board, int tileX, int tileY)
+    private static bool IsPlayerWithinReach(BoardDefinition board, int tileX, int tileY)
     {
         var player = Game1.player;
         if (player == null)

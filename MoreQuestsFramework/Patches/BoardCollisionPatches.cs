@@ -1,6 +1,7 @@
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using MoreQuestsFramework.Conditions;
+using MoreQuestsFramework.Posting.Boards;
 using MoreQuestsFramework.Registry;
 using StardewModdingAPI;
 using StardewValley;
@@ -8,9 +9,9 @@ using StardewValley;
 namespace MoreQuestsFramework.Patches;
 
 // Without this, board sprites read as a "roof" the player can walk under.
+// Collision footprint matches the exact pixel rect that BoardWorldRenderer draws.
 internal static class BoardCollisionPatches
 {
-    private const int TilePixels = 64;
     private static BoardRegistry _registry = null!;
     private static IModRegistry? _modRegistry;
 
@@ -51,11 +52,7 @@ internal static class BoardCollisionPatches
             // player walking into an invisible wall.
             if (!IsAvailable(board))
                 continue;
-            var footprint = new Rectangle(
-                board.TileX * TilePixels + board.DrawOffsetX,
-                board.TileY * TilePixels + board.DrawOffsetY,
-                board.FootprintWidth * TilePixels,
-                board.FootprintHeight * TilePixels);
+            var footprint = BoardWorldRenderer.GetSpriteRect(board);
             if (position.Intersects(footprint))
             {
                 __result = true;

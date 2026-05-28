@@ -1045,6 +1045,5 @@ public sealed class ModEntry : Mod
         if (board == null)
             return;
         board.Tile = new[] { Config.AdventureBoardTileX, Config.AdventureBoardTileY };
-        board.DrawOffset = new[] { Config.AdventureBoardDrawOffsetX, Config.AdventureBoardDrawOffsetY };
     }
 }
