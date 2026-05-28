@@ -183,7 +183,9 @@ internal static partial class Generators
     /// Met villagers whose `Age == Child`, with positive friendship. Used by the child-only
     /// daily-board quests (Feed Wild Critters). Vanilla returns Jas / Vincent / Leo when met;
     /// modded child NPCs come along for free. Friendable monsters with a NpcAge.Child data
-    /// row don't sneak in because of the IsMonster / IsVillager check.
+    /// row don't sneak in because of the IsMonster / IsVillager check. We also run
+    /// IsBoardEligible(allowChild: true) so non-human "child" NPCs like RSV's Torts (a
+    /// tortoise tagged Age=Child) get caught by the framework's IneligibleGivers list.
     private static List<string> MetChildHumanGivers()
     {
         var results = new List<string>();
@@ -196,6 +198,8 @@ internal static partial class Generators
             if (data == null || data.Age != NpcAge.Child)
                 continue;
             if (!Game1.player.friendshipData.TryGetValue(name, out var friendship) || friendship == null || friendship.Points <= 0)
+                continue;
+            if (!NpcDisplay.IsBoardEligible(name, allowChild: true))
                 continue;
             results.Add(name);
         }

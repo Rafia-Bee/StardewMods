@@ -36,14 +36,17 @@ public sealed class MoreQuestsFrameworkConfig
     // Internal NPC names that should never be a board / special-order quest giver,
     // on top of the per-character heuristics in NpcDisplay.IsBoardEligible (child,
     // CanSocialize=false, PerfectionScore=false). Use this for friendable monsters
-    // whose CharacterData is crafted like a real NPC (full perfection / slideshow
-    // entries), so the heuristic can't tell them apart from a real human. Defaults
-    // cover the friendable monsters / creatures that ship with my installed packs.
+    // and animal NPCs whose CharacterData is crafted like a real NPC (full perfection
+    // / slideshow entries), so the heuristic can't tell them apart from a real human.
+    // Defaults cover the friendable monsters / creatures that ship with my installed
+    // packs. Torts is an RSV tortoise with Age=Child, so he was getting picked for
+    // the child-only Feed Wild Critters quest.
     public List<string> IneligibleGivers { get; set; } = new()
     {
         "Krobus",
         "Leximonster",
         "SenS",
+        "Torts",
     };
 
     // When a daily-board posting has a hardcoded giver who's on the exclusion list,
