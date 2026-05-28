@@ -593,6 +593,35 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return credit;
     }
 
+    // Like TryAddCustomStepProgress, but also dedupes by a caller-supplied key (e.g. a
+    // tile coordinate or unique entity id) using the step's CreditedKeys list. Returns 0
+    // when the key has already been credited so the same event can't double-count. The
+    // key is persisted in the AdventureStepState's CreditedKeys (the same NetStringList
+    // Talk/GiftUniqueNpcs steps already use), so dedupe survives save/reload.
+    public int TryAddCustomStepProgressOnceForKey(int index, string key, int delta = 1)
+    {
+        if (string.IsNullOrEmpty(key) || delta <= 0 || completed.Value) return 0;
+        var steps = Steps;
+        if (index < 0 || index >= steps.Count) return 0;
+        var step = steps[index];
+        if (step.Done || step.Kind != AdventureStepKind.Custom) return 0;
+        if (!RequiresMet(steps, step)) return 0;
+        if (step.CreditedKeys.Contains(key, StringComparer.OrdinalIgnoreCase)) return 0;
+        int needed = Math.Max(1, step.Count);
+        int credit = Math.Min(delta, needed - step.Progress);
+        if (credit <= 0) return 0;
+        step.CreditedKeys.Add(key);
+        step.Progress += credit;
+        if (step.Progress >= needed)
+            MarkStepDone(index, step);
+        else
+        {
+            Persist(index, step);
+            reloadObjective();
+        }
+        return credit;
+    }
+
     public bool TryMarkCustomStepDone(int index)
     {
         if (completed.Value) return false;

@@ -193,6 +193,10 @@ public sealed class ModConfig
     /// "this location has no weeds today" dead-ends).
     public int SpringCleaningCount { get; set; } = 8;
 
+    /// Minimum Farming level the player needs before Crop Cycle starts posting. Default 4
+    /// so the quest shows up by late spring year 1 but isn't spamming new saves.
+    public int CropCycleMinFarmingLevel { get; set; } = 4;
+
     /// Frame style the player wants on Leah's farm-animal painting reward.
     /// Allowed values: "Wood", "Burgundy", "Night". The animal in the painting is
     /// always random; only the frame is player-controlled.

@@ -48,6 +48,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     public event EventHandler<DayRefreshedArgs>? DayRefreshed;
     public event EventHandler<QuestSkippedArgs>? QuestSkippedToday;
     public event EventHandler? FrameworkShuttingDown;
+    public event EventHandler<CropHarvestInfo>? CropHarvested;
 
     private FrameworkState? _state;
 
@@ -484,6 +485,8 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         => QuestSkippedToday?.Invoke(this, new QuestSkippedArgs(defId, ownerUniqueId, source, reason));
     internal void FireFrameworkShuttingDown()
         => FrameworkShuttingDown?.Invoke(this, EventArgs.Empty);
+    internal void FireCropHarvested(CropHarvestInfo info)
+        => CropHarvested?.Invoke(this, info);
 
     internal sealed class ManagedQuest
     {

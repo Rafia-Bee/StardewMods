@@ -47,6 +47,7 @@ internal static partial class Generators
         // Farming
         Reg(fw, "BasicCropDelivery", BasicCropDelivery);
         Reg(fw, "CarolineTeaGarden", CarolineTeaGarden);
+        Reg(fw, "CropCycleQuest", CropCycleQuest);
         Reg(fw, "DehydratorRequest", DehydratorRequest);
         Reg(fw, "KegRequest", KegRequest);
         Reg(fw, "MassiveHarvestRequest", MassiveHarvestRequest);

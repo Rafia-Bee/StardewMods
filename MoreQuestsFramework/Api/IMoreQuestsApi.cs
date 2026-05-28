@@ -142,4 +142,9 @@ public interface IMoreQuestsApi
     // is NOT required between saves: quest definitions, generators, custom triggers,
     // etc. survive across save loads in the same session.
     event EventHandler FrameworkShuttingDown;
+
+    // Fires on every successful Crop.harvest call (player + Junimo). Subscribe for
+    // quests that need to track harvest events. Cheap to subscribe but the handler
+    // runs on the game thread inside the harvest call, so keep work light.
+    event EventHandler<CropHarvestInfo> CropHarvested;
 }

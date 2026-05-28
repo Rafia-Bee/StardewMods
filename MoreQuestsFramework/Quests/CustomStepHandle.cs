@@ -30,5 +30,6 @@ internal sealed class CustomStepHandle : ICustomStepHandle
     public bool IsActive => _quest.IsCustomStepActive(_index);
 
     public int AddProgress(int delta) => _quest.TryAddCustomStepProgress(_index, delta);
+    public int AddProgressOnceForKey(string key, int delta = 1) => _quest.TryAddCustomStepProgressOnceForKey(_index, key, delta);
     public bool MarkDone() => _quest.TryMarkCustomStepDone(_index);
 }

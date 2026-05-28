@@ -127,6 +127,47 @@ internal static partial class Generators
         }
     }
 
+    /// Total base days from sowing the seed to first harvest, summed across Data/Crops
+    /// phases. Returns 0 when the seed isn't found. Doesn't account for Speed-Gro,
+    /// Agriculturist, or Deluxe Speed-Gro: the bonuses are friendly to the player, so
+    /// using base time as the gate means we don't over-promise a crop the player can
+    /// only finish with the right fertilizer.
+    private static int GetCropMaturityDays(QuestContext ctx, string seedQualifiedId)
+    {
+        if (string.IsNullOrEmpty(seedQualifiedId))
+            return 0;
+        string bareSeed = seedQualifiedId.StartsWith("(O)", StringComparison.Ordinal)
+            ? seedQualifiedId[3..]
+            : seedQualifiedId;
+        if (!ctx.Data.Crops.TryGetValue(bareSeed, out var data) || data?.DaysInPhase == null)
+            return 0;
+        int total = 0;
+        foreach (int phase in data.DaysInPhase)
+            total += phase;
+        return total;
+    }
+
+    /// Filters the current-season crop pool down to crops whose seed-to-first-harvest
+    /// time plus a one-day harvest-and-deliver reserve fits in the supplied window.
+    /// `harvestWindow` should already be capped to min(quest deadline, days left in
+    /// season) so end-of-season acceptances don't pick a crop that can't mature in time.
+    private static List<ResolvedItem> FilterCropsByGrowthWindow(QuestContext ctx, int harvestWindow)
+    {
+        const int reserveDays = 1;
+        var pool = ctx.Items.GetSeasonalCrops(ctx.Season);
+        var viable = new List<ResolvedItem>(pool.Count);
+        foreach (var crop in pool)
+        {
+            string? seedId = ResolveSeedIdForHarvest(ctx, crop.QualifiedItemId);
+            if (seedId == null)
+                continue;
+            int maturity = GetCropMaturityDays(ctx, seedId);
+            if (maturity > 0 && maturity + reserveDays <= harvestWindow)
+                viable.Add(crop);
+        }
+        return viable;
+    }
+
     /// Picks a current-season seed via Data/Crops. Returns null when no seasonal crop's
     /// seed resolves.
     private static ResolvedItem? PickSeasonalSeed(QuestContext ctx)

@@ -119,6 +119,14 @@
     "quest.farming.basic.objective": "Bring {{item}} to {{npc}}.",
     "quest.farming.basic.targetMessage": "These look great. Thank you!",
 
+    "quest.farming.cropCycle.title": "{{npc}}'s crop cycle",
+    "quest.farming.cropCycle.description": "{{npc}} wants to see a crop grown the proper way, start to finish. Sow {{qty}} {{seed}}, water them, harvest {{qty}} {{item}}, then bring the haul back. There's no rush, take the whole month if you need it.",
+    "quest.farming.cropCycle.step.sow": "Sow {{qty}} seeds on the farm.",
+    "quest.farming.cropCycle.step.water": "Water {{qty}} planted tiles.",
+    "quest.farming.cropCycle.step.harvest": "Harvest {{qty}} {{item}}.",
+    "quest.farming.cropCycle.step.deliver": "Deliver {{qty}} {{item}} to {{npc}}.",
+    "quest.farming.cropCycle.targetMessage": "Beautiful work. Hard to beat a crop grown by hand from seed to harvest.",
+
     "quest.fishing.simple.title": "Fresh catch needed",
     "quest.fishing.simple.description": "{{npc}} here. I saw some {{item}} splashing around the other day when I was going through {{location}}, but I couldn't catch any. Could someone bring me {{qty}}? I'd really appreciate it.",
     "quest.fishing.simple.objective": "Catch {{qty}} {{item}} for {{npc}}.",
