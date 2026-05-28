@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MoreQuestsFramework.Registry;
+using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 
 namespace MoreQuestsFramework.Config;
@@ -98,11 +99,18 @@ internal static class GmcmRegistration
             () => t.Get("config.mailFallbackForExcludedGivers"),
             () => t.Get("config.mailFallbackForExcludedGivers.tooltip"));
 
+        // BuildingBuilt and MailReceived defs are skipped: their triggers are diff-based,
+        // so a failed chance roll loses the quest forever. Matched by the same skip in
+        // QuestPipeline.GenerateTriggered.
         var mailDefs = new List<IQuestDefinition>();
         foreach (var def in registry.All)
         {
-            if (def.Kind == PostingKind.Mail)
-                mailDefs.Add(def);
+            if (def.Kind != PostingKind.Mail)
+                continue;
+            var src = registry.EffectiveSource(def);
+            if (src == TriggerSource.BuildingBuilt || src == TriggerSource.MailReceived)
+                continue;
+            mailDefs.Add(def);
         }
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.weights"),

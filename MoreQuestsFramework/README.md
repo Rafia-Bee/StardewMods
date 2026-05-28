@@ -554,6 +554,7 @@ The framework follows semver from 1.0 onward.
 - **Quest board:** `QuestsPerDay`, `SpecialOrdersBoardPages`, `AllowDuplicateGiverPerDay`, `SkipFriendshipQuestsAtMaxHeart`.
 - **Master toggles:** `DifficultyScaling`, `FishingIgnoresVisitedLocations`, `ForagingIgnoresVisitedLocations`.
 - **Per-quest weights:** one entry per registered `IQuestDefinition` (built at runtime, so consumer mods' quests show up too).
+- **Mail quest chances:** per-`IQuestDefinition` `MailQuestChancePercent` sliders for mail-delivered quests (0 to 100; default 100). Applies to anything whose effective `Kind` is `PostingKind.Mail` *except* `BuildingBuilt` and `MailReceived` defs, since those triggers are diff-based and a failed roll would lose the quest forever. The slider rolls in `QuestPipeline.GenerateTriggered` before `ShouldFireToday`, so a failed roll doesn't burn the trigger's cooldown / yearly date / OneShot flag.
 - **Vanilla wrappers:** toggle and tune the four bundled vanilla quest types.
 - **Friendship reward sizes:** `FriendshipBasic`, `FriendshipMid`, `FriendshipIntermediate`, `FriendshipLarge`, `FriendshipMultiSmall`, `FriendshipMultiHeart`.
 - **Gold reward bases:** beginner / basic / intermediate / advanced / expert tiers.

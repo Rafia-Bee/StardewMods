@@ -460,18 +460,11 @@ internal static partial class Generators
         };
     }
 
-    /// Mail quest when tomorrow is forecast rain. RainyDayCatchMailChancePercent gates each
-    /// qualifying day. Filters to rainy Data/Fish entries with a runtime gate that the player
-    /// is actually fishing in rain. Reward: GoldIntermediateBase + one rare tackle.
-    private const string RainyDayCatchMailDefId = "Fishing.RainyDayCatchMail";
-
+    /// Mail quest when tomorrow is forecast rain. Filters to rainy Data/Fish entries
+    /// with a runtime gate that the player is actually fishing in rain. Reward:
+    /// GoldIntermediateBase + one rare tackle.
     private static QuestPosting? RainyDayCatch(QuestContext ctx)
     {
-        int chance = ctx.Config.MailQuestChancePercent.TryGetValue(RainyDayCatchMailDefId, out int p) ? p : 100;
-        chance = Math.Clamp(chance, 0, 100);
-        if (chance <= 0 || Game1.random.Next(100) >= chance)
-            return null;
-
         string? giver = ctx.Dispatch.Pick(DispatchRoles.FishermenNpcs);
         if (giver == null)
             return null;
