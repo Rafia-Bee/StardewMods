@@ -107,6 +107,10 @@ public sealed class ModEntry : Mod
         _mailStashCodecs = new MailStashCodecRegistry(Monitor);
         _mailStashCodecs.Register(AdventureQuestStashCodec.Kind, typeof(AdventureQuest), AdventureQuestStashCodec.Encode, AdventureQuestStashCodec.Decode);
         _mailStashCodecs.Register(MoreQuestsShipQuestStashCodec.Kind, typeof(MoreQuestsShipQuest), MoreQuestsShipQuestStashCodec.Encode, MoreQuestsShipQuestStashCodec.Decode);
+        _mailStashCodecs.Register(VanillaItemDeliveryQuestStashCodec.Kind, typeof(StardewValley.Quests.ItemDeliveryQuest), VanillaItemDeliveryQuestStashCodec.Encode, VanillaItemDeliveryQuestStashCodec.Decode);
+        _mailStashCodecs.Register(VanillaFishingQuestStashCodec.Kind, typeof(StardewValley.Quests.FishingQuest), VanillaFishingQuestStashCodec.Encode, VanillaFishingQuestStashCodec.Decode);
+        _mailStashCodecs.Register(VanillaSlayMonsterQuestStashCodec.Kind, typeof(StardewValley.Quests.SlayMonsterQuest), VanillaSlayMonsterQuestStashCodec.Encode, VanillaSlayMonsterQuestStashCodec.Decode);
+        _mailStashCodecs.Register(VanillaResourceCollectionQuestStashCodec.Kind, typeof(StardewValley.Quests.ResourceCollectionQuest), VanillaResourceCollectionQuestStashCodec.Encode, VanillaResourceCollectionQuestStashCodec.Decode);
         _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, Dispatch, _boards, CombatFood, _mailStashCodecs, Monitor, () => _spaceCore, RefreshOffers, () => _ctx);
 
         _boardRenderer = new BoardWorldRenderer(helper, Monitor, _boards);
