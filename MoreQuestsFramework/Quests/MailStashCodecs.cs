@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using StardewValley.Quests;
@@ -50,6 +51,142 @@ internal static class AdventureQuestStashCodec
             a.serializedRewards.Add(payload[i++]);
         }
         return a;
+    }
+}
+
+// Vanilla quest subclass codecs. Needed because the four VanillaXxx wrappers (and
+// QuestFactory's Socialize / SlayMonster paths) set PreBuiltQuest to a fresh vanilla
+// instance, and a mail redirect (e.g. when the giver is on IneligibleGivers) stashes
+// it. The `parts` / `dialogueparts` / `objective` NetDescriptionElementList fields
+// aren't encoded: ApplyPostingFields restores questDescription / currentObjective
+// from the stash strings and flips _loadedDescription so vanilla doesn't rebuild
+// from the netcoded parts. Progress counters are always 0 at stash time (player
+// hasn't accepted the quest yet), so they don't need encoding either.
+internal static class VanillaItemDeliveryQuestStashCodec
+{
+    public const string Kind = "Vanilla.ItemDeliveryQuest";
+
+    public static IList<string> Encode(Quest q)
+    {
+        var i = (ItemDeliveryQuest)q;
+        return new List<string>
+        {
+            i.target.Value ?? string.Empty,
+            i.ItemId.Value ?? string.Empty,
+            i.number.Value.ToString(CultureInfo.InvariantCulture),
+            i.targetMessage ?? string.Empty
+        };
+    }
+
+    public static Quest? Decode(IList<string> payload)
+    {
+        if (payload.Count < 4) return null;
+        var q = new ItemDeliveryQuest();
+        q.target.Value = payload[0];
+        q.ItemId.Value = payload[1];
+        if (!int.TryParse(payload[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int number))
+            return null;
+        q.number.Value = Math.Max(1, number);
+        q.targetMessage = payload[3];
+        return q;
+    }
+}
+
+internal static class VanillaFishingQuestStashCodec
+{
+    public const string Kind = "Vanilla.FishingQuest";
+
+    public static IList<string> Encode(Quest q)
+    {
+        var f = (FishingQuest)q;
+        return new List<string>
+        {
+            f.target.Value ?? string.Empty,
+            f.ItemId.Value ?? string.Empty,
+            f.numberToFish.Value.ToString(CultureInfo.InvariantCulture),
+            f.reward.Value.ToString(CultureInfo.InvariantCulture),
+            f.targetMessage ?? string.Empty
+        };
+    }
+
+    public static Quest? Decode(IList<string> payload)
+    {
+        if (payload.Count < 5) return null;
+        var f = new FishingQuest();
+        f.target.Value = payload[0];
+        f.ItemId.Value = payload[1];
+        if (!int.TryParse(payload[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int toFish)) return null;
+        f.numberToFish.Value = Math.Max(1, toFish);
+        if (!int.TryParse(payload[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out int reward)) return null;
+        f.reward.Value = reward;
+        f.targetMessage = payload[4];
+        return f;
+    }
+}
+
+internal static class VanillaSlayMonsterQuestStashCodec
+{
+    public const string Kind = "Vanilla.SlayMonsterQuest";
+
+    public static IList<string> Encode(Quest q)
+    {
+        var s = (SlayMonsterQuest)q;
+        return new List<string>
+        {
+            s.target.Value ?? string.Empty,
+            s.monsterName.Value ?? string.Empty,
+            s.numberToKill.Value.ToString(CultureInfo.InvariantCulture),
+            s.reward.Value.ToString(CultureInfo.InvariantCulture),
+            s.ignoreFarmMonsters.Value ? "1" : "0",
+            s.targetMessage ?? string.Empty
+        };
+    }
+
+    public static Quest? Decode(IList<string> payload)
+    {
+        if (payload.Count < 6) return null;
+        var s = new SlayMonsterQuest();
+        s.target.Value = payload[0];
+        s.monsterName.Value = payload[1];
+        if (!int.TryParse(payload[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int toKill)) return null;
+        s.numberToKill.Value = Math.Max(1, toKill);
+        if (!int.TryParse(payload[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out int reward)) return null;
+        s.reward.Value = reward;
+        s.ignoreFarmMonsters.Value = payload[4] == "1";
+        s.targetMessage = payload[5];
+        return s;
+    }
+}
+
+internal static class VanillaResourceCollectionQuestStashCodec
+{
+    public const string Kind = "Vanilla.ResourceCollectionQuest";
+
+    public static IList<string> Encode(Quest q)
+    {
+        var r = (ResourceCollectionQuest)q;
+        return new List<string>
+        {
+            r.target.Value ?? string.Empty,
+            r.ItemId.Value ?? string.Empty,
+            r.number.Value.ToString(CultureInfo.InvariantCulture),
+            r.reward.Value.ToString(CultureInfo.InvariantCulture),
+            r.targetMessage.Value ?? string.Empty
+        };
+    }
+
+    public static Quest? Decode(IList<string> payload)
+    {
+        if (payload.Count < 5) return null;
+        var r = new ResourceCollectionQuest();
+        r.target.Value = payload[0];
+        r.ItemId.Value = payload[1];
+        if (!int.TryParse(payload[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int number)) return null;
+        r.number.Value = Math.Max(1, number);
+        if (!int.TryParse(payload[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out int reward)) return null;
+        r.reward.Value = reward;
+        r.targetMessage.Value = payload[4];
+        return r;
     }
 }
 
