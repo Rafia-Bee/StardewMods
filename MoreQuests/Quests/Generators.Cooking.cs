@@ -514,7 +514,7 @@ internal static partial class Generators
         foreach (var (key, val) in aggregate)
         {
             string contextTag = val.IsCategory
-                ? "category_" + Math.Abs(val.CategoryId)
+                ? VanillaCategoryContextTag(val.CategoryId)
                 : "id_" + key.ToLowerInvariant().Replace("(", string.Empty).Replace(")", "_");
             objectives.Add(new SpecialOrderObjectiveSpec
             {
@@ -590,6 +590,63 @@ internal static partial class Generators
                 Consequences = consequences
             }
         };
+    }
+
+    // Negative-category-id to vanilla context-tag name. Vanilla ItemContextTagManager
+    // applies these as base tags to every item with the matching Category, so a Ship
+    // objective's AcceptedContextTags can match a category-token recipe ingredient
+    // (e.g. recipes that take "any egg" via category -5). Without this map, the Ship
+    // objective ends up looking for a literal "category_5" tag that no item has, and
+    // shipped eggs / milk / fish / produce never get credited (issue 96).
+    //
+    // Egg gets a comma-AND clause that also excludes Dinosaur Egg `(O)107`, mirroring
+    // the AdventureQuest `$edible-egg` semantics used by Alex's Protein Shakes and
+    // Evelyn's Holiday Cookies. Other inedible vanilla eggs are non-existent; modded
+    // egg-shaped fossils have to opt out via their own ContextTags if they want to.
+    private static readonly Dictionary<int, string> VanillaCategoryTagByCategoryId = new()
+    {
+        { -2, "category_gem" },
+        { -4, "category_fish" },
+        { -5, "category_egg, !id_(o)107" },
+        { -6, "category_milk" },
+        { -7, "category_cooking" },
+        { -8, "category_crafting" },
+        { -12, "category_minerals" },
+        { -14, "category_meat" },
+        { -15, "category_metal_resources" },
+        { -16, "category_building_resources" },
+        { -17, "category_sell_at_pierres" },
+        { -18, "category_sell_at_pierres_and_marnies" },
+        { -19, "category_fertilizer" },
+        { -20, "category_junk" },
+        { -21, "category_bait" },
+        { -22, "category_tackle" },
+        { -23, "category_sell_at_fish_shop" },
+        { -24, "category_furniture" },
+        { -25, "category_ingredients" },
+        { -26, "category_artisan_goods" },
+        { -27, "category_syrup" },
+        { -28, "category_monster_loot" },
+        { -29, "category_equipment" },
+        { -74, "category_seeds" },
+        { -75, "category_vegetable" },
+        { -79, "category_fruits" },
+        { -80, "category_flowers" },
+        { -81, "category_greens" },
+        { -95, "category_hat" },
+        { -96, "category_ring" },
+        { -97, "category_boots" },
+        { -98, "category_weapon" },
+        { -99, "category_tool" },
+        { -100, "category_clothing" },
+        { -999, "category_litter" },
+    };
+
+    private static string VanillaCategoryContextTag(int categoryId)
+    {
+        return VanillaCategoryTagByCategoryId.TryGetValue(categoryId, out var tag)
+            ? tag
+            : "category_" + Math.Abs(categoryId);
     }
 
     /// Recipe count. Scaling on + Cooking Skill: cookingLevel*3/2. Scaling on without
