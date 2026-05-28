@@ -33,8 +33,9 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
 
     private List<AdventureStepState>? _decoded;
 
-    // Per-step baseline ResourceClump count for ClearDebris. Re-baselines on save load.
-    private Dictionary<int, int>? _clumpBaselines;
+    // Per-(step, location). A shared baseline across locations would credit progress on
+    // every warp into a map with fewer clumps than the previous one.
+    private Dictionary<(int StepIndex, string Location), int>? _clumpBaselines;
 
     public bool HasDecorShippingStep
     {
@@ -453,21 +454,22 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             if (!LocationMatches(step, location.Name)) continue;
 
             int current = CountTargetClumps(location);
-            _clumpBaselines ??= new Dictionary<int, int>();
-            if (!_clumpBaselines.TryGetValue(i, out int baseline))
+            _clumpBaselines ??= new Dictionary<(int, string), int>();
+            var key = (i, location.Name);
+            if (!_clumpBaselines.TryGetValue(key, out int baseline))
             {
-                _clumpBaselines[i] = current;
+                _clumpBaselines[key] = current;
                 continue;
             }
             if (current < baseline)
             {
                 int delta = baseline - current;
-                _clumpBaselines[i] = current;
+                _clumpBaselines[key] = current;
                 CreditCount(i, step, delta);
             }
             else if (current > baseline)
             {
-                _clumpBaselines[i] = current;
+                _clumpBaselines[key] = current;
             }
         }
     }

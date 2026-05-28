@@ -666,6 +666,10 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || Game1.player == null || e.Location == null)
             return;
+        // The day-rollover refresh removes yesterday's litter from every outdoor map,
+        // which would otherwise close the step in one shot. Gate by player presence.
+        if (Game1.currentLocation == null || !ReferenceEquals(e.Location, Game1.currentLocation))
+            return;
         bool outdoors = e.Location.IsOutdoors;
         int weeds = 0;
         int debris = 0;
