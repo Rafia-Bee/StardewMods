@@ -140,10 +140,28 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     public void SelectRow(QuestRow row)
     {
-        if (SelectedQuest != null)
-            SelectedQuest.IsSelected = false;
+        var previous = SelectedQuest;
+        if (previous == row) return;
+        if (previous != null)
+        {
+            previous.IsSelected = false;
+            RefreshRowView(previous);
+        }
         row.IsSelected = true;
+        RefreshRowView(row);
         SelectedQuest = row;
+    }
+
+    // Forces StardewUI's *repeat to rebuild the visual for this row. Per-row
+    // INotifyPropertyChanged inside *repeat doesn't reliably re-evaluate *if
+    // bindings (same StardewUI quirk that forced the SelectedQuest flatten on
+    // the host context), so we trigger a CollectionChanged.Replace on the
+    // ObservableCollection. Setting the indexer to the same reference still
+    // fires Replace, which is enough to rebuild the item's view.
+    private void RefreshRowView(QuestRow row)
+    {
+        int idx = Quests.IndexOf(row);
+        if (idx >= 0) Quests[idx] = row;
     }
 
     public void CompleteSelected()
@@ -729,8 +747,15 @@ public sealed class QuestRow : INotifyPropertyChanged
     public bool IsSelected
     {
         get => _isSelected;
-        set { if (_isSelected == value) return; _isSelected = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected))); }
+        set
+        {
+            if (_isSelected == value) return;
+            _isSelected = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsNotSelected)));
+        }
     }
+    public bool IsNotSelected => !_isSelected;
 
     public bool HasWarpTarget => !string.IsNullOrEmpty(WarpTarget);
     public string WarpLabel => HasWarpTarget ? $"Warp to {WarpTarget}" : "No warp target";
