@@ -129,7 +129,7 @@ internal sealed class MoreQuestsBillboard : Billboard
             if (cc.containsPoint(x, y))
             {
                 _hoverTitle = note.Slot.Quest.questTitle ?? "";
-                _hoverText = note.Slot.Posting.QuestGiver;
+                _hoverText = QuestTooltip.BodyFor(note.Slot.Quest);
                 cc.scale = Math.Min(cc.scale + 0.04f, cc.baseScale + 0.5f);
             }
             else
