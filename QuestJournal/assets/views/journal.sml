@@ -39,17 +39,24 @@
                                 scrollbar-down-sprite={@Mods/RafiaBee.QuestJournal/Sprites/down_arrow:Arrow}
                                 scrollbar-thumb-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}>
                         <lane orientation="vertical" layout="stretch content" margin="0, 0, 40, 0">
-                            <frame *repeat={:Quests}
-                                   layout="stretch content"
-                                   margin="0, 2"
-                                   padding="6, 8"
-                                   focusable="true"
-                                   click=|Select()|>
-                                <lane orientation="horizontal" vertical-content-alignment="middle">
-                                    <label *if={:IsSelected} text="> " />
+                            <lane *repeat={:Quests} orientation="vertical" layout="stretch content" margin="0, 2">
+                                <frame *if={:IsNotSelected}
+                                       layout="stretch content"
+                                       padding="10, 8"
+                                       background={@Mods/StardewUI/Sprites/MenuSlotTransparent}
+                                       focusable="true"
+                                       click=|Select()|>
                                     <label text={:Title} />
-                                </lane>
-                            </frame>
+                                </frame>
+                                <frame *if={:IsSelected}
+                                       layout="stretch content"
+                                       padding="10, 8"
+                                       background={@Mods/StardewUI/Sprites/MenuSlotInset}
+                                       focusable="true"
+                                       click=|Select()|>
+                                    <label bold="true" text={:Title} />
+                                </frame>
+                            </lane>
                             <label *if={:IsEmpty} margin="8" text="No quests on this tab." />
                         </lane>
                     </scrollable>
