@@ -1,0 +1,36 @@
+v1.4.1
+- Fixed multiplayer crash when playing as a farmhand. Save data read/write operations are now skipped on non-host players.
+- Fixed intro mail not appearing when "Enable Mailbox Loan" was disabled before starting a new game. The intro letter now always delivers regardless of that setting.
+
+v1.4.0
+- Morris (or Pierre, after CC completion) now occasionally reacts when you ride the loaned tractor past them, with a thought bubble above their head. 40% chance per day, 8 unique lines each. Compatible with Stardew Valley Expanded.
+
+v1.3.0
+- Added a configurable keybind to open the tractor loan menu from anywhere, without needing to visit the mailbox.
+  - Unbound by default. Set it in GMCM (General Settings section) or in config.json ("LoanTractorKeybind").
+  - Shows the same loan dialogue with pricing, breakdown chance, and all the usual conditions.
+- Added "Enable Mailbox Loan" config option (on by default). Turn it off to disable the mailbox-based loan feature entirely, which avoids compatibility issues with other mods that modify mailbox behavior. The keybind still works when this is off.
+
+v1.2.0
+- Added tractor feature breakdown system: loaned tractors have a configurable chance (default 10%) of arriving with a broken feature each time you loan one.
+  - Player gets a dialogue choosing to fix it (costs % of current stamina) or leave it broken (that feature is disabled for the day).
+  - Breakable features: hoeing, watering, harvesting, tree chopping, rock breaking, seed planting, fertilizing.
+  - Three new config options: Enable Breakdown Chance, Breakdown Chance %, Fix Stamina Cost %.
+- Fixed loyalty tier messages showing Joja branding after Community Center completion. Now shows Pierre-flavored messages.
+
+v1.1.3
+- Fixed late return penalty (passing out after 2AM) silently deducting gold with no notification. Now sends a mail the next morning.
+- Fixed Joja branding persisting after Community Center completion. All flavor text, HUD messages, and mailbox dialogue now properly switch to Pierre's.
+- Added Pierre's takeover transition letter delivered the morning after CC completion.
+- Improved Community Center detection to also check individual bundle flags.
+
+v1.1.2
+- Fixed tractor not working in mines, volcano dungeons, and other generated locations (#24).
+- Reduced log noise by downgrading routine debug messages to trace level (#25).
+
+v1.1.0
+- Added Pierre's Farm Equipment Rental (activates after Community Center completion).
+- Added weekend surcharges (configurable, default 25%).
+- Added seasonal promotions (Spring 15% off, Winter 20% off).
+- Added tractor condition flavor text when speed reduction triggers.
+- Speed reduction config now actually affects tractor speed.

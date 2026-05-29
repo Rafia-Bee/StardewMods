@@ -1,0 +1,6 @@
+v1.0.0
+- Initial release.
+- Bulk exchange all Golden Tags at the Trout Derby booth.
+- Chest-style grab menu for collecting prizes.
+- Vanilla prize cycle (Tent Kit → Bucket Hat → Crab Pot → ... → Omni Geode).
+- Generic Mod Config Menu support (Enabled, Always Bulk).

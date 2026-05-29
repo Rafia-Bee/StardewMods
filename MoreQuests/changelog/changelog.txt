@@ -1,0 +1,44 @@
+2.2.0
+- Needs More Quests Framework 2.3.0 or newer.
+- New "The Unseen Offering" quest on the Adventurer's Guild board: a magic NPC marks a glowing ritual circle (look for the beam of light) out in the wild or deep in the Mines. Leave spoiled, inedible food inside the ring and a combat food turns up in the mail next morning. Needs Combat 5 and Ginger Island.
+- New Crop Cycle quest: a farmer NPC asks you to grow a crop start to finish. Sow seeds, water them, harvest the crop, then deliver the haul. 28-day deadline. Pays gold plus a stack of Hyper Speed-Gro. The crop pick respects how many days are left in the current season, so you won't get rolled a crop you can't finish in time. Sprinklers, rain, and Junimo Huts all count toward the watering and harvesting steps.
+- Coal Point Farm and Ripley NPCs join the quest-giver pools.
+- Quests no longer ask for crops, gems, or flowers you can't reasonably get yet. Qi crops, Prismatic Shard, and the Galdoran Gem are never requested. Ancient Fruit, Sweet Gem Berry, and the Ginger Island and Desert crops (Pineapple, Taro Root, Starfruit, and so on) won't be asked for during your first year.
+
+2.1.0
+- Needs More Quests Framework 2.1.0 or newer.
+- New Egg Hunt sabotage quest: chat with Vincent the few days before the Egg Festival, beat Abigail at the hunt, and the kids leave you a special egg.
+- New Gunther museum donation quest (SVE only, comes up in conversation, and Gunther says the offer line in person).
+- New Archaeology Dig quest from Gunther / Jasper for digging artifact spots.
+- New Feed Wild Critters quest (Marnie) with a discount at the pet shop on completion.
+- Marnie's cow offer Milk Pail variant now completes when you buy the Milk Pail at her shop.
+- Rainy Day Catch now pays based on your haul, any installed tackle can satisfy it, and the deadline is medium length.
+- Legendary and location-based fishing quests no longer eat your catch on turn-in.
+- Delivery quests say "Deliver X to Y" instead of "Return to NPC".
+- Long quest descriptions no longer overflow the daily Billboard panel.
+- Fixed Luau quest reactions sometimes flipping "Loved it" into "Something is Missing".
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuests-v2.0.0...MoreQuests-v2.1.0]i18n changes here[/url] (Files changed -> scroll down to i18n/default.json).
+
+2.0.0
+- Updated for the new framework. Requires More Quests Framework 2.0.0 or newer (older framework versions are incompatible, please update both at the same time).
+- No new quests or gameplay changes in this version; under the hood, the mod now hands its quests to the framework through Content Patcher's asset system instead of the old loader, which makes it future-proof for any third-party CP packs that want to add or tweak quests.
+- GMCM edits to the Short / Medium / Long cooldown days now take effect the same day, no save reload needed.
+- Cooking quest scaling now detects Love of Cooking too, not just YACS. Either mod (or neither) works.
+- Furniture shipping quest descriptions now include a small in-character hint about where to source the items (Marnie sells hay bales, Robin's catalogue rotates tables, etc.) so players aren't left guessing.
+- Legendary Fish quest fixed: only picks fish that are actually in season (Angler in winter was a known case), never picks Mr. Qi's extended-family legendaries (Ms. Angler, Son of Crimsonfish, Glacierfish Jr., Radioactive Carp, Legend II), skips legendaries you've already caught, and won't repeat the same fish back-to-back.
+
+1.0.0
+- Initial public release. Requires More Quests Framework.
+- 50+ new quests across Farming, Fishing, Mining, Foraging, Animal, Cooking, Festival, Seasonal, and Social categories.
+- Animal quests: Marnie's chicken / cow / silo offers, egg and milk requests, Gunther's Dinosaur Study, Krobus's Void Note, Alex's Protein Shakes, Hay Supply Run.
+- Festival prep chain: Submarine Fuel, Wizard's Ritual, Holiday Cookies, Wrapping Paper, Festival Decor variants (Egg, Luau, Moonlight Jellies, Fair, Spirit's Eve, Ridgeside Gathering, ES Spirit's Eve), Gus's Feasts, Jellyfish Watch Prep, Lewis's Easter Eggs, Merchant Unpacking, Rainbow Platter, SquidFest Showcase, Secret Gift Hint.
+- Saloon quests: Weekly Specials, Dinner Party, Saloon Grand Feast (Special Order), Craving a Meal, with loved/hated dish reactions from villagers.
+- Farming quests: Basic / Quality / Premium Crop Delivery, Caroline's Tea Garden, Massive Harvest Request, Pierre's Stock-Up, Preserves Jar / Keg / Dehydrator / Fish Smoker requests.
+- Mining quests: Bar Delivery, Basic Slime Clearing, Monster Hunt, Monster Parts, Rare Material Request, Skull Cavern Deep Dive, Mines Deep Dive.
+- Fishing quests: Simple Fishing Request, Location / Size Overpopulation, Quality Fish Delivery, Medium Fishing Haul, Rainy Day Catch, Seafood Night, Fish Smoker Request.
+- Foraging and seasonal quests: Beach Cleanup, Floral Tea, Forage with Linus, Clear Debris, Plant Trees, Rare Forage Hunt, Heat Wave Relief, Spring Cleaning.
+- Social quests: Check on George, Check on Friends, Gift Delivery, Elliott's Poem Inspiration.
+- New Adventurer's Guild board at the mine entrance (opt-out via config). Mining and combat quests fold onto it so the help-wanted board doesn't get crowded.
+- Consequence reactions on Massive Harvest Request, Medium Fishing Haul, Seafood Night, Monster Parts, and the Saloon Specials.
+- Modded-NPC dispatch pools cover Ridgeside Village, East Scarp, Visit Mount Vapius, SVE, Eli and Dylan, and Arumi the Actress.
+- Reward variety: shop discounts at Pierre and the saloons, animal-purchase discounts, festival biases (Luau, Fair), Fair grange star tokens, recipes, mail letters.

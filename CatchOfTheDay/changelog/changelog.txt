@@ -1,0 +1,10 @@
+1.1.0
+- Added keybind (default: Delete) to hide specific fish from the HUD while hovering over them
+- Hidden fish are managed on a dedicated GMCM subpage where you can selectively unhide them
+- Added configurable time slots (up to 5) to show fish that only spawn during specific hours
+- Each time slot has its own background color and supports multiple ranges (e.g., 6-12 or 18-2)
+- Time slots work independently of weather toggles -- fish matching a slot show even if their weather type is disabled
+- Replaced the old "Show Night Fish" and "Show Morning Fish" toggles with the more flexible time slot system
+
+1.0.0
+- Initial release

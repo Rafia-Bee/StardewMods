@@ -1,0 +1,39 @@
+1.5.0
+- Rewrote follow pathfinding: animals now route around fences, trees, and rocks instead of getting stuck on them. The old "wait then teleport past the obstacle" fallback is gone for normal walking
+- When an animal does run into a blocker that isn't going away (another animal, a closed gate, etc.), it backs off and tries a different route on its own
+- Walking with multiple animals now spreads them into a small group around you, instead of all stacking on the same tile
+- Animals that fall behind sprint at 3x speed to catch up. Teleport now only triggers if they fall behind by more than twice the catch-up distance
+- Fixed the Follow Speed slider in the config menu actually doing something. Previously it was ignored and animals always walked at the default speed
+- Grazing now uses the same smart pathfinding as following, so animals can graze grass tiles that aren't on a perfect straight line
+- If grazing fails because the path is blocked, the animal tries again a couple seconds later instead of giving up for the whole stop
+- Various performance and cleanup improvements under the hood
+
+1.4.0
+- Added the Grazing Bell, a reusable item from Marnie's shop (500g) that lets you take farm animals on walks
+- Walking animals graze nearby grass when you stand still, gaining a configurable happiness boost
+- Animals on walks can be sent home alone by clicking them with the bell (requires 3+ hearts)
+- Custom idle roaming: animals walk, pause, sit, and do eating animations naturally when you stop moving
+- Walk-specific NPC reaction lines (16 new dialog lines)
+- Completely reworked pathfinding: removed speed boosting (caused animals to zoom away), animals now teleport when too far behind
+- All animals follow the player directly instead of chaining (fixes sideways drifting with 3+ animals)
+- Better stuck handling: animals teleport near the player instead of nudging into more obstacles
+- Rubber band distance default reduced from 12 to 10 tiles
+- Added Autonomals mod compatibility (clears external pathfinding controllers)
+- New config options: Grazing Happiness Boost, Send Home Friendship, Grazing Idle Time
+- Debug logging now defaults to off (was flooding SMAPI logs); can be re-enabled in config
+
+1.3.0
+- Character-specific NPC reactions: Marnie, Shane, and Jas each have unique dialog lines and no longer use the generic pool
+- Weather-aware NPC reactions: villagers react differently during rain, thunderstorms, and snow
+- Fixed horses, pets, and stray cats incorrectly triggering NPC reaction speech bubbles
+
+1.2.0
+- Multiplayer support: farmhands can now use the mod, not just the host
+
+1.1.0
+- Added NPC reactions: nearby villagers show speech bubble comments when they see you escorting animals through town
+- 55 unique dialog lines (35 single-animal, 20 multi-animal) with a mix of sweet, funny, and snarky reactions
+- New config option: NPC Reactions (on/off)
+
+1.0.0
+- Initial release

@@ -1,0 +1,96 @@
+[size=4][b]What does this mod do?[/b][/size]
+
+This mod lets you exchange all your Golden Tags in a single interaction and collect every reward from a chest-style menu, the same way the SquidFest works.
+
+Walk up to the derby booth, and if you're carrying more than one Golden Tag, the mod asks: "Exchange all X tags for prizes?" Say yes, and your rewards appear in a grab menu. Take what you want, close when you're done.
+
+[size=4][b]Features[/b][/size]
+[list]
+[*][b]Bulk exchange[/b] — Turn in all Golden Tags at once instead of one by one[/*]
+[*][b]Chest-style menu[/b] — Browse and collect prizes at your own pace[/*]
+[*][b]Vanilla prize cycle[/b] — Prizes follow the same rotation as the base game (Tent Kit first, then the standard cycle)[/*]
+[*][b]Uncollected items drop safely[/b] — Close the menu early and leftover prizes drop at your feet[/*]
+[*][b]Configurable[/b] — Toggle the mod on/off or force bulk mode even for a single tag[/*]
+[/list]
+[size=4][b]
+How to use[/b][/size]
+[list=1]
+[*]Fish during the [b]Trout Derby[/b] (Summer 20–21) and collect Golden Tags as usual.[/*]
+[*]Visit the [b]prize booth[/b] with your tags.[/*]
+[*]If you have multiple tags, the mod asks if you want to exchange them all at once.[/*]
+[*]Confirm, and a [b]chest menu[/b] opens with all your prizes.[/*]
+[*]Grab the items you want. Anything left behind when you close the menu is dropped on the ground.[/*]
+[/list]
+[size=4][b]
+Configuration[/b][/size]
+If you have [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] installed, you can tweak these from the in-game options. Otherwise, edit [font=Courier New]config.json[/font] in the mod folder.
+[list]
+[*][b]Enabled[/b] (default: Yes) — Turn the mod on or off entirely. When off, the vanilla one-at-a-time exchange is used.[/*]
+[*][b]Always Bulk[/b] (default: No) — When enabled, even a single Golden Tag uses the chest-style menu instead of the vanilla exchange.[/*]
+[/list]
+[size=4][b]
+Prize Cycle[/b][/size]
+Prizes follow the same rotation as the vanilla game:
+[spoiler]
+[list=1]
+[*]Tent Kit (first tag ever — one time only)[/*]
+[*]Bucket Hat[/*]
+[*]Crab Pot[/*]
+[*]Mystery Box ×3[/*]
+[*]Diamond[/*]
+[*]Mounted Trout (furniture)[/*]
+[*]Deluxe Bait ×20[/*]
+[*]Triple Shot Espresso ×2[/*]
+[*]Quality Sprinkler[/*]
+[*]Warp Totem: Farm ×3[/*]
+[*]Omni Geode ×3[/*]
+[/list]
+
+After the cycle completes, it loops back to the Bucket Hat.[/spoiler]
+[size=4][b]
+Requirements[/b][/size]
+[b]Required:[/b]
+[list]
+[*][url=https://smapi.io/]SMAPI[/url] 4.1+[/*]
+[*]Stardew Valley 1.6+[/*]
+[/list]
+
+[b]Optional:[/b]
+[list]
+[*][url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] — In-game settings menu[/*]
+[/list]
+[size=4][b]
+Install[/b][/size]
+[list=1]
+[*]Install SMAPI.[/*]
+[*]Download this mod and unzip it into your [font=Courier New]Stardew Valley/Mods[/font] folder.[/*]
+[*]Run the game through SMAPI.[/*]
+[/list]
+You can install this at any point during a playthrough.
+[size=4][b]
+Compatibility[/b][/size]
+Tested with Stardew Valley 1.6+ on Windows single-player. Should work on other platforms and in multiplayer (each player needs the mod installed). If you run into any issues, please let me know!
+[size=4][b]
+FAQ[/b][/size]
+[b]Can I install this mid-playthrough?[/b]
+Yes! It works immediately at the next Trout Derby.
+[b]Does this change the prizes I get?[/b]
+No. The prize cycle is the same as vanilla. The mod just lets you collect them all at once instead of one at a time.
+[b]What if my inventory is full?[/b]
+Any prizes you can't pick up stay in the chest menu. If you close the menu with items still in it, they drop on the ground next to you.
+[b]Does this work with the SquidFest too?[/b]
+No need - the SquidFest already has a bulk reward system built into the vanilla game. This mod brings that same experience to the Trout Derby.
+[size=4][b]
+Planned Features[/b][/size]
+Got a feature idea? Drop it in the comments!
+
+[size=4][b]Translations[/b][/size]
+This mod supports translations! Please feel free to translate the mod to your language and upload to Nexus on your own page. Nexus will automatically link it to this mod.
+
+[size=4][b]
+Credits[/b][/size]
+[list]
+[*][b]ConcernedApe[/b] for Stardew Valley[/*]
+[*][b]Pathoschild[/b] for [url=https://smapi.io/]SMAPI[/url][/*]
+[*][b]spacechase0[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url][/*]
+[/list]
