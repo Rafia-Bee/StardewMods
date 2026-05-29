@@ -1,7 +1,7 @@
 <lane orientation="vertical"
       horizontal-content-alignment="middle"
       vertical-content-alignment="middle">
-    <frame layout="1100px 720px"
+    <frame layout={RootLayout}
            background={@Mods/StardewUI/Sprites/MenuBackground}
            border={@Mods/StardewUI/Sprites/MenuBorder}
            border-thickness="36, 36, 40, 36"
@@ -11,7 +11,7 @@
 
             <lane orientation="horizontal" margin="0, 0, 0, 8">
                 <frame *repeat={:Tabs}
-                       layout="140px 76px"
+                       layout={^TabLayout}
                        margin="0, 0, 8, 0"
                        padding="12, 8"
                        horizontal-content-alignment="middle"
@@ -26,9 +26,9 @@
                 </frame>
             </lane>
 
-            <lane orientation="horizontal" layout="content 580px" vertical-content-alignment="start">
+            <lane orientation="horizontal" layout={PanelRowLayout} vertical-content-alignment="start">
 
-                <frame layout="240px 580px"
+                <frame layout={ListPanelLayout}
                        padding="20"
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
                     <scrollable layout="stretch stretch"
@@ -61,7 +61,7 @@
                     </scrollable>
                 </frame>
 
-                <frame layout="484px 580px"
+                <frame layout={DetailPanelLayout}
                        margin="8, 0"
                        padding="20"
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
@@ -106,7 +106,7 @@
                     </scrollable>
                 </frame>
 
-                <frame layout="236px 580px"
+                <frame layout={ActionPanelLayout}
                        padding="20"
                        background={@Mods/StardewUI/Sprites/ControlBorder}>
                     <scrollable layout="stretch stretch"
@@ -115,7 +115,7 @@
                                 scrollbar-up-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}
                                 scrollbar-down-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}
                                 scrollbar-thumb-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}>
-                        <lane orientation="vertical" layout="stretch 540px" horizontal-content-alignment="middle">
+                        <lane orientation="vertical" layout={ActionLaneLayout} horizontal-content-alignment="middle">
                         <label *if={SelectedIsCompleted} margin="0, 12" color={HeaderColor} text="Quest complete" />
 
                         <frame *if={SelectedShowActions} layout="stretch content" margin="0, 4" padding="8, 14"
