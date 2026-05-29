@@ -105,6 +105,7 @@ internal static partial class Generators
         Reg(fw, "MonsterParts", MonsterParts);
         Reg(fw, "RareMaterialRequest", RareMaterialRequest);
         Reg(fw, "SkullCavernDeepDive", SkullCavernDeepDive);
+        Reg(fw, "UnseenOffering", UnseenOffering);
 
         // Seasonal
         Reg(fw, "BeachCleanup", BeachCleanup);

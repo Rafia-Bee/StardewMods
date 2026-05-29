@@ -115,6 +115,11 @@ public sealed class ModEntry : Mod
     /// body and attachment without needing per-quest persistence.
     internal const string DeepDiveRewardKeyPrefix = "RafiaBee.MoreQuests.DeepDiveReward.";
 
+    /// Mail key prefix for the Unseen Offering reward letter. Suffix is `{foodId}.{count}`
+    /// (count is the final dot-segment so modded ids with dots still parse). The asset edit
+    /// reads the suffix and builds the body + food attachment, so nothing is persisted per-quest.
+    internal const string UnseenOfferingRewardKeyPrefix = "RafiaBee.MoreQuests.UnseenOfferingReward.";
+
     /// Mail key prefix for Leah's painting reward. Suffix is `<animal>.<frame>` (e.g.
     /// `...LeahPaintingReward.BabyBlueChicken.wood`). The asset edit reads the suffix and
     /// builds a body + furniture attachment matching the painting the player earned.
@@ -414,6 +419,7 @@ public sealed class ModEntry : Mod
             mail[EggHuntSabotageRewardMailKey] = I18n.Get("mail.festival.eggHuntSabotageReward.body").ToString();
 
             PopulateDeepDiveRewardLetters(mail);
+            PopulateUnseenOfferingRewardLetters(mail);
             PopulateLeahPaintingRewardLetters(mail);
         });
     }
@@ -507,6 +513,46 @@ public sealed class ModEntry : Mod
         }
     }
 
+    /// Scans the player's mail for Unseen Offering reward keys and authors a body + food
+    /// attachment for each. Key suffix is `{foodId}.{count}`; count is the final dot-segment
+    /// so modded food ids containing dots still parse. Skipped when no save is loaded.
+    private void PopulateUnseenOfferingRewardLetters(IDictionary<string, string> mail)
+    {
+        if (Game1.player == null)
+            return;
+
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        CollectKeys(Game1.player.mailForTomorrow, seen);
+        CollectKeys(Game1.player.mailbox, seen);
+        CollectKeys(Game1.player.mailReceived, seen);
+
+        foreach (var key in seen)
+        {
+            if (!key.StartsWith(UnseenOfferingRewardKeyPrefix, StringComparison.Ordinal))
+                continue;
+            string suffix = key.Substring(UnseenOfferingRewardKeyPrefix.Length);
+            int sep = suffix.LastIndexOf('.');
+            if (sep <= 0 || sep == suffix.Length - 1)
+                continue;
+            string foodId = suffix.Substring(0, sep);
+            if (!int.TryParse(suffix.Substring(sep + 1), out int count) || count <= 0)
+                continue;
+
+            string foodName;
+            try
+            {
+                foodName = ItemRegistry.GetData("(O)" + foodId)?.DisplayName ?? foodId;
+            }
+            catch
+            {
+                foodName = foodId;
+            }
+
+            string body = I18n.Get("mail.combat.unseenOfferingReward.body", new { count, food = foodName }).ToString();
+            mail[key] = body + $"%item object {foodId} {count} %%";
+        }
+    }
+
     private static void CollectKeys(System.Collections.IEnumerable source, HashSet<string> sink)
     {
         if (source == null) return;
@@ -580,6 +626,7 @@ public sealed class ModEntry : Mod
         ["Animal.LeahFarmPainting"]     = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
         ["Mining.SkullCavernDeepDive"]  = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
         ["Mining.MinesDeepDive"]        = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
+        ["Mining.UnseenOffering"]       = (m, _) => m.Helper.GameContent.InvalidateCache("Data/mail"),
         ["Foraging.FeedWildCritters"]   = (m, _) => m.OnFeedWildCrittersCompleted(),
         // Belt-and-braces invalidation. The DayEnding resolver already invalidates on
         // the win path, but a completion via any other route still needs the static
@@ -1145,6 +1192,7 @@ public sealed class ModEntry : Mod
             scope.OverrideTriggerSource("Mining.RareMaterialRequest", TriggerSource.DailyBoard);
             scope.OverrideTriggerSource("Mining.SkullCavernDeepDive", TriggerSource.DailyBoard);
             scope.OverrideTriggerSource("Mining.MinesDeepDive", TriggerSource.DailyBoard);
+            scope.OverrideTriggerSource("Mining.UnseenOffering", TriggerSource.DailyBoard);
         }
     }
 

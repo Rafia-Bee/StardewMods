@@ -149,6 +149,7 @@ public sealed class ModEntry : Mod
         DecorShippingPatches.Apply(harmony, Monitor);
         WinterStarGiftPatch.Apply(harmony);
         DropItemsPatches.Subscribe(helper);
+        MoreQuestsFramework.Rendering.DropZoneOverlay.Register(helper);
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.Content.AssetsInvalidated += OnAssetsInvalidated;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
+using Microsoft.Xna.Framework;
 using MoreQuestsFramework.Rewards;
 using Netcode;
 using StardewValley;
@@ -36,6 +37,13 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     // Per-(step, location). A shared baseline across locations would credit progress on
     // every warp into a map with fewer clumps than the previous one.
     private Dictionary<(int StepIndex, string Location), int>? _clumpBaselines;
+
+    // Transient cache for a deferred (mine) DropItemsInRadius zone, keyed by the live floor
+    // instance so a new visit (new instance) re-picks. Not netfields, so it never syncs or saves.
+    [XmlIgnore] private GameLocation? _zoneLoc;
+    [XmlIgnore] private int _zoneStepIndex = -1;
+    [XmlIgnore] private Point _zoneCenter;
+    [XmlIgnore] private bool _zoneTried;
 
     public bool HasDecorShippingStep
     {
@@ -126,6 +134,49 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             if (step.Kind != kind) continue;
             if (LocationMatches(step, locationName))
                 return true;
+        }
+        return false;
+    }
+
+    // Resolves the active DropItemsInRadius zone for the given location, if any. Overground
+    // zones return the center baked into the step on accept. Mine zones (center left at 0,0)
+    // are resolved lazily against the live floor via DropZonePicker and cached per visit.
+    // Returns false when there's no matching active step, or the lazy pick found no clear tile.
+    // Read-only: it never writes to the location, only queries tiles to choose a center.
+    public bool TryGetDropZone(GameLocation? location, out Point center, out int radius)
+    {
+        center = Point.Zero;
+        radius = 0;
+        if (completed.Value || location == null)
+            return false;
+        string locName = location.Name ?? string.Empty;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.DropItemsInRadius) continue;
+            if (!LocationMatches(step, locName)) continue;
+
+            radius = step.Radius;
+            if (step.CenterX != 0 || step.CenterY != 0)
+            {
+                center = new Point(step.CenterX, step.CenterY);
+                return true;
+            }
+            if (_zoneTried && ReferenceEquals(_zoneLoc, location) && _zoneStepIndex == i)
+            {
+                center = _zoneCenter;
+                return _zoneCenter != Point.Zero;
+            }
+            _zoneLoc = location;
+            _zoneStepIndex = i;
+            _zoneTried = true;
+            _zoneCenter = DropZonePicker.TryPickZone(location, Math.Max(1, radius), minDistFromWarp: 3, attempts: 200, out var picked)
+                ? picked
+                : Point.Zero;
+            center = _zoneCenter;
+            return _zoneCenter != Point.Zero;
         }
         return false;
     }
@@ -697,9 +748,20 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         {
             var step = steps[i];
             if (step.Done || !RequiresMet(steps, step)) continue;
-            if (step.Kind != AdventureStepKind.DropItems) continue;
+            if (step.Kind != AdventureStepKind.DropItems && step.Kind != AdventureStepKind.DropItemsInRadius) continue;
             if (!LocationMatches(step, locationName)) continue;
             if (!ItemMatches(step, item)) continue;
+            // Ritual-circle gate: the drop only counts inside the zone. Radius 0 = no gate.
+            if (step.Kind == AdventureStepKind.DropItemsInRadius && step.Radius > 0)
+            {
+                if (!TryGetDropZone(Game1.currentLocation, out var c, out _))
+                    continue;
+                var tile = Game1.player.Tile;
+                int dx = (int)tile.X - c.X;
+                int dy = (int)tile.Y - c.Y;
+                if (dx * dx + dy * dy > step.Radius * step.Radius)
+                    continue;
+            }
             int needed = Math.Max(1, step.Count);
             int remaining = needed - step.Progress;
             if (remaining <= 0) continue;
@@ -1121,7 +1183,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     }
 
     // Tokens: $edible-egg, $category:N, $forage (= $tag:forage_item), $furniture-table,
-    // $tag:<tag>. $edible-egg excludes Dinosaur Egg (Edibility -300).
+    // $tag:<tag>, $edibility:<min>:<max>. $edible-egg excludes Dinosaur Egg (Edibility -300).
     private static bool TokenMatches(string token, Item item)
     {
         const int eggCategory = -5;
@@ -1146,6 +1208,19 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         {
             string tag = token.Substring("$tag:".Length).Trim();
             return !string.IsNullOrEmpty(tag) && HasContextTag(item, tag);
+        }
+        // Matches any object with Edibility in [min, max] inclusive (-300 is the inedible sentinel).
+        if (token.StartsWith("$edibility:", StringComparison.OrdinalIgnoreCase))
+        {
+            if (item is not StardewValley.Object edObj)
+                return false;
+            var bounds = token.Substring("$edibility:".Length).Split(':');
+            if (bounds.Length != 2
+                || !int.TryParse(bounds[0], out int lo)
+                || !int.TryParse(bounds[1], out int hi))
+                return false;
+            int e = edObj.Edibility;
+            return e >= lo && e <= hi;
         }
         return false;
     }

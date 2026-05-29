@@ -18,4 +18,5 @@ public static class DispatchRoles
     public const string BlacksmithNpcs = "BlacksmithNpcs";
     public const string ArchaeologyNpcs = "ArchaeologyNpcs";
     public const string FarmerNPCs = "FarmerNPCs";
+    public const string MagicianNPCs = "MagicianNPCs";
 }

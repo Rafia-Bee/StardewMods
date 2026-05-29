@@ -47,6 +47,13 @@ internal static class NpcDispatch
         registry.Register(DispatchRoles.CombatNpcs, "Eli", ModCompat.EliAndDylan);
         registry.Register(DispatchRoles.CombatNpcs, "Mariam", ModCompat.VisitMountVapius);
 
+        // MagicianNPCs: ritual/offering givers. Wizard also stays in CombatNpcs above.
+        registry.Register(DispatchRoles.MagicianNPCs, "Wizard");
+        registry.Register(DispatchRoles.MagicianNPCs, "Lance", ModCompat.StardewValleyExpanded);
+        registry.Register(DispatchRoles.MagicianNPCs, "Vael", ModCompat.TalesOfTheAetherGlade);
+        registry.Register(DispatchRoles.MagicianNPCs, "Ivaras", ModCompat.CustomNpcIvaras);
+        registry.Register(DispatchRoles.MagicianNPCs, "Alecto", ModCompat.NpcAlecto);
+
         registry.Register(DispatchRoles.BeachCleanup, "Elliott");
         registry.Register(DispatchRoles.BeachCleanup, "Willy");
         registry.Register(DispatchRoles.BeachCleanup, "Dylan", ModCompat.EliAndDylan);
