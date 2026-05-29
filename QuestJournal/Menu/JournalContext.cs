@@ -373,8 +373,8 @@ public sealed class JournalContext : INotifyPropertyChanged
         string giver = ResolveNpcDisplayName(so.requester.Value);
 
         return new QuestRow(
-            title: so.GetName() ?? string.Empty,
-            description: so.GetDescription() ?? string.Empty,
+            title: ResolveSoTitle(so),
+            description: SafeParse(so, so.questDescription.Value),
             objective: string.Empty,
             rewardLines: rewards,
             adventureSteps: steps,
@@ -515,6 +515,21 @@ public sealed class JournalContext : INotifyPropertyChanged
         if (string.IsNullOrEmpty(raw)) return string.Empty;
         try { return so.Parse(raw) ?? raw!; }
         catch { return raw!; }
+    }
+
+    // SpecialOrder.GetName() caches its result in _localizedName the first time
+    // it's called. If that first call happens before a content pack (like
+    // Ridgeside Village) has patched its [key] strings into
+    // Strings/SpecialOrderStrings, the unresolved fallback path gets cached and
+    // every later read shows the literal "Strings\SpecialOrderStrings:..." key.
+    // The objective rows already dodge this by going through the cache-free
+    // Parse(), so we resolve the title fresh from the raw field the same way.
+    private static string ResolveSoTitle(SpecialOrder so)
+    {
+        string? raw = so.questName.Value;
+        if (string.IsNullOrEmpty(raw)) return so.GetName() ?? string.Empty;
+        try { return SpecialOrder.MakeLocalizationReplacements(raw).Trim(); }
+        catch { return so.GetName() ?? string.Empty; }
     }
 
     private static string BuildSpecialOrderDaysLeft(SpecialOrder so)
