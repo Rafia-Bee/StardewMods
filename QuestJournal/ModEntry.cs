@@ -19,6 +19,7 @@ public sealed class ModEntry : Mod
     private GameMenuTabOverlay? _tabOverlay;
     private CompletionWatcher? _completionWatcher;
     private IClickableMenu? _journalMenu;
+    private JournalContext? _journalContext;
 
     public override void Entry(IModHelper helper)
     {
@@ -29,6 +30,31 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.Input.ButtonsChanged += OnButtonsChanged;
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
+        helper.Events.Content.AssetRequested += OnAssetRequested;
+        helper.Events.Content.AssetsInvalidated += OnAssetsInvalidated;
+    }
+
+    // Serve the journal's theme colours as a Content Patcher-editable data
+    // asset (a string->hex dictionary). Authors override entries with EditData.
+    private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
+    {
+        if (e.NameWithoutLocale.IsEquivalentTo(JournalTheme.AssetName(ModManifest.UniqueID)))
+            e.LoadFrom(JournalTheme.BuildDefaults, AssetLoadPriority.Low);
+    }
+
+    // Re-read the theme when a patch invalidates it, and repaint an open journal
+    // so authors iterating with hot-reloaded CP packs see changes immediately.
+    private void OnAssetsInvalidated(object? sender, AssetsInvalidatedEventArgs e)
+    {
+        string themeName = JournalTheme.AssetName(ModManifest.UniqueID);
+        bool hit = false;
+        foreach (var name in e.NamesWithoutLocale)
+        {
+            if (name.IsEquivalentTo(themeName)) { hit = true; break; }
+        }
+        if (!hit) return;
+        JournalTheme.Reload(Helper, ModManifest.UniqueID);
+        _journalContext?.RefreshTheme();
     }
 
     // StardewUI's ViewMenu hides the corner HUD on construct. A per-tick reset
@@ -53,6 +79,9 @@ public sealed class ModEntry : Mod
         }
         _viewEngine.RegisterViews(_viewPrefix, "assets/views");
         _viewEngine.RegisterSprites($"Mods/{ModManifest.UniqueID}/Sprites", "assets/sprites");
+
+        // Pull theme colours now so the first journal open is already themed.
+        JournalTheme.Reload(Helper, ModManifest.UniqueID);
 
         // MoreQuestsFramework is optional. Resolve once; null when not loaded.
         // Reward itemisation falls back to vanilla synthesis in that case.
@@ -119,6 +148,7 @@ public sealed class ModEntry : Mod
     {
         if (_viewEngine == null) return null;
         var ctx = new JournalContext(Helper, _viewEngine, _mqfApi, _viewPrefix, _completionWatcher);
+        _journalContext = ctx;
         ctx.Refresh();
         // Zero the dim underlay so the game world stays visible behind the journal.
         var controller = _viewEngine.CreateMenuControllerFromAsset($"{_viewPrefix}/journal", ctx);

@@ -39,23 +39,22 @@
                                 scrollbar-down-sprite={@Mods/RafiaBee.QuestJournal/Sprites/down_arrow:Arrow}
                                 scrollbar-thumb-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}>
                         <lane orientation="vertical" layout="stretch content" margin="0, 0, 40, 0">
-                            <lane *repeat={:Quests} orientation="vertical" layout="stretch content" margin="0, 2">
-                                <frame *if={:IsNotSelected}
-                                       layout="stretch content"
+                            <lane *repeat={:Quests} orientation="vertical" layout="stretch content">
+                                <frame layout="stretch content"
                                        padding="10, 8"
-                                       background={@Mods/StardewUI/Sprites/MenuSlotTransparent}
+                                       background={@Mods/RafiaBee.QuestJournal/Sprites/highlight:Highlight}
+                                       background-tint={RowTint}
                                        focusable="true"
-                                       click=|Select()|>
-                                    <label text={:Title} />
+                                       click=|Select()|
+                                       pointer-enter=|HoverEnter()|
+                                       pointer-leave=|HoverLeave()|>
+                                    <label bold={IsSelected} text={:Title} />
                                 </frame>
-                                <frame *if={:IsSelected}
-                                       layout="stretch content"
-                                       padding="10, 8"
-                                       background={@Mods/StardewUI/Sprites/MenuSlotInset}
-                                       focusable="true"
-                                       click=|Select()|>
-                                    <label bold="true" text={:Title} />
-                                </frame>
+                                <frame *if={ShowDivider}
+                                       layout="stretch 3px"
+                                       margin="6, 4"
+                                       background={@Mods/RafiaBee.QuestJournal/Sprites/highlight:Highlight}
+                                       background-tint={DividerTint} />
                             </lane>
                             <label *if={:IsEmpty} margin="8" text="No quests on this tab." />
                         </lane>
@@ -88,20 +87,20 @@
                                        text={SelectedTitle} />
                             </frame>
                             <label margin="0, 4" text={SelectedDescription} />
-                            <label *if={SelectedShowObjective} margin="0, 12, 0, 4" color="#136" text="Objective" />
+                            <label *if={SelectedShowObjective} margin="0, 12, 0, 4" color={HeaderColor} text="Objective" />
                             <label *if={SelectedShowObjective} margin="8, 0" text={SelectedObjective} />
-                            <label *if={SelectedHasSteps} margin="0, 12, 0, 4" color="#136" text="Steps" />
+                            <label *if={SelectedHasSteps} margin="0, 12, 0, 4" color={HeaderColor} text="Steps" />
                             <label *repeat={:SelectedSteps} margin="8, 1" text={:RowText} />
-                            <label margin="0, 12, 0, 4" color="#136" text="Rewards" />
+                            <label margin="0, 12, 0, 4" color={HeaderColor} text="Rewards" />
                             <lane *repeat={:SelectedRewards} orientation="horizontal" margin="8, 1" vertical-content-alignment="middle">
                                 <label text="- " />
                                 <label text={:Summary} />
                             </lane>
-                            <label margin="0, 12, 0, 4" color="#136" text="Giver" />
+                            <label margin="0, 12, 0, 4" color={HeaderColor} text="Giver" />
                             <label margin="8, 0" text={SelectedGiverDisplay} />
-                            <label margin="0, 12, 0, 4" color="#136" text="Days Left" />
+                            <label margin="0, 12, 0, 4" color={HeaderColor} text="Days Left" />
                             <label margin="8, 0" text={SelectedDaysLeftDisplay} />
-                            <label margin="0, 12, 0, 4" color="#136" text="Source" />
+                            <label margin="0, 12, 0, 4" color={HeaderColor} text="Source" />
                             <label margin="8, 0" text={SelectedSourceDisplay} />
                         </lane>
                     </scrollable>
@@ -117,7 +116,7 @@
                                 scrollbar-down-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}
                                 scrollbar-thumb-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}>
                         <lane orientation="vertical" layout="stretch 540px" horizontal-content-alignment="middle">
-                        <label *if={SelectedIsCompleted} margin="0, 12" color="#136" text="Quest complete" />
+                        <label *if={SelectedIsCompleted} margin="0, 12" color={HeaderColor} text="Quest complete" />
 
                         <frame *if={SelectedShowActions} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}

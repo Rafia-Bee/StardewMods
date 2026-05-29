@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using Microsoft.Xna.Framework;
 using QuestJournal.Api;
 using QuestJournal.Integrations;
 using StardewModdingAPI;
@@ -61,6 +62,17 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     public bool HasSelection => _selectedQuest != null;
     public bool IsEmpty => Quests.Count == 0;
+
+    // Section-heading colour for the detail panel, themed via JournalTheme.
+    public Color HeaderColor => JournalTheme.HeaderColor;
+
+    // Repaint an open journal after the theme asset is repatched.
+    public void RefreshTheme()
+    {
+        Raise(nameof(HeaderColor));
+        foreach (var r in Quests)
+            r.RaiseThemeColors();
+    }
 
     private string _activeTabId = TabActive;
     private List<QuestRow> _activeRows = new();
@@ -143,25 +155,9 @@ public sealed class JournalContext : INotifyPropertyChanged
         var previous = SelectedQuest;
         if (previous == row) return;
         if (previous != null)
-        {
             previous.IsSelected = false;
-            RefreshRowView(previous);
-        }
         row.IsSelected = true;
-        RefreshRowView(row);
         SelectedQuest = row;
-    }
-
-    // Forces StardewUI's *repeat to rebuild the visual for this row. Per-row
-    // INotifyPropertyChanged inside *repeat doesn't reliably re-evaluate *if
-    // bindings (same StardewUI quirk that forced the SelectedQuest flatten on
-    // the host context), so we trigger a CollectionChanged.Replace on the
-    // ObservableCollection. Setting the indexer to the same reference still
-    // fires Replace, which is enough to rebuild the item's view.
-    private void RefreshRowView(QuestRow row)
-    {
-        int idx = Quests.IndexOf(row);
-        if (idx >= 0) Quests[idx] = row;
     }
 
     public void CompleteSelected()
@@ -273,6 +269,17 @@ public sealed class JournalContext : INotifyPropertyChanged
                 foreach (var r in _historyRows) Quests.Add(r);
                 break;
         }
+        // Rows are shared across tabs, so clear any stale selection/hover from
+        // a previous tab before re-selecting. Divider goes under every row
+        // except the last, so the list reads as separated entries without a
+        // dangling line at the bottom.
+        for (int i = 0; i < Quests.Count; i++)
+        {
+            Quests[i].IsSelected = false;
+            Quests[i].ClearHover();
+            Quests[i].ShowDivider = i < Quests.Count - 1;
+        }
+
         // Auto-select the first row so the detail panel isn't blank when the
         // tab has rows. Drop selection when the tab is empty.
         if (Quests.Count > 0)
@@ -743,6 +750,9 @@ public sealed class QuestRow : INotifyPropertyChanged
 
     private readonly JournalContext _host;
 
+    // Selection (sticks until another row is clicked) and hover both feed
+    // RowTint. RowTint is the highlight colour drawn over the row's solid
+    // background sprite: selected wins over hover, otherwise transparent.
     private bool _isSelected;
     public bool IsSelected
     {
@@ -751,11 +761,52 @@ public sealed class QuestRow : INotifyPropertyChanged
         {
             if (_isSelected == value) return;
             _isSelected = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsNotSelected)));
+            Raise(nameof(IsSelected));
+            Raise(nameof(RowTint));
         }
     }
-    public bool IsNotSelected => !_isSelected;
+
+    private bool _isHovered;
+    public bool IsHovered => _isHovered;
+
+    private bool _showDivider;
+    public bool ShowDivider
+    {
+        get => _showDivider;
+        set { if (_showDivider == value) return; _showDivider = value; Raise(nameof(ShowDivider)); }
+    }
+
+    // Colours come from JournalTheme (a Content Patcher-editable asset), so a
+    // re-theme patch flows through here. Selected wins over hover, else nothing.
+    public Color RowTint => _isSelected ? JournalTheme.SelectedTint : (_isHovered ? JournalTheme.HoverTint : Color.Transparent);
+    public Color DividerTint => JournalTheme.DividerColor;
+
+    public void HoverEnter()
+    {
+        if (_isHovered) return;
+        _isHovered = true;
+        Raise(nameof(IsHovered));
+        Raise(nameof(RowTint));
+    }
+
+    public void HoverLeave() => ClearHover();
+
+    public void ClearHover()
+    {
+        if (!_isHovered) return;
+        _isHovered = false;
+        Raise(nameof(IsHovered));
+        Raise(nameof(RowTint));
+    }
+
+    // Called when the theme asset is repatched so an open journal repaints.
+    public void RaiseThemeColors()
+    {
+        Raise(nameof(RowTint));
+        Raise(nameof(DividerTint));
+    }
+
+    private void Raise(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
     public bool HasWarpTarget => !string.IsNullOrEmpty(WarpTarget);
     public string WarpLabel => HasWarpTarget ? $"Warp to {WarpTarget}" : "No warp target";
