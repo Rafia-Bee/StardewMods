@@ -40,13 +40,16 @@ public sealed class MoreQuestsFrameworkConfig
     // / slideshow entries), so the heuristic can't tell them apart from a real human.
     // Defaults cover the friendable monsters / creatures that ship with my installed
     // packs. Torts is an RSV tortoise with Age=Child, so he was getting picked for
-    // the child-only Feed Wild Critters quest.
+    // the child-only Feed Wild Critters quest. The Dwarf is a real villager (Age=Adult,
+    // PerfectionScore=true) so the heuristics let him through, but he lives in the mines
+    // and speaks Dwarvish, so a town help-wanted post from him reads wrong.
     public List<string> IneligibleGivers { get; set; } = new()
     {
         "Krobus",
         "Leximonster",
         "SenS",
         "Torts",
+        "Dwarf",
     };
 
     // When a daily-board posting has a hardcoded giver who's on the exclusion list,
