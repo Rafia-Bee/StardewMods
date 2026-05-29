@@ -66,6 +66,34 @@ public sealed class JournalContext : INotifyPropertyChanged
     // Section-heading colour for the detail panel, themed via JournalTheme.
     public Color HeaderColor => JournalTheme.HeaderColor;
 
+    // Whole-journal zoom, done as a real layout resize (not a transform). Every
+    // structural dimension is base * scale, so the actual layout boxes grow and
+    // StardewUI's hit-testing/centring stays correct. A transform was tried
+    // first but only scaled the pixels, leaving clicks mapped to the 1x layout.
+    // Font size is fixed by the engine, so text stays native size; the boxes
+    // just get roomier. Clamped so a bad config value can't break the journal.
+    private float Scale
+    {
+        get
+        {
+            float s = ModEntry.Config.JournalScale;
+            if (s < 0.7f) return 0.7f;
+            if (s > 1.5f) return 1.5f;
+            return s;
+        }
+    }
+
+    private string Px(float baseValue)
+        => ((int)System.Math.Round(baseValue * Scale)).ToString(System.Globalization.CultureInfo.InvariantCulture) + "px";
+
+    public string RootLayout => $"{Px(1100)} {Px(720)}";
+    public string TabLayout => $"{Px(140)} {Px(76)}";
+    public string PanelRowLayout => $"content {Px(580)}";
+    public string ListPanelLayout => $"{Px(240)} {Px(580)}";
+    public string DetailPanelLayout => $"{Px(484)} {Px(580)}";
+    public string ActionPanelLayout => $"{Px(236)} {Px(580)}";
+    public string ActionLaneLayout => $"stretch {Px(540)}";
+
     // Repaint an open journal after the theme asset is repatched.
     public void RefreshTheme()
     {
