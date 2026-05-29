@@ -14,6 +14,11 @@ public static class ModCompat
     public const string StardewValleyExpanded = "FlashShifter.SVECode";
     public const string EliAndDylan = "TenebrousNova.EliDylan.CP";
 
+    // Custom-NPC packs that contribute magic-themed givers to the MagicianNPCs pool.
+    public const string TalesOfTheAetherGlade = "CodysOasis.TotAG_CP_AetherGlade";
+    public const string CustomNpcIvaras = "starfyzz.ivaraswolfgang";
+    public const string NpcAlecto = "ZoeDoll.NPCAlecto";
+
     public const string LurkingInTheDark = "7thAxis.LitD.CP";
     public const string AikawaAsakaiCP = "NassiLove.AikawaAsakaiCP";
     public const string HashtagBearFamGunnar = "MadDog.HashtagBearFam";

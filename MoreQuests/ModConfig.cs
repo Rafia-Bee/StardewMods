@@ -57,6 +57,11 @@ public sealed class ModConfig
     // ----- Skull Cavern depth cap for Deep Dive quest -----
     public int SkullCavernMaxLevel { get; set; } = 100;
 
+    /// Radius (in tiles) of the ritual circle for the Unseen Offering quest. Clamped to
+    /// [2, 6] at read time (mine zones cap lower since floors are cramped). Bigger = easier
+    /// to find a spot inside, smaller = a tighter target.
+    public int MagicianDropRadius { get; set; } = 4;
+
     // ----- Saloon weekly special / Grand Feast tunables -----
     /// Recipes with at least this many distinct ingredient lines qualify for the Complex pool.
     public int WeeklySpecialComplexMinIngredients { get; set; } = 4;

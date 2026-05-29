@@ -314,7 +314,7 @@ If you want a quest to survive any exclusion list without falling back to mail, 
 Use `Steps[]` instead of `Objective`. Each step has:
 
 - `Name`, referenced by other steps' `Requires[]`.
-- `Kind`, one of: `Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearWeeds`, `ClearDebris`, `DropItems`, `DigArtifactSpot`, `Custom`.
+- `Kind`, one of: `Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearWeeds`, `ClearDebris`, `DropItems`, `DropItemsInRadius`, `DigArtifactSpot`, `Custom`.
 - `Description`, the journal line.
 - Step-kind-specific targeting fields (`Targets[]`, `Items[]`, `Count`, etc.).
 
@@ -486,6 +486,7 @@ Multi-step Adventure quests carry a `Steps[]` list. Each entry has a `Kind` driv
 - `ClearWeeds`, `World.ObjectListChanged` removed list filtered by `IsWeeds()`. `Targets[0]` = location, `Count` = weeds cleared.
 - `ClearDebris`, per-second poll of `location.resourceClumps`. `Targets[0]` = location, `Count` = clumps removed.
 - `DropItems`, `World.DebrisListChanged` filtered to debris dropped by the local player. `Targets[0]` = location, `Items[]` = accepted item ids (same `$`-predicate syntax as Deliver), `Count` = items dropped. Consumed debris are visibly removed from the ground.
+- `DropItemsInRadius`, same as `DropItems` but only credits drops inside a circular zone. Adds `CenterX` / `CenterY` (the zone's center tile) and `Radius` (tiles; 0 = no gate). An overlay draws a pulsing ring + beam of light at the center so the player can find it. The overlay is render-only (no collision, never edits tiles or objects). If `CenterX` and `CenterY` are both 0 the zone is resolved lazily on the live location via a read-only tile scan (`DropZonePicker`), which is how mine-floor zones work since those locations regenerate per visit.
 - `DigArtifactSpot`, `World.ObjectListChanged` removed list filtered by `QualifiedItemId == "(O)590"`. `Targets[0]` = location, `Count` = artifact spots dug.
 - `Collect`, `Player.InventoryChanged` additions for matching item ids.
 - `Custom`, escape hatch for consumer-mod step handlers. `Targets[0]` is the handler id registered through `IMoreQuestsModApi.RegisterCustomAdventureStep`. The framework polls the handler once per second while the step is active; the handler reads `CustomStepContext` and returns an `int` delta to credit against `Step.Progress` (returning enough to reach `Count` marks the step Done). Bare names resolve under the calling mod's UniqueID; pass `"OtherMod.UniqueID/Name"` to reference another mod's handler. Example:

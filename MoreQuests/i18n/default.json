@@ -93,6 +93,8 @@
     "config.RequestVariationCount.tooltip": "How many distinct item variations NPCs ask for in mixed-bag delivery quests like Pierre's Stock-Up. Range 2 to 5. Default 3.",
     "config.SkullCavernMaxLevel": "Skull Cavern max level",
     "config.SkullCavernMaxLevel.tooltip": "Maximum floor target for Skull Cavern Deep Dive quests.",
+    "config.MagicianDropRadius": "Offering circle radius",
+    "config.MagicianDropRadius.tooltip": "Size, in tiles, of the ritual circle for the Unseen Offering quest. Bigger circles are easier to stand inside; smaller ones are a tighter target. Mine circles cap a bit smaller since the floors are cramped.",
     "config.WeeklySpecialComplexMinIngredients": "Weekly Special (Complex) min ingredients",
     "config.WeeklySpecialComplexMinIngredients.tooltip": "Recipes with at least this many distinct ingredient lines qualify for the Complex saloon weekly special and Grand Feast pools.",
     "config.CheckOnFriendsCount": "Check on Friends NPC count",
@@ -254,6 +256,17 @@
 
     "mail.mining.deepDiveReward.body": "Dear farmer,^^Your haul came through clean. The Guild had everything smelted overnight and ran the numbers. Here's your share of the bars - {{count}} {{bar}}, payment in full. There's plenty more work like this if you're up for it.",
     "mail.mining.deepDiveReward.skullCavern.body": "Dear farmer,^^Thanks for the ores. While smelting them, we got a few of these strange looking bars - {{count}} {{bar}} to be exact. Maybe you can find some use for them.",
+
+    "quest.combat.unseenOffering.title": "{{npc}}'s offering",
+    "quest.combat.unseenOffering.description": "A portal has opened in {{location}}. It seems the unseen ones who share the world with us mortals are restless again. Lay down some poisonous items as an offering, {{count}} should be enough to placate them before things turn hostile. Find the portal, make sure to leave the offering within its bounds, and don't linger around after you've left it. I'll be in touch.",
+    "quest.combat.unseenOffering.step": "Leave {{count}} items with edibility between {{min}} and {{max}} inside the ring in {{location}}.",
+    "quest.combat.unseenOffering.loc.forest": "Cindersap Forest",
+    "quest.combat.unseenOffering.loc.mountain": "the mountain",
+    "quest.combat.unseenOffering.loc.backwoods": "the Backwoods",
+    "quest.combat.unseenOffering.loc.desert": "Calico Desert",
+    "quest.combat.unseenOffering.loc.mine": "the Mines",
+
+    "mail.combat.unseenOfferingReward.body": "The offering was accepted.^^Whatever lingers out there is quiet again, for now. Take this with our thanks. It will give you strength when dealing with the hostile forces.",
 
     "quest.farming.pierresStockUp.title": "Pierre's stock-up",
     "quest.farming.pierresStockUp.description": "I'm running low on a few seasonal staples for the store. I'd like to stock up on {{count}} each of {{items}}. Bring them by the shop when you can - I'll knock the price down on the seeds for those crops in return.",

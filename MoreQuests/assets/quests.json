@@ -227,6 +227,18 @@
             "Generator": "MinesDeepDive"
         },
         {
+            "Name": "Mining.UnseenOffering",
+            "Category": "Mining",
+            "Trigger": {
+                "Source": "CustomBoard",
+                "Weight": 10,
+                "MaxPerDay": 1,
+                "CooldownTier": "Medium",
+                "Available": { "SkillLevel": "Combat 5", "MailReceived": "willyBoatFixed" }
+            },
+            "Generator": "UnseenOffering"
+        },
+        {
             "Name": "Mining.ArchaeologyDig",
             "Category": "Mining",
             "Trigger": {

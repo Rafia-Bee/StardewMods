@@ -24,6 +24,7 @@ public enum AdventureStepKind
     ClearDebris,
     ClearWeeds,
     DropItems,
+    DropItemsInRadius,
     DigArtifactSpot,
     DonateMuseum,
     Custom
@@ -49,6 +50,13 @@ public sealed class AdventureStepState
     public bool Done { get; set; }
     public string Description { get; set; } = string.Empty;
 
+    // DropItemsInRadius only. Center tile of the ritual circle and its radius in tiles.
+    // Overground zones bake the center in on accept; mine zones leave it 0 and resolve it
+    // lazily on the live floor (see AdventureQuest.TryGetDropZone). Radius 0 = no gate.
+    public int CenterX { get; set; }
+    public int CenterY { get; set; }
+    public int Radius { get; set; }
+
     // Uniqueness tracking for Talk/Gift ("talk to N different NPCs").
     public List<string> CreditedKeys { get; set; } = new();
 }
@@ -71,6 +79,9 @@ internal static class AdventureStepCodec
         sb.Append("|Weather=").Append(Sanitise(s.Weather));
         sb.Append("|Progress=").Append(s.Progress);
         sb.Append("|Done=").Append(s.Done ? "1" : "0");
+        sb.Append("|CenterX=").Append(s.CenterX);
+        sb.Append("|CenterY=").Append(s.CenterY);
+        sb.Append("|Radius=").Append(s.Radius);
         sb.Append("|Credited=").Append(JoinList(s.CreditedKeys));
         // Description last because it's the only field that may contain "|"; sanitised
         // to keep the decoder's flat split working and one step per NetStringList line.
@@ -151,6 +162,18 @@ internal static class AdventureStepCodec
                     break;
                 case "Done":
                     state.Done = val == "1" || string.Equals(val, "true", StringComparison.OrdinalIgnoreCase);
+                    break;
+                case "CenterX":
+                    int.TryParse(val, out int cx);
+                    state.CenterX = cx;
+                    break;
+                case "CenterY":
+                    int.TryParse(val, out int cy);
+                    state.CenterY = cy;
+                    break;
+                case "Radius":
+                    int.TryParse(val, out int rad);
+                    state.Radius = rad;
                     break;
                 case "Credited":
                     state.CreditedKeys = SplitList(val);

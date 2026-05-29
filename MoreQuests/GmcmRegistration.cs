@@ -111,6 +111,7 @@ internal static class GmcmRegistration
             () => t.Get("config.miningQuests.tooltip"));
         api.AddSectionTitle(manifest, () => t.Get("config.section.skullCavernDeepDive"));
         AddInt(api, manifest, t, "SkullCavernMaxLevel", () => ModEntry.Config.SkullCavernMaxLevel, v => ModEntry.Config.SkullCavernMaxLevel = v, 5, 500);
+        AddInt(api, manifest, t, "MagicianDropRadius", () => ModEntry.Config.MagicianDropRadius, v => ModEntry.Config.MagicianDropRadius = v, 2, 6);
 
         // ----- Foraging -----
         api.AddPage(manifest, PageForaging, () => t.Get("config.page.foraging"));
