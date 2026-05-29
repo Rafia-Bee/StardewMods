@@ -5,6 +5,7 @@ Keep changelog for each version within 1000 characters. No tech jargon. Simple w
 - New "The Unseen Offering" quest on the Adventurer's Guild board: a magic NPC marks a glowing ritual circle (look for the beam of light) out in the wild or deep in the Mines. Leave spoiled, inedible food inside the ring and a combat food turns up in the mail next morning. Needs Combat 5 and Ginger Island.
 - New Crop Cycle quest: a farmer NPC asks you to grow a crop start to finish. Sow seeds, water them, harvest the crop, then deliver the haul. 28-day deadline. Pays gold plus a stack of Hyper Speed-Gro. The crop pick respects how many days are left in the current season, so you won't get rolled a crop you can't finish in time. Sprinklers, rain, and Junimo Huts all count toward the watering and harvesting steps.
 - Coal Point Farm and Ripley NPCs join the quest-giver pools.
+- The Adventurer's Guild board now shows up as soon as you can reach the mine entrance instead of waiting until Spring 14, and its default spot moved a little lower on the wall.
 - Quests no longer ask for crops, gems, or flowers you can't reasonably get yet. Qi crops, Prismatic Shard, and the Galdoran Gem are never requested. Ancient Fruit, Sweet Gem Berry, and the Ginger Island and Desert crops (Pineapple, Taro Root, Starfruit, and so on) won't be asked for during your first year.
 Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuests-v2.1.0...MoreQuests-v2.2.0]i18n changes here[/url] (look at i18n/default.json).
 

@@ -7,6 +7,9 @@ Keep changelog for each version within 1000 characters. No tech jargon. Simple w
 - Fixed a rare issue where a basic vanilla-style quest (the simple "deliver this" / "catch that" / "slay that monster" / "collect this" jobs) could be lost if you saved and reloaded the game in between getting the mail letter and opening it. Only affected the cases where a quest landed in your mail because its giver was on the exclusion list.
 - Mail quest chance sliders in GMCM actually work now. Before this only Rainy Day Catch responded to its slider; every other entry was a no-op. Quests that only fire once on a building going up (Marnie's first chicken / cow / silo offers) are hidden from the page so you can't accidentally lose one by turning the slider down.
 - Filled in two missing GMCM labels (Crop Cycle delivery, Archaeology dig) that were showing as raw IDs.
+- Reworked how custom boards (like the Adventurer's board) sit and draw in the world. They no longer paint on top of you when you stand in front of them, the part you bump into now matches exactly what you see, and you stand on the open tile right in front of the board. Authors place a board by its floor tile and a size in tiles, no more fiddly pixel offsets.
+- Hovering a quest on a board now shows what it wants (the action and the items) instead of a raw internal name.
+- Fixed adventure-board quest pop-ups running off the parchment when you use a custom font.
 - The Dwarf no longer posts town help-wanted quests. He lives in the mines, so a town errand from him read wrong.
 Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuestsFramework-v2.2.0...MoreQuestsFramework-v2.3.0]i18n changes here[/url] (look at i18n/default.json).
 
