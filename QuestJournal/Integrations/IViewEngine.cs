@@ -24,4 +24,5 @@ public interface IMenuController : IDisposable
     IClickableMenu Menu { get; }
     float DimmingAmount { get; set; }
     event Action Closed;
+    void Close();
 }

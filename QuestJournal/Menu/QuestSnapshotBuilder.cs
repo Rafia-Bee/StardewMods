@@ -254,6 +254,25 @@ internal static class QuestSnapshotBuilder
         catch { return null; }
     }
 
+    // MoreQuests category + posting kind for a quest, as plain strings for
+    // custom-tab filtering. Only framework quests carry these; vanilla and
+    // anything MQF doesn't claim come back blank. Enum values arrive over
+    // Pintail's proxy, so ToString() gives the member name ("Cooking",
+    // "DailyBoard"), which is exactly what we filter on.
+    public static (string Category, string Kind) ResolveCategoryKind(Quest q, IMoreQuestsApi? mqfApi)
+    {
+        if (q == null || mqfApi == null) return (string.Empty, string.Empty);
+        try
+        {
+            string? defId = mqfApi.GetDefinitionId(q);
+            if (string.IsNullOrEmpty(defId)) return (string.Empty, string.Empty);
+            var info = mqfApi.GetQuestInfo(defId!);
+            if (info == null) return (string.Empty, string.Empty);
+            return (info.Category.ToString(), info.Kind.ToString());
+        }
+        catch { return (string.Empty, string.Empty); }
+    }
+
     public static string ResolveGiverDisplay(Quest q, IMoreQuestsApi? mqfApi = null)
     {
         string? name = ResolveGiverNpcName(q, mqfApi);

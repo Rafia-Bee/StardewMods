@@ -120,6 +120,7 @@ public sealed class CompletionWatcher
     private QuestSnapshot Capture(Quest q)
     {
         var rewards = QuestSnapshotBuilder.BuildRewardLines(q, _mqfApi);
+        var (category, kind) = QuestSnapshotBuilder.ResolveCategoryKind(q, _mqfApi);
         return new QuestSnapshot
         {
             Title = q.questTitle ?? string.Empty,
@@ -128,6 +129,8 @@ public sealed class CompletionWatcher
             Rewards = rewards,
             Giver = QuestSnapshotBuilder.ResolveGiverDisplay(q, _mqfApi),
             Source = QuestSnapshotBuilder.ResolveSourceDisplay(q, _mqfApi, _helper),
+            Category = category,
+            Kind = kind,
             LastSeenCompleted = q.completed.Value
         };
     }
@@ -159,6 +162,8 @@ public sealed class CompletionWatcher
             RewardLines = stored,
             Giver = snap.Giver,
             Source = snap.Source,
+            Category = snap.Category,
+            Kind = snap.Kind,
             CompletedOnTotalDays = Game1.Date?.TotalDays ?? 0,
             Status = status
         });
@@ -172,6 +177,8 @@ public sealed class CompletionWatcher
         public List<RewardLineRow> Rewards { get; set; } = new();
         public string Giver { get; set; } = string.Empty;
         public string Source { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string Kind { get; set; } = string.Empty;
         public bool LastSeenCompleted { get; set; }
     }
 }

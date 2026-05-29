@@ -20,6 +20,8 @@ public sealed class JournalContext : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ObservableCollection<TabRow> Tabs { get; } = new();
+    // Tabs packed into rows for the edge-mounted rail (see RebuildTabRows).
+    public ObservableCollection<TabRowGroup> TabRowGroups { get; } = new();
     public ObservableCollection<QuestRow> Quests { get; } = new();
     public ObservableCollection<RewardLineRow> SelectedRewards { get; } = new();
     public ObservableCollection<AdventureStepRow> SelectedSteps { get; } = new();
@@ -63,6 +65,31 @@ public sealed class JournalContext : INotifyPropertyChanged
     public bool HasSelection => _selectedQuest != null;
     public bool IsEmpty => Quests.Count == 0;
 
+    // Edit mode (mirrors Better Crafting's category editing): off by default and
+    // tabs just switch. When on, clicking a custom tab opens its editor to
+    // rename / re-filter / delete it. Built-in tabs always just switch.
+    private bool _editMode;
+    public bool EditMode
+    {
+        get => _editMode;
+        private set
+        {
+            if (_editMode == value) return;
+            _editMode = value;
+            Raise(nameof(EditMode));
+            Raise(nameof(EditButtonLabel));
+            // The edit tab lives on the rail and its label flips with the mode,
+            // which changes its width, so re-pack the rows.
+            if (_editTab != null)
+            {
+                _editTab.Label = EditButtonLabel;
+                RebuildTabRows();
+            }
+        }
+    }
+    public string EditButtonLabel => _editMode ? "Done" : "Edit tabs";
+    public void ToggleEditMode() => EditMode = !_editMode;
+
     // Section-heading colour for the detail panel, themed via JournalTheme.
     public Color HeaderColor => JournalTheme.HeaderColor;
 
@@ -87,7 +114,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         => ((int)System.Math.Round(baseValue * Scale)).ToString(System.Globalization.CultureInfo.InvariantCulture) + "px";
 
     public string RootLayout => $"{Px(1100)} {Px(720)}";
-    public string TabLayout => $"{Px(140)} {Px(76)}";
     public string PanelRowLayout => $"content {Px(580)}";
     public string ListPanelLayout => $"{Px(240)} {Px(580)}";
     public string DetailPanelLayout => $"{Px(484)} {Px(580)}";
@@ -103,6 +129,11 @@ public sealed class JournalContext : INotifyPropertyChanged
     }
 
     private string _activeTabId = TabActive;
+    // The "+" and "Edit tabs" controls ride the rail as trailing tabs so they
+    // pack and stack with everything else. They're not in Tabs (which is the
+    // selectable model); RebuildTabRows appends them after the real tabs.
+    private TabRow? _addTab;
+    private TabRow? _editTab;
     private List<QuestRow> _activeRows = new();
     private List<QuestRow> _historyRows = new();
     private List<QuestRow> _specialOrderRows = new();
@@ -125,11 +156,13 @@ public sealed class JournalContext : INotifyPropertyChanged
         _mqfApi = mqfApi;
         _viewPrefix = viewPrefix;
         _completionWatcher = completionWatcher;
-        Tabs.Add(new TabRow(TabActive, "Active", id => SelectTab(id)));
-        Tabs.Add(new TabRow(TabSpecial, "Special Orders", id => SelectTab(id)));
-        Tabs.Add(new TabRow(TabCompleted, "Completed", id => SelectTab(id)));
-        Tabs.Add(new TabRow(TabAll, "All", id => SelectTab(id)));
-        UpdateTabSelection();
+        Tabs.Add(new TabRow(TabActive, "Active", HandleTabActivate));
+        Tabs.Add(new TabRow(TabSpecial, "Special Orders", HandleTabActivate));
+        Tabs.Add(new TabRow(TabCompleted, "Completed", HandleTabActivate));
+        Tabs.Add(new TabRow(TabAll, "All", HandleTabActivate));
+        _addTab = new TabRow("__add", "New tab", _ => CreateTab()) { IsAddTab = true };
+        _editTab = new TabRow("__edit", EditButtonLabel, _ => ToggleEditMode()) { IsEditTab = true };
+        LoadCustomTabs();
     }
 
     public void Refresh()
@@ -173,6 +206,9 @@ public sealed class JournalContext : INotifyPropertyChanged
     public void SelectTab(string id)
     {
         if (_activeTabId == id) return;
+        // Guard against a click that targets a tab no longer in the list (e.g.
+        // one just removed via the editor). No matching row, do nothing.
+        if (FindTab(id) == null) return;
         _activeTabId = id;
         UpdateTabSelection();
         ReapplyFilter();
@@ -277,10 +313,217 @@ public sealed class JournalContext : INotifyPropertyChanged
     public void PinSelected() { }
     public void WarpSelected() { }
 
+    // Tab clicks route through here so edit mode can intercept. Built-in tabs
+    // always just switch; a custom tab in edit mode opens its editor instead.
+    private void HandleTabActivate(TabRow row)
+    {
+        if (_editMode && row.IsCustom)
+        {
+            OpenTabEditor(row);
+            return;
+        }
+        SelectTab(row.Id);
+    }
+
+    // Bound to the "+" button. Parameterless so the StarML event binding has an
+    // unambiguous target.
+    public void CreateTab() => OpenTabEditor(null);
+
+    // Create (existing == null) or edit (existing != null) a custom tab. The
+    // same popup handles both; when editing it pre-fills the fields and shows a
+    // Delete button. Opened as a child menu so Esc returns to the journal.
+    public void OpenTabEditor(TabRow? existing = null)
+    {
+        if (_viewEngine == null) return;
+        var def = existing?.CustomDef;
+        var ctx = new CustomTabEditorContext(
+            BuildHint(r => r.Category),
+            BuildHint(r => r.Kind),
+            isEdit: def != null)
+        {
+            Name = def?.Name ?? string.Empty,
+            TitleFilter = def?.TitleFilter ?? string.Empty,
+            SourceFilter = def?.SourceFilter ?? string.Empty,
+            CategoryFilter = def?.CategoryFilter ?? string.Empty,
+            KindFilter = def?.KindFilter ?? string.Empty
+        };
+        var controller = _viewEngine.CreateMenuControllerFromAsset($"{_viewPrefix}/custom_tab_editor", ctx);
+        if (controller == null) return;
+        controller.DimmingAmount = 0f;
+        controller.Closed += () => controller.Dispose();
+        ctx.Bind(
+            onSave: c =>
+            {
+                if (def != null)
+                {
+                    // Edit in place: keep the id so selection/persistence stay stable.
+                    var list = CustomTabStore.Load();
+                    var match = list.Find(t => t.Id == def.Id);
+                    if (match != null)
+                    {
+                        match.Name = NameOrDefault(c.Name);
+                        match.TitleFilter = (c.TitleFilter ?? string.Empty).Trim();
+                        match.SourceFilter = (c.SourceFilter ?? string.Empty).Trim();
+                        match.CategoryFilter = (c.CategoryFilter ?? string.Empty).Trim();
+                        match.KindFilter = (c.KindFilter ?? string.Empty).Trim();
+                        CustomTabStore.Save(list);
+                    }
+                    LoadCustomTabs();
+                    controller.Close();
+                    // Force a reapply even if this tab is already active, so the
+                    // changed filters take effect right away.
+                    _activeTabId = def.Id;
+                    UpdateTabSelection();
+                    ReapplyFilter();
+                }
+                else
+                {
+                    var newDef = new CustomTabDef
+                    {
+                        Id = System.Guid.NewGuid().ToString("N"),
+                        Name = NameOrDefault(c.Name),
+                        TitleFilter = (c.TitleFilter ?? string.Empty).Trim(),
+                        SourceFilter = (c.SourceFilter ?? string.Empty).Trim(),
+                        CategoryFilter = (c.CategoryFilter ?? string.Empty).Trim(),
+                        KindFilter = (c.KindFilter ?? string.Empty).Trim()
+                    };
+                    CustomTabStore.Add(newDef);
+                    LoadCustomTabs();
+                    controller.Close();
+                    SelectTab(newDef.Id);
+                }
+            },
+            onDelete: () =>
+            {
+                if (def == null) { controller.Close(); return; }
+                bool wasActive = _activeTabId == def.Id;
+                CustomTabStore.Remove(def.Id);
+                LoadCustomTabs();
+                controller.Close();
+                if (wasActive)
+                {
+                    _activeTabId = TabActive;
+                    UpdateTabSelection();
+                    ReapplyFilter();
+                }
+            },
+            onCancel: () => controller.Close());
+        Game1.activeClickableMenu?.SetChildMenu(controller.Menu);
+    }
+
+    private static string NameOrDefault(string? name)
+        => string.IsNullOrWhiteSpace(name) ? "Tab" : name!.Trim();
+
+    // Drops the existing custom rows (the four built-ins stay at the front) and
+    // re-adds them from the store. Called on open and after every add/delete.
+    private void LoadCustomTabs()
+    {
+        for (int i = Tabs.Count - 1; i >= 0; i--)
+            if (Tabs[i].IsCustom) Tabs.RemoveAt(i);
+        foreach (var def in CustomTabStore.Load())
+            Tabs.Add(new TabRow(def.Id, def.Name, HandleTabActivate, def));
+        UpdateTabSelection();
+        RebuildTabRows();
+    }
+
+    // Packs the rail tabs (the selectable Tabs, then "+" and "Edit tabs") into
+    // rows that fit the frame width, since StardewUI can't wrap a lane on its
+    // own. Tabs are uniform width (widest label, clamped; longer labels truncate
+    // with the full name in the tooltip), measured off Game1.smallFont so the
+    // packed width matches the draw. Rows are emitted top-most first so overflow
+    // stacks above the built-in row.
+    private void RebuildTabRows()
+    {
+        TabRowGroups.Clear();
+
+        var ordered = new List<TabRow>(Tabs);
+        if (_addTab != null) ordered.Add(_addTab);
+        if (_editTab != null) ordered.Add(_editTab);
+
+        var font = Game1.smallFont;
+        const float minContent = 64f;
+        const float maxContent = 200f;
+        float widest = minContent;
+        foreach (var t in ordered)
+        {
+            try { widest = System.Math.Max(widest, font.MeasureString(t.Label ?? string.Empty).X); }
+            catch { }
+        }
+        float uniformContent = System.Math.Min(widest, maxContent);
+
+        const float padding = 24f;       // "12, 0" horizontal padding, both sides
+        const float interMargin = 8f;
+        const int tabHeight = 60;        // fixed so middle-alignment can center content
+        int frameWidth = (int)System.Math.Ceiling(uniformContent) + (int)padding;
+        string widthLayout = frameWidth.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            + "px " + tabHeight + "px";
+        const string iconLayout = "62px 60px";
+        foreach (var t in ordered)
+        {
+            bool isControl = t.IsAddTab || t.IsEditTab;
+            t.WidthLayout = isControl ? iconLayout : widthLayout;
+            if (!isControl)
+                t.DisplayLabel = Truncate(t.Label ?? string.Empty, font, uniformContent);
+        }
+
+        // Reserve 16px so a rounding diff wraps early rather than spilling past the border.
+        float available = 1100f * Scale - 16f;
+        float footprint = frameWidth + interMargin;
+        int perRow = System.Math.Max(1, (int)((available + interMargin) / footprint));
+
+        var rows = new List<List<TabRow>>();
+        for (int i = 0; i < ordered.Count; i += perRow)
+            rows.Add(ordered.GetRange(i, System.Math.Min(perRow, ordered.Count - i)));
+
+        for (int i = rows.Count - 1; i >= 0; i--)
+        {
+            var group = new TabRowGroup();
+            foreach (var t in rows[i]) group.Tabs.Add(t);
+            TabRowGroups.Add(group);
+        }
+    }
+
+    // Cuts a label to fit maxWidth (in the given font), appending an ellipsis.
+    private static string Truncate(string s, Microsoft.Xna.Framework.Graphics.SpriteFont font, float maxWidth)
+    {
+        if (string.IsNullOrEmpty(s)) return s;
+        try
+        {
+            if (font.MeasureString(s).X <= maxWidth) return s;
+            const string ellipsis = "...";
+            float ellipsisW = font.MeasureString(ellipsis).X;
+            int keep = 0;
+            for (int i = 1; i <= s.Length; i++)
+            {
+                if (font.MeasureString(s.Substring(0, i)).X + ellipsisW > maxWidth) break;
+                keep = i;
+            }
+            return s.Substring(0, keep).TrimEnd() + ellipsis;
+        }
+        catch { return s; }
+    }
+
+    private TabRow? FindTab(string id)
+    {
+        foreach (var t in Tabs)
+            if (t.Id == id) return t;
+        return null;
+    }
+
     private void ReapplyFilter()
     {
         Quests.Clear();
-        switch (_activeTabId)
+        var activeTab = FindTab(_activeTabId);
+        if (activeTab?.CustomDef is CustomTabDef def)
+        {
+            // Custom tabs search across all three buckets and keep only the
+            // rows matching the saved filters. A row only ever lives in one
+            // bucket, so there are no duplicates.
+            AddMatching(_activeRows, def);
+            AddMatching(_specialOrderRows, def);
+            AddMatching(_historyRows, def);
+        }
+        else switch (_activeTabId)
         {
             case TabActive:
                 foreach (var r in _activeRows) Quests.Add(r);
@@ -322,10 +565,53 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(IsEmpty));
     }
 
+    private void AddMatching(List<QuestRow> source, CustomTabDef def)
+    {
+        foreach (var r in source)
+            if (MatchesFilter(r, def)) Quests.Add(r);
+    }
+
+    private static bool MatchesFilter(QuestRow r, CustomTabDef def)
+    {
+        // Every non-blank filter must match (AND). Blank filters are ignored.
+        return Contains(r.Title, def.TitleFilter)
+            && Contains(r.SourceDisplay, def.SourceFilter)
+            && Contains(r.Category, def.CategoryFilter)
+            && Contains(r.Kind, def.KindFilter);
+    }
+
+    private static bool Contains(string? haystack, string? filter)
+    {
+        if (string.IsNullOrEmpty(filter)) return true;
+        return haystack != null
+            && haystack.IndexOf(filter, System.StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    // Collects the distinct category/kind values present across the player's
+    // current quests so the editor popup can hint what's worth typing. Empty
+    // when nothing in the journal is classified (e.g. vanilla-only save).
+    private string BuildHint(System.Func<QuestRow, string> selector)
+    {
+        var seen = new SortedSet<string>(System.StringComparer.OrdinalIgnoreCase);
+        void Scan(List<QuestRow> rows)
+        {
+            foreach (var r in rows)
+            {
+                string v = selector(r);
+                if (!string.IsNullOrWhiteSpace(v)) seen.Add(v.Trim());
+            }
+        }
+        Scan(_activeRows);
+        Scan(_specialOrderRows);
+        Scan(_historyRows);
+        return seen.Count == 0 ? string.Empty : "In your quests: " + string.Join(", ", seen);
+    }
+
     private QuestRow BuildActiveRow(Quest q)
     {
         var rewards = BuildRewardLines(q);
         var steps = BuildAdventureSteps(q);
+        var (category, kind) = QuestSnapshotBuilder.ResolveCategoryKind(q, _mqfApi);
         return new QuestRow(
             title: q.questTitle ?? string.Empty,
             description: q.questDescription ?? string.Empty,
@@ -340,7 +626,9 @@ public sealed class JournalContext : INotifyPropertyChanged
             canCancel: q.canBeCancelled.Value,
             canPostpone: q.daysLeft.Value > 0,
             quest: q,
-            host: this);
+            host: this,
+            category: category,
+            kind: kind);
     }
 
     private QuestRow BuildSpecialOrderRow(SpecialOrder so)
@@ -386,7 +674,9 @@ public sealed class JournalContext : INotifyPropertyChanged
             canCancel: false,
             canPostpone: false,
             quest: null,
-            host: this);
+            host: this,
+            category: string.Empty,
+            kind: "SpecialOrder");
     }
 
     private static List<RewardLineRow> BuildSpecialOrderRewards(SpecialOrder so)
@@ -594,7 +884,9 @@ public sealed class JournalContext : INotifyPropertyChanged
             canCancel: false,
             canPostpone: false,
             quest: null,
-            host: this);
+            host: this,
+            category: r.Category ?? string.Empty,
+            kind: r.Kind ?? string.Empty);
     }
 
     private static CompletedQuestRecord BuildRecordFrom(QuestRow row)
@@ -621,6 +913,8 @@ public sealed class JournalContext : INotifyPropertyChanged
             RewardLines = stored,
             Giver = row.GiverDisplay,
             Source = row.SourceDisplay,
+            Category = row.Category,
+            Kind = row.Kind,
             CompletedOnTotalDays = Game1.Date?.TotalDays ?? 0
         };
     }
@@ -751,24 +1045,76 @@ public sealed class TabRow : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public string Id { get; }
-    public string Label { get; }
-    private readonly System.Action<string> _onActivate;
+    // Settable so the "Edit tabs"/"Done" control tab can flip its own label.
+    private string _label = string.Empty;
+    public string Label
+    {
+        get => _label;
+        set { if (_label == value) return; _label = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Label))); }
+    }
+    // Non-null only for player-defined tabs. In edit mode, clicking a custom
+    // tab opens its editor instead of switching to it.
+    public CustomTabDef? CustomDef { get; }
+    public bool IsCustom => CustomDef != null;
+
+    // The two rail controls render an icon instead of a label and use a narrow
+    // icon-sized width (the rest of the rail stays uniform). Everything else is
+    // a normal text tab.
+    public bool IsAddTab { get; init; }
+    public bool IsEditTab { get; init; }
+    public bool IsTextTab => !IsAddTab && !IsEditTab;
+    private readonly System.Action<TabRow> _onActivate;
 
     private bool _isActive;
     public bool IsActive
     {
         get => _isActive;
-        set { if (_isActive == value) return; _isActive = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsActive))); }
+        set
+        {
+            if (_isActive == value) return;
+            _isActive = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsActive)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TabOpacity)));
+        }
     }
 
-    public TabRow(string id, string label, System.Action<string> onActivate)
+    // Inactive tabs dim slightly so the active one reads as selected (the tab
+    // frames don't raise like vanilla tabs, so opacity carries the cue).
+    public float TabOpacity => _isActive ? 1f : 0.85f;
+
+    // Set by RebuildTabRows so every tab is the same width (uniform rail). The
+    // full name lives in Label (used for the tooltip); DisplayLabel is the text
+    // actually drawn, truncated to fit the uniform width.
+    private string _displayLabel = string.Empty;
+    public string DisplayLabel
+    {
+        get => _displayLabel;
+        set { if (_displayLabel == value) return; _displayLabel = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayLabel))); }
+    }
+
+    private string _widthLayout = "content content";
+    public string WidthLayout
+    {
+        get => _widthLayout;
+        set { if (_widthLayout == value) return; _widthLayout = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(WidthLayout))); }
+    }
+
+    public TabRow(string id, string label, System.Action<TabRow> onActivate, CustomTabDef? customDef = null)
     {
         Id = id;
         Label = label;
         _onActivate = onActivate;
+        CustomDef = customDef;
     }
 
-    public void Activate() => _onActivate(Id);
+    public void Activate() => _onActivate(this);
+}
+
+// One horizontal row of tabs on the rail. RebuildTabRows fills these so the
+// SML can repeat rows (vertical) then tabs within each row (horizontal).
+public sealed class TabRowGroup
+{
+    public ObservableCollection<TabRow> Tabs { get; } = new();
 }
 
 public sealed class QuestRow : INotifyPropertyChanged
@@ -783,6 +1129,11 @@ public sealed class QuestRow : INotifyPropertyChanged
     public string GiverDisplay { get; }
     public string DaysLeftDisplay { get; }
     public string SourceDisplay { get; }
+    // MoreQuests category / posting kind as plain strings (e.g. "Cooking",
+    // "DailyBoard"), used only by custom-tab filtering. Blank for vanilla quests
+    // and for buckets we don't classify. Not shown in the detail panel.
+    public string Category { get; }
+    public string Kind { get; }
     public string? WarpTarget { get; }
     public bool IsCompleted { get; }
     public bool CanCancel { get; }
@@ -885,7 +1236,9 @@ public sealed class QuestRow : INotifyPropertyChanged
         bool canCancel,
         bool canPostpone,
         Quest? quest,
-        JournalContext host)
+        JournalContext host,
+        string category = "",
+        string kind = "")
     {
         Title = title;
         Description = description;
@@ -895,6 +1248,8 @@ public sealed class QuestRow : INotifyPropertyChanged
         GiverDisplay = giverDisplay;
         DaysLeftDisplay = daysLeftDisplay;
         SourceDisplay = sourceDisplay;
+        Category = category ?? string.Empty;
+        Kind = kind ?? string.Empty;
         WarpTarget = warpTarget;
         IsCompleted = isCompleted;
         CanCancel = canCancel;
