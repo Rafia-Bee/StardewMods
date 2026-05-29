@@ -7,6 +7,8 @@ Keep changelog for each version within 1000 characters. No tech jargon. Simple w
 - Fixed a rare issue where a basic vanilla-style quest (the simple "deliver this" / "catch that" / "slay that monster" / "collect this" jobs) could be lost if you saved and reloaded the game in between getting the mail letter and opening it. Only affected the cases where a quest landed in your mail because its giver was on the exclusion list.
 - Mail quest chance sliders in GMCM actually work now. Before this only Rainy Day Catch responded to its slider; every other entry was a no-op. Quests that only fire once on a building going up (Marnie's first chicken / cow / silo offers) are hidden from the page so you can't accidentally lose one by turning the slider down.
 - Filled in two missing GMCM labels (Crop Cycle delivery, Archaeology dig) that were showing as raw IDs.
+- The Dwarf no longer posts town help-wanted quests. He lives in the mines, so a town errand from him read wrong.
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuestsFramework-v2.2.0...MoreQuestsFramework-v2.3.0]i18n changes here[/url] (look at i18n/default.json).
 
 2.2.0
 - Fixed a bug where some quest rewards (friendship, items, etc.) could get duplicated each time you saved and reloaded. Old saves with the bug get cleaned up automatically the next time you load them.
