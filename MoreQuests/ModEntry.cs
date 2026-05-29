@@ -49,6 +49,10 @@ public sealed class ModEntry : Mod
         Instance = this;
         Config = helper.ReadConfig<ModConfig>();
 
+        // Keep rare / endgame items (Qi crops, Prismatic Shard, etc.) out of every crop,
+        // flower, and gem objective pool the framework hands out. See QuestItemBlacklist.
+        MoreQuestsFramework.ItemResolver.QuestPoolExclusion = QuestItemBlacklist.IsExcluded;
+
         ScanLeahPaintingAssets();
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;

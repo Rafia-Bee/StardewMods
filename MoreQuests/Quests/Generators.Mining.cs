@@ -623,7 +623,10 @@ internal static partial class Generators
                 continue;
             if (obj.Category != StardewValley.Object.GemCategory)
                 continue;
-            ids.Add("(O)" + rawId);
+            string qualified = "(O)" + rawId;
+            if (QuestItemBlacklist.IsExcluded(qualified))
+                continue;
+            ids.Add(qualified);
         }
         if (ids.Count == 0)
             return null;
