@@ -49,6 +49,19 @@ public sealed class ItemResolver
         _cache = cache;
     }
 
+    // Optional content-supplied exclusion for quest *objective* pools. When set, the crop
+    // enumeration and the category (flower / gem) enumeration drop any item it flags as true.
+    // Direct TryResolveItem lookups and reward pools are left alone, so a flagged item can
+    // still be handed to the player as a reward. The content mod uses this to keep rare or
+    // endgame items (Qi crops, Prismatic Shard, etc.) out of "go fetch me X" requests.
+    public static Func<ResolvedItem, bool>? QuestPoolExclusion { get; set; }
+
+    private static bool IsExcludedFromQuestPool(ResolvedItem item)
+    {
+        var filter = QuestPoolExclusion;
+        return filter != null && filter(item);
+    }
+
     // Modded Data/Crops entries occasionally map a "seed" to non-crop harvest items
     // (e.g. Pearl, Category -4 Fish). Filter to vegetable / fruit / flower so callers
     // get the real farm-grown crops only, not pond produce piggybacking on the crop
@@ -68,6 +81,8 @@ public sealed class ItemResolver
                 if (item == null)
                     continue;
                 if (!CropProduceCategories.Contains(item.Category))
+                    continue;
+                if (IsExcludedFromQuestPool(item))
                     continue;
                 results.Add(item);
             }
@@ -453,7 +468,7 @@ public sealed class ItemResolver
                     if (parsed?.Category == category)
                     {
                         var item = TryResolveItem(qualifiedId);
-                        if (item != null)
+                        if (item != null && !IsExcludedFromQuestPool(item))
                             results.Add(item);
                     }
                 }
