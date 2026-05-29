@@ -40,6 +40,11 @@ public static class ModCompat
     public const string ArchaeologySkill = "moonslime.ArchaeologySkill";
     internal const string ArchaeologySkillId = "moonslime.Archaeology";
 
+    // Set once in ModEntry.OnGameLaunched after SpaceCore's API is resolved. SpaceCore
+    // is a required dependency, so this is non-null in practice; the null guard below is
+    // just belt-and-suspenders.
+    internal static ISpaceCoreApi? SpaceCoreApi { get; set; }
+
     public static bool IsLoaded(IModRegistry registry, string uniqueId) => registry.IsLoaded(uniqueId);
 
     public static bool HasRsv(IModRegistry registry) => registry.IsLoaded(RidgesideVillage);
@@ -60,8 +65,25 @@ public static class ModCompat
 
     public static int GetArchaeologyLevel(IModRegistry registry)
         => registry.IsLoaded(ArchaeologySkill)
-            ? SpaceCoreSkills.GetLevel(Game1.player, ArchaeologySkillId)
+            ? GetCustomSkillLevel(ArchaeologySkillId)
             : 0;
+
+    // Reads a SpaceCore custom-skill level off the current player. Fail-closed: returns 0
+    // when the API or player isn't available, or if SpaceCore throws for an unknown id, so
+    // "Cooking N"-style condition checks still fail rather than blow up.
+    private static int GetCustomSkillLevel(string skillId)
+    {
+        if (SpaceCoreApi == null || Game1.player == null || string.IsNullOrEmpty(skillId))
+            return 0;
+        try
+        {
+            return SpaceCoreApi.GetLevelForCustomSkill(Game1.player, skillId);
+        }
+        catch
+        {
+            return 0;
+        }
+    }
 
     // Returns the current player's cooking skill level from whichever supported
     // cooking-skill mod is installed. Love of Cooking wins when both are present
@@ -70,9 +92,9 @@ public static class ModCompat
     public static int GetCookingLevel(IModRegistry registry)
     {
         if (registry.IsLoaded(LoveOfCooking))
-            return SpaceCoreSkills.GetLevel(Game1.player, LoveOfCookingSkillId);
+            return GetCustomSkillLevel(LoveOfCookingSkillId);
         if (registry.IsLoaded(CookingSkillRedux))
-            return SpaceCoreSkills.GetLevel(Game1.player, CookingSkillReduxSkillId);
+            return GetCustomSkillLevel(CookingSkillReduxSkillId);
         return 0;
     }
 }

@@ -308,6 +308,7 @@ public sealed class ModEntry : Mod
         NpcDispatch.SeedBuiltins(Dispatch);
 
         _spaceCore = Helper.ModRegistry.GetApi<ISpaceCoreApi>(ModCompat.SpaceCore);
+        ModCompat.SpaceCoreApi = _spaceCore;
         if (_spaceCore != null)
         {
             _spaceCore.RegisterSerializerType(typeof(MoreQuestsItemDeliveryQuest));
