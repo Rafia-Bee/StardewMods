@@ -111,6 +111,8 @@ This mod powers [More Quests](../MoreQuests/README.md) and ships four configurab
 
   Then in JSON: `"Available": { "MyMod_HasFollower": "Junimo" }` or `"Available": { "not:MyMod_HasFollower": "Krobus" }`.
 
+  **Gating on a custom skill (Magic, Luck, Archaeology, etc).** The `SkillLevel` key only covers the five vanilla skills plus `Cooking`. For any other SpaceCore-based skill, use the `GSQ` key: SpaceCore auto-registers a `PLAYER_<SKILLID>_LEVEL` query for every custom skill (the skill id is upper-cased). So a level-5 cooking check via Love of Cooking looks like `"Available": { "GSQ": "PLAYER_BLUEBERRY.LOVEOFCOOKING.COOKINGSKILL_LEVEL Current 5" }`. No new code or condition key needed on our side.
+
 - **Game-data cache.** `GameDataCache` reads `Data/Crops`, `Data/Fish`, `Data/Locations`, `Data/CookingRecipes`, `Data/NPCGiftTastes` once per day so generators don't pay the load cost on every Build call.
 - **Item resolver and NPC dispatch.** `ItemResolver` reads cached game data so modded items show up automatically. `DispatchRegistry` is a runtime role-keyed picker (saloon chefs, ecology-minded, conservation guides, etc.). The built-in vanilla and RSV / ESV / VMV / SVE seeds register through the same public `RegisterDispatchNpc` API that third parties use, and mod authors can define new role strings on the fly.
 - **Custom assets.** Pad and pin sprites for the billboard, loaded from `Mods/RafiaBee.MoreQuestsFramework/Pad` and `.../Pin` (resprite of Aedenthorn's Help Wanted pad and pin!).
