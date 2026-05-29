@@ -50,6 +50,11 @@ public sealed class CompletedQuestRecord
     public List<StoredRewardLine> RewardLines { get; set; } = new();
     public string Giver { get; set; } = string.Empty;
     public string Source { get; set; } = string.Empty;
+    // MoreQuests category / posting kind captured at completion so custom-tab
+    // filters still match a quest after it moves into the Completed history.
+    // Blank for vanilla quests and pre-existing records.
+    public string Category { get; set; } = string.Empty;
+    public string Kind { get; set; } = string.Empty;
     // Total in-game days at the time of completion. Lets us display
     // "completed Spring 14, Y2" later without storing a string.
     public int CompletedOnTotalDays { get; set; }

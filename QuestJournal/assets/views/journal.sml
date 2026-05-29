@@ -1,30 +1,42 @@
 <lane orientation="vertical"
       horizontal-content-alignment="middle"
       vertical-content-alignment="middle">
+
     <frame layout={RootLayout}
            background={@Mods/StardewUI/Sprites/MenuBackground}
            border={@Mods/StardewUI/Sprites/MenuBorder}
            border-thickness="36, 36, 40, 36"
            padding="20, 12"
            horizontal-content-alignment="middle">
-        <lane orientation="vertical" layout="stretch content" horizontal-content-alignment="middle">
 
-            <lane orientation="horizontal" margin="0, 0, 0, 8">
+        <lane *float="above"
+              orientation="vertical"
+              horizontal-content-alignment="start"
+              margin="36, 0, 0, -8">
+            <lane *repeat={:TabRowGroups} orientation="horizontal" vertical-content-alignment="end">
                 <frame *repeat={:Tabs}
-                       layout={^TabLayout}
+                       layout={WidthLayout}
                        margin="0, 0, 8, 0"
-                       padding="12, 8"
+                       padding="12, 0"
+                       background={@Mods/StardewUI/Sprites/ControlBorder}
                        horizontal-content-alignment="middle"
                        vertical-content-alignment="middle"
-                       background={@Mods/StardewUI/Sprites/ControlBorder}
                        focusable="true"
+                       opacity={TabOpacity}
+                       tooltip={Label}
                        click=|Activate()|>
-                    <lane orientation="horizontal" vertical-content-alignment="middle">
-                        <label *if={:IsActive} text="* " />
-                        <label text={:Label} />
-                    </lane>
+                    <label *if={IsTextTab} bold={IsActive} text={DisplayLabel} />
+                    <image *if={IsAddTab} layout="32px 32px" fit="Contain" sprite={@Mods/StardewUI/Sprites/SmallGreenPlus} />
+                    <image *if={IsEditTab} layout="38px 38px" fit="Contain" sprite={@Mods/RafiaBee.QuestJournal/Sprites/edit:Edit} />
                 </frame>
             </lane>
+        </lane>
+
+        <lane orientation="vertical" layout="stretch content" horizontal-content-alignment="middle">
+
+            <label *if={EditMode}
+                   margin="0, 0, 0, 8"
+                   text="Edit mode: click one of your own tabs to rename, refilter, or delete it." />
 
             <lane orientation="horizontal" layout={PanelRowLayout} vertical-content-alignment="start">
 
