@@ -1,0 +1,117 @@
+[size=4][b]What does this mod do?[/b][/size]
+
+This mod is a quest engine. This is the framework half of [url=https://www.nexusmods.com/stardewvalley/mods/46362]More Quests[/url]; any mod author can build new quests on top of it.
+
+If you only want the gameplay content, install [b]More Quests[/b] and this framework together. If you're a mod author, this gives you a declarative way to add quests without writing your own billboard, generator, reward, or consequence code.
+
+[size=4][b]Features[/b][/size]
+[spoiler]
+[list]
+[*][b]Multi-slot Help Wanted billboard[/b] - vanilla's single "Quest of the Day" becomes a configurable batch of quests per day (massive thanks to [url=https://www.nexusmods.com/profile/aedenthorn/mods?gameId=1303]aedenthorn [/url]for open sourcing their code and the pad and pin textures, I got a lot of help from their [url=https://www.nexusmods.com/stardewvalley/mods/14640]Help Wanted[/url]mod for this feature.)[/*]
+[*][b]Optional paginated Special Orders board[/b] - adds left and right arrow keys to the top right corner of all special order boards to let you scroll through the generated special orders (if you configure pagination >1)[/*]
+[*][b]Custom pin-boards[/b] - mods can register their own boards at any tile in any location (the More Quests content mod uses this for the Adventurer's Guild board at the mine entrance)[/*]
+[*][b]Quality-aware deliveries[/b] - quests can require Silver, Gold, or Iridium quality items[/*]
+[*][b]Fish filters[/b] - catch-by-location, catch-by-size, catch-by-weather, filtered by fish that spawn in your visited locations only (configurable) all built in[/*]
+[*][b]Shipping observer[/b] - shipping items quests supported, with an opt-in bypass for shipping furniture / decor if you want a quest to ship decor items but don't have Ship Anything mod[/*]
+[*][b]Multi-step Adventure quests[/b] - chains of Deliver / Talk / Gift / GiftUniqueNpcs / Ship / Catch / Slay / Visit / Build / Plant / Collect / ClearWeeds / ClearDebris / DropItems / DigArtifactSpot / DonateMuseum / ReachLevel / Custom steps, with optional ordering[/*]
+[*][b]Reward kinds[/b] - gold, friendship, items, recipes, mail letters, shop discounts (timed, optional whitelist), animal-purchase discounts, festival biases (Luau, Fair), Fair grange tokens, plus a Custom hook so consumer mods can register their own reward kinds[/*]
+[*][b]Consequence engine[/b] - quests can carry Tier 1 / 2 / 3 / Special reactions. Loved-and-hated NPCs surface automatically from gift tastes, with a persistent dialogue queue so reactions show up the next time you actually chat with the affected NPC[/*]
+[*][b]Four configurable vanilla wrappers[/b] - VanillaItemDelivery, VanillaResourceCollection, VanillaSlayMonster, VanillaFishing, all tunable through GMCM so you get a working billboard out of the box even without any content mod installed[/*]
+[/list]
+[/spoiler]
+
+[size=4][b]Trigger sources[/b][/size]
+[spoiler]
+[list]
+[*][b]DailyBoard[/b] - weighted draw, picks per-day batch for the Help Wanted billboard[/*]
+[*][b]CustomBoard[/b] - routes to a registered per-location board's slot list[/*]
+[*][b]Mail[/b] / [b]Periodic[/b] - mail letter every N days[/*]
+[*][b]DateLocked[/b] - fires on a specific date (optionally yearly)[/*]
+[*][b]DateRange[/b] - active every day inside a closed date range (festival windows)[/*]
+[*][b]OneShot[/b] - fires once per save when a predicate first comes true[/*]
+[*][b]BuildingBuilt[/b] - N days after the player adds a farm building[/*]
+[*][b]MailReceived[/b] - N days after a mail flag enters the player's received list[/*]
+[*][b]WeatherForecast[/b] - when tomorrow matches the named weather[/*]
+[*][b]NpcDialogue[/b] - queues until the player next speaks to the named NPC. Authors can optionally supply an offer line that the NPC actually says in person on the second chat that day (first chat plays their normal scheduled line; the offer slots in right after), instead of the quest just appearing in the journal silently[/*]
+[*][b]SpecialOrder[/b] - writes a vanilla Data/SpecialOrders entry for the named duration[/*]
+[*][b]Custom[/b] - consumer mods register a predicate that decides whether the quest fires today[/*]
+[/list]
+[/spoiler]
+
+[size=4][b]Configuration[/b][/size]
+If you have [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] installed, the framework adds a page with every knob below. Otherwise edit [font=Courier New]config.json[/font] in the framework's mod folder.
+[spoiler]
+[list]
+[*][b]Quest board[/b] - QuestsPerDay, SpecialOrdersBoardPages, AllowDuplicateGiverPerDay, SkipFriendshipQuestsAtMaxHeart[/*]
+[*][b]Master toggles[/b] - DifficultyScaling, FishingIgnoresVisitedLocations, ForagingIgnoresVisitedLocations[/*]
+[*][b]Per-quest weights[/b] - one entry per registered quest, built at runtime so any consumer mod's quests show up automatically[/*]
+[*][b]Vanilla wrappers[/b] - toggle and tune the four bundled vanilla quest types[/*]
+[*][b]Friendship reward sizes[/b] - Basic / Mid / Intermediate / Large / MultiSmall / MultiHeart[/*]
+[*][b]Gold reward bases[/b] - beginner / basic / intermediate / advanced / expert tiers[/*]
+[*][b]Reward multipliers[/b] - RewardMultiplierBelowSell / AboveSell / FishPremium[/*]
+[*][b]Deadlines[/b] - short / medium / long / extended / none (in-game days)[/*]
+[*][b]Consequences[/b] - ConsequenceGraceDays (default 7, how long a queued reaction sticks around if you avoid the NPC)[/*]
+[*][b]Advanced[/b] - DebugLogging (off by default. Leave it off for normal play, flip it on if you hit a bug and need to share a SMAPI log.)[/*]
+[/list]
+[/spoiler]
+
+[size=4][b]For mod authors[/b][/size]
+[b]New in 2.0:[/b] quest data lives in a Content Patcher-editable game-content asset ([font=Courier New]Mods/RafiaBee.MoreQuestsFramework/Quests[/font]). Three entry points:
+[list]
+[*][b]Content Patcher pack (no code)[/b] - ship a CP pack that [font=Courier New]EditData[/font]s the Quests asset. You get When conditions, dynamic tokens, [font=Courier New]patch reload[/font], and [font=Courier New]patch summary[/font] for free.[/*]
+[*][b]C# mod with bundled JSON and generators[/b] - get the API via [font=Courier New]Helper.ModRegistry.GetApi<IMoreQuestsApi>("RafiaBee.MoreQuestsFramework")[/font], call [font=Courier New]GetModApi(ModManifest)[/font] for a per-mod scope, register generators, and inject entries into the asset on [font=Courier New]AssetRequested[/font].[/*]
+[*][b]C# mod with IQuestDefinition instances[/b] - pure-C# alternative for mods that don't want JSON.[/*]
+[/list]
+Working examples for all three entry points can be found here: [url=https://github.com/Rafia-Bee/StardewMods/tree/main/MoreQuestsFramework/docs]GitHub[/url] alongside the schema reference and the full public API surface. [b]I tried to make the readme as informative as possible without making it a wall of text, but if you have any confusions, please feel free to ask me any questions you have.[/b]
+
+[b]Migrating a 1.x pack:[/b] the old [font=Courier New]quests.json[/font] + [font=Courier New]ContentPackFor = RafiaBee.MoreQuestsFramework[/font] path is gone. Convert to a CP pack: rename [font=Courier New]quests.json[/font] to [font=Courier New]content.json[/font], wrap entries in CP's [font=Courier New]EditData[/font] envelope targeting the Quests asset, key each entry as [font=Courier New]{{ModId}}_Name[/font], and swap [font=Courier New]{i18n:foo}[/font] tokens to [font=Courier New]{{i18n:foo}}[/font]. Full step-by-step in the README.
+
+[b]Excluded quest givers (heads up if you hardcode a Giver):[/b] the framework keeps an [font=Courier New]IneligibleGivers[/font] list in config (default: Krobus, Leximonster, SenS). Players can edit it from GMCM. If your quest hardcodes a [font=Courier New]Giver[/font] that lands on the exclusion list:
+[list]
+[*][b]DailyBoard postings[/b] - the framework logs a WARN line and, when the [font=Courier New]MailFallbackForExcludedGivers[/font] config toggle is on (the default), redirects the quest to mail so the player still receives it. Your [font=Courier New]MailBody[/font] is used if set, otherwise a default letter body is generated. With the toggle off the posting is dropped instead.[/*]
+[*][b]SpecialOrder postings[/b] - dropped with a WARN line (special orders can't fall back to mail).[/*]
+[*][b]Mail / NpcDialogue / Custom postings[/b] - unaffected. Mail is treated as an explicit author choice.[/*]
+[/list]
+If you want a quest to survive exclusions without the redirect-warning, set [font=Courier New]Trigger.Delivery = "Mail"[/font] on the quest definition directly.
+
+[size=4][b]Requirements[/b][/size]
+[b]Required:[/b]
+[list]
+[*][url=https://smapi.io/]SMAPI[/url] 4.1+[/*]
+[*]Stardew Valley 1.6+[/*]
+[*][url=https://www.nexusmods.com/stardewvalley/mods/1348]SpaceCore[/url] - registers custom Quest subclasses with the save serializer[/*]
+[/list]
+[b]Optional:[/b]
+[list]
+[*][url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] - in-game settings page[/*]
+[/list]
+
+[size=4][b]Install[/b][/size]
+[list=1]
+[*]Install SMAPI and SpaceCore.[/*]
+[*]Download this mod and unzip it into your [font=Courier New]Stardew Valley/Mods[/font] folder.[/*]
+[*]Install at least one consumer mod (for example [b]More Quests[/b]) or stick with the four vanilla wrappers.[/*]
+[*]Run the game through SMAPI.[/*]
+[/list]
+
+[size=4][b]Compatibility[/b][/size]
+[list]
+[*][b]Multiplayer:[/b] untested. Tested on single-player only.[/*]
+[*][b]Not compatible with any other Help Wanted mod, or any mod that directly modifies the Help Wanted board. [/b][/*]
+[*][b][url=https://www.nexusmods.com/stardewvalley/mods/7842]Mail Services Mod[/url]:[/b] in-person delivery quests work as expected. Mailing items through MSM bypasses vanilla's OnItemOfferedToNpc hook, so multi-step Gift / GiftUniqueNpcs steps don't tick when items are mailed. Mod authors can call [font=Courier New]quest.OnItemOfferedToNpc[/font] directly to forward delivery events.[/*]
+[*][b]Friendship-decay / friendship-clamp mods (CJB Cheats Menu's "No friendship decay", [url=https://www.nexusmods.com/stardewvalley/mods/22922]No Friendship Decay - Reborn[/url] etc.):[/b] intercept vanilla's friendship change calls. The negative side of consequence reactions don't negate friendship while those interceptors are on; the positive side still works.[/*]
+[/list]
+
+[size=4][b]Disclaimer[/b][/size]
+I only publish my mods on [url=https://www.nexusmods.com/profile/RafiaBee/mods]Nexus Mods[/url] and [url=https://github.com/Rafia-Bee/StardewMods]GitHub[/url]. Please don't download them from anywhere else. If you see one of my mods reposted on another site, it's not from me and I can't guarantee the file is safe or up to date.
+
+[size=4][b]Translations[/b][/size]
+This mod supports translations! Please feel free to translate the mod to your language and upload to Nexus on your own page. Nexus will automatically link it to this mod.
+
+[size=4][b]Credits[/b][/size]
+[list]
+[*][b]ConcernedApe[/b] for Stardew Valley[/*]
+[*][b]Pathoschild[/b] for [url=https://smapi.io/]SMAPI[/url][/*]
+[*][b]spacechase0[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/1348]SpaceCore[/url] and [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url][/*]
+[*][b]aedenthorn[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/14640]Help Wanted[/url], the inspiration for the vanilla quest tuning, and the source the pad / pin sprites were retextured from[/*]
+[/list]

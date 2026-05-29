@@ -1,0 +1,80 @@
+[size=4][b]What does this mod do?[/b][/size]
+
+This mod lets you recycle any vanilla ring in the Furnace (and the Heavy Furnace, plus MPS upgraded versions). What you get back depends on the ring:
+
+[list]
+[*][b]Drop-only rings[/b] (like Lucky Ring, Vampire Ring, Phoenix Ring) return random ore. Higher-tier rings give better ore.
+[*][b]Gem rings[/b] (Amethyst, Topaz, Aquamarine, Jade, Emerald, Ruby) return their gem.
+[*][b]Craftable rings[/b] (Sturdy, Warrior, Yoba, Iridium Band, Thorns, Glowstone) return one of their crafting materials at random.
+[/list]
+
+[size=4][b]Ring Tiers[/b][/size]
+[spoiler]
+[b]Tier 1 (cheap drops)[/b]: Small Glow Ring, Small Magnet Ring, Jukebox Ring.
+1 ring becomes 5 copper ore or 3 iron ore (equal chance).
+
+[b]Tier 2 (mid drops)[/b]: Lucky, Glow, Magnet, Slime Charmer, Vampire, Savage, Burglar's, Crabshell.
+1 ring becomes 10 copper, 7 iron, or 3 gold ore (equal chance).
+
+[b]Tier 3 (end-game drops)[/b]: Napalm, Hot Java, Protection, Soul Sapper, Phoenix, Immunity Band.
+1 ring becomes 15 iron, 10 gold, or 5 iridium ore (equal chance).
+
+[b]Gem rings[/b]: 1 ring becomes 1 gem of its type.
+
+[b]Craftable rings[/b]: smelting returns one of the original recipe materials, chosen at random with equal chance.
+[list]
+[*]Sturdy Ring: 2 copper bar, 25 bug meat, or 25 slime.
+[*]Warrior Ring: 10 iron bar, 25 coal, or 10 frozen tear.
+[*]Ring of Yoba: 5 gold bar, 5 iron bar, or 1 diamond.
+[*]Iridium Band: 5 iridium bar, 50 solar essence, or 50 void essence.
+[*]Thorns Ring: 50 bone fragment, 50 stone, or 1 gold bar.
+[*]Glowstone Ring: 5 solar essence or 5 iron bar.
+[/list]
+
+Wedding Ring is intentionally excluded.
+[/spoiler]
+
+[size=4][b]Heavy Furnace[/b][/size]
+Heavy Furnace handles 5 rings at a time and returns 5x the output, exactly like the base mod did for Lucky Rings. Works for every ring above.
+
+[size=4][b]Machine Progression System support[/b][/size]
+[spoiler]
+With [url=https://www.nexusmods.com/stardewvalley/mods/21720]Machine Progression System[/url] installed, upgraded furnaces process rings faster. Output stays the same as the base tier.
+[list]
+[*]Steel Furnace: 50 minutes
+[*]Gold Furnace: 40 minutes
+[*]Diamond Furnace: 30 minutes
+[*]Iridium Furnace: 20 minutes
+[*]Radioactive Heavy Furnace: 40 minutes
+[*]Prismatic Heavy Furnace: 20 minutes
+[/list]
+[/spoiler]
+
+[size=4][b]Requirements[/b][/size]
+[b]Required:[/b]
+[list]
+[*][url=https://smapi.io/]SMAPI[/url] 4.0+
+[*][url=https://www.nexusmods.com/stardewvalley/mods/1915]Content Patcher[/url] 2.9+
+[*]Stardew Valley 1.6+
+[/list]
+
+[size=4][b]Install[/b][/size]
+[list=1]
+[*]Install SMAPI and Content Patcher.
+[*]Download this mod and unzip it into your [font=Courier New]Stardew Valley/Mods[/font] folder.
+[*]Run the game through SMAPI.
+[/list]
+You can install or remove this at any point during a playthrough. It only adds new recipes to the furnace, nothing else.
+
+[size=4][b]Compatibility[/b][/size]
+[url=https://www.nexusmods.com/stardewvalley/mods/21720]Machine Progression System[/url]: adds support for upgraded furnaces and heavy furnaces.
+Tested with Stardew Valley 1.6+ on Windows single-player. Should work in multiplayer (each player needs the mod installed).
+
+If you run into any issues, please let me know!
+
+[size=4][b]Credits[/b][/size]
+[list]
+[*][b]ConcernedApe[/b] for Stardew Valley
+[*][b]Pathoschild[/b] for [url=https://smapi.io/]SMAPI[/url] and [url=https://www.nexusmods.com/stardewvalley/mods/1915]Content Patcher[/url]
+[*][b]NachOnline[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/21720]Machine Progression System[/url]
+[/list]

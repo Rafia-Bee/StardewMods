@@ -1,0 +1,244 @@
+Keep changelog for each version within 255 characters. No tech jargon. Simple words and sentences only.
+
+v1.22.0
+- Added Agromancy compatibility. Extra grapes (and bonus seeds) from yield-boosted crops now go straight into the auto-grabber instead of falling on the ground next to the trellis. No effect if you do not have Agromancy installed.
+
+v1.21.1
+- Fixed all grabbers (specialized and classic) silently stopping mid-session in v1.21.0. The new harvest interceptor would lock up if anything inside a vanilla harvest call ever threw (third-party Harmony patch, malformed crop, etc.), and every subsequent grab in the session aborted on the audit-4.6 reentry check. The interceptor is now exception-safe: every harvest call is wrapped in try/finally, and the grab session resets the interceptor flag when it ends so a leaked state never survives past one cycle.
+
+v1.21.0
+- Added modded-skill XP routing. When SpaceCore-based skill mods are installed, the grabber now grants XP for actions it performs on your behalf: Binning Skill (drbirbdev) gets credit for every town garbage can the grabber checks, and Archaeology Skill (moonslime) gets credit for every artifact spot dug up and every ore pan collected. Defaults match the upstream mods' own per-action XP. All toggles live on the Compatibility config page under "Modded Skill XP". No effect if the relevant mods aren't installed.
+- Fixed global-mode routing always preferring older grabbers across maps over closer ones on the same map. Now if a Crop Grabber lives in the Greenhouse near a planted indoor pot, the harvest lands in that Greenhouse grabber instead of being shipped to a Farm grabber on the other side of the world. Same fix applies to wildflower, forage, seed-tree, and forage-hoedirt routing.
+- Fixed tree debris (wood, sap, acorns) sitting on the ground for an in-game day in Instant mode. Cutting trees now triggers an hourly catch-up sweep so debris is collected within the hour instead of waiting for next day-start.
+- Fixed ore pan items not appearing in the hourly HUD summary. Ore pan yield now shows alongside other grabbed items in the on-screen total when Report Yield is on.
+- Fixed the HUD listing every named grabber on the map after a global grab, including ones that did not catch anything. Now only contributing grabbers are named.
+- Fixed the GMCM Enabled Locations subpage bouncing back to the root every time you clicked Enable All, Disable All, or Select Visited Only. The subpage now stays open and the toggles update in place.
+- Fixed Enable All silently re-skipping unvisited locations because Select Visited Only was still on. Clicking Enable All now also turns off Select Visited Only since the two intents contradict each other. Manually enabling a single unvisited location while SVO is on also now sticks.
+- Fixed Seed Tree Grabber silently losing items when the chest was full. If the chest cannot fit a shaken item, it now drops on the ground next to the tree (matching how Indoor Pot, Forage HoeDirt, and Wildflower grabbers already handled overflow), instead of evaporating.
+- Fixed Qi Beans dropped by shaken wild trees falling on the ground during Qi's Crop. The Qi Bean drop in Tree.shake routes through a different SDV method than the normal seed drop, which the interceptor was not patching. Qi Beans now route into the auto-grabber chest like every other shake-time drop. Same fix incidentally covers rare-spawn drops from shaken trees.
+- Fixed double mail on retroactive Specialized progression. When the retroactive check grants a recipe you have already earned, you no longer also get the hint mail advertising a grabber you just unlocked.
+- Improved diagnostics for mod-on-mod Harmony conflicts. If another mod's patch reenters a DGF grab cycle (e.g. Crop.harvest, Tree.shake), DGF now throws a clear exception naming the likely cause instead of silently dropping the outer grab's items.
+- Reduced disk writes when warping with Select Visited Only on. Walking through 10 unvisited maps used to mean 20 disk writes; the writes are now coalesced and flushed at sleep or return-to-title. Note: force-quitting (alt-F4) before sleeping will lose any un-skipped maps from that day, matching Stardew's "no save = no persist" rule.
+- Performance: machine-name cleaning is now memoized, GMCM rebuilds skip when nothing structural has changed, hourly grabs skip the diff pass when nothing was collected, day-start progression checks early-exit once all prerequisite types are owned. Several LINQ allocations on hot grabber paths replaced with foreach. Static caches now reset uniformly on title return.
+- Internal refactors: consolidated machine grabber dispatch, yield-reporting, and config-swap plumbing so future bugs of these shapes are much harder to introduce. No user-visible change.
+
+v1.20.4
+- Fixed Specialized mode silently destroying off-type harvest targets. Placing only one type of specialized grabber (for example just a Forage grabber) no longer causes vanilla crops, indoor pot crops, spring onions, ginger, wildflowers, or seed trees on the same map to be harvested and dropped as ground debris. Sub-grabbers without a matching specialized grabber on the map are now skipped entirely, and crop tiles whose nearest matching grabber is out of range are left alone instead of being harvested into thin air.
+- Fixed Classic mode + global grab not working with specialized grabbers. Designating a specialized grabber as the global grabber and pressing the fire-global-grab key now correctly deposits items into its chest. Previously every specialized grabber type reported "grabber is full" because the chest's external-add guard wasn't notified that a grab cycle was running.
+- Internal refactor: consolidated grab-cycle state setup that was duplicated across nine event handlers into a single helper. No user-visible behavior change; future bugs of the same shape as the Classic-into-Specialized one above are now much harder to introduce.
+- Reorganized config layout. Settings are now grouped (Features, Machines, Specialized, Locations, Global Grab, Compatibility) so the file is easier to navigate and adding new options is simpler. NOTE: your existing config.json will reset to defaults on first load. Use the in-game GMCM menu (or edit the new config.json) to restore your preferences.
+
+v1.20.2
+- Redesigned the Machine Collection master toggle. Replaced "Enable Machine Collection" and "Collect All Machines" with a single "Disable Machine Collection" toggle (default off). Every machine sub-toggle is now on by default, so machine collection works out of the box and you can tailor individual machines without the master toggle fighting you. Flip "Disable Machine Collection" on for a hard stop.
+- Added Wild Flowers Reimagined compatibility. The grabber now harvests fully grown wildflowers from grass tiles when either the Wild Flowers mod by aedenthorn or Wild Flowers Reimagined by jpparajeles is installed. Respects the Harvest Flowers setting for both. Regrow flowers from Reimagined are left on the tile so the mod can regrow them.
+
+v1.20.1
+- Fixed wildflowers being duplicated instead of collected. The main flower drop was going into the player's inventory rather than the grabber, and the flower stayed visible on the map. Flowers now reliably end up in the grabber and disappear from the map after being harvested.
+- Fixed double foraging XP on wildflower harvest. The grabber was granting 7 XP on top of the XP already granted by the Wild Flowers mod's patched harvest, so each flower (and each flower re-grabbed after a grabber push) gave about twice the intended XP.
+
+v1.20.0
+- Added "Count for Perfection" option on the Specialized Grabbers config page. When disabled, crafting the five specialized grabbers is not required for the Craft Master achievement or the crafting portion of the perfection score. Useful for players who want Specialized mode without it affecting their perfection run.
+- Fixed specialized grabber crafting recipes being registered in Classic mode. Recipes now only appear when Grabber Mode is set to Specialized, so they no longer silently affect achievement or perfection counts in Classic mode.
+
+v1.19.1
+- Fixed excluded crops being harvested and dropped as ground debris instead of being left alone. The exclusion check now runs before the harvest, so excluded crops stay in the ground untouched.
+
+v1.19.0
+- Added per-save config files. Each save now gets its own config stored in configs/{SaveFolderName}.json. Changing settings in one save no longer affects other saves. The global config.json is used as the default template for new saves and for title screen edits. Existing users get seamless migration on first load.
+
+v1.18.0
+- Added Wild Flowers compatibility. The grabber now harvests fully grown wildflowers from grass tiles when the Wild Flowers mod by aedenthorn is installed. Respects the Harvest Flowers setting (Off/All/Smart). Toggle on the Compatibility config page.
+- Fixed disabled locations being re-enabled when visited with "Select Visited Only" active. Manually disabled locations now stay disabled thanks to a per-save blacklist. The blacklist is cleared when you toggle Enable All or Select Visited Only back on, or reset config to defaults.
+- Fixed "Collect Machine Outputs" master toggle silently blocking all machine collection even when individual machine toggles were enabled. The master toggle now auto-enables when you turn on any machine sub-toggle in the config menu.
+- Moved Farm Cave Mushroom Boxes from the Other Harvesting page to the Machine Collection page. Mushroom boxes now respect the machine master toggle for consistency.
+- Reorganized the Machine Collection config page with labeled sections: Fishing, Outdoor Producers, Farm Cave, Artisan Equipment, Processing Machines, 1.6 Update Machines, Passive Producers, Statues, and Other/Modded Machines.
+- Updated the "Collect Machine Outputs" tooltip to explain how the master toggle and auto-enable work.
+
+v1.17.1
+- Fixed fruit trees not being collected in Instant mode after day 1. The instant-mode path relied on dirty-location tracking that never fired for fruit tree changes, so only Daily mode collected them reliably.
+- Fixed 14 issues found during April codebase audit: null-checks, edge-case crashes, and minor correctness fixes.
+- Improved performance: GetAllLocations and BuildAutomateSkipTiles results are now cached per tick, avoiding repeated iteration on large modded farms.
+- Added specialized mode note to auto-grabber hover descriptions so players can tell which type a grabber is at a glance.
+
+v1.17.0
+- Added Specialized Grabbers mode: an optional progression system with six grabbers (Animal, Crop, Forage, Tree, Scavenger, Machine), each collecting a specific category of items. Unlock them sequentially by hitting gameplay milestones. All thresholds and recipe costs are configurable.
+- Added Custom Bush compatibility. Bushes from Custom Bush (e.g. Growable Forage and Crop Bushes) now produce the correct items with proper quality and stack size when harvested by the auto-grabber.
+
+v1.16.6
+- Fixed machines disabled in Automate's config (e.g. tappers with Enabled: false) not being collected by DGF. DGF now reads Automate's config to detect disabled machine types and collects from them instead of skipping.
+- Fixed yield report showing wrong item names for modded items (e.g. "Fossilized Apple" instead of "Fir Wax"). Item identity now uses QualifiedItemId instead of ParentSheetIndex.
+
+v1.16.5
+- Fixed tapper collection not working with modded tappers (e.g. Tree Overhaul). The tapper check now uses the game's context-tag-based detection instead of hardcoded item IDs.
+
+v1.16.4
+- Added compatibility with Smart Filtered Hopper. Hoppers with the SuperHopper modData flag are no longer treated as chest connectors in the Automate chain scanner, so split chains (A -> hopper -> B) are recognized as separate groups.
+- Fixed auto-fire global grabber not working outside the farm when grab frequency was set to Hourly or Instant.
+
+v1.16.3
+- Fixed fruit tree quality not respecting Fruit Tree Tweaks (and similar mods). The grabber now uses the game's GetQuality() method instead of hardcoded day thresholds.
+- Fixed "Error repairing" log spam for tappers, Stone Owl, and Stone Junimo on every save load. Removed an overly aggressive idle machine restart path that was misidentifying normal objects as stuck.
+- Grab frequency config is now properly respected. Day-start sweep only runs in Daily mode. Hourly mode runs a full grab (crops, fruit trees, bushes, machines, forage) on every hourly tick. Day-end sweep is now forage-only as intended.
+
+v1.16.2
+- Fixed machines (worm bins, crystalariums, tappers, bee houses, mushroom boxes, modded machines) getting permanently stuck after the grabber collected from them. The grabber was not properly resetting machine state after collection, preventing them from restarting.
+- Fixed mushroom boxes in the farm cave breaking permanently. The mushroom box grabber now properly resets and restarts the box after collection.
+- Added a one-time save repair that detects and fixes machines already stuck by the old bug. Supports modded machines with combined trigger flags.
+- Fixed incubators (regular and ostrich) being collected by the machine grabber, which stole hatching eggs and prevented animals from being born.
+
+v1.16.1
+- Yield report logs are now translation-friendly: item names use the game's localized display name, and all headers, quality names, and formatting use i18n keys. Translators can provide localized yield reports by adding the new log keys to their language file.
+- Renamed "Skipped Locations" config page to "Enabled Locations" for clarity.
+- Config dump now always logs at Trace level instead of requiring Debug Logging to be enabled.
+
+v1.16.0
+- True instant machine collection: in Instant mode, machine outputs are now grabbed the moment they finish processing, not just during the hourly poll. Uses a Harmony patch on Object.minutesElapsed() to detect when machines become ready. Global grabber mode is fully supported.
+
+v1.15.1
+- Machine collection now respects frequency modes: machines were only collected at day start regardless of the Hourly/Instant setting, because machine outputs finishing don't trigger the object-change detection. Machines are now polled every in-game hour for non-Daily modes.
+- Reduced log spam: removed "nothing to collect" debug log messages that fired for every location on every grab cycle. Only actual collections are logged now.
+- Moved replant reminder settings to Crop Harvesting page: the Replant Reminder and Replant Reminder Time config options now appear under the Crop Harvesting subpage in GMCM instead of the Miscellaneous page.
+
+v1.15.0
+- Replant reminder: when the auto-grabber harvests single-harvest crops, a HUD notification reminds you to replant. A second reminder fires later in the day (default 8:00 PM) in case you missed the first one. Both the toggle and reminder time are configurable in the Global Grabber & Misc settings.
+- Exclude quest items: new toggle (on by default) that prevents the grabber from picking up quest items like the Lucky Purple Shorts. Found in the Global Grabber & Misc settings.
+- Fishnets compatibility: Fish Nets from the Fishnets mod (by MindMeltMax) are now collected alongside crab pots. Bait is consumed on collection and Fishing XP is awarded. Controlled by the existing "Collect from Crab Pots" toggle.
+
+v1.14.1
+- Automate compatibility: DGF now respects per-chest Automate settings. Chests set to "Never put items in this chest" (input-only) no longer prevent DGF from collecting finished products. Machines are only skipped when their Automate group has at least one chest that can accept output.
+
+v1.14.0
+- Expanded machine collection: added support for all vanilla machines: Kegs, Preserves Jars, Cheese Presses, Mayonnaise Machines, Looms, Oil Makers, Furnaces, Charcoal Kilns, Recycling Machines, Seed Makers, Bone Mills, Geode Crushers, Wood Chippers, Deconstructors, Fish Smokers, Bait Makers, Dehydrators, Crystalariums, Lightning Rods, Worm Bins, Solar Panels, Slime Egg Presses, Coffee Makers, Soda Machines, and statues (Endless Fortune, Perfection, True Perfection). Per-machine config toggles and a "Collect All Machines" batch toggle are available in GMCM.
+- Fish Pond collection: collects roe and other produce from Fish Ponds. Works with Golden Animal Cracker doubled output. Awards fishing XP.
+- Mushroom Log collection: collects mushrooms from Mushroom Logs, including MPS upgraded variants.
+- Other/Modded machine support: a catch-all toggle collects outputs from any unrecognized BigCraftable machine, including modded ones.
+- Automate compatibility: when Pathoschild's Automate is installed, DGF skips machines that Automate is already managing, preventing duplicate collection. Enabled by default with a toggle on the Compatibility config page.
+- Cloths and Colors (Textile Expansion) compatibility: Leaf Baskets from the Cloths and Colors mod are now collected as part of machine collection.
+
+v1.12.0
+- Smart Flower Preservation: the "Harvest Flowers" option is now a dropdown with three modes: Off (never harvest flowers), All (harvest all flowers), and Smart (harvest flowers except those within range of a Bee House). Smart mode preserves your honey quality while still collecting flowers that are not near any Bee House. Default changed to Smart. The "Bee House Flower Range" setting lets you adjust the detection range to match mods that change Bee House range.
+- Resource Chickens compatibility: Geode stones, fossil stones, egg weeds, egg barrels, and other breakable nodes from Resource Chickens are now excluded from auto-grabbing by default. These nodes drop special eggs when broken and should not be collected as forage.
+- Cape Stardew compatibility: Kimberlite ore nodes (heart, fire, blue, and prismatic variants) are now excluded from auto-grabbing by default. These mineable nodes drop special diamonds.
+
+v1.11.2
+- Grab Frequency: new config dropdown (Instant / Hourly / Daily) that controls how often the grabber scans for items. Instant grabs items as they appear, Hourly batches pickups into the hourly sweep, and Daily only collects at the start and end of each day.
+- Harvest Green Rain Weeds: new config toggle (default off) that lets the auto-grabber break apart the large green rain bushes for moss, fiber, and mossy seeds.
+- Machine Progression System compatibility: Crab pots, bee houses, and tappers upgraded by MPS are now recognized and collected alongside their vanilla counterparts.
+- Baubles mod compatibility: Cattail nodes and petuntse nodes from the Baubles mod are now excluded from auto-grabbing by default. Toggle available on the Compatibility config page.
+
+v1.9.0
+- Expanded mod API: added GetFruitTreeHarvest and GetSlimeHarvest delegate properties for other mods to override fruit tree and slime ball harvest behavior. Added OnItemGrabbed event that fires when any item is placed into a grabber chest. Added IsGrabberActive() read-only query method.
+- Codebase restructure: extracted ModEntry.cs (1,320 lines) into three focused manager classes: LocationManager, GrabberManager, and GmcmRegistration. ModEntry is now ~490 lines.
+- Stale snapshot protection: added a shared GrabbedTiles set to prevent double-collection when multiple grabbers run against the same location. Replaces the old fragile AnimalHouse + EggCategory special case.
+- Config field rename: renamed fellSecretWoodsStumps to fellHardwoodStumps to match actual behavior (works everywhere, not just Secret Woods). Existing configs are migrated automatically.
+- Consolidated static fields: replaced two static Harmony fields with a single _instance pattern. Removed unused VPP API field.
+- Performance improvements: grabber pair scanning, object/feature snapshots, and chest cleanup are now cached per grab cycle instead of being repeated for every sub-grabber. Most relevant for large modpacks with 100+ locations.
+- Fixed hourly handler collecting non-forage items: the hourly collection was running the full grab chain (animal products, crops, machines, etc.) instead of just ore panning and forage. Now only GenericObjectGrabber and ForageHoeDirtGrabber run during hourly updates.
+- Fixed visit auto-enable not working: visiting a location with global grab active now correctly enables it for collection by checking the skip list directly.
+
+v1.8.0
+- Auto-grabber naming: name individual auto-grabbers through the Name button on the auto-grabber menu. Named grabbers show their custom name in chest-full HUD warnings and grab summary toasts instead of just the location name. Also reads names set by Chests Anywhere as a fallback.
+- Configurable Name button position: new config options to adjust the Name button's X/Y offset, just like the Global Grabber star button.
+- Smarter chest-full HUD: named grabbers now show "{name} is full!" while unnamed ones show "Auto-grabber is full at {location}!". In global mode, the message now correctly reports the grabber's location instead of every scanned source location.
+- Named grab summaries: when grabbers have custom names, the grab summary toast shows "{name} grabbed X items" instead of "Auto-grabbed X items".
+
+v1.7.3
+- Chest-full HUD warning: when auto-grabber chests are full and items can't be stored, a red HUD warning now appears listing the affected locations (e.g. "Auto-grabber is full at Farm!"). Previously this was only logged to the SMAPI console at debug level, causing silent item loss.
+- In-game grab summary toast: after daily grabs and global grabs, an in-game HUD toast shows how many items were collected (e.g. "Auto-grabbed 47 items"). Controlled by the existing Report Yield config option.
+
+v1.7.1
+- Fixed farm cave mushrooms not being collected: the mushroom box ID was incorrectly set to (O)128 (a regular object) instead of (BC)128 (a big craftable) during the 1.6.6 constants migration. This caused the grabber to silently skip every mushroom box. Fixed by moving the constant to BigCraftableIds with the correct prefix.
+- Added config logging on save load: all feature toggles are now logged at DEBUG level when a save is loaded. When users share their SMAPI logs, we can see exactly which features they have enabled.
+
+v1.7.0
+- Fell hardwood stumps everywhere: the "Fell Stumps" option now chops large stumps and hollow logs in all locations, not just the Secret Woods. Only collects resource clumps that drop hardwood.
+- Fixed global grabber mode not harvesting ore panning sites: when the grabber was set to Global (All) mode, ore panning sites were only collected if there was a local auto-grabber at each panning location. The hourly ore panning check now activates global mode so the designated grabber collects panned items from all locations.
+- Added yield reporting for ore panning: when Report Yield is enabled, panned ore and gems are now logged to the SMAPI console, matching the existing yield reporting for daily grabs.
+- Renamed internal method: OnTenMinuteUpdate to OnHourlyUpdate to accurately reflect that ore panning runs every in-game hour, not every 10 minutes.
+
+v1.6.6
+- Fixed modded forage not being collected: items from mods like "Rose and the Alchemist" (e.g., Mugwort) were silently skipped because they shared sprite index 73 with the Golden Walnut, which was excluded using a ParentSheetIndex check. Now uses QualifiedItemId to only exclude the actual Golden Walnut.
+- Replaced all hardcoded game IDs with named constants: all 30+ hardcoded object IDs, big craftable IDs, category IDs, and qualified item IDs across 14 files now use named constants. All constants use qualified IDs with type prefixes ((O), (BC), (F)), and all ParentSheetIndex/ItemId comparisons have been migrated to QualifiedItemId for type-safety.
+
+v1.6.5
+- Visit Mount Vapius compatibility: new toggle on the Compatibility config page that prevents the grabber from collecting VMV resource nodes (ores, stumps, weeds). These are breakable objects that look like forage to the grabber but are meant to be mined or chopped. Excludes any item with _Node_ in its ID.
+
+v1.6.4
+- Fixed Error Items from broken mod spawns being collected: mods like ItemExtensions use special query IDs (e.g., RANDOM_CLUMPS) in forage spawn data that are meant to be intercepted and resolved into resource clumps. When the resolution fails, the game creates Error Items with IsSpawnedObject=true, which DGF picked up. Now validates that objects have real item data before collecting them.
+
+v1.6.3
+- Fixed FTM BuriedItems being consumed with wrong drops: Farm Type Manager's buried items (used by SVE, WAG, and many other mods) were misidentified as vanilla artifact spots. The grabber destroyed the real buried contents and replaced them with random vanilla artifacts. Now correctly extracts the actual items from FTM's BuriedItems containers.
+- Collect Buried Items (FTM) config option (default: On) on the Compatibility page: controls whether the grabber collects items buried by Farm Type Manager. Affects SVE (Shrub Seed, Ancient Ferns Seed, etc.), WAG (Wild Red Onion, Gentian Root), and any other mod using FTM's buried spawn type.
+
+v1.6.2
+- Fixed eggs being double-collected in barns/coops, which caused Automate to spam "produced an item with no stack size" warnings and created ghost items with Stack=0 in the auto-grabber chest. The issue was that eggs (IsSpawnedObject=true) were picked up by both AnimalProductGrabber and GenericObjectGrabber due to a stale object snapshot.
+- Fixed DebrisGrabber creating Stack=0 items when debris had an empty (non-null) chunk list.
+- Fixed SlimeHutchGrabber creating Stack=0 Petrified Slime when the random chance never triggered.
+- Added defensive cleanup in the auto-grabber chest that removes any stuck Stack=0 items before adding new ones.
+
+v1.6.1
+- Vanilla Plus Professions (VPP) compatibility: DGF now detects VPP at runtime and lays the foundation for profession-aware behavior. Most VPP features (Combat-Farm slime drops, Shaker tree drops, Gleaner/Wayfarer forage) are already auto-compatible. Logs an info message when VPP is detected.
+- Sunberry Village compatibility: new toggle on the Compatibility config page to exclude Sunberry Village's 12 FTM-spawned ore nodes and supply crates from auto-collection, so they stay in the world as intended.
+- Replaced hardcoded vanilla profession IDs (12, 13, 16) with named constants (ProfessionIds.Lumberjack, .Gatherer, .Botanist) for clarity and extensibility.
+
+v1.6.0
+- Item exclusion list: new "Excluded Items" config option lets you specify items by their qualified item ID that the grabber should never collect. Useful for preventing rare items like the Lucky Ring (O)859 from piling up. Works across all grabber types (forage, debris, panning, machines, etc.). Found on the Global Grabber & Misc config page.
+- Fixed modded spawned objects not collected as forage (Issue #34 follow-up): items spawned by FTM-based mods (Sunberry Village Twilight Feathers, Alchemistry, etc.) that do not have standard forage categories are now collected. The grabber now uses the game's IsSpawnedObject flag, matching vanilla pickup behavior. Profession quality boosts and foraging XP are only applied to true forageables.
+
+v1.5.0
+- Item debris collection: new "Collect Item Debris" config option (default: Off) lets the auto-grabber pick up items dropped as ground debris -- monster loot, fallen items, and modded forage drops (e.g. Twilight Feathers from Sunberry Village). Found on the Other Harvesting config page.
+- Fixed modded forage not collected (Issue #34): items spawned by FTM-based mods (Sunberry Village, Alchemistry, etc.) that do not have standard forage categories are now collected. The grabber now uses the game's own IsSpawnedObject flag to detect ground items, matching vanilla pickup behavior.
+- Global Grabber X/Y offset config options now use text input fields instead of sliders, making it easier to enter precise pixel values. Values are still clamped to -500..500.
+
+v1.4.0
+- Forage toggle: new "Collect Forage Items" config option (default: On) lets you turn off automatic forage collection. Found on the Other Harvesting config page.
+- Sleep-time collection: forage items are now collected one last time when you go to bed, catching anything that appeared during the day.
+- Forage grabbers no longer fire on every object change -- they only run at day start, on global grab, and at bedtime. Reduces unnecessary processing, especially on large farms.
+- Forage crop harvesting (spring onions, ginger) now uses the game's own harvest logic instead of hardcoded item IDs. Modded forage crops are now supported automatically.
+- Garbage can scanning now only checks the Buildings tile layer instead of all map layers, and caches results per location. Significantly faster on large or modded maps.
+- Artifact spot drop quantities now use seeded randomization for consistency.
+
+v1.3.1
+- GMCM config is now organized into subpages (Crop Harvesting, Other Harvesting, Machine Collection, Global Grabber & Misc, Skipped Locations) instead of one long scrollable page.
+- All player-facing text (config labels, tooltips, HUD messages, button text) now uses SMAPI's i18n system, enabling community translations.
+
+v1.3.0
+- In-menu Global Grabber button: open any auto-grabber and tap the star button to designate it as the Global Grabber. Gold star = designated, silver star = not. Works on mobile, PC, and console -- no hover or hotkey needed.
+- Auto-Fire Global Grabber: new config option that automatically fires the designated global grabber at the start of each day. Enables fully hands-free global grabbing on mobile.
+- Configurable button position: Global Button X/Y Offset settings let you reposition the star button if it overlaps with Chests Anywhere or other mod buttons.
+
+v1.2.0
+- Select Visited Only: a new toggle on the Skipped Locations page that enables only locations you have visited and skips the rest. Newly discovered locations are auto-enabled when you walk into them.
+- Skipped Locations page now groups locations under "Visited Locations" and "Not Yet Visited" sections when a save is loaded.
+
+v1.1.0
+- Machine collection: auto-grabbers can now collect finished outputs from Crab Pots, Bee Houses, Tappers, and Heavy Tappers.
+- New config section "Machine Collection" with a master toggle and per-machine sub-toggles.
+- Crab pot bait is consumed on collection (matching vanilla behavior).
+- Crab pot collection grants Fishing XP (5 per item).
+
+v1.0.0
+Initial release as Deluxe Grabber Fix, forked from Deluxe Grabber Redux 1.6 (v1.9.2) by Nykal145.
+- Fixed items vanishing when auto-grabber chest fills mid-batch (all grabbers).
+- Fixed fruit tree fruit loss when chest can't hold all fruits.
+- Fixed InvalidCastException crash on artifact spots dropping Rings, Boots, or Weapons.
+- Fixed NullReferenceException crash on modded bushes with null shake-off items.
+- Fixed ArgumentNullException / KeyNotFoundException crash on modded crops with null/empty harvest IDs.
+- Fixed tree growth stage corruption when harvesting moss.
+- Fixed zero-item artifact drops (random roll could silently discard valid drops).
+- Fixed global grabber firing unconditionally on day start and object list changes.
+- Fixed cascading OnObjectListChanged feedback loop causing performance issues on large farms.
+- Fixed day-start timing race where items spawned by other mods were missed.
+- Fixed incomplete building interior enumeration (only checked farm buildings, missed Ginger Island/SVE/etc.).
+- Fixed debug logging always on with no way to disable.
+- Animal product collection (milk, wool, eggs, feathers) from barns and coops.
+- Designated global grabber system (persist a single grabber as the collection point).
+- Per-location skip list with GMCM config page.
+- Festival/event location auto-skip toggle.
+- Debug logging toggle (separate from yield reporting).
+- Designate Global Grabber keybind (default: G).
+- Crop harvesting delegates to vanilla Crop.harvest() via Harmony (supports HarvestMinQuality, HarvestMaxQuality, overrideHarvestItemId, modded crops).
+- Seed tree shaking delegates to vanilla Tree.shake() via Harmony (supports modded trees, WildTreeData).
+- Forage detection simplified to use game's isForage() (automatic SVE/modded forage support).
+- Project reorganized into Framework/, Grabbers/, Interfaces/ with matching namespaces.
+- Decompilation artifacts (IL comments) removed, modern C# syntax throughout.

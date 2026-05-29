@@ -1,0 +1,67 @@
+Keep changelog for each version within 1000 characters. No tech jargon. Simple words and sentences only.
+
+2.3.0
+- New step kind for mod authors: "drop items inside a marked circle". The game draws a glowing ring on the ground with a tall beam of light above it so the player can find the spot, and only items dropped inside the ring count. The marker is purely visual: it never blocks anyone or harms anything placed there, so people and monsters walk right through it. Comes with a new magic-themed NPC pool for quest givers.
+- New tools for mod authors who want to add quests that track crop growing. There's a new event that fires every time a crop is harvested (by you or your Junimos), and a new way to dedupe step progress per tile / per event so the same thing can't double-count.
+- New farmer NPC pool so quests can pick a farmer NPC as the giver. Covers Pierre, Evelyn, Andy / Sophia / Susan from SVE, Jeric / Alissa from Ridgeside, Jessie from East Scarp, Ashida / IsaacI from Coal Point Farm, and Ripley.
+- Fixed a rare issue where a basic vanilla-style quest (the simple "deliver this" / "catch that" / "slay that monster" / "collect this" jobs) could be lost if you saved and reloaded the game in between getting the mail letter and opening it. Only affected the cases where a quest landed in your mail because its giver was on the exclusion list.
+- Mail quest chance sliders in GMCM actually work now. Before this only Rainy Day Catch responded to its slider; every other entry was a no-op. Quests that only fire once on a building going up (Marnie's first chicken / cow / silo offers) are hidden from the page so you can't accidentally lose one by turning the slider down.
+- Filled in two missing GMCM labels (Crop Cycle delivery, Archaeology dig) that were showing as raw IDs.
+
+2.2.0
+- Fixed a bug where some quest rewards (friendship, items, etc.) could get duplicated each time you saved and reloaded. Old saves with the bug get cleaned up automatically the next time you load them.
+- Added new tools for mod authors who want to build richer quest journal screens. No in-game change on its own.
+
+2.1.1
+- Fixed a bug where finishing a ship quest could max out a villager's friendship in one go. Only happened on saves where the quest was accepted on an older version of the mod and finished after updating. Affected saves now pay the right amount when the quest wraps up.
+
+2.1.0
+- Difficulty Scaling now defaults to off. Flip it on in GMCM if you want quests to scale with your skill levels.
+- New step kinds for adventure quests: dig artifact spots, drop items, donate to museum.
+- Dialog-triggered quests can now have the giver actually say the offer line in person.
+- New per-quest friendship reward line, plus 5 kid dialog variants for friendlier rewards.
+- New helper for mods to list all installed tackles.
+- Mail-fallback daily-board quests no longer re-roll a new quest every day.
+- Long quest descriptions no longer overflow the daily Billboard panel.
+- Fixed cooldown not stamping in some cases, and the cooldown queue is re-applied after a save reload.
+- Fishing report-back quests no longer eat the fish on turn-in.
+- Fishing delivery quests say "Deliver X to Y" instead of "Return to NPC".
+- Rainy Day Catch chance moved here from More Quests so framework content packs can tune it.
+- New mq_trigger console command to force a quest to post (for testing).
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuestsFramework-v2.0.0...MoreQuestsFramework-v2.1.0]i18n changes here[/url] (Files changed -> scroll down to i18n/default.json).
+
+2.0.0
+- Switched to Content Patcher for adding quests. The old "make a folder with a quests.json" path is gone. CP packs now edit Mods/RafiaBee.MoreQuestsFramework/Quests directly, and authors get When conditions, dynamic tokens, patch reload, and the patch summary debug command for free.
+- Same story for custom boards (Mods/RafiaBee.MoreQuestsFramework/Boards) and cooldown buckets (Mods/RafiaBee.MoreQuestsFramework/CooldownTiers).
+- GMCM edits to cooldown tier days now take effect mid-session, no save reload needed.
+- C# mods that used to call LoadQuestsFromMod / LoadBoardsFromMod / LoadContentPack should subscribe to AssetRequested and edit the assets instead. See docs/example-csharp-generators/ for the pattern.
+- Migration steps for 1.x packs are in the README under "Migrating a 1.x consumer to 2.0".
+- Catchable fish lookup now honors the per-spawn Season field, not just the GSQ Condition string. Fixes legendaries (like Angler) being treated as catchable outside their actual season.
+- Catchable boss-fish lookup now excludes Mr. Qi's extended-family legendaries (Ms. Angler, Son of Crimsonfish, Glacierfish Jr., Radioactive Carp, Legend II, plus any modded analog that gates on the same family rule).
+- New QuestContext.IsItemRecent helper so generators can skip a target the framework just used. Same anti-repetition queue the framework was already keeping; just exposed.
+- Added a built-in cooking-skill detector that recognises both Love of Cooking and YACS / Cooking Skill Redux, and reads the level from whichever is installed. The "Cooking N" SkillLevel condition picks up both automatically.
+- Fixed the Skull Cavern Deep Dive and Mines Deep Dive quest weight labels missing from the GMCM Mining page (post-CP-migration regression).
+
+1.1.0
+- Added controller support for the custom quest billboard so D-pad can move between notes and accept quests.
+- Added controller support for the Prev/Next pager buttons on the Special Orders board.
+- Added a GMCM "Excluded quest givers" field so the IneligibleGivers list can be edited in-game.
+- Added a MailFallbackForExcludedGivers toggle. When a daily-board quest's hardcoded giver is excluded, the quest gets redirected to mail (or dropped if the toggle is off) instead of silently disappearing.
+- Added per-category pad/pin tinting on the cork-board so each of the 9 quest categories has its own color (was 5 by quest type before).
+
+1.0.0
+- Initial public release.
+- Multi-slot Help Wanted billboard, replaces vanilla's single Quest of the Day.
+- Optional paginated Special Orders board (up to 5 pages).
+- Daily generation pipeline with weights, cooldowns, per-NPC dedup, and friendship-cap dedup.
+- Trigger sources: DailyBoard, Mail, Periodic, DateLocked, DateRange, OneShot, BuildingBuilt, MailReceived, WeatherForecast, NpcDialogue, SpecialOrder, CustomBoard.
+- Custom boards (per-location pin-boards) registered via BoardDefinition + boards.json.
+- Reward kinds: Money, Friendship, Object, Recipe, Mail (Today / Tomorrow / NextDay), ShopDiscount, AnimalPurchaseDiscount, FestivalBias, FairStarTokens.
+- Consequence engine with Tier1 / Tier2 / Tier3 / Special tiers, persistent dialogue queue, configurable grace window.
+- AdventureQuest base class with Deliver, Talk, Gift, GiftUniqueNpcs, Ship, Catch, Slay, ReachLevel, Visit, Build, Plant, Collect, ClearWeeds, ClearDebris, Custom step kinds.
+- Decor-shipping bypass for quests that ask the player to ship furniture or decor.
+- Condition evaluator covering season, date, weather, skill, friendship, mail flag, building, mod presence, GSQ, and more.
+- Public API for registering quests, generators, custom quest types, reward kinds, conditions, consequences, dispatch NPCs, and combat foods.
+- SMAPI content-pack loader (auto-loads any pack with ContentPackFor = RafiaBee.MoreQuestsFramework).
+- Four configurable vanilla wrappers: VanillaItemDelivery, VanillaResourceCollection, VanillaSlayMonster, VanillaFishing.
+- Per-quest weights, friendship reward sizes, gold tiers, reward multipliers, and deadline lengths exposed through GMCM.

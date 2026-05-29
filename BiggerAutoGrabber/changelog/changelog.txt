@@ -1,0 +1,27 @@
+Keep changelog for each version within 255 characters. No tech jargon. Simple words and sentences only.
+
+v1.2.2
+- Fixed the chest grid going invisible on Android/mobile when capacity was increased. The mobile UI now keeps the vanilla grid layout and lets you scroll through the full enlarged inventory with the up/down arrows.
+
+v1.2.1
+- Added compatibility with Custom Chest Size by Kree. When that mod is installed, Bigger Auto-Grabber detects it at startup and bows out so the two mods don't fight over the auto-grabber menu layout. Storage cap then comes from Custom Chest Size's regular-chest config (default 119 slots) instead of Bigger Auto-Grabber's slider.
+
+v1.2.0
+- Added scrollable inventory when capacity exceeds 72 slots. Use the mouse wheel or the up/down arrows on the right side of the chest grid to scroll through all items.
+
+v1.1.2
+- Fixed mod failing to load on Android/mobile (RepositionSideButtons and SetupBorderNeighbors methods don't exist on mobile). Now uses reflection so the mod loads on both platforms.
+
+v1.1.1
+- Fixed UI blink/flash when taking items out of enlarged auto-grabbers. The menu no longer rebuilds on every click.
+
+v1.0.1
+- Fixed crash when using Chests Anywhere to toggle "hide chest" on auto-grabbers (ArgumentOutOfRangeException in SetupBorderNeighbors). (#2)
+- Fixed UI shifting when switching to/from auto-grabbers via Chests Anywhere. (#1)
+- ResizeMenu now calls RepositionSideButtons() and SetupBorderNeighbors() to properly synch button layout and keyboard/gamepad navigation after resizing.
+
+v1.0.0
+- Initial release.
+- Configurable auto-grabber chest capacity (default: 36, vanilla).
+- Auto-grabber chest UI resizes to show expanded rows (up to 6 rows / 72 slots visible).
+- Generic Mod Config Menu support (capacity slider, 36–288).
