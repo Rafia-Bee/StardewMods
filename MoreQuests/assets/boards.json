@@ -4,12 +4,11 @@
         {
             "Name": "AdventurersGuild",
             "Location": "Mine",
-            "Tile": [ 20, 4 ],
+            "Tile": [ 20, 6 ],
             "Texture": "Mods/RafiaBee.MoreQuests/AdventureBoard",
             "Background": "Mods/RafiaBee.MoreQuests/AdventureBoardBackground",
             "BoardSize": [ 2, 2 ],
             "Title": "Adventurer's Guild Board",
-            "Available": { "MinDaysPlayed": "14" },
             "Indicator": { "Show": true, "Offset": [ 0, -8 ] },
             "PoolSize": 3,
             "PoolStrategy": "WeightedRandom",

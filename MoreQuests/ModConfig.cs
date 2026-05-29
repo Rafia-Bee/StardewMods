@@ -22,12 +22,12 @@ public sealed class ModConfig
     public bool EnableAdventurersGuildBoard { get; set; } = true;
 
     /// Tile X of the guild board's anchor (the floor tile the player stands on to interact).
-    /// The board lives in the Mine entrance map. Default (20, 4) places the player on the
+    /// The board lives in the Mine entrance map. Default (20, 6) places the player on the
     /// right wall, just past the mine shaft, near the ladder down. The board sprite renders
     /// directly above this tile.
     public int AdventureBoardTileX { get; set; } = 20;
     /// Tile Y of the guild board's anchor. See AdventureBoardTileX for default placement.
-    public int AdventureBoardTileY { get; set; } = 4;
+    public int AdventureBoardTileY { get; set; } = 6;
 
     // ----- Shop discounts -----
     public int ShopDiscountPercent { get; set; } = 50;
