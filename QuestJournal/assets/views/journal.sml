@@ -130,7 +130,7 @@
                                        background={@Mods/RafiaBee.QuestJournal/Sprites/highlight:Highlight}
                                        background-tint={DividerTint} />
                             </lane>
-                            <label *if={:IsEmpty} margin="8" text={#journal.list.empty} />
+                            <label *if={IsEmpty} margin="8" text={#journal.list.empty} />
                         </lane>
                     </scrollable>
                 </frame>
