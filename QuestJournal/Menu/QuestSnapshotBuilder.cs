@@ -269,17 +269,40 @@ internal static class QuestSnapshotBuilder
     // "DailyBoard"), which is exactly what we filter on.
     public static (string Category, string Kind) ResolveCategoryKind(Quest q, IMoreQuestsApi? mqfApi)
     {
-        if (q == null || mqfApi == null) return (string.Empty, string.Empty);
-        try
+        if (q == null) return (string.Empty, string.Empty);
+        if (mqfApi != null)
         {
-            string? defId = mqfApi.GetDefinitionId(q);
-            if (string.IsNullOrEmpty(defId)) return (string.Empty, string.Empty);
-            var info = mqfApi.GetQuestInfo(defId!);
-            if (info == null) return (string.Empty, string.Empty);
-            return (info.Category.ToString(), info.Kind.ToString());
+            try
+            {
+                string? defId = mqfApi.GetDefinitionId(q);
+                if (!string.IsNullOrEmpty(defId))
+                {
+                    var info = mqfApi.GetQuestInfo(defId!);
+                    if (info != null)
+                        return (info.Category.ToString(), info.Kind.ToString());
+                }
+            }
+            catch { }
         }
-        catch { return (string.Empty, string.Empty); }
+
+        // MQF didn't claim this quest: it's vanilla, a non-MQF modded quest, or
+        // one that was already in the log before it got stamped. Classify it by
+        // its vanilla subclass so custom "kind" tabs still catch it. Category
+        // stays blank since vanilla quests carry no theme.
+        return (string.Empty, ClassifyVanillaKind(q));
     }
+
+    // Best-effort quest-type label from the vanilla subclass. Names match MQF's
+    // BoardQuestType so a "kind" tab reads the same whether the quest came from
+    // MQF or vanilla. Anything without a known subclass is bucketed as Story.
+    private static string ClassifyVanillaKind(Quest q) => q switch
+    {
+        ItemDeliveryQuest => "ItemDelivery",
+        ResourceCollectionQuest => "ResourceCollection",
+        FishingQuest => "Fishing",
+        SlayMonsterQuest => "SlayMonster",
+        _ => "Story"
+    };
 
     public static string ResolveGiverDisplay(Quest q, IMoreQuestsApi? mqfApi = null)
     {
