@@ -285,6 +285,31 @@ public sealed class JournalContext : INotifyPropertyChanged
         SelectedQuest = row;
     }
 
+    // Used by the HUD click-through: find the live quest matching a pin key and
+    // select it. If the current tab filters it out, fall back to the Active tab
+    // (which always lists live quests, and pinned quests are always live).
+    public bool SelectQuestByKey(string key)
+    {
+        if (string.IsNullOrEmpty(key)) return false;
+        var match = FindRowByKey(key);
+        if (match == null)
+        {
+            SelectTab(TabActive);
+            match = FindRowByKey(key);
+        }
+        if (match == null) return false;
+        SelectRow(match);
+        return true;
+    }
+
+    private QuestRow? FindRowByKey(string key)
+    {
+        foreach (var r in Quests)
+            if (r.Quest is Quest q && PinnedObjectivesStore.KeyFor(q) == key)
+                return r;
+        return null;
+    }
+
     public void CompleteSelected()
     {
         if (_selectedQuest == null || _selectedQuest.IsCompleted) return;

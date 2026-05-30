@@ -270,4 +270,15 @@ public sealed class ModEntry : Mod
         return menu;
     }
 
+    // Opens the journal and selects the quest matching a pin key. Called by the
+    // HUD when the player clicks a pinned quest.
+    internal void OpenJournalToQuest(string key)
+    {
+        if (_viewEngine == null) return;
+        var journal = BuildJournalMenu();
+        if (journal == null) return;
+        Game1.activeClickableMenu = journal;
+        _journalContext?.SelectQuestByKey(key);
+    }
+
 }
