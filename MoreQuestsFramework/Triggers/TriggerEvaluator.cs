@@ -261,7 +261,8 @@ internal sealed class TriggerEvaluator
 
     // Forms: "FirstStat <name>[|<name>...] >= <n>", "FirstShipped <id>",
     // "FirstItemOwned <id>" (proxied to basicShipped + recipesCooked), "FirstHeldItem <id>",
-    // "FirstCraftingRecipe <Name>", "FirstCookingRecipe <Name>".
+    // "FirstCraftingRecipe <Name>", "FirstCookingRecipe <Name>",
+    // "FirstFriendship <Npc> >= <hearts>".
     private bool EvaluateOneShotPredicate(string when)
     {
         var parts = when.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -307,6 +308,12 @@ internal sealed class TriggerEvaluator
                     return false;
                 string cookingName = string.Join(' ', parts, 1, parts.Length - 1);
                 return Game1.player.cookingRecipes.ContainsKey(cookingName);
+
+            case "firstfriendship":
+                // "FirstFriendship <Npc> >= <hearts>". Unknown NPCs read as 0 hearts.
+                if (parts.Length < 4 || parts[2] != ">=" || !int.TryParse(parts[3], out int hearts))
+                    return false;
+                return Game1.player.getFriendshipHeartLevelForNPC(parts[1]) >= hearts;
 
             default:
                 _monitor.Log($"OneShot 'When' clause not recognised: '{when}'.", LogLevel.Warn);

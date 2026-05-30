@@ -145,6 +145,16 @@
             "Generator": "CheckOnFriends"
         },
         {
+            "Name": "Social.EmilyHousewarming",
+            "Category": "Social",
+            "Trigger": {
+                "Source": "OneShot",
+                "When": "FirstFriendship Emily >= 5",
+                "Available": { "NpcExists": "Emily", "NpcMet": "Emily" }
+            },
+            "Generator": "EmilyHousewarming"
+        },
+        {
             "Name": "Festival.GusSpring",
             "Category": "Festival",
             "Trigger": {

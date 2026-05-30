@@ -120,6 +120,7 @@ internal static partial class Generators
         Reg(fw, "CheckOnFriends", CheckOnFriends);
         Reg(fw, "CheckOnGeorge", CheckOnGeorge);
         Reg(fw, "ElliottPoemInspiration", ElliottPoemInspiration);
+        Reg(fw, "EmilyHousewarming", EmilyHousewarming);
         Reg(fw, "GiftDelivery", GiftDelivery);
         Reg(fw, "GuntherMuseumDonation", GuntherMuseumDonation);
     }

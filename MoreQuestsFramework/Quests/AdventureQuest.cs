@@ -7,6 +7,7 @@ using MoreQuestsFramework.Rewards;
 using Netcode;
 using StardewValley;
 using StardewValley.Monsters;
+using StardewValley.Objects;
 using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Quests;
@@ -37,6 +38,12 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     // Per-(step, location). A shared baseline across locations would credit progress on
     // every warp into a map with fewer clumps than the previous one.
     private Dictionary<(int StepIndex, string Location), int>? _clumpBaselines;
+
+    // Decorate high-water baselines, per (step, "category@location"). Transient and seeded
+    // on the first poll of a session, so furniture already in the room when the quest starts
+    // (or already credited before a reload) never counts. Only ever moves up, so moving a
+    // piece around can't credit. Only genuinely new placements do.
+    [XmlIgnore] private Dictionary<(int StepIndex, string Key), int>? _decorBaselines;
 
     // Transient cache for a deferred (mine) DropItemsInRadius zone, keyed by the live floor
     // instance so a new visit (new instance) re-picks. Not netfields, so it never syncs or saves.
@@ -732,6 +739,101 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             CreditCount(i, step, delta);
         }
     }
+
+    // Polled each second on the player's current location. Credits furniture the player
+    // places while the step is active, and only that: the baseline is a high-water mark of
+    // the matching-furniture count, seeded on the first poll of a session (so what's already
+    // in the room never counts) and never lowered. Picking up furniture to move it drops the
+    // live count below the high-water mark, so putting it back can't credit, which keeps a
+    // rearrange from advancing the quest. The step's category (Items[0]) selects which
+    // furniture counts: rug, light, wall, other (none of those three), or any.
+    public void ObserveDecorate(GameLocation? location)
+    {
+        if (completed.Value || location == null)
+            return;
+        string loc = location.Name ?? string.Empty;
+        if (loc.Length == 0)
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.Decorate) continue;
+            if (!LocationMatches(step, loc)) continue;
+
+            string category = step.Items.Count > 0
+                ? (NormalizeDecorCategory(step.Items[0]) ?? "any")
+                : "any";
+
+            int matching = 0;
+            var furniture = location.furniture;
+            if (furniture != null)
+            {
+                foreach (var f in furniture)
+                {
+                    if (f == null) continue;
+                    if (MatchesDecorCategory(f, category)) matching++;
+                }
+            }
+
+            _decorBaselines ??= new Dictionary<(int, string), int>();
+            var key = (i, category + "@" + loc);
+            if (!_decorBaselines.TryGetValue(key, out int baseline))
+            {
+                _decorBaselines[key] = matching;
+                continue;
+            }
+            if (matching <= baseline)
+                continue;
+
+            int delta = matching - baseline;
+            _decorBaselines[key] = matching;
+            int needed = Math.Max(1, step.Count);
+            int credit = Math.Min(delta, needed - step.Progress);
+            if (credit <= 0)
+                continue;
+            step.Progress += credit;
+            if (step.Progress >= needed)
+                MarkStepDone(i, step);
+            else
+            {
+                Persist(i, step);
+                reloadObjective();
+            }
+        }
+    }
+
+    private static string? NormalizeDecorCategory(string raw) =>
+        raw?.Trim().ToLowerInvariant() switch
+        {
+            "rug" => "rug",
+            "light" or "lamp" or "lighting" => "light",
+            "wall" or "walldecor" or "wall-decoration" => "wall",
+            "other" => "other",
+            "any" or "" => "any",
+            _ => null
+        };
+
+    private static bool MatchesDecorCategory(Furniture f, string category) => category switch
+    {
+        "rug" => IsDecorRug(f),
+        "light" => IsDecorLight(f),
+        "wall" => IsDecorWall(f),
+        "other" => !IsDecorRug(f) && !IsDecorLight(f) && !IsDecorWall(f),
+        _ => true
+    };
+
+    private static bool IsDecorRug(Furniture f) => f.furniture_type.Value == Furniture.rug;
+
+    private static bool IsDecorLight(Furniture f)
+    {
+        int t = f.furniture_type.Value;
+        return t == Furniture.lamp || t == Furniture.fireplace
+            || t == Furniture.sconce || t == Furniture.torch;
+    }
+
+    private static bool IsDecorWall(Furniture f) => !f.isGroundFurniture();
 
     /// DropItemsPatches calls this when a player-dropped Debris hits the ground. Drops
     /// of a stack create one Debris carrying the whole stack, so the listener passes

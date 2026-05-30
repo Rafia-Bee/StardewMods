@@ -15,7 +15,7 @@ This mod powers [More Quests](../MoreQuests/README.md) and ships four configurab
   - `Periodic`, every N in-game days.
   - `DateLocked`, a specific date, optionally yearly.
   - `DateRange`, every day inside a closed date range.
-  - `OneShot`, fires once per save when the `When` predicate first comes true.
+  - `OneShot`, fires once per save when the `When` predicate first comes true. Predicate forms: `FirstStat <name>[|<name>...] >= <n>`, `FirstShipped <id>`, `FirstItemOwned <id>`, `FirstHeldItem <id>`, `FirstCraftingRecipe <Name>`, `FirstCookingRecipe <Name>`, `FirstFriendship <Npc> >= <hearts>`.
   - `BuildingBuilt`, the morning after a given farm building finishes construction (with optional `DayDelay`).
   - `MailReceived`, the day a given mail flag enters the player's received list (with optional `DayDelay`).
   - `WeatherForecast`, when tomorrow's weather matches. Handy for rainy-day mail that arrives the night before.
@@ -316,7 +316,7 @@ If you want a quest to survive any exclusion list without falling back to mail, 
 Use `Steps[]` instead of `Objective`. Each step has:
 
 - `Name`, referenced by other steps' `Requires[]`.
-- `Kind`, one of: `Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearWeeds`, `ClearDebris`, `DropItems`, `DropItemsInRadius`, `DigArtifactSpot`, `Custom`.
+- `Kind`, one of: `Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearWeeds`, `ClearDebris`, `DropItems`, `DropItemsInRadius`, `DigArtifactSpot`, `DonateMuseum`, `Decorate`, `Custom`.
 - `Description`, the journal line.
 - Step-kind-specific targeting fields (`Targets[]`, `Items[]`, `Count`, etc.).
 
@@ -490,6 +490,7 @@ Multi-step Adventure quests carry a `Steps[]` list. Each entry has a `Kind` driv
 - `DropItems`, `World.DebrisListChanged` filtered to debris dropped by the local player. `Targets[0]` = location, `Items[]` = accepted item ids (same `$`-predicate syntax as Deliver), `Count` = items dropped. Consumed debris are visibly removed from the ground.
 - `DropItemsInRadius`, same as `DropItems` but only credits drops inside a circular zone. Adds `CenterX` / `CenterY` (the zone's center tile) and `Radius` (tiles; 0 = no gate). An overlay draws a pulsing ring + beam of light at the center so the player can find it. The overlay is render-only (no collision, never edits tiles or objects). If `CenterX` and `CenterY` are both 0 the zone is resolved lazily on the live location via a read-only tile scan (`DropZonePicker`), which is how mine-floor zones work since those locations regenerate per visit.
 - `DigArtifactSpot`, `World.ObjectListChanged` removed list filtered by `QualifiedItemId == "(O)590"`. `Targets[0]` = location, `Count` = artifact spots dug.
+- `Decorate`, per-second poll of `location.furniture`. `Targets[0]` = location (e.g. `FarmHouse`), `Count` = pieces to place, `Items[0]` = the category that counts: `rug`, `light`, `wall`, `other` (none of those three), or `any`. Only furniture placed while the step is active credits: the baseline is a high-water mark of the matching count, seeded on the first poll and never lowered, so furniture already in the room and furniture moved around never count. Use one step per category to spell out "place a rug, a light, a wall piece, and N others".
 - `Collect`, `Player.InventoryChanged` additions for matching item ids.
 - `Custom`, escape hatch for consumer-mod step handlers. `Targets[0]` is the handler id registered through `IMoreQuestsModApi.RegisterCustomAdventureStep`. The framework polls the handler once per second while the step is active; the handler reads `CustomStepContext` and returns an `int` delta to credit against `Step.Progress` (returning enough to reach `Count` marks the step Done). Bare names resolve under the calling mod's UniqueID; pass `"OtherMod.UniqueID/Name"` to reference another mod's handler. Example:
 

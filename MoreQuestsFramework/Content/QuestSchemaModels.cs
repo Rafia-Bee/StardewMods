@@ -167,7 +167,11 @@ public sealed class StepDef
     public string? Name { get; set; }
 
     // Deliver | Talk | Gift | Catch | Slay | Ship | Visit | Build | ReachLevel |
-    // Plant | Collect | ClearDebris | ClearWeeds | DropItems | DigArtifactSpot | Custom.
+    // Plant | Collect | ClearDebris | ClearWeeds | DropItems | DigArtifactSpot |
+    // DonateMuseum | Decorate | Custom.
+    // Decorate: counts furniture placed in Targets' location(s) while the step is active
+    // (Count = pieces to place). Items[0] is the category that counts: rug, light, wall,
+    // other (none of those three), or any. Moving existing furniture never counts.
     public string Kind { get; set; } = "Talk";
 
     public string? Description { get; set; }

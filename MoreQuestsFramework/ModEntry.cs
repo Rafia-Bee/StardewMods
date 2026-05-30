@@ -805,6 +805,7 @@ public sealed class ModEntry : Mod
             // Polling at currentLocation handles the common case (player breaks a clump
             // where they stand). Multi-location quests re-baseline on the next warp.
             a.PollResourceClumps(Game1.currentLocation);
+            a.ObserveDecorate(Game1.currentLocation);
             a.PollCustomSteps(step => ResolveCustomStepHandler(a, step));
         }
     }

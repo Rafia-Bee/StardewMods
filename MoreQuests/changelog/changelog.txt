@@ -1,5 +1,6 @@
 2.2.0
 - Needs More Quests Framework 2.3.0 or newer.
+- New "Emily's Housewarming Challenge" quest: reach 5 hearts with Emily and she mails you a challenge to liven up your farmhouse. Place a rug, a light source, a wall decoration, and a few more pieces of furniture, then tell her it's ready. Only furniture you put down while the quest is going counts, so moving things around won't cheat it. Emily and Robin send you a surprise dresser, plus a friendship boost. You can change how many pieces it asks for in the settings.
 - New "The Unseen Offering" quest on the Adventurer's Guild board: a magic NPC marks a glowing ritual circle (look for the beam of light) out in the wild or deep in the Mines. Leave spoiled, inedible food inside the ring and a combat food turns up in the mail next morning. Needs Combat 5 and Ginger Island.
 - New Crop Cycle quest: a farmer NPC asks you to grow a crop start to finish. Sow seeds, water them, harvest the crop, then deliver the haul. 28-day deadline. Pays gold plus a stack of Hyper Speed-Gro. The crop pick respects how many days are left in the current season, so you won't get rolled a crop you can't finish in time. Sprinklers, rain, and Junimo Huts all count toward the watering and harvesting steps.
 - Coal Point Farm and Ripley NPCs join the quest-giver pools.
