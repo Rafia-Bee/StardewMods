@@ -116,6 +116,7 @@ public sealed class JournalContext : INotifyPropertyChanged
     public bool SelectedShowObjective => !SelectedHasSteps && !string.IsNullOrEmpty(SelectedObjective);
 
     public bool HasSelection => _selectedQuest != null;
+    public bool NoSelection => _selectedQuest == null;
     public bool IsEmpty => Quests.Count == 0;
 
     // Edit mode (mirrors Better Crafting's category editing): off by default and
@@ -1329,6 +1330,7 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedHasSteps));
         Raise(nameof(SelectedShowObjective));
         Raise(nameof(HasSelection));
+        Raise(nameof(NoSelection));
     }
 
     private void Raise(string? name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

@@ -11,6 +11,7 @@
     "journal.editmode.hint": "Edit mode: click one of your own tabs to rename, refilter, or delete it.",
 
     "journal.list.empty": "No quests on this tab.",
+    "journal.detail.empty": "Pick a quest to see its details.",
 
     "journal.header.objective": "Objective",
     "journal.header.steps": "Steps",

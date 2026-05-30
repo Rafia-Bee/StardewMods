@@ -129,6 +129,8 @@
                                 scrollbar-down-sprite={@Mods/RafiaBee.QuestJournal/Sprites/down_arrow:Arrow}
                                 scrollbar-thumb-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}>
                         <lane orientation="vertical" layout="stretch content" margin="0, 0, 40, 0">
+                            <label *if={NoSelection} margin="8, 16" text={#journal.detail.empty} />
+                            <lane *if={HasSelection} orientation="vertical" layout="stretch content">
                             <frame layout="stretch content"
                                    margin="0, 0, 0, 12"
                                    background={@Mods/StardewUI/Sprites/BannerBackground}
@@ -158,6 +160,7 @@
                             <label margin="8, 0" text={SelectedDaysLeftDisplay} />
                             <label margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.source} />
                             <label margin="8, 0" text={SelectedSourceDisplay} />
+                            </lane>
                         </lane>
                     </scrollable>
                 </frame>
