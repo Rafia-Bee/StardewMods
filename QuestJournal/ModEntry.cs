@@ -217,13 +217,15 @@ public sealed class ModEntry : Mod
             // BGM replaces GameMenu wholesale, so the floating-overlay tab
             // approach Ferngill uses can't reach BGM's tab strip. When BGM
             // isn't around, fall back to the overlay for vanilla GameMenu.
+            var menuIcon = Helper.ModContent.Load<Microsoft.Xna.Framework.Graphics.Texture2D>("assets/sprites/menuIcon.png");
             var bgm = Helper.ModRegistry.GetApi<IBetterGameMenuApi>("leclair.bettergamemenu");
             if (bgm != null)
             {
                 new BgmIntegration(
                     bgm,
                     BuildJournalMenu,
-                    () => Helper.Translation.Get("journal.tab.tooltip").Default("Quest Journal").ToString()
+                    () => Helper.Translation.Get("journal.tab.tooltip").Default("Quest Journal").ToString(),
+                    menuIcon
                 ).Register();
                 DebugLog("Registered Quest Journal as a Better Game Menu tab.");
             }
@@ -232,7 +234,8 @@ public sealed class ModEntry : Mod
                 _tabOverlay = new GameMenuTabOverlay(
                     Helper,
                     BuildJournalMenu,
-                    Helper.Translation.Get("journal.tab.tooltip").Default("Quest Journal").ToString());
+                    Helper.Translation.Get("journal.tab.tooltip").Default("Quest Journal").ToString(),
+                    menuIcon);
                 _tabOverlay.Register();
             }
         }

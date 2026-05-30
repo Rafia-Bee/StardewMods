@@ -17,15 +17,17 @@ internal sealed class GameMenuTabOverlay
     private readonly IModHelper _helper;
     private readonly System.Func<IClickableMenu?> _openJournal;
     private readonly ClickableComponent _tab;
+    private readonly Texture2D _icon;
 
     private GameMenu? _hiddenMenu;
     private IClickableMenu? _activeJournal;
 
-    public GameMenuTabOverlay(IModHelper helper, System.Func<IClickableMenu?> openJournal, string tooltip)
+    public GameMenuTabOverlay(IModHelper helper, System.Func<IClickableMenu?> openJournal, string tooltip, Texture2D icon)
     {
         _helper = helper;
         _openJournal = openJournal;
         _tab = new ClickableComponent(new Rectangle(0, 0, 64, 64), "questJournal", tooltip);
+        _icon = icon;
     }
 
     public void Register()
@@ -132,9 +134,9 @@ internal sealed class GameMenuTabOverlay
 
         var batch = e.SpriteBatch;
         batch.Draw(
-            Game1.mouseCursors,
+            _icon,
             new Vector2(_tab.bounds.X, _tab.bounds.Y),
-            new Rectangle(80, 0, 16, 16),
+            new Rectangle(0, 0, 16, 16),
             Color.White,
             0f,
             Vector2.Zero,

@@ -22,21 +22,22 @@ internal sealed class BgmIntegration
     private readonly IBetterGameMenuApi _api;
     private readonly System.Func<IClickableMenu?> _buildStandaloneJournal;
     private readonly System.Func<string> _displayName;
+    private readonly Microsoft.Xna.Framework.Graphics.Texture2D _icon;
 
-    public BgmIntegration(IBetterGameMenuApi api, System.Func<IClickableMenu?> buildStandaloneJournal, System.Func<string> displayName)
+    public BgmIntegration(IBetterGameMenuApi api, System.Func<IClickableMenu?> buildStandaloneJournal, System.Func<string> displayName, Microsoft.Xna.Framework.Graphics.Texture2D icon)
     {
         _api = api;
         _buildStandaloneJournal = buildStandaloneJournal;
         _displayName = displayName;
+        _icon = icon;
     }
 
     public void Register()
     {
-        // Vanilla quest-log scroll on mouseCursors. Placeholder until step 13's
-        // art pass swaps in a dedicated 16x16 tab icon.
+        // The mod's own 16x16 tab icon (assets/sprites/menuIcon.png).
         var iconDraw = _api.CreateDraw(
-            Game1.mouseCursors,
-            new Rectangle(80, 0, 16, 16),
+            _icon,
+            new Rectangle(0, 0, 16, 16),
             scale: 1f);
 
         _api.RegisterTab(
