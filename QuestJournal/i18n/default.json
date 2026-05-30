@@ -3,5 +3,9 @@
     "journal.cancel.confirm": "Cancel this quest?",
     "journal.action.pin": "Pin",
     "journal.action.unpin": "Unpin",
+    "journal.action.warpto": "Warp to {{npc}}",
+    "journal.action.warpmany": "Warp...",
+    "journal.warp.title": "Warp to...",
+    "journal.warp.notfound": "Can't find {{npc}} right now.",
     "hud.more": "... and {{count}} more"
 }

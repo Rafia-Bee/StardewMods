@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using QuestJournal.Api;
 using QuestJournal.Hud;
 using QuestJournal.Integrations;
+using QuestJournal.Warp;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
@@ -55,7 +56,20 @@ public sealed class JournalContext : INotifyPropertyChanged
     public string SelectedGiverDisplay => _selectedQuest?.GiverDisplay ?? string.Empty;
     public string SelectedDaysLeftDisplay => _selectedQuest?.DaysLeftDisplay ?? string.Empty;
     public string SelectedSourceDisplay => _selectedQuest?.SourceDisplay ?? string.Empty;
-    public string SelectedWarpLabel => _selectedQuest?.WarpLabel ?? string.Empty;
+    // Single NPC reads "Warp to X"; multiple touches open the dropdown, so the
+    // button just says "Warp...". Empty when nothing's selected or warpable.
+    public string SelectedWarpLabel
+    {
+        get
+        {
+            var targets = _selectedQuest?.WarpTargets;
+            if (targets == null || targets.Count == 0) return string.Empty;
+            if (targets.Count == 1)
+                return _helper.Translation.Get("journal.action.warpto", new { npc = targets[0].DisplayName })
+                    .Default($"Warp to {targets[0].DisplayName}").ToString();
+            return _helper.Translation.Get("journal.action.warpmany").Default("Warp...").ToString();
+        }
+    }
     public bool SelectedIsCompleted => _selectedQuest?.IsCompleted == true;
     public bool SelectedShowActions => _selectedQuest != null && !_selectedQuest.IsCompleted && _selectedQuest.Quest != null;
     public bool SelectedShowComplete => SelectedShowActions;
@@ -66,8 +80,10 @@ public sealed class JournalContext : INotifyPropertyChanged
     public bool SelectedShowDetails => _selectedQuest != null && !_selectedQuest.IsCompleted
         && (_selectedQuest.Quest != null || _selectedQuest.SpecialOrder != null);
     public bool SelectedShowPin => SelectedShowDetails;
-    // Warp is gated behind AllowWarpCheat (default off).
-    public bool SelectedShowWarp => SelectedShowDetails && ModEntry.Config.AllowWarpCheat;
+    // Warp is gated behind AllowWarpCheat (default off) and needs at least one
+    // resolvable NPC to warp to, else the button has nothing to do.
+    public bool SelectedShowWarp => SelectedShowDetails && ModEntry.Config.AllowWarpCheat
+        && _selectedQuest != null && _selectedQuest.WarpTargets.Count > 0;
     public bool SelectedIsPinned =>
         (_selectedQuest?.Quest is Quest q && PinnedObjectivesStore.IsPinned(q))
         || (_selectedQuest?.SpecialOrder is SpecialOrder so && PinnedObjectivesStore.IsPinned(so));
@@ -421,7 +437,36 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedPinLabel));
     }
 
-    public void WarpSelected() { }
+    // One NPC warps straight there; more than one opens a picker popup.
+    public void WarpSelected()
+    {
+        var targets = _selectedQuest?.WarpTargets;
+        if (targets == null || targets.Count == 0) return;
+        if (targets.Count == 1)
+        {
+            NpcWarpResolver.Warp(targets[0].InternalName);
+            return;
+        }
+        OpenWarpDropdown(targets);
+    }
+
+    private void OpenWarpDropdown(IReadOnlyList<WarpNpc> targets)
+    {
+        if (_viewEngine == null) return;
+        string title = _helper.Translation.Get("journal.warp.title").Default("Warp to...").ToString();
+        var ctx = new WarpDropdownContext(title);
+        foreach (var t in targets)
+        {
+            string label = _helper.Translation.Get("journal.action.warpto", new { npc = t.DisplayName })
+                .Default($"Warp to {t.DisplayName}").ToString();
+            ctx.Options.Add(new WarpOptionRow(label, t.InternalName));
+        }
+        var controller = _viewEngine.CreateMenuControllerFromAsset($"{_viewPrefix}/warp_dropdown", ctx);
+        if (controller == null) return;
+        controller.DimmingAmount = 0f;
+        controller.Closed += () => controller.Dispose();
+        Game1.activeClickableMenu?.SetChildMenu(controller.Menu);
+    }
 
     // Tab clicks route through here so edit mode can intercept. Built-in tabs
     // always just switch; a custom tab in edit mode opens its editor instead.
@@ -757,7 +802,7 @@ public sealed class JournalContext : INotifyPropertyChanged
             giverDisplay: ResolveGiverDisplay(q),
             daysLeftDisplay: BuildDaysLeftDisplay(q),
             sourceDisplay: ResolveSourceDisplay(q),
-            warpTarget: ResolveGiverNpcName(q),
+            warpTargets: BuildWarpTargets(q),
             isCompleted: false,
             canCancel: q.canBeCancelled.Value,
             canPostpone: q.daysLeft.Value > 0,
@@ -805,7 +850,7 @@ public sealed class JournalContext : INotifyPropertyChanged
             giverDisplay: giver,
             daysLeftDisplay: BuildSpecialOrderDaysLeft(so),
             sourceDisplay: source,
-            warpTarget: so.requester.Value,
+            warpTargets: BuildSoWarpTargets(so),
             isCompleted: false,
             canCancel: false,
             canPostpone: false,
@@ -1016,7 +1061,7 @@ public sealed class JournalContext : INotifyPropertyChanged
             giverDisplay: string.IsNullOrEmpty(r.Giver) ? "Unknown" : r.Giver,
             daysLeftDisplay: dateSlot,
             sourceDisplay: string.IsNullOrEmpty(r.Source) ? "Unknown" : r.Source,
-            warpTarget: null,
+            warpTargets: null,
             isCompleted: true,
             canCancel: false,
             canPostpone: false,
@@ -1103,6 +1148,49 @@ public sealed class JournalContext : INotifyPropertyChanged
                 kind: s.Kind));
         }
         return rows;
+    }
+
+    // The NPCs a quest can warp to: its giver plus any NPC named in the active
+    // Adventure step's Targets. Each is filtered to a character that actually
+    // resolves so the dropdown never offers a warp that goes nowhere.
+    private List<WarpNpc> BuildWarpTargets(Quest q)
+    {
+        var result = new List<WarpNpc>();
+        var seen = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+
+        void Add(string? internalName)
+        {
+            if (string.IsNullOrEmpty(internalName)) return;
+            string name = internalName!.Trim();
+            if (name.Length == 0 || !seen.Add(name)) return;
+            if (Game1.getCharacterFromName(name) == null) return;
+            result.Add(new WarpNpc(name, ResolveNpcDisplayName(name)));
+        }
+
+        Add(ResolveGiverNpcName(q));
+
+        var steps = SafeGetAdventureSteps(q);
+        if (steps != null && steps.Count > 0)
+        {
+            int? activeIdx = SafeGetActiveStepIndex(q);
+            if (activeIdx.HasValue && activeIdx.Value >= 0 && activeIdx.Value < steps.Count)
+            {
+                var targets = steps[activeIdx.Value].Targets;
+                if (targets != null)
+                    foreach (var t in targets) Add(t);
+            }
+        }
+
+        return result;
+    }
+
+    private static List<WarpNpc> BuildSoWarpTargets(SpecialOrder so)
+    {
+        var result = new List<WarpNpc>();
+        string? req = so.requester.Value;
+        if (!string.IsNullOrEmpty(req) && Game1.getCharacterFromName(req) != null)
+            result.Add(new WarpNpc(req!, ResolveNpcDisplayName(req)));
+        return result;
     }
 
     private void RebuildSelectedRewards()
@@ -1276,7 +1364,10 @@ public sealed class QuestRow : INotifyPropertyChanged
     // and for buckets we don't classify. Not shown in the detail panel.
     public string Category { get; }
     public string Kind { get; }
-    public string? WarpTarget { get; }
+    // NPCs this quest can warp to (giver + active-step targets), distinct and
+    // already filtered to characters that actually resolve. Empty for history
+    // rows. One entry warps directly; more open the dropdown.
+    public IReadOnlyList<WarpNpc> WarpTargets { get; }
     public bool IsCompleted { get; }
     public bool CanCancel { get; }
     public bool CanPostpone { get; }
@@ -1347,9 +1438,6 @@ public sealed class QuestRow : INotifyPropertyChanged
 
     private void Raise(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-    public bool HasWarpTarget => !string.IsNullOrEmpty(WarpTarget);
-    public string WarpLabel => HasWarpTarget ? $"Warp to {WarpTarget}" : "No warp target";
-
     // Aggregate text capture for legacy CompletedQuestRecord.RewardSummary so
     // pre-Step-5 saves still render readable history rows after this change.
     public string RewardSummaryAggregate
@@ -1376,7 +1464,7 @@ public sealed class QuestRow : INotifyPropertyChanged
         string giverDisplay,
         string daysLeftDisplay,
         string sourceDisplay,
-        string? warpTarget,
+        IReadOnlyList<WarpNpc>? warpTargets,
         bool isCompleted,
         bool canCancel,
         bool canPostpone,
@@ -1396,7 +1484,7 @@ public sealed class QuestRow : INotifyPropertyChanged
         SourceDisplay = sourceDisplay;
         Category = category ?? string.Empty;
         Kind = kind ?? string.Empty;
-        WarpTarget = warpTarget;
+        WarpTargets = warpTargets ?? new List<WarpNpc>();
         IsCompleted = isCompleted;
         CanCancel = canCancel;
         CanPostpone = canPostpone;
