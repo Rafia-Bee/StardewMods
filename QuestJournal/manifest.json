@@ -6,7 +6,7 @@
     "UniqueID": "RafiaBee.QuestJournal",
     "Description": "Richer quest journal with multi-step view, auto HUD pins, complete/cancel, warp integration, built specially to accommodate MoreQuestsFramework.",
     "EntryDll": "QuestJournal.dll",
-    "UpdateKeys": ["Nexus:00000"],
+    "UpdateKeys": ["Nexus:46966"],
     "Dependencies": [
         {
             "UniqueID": "focustense.StardewUI",
