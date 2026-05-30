@@ -6,6 +6,7 @@
 - Special Orders get their own tab.
 - Pin quests to a top-right corner of the screen so you can see your current goal while you play. Click a pin to jump straight to that quest.
 - Make your own tabs that filter quests by title, source, category, or kind. Saved per save file.
+- Search bar at the top to filter the quest list by title.
 - Optional warp helper warps you next to a quest's NPC.
 - Optional item helper hands you the item a quest asks for.
 - Resize the whole window in the settings.

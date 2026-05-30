@@ -14,7 +14,7 @@
         },
         {
             "UniqueID": "RafiaBee.MoreQuestsFramework",
-            "MinimumVersion": "2.3.0",
+            "MinimumVersion": "2.4.0",
             "IsRequired": false
         },
         {

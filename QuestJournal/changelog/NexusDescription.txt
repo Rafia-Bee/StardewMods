@@ -12,6 +12,7 @@ Quest Journal replaces that log with a proper journal. A quest list down the lef
 [*][b]Special Orders[/b] - the board quests get their own tab with their rewards listed out[/*]
 [*][b]Pin to the screen[/b] - pin any quest and its current goal shows up in the top-right corner while you play. Click a pinned quest to jump straight to it. Drag the panel wherever you want it[/*]
 [*][b]Your own tabs[/b] - build tabs that filter the list by title, source mod, category, or kind. Custom tabs are stored per-save.[/*]
+[*][b]Search bar[/b] - type in the box at the top to filter the quest list by title[/*]
 [*][b]Complete button[/b] (optional, off by default) - a button that finishes a quest and pays its reward without doing the objective. It's a shortcut, so you turn it on yourself[/*]
 [*][b]Warp helper[/b] (optional, off by default) - a button that warps you right next to a quest's NPC. If a quest involves more than one NPC you get a little picker[/*]
 [*][b]Item helper[/b] (optional, off by default) - a button that hands you the item a quest is asking for so you still do the real turn-in, or bumps a fishing quest's catch count[/*]
