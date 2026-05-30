@@ -12,6 +12,9 @@
 
     "journal.list.empty": "No quests on this tab.",
     "journal.detail.empty": "Pick a quest to see its details.",
+    "journal.search.label": "Search:",
+    "journal.search.clear": "Clear the search",
+    "journal.search.clearlabel": "Clear",
 
     "journal.header.objective": "Objective",
     "journal.header.steps": "Steps",

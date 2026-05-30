@@ -119,6 +119,25 @@ public sealed class JournalContext : INotifyPropertyChanged
     public bool NoSelection => _selectedQuest == null;
     public bool IsEmpty => Quests.Count == 0;
 
+    // Free-text search box in the top row. Filters the current tab's rows by
+    // title (case-insensitive substring). Two-way bound so typing re-filters
+    // live; cleared text shows the whole tab again.
+    private string _searchText = string.Empty;
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            string v = value ?? string.Empty;
+            if (_searchText == v) return;
+            _searchText = v;
+            Raise(nameof(SearchText));
+            ReapplyFilter();
+        }
+    }
+
+    public void ClearSearch() => SearchText = string.Empty;
+
     // Edit mode (mirrors Better Crafting's category editing): off by default and
     // tabs just switch. When on, clicking a custom tab opens its editor to
     // rename / re-filter / delete it. Built-in tabs always just switch.
@@ -766,18 +785,18 @@ public sealed class JournalContext : INotifyPropertyChanged
         else switch (_activeTabId)
         {
             case TabActive:
-                foreach (var r in _activeRows) Quests.Add(r);
+                foreach (var r in _activeRows) AddRow(r);
                 break;
             case TabSpecial:
-                foreach (var r in _specialOrderRows) Quests.Add(r);
+                foreach (var r in _specialOrderRows) AddRow(r);
                 break;
             case TabCompleted:
-                foreach (var r in _historyRows) Quests.Add(r);
+                foreach (var r in _historyRows) AddRow(r);
                 break;
             case TabAll:
-                foreach (var r in _activeRows) Quests.Add(r);
-                foreach (var r in _specialOrderRows) Quests.Add(r);
-                foreach (var r in _historyRows) Quests.Add(r);
+                foreach (var r in _activeRows) AddRow(r);
+                foreach (var r in _specialOrderRows) AddRow(r);
+                foreach (var r in _historyRows) AddRow(r);
                 break;
         }
         // Rows are shared across tabs, so clear any stale selection/hover from
@@ -808,7 +827,14 @@ public sealed class JournalContext : INotifyPropertyChanged
     private void AddMatching(List<QuestRow> source, CustomTabDef def)
     {
         foreach (var r in source)
-            if (MatchesFilter(r, def)) Quests.Add(r);
+            if (MatchesFilter(r, def)) AddRow(r);
+    }
+
+    // Final gate before a row reaches the list: the search box. Empty search
+    // lets everything through.
+    private void AddRow(QuestRow r)
+    {
+        if (Contains(r.Title, _searchText)) Quests.Add(r);
     }
 
     private static bool MatchesFilter(QuestRow r, CustomTabDef def)

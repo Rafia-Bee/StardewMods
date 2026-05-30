@@ -78,6 +78,24 @@
 
         <lane orientation="vertical" layout="stretch stretch" horizontal-content-alignment="middle">
 
+            <lane orientation="horizontal" layout="stretch content" margin="0, 0, 0, 8" vertical-content-alignment="middle">
+                <label margin="0, 0, 8, 0" text={#journal.search.label} />
+                <textinput layout="360px 56px"
+                           max-length="40"
+                           background={@Mods/StardewUI/Sprites/TextBox}
+                           text={<>SearchText} />
+                <frame margin="8, 0, 0, 0"
+                       padding="10, 6"
+                       background={@Mods/StardewUI/Sprites/ButtonLight}
+                       horizontal-content-alignment="middle"
+                       vertical-content-alignment="middle"
+                       focusable="true"
+                       tooltip={#journal.search.clear}
+                       click=|ClearSearch()|>
+                    <label text={#journal.search.clearlabel} />
+                </frame>
+            </lane>
+
             <label *if={EditMode}
                    margin="0, 0, 0, 8"
                    text={#journal.editmode.hint} />
