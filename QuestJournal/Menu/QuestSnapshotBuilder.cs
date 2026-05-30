@@ -156,9 +156,8 @@ internal static class QuestSnapshotBuilder
         // future bug reports include enough info to extend this resolver.
         try
         {
-            ModEntry.Instance?.Monitor?.Log(
-                $"No giver inferred for quest type={q.GetType().Name} id='{q.id?.Value ?? "(none)"}' title='{q.questTitle ?? "(none)"}'.",
-                LogLevel.Trace);
+            ModEntry.DebugLog(
+                $"No giver inferred for quest type={q.GetType().Name} id='{q.id?.Value ?? "(none)"}' title='{q.questTitle ?? "(none)"}'.");
         }
         catch { }
         return null;

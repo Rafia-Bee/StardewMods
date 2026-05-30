@@ -13,6 +13,11 @@ public sealed class ModConfig
     public bool EnableLookupAnythingIntegration { get; set; } = true;
     public bool DefaultPinNewQuests { get; set; }
 
+    // When on, the journal writes its chatty status logs (everything below a
+    // warning) to the SMAPI console. Warnings and errors always show. On by
+    // default for now while the mod is new.
+    public bool DebugLogging { get; set; } = true;
+
     // Journal window position, as a pixel offset from screen-centered (0,0 =
     // centered). Set by dragging the journal's title bar; persisted so the
     // window stays where you put it.

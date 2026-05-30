@@ -14,6 +14,14 @@ public sealed class ModEntry : Mod
     internal static ModEntry Instance { get; private set; } = null!;
     internal static ModConfig Config { get; set; } = new();
 
+    // Chatty logs (anything below a warning) only show when the player turns on
+    // debug logging. Warnings and errors always go through Monitor.Log directly.
+    internal static void DebugLog(string message, LogLevel level = LogLevel.Trace)
+    {
+        if (Config.DebugLogging)
+            Instance?.Monitor.Log(message, level);
+    }
+
     private IViewEngine? _viewEngine;
     private IMoreQuestsApi? _mqfApi;
     private string _viewPrefix = null!;
@@ -181,7 +189,7 @@ public sealed class ModEntry : Mod
         // Reward itemisation falls back to vanilla synthesis in that case.
         _mqfApi = Helper.ModRegistry.GetApi<IMoreQuestsApi>("RafiaBee.MoreQuestsFramework");
         if (_mqfApi == null)
-            Monitor.Log("MoreQuestsFramework not loaded. Reward itemisation will use vanilla synthesis only.", LogLevel.Trace);
+            DebugLog("MoreQuestsFramework not loaded. Reward itemisation will use vanilla synthesis only.");
 
         // The watcher captures natural completions (delivery, fishing, slay,
         // etc.) into CompletedQuestStore so the Completed tab isn't limited
@@ -217,7 +225,7 @@ public sealed class ModEntry : Mod
                     BuildJournalMenu,
                     () => Helper.Translation.Get("journal.tab.tooltip").Default("Quest Journal").ToString()
                 ).Register();
-                Monitor.Log("Registered Quest Journal as a Better Game Menu tab.", LogLevel.Trace);
+                DebugLog("Registered Quest Journal as a Better Game Menu tab.");
             }
             else
             {

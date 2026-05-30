@@ -40,6 +40,11 @@ internal static class GmcmRegistration
             v => ModEntry.Config.DefaultPinNewQuests = v,
             () => t.Get("config.pinNew"),
             () => t.Get("config.pinNew.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.DebugLogging,
+            v => ModEntry.Config.DebugLogging = v,
+            () => t.Get("config.debugLogging"),
+            () => t.Get("config.debugLogging.tooltip"));
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.appearance"));
         api.AddNumberOption(manifest,

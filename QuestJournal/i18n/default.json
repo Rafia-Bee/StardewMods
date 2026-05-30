@@ -81,6 +81,8 @@
     "config.hudPin.tooltip": "Draws your pinned quests in the top-right corner while you're playing.",
     "config.pinNew": "Auto-pin new quests",
     "config.pinNew.tooltip": "Automatically pins a quest to the HUD the moment you accept it.",
+    "config.debugLogging": "Debug logging",
+    "config.debugLogging.tooltip": "Writes extra status messages to the SMAPI console. Handy for bug reports. Warnings and errors always show.",
 
     "config.section.appearance": "Appearance",
     "config.scale": "Journal size",

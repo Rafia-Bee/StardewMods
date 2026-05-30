@@ -123,7 +123,7 @@ internal sealed class GameMenuTabOverlay
             if (!_loggedOffscreen)
             {
                 _loggedOffscreen = true;
-                ModEntry.Instance?.Monitor.Log(
+                ModEntry.DebugLog(
                     $"Quest Journal tab would render off-screen (calculated X={_tab.bounds.X}, viewport width={Game1.uiViewport.Width}). Use the F6 hotkey instead. Better Game Menu / tab-API integration is coming later.",
                     LogLevel.Info);
             }
