@@ -180,12 +180,15 @@ public sealed class JournalContext : INotifyPropertyChanged
     private string Px(float baseValue)
         => ((int)System.Math.Round(baseValue * Scale)).ToString(System.Globalization.CultureInfo.InvariantCulture) + "px";
 
+    // Heights stretch so the panels fill the frame instead of leaving dead space
+    // below them, and they stay filled at any JournalScale. Only the widths are
+    // fixed per panel.
     public string RootLayout => $"{Px(1100)} {Px(720)}";
-    public string PanelRowLayout => $"content {Px(580)}";
-    public string ListPanelLayout => $"{Px(240)} {Px(580)}";
-    public string DetailPanelLayout => $"{Px(484)} {Px(580)}";
-    public string ActionPanelLayout => $"{Px(236)} {Px(580)}";
-    public string ActionLaneLayout => $"stretch {Px(540)}";
+    public string PanelRowLayout => "content stretch";
+    public string ListPanelLayout => $"{Px(240)} stretch";
+    public string DetailPanelLayout => $"{Px(484)} stretch";
+    public string ActionPanelLayout => $"{Px(236)} stretch";
+    public string ActionLaneLayout => "stretch content";
 
     // Drag-to-move. GetJournalTopLeft is the screen-centered position plus a
     // persisted offset; ModEntry pushes it onto the menu every tick (StardewUI's

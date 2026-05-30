@@ -76,7 +76,7 @@
             </frame>
         </lane>
 
-        <lane orientation="vertical" layout="stretch content" horizontal-content-alignment="middle">
+        <lane orientation="vertical" layout="stretch stretch" horizontal-content-alignment="middle">
 
             <label *if={EditMode}
                    margin="0, 0, 0, 8"
