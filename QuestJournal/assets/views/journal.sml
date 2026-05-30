@@ -174,7 +174,7 @@
                         <lane orientation="vertical" layout={ActionLaneLayout} horizontal-content-alignment="middle">
                         <label *if={SelectedIsCompleted} margin="0, 12" color={HeaderColor} text="Quest complete" />
 
-                        <frame *if={SelectedShowActions} layout="stretch content" margin="0, 4" padding="8, 14"
+                        <frame *if={SelectedShowDetails} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
@@ -182,7 +182,7 @@
                                click=|ShowDetailsSelected()|>
                             <label text="Details" />
                         </frame>
-                        <frame *if={SelectedShowActions} layout="stretch content" margin="0, 4" padding="8, 14"
+                        <frame *if={SelectedShowPin} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"
@@ -198,7 +198,7 @@
                                click=|CompleteSelected()|>
                             <label text="Complete Quest" />
                         </frame>
-                        <frame *if={SelectedShowActions} layout="stretch content" margin="0, 4" padding="8, 14"
+                        <frame *if={SelectedShowWarp} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"
                                vertical-content-alignment="middle"

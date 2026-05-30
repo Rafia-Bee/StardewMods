@@ -10,6 +10,7 @@ using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Quests;
+using StardewValley.SpecialOrders;
 
 namespace QuestJournal.Hud;
 
@@ -165,9 +166,55 @@ internal sealed class PinnedObjectiveHud
             if (entries.Count >= MaxEntries) { hiddenOverflow++; continue; }
             entries.Add((q.questTitle ?? string.Empty, ResolveObjective(q), key));
         }
+
+        // Special orders live in team.specialOrders, not the quest log, so they
+        // need a parallel pass. Only in-progress ones are shown.
+        var orders = Game1.player.team?.specialOrders;
+        if (orders != null)
+        {
+            foreach (var so in orders)
+            {
+                if (so == null || so.questState.Value != SpecialOrderStatus.InProgress) continue;
+                string key = PinnedObjectivesStore.KeyFor(so);
+                if (string.IsNullOrEmpty(key) || !pinned.Contains(key)) continue;
+                if (entries.Count >= MaxEntries) { hiddenOverflow++; continue; }
+                entries.Add((ResolveSpecialOrderTitle(so), ResolveSpecialOrderObjective(so), key));
+            }
+        }
+
         if (entries.Count == 0) return;
 
         DrawStack(e.SpriteBatch, entries, hiddenOverflow);
+    }
+
+    // Resolved fresh from the raw field, not the cached GetName(), so a late
+    // string patch still reads right (mirrors the journal).
+    private static string ResolveSpecialOrderTitle(SpecialOrder so)
+    {
+        string? raw = so.questName.Value;
+        if (string.IsNullOrEmpty(raw)) return so.GetName() ?? string.Empty;
+        try { return SpecialOrder.MakeLocalizationReplacements(raw).Trim(); }
+        catch { return so.GetName() ?? string.Empty; }
+    }
+
+    // First not-yet-complete objective, with its progress count when it has one.
+    private static string ResolveSpecialOrderObjective(SpecialOrder so)
+    {
+        try
+        {
+            foreach (var obj in so.objectives)
+            {
+                if (obj == null || obj.IsComplete()) continue;
+                string desc = obj.GetDescription() ?? string.Empty;
+                try { desc = so.Parse(desc) ?? desc; } catch { }
+                int max = obj.GetMaxCount();
+                if (max > 1)
+                    desc = $"{desc} ({obj.GetCount()}/{max})";
+                return desc;
+            }
+        }
+        catch { }
+        return string.Empty;
     }
 
     // Active step for MQF Adventure quests, otherwise the vanilla currentObjective.

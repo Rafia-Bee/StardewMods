@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using StardewValley;
 using StardewValley.Quests;
+using StardewValley.SpecialOrders;
 
 namespace QuestJournal.Hud;
 
@@ -31,6 +32,15 @@ internal static class PinnedObjectivesStore
         return string.IsNullOrEmpty(title) ? string.Empty : "title:" + title;
     }
 
+    // "so:" prefix keeps an order's key from colliding with a numeric quest id
+    // in the same pin set.
+    public static string KeyFor(SpecialOrder so)
+    {
+        if (so == null) return string.Empty;
+        string? key = so.questKey?.Value;
+        return string.IsNullOrEmpty(key) ? string.Empty : "so:" + key;
+    }
+
     public static HashSet<string> Load()
     {
         if (Game1.player == null) return new HashSet<string>();
@@ -56,16 +66,24 @@ internal static class PinnedObjectivesStore
         return set;
     }
 
-    public static bool IsPinned(Quest q)
-    {
-        string key = KeyFor(q);
-        return !string.IsNullOrEmpty(key) && Load().Contains(key);
-    }
+    public static bool IsPinned(Quest q) => IsPinnedKey(KeyFor(q));
+    public static bool IsPinned(SpecialOrder so) => IsPinnedKey(KeyFor(so));
 
     // Flips the pin and persists. Returns the new pinned state.
-    public static bool Toggle(Quest q)
+    public static bool Toggle(Quest q) => ToggleKey(KeyFor(q));
+    public static bool Toggle(SpecialOrder so) => ToggleKey(KeyFor(so));
+
+    public static void Pin(Quest q) => PinKey(KeyFor(q));
+    public static void Pin(SpecialOrder so) => PinKey(KeyFor(so));
+
+    public static void Unpin(Quest q) => UnpinKey(KeyFor(q));
+    public static void Unpin(SpecialOrder so) => UnpinKey(KeyFor(so));
+
+    private static bool IsPinnedKey(string key)
+        => !string.IsNullOrEmpty(key) && Load().Contains(key);
+
+    private static bool ToggleKey(string key)
     {
-        string key = KeyFor(q);
         if (string.IsNullOrEmpty(key)) return false;
         var set = new HashSet<string>(Load());
         bool nowPinned;
@@ -75,17 +93,15 @@ internal static class PinnedObjectivesStore
         return nowPinned;
     }
 
-    public static void Pin(Quest q)
+    private static void PinKey(string key)
     {
-        string key = KeyFor(q);
         if (string.IsNullOrEmpty(key)) return;
         var set = new HashSet<string>(Load());
         if (set.Add(key)) Save(set);
     }
 
-    public static void Unpin(Quest q)
+    private static void UnpinKey(string key)
     {
-        string key = KeyFor(q);
         if (string.IsNullOrEmpty(key)) return;
         var set = new HashSet<string>(Load());
         if (set.Remove(key)) Save(set);

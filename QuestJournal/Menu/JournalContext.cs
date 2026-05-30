@@ -61,9 +61,16 @@ public sealed class JournalContext : INotifyPropertyChanged
     public bool SelectedShowComplete => SelectedShowActions;
     public bool SelectedShowCancel => _selectedQuest != null && _selectedQuest.CanCancel;
     public bool SelectedShowPostpone => _selectedQuest != null && _selectedQuest.CanPostpone;
-    // Pin button label flips with the quest's pinned state so one button both
-    // pins and unpins. Only meaningful for live quests; null Quest reads unpinned.
-    public bool SelectedIsPinned => _selectedQuest?.Quest is Quest q && PinnedObjectivesStore.IsPinned(q);
+    // Details / Pin / Warp work for live quests and special orders, not history
+    // rows. Complete / Postpone / Cancel stay quest-only.
+    public bool SelectedShowDetails => _selectedQuest != null && !_selectedQuest.IsCompleted
+        && (_selectedQuest.Quest != null || _selectedQuest.SpecialOrder != null);
+    public bool SelectedShowPin => SelectedShowDetails;
+    // Warp is gated behind AllowWarpCheat (default off).
+    public bool SelectedShowWarp => SelectedShowDetails && ModEntry.Config.AllowWarpCheat;
+    public bool SelectedIsPinned =>
+        (_selectedQuest?.Quest is Quest q && PinnedObjectivesStore.IsPinned(q))
+        || (_selectedQuest?.SpecialOrder is SpecialOrder so && PinnedObjectivesStore.IsPinned(so));
     public string SelectedPinLabel => _helper.Translation
         .Get(SelectedIsPinned ? "journal.action.unpin" : "journal.action.pin")
         .Default(SelectedIsPinned ? "Unpin" : "Pin").ToString();
@@ -285,16 +292,15 @@ public sealed class JournalContext : INotifyPropertyChanged
         SelectedQuest = row;
     }
 
-    // Used by the HUD click-through: find the live quest matching a pin key and
-    // select it. If the current tab filters it out, fall back to the Active tab
-    // (which always lists live quests, and pinned quests are always live).
+    // Used by the HUD click-through to select the quest/order behind a pin key.
     public bool SelectQuestByKey(string key)
     {
         if (string.IsNullOrEmpty(key)) return false;
         var match = FindRowByKey(key);
         if (match == null)
         {
-            SelectTab(TabActive);
+            // Quests live in the Active tab, special orders ("so:") in Special.
+            SelectTab(key.StartsWith("so:", System.StringComparison.Ordinal) ? TabSpecial : TabActive);
             match = FindRowByKey(key);
         }
         if (match == null) return false;
@@ -305,8 +311,12 @@ public sealed class JournalContext : INotifyPropertyChanged
     private QuestRow? FindRowByKey(string key)
     {
         foreach (var r in Quests)
+        {
             if (r.Quest is Quest q && PinnedObjectivesStore.KeyFor(q) == key)
                 return r;
+            if (r.SpecialOrder is SpecialOrder so && PinnedObjectivesStore.KeyFor(so) == key)
+                return r;
+        }
         return null;
     }
 
@@ -398,13 +408,15 @@ public sealed class JournalContext : INotifyPropertyChanged
         }
     }
 
-    // Toggles the HUD pin for the selected quest. Only live quests (Quest != null)
-    // get the Pin button, so history rows and special orders are filtered out by
-    // SelectedShowActions before we get here.
+    // Toggles the HUD pin for the selected quest or special order.
     public void PinSelected()
     {
-        if (_selectedQuest?.Quest is not Quest q) return;
-        PinnedObjectivesStore.Toggle(q);
+        if (_selectedQuest?.Quest is Quest q)
+            PinnedObjectivesStore.Toggle(q);
+        else if (_selectedQuest?.SpecialOrder is SpecialOrder so)
+            PinnedObjectivesStore.Toggle(so);
+        else
+            return;
         Raise(nameof(SelectedIsPinned));
         Raise(nameof(SelectedPinLabel));
     }
@@ -793,11 +805,12 @@ public sealed class JournalContext : INotifyPropertyChanged
             giverDisplay: giver,
             daysLeftDisplay: BuildSpecialOrderDaysLeft(so),
             sourceDisplay: source,
-            warpTarget: null,
+            warpTarget: so.requester.Value,
             isCompleted: false,
             canCancel: false,
             canPostpone: false,
             quest: null,
+            specialOrder: so,
             host: this,
             category: string.Empty,
             kind: "SpecialOrder");
@@ -1156,6 +1169,9 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedShowComplete));
         Raise(nameof(SelectedShowCancel));
         Raise(nameof(SelectedShowPostpone));
+        Raise(nameof(SelectedShowDetails));
+        Raise(nameof(SelectedShowPin));
+        Raise(nameof(SelectedShowWarp));
         Raise(nameof(SelectedIsPinned));
         Raise(nameof(SelectedPinLabel));
         Raise(nameof(SelectedHasSteps));
@@ -1265,8 +1281,11 @@ public sealed class QuestRow : INotifyPropertyChanged
     public bool CanCancel { get; }
     public bool CanPostpone { get; }
     // Live quest reference for active rows. Null for historical rows
-    // (snapshots from CompletedQuestStore).
+    // (snapshots from CompletedQuestStore) and for special-order rows.
     public Quest? Quest { get; }
+    // Live special-order reference for Special Orders tab rows. Null otherwise.
+    public SpecialOrder? SpecialOrder { get; }
+    public bool IsSpecialOrder => SpecialOrder != null;
 
     private readonly JournalContext _host;
 
@@ -1364,7 +1383,8 @@ public sealed class QuestRow : INotifyPropertyChanged
         Quest? quest,
         JournalContext host,
         string category = "",
-        string kind = "")
+        string kind = "",
+        SpecialOrder? specialOrder = null)
     {
         Title = title;
         Description = description;
@@ -1381,6 +1401,7 @@ public sealed class QuestRow : INotifyPropertyChanged
         CanCancel = canCancel;
         CanPostpone = canPostpone;
         Quest = quest;
+        SpecialOrder = specialOrder;
         _host = host;
     }
 

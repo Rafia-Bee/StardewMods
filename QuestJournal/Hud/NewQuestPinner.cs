@@ -2,13 +2,15 @@ using System.Collections.Generic;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.SpecialOrders;
 
 namespace QuestJournal.Hud;
 
 // Auto-pins quests the player picks up after a save loads, when
 // DefaultPinNewQuests is on. SMAPI has no "quest added" event, so this watches
-// the quest log on a one-second tick and pins anything it hasn't seen before.
-// On save load it primes the seen-set with the existing quests so old quests
+// the quest log (and special orders, which live in team.specialOrders, not the
+// log) on a one-second tick and pins anything it hasn't seen before. On save
+// load it primes the seen-set with the existing quests/orders so old ones
 // aren't bulk-pinned, only genuinely new ones are.
 internal sealed class NewQuestPinner
 {
@@ -36,7 +38,8 @@ internal sealed class NewQuestPinner
         _primed = false;
     }
 
-    // Snapshot the current quests as already-seen so they don't get auto-pinned.
+    // Snapshot the current quests + special orders as already-seen so they don't
+    // get auto-pinned.
     private void Prime()
     {
         _seen.Clear();
@@ -48,6 +51,16 @@ internal sealed class NewQuestPinner
                 var q = log[i];
                 if (q == null) continue;
                 string key = PinnedObjectivesStore.KeyFor(q);
+                if (!string.IsNullOrEmpty(key)) _seen.Add(key);
+            }
+        }
+        var orders = Game1.player?.team?.specialOrders;
+        if (orders != null)
+        {
+            foreach (var so in orders)
+            {
+                if (so == null) continue;
+                string key = PinnedObjectivesStore.KeyFor(so);
                 if (!string.IsNullOrEmpty(key)) _seen.Add(key);
             }
         }
@@ -71,7 +84,21 @@ internal sealed class NewQuestPinner
             if (_seen.Add(key) && ModEntry.Config.DefaultPinNewQuests)
                 PinnedObjectivesStore.Pin(q);
         }
-        // Forget quests that left the log so re-accepting one pins it again.
+        // Special orders, accepted from the SO board into team.specialOrders.
+        var orders = Game1.player.team?.specialOrders;
+        if (orders != null)
+        {
+            foreach (var so in orders)
+            {
+                if (so == null || so.questState.Value != SpecialOrderStatus.InProgress) continue;
+                string key = PinnedObjectivesStore.KeyFor(so);
+                if (string.IsNullOrEmpty(key)) continue;
+                current.Add(key);
+                if (_seen.Add(key) && ModEntry.Config.DefaultPinNewQuests)
+                    PinnedObjectivesStore.Pin(so);
+            }
+        }
+        // Forget quests/orders that left so re-accepting one pins it again.
         _seen.RemoveWhere(k => !current.Contains(k));
     }
 }
