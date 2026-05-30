@@ -1,6 +1,9 @@
+using System;
+using System.Collections.Generic;
 using QuestJournal.Api;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.GameData.Objects;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Quests;
 
@@ -156,10 +159,19 @@ internal static class AdaptiveItemSpawner
             var step = steps[idx.Value];
             var items = step.Items;
             if (items == null || items.Count == 0) return false;
-            // First item the registry recognises (skip "$any" tokens).
+            // First item we can actually spawn. A concrete id is used as-is; a
+            // "$" token (e.g. "$edible-egg", "$category:-5", "$tag:forage_item")
+            // gets resolved to one real item that satisfies it, so the helper
+            // still works for "any egg" style steps.
             foreach (var candidate in items)
             {
                 if (string.IsNullOrEmpty(candidate)) continue;
+                if (candidate[0] == '$')
+                {
+                    string resolved = ResolveTokenItem(candidate);
+                    if (!string.IsNullOrEmpty(resolved)) { itemId = resolved; break; }
+                    continue;
+                }
                 try { if (ItemRegistry.GetData(candidate) == null) continue; }
                 catch { continue; }
                 itemId = candidate;
@@ -171,6 +183,73 @@ internal static class AdaptiveItemSpawner
             quality = step.MinQuality;
             return true;
         }
+        catch { return false; }
+    }
+
+    // Resolved-token cache. The item catalogue doesn't change during a session,
+    // and CanHelp runs on every detail-panel render, so a token is scanned once.
+    private static readonly Dictionary<string, string> TokenItemCache =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    // Picks one concrete object that satisfies a MoreQuests "$" item token, so
+    // the helper can spawn it for "any egg"/"any forage" style steps. Mirrors
+    // MoreQuests' own token matching. Empty string when nothing matches (the
+    // result is cached either way).
+    private static string ResolveTokenItem(string token)
+    {
+        if (string.IsNullOrEmpty(token)) return string.Empty;
+        if (TokenItemCache.TryGetValue(token, out string? cached)) return cached;
+
+        string found = string.Empty;
+        try
+        {
+            foreach (var itemType in ItemRegistry.ItemTypes)
+            {
+                if (itemType.Identifier != "(O)") continue;
+                foreach (string id in itemType.GetAllIds())
+                {
+                    string qid = itemType.Identifier + id;
+                    if (ItemRegistry.GetData(qid)?.RawData is not ObjectData obj) continue;
+                    if (TokenMatches(token, obj, qid)) { found = qid; break; }
+                }
+                if (!string.IsNullOrEmpty(found)) break;
+            }
+        }
+        catch { found = string.Empty; }
+
+        TokenItemCache[token] = found;
+        return found;
+    }
+
+    private static bool TokenMatches(string token, ObjectData obj, string qid)
+    {
+        const int eggCategory = -5;
+        const int inedible = -300;
+        if (token.Equals("$edible-egg", StringComparison.OrdinalIgnoreCase))
+            return obj.Category == eggCategory && obj.Edibility != inedible;
+        if (token.Equals("$forage", StringComparison.OrdinalIgnoreCase))
+            return HasTag(qid, "forage_item");
+        if (token.StartsWith("$category:", StringComparison.OrdinalIgnoreCase))
+            return int.TryParse(token.Substring("$category:".Length), out int cat) && obj.Category == cat;
+        if (token.StartsWith("$tag:", StringComparison.OrdinalIgnoreCase))
+        {
+            string tag = token.Substring("$tag:".Length).Trim();
+            return tag.Length > 0 && HasTag(qid, tag);
+        }
+        if (token.StartsWith("$edibility:", StringComparison.OrdinalIgnoreCase))
+        {
+            var bounds = token.Substring("$edibility:".Length).Split(':');
+            return bounds.Length == 2
+                && int.TryParse(bounds[0], out int lo)
+                && int.TryParse(bounds[1], out int hi)
+                && obj.Edibility >= lo && obj.Edibility <= hi;
+        }
+        return false;
+    }
+
+    private static bool HasTag(string qid, string tag)
+    {
+        try { return ItemContextTagManager.HasBaseTag(qid, tag); }
         catch { return false; }
     }
 }
