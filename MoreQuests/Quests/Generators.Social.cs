@@ -321,4 +321,124 @@ internal static partial class Generators
             return null;
         return chosen[Game1.random.Next(chosen.Count)];
     }
+
+    /// OneShot mail quest, fired once the player hits 5 hearts with Emily (the
+    /// "FirstFriendship Emily >= 5" trigger in quests.json). Emily asks the player to
+    /// liven up the farmhouse: place a number of furniture pieces (config) while the quest
+    /// is active, including a rug, a light source, and a wall decoration, then talk to her.
+    /// The Decorate step only counts furniture placed after the quest starts, so a player
+    /// who already decorated can't auto-complete it. Reward: a random dresser of the kind
+    /// Robin sells, plus FriendshipMid with Emily.
+    private static QuestPosting? EmilyHousewarming(QuestContext ctx)
+    {
+        if (Game1.getCharacterFromName("Emily") == null)
+            return null;
+
+        string? dresserId = PickRandomDresser(ctx);
+        if (dresserId == null)
+            return null;
+        var dresser = ctx.Items.TryResolveItem(dresserId);
+        if (dresser == null)
+            return null;
+
+        const string giver = "Emily";
+        int total = Math.Max(3, ModEntry.Config.EmilyHousewarmingCount);
+        int other = total - 3;
+
+        var steps = new List<AdventureStepState>
+        {
+            DecorateStep("PlaceLight", "light", 1, "quest.social.emilyHousewarming.step.light"),
+            DecorateStep("PlaceRug", "rug", 1, "quest.social.emilyHousewarming.step.rug"),
+            DecorateStep("PlaceWall", "wall", 1, "quest.social.emilyHousewarming.step.wall")
+        };
+        var requires = new List<string> { "PlaceLight", "PlaceRug", "PlaceWall" };
+        if (other > 0)
+        {
+            steps.Add(new AdventureStepState
+            {
+                Name = "PlaceOther",
+                Kind = AdventureStepKind.Decorate,
+                Targets = new List<string> { "FarmHouse" },
+                Items = new List<string> { "other" },
+                Count = other,
+                Description = ModEntry.I18n.Get("quest.social.emilyHousewarming.step.other")
+            });
+            requires.Add("PlaceOther");
+        }
+        steps.Add(new AdventureStepState
+        {
+            Name = "TalkEmily",
+            Kind = AdventureStepKind.Talk,
+            Targets = new List<string> { giver },
+            Requires = requires,
+            Count = 1,
+            Description = ModEntry.I18n.Get("quest.social.emilyHousewarming.step.talk")
+        });
+
+        var quest = new AdventureQuest();
+        quest.Initialize(steps, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.social.emilyHousewarming.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Social,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            // Flat 14 days (not a preset): a missed one-shot never comes back.
+            DeadlineDays = 14,
+            Rewards =
+            {
+                new ObjectReward(dresser.QualifiedItemId, 1),
+                new FriendshipReward(giver, ctx.Config.FriendshipMid)
+            },
+            Title = ModEntry.I18n.Get("quest.social.emilyHousewarming.title"),
+            Description = ModEntry.I18n.Get("quest.social.emilyHousewarming.description", new { count = total }),
+            CurrentObjective = ModEntry.I18n.Get("quest.social.emilyHousewarming.step.light"),
+            TargetMessage = ModEntry.I18n.Get("quest.social.emilyHousewarming.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
+    private static AdventureStepState DecorateStep(string name, string category, int count, string descKey) =>
+        new AdventureStepState
+        {
+            Name = name,
+            Kind = AdventureStepKind.Decorate,
+            Targets = new List<string> { "FarmHouse" },
+            Items = new List<string> { category },
+            Count = count,
+            Description = ModEntry.I18n.Get(descKey)
+        };
+
+    // Random dresser-type furniture (Data/Furniture Type field == "dresser"), the kind
+    // Robin stocks at the Carpenter shop. Returns a (F)-qualified id, or null if none.
+    private static string? PickRandomDresser(QuestContext ctx)
+    {
+        Dictionary<string, string> data;
+        try
+        {
+            data = ctx.Helper.GameContent.Load<Dictionary<string, string>>("Data/Furniture");
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+
+        var pool = new List<string>();
+        foreach (var (key, raw) in data)
+        {
+            if (string.IsNullOrEmpty(raw))
+                continue;
+            var fields = raw.Split('/');
+            if (fields.Length < 2)
+                continue;
+            if (!string.Equals(fields[1], "dresser", StringComparison.OrdinalIgnoreCase))
+                continue;
+            pool.Add("(F)" + key);
+        }
+        if (pool.Count == 0)
+            return null;
+        return pool[Game1.random.Next(pool.Count)];
+    }
 }

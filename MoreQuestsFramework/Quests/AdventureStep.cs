@@ -27,6 +27,7 @@ public enum AdventureStepKind
     DropItemsInRadius,
     DigArtifactSpot,
     DonateMuseum,
+    Decorate,
     Custom
 }
 

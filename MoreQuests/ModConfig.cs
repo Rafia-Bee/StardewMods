@@ -210,6 +210,10 @@ public sealed class ModConfig
     /// Check on Friends: how many distinct NPCs to talk to before reporting back.
     public int CheckOnFriendsCount { get; set; } = 3;
 
+    /// Emily's Housewarming: how many furniture pieces to place in the farmhouse while the
+    /// quest is active (on top of needing a rug, a light source, and a wall decoration).
+    public int EmilyHousewarmingCount { get; set; } = 8;
+
     /// When on, internal diagnostic logs are written at Trace level. Off in release builds
     /// by default so the SMAPI log stays quiet; flip on if you're chasing a bug.
     public bool DebugLogging { get; set; } = false;

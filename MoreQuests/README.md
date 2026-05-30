@@ -159,6 +159,7 @@ Quests are grouped by category below and listed alphabetically within each group
 | Check on Friends | Daily board | Any met villager | Talk to 3 randomly picked met villagers, then report back to the giver | Friendship with the giver | Cooldown 30 days |
 | Check on George | Daily board | Evelyn | Gift George, talk to him, report to Evelyn | Friendship with both | Cooldown 21 days |
 | Elliott's Poem Inspiration | Daily board | Elliott | Bring Elliott one flower or gem | Friendship (big bump) | Cooldown Long, needs Elliott met |
+| Emily's Housewarming Challenge | Mail, once at 5 hearts with Emily | Emily | Decorate the farmhouse: place a rug, a light source, a wall decoration, and more furniture (only pieces placed while the quest is active count), then talk to Emily | A random dresser from Robin + Friendship with Emily | One time, 14-day deadline, count set in config |
 | Gift Delivery | Daily board | Any met villager | Drop off a loved or liked gift to one of the giver's friends | Gold + Friendship with both NPCs | Cooldown Long |
 
 ### Not planning to add

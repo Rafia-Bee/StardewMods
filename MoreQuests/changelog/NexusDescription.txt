@@ -158,6 +158,7 @@ The Mining-category quests above (everything except Bar Delivery and Archaeology
 [tr][td]Check on Friends[/td][td]Daily board[/td][td]Any met villager[/td][td]Talk to 3 randomly picked met villagers, then report back to the giver[/td][td]Friendship with the giver[/td][td]Cooldown 30 days[/td][/tr]
 [tr][td]Check on George[/td][td]Daily board[/td][td]Evelyn[/td][td]Gift George, talk to him, report to Evelyn[/td][td]Friendship with both[/td][td]Cooldown 21 days[/td][/tr]
 [tr][td]Elliott's Poem Inspiration[/td][td]Daily board[/td][td]Elliott[/td][td]Bring Elliott one flower or gem[/td][td]Friendship (big bump)[/td][td]Cooldown Long, needs Elliott met[/td][/tr]
+[tr][td]Emily's Housewarming Challenge[/td][td]Mail, once at 5 hearts with Emily[/td][td]Emily[/td][td]Decorate the farmhouse: place a rug, a light source, a wall decoration, and more furniture (only pieces placed while the quest is active count), then talk to Emily[/td][td]A random dresser from Robin + Friendship with Emily[/td][td]One time, 14-day deadline, count set in config[/td][/tr]
 [tr][td]Gift Delivery[/td][td]Daily board[/td][td]Any met villager[/td][td]Drop off a loved or liked gift to one of the giver's friends[/td][td]Gold + Friendship with both NPCs[/td][td]Cooldown Long[/td][/tr]
 [/table]
 [/spoiler]
