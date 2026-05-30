@@ -7,5 +7,9 @@
     "journal.action.warpmany": "Warp...",
     "journal.warp.title": "Warp to...",
     "journal.warp.notfound": "Can't find {{npc}} right now.",
+    "journal.action.spawnitem": "Get quest item",
+    "journal.action.catchall": "Catch all",
+    "journal.itemhelper.spawned": "Added {{amount}} {{item}}",
+    "journal.itemhelper.caughtall": "Caught all {{total}}!",
     "hud.more": "... and {{count}} more"
 }

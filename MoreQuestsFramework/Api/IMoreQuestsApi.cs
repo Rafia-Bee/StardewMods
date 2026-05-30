@@ -29,6 +29,13 @@ public interface IMoreQuestsApi
     // quest, an AdventureQuest, etc.).
     int? GetDeliveredQuality(Quest quest);
 
+    // The concrete item the quest wants the player to provide, with required
+    // quality and remaining count. Resolves "$any" / alternative tokens to a real
+    // eligible id. Covers framework delivery + ship quests and plain vanilla
+    // item-delivery / resource-collection quests. Null when the quest doesn't
+    // hand in a spawnable item (fishing, slay, story, etc.).
+    QuestItemRequirement? GetItemRequirement(Quest quest);
+
     // For a managed quest currently posted or in the player's log, returns the
     // registered definition id. Null when the quest isn't framework-managed. Useful
     // for content mods that want to identify a quest by id rather than by translated

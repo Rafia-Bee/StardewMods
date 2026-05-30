@@ -107,6 +107,57 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
             : null;
     }
 
+    public QuestItemRequirement? GetItemRequirement(Quest quest)
+    {
+        switch (quest)
+        {
+            // MoreQuests delivery: ItemId may be a "$any" placeholder, so resolve
+            // through the concrete alternatives. minQuality carries the required tier.
+            case MoreQuestsItemDeliveryQuest mqd:
+            {
+                string id = ResolveConcreteId(mqd.ItemId.Value, mqd.alternativeItemIds);
+                if (string.IsNullOrEmpty(id)) return null;
+                int total = mqd.lockedRequiredQty.Value > 0 ? mqd.lockedRequiredQty.Value : mqd.number.Value;
+                int remaining = System.Math.Max(1, total - mqd.delivered.Value);
+                return new QuestItemRequirement(id, mqd.minQuality.Value, remaining);
+            }
+            case MoreQuestsShipQuest sq:
+            {
+                string id = ResolveConcreteId(sq.itemId.Value, sq.alternativeItemIds);
+                if (string.IsNullOrEmpty(id)) return null;
+                int remaining = System.Math.Max(1, sq.numberToShip.Value - sq.numberShipped.Value);
+                return new QuestItemRequirement(id, 0, remaining);
+            }
+            case ItemDeliveryQuest vd:
+            {
+                if (!IsRealItem(vd.ItemId.Value)) return null;
+                return new QuestItemRequirement(vd.ItemId.Value, 0, System.Math.Max(1, vd.number.Value));
+            }
+            case ResourceCollectionQuest rc:
+            {
+                if (!IsRealItem(rc.ItemId.Value)) return null;
+                return new QuestItemRequirement(rc.ItemId.Value, 0, System.Math.Max(1, rc.number.Value - rc.numberCollected.Value));
+            }
+        }
+        return null;
+    }
+
+    private static bool IsRealItem(string? id)
+    {
+        if (string.IsNullOrEmpty(id)) return false;
+        try { return StardewValley.ItemRegistry.GetData(id) != null; }
+        catch { return false; }
+    }
+
+    private static string ResolveConcreteId(string? primary, Netcode.NetStringList alts)
+    {
+        if (IsRealItem(primary)) return primary!;
+        if (alts != null)
+            for (int i = 0; i < alts.Count; i++)
+                if (IsRealItem(alts[i])) return alts[i];
+        return string.Empty;
+    }
+
     public string? GetDefinitionId(Quest quest)
     {
         return TryGetManaged(quest, out var info) ? info.DefinitionId : null;

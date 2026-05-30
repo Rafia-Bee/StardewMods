@@ -206,6 +206,14 @@
                                click=|WarpSelected()|>
                             <label text={SelectedWarpLabel} />
                         </frame>
+                        <frame *if={SelectedShowItemHelper} layout="stretch content" margin="0, 4" padding="8, 14"
+                               background={@Mods/StardewUI/Sprites/ButtonLight}
+                               horizontal-content-alignment="middle"
+                               vertical-content-alignment="middle"
+                               focusable="true"
+                               click=|ItemHelperSelected()|>
+                            <label text={SelectedItemHelperLabel} />
+                        </frame>
                         <frame *if={SelectedShowPostpone} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"

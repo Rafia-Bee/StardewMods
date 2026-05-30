@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using QuestJournal.Api;
+using QuestJournal.Cheats;
 using QuestJournal.Hud;
 using QuestJournal.Integrations;
 using QuestJournal.Warp;
@@ -90,6 +91,22 @@ public sealed class JournalContext : INotifyPropertyChanged
     public string SelectedPinLabel => _helper.Translation
         .Get(SelectedIsPinned ? "journal.action.unpin" : "journal.action.pin")
         .Default(SelectedIsPinned ? "Unpin" : "Pin").ToString();
+    // Item helper (cheat). Spawns the target item for item-style quests, or
+    // advances the catch counter for fishing quests. Hidden unless AllowItemCheats
+    // is on and the live quest actually has something the helper can do.
+    public bool SelectedShowItemHelper => _selectedQuest?.Quest is Quest q
+        && ModEntry.Config.AllowItemCheats
+        && AdaptiveItemSpawner.CanHelp(q, _mqfApi, _helper, out _);
+    public string SelectedItemHelperLabel
+    {
+        get
+        {
+            if (_selectedQuest?.Quest is Quest q && ModEntry.Config.AllowItemCheats
+                && AdaptiveItemSpawner.CanHelp(q, _mqfApi, _helper, out string label))
+                return label;
+            return string.Empty;
+        }
+    }
     // SML swaps between the single Objective line and the multi-step list
     // based on these. A stepped Adventure quest renders the step list and
     // hides the objective; everything else keeps the single objective.
@@ -407,6 +424,28 @@ public sealed class JournalContext : INotifyPropertyChanged
         if (quest.daysLeft.Value <= 0) return;
         quest.daysLeft.Value += 7;
         Refresh();
+    }
+
+    // Item helper (cheat, gated behind AllowItemCheats). Spawns the quest's
+    // target item into the bag, or for a fishing quest advances the catch
+    // counter by one. Rebuilds the list so progress/objective reflect the
+    // change, then keeps the same quest selected so repeat clicks stay put.
+    public void ItemHelperSelected()
+    {
+        if (!ModEntry.Config.AllowItemCheats) return;
+        var quest = _selectedQuest?.Quest;
+        if (quest == null) return;
+        string message = AdaptiveItemSpawner.Apply(quest, _mqfApi, _helper);
+        if (!string.IsNullOrEmpty(message))
+            Game1.addHUDMessage(HUDMessage.ForCornerTextbox(message));
+        Refresh();
+        ReselectQuest(quest);
+    }
+
+    private void ReselectQuest(Quest quest)
+    {
+        foreach (var r in Quests)
+            if (ReferenceEquals(r.Quest, quest)) { SelectRow(r); return; }
     }
 
     public void ShowDetailsSelected()
@@ -1260,6 +1299,8 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedShowDetails));
         Raise(nameof(SelectedShowPin));
         Raise(nameof(SelectedShowWarp));
+        Raise(nameof(SelectedShowItemHelper));
+        Raise(nameof(SelectedItemHelperLabel));
         Raise(nameof(SelectedIsPinned));
         Raise(nameof(SelectedPinLabel));
         Raise(nameof(SelectedHasSteps));

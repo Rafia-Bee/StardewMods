@@ -25,4 +25,6 @@ public interface IMoreQuestsApi
     string? GetGiverNpc(Quest quest);
 
     IQuestInfo? GetQuestInfo(string definitionId);
+
+    IQuestItemRequirement? GetItemRequirement(Quest quest);
 }
