@@ -1,3 +1,6 @@
+2.4.0
+- Added a tool for mod authors that tells you the exact item a quest wants handed in, with the quality and how many are still needed, and resolves "any of these" item lists to a real item. The Quest Journal mod uses this for its "get quest item" helper. No in-game change on its own.
+
 2.3.0
 - New step kind for mod authors: "decorate a room". It counts furniture the player puts down in a named building while the quest is going. Only new pieces count, so moving furniture around or anything already in the room won't tick it up. Authors can ask for a specific kind (a rug, a light, a wall piece, or anything else), which makes "place a rug, a lamp, and a painting" quests easy to set up.
 - New quest start for mod authors: fire a quest the first time the player reaches a heart level with an NPC (for example, 5 hearts with Emily).
