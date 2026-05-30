@@ -34,12 +34,13 @@ internal sealed class BgmIntegration
 
     public void Register()
     {
-        // The mod's own 16x16 tab icon (assets/sprites/menuIcon.png). Drawn at
-        // 3x so it fills the tab without crowding the edges.
+        // The mod's own 16x16 tab icon (assets/sprites/menuIcon.png), at 3x with
+        // a small downward nudge to sit centered in the tab.
         var iconDraw = _api.CreateDraw(
             _icon,
             new Rectangle(0, 0, 16, 16),
-            scale: 3f);
+            scale: 3f,
+            offset: new Vector2(0f, 2f));
 
         _api.RegisterTab(
             id: TabId,
