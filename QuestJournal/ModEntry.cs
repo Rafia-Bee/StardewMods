@@ -12,7 +12,7 @@ namespace QuestJournal;
 public sealed class ModEntry : Mod
 {
     internal static ModEntry Instance { get; private set; } = null!;
-    internal static ModConfig Config { get; private set; } = new();
+    internal static ModConfig Config { get; set; } = new();
 
     private IViewEngine? _viewEngine;
     private IMoreQuestsApi? _mqfApi;
@@ -200,6 +200,8 @@ public sealed class ModEntry : Mod
         if (Config.HotReloadViews)
             _viewEngine.EnableHotReloading();
         _viewEngine.PreloadAssets();
+
+        GmcmRegistration.Register(Helper, ModManifest);
 
         if (Config.AddGameMenuTab)
         {

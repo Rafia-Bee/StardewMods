@@ -9,6 +9,7 @@ public sealed class ModConfig
     public bool ShowHudPin { get; set; } = true;
     public bool AllowItemCheats { get; set; }
     public bool AllowWarpCheat { get; set; }
+    public bool AllowCompleteCheat { get; set; }
     public bool EnableLookupAnythingIntegration { get; set; } = true;
     public bool DefaultPinNewQuests { get; set; }
 

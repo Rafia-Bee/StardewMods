@@ -1,0 +1,78 @@
+[size=4][b]What does this mod do?[/b][/size]
+
+The vanilla quest log is one plain scroll: a title, one line of objective, a reward, and that's it. No way to see the steps of a longer quest, no button to finish or drop a quest, no label saying which mod a quest came from, and nothing on your screen reminding you what you're working on.
+
+Quest Journal replaces that log with a proper journal. A quest list down the left, all the details in the middle, and buttons on the right. It works on its own with vanilla quests, and grows extra features when [url=https://www.nexusmods.com/stardewvalley/mods/46361]More Quests Framework[/url] is installed.
+
+[size=4][b]Features[/b][/size]
+[list]
+[*][b]Full details panel[/b] - title, description, current objective, rewards, who gave it to you, days left, and which mod it came from[/*]
+[*][b]Action buttons[/b] - drop a quest you don't want, or push a quest's deadline back a week so it doesn't run out on you[/*]
+[*][b]Multi-step quests[/b] - the longer quests from More Quests Framework show every step and how far along each one is, instead of squashing it into one sentence[/*]
+[*][b]Special Orders[/b] - the board quests get their own tab with their rewards listed out[/*]
+[*][b]Pin to the screen[/b] - pin any quest and its current goal shows up in the top-right corner while you play. Click a pinned quest to jump straight to it. Drag the panel wherever you want it[/*]
+[*][b]Your own tabs[/b] - build tabs that filter the list by title, source mod, category, or kind. Custom tabs are stored per-save.[/*]
+[*][b]Complete button[/b] (optional, off by default) - a button that finishes a quest and pays its reward without doing the objective. It's a shortcut, so you turn it on yourself[/*]
+[*][b]Warp helper[/b] (optional, off by default) - a button that warps you right next to a quest's NPC. If a quest involves more than one NPC you get a little picker[/*]
+[*][b]Item helper[/b] (optional, off by default) - a button that hands you the item a quest is asking for so you still do the real turn-in, or bumps a fishing quest's catch count[/*]
+[*][b]Resize it[/b] - make the whole window bigger or smaller to taste[/*]
+[/list]
+
+[size=4][b]How to open it[/b][/size]
+[list]
+[*]Press [b]F6[/b] (you can change this key in the settings)[/*]
+[*]If you have Better Game Menu, click the [b]Quest Journal[/b] tab in the Esc menu[/*]
+[/list]
+
+[size=4][b]Requirements[/b][/size]
+[b]Required:[/b]
+[list]
+[*][url=https://smapi.io/]SMAPI[/url] 4.1+[/*]
+[*]Stardew Valley 1.6+[/*]
+[*][url=https://www.nexusmods.com/stardewvalley/mods/28870]StardewUI[/url] - the journal is drawn with it, so it won't open without it[/*]
+[/list]
+[b]Optional (auto-detected):[/b]
+[list]
+[*][url=https://www.nexusmods.com/stardewvalley/mods/46361]More Quests Framework[/url] - unlocks the multi-step view, proper reward lists, and source-mod labels. Without it, vanilla quests still get the full journal[/*]
+[*][url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] - an in-game settings page[/*]
+[*][url=https://www.nexusmods.com/stardewvalley/mods/32032]Better Game Menu[/url] - when it's installed, the Quest Journal tab is added through its tab strip[/*]
+[/list]
+
+[size=4][b]Install[/b][/size]
+[list=1]
+[*]Install SMAPI and StardewUI.[/*]
+[*]Download this mod and unzip it into your [font=Courier New]Stardew Valley/Mods[/font] folder.[/*]
+[*]Run the game through SMAPI.[/*]
+[/list]
+
+[size=4][b]Configuration[/b][/size]
+If you have [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] installed, a settings page shows up in-game. Otherwise edit the [font=Courier New]config.json[/font] in the mod's folder.
+[list]
+[*][b]Open journal key[/b] - the hotkey that opens the journal (default F6)[/*]
+[*][b]Add a game-menu tab[/b] - adds the Quest Journal tab to the Esc menu (needs a restart)[/*]
+[*][b]Show pinned quests on the HUD[/b] - draws your pinned quests in the top-right corner[/*]
+[*][b]Auto-pin new quests[/b] - pins a quest the moment you accept it (does nothing if Show pinned quests on the HUD is false)[/*]
+[*][b]Journal size[/b] - makes the whole window bigger or smaller[/*]
+[*][b]Complete button[/b], [b]Item helper[/b], and [b]Warp helper[/b] - the optional cheat buttons, all off by default[/*]
+[/list]
+
+[size=4][b]Known limitations[/b][/size]
+[list]
+[*][b]Lookup Anything[/b] support isn't in yet. Lookup Anything doesn't give other mods a way to open its lookups, so that button is parked until it does.[/*]
+[*][b]Bigger size doesn't grow the text.[/b] Scaling the window gives the text more room but keeps it at normal size, because scaling the font itself breaks word-wrap and clicking.[/*]
+[*][b]Multiplayer:[/b] pins and custom tabs are saved per player but aren't synced between players. Tested on single-player.[/*]
+[/list]
+
+[size=4][b]Translations[/b][/size]
+This mod supports translations! Feel free to translate it to your language and upload it to Nexus on your own page. Nexus will link it back to this mod automatically.
+
+[size=4][b]Credits[/b][/size]
+[list]
+[*][b]ConcernedApe[/b] for Stardew Valley[/*]
+[*][b]Pathoschild[/b] for [url=https://smapi.io/]SMAPI[/url][/*]
+[*][b]focustense[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/28870]StardewUI[/url][/*]
+[*][b]Mushymato[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/43861]StardewUI Continued[/*]
+[*][b]spacechase0[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url][/*]
+[/list]
+
+Thanks to the Stardew Valley modding community for the feedback and ideas!

@@ -15,7 +15,10 @@ public sealed class CustomTabEditorContext : INotifyPropertyChanged
         CategoryHint = categoryHint;
         KindHint = kindHint;
         ShowDelete = isEdit;
-        HeaderText = isEdit ? "Edit tab" : "New tab";
+        var t = ModEntry.Instance?.Helper?.Translation;
+        HeaderText = isEdit
+            ? t?.Get("tabeditor.header.edit").Default("Edit tab").ToString() ?? "Edit tab"
+            : t?.Get("tabeditor.header.new").Default("New tab").ToString() ?? "New tab";
     }
 
     private string _name = string.Empty;

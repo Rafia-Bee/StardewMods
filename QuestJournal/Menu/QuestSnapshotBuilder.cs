@@ -14,6 +14,15 @@ namespace QuestJournal.Menu;
 // different fields for the same quest.
 internal static class QuestSnapshotBuilder
 {
+    // These run from both the journal (instance helper) and the completion
+    // watcher (static context), so they pull the translation helper off the
+    // mod entry. Falls back to the English literal if it isn't ready yet.
+    private static string T(string key, string fallback)
+        => ModEntry.Instance?.Helper?.Translation.Get(key).Default(fallback).ToString() ?? fallback;
+
+    private static string T(string key, object tokens, string fallback)
+        => ModEntry.Instance?.Helper?.Translation.Get(key, tokens).Default(fallback).ToString() ?? fallback;
+
     public static List<RewardLineRow> BuildRewardLines(Quest q, IMoreQuestsApi? mqfApi)
     {
         var lines = new List<RewardLineRow>();
@@ -49,7 +58,7 @@ internal static class QuestSnapshotBuilder
             SynthesiseVanillaRewardLines(q, lines);
 
         if (lines.Count == 0)
-            lines.Add(new RewardLineRow(kind: "None", summary: "(none)"));
+            lines.Add(new RewardLineRow(kind: "None", summary: T("journal.reward.none", "(none)")));
 
         return lines;
     }
@@ -65,7 +74,7 @@ internal static class QuestSnapshotBuilder
         if (gold <= 0)
             gold = ResolveSubclassReward(q);
         if (gold > 0)
-            lines.Add(new RewardLineRow(kind: "Money", summary: $"{gold}g", amount: gold));
+            lines.Add(new RewardLineRow(kind: "Money", summary: T("journal.reward.money", new { amount = gold }, $"{gold}g"), amount: gold));
 
         string? desc = q.rewardDescription.Value;
         // Vanilla quest data uses "-1" as the "no reward description" sentinel
@@ -77,7 +86,7 @@ internal static class QuestSnapshotBuilder
         if (!string.IsNullOrEmpty(friend))
             lines.Add(new RewardLineRow(
                 kind: "Friendship",
-                summary: $"+250 friendship with {friend}",
+                summary: T("journal.reward.friendship", new { amount = 250, npc = friend }, $"+250 friendship with {friend}"),
                 npcName: friend,
                 amount: 250));
     }
@@ -276,7 +285,7 @@ internal static class QuestSnapshotBuilder
     public static string ResolveGiverDisplay(Quest q, IMoreQuestsApi? mqfApi = null)
     {
         string? name = ResolveGiverNpcName(q, mqfApi);
-        return string.IsNullOrEmpty(name) ? "Unknown" : name!;
+        return string.IsNullOrEmpty(name) ? T("journal.unknown", "Unknown") : name!;
     }
 
     public static string ResolveSourceDisplay(Quest q, IMoreQuestsApi? mqfApi, IModHelper helper)

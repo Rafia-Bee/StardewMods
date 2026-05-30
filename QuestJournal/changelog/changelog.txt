@@ -1,0 +1,12 @@
+1.0.0
+- First release.
+- Replaces the plain quest log with a full journal: a quest list on the left, all the details in the middle, and action buttons on the right.
+- Cancel or postpone a quest right from the journal. There's also an optional Complete button (off by default) that finishes a quest and pays its reward.
+- Multi-step quests from More Quests Framework show each step and how far along it is.
+- Special Orders get their own tab.
+- Pin quests to a top-right corner of the screen so you can see your current goal while you play. Click a pin to jump straight to that quest.
+- Make your own tabs that filter quests by title, source, category, or kind. Saved per save file.
+- Optional warp helper warps you next to a quest's NPC.
+- Optional item helper hands you the item a quest asks for.
+- Resize the whole window in the settings.
+- Open it with F6 or a tab in the Esc menu. Needs StardewUI. More Quests Framework and Generic Mod Config Menu are optional.

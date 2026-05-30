@@ -80,7 +80,7 @@
 
             <label *if={EditMode}
                    margin="0, 0, 0, 8"
-                   text="Edit mode: click one of your own tabs to rename, refilter, or delete it." />
+                   text={#journal.editmode.hint} />
 
             <lane orientation="horizontal" layout={PanelRowLayout} vertical-content-alignment="start">
 
@@ -112,7 +112,7 @@
                                        background={@Mods/RafiaBee.QuestJournal/Sprites/highlight:Highlight}
                                        background-tint={DividerTint} />
                             </lane>
-                            <label *if={:IsEmpty} margin="8" text="No quests on this tab." />
+                            <label *if={:IsEmpty} margin="8" text={#journal.list.empty} />
                         </lane>
                     </scrollable>
                 </frame>
@@ -143,20 +143,20 @@
                                        text={SelectedTitle} />
                             </frame>
                             <label margin="0, 4" text={SelectedDescription} />
-                            <label *if={SelectedShowObjective} margin="0, 12, 0, 4" color={HeaderColor} text="Objective" />
+                            <label *if={SelectedShowObjective} margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.objective} />
                             <label *if={SelectedShowObjective} margin="8, 0" text={SelectedObjective} />
-                            <label *if={SelectedHasSteps} margin="0, 12, 0, 4" color={HeaderColor} text="Steps" />
+                            <label *if={SelectedHasSteps} margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.steps} />
                             <label *repeat={:SelectedSteps} margin="8, 1" text={:RowText} />
-                            <label margin="0, 12, 0, 4" color={HeaderColor} text="Rewards" />
+                            <label margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.rewards} />
                             <lane *repeat={:SelectedRewards} orientation="horizontal" margin="8, 1" vertical-content-alignment="middle">
                                 <label text="- " />
                                 <label text={:Summary} />
                             </lane>
-                            <label margin="0, 12, 0, 4" color={HeaderColor} text="Giver" />
+                            <label margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.giver} />
                             <label margin="8, 0" text={SelectedGiverDisplay} />
-                            <label margin="0, 12, 0, 4" color={HeaderColor} text="Days Left" />
+                            <label margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.daysleft} />
                             <label margin="8, 0" text={SelectedDaysLeftDisplay} />
-                            <label margin="0, 12, 0, 4" color={HeaderColor} text="Source" />
+                            <label margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.source} />
                             <label margin="8, 0" text={SelectedSourceDisplay} />
                         </lane>
                     </scrollable>
@@ -172,7 +172,7 @@
                                 scrollbar-down-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}
                                 scrollbar-thumb-sprite={@Mods/RafiaBee.QuestJournal/Sprites/blank:Blank}>
                         <lane orientation="vertical" layout={ActionLaneLayout} horizontal-content-alignment="middle">
-                        <label *if={SelectedIsCompleted} margin="0, 12" color={HeaderColor} text="Quest complete" />
+                        <label *if={SelectedIsCompleted} margin="0, 12" color={HeaderColor} text={#journal.status.questcomplete} />
 
                         <frame *if={SelectedShowDetails} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
@@ -180,7 +180,7 @@
                                vertical-content-alignment="middle"
                                focusable="true"
                                click=|ShowDetailsSelected()|>
-                            <label text="Details" />
+                            <label text={#journal.action.details} />
                         </frame>
                         <frame *if={SelectedShowPin} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
@@ -196,7 +196,7 @@
                                vertical-content-alignment="middle"
                                focusable="true"
                                click=|CompleteSelected()|>
-                            <label text="Complete Quest" />
+                            <label text={#journal.action.complete} />
                         </frame>
                         <frame *if={SelectedShowWarp} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
@@ -220,7 +220,7 @@
                                vertical-content-alignment="middle"
                                focusable="true"
                                click=|PostponeSelected()|>
-                            <label text="Postpone (+7 days)" />
+                            <label text={#journal.action.postpone} />
                         </frame>
                         <frame *if={SelectedShowCancel} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
@@ -228,7 +228,7 @@
                                vertical-content-alignment="middle"
                                focusable="true"
                                click=|RequestCancelSelected()|>
-                            <label text="Cancel" />
+                            <label text={#journal.action.cancel} />
                         </frame>
                         </lane>
                     </scrollable>

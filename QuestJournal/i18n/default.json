@@ -1,15 +1,95 @@
 {
     "journal.tab.tooltip": "Quest Journal",
-    "journal.cancel.confirm": "Cancel this quest?",
+
+    "journal.tab.active": "Active",
+    "journal.tab.special": "Special Orders",
+    "journal.tab.completed": "Completed",
+    "journal.tab.all": "All",
+    "journal.tab.new": "New tab",
+    "journal.tab.edit": "Edit tabs",
+    "journal.tab.editdone": "Done",
+    "journal.editmode.hint": "Edit mode: click one of your own tabs to rename, refilter, or delete it.",
+
+    "journal.list.empty": "No quests on this tab.",
+
+    "journal.header.objective": "Objective",
+    "journal.header.steps": "Steps",
+    "journal.header.rewards": "Rewards",
+    "journal.header.giver": "Giver",
+    "journal.header.daysleft": "Days Left",
+    "journal.header.source": "Source",
+
+    "journal.status.questcomplete": "Quest complete",
+    "journal.status.completed": "Completed",
+    "journal.status.failed": "Failed",
+
+    "journal.days.none": "No deadline",
+    "journal.days.duetoday": "Due today!",
+    "journal.days.duetomorrow": "Due tomorrow!",
+    "journal.days.left": "{{count}} days left",
+
+    "journal.unknown": "Unknown",
+
+    "journal.action.details": "Details",
     "journal.action.pin": "Pin",
     "journal.action.unpin": "Unpin",
+    "journal.action.complete": "Complete Quest",
     "journal.action.warpto": "Warp to {{npc}}",
     "journal.action.warpmany": "Warp...",
-    "journal.warp.title": "Warp to...",
-    "journal.warp.notfound": "Can't find {{npc}} right now.",
     "journal.action.spawnitem": "Get quest item",
     "journal.action.catchall": "Catch all",
+    "journal.action.postpone": "Postpone (+7 days)",
+    "journal.action.cancel": "Cancel",
+
+    "journal.cancel.confirm": "Cancel this quest?",
+
+    "journal.warp.title": "Warp to...",
+    "journal.warp.notfound": "Can't find {{npc}} right now.",
+
     "journal.itemhelper.spawned": "Added {{amount}} {{item}}",
     "journal.itemhelper.caughtall": "Caught all {{total}}!",
-    "hud.more": "... and {{count}} more"
+
+    "journal.reward.none": "(none)",
+    "journal.reward.money": "{{amount}}g",
+    "journal.reward.friendship": "+{{amount}} friendship with {{npc}}",
+    "journal.reward.qigems": "{{amount}} Qi Gems",
+    "journal.reward.item": "{{amount}} {{item}}",
+    "journal.reward.extra": "(extra reward)",
+
+    "hud.more": "... and {{count}} more",
+
+    "tabeditor.header.new": "New tab",
+    "tabeditor.header.edit": "Edit tab",
+    "tabeditor.intro": "This tab will list quests matching the filters below. Leave a filter blank to ignore it.",
+    "tabeditor.name": "Tab name",
+    "tabeditor.title": "Title contains",
+    "tabeditor.source": "Source contains",
+    "tabeditor.category": "Category contains",
+    "tabeditor.kind": "Kind contains",
+    "tabeditor.hint": "In your quests: {{values}}",
+    "tabeditor.save": "Save",
+    "tabeditor.delete": "Delete",
+    "tabeditor.cancel": "Cancel",
+
+    "config.section.general": "General",
+    "config.openKey": "Open journal key",
+    "config.openKey.tooltip": "The key that opens the Quest Journal when you're out in the world.",
+    "config.gameMenuTab": "Add a game-menu tab",
+    "config.gameMenuTab.tooltip": "Adds a Quest Journal tab to the in-game menu (the one you open with Esc). Takes effect after a restart.",
+    "config.hudPin": "Show pinned quests on the HUD",
+    "config.hudPin.tooltip": "Draws your pinned quests in the top-right corner while you're playing.",
+    "config.pinNew": "Auto-pin new quests",
+    "config.pinNew.tooltip": "Automatically pins a quest to the HUD the moment you accept it.",
+
+    "config.section.appearance": "Appearance",
+    "config.scale": "Journal size",
+    "config.scale.tooltip": "Makes the whole journal window bigger or smaller. Reopen the journal for a change to apply.",
+
+    "config.section.cheats": "Cheats",
+    "config.completeCheat": "Complete button",
+    "config.completeCheat.tooltip": "Adds a button that finishes a quest and pays its reward without doing the objective. It's a shortcut, so it's off by default.",
+    "config.itemCheats": "Item helper",
+    "config.itemCheats.tooltip": "Adds a button that gives you the item a quest asks for (or advances a fishing quest's catch count). It's a shortcut, so it's off by default.",
+    "config.warpCheat": "Warp helper",
+    "config.warpCheat.tooltip": "Adds a button that warps you next to a quest's NPC. Off by default."
 }

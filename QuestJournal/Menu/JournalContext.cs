@@ -73,7 +73,9 @@ public sealed class JournalContext : INotifyPropertyChanged
     }
     public bool SelectedIsCompleted => _selectedQuest?.IsCompleted == true;
     public bool SelectedShowActions => _selectedQuest != null && !_selectedQuest.IsCompleted && _selectedQuest.Quest != null;
-    public bool SelectedShowComplete => SelectedShowActions;
+    // Complete pays the reward and clears the quest without doing the objective,
+    // so it's a cheat too. Gated behind AllowCompleteCheat (default off).
+    public bool SelectedShowComplete => SelectedShowActions && ModEntry.Config.AllowCompleteCheat;
     public bool SelectedShowCancel => _selectedQuest != null && _selectedQuest.CanCancel;
     public bool SelectedShowPostpone => _selectedQuest != null && _selectedQuest.CanPostpone;
     // Details / Pin / Warp work for live quests and special orders, not history
@@ -138,8 +140,22 @@ public sealed class JournalContext : INotifyPropertyChanged
             }
         }
     }
-    public string EditButtonLabel => _editMode ? "Done" : "Edit tabs";
+    public string EditButtonLabel => _editMode
+        ? _helper.Translation.Get("journal.tab.editdone").Default("Done").ToString()
+        : _helper.Translation.Get("journal.tab.edit").Default("Edit tabs").ToString();
     public void ToggleEditMode() => EditMode = !_editMode;
+
+    // Shared fallback label for a missing giver / source.
+    private string UnknownLabel => _helper.Translation.Get("journal.unknown").Default("Unknown").ToString();
+
+    // Static translation helpers for the Special Order reward builders below,
+    // which stay static (no instance state). Falls back to the English literal
+    // before the mod entry is ready.
+    private static string T(string key, string fallback)
+        => ModEntry.Instance?.Helper?.Translation.Get(key).Default(fallback).ToString() ?? fallback;
+
+    private static string T(string key, object tokens, string fallback)
+        => ModEntry.Instance?.Helper?.Translation.Get(key, tokens).Default(fallback).ToString() ?? fallback;
 
     // Section-heading colour for the detail panel, themed via JournalTheme.
     public Color HeaderColor => JournalTheme.HeaderColor;
@@ -257,11 +273,11 @@ public sealed class JournalContext : INotifyPropertyChanged
         _viewPrefix = viewPrefix;
         _completionWatcher = completionWatcher;
         _journalOffset = new Point(ModEntry.Config.JournalOffsetX, ModEntry.Config.JournalOffsetY);
-        Tabs.Add(new TabRow(TabActive, "Active", HandleTabActivate));
-        Tabs.Add(new TabRow(TabSpecial, "Special Orders", HandleTabActivate));
-        Tabs.Add(new TabRow(TabCompleted, "Completed", HandleTabActivate));
-        Tabs.Add(new TabRow(TabAll, "All", HandleTabActivate));
-        _addTab = new TabRow("__add", "New tab", _ => CreateTab()) { IsAddTab = true };
+        Tabs.Add(new TabRow(TabActive, helper.Translation.Get("journal.tab.active").Default("Active").ToString(), HandleTabActivate));
+        Tabs.Add(new TabRow(TabSpecial, helper.Translation.Get("journal.tab.special").Default("Special Orders").ToString(), HandleTabActivate));
+        Tabs.Add(new TabRow(TabCompleted, helper.Translation.Get("journal.tab.completed").Default("Completed").ToString(), HandleTabActivate));
+        Tabs.Add(new TabRow(TabAll, helper.Translation.Get("journal.tab.all").Default("All").ToString(), HandleTabActivate));
+        _addTab = new TabRow("__add", helper.Translation.Get("journal.tab.new").Default("New tab").ToString(), _ => CreateTab()) { IsAddTab = true };
         _editTab = new TabRow("__edit", EditButtonLabel, _ => ToggleEditMode()) { IsEditTab = true };
         LoadCustomTabs();
     }
@@ -824,7 +840,9 @@ public sealed class JournalContext : INotifyPropertyChanged
         Scan(_activeRows);
         Scan(_specialOrderRows);
         Scan(_historyRows);
-        return seen.Count == 0 ? string.Empty : "In your quests: " + string.Join(", ", seen);
+        if (seen.Count == 0) return string.Empty;
+        string values = string.Join(", ", seen);
+        return _helper.Translation.Get("tabeditor.hint", new { values }).Default($"In your quests: {values}").ToString();
     }
 
     private QuestRow BuildActiveRow(Quest q)
@@ -922,14 +940,14 @@ public sealed class JournalContext : INotifyPropertyChanged
                 {
                     int amt = mr.GetRewardMoneyAmount();
                     if (amt > 0)
-                        lines.Add(new RewardLineRow(kind: "Money", summary: $"{amt}g", amount: amt));
+                        lines.Add(new RewardLineRow(kind: "Money", summary: T("journal.reward.money", new { amount = amt }, $"{amt}g"), amount: amt));
                     break;
                 }
                 case GemsReward gr:
                 {
                     int amt = gr.amount.Value;
                     if (amt > 0)
-                        lines.Add(new RewardLineRow(kind: "Gems", summary: $"{amt} Qi Gems", amount: amt));
+                        lines.Add(new RewardLineRow(kind: "Gems", summary: T("journal.reward.qigems", new { amount = amt }, $"{amt} Qi Gems"), amount: amt));
                     break;
                 }
                 case FriendshipReward fr:
@@ -939,7 +957,7 @@ public sealed class JournalContext : INotifyPropertyChanged
                     if (amt != 0)
                         lines.Add(new RewardLineRow(
                             kind: "Friendship",
-                            summary: $"+{amt} friendship with {target}",
+                            summary: T("journal.reward.friendship", new { amount = amt, npc = target }, $"+{amt} friendship with {target}"),
                             npcName: fr.targetName.Value,
                             amount: amt));
                     break;
@@ -950,7 +968,7 @@ public sealed class JournalContext : INotifyPropertyChanged
                     int amt = objRew.amount.Value;
                     if (string.IsNullOrEmpty(itemKey) || amt <= 0) break;
                     string itemName = ResolveItemDisplayName(itemKey);
-                    string summary = amt > 1 ? $"{amt} {itemName}" : itemName;
+                    string summary = amt > 1 ? T("journal.reward.item", new { amount = amt, item = itemName }, $"{amt} {itemName}") : itemName;
                     lines.Add(new RewardLineRow(
                         kind: "Item",
                         summary: summary,
@@ -965,7 +983,7 @@ public sealed class JournalContext : INotifyPropertyChanged
                 ModEntry.Instance?.Monitor?.Log(
                     $"Failed to render SO reward of type {reward.GetType().Name} for quest '{so.questKey.Value}': {ex.Message}",
                     StardewModdingAPI.LogLevel.Warn);
-                lines.Add(new RewardLineRow(kind: "Other", summary: "(extra reward)"));
+                lines.Add(new RewardLineRow(kind: "Other", summary: T("journal.reward.extra", "(extra reward)")));
             }
         }
         return lines;
@@ -973,7 +991,7 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     private static string ResolveNpcDisplayName(string? internalName)
     {
-        if (string.IsNullOrEmpty(internalName)) return "Unknown";
+        if (string.IsNullOrEmpty(internalName)) return T("journal.unknown", "Unknown");
         try
         {
             var npc = Game1.getCharacterFromName(internalName);
@@ -1043,22 +1061,24 @@ public sealed class JournalContext : INotifyPropertyChanged
         catch { return so.GetName() ?? string.Empty; }
     }
 
-    private static string BuildSpecialOrderDaysLeft(SpecialOrder so)
+    private string BuildSpecialOrderDaysLeft(SpecialOrder so)
     {
         // SpecialOrder.dueDate.Value is absolute TotalDays (when the order
         // expires), not a countdown. Subtract Game1.Date.TotalDays to get
         // remaining days.
         int totalDays = Game1.Date?.TotalDays ?? 0;
         int daysLeft = so.dueDate.Value - totalDays;
-        if (daysLeft <= 0) return "Due today!";
-        if (daysLeft == 1) return "Due tomorrow!";
-        return $"{daysLeft} days left";
+        if (daysLeft <= 0) return _helper.Translation.Get("journal.days.duetoday").Default("Due today!").ToString();
+        if (daysLeft == 1) return _helper.Translation.Get("journal.days.duetomorrow").Default("Due tomorrow!").ToString();
+        return _helper.Translation.Get("journal.days.left", new { count = daysLeft }).Default($"{daysLeft} days left").ToString();
     }
 
     private QuestRow BuildHistoryRow(CompletedQuestRecord r)
     {
         bool failed = string.Equals(r.Status, "Failed", System.StringComparison.OrdinalIgnoreCase);
-        string statusLabel = failed ? "Failed" : "Completed";
+        string statusLabel = failed
+            ? _helper.Translation.Get("journal.status.failed").Default("Failed").ToString()
+            : _helper.Translation.Get("journal.status.completed").Default("Completed").ToString();
         // CompletedOnTotalDays==0 happens on pre-fix records where we never
         // wrote the field. Fall back to the bare status string so old rows
         // still read sanely instead of saying "Completed Spring 1, Y1".
@@ -1097,9 +1117,9 @@ public sealed class JournalContext : INotifyPropertyChanged
             objective: r.Objective,
             rewardLines: rewards,
             adventureSteps: new List<AdventureStepRow>(),
-            giverDisplay: string.IsNullOrEmpty(r.Giver) ? "Unknown" : r.Giver,
+            giverDisplay: string.IsNullOrEmpty(r.Giver) ? UnknownLabel : r.Giver,
             daysLeftDisplay: dateSlot,
-            sourceDisplay: string.IsNullOrEmpty(r.Source) ? "Unknown" : r.Source,
+            sourceDisplay: string.IsNullOrEmpty(r.Source) ? UnknownLabel : r.Source,
             warpTargets: null,
             isCompleted: true,
             canCancel: false,
@@ -1248,15 +1268,15 @@ public sealed class JournalContext : INotifyPropertyChanged
             SelectedSteps.Add(s);
     }
 
-    private static string BuildDaysLeftDisplay(Quest q)
+    private string BuildDaysLeftDisplay(Quest q)
     {
         int d = q.daysLeft.Value;
-        if (d <= 0) return "No deadline";
+        if (d <= 0) return _helper.Translation.Get("journal.days.none").Default("No deadline").ToString();
         // Vanilla yanks the quest the first morning daysLeft hits 0, so
         // daysLeft==1 means "you sleep tonight and it expires", not "you
         // have a full day". Flag it so the player notices before sleeping.
-        if (d == 1) return "Due tomorrow!";
-        return $"{d} days left";
+        if (d == 1) return _helper.Translation.Get("journal.days.duetomorrow").Default("Due tomorrow!").ToString();
+        return _helper.Translation.Get("journal.days.left", new { count = d }).Default($"{d} days left").ToString();
     }
 
     private static string BuildHistoryDateDisplay(int totalDays)
