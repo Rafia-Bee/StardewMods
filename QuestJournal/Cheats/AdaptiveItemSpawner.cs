@@ -96,6 +96,9 @@ internal static class AdaptiveItemSpawner
         if (string.IsNullOrEmpty(fq.ItemId.Value)) return string.Empty;
         int remaining = fq.numberToFish.Value - fq.numberFished.Value;
         if (remaining <= 0) return string.Empty;
+        // Drop the actual fish in the bag too, like the item helper does for
+        // delivery quests, so the player ends up holding what they "caught".
+        SpawnItem(fq.ItemId.Value, remaining, 0, helper);
         // Run the game's own catch hook for the whole remaining count first, so it
         // arms completion / the return-to-NPC objective. Then force the counter to
         // the target as a fallback, since OnFishCaught's fish-id match wasn't
