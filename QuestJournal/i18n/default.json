@@ -1,4 +1,7 @@
 {
     "journal.tab.tooltip": "Quest Journal",
-    "journal.cancel.confirm": "Cancel this quest?"
+    "journal.cancel.confirm": "Cancel this quest?",
+    "journal.action.pin": "Pin",
+    "journal.action.unpin": "Unpin",
+    "hud.more": "... and {{count}} more"
 }

@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using QuestJournal.Api;
+using QuestJournal.Hud;
 using QuestJournal.Integrations;
 using StardewModdingAPI;
 using StardewValley;
@@ -60,6 +61,12 @@ public sealed class JournalContext : INotifyPropertyChanged
     public bool SelectedShowComplete => SelectedShowActions;
     public bool SelectedShowCancel => _selectedQuest != null && _selectedQuest.CanCancel;
     public bool SelectedShowPostpone => _selectedQuest != null && _selectedQuest.CanPostpone;
+    // Pin button label flips with the quest's pinned state so one button both
+    // pins and unpins. Only meaningful for live quests; null Quest reads unpinned.
+    public bool SelectedIsPinned => _selectedQuest?.Quest is Quest q && PinnedObjectivesStore.IsPinned(q);
+    public string SelectedPinLabel => _helper.Translation
+        .Get(SelectedIsPinned ? "journal.action.unpin" : "journal.action.pin")
+        .Default(SelectedIsPinned ? "Unpin" : "Pin").ToString();
     // SML swaps between the single Objective line and the multi-step list
     // based on these. A stepped Adventure quest renders the step list and
     // hides the objective; everything else keeps the single objective.
@@ -124,6 +131,40 @@ public sealed class JournalContext : INotifyPropertyChanged
     public string ActionPanelLayout => $"{Px(236)} {Px(580)}";
     public string ActionLaneLayout => $"stretch {Px(540)}";
 
+    // Drag-to-move. GetJournalTopLeft is the screen-centered position plus a
+    // persisted offset; ModEntry pushes it onto the menu every tick (StardewUI's
+    // PositionSelector only re-evaluates on re-measure, which a drag doesn't
+    // trigger). The drag itself is handled in ModEntry via SMAPI input, which
+    // calls SetJournalTopLeft as the cursor moves.
+    private Point _journalOffset;
+
+    public int JournalFrameWidth => (int)System.Math.Round(1100 * Scale);
+    public int JournalFrameHeight => (int)System.Math.Round(720 * Scale);
+
+    private Point CenteredBase()
+        => new Point(
+            (Game1.uiViewport.Width - JournalFrameWidth) / 2,
+            (Game1.uiViewport.Height - JournalFrameHeight) / 2);
+
+    public Point GetJournalTopLeft()
+    {
+        var c = CenteredBase();
+        return new Point(c.X + _journalOffset.X, c.Y + _journalOffset.Y);
+    }
+
+    public void SetJournalTopLeft(Point topLeft)
+    {
+        var c = CenteredBase();
+        _journalOffset = new Point(topLeft.X - c.X, topLeft.Y - c.Y);
+    }
+
+    public void PersistJournalOffset()
+    {
+        ModEntry.Config.JournalOffsetX = _journalOffset.X;
+        ModEntry.Config.JournalOffsetY = _journalOffset.Y;
+        _helper.WriteConfig(ModEntry.Config);
+    }
+
     // The "+" and "Edit tabs" controls are bound directly (not via a repeat) so
     // they can be pinned to the right edge of the bottom row.
     public TabRow? AddTab => _addTab;
@@ -175,6 +216,7 @@ public sealed class JournalContext : INotifyPropertyChanged
         _mqfApi = mqfApi;
         _viewPrefix = viewPrefix;
         _completionWatcher = completionWatcher;
+        _journalOffset = new Point(ModEntry.Config.JournalOffsetX, ModEntry.Config.JournalOffsetY);
         Tabs.Add(new TabRow(TabActive, "Active", HandleTabActivate));
         Tabs.Add(new TabRow(TabSpecial, "Special Orders", HandleTabActivate));
         Tabs.Add(new TabRow(TabCompleted, "Completed", HandleTabActivate));
@@ -271,6 +313,7 @@ public sealed class JournalContext : INotifyPropertyChanged
         // Always remove from log so vanilla journal stops showing a stale
         // empty-claim row, even if vanilla questComplete already removed it.
         Game1.player.questLog.Remove(quest);
+        PinnedObjectivesStore.Unpin(quest);
         Refresh();
     }
 
@@ -292,6 +335,7 @@ public sealed class JournalContext : INotifyPropertyChanged
                 // so mark it ignored before the actual removal.
                 _completionWatcher?.MarkIgnore(quest);
                 Game1.player.questLog.Remove(quest);
+                PinnedObjectivesStore.Unpin(quest);
                 if (savedMenu != null)
                     Game1.activeClickableMenu = savedMenu;
                 Refresh();
@@ -329,7 +373,17 @@ public sealed class JournalContext : INotifyPropertyChanged
         }
     }
 
-    public void PinSelected() { }
+    // Toggles the HUD pin for the selected quest. Only live quests (Quest != null)
+    // get the Pin button, so history rows and special orders are filtered out by
+    // SelectedShowActions before we get here.
+    public void PinSelected()
+    {
+        if (_selectedQuest?.Quest is not Quest q) return;
+        PinnedObjectivesStore.Toggle(q);
+        Raise(nameof(SelectedIsPinned));
+        Raise(nameof(SelectedPinLabel));
+    }
+
     public void WarpSelected() { }
 
     // Tab clicks route through here so edit mode can intercept. Built-in tabs
@@ -1077,6 +1131,8 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedShowComplete));
         Raise(nameof(SelectedShowCancel));
         Raise(nameof(SelectedShowPostpone));
+        Raise(nameof(SelectedIsPinned));
+        Raise(nameof(SelectedPinLabel));
         Raise(nameof(SelectedHasSteps));
         Raise(nameof(SelectedShowObjective));
         Raise(nameof(HasSelection));
