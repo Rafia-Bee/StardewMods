@@ -13,11 +13,11 @@
               orientation="vertical"
               horizontal-content-alignment="start"
               margin="36, 0, 0, -8">
-            <lane *repeat={:TabRowGroups} orientation="horizontal" vertical-content-alignment="end">
+            <lane *repeat={:OverflowRowGroups} orientation="horizontal" vertical-content-alignment="end">
                 <frame *repeat={:Tabs}
                        layout={WidthLayout}
                        margin="0, 0, 8, 0"
-                       padding="12, 0"
+                       padding="8, 0"
                        background={@Mods/StardewUI/Sprites/ControlBorder}
                        horizontal-content-alignment="middle"
                        vertical-content-alignment="middle"
@@ -25,11 +25,55 @@
                        opacity={TabOpacity}
                        tooltip={Label}
                        click=|Activate()|>
-                    <label *if={IsTextTab} bold={IsActive} text={DisplayLabel} />
-                    <image *if={IsAddTab} layout="32px 32px" fit="Contain" sprite={@Mods/StardewUI/Sprites/SmallGreenPlus} />
-                    <image *if={IsEditTab} layout="38px 38px" fit="Contain" sprite={@Mods/RafiaBee.QuestJournal/Sprites/edit:Edit} />
+                    <label bold={IsActive} text={DisplayLabel} />
                 </frame>
             </lane>
+
+            <lane orientation="horizontal" vertical-content-alignment="end">
+                <frame *repeat={:BottomRowTabs}
+                       layout={WidthLayout}
+                       margin="0, 0, 8, 0"
+                       padding="8, 0"
+                       background={@Mods/StardewUI/Sprites/ControlBorder}
+                       horizontal-content-alignment="middle"
+                       vertical-content-alignment="middle"
+                       focusable="true"
+                       opacity={TabOpacity}
+                       tooltip={Label}
+                       click=|Activate()|>
+                    <label bold={IsActive} text={DisplayLabel} />
+                </frame>
+            </lane>
+        </lane>
+
+        <lane *float="above"
+              orientation="horizontal"
+              vertical-content-alignment="end"
+              margin={ControlsLeftMargin}>
+            <frame layout={AddTab.WidthLayout}
+                   margin="0, 0, 8, 0"
+                   padding="8, 0"
+                   background={@Mods/StardewUI/Sprites/ControlBorder}
+                   horizontal-content-alignment="middle"
+                   vertical-content-alignment="middle"
+                   focusable="true"
+                   opacity={AddTab.TabOpacity}
+                   tooltip={AddTab.Label}
+                   click=|CreateTab()|>
+                <image layout="32px 32px" fit="Contain" sprite={@Mods/StardewUI/Sprites/SmallGreenPlus} />
+            </frame>
+
+            <frame layout={EditTab.WidthLayout}
+                   padding="8, 0"
+                   background={@Mods/StardewUI/Sprites/ControlBorder}
+                   horizontal-content-alignment="middle"
+                   vertical-content-alignment="middle"
+                   focusable="true"
+                   opacity={EditTab.TabOpacity}
+                   tooltip={EditTab.Label}
+                   click=|ToggleEditMode()|>
+                <image layout="38px 38px" fit="Contain" sprite={@Mods/RafiaBee.QuestJournal/Sprites/edit:Edit} />
+            </frame>
         </lane>
 
         <lane orientation="vertical" layout="stretch content" horizontal-content-alignment="middle">

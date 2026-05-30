@@ -20,8 +20,12 @@ public sealed class JournalContext : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ObservableCollection<TabRow> Tabs { get; } = new();
-    // Tabs packed into rows for the edge-mounted rail (see RebuildTabRows).
-    public ObservableCollection<TabRowGroup> TabRowGroups { get; } = new();
+    // Tabs that don't fit on the bottom row, packed into rows that stack above
+    // it (see RebuildTabRows). The bottom row itself is BottomRowTabs.
+    public ObservableCollection<TabRowGroup> OverflowRowGroups { get; } = new();
+    // The first tabs, which share the always-visible bottom row with the "+"
+    // and "Edit tabs" controls.
+    public ObservableCollection<TabRow> BottomRowTabs { get; } = new();
     public ObservableCollection<QuestRow> Quests { get; } = new();
     public ObservableCollection<RewardLineRow> SelectedRewards { get; } = new();
     public ObservableCollection<AdventureStepRow> SelectedSteps { get; } = new();
@@ -119,6 +123,21 @@ public sealed class JournalContext : INotifyPropertyChanged
     public string DetailPanelLayout => $"{Px(484)} {Px(580)}";
     public string ActionPanelLayout => $"{Px(236)} {Px(580)}";
     public string ActionLaneLayout => $"stretch {Px(540)}";
+
+    // The "+" and "Edit tabs" controls are bound directly (not via a repeat) so
+    // they can be pinned to the right edge of the bottom row.
+    public TabRow? AddTab => _addTab;
+    public TabRow? EditTab => _editTab;
+
+    // Left margin of the controls float, which positions the "+"/"Edit" icons at
+    // a fixed spot on the right (independent of how many tabs exist or how wide
+    // they render). Recomputed by RebuildTabRows.
+    private string _controlsLeftMargin = "0, 0, 0, -8";
+    public string ControlsLeftMargin
+    {
+        get => _controlsLeftMargin;
+        private set { if (_controlsLeftMargin == value) return; _controlsLeftMargin = value; Raise(nameof(ControlsLeftMargin)); }
+    }
 
     // Repaint an open journal after the theme asset is repatched.
     public void RefreshTheme()
@@ -426,60 +445,86 @@ public sealed class JournalContext : INotifyPropertyChanged
         RebuildTabRows();
     }
 
-    // Packs the rail tabs (the selectable Tabs, then "+" and "Edit tabs") into
-    // rows that fit the frame width, since StardewUI can't wrap a lane on its
-    // own. Tabs are uniform width (widest label, clamped; longer labels truncate
-    // with the full name in the tooltip), measured off Game1.smallFont so the
-    // packed width matches the draw. Rows are emitted top-most first so overflow
-    // stacks above the built-in row.
+    // Lays out the rail. The "+" and "Edit tabs" controls live in their own
+    // floating element pinned to a fixed spot at the bottom-right (computed from
+    // the frame width and control width only, so they never drift as tabs are
+    // added). The first tabs share that bottom level; any that don't fit beside
+    // the controls wrap to rows that stack above. Tabs are uniform width (widest
+    // label, clamped; longer labels truncate with the full name in the tooltip),
+    // measured off Game1.smallFont so the packed width matches the draw.
     private void RebuildTabRows()
     {
-        TabRowGroups.Clear();
-
-        var ordered = new List<TabRow>(Tabs);
-        if (_addTab != null) ordered.Add(_addTab);
-        if (_editTab != null) ordered.Add(_editTab);
+        OverflowRowGroups.Clear();
+        BottomRowTabs.Clear();
 
         var font = Game1.smallFont;
         const float minContent = 64f;
         const float maxContent = 200f;
         float widest = minContent;
-        foreach (var t in ordered)
+        foreach (var t in Tabs)
         {
             try { widest = System.Math.Max(widest, font.MeasureString(t.Label ?? string.Empty).X); }
             catch { }
         }
         float uniformContent = System.Math.Min(widest, maxContent);
 
-        const float padding = 24f;       // "12, 0" horizontal padding, both sides
-        const float interMargin = 8f;
+        const float padding = 16f;       // "8, 0" horizontal padding, both sides
+        const float interMargin = 8f;    // each tab's right margin
         const int tabHeight = 60;        // fixed so middle-alignment can center content
         int frameWidth = (int)System.Math.Ceiling(uniformContent) + (int)padding;
         string widthLayout = frameWidth.ToString(System.Globalization.CultureInfo.InvariantCulture)
             + "px " + tabHeight + "px";
+
         const string iconLayout = "62px 60px";
-        foreach (var t in ordered)
+        if (_addTab != null) _addTab.WidthLayout = iconLayout;
+        if (_editTab != null) _editTab.WidthLayout = iconLayout;
+
+        foreach (var t in Tabs)
         {
-            bool isControl = t.IsAddTab || t.IsEditTab;
-            t.WidthLayout = isControl ? iconLayout : widthLayout;
-            if (!isControl)
-                t.DisplayLabel = Truncate(t.Label ?? string.Empty, font, uniformContent);
+            t.WidthLayout = widthLayout;
+            t.DisplayLabel = Truncate(t.Label ?? string.Empty, font, uniformContent);
         }
 
-        // Reserve 16px so a rounding diff wraps early rather than spilling past the border.
-        float available = 1100f * Scale - 16f;
         float footprint = frameWidth + interMargin;
-        int perRow = System.Math.Max(1, (int)((available + interMargin) / footprint));
+        float outerWidth = 1100f * Scale;
 
-        var rows = new List<List<TabRow>>();
-        for (int i = 0; i < ordered.Count; i += perRow)
-            rows.Add(ordered.GetRange(i, System.Math.Min(perRow, ordered.Count - i)));
+        // The control pair renders ~103px wide (measured in-game at scale 1.0,
+        // not the nominal 62px each) and is pinned 36px from the frame's right.
+        const float controlsRenderWidth = 103f;
+        const float rightInset = 36f;
+        const float railLeft = 36f;      // must match the rail float's left margin
+        const float gapNudge = 5f;       // tuned in-game: a touch more space after the last tab
+        float controlsLeft = outerWidth - rightInset - controlsRenderWidth + gapNudge;
+        ControlsLeftMargin = ((int)controlsLeft).ToString(System.Globalization.CultureInfo.InvariantCulture) + ", 0, 0, -8";
 
-        for (int i = rows.Count - 1; i >= 0; i--)
+        // How many tabs fit on the bottom row before running into the controls.
+        const float gap = 12f;           // breathing room between last tab and controls
+        float bottomArea = controlsLeft - railLeft - gap;
+        int bottomCapacity = System.Math.Max(0, (int)((bottomArea + interMargin) / footprint));
+        int bottomCount = System.Math.Min(Tabs.Count, bottomCapacity);
+        for (int i = 0; i < bottomCount; i++)
+            BottomRowTabs.Add(Tabs[i]);
+
+        // Remaining tabs wrap to rows above the bottom row, using the full rail
+        // width (frame width minus the rail's 36px left margin).
+        float available = outerWidth - railLeft;
+        int overflowCapacity = System.Math.Max(1, (int)((available + interMargin) / footprint));
+        var chunks = new List<List<TabRow>>();
+        for (int i = bottomCount; i < Tabs.Count; i += overflowCapacity)
+        {
+            var chunk = new List<TabRow>();
+            for (int j = i; j < System.Math.Min(i + overflowCapacity, Tabs.Count); j++)
+                chunk.Add(Tabs[j]);
+            chunks.Add(chunk);
+        }
+
+        // Emit highest chunk first so the first overflow row sits directly above
+        // the bottom row (the vertical lane renders top-to-bottom).
+        for (int i = chunks.Count - 1; i >= 0; i--)
         {
             var group = new TabRowGroup();
-            foreach (var t in rows[i]) group.Tabs.Add(t);
-            TabRowGroups.Add(group);
+            foreach (var t in chunks[i]) group.Tabs.Add(t);
+            OverflowRowGroups.Add(group);
         }
     }
 
