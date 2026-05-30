@@ -1,4 +1,5 @@
 using QuestJournal.Api;
+using QuestJournal.Hud;
 using QuestJournal.Integrations;
 using QuestJournal.Menu;
 using StardewModdingAPI;
@@ -18,8 +19,20 @@ public sealed class ModEntry : Mod
     private string _viewPrefix = null!;
     private GameMenuTabOverlay? _tabOverlay;
     private CompletionWatcher? _completionWatcher;
+    private PinnedObjectiveHud? _pinnedHud;
+    private NewQuestPinner? _newQuestPinner;
     private IClickableMenu? _journalMenu;
     private JournalContext? _journalContext;
+
+    // Journal drag state (handled via SMAPI input rather than StardewUI drag
+    // events, which don't reliably fire on a plain frame). You can grab the
+    // window anywhere; a press only becomes a drag once the cursor travels past
+    // a small threshold, so plain clicks still reach tabs / buttons / rows.
+    private bool _journalDragging;
+    private bool _journalPendingDrag;
+    private Microsoft.Xna.Framework.Vector2 _journalGrab;
+    private Microsoft.Xna.Framework.Vector2 _journalPressPos;
+    private const int JournalDragThreshold = 8;
 
     public override void Entry(IModHelper helper)
     {
@@ -29,9 +42,73 @@ public sealed class ModEntry : Mod
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.Input.ButtonsChanged += OnButtonsChanged;
+        helper.Events.Input.ButtonPressed += OnInputButtonPressed;
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.Content.AssetsInvalidated += OnAssetsInvalidated;
+    }
+
+    // The journal's frame rectangle in UI-screen space when it's the active menu
+    // with no child popup; null otherwise. The floating tab rail sits above this
+    // rect, so tabs and the +/Edit controls are naturally excluded from dragging.
+    private Microsoft.Xna.Framework.Rectangle? JournalFrameRect()
+    {
+        if (_journalContext == null || _journalMenu == null) return null;
+        if (!ReferenceEquals(Game1.activeClickableMenu, _journalMenu)) return null;
+        if (_journalMenu.GetChildMenu() != null) return null;
+        var tl = _journalContext.GetJournalTopLeft();
+        return new Microsoft.Xna.Framework.Rectangle(
+            tl.X, tl.Y, _journalContext.JournalFrameWidth, _journalContext.JournalFrameHeight);
+    }
+
+    private void OnInputButtonPressed(object? sender, ButtonPressedEventArgs e)
+    {
+        if (e.Button != SButton.MouseLeft) return;
+        var frame = JournalFrameRect();
+        if (frame == null) return;
+        var cursor = e.Cursor.GetScaledScreenPixels();
+        if (!frame.Value.Contains((int)cursor.X, (int)cursor.Y)) return;
+        // Arm a potential drag without suppressing, so a plain click still
+        // reaches the widget under it; the per-tick poll promotes it to a drag.
+        var tl = _journalContext!.GetJournalTopLeft();
+        _journalPendingDrag = true;
+        _journalPressPos = cursor;
+        _journalGrab = new Microsoft.Xna.Framework.Vector2(cursor.X - tl.X, cursor.Y - tl.Y);
+    }
+
+    // Per-tick drag driver. CursorMoved doesn't fire with a button held, and
+    // SMAPI's ButtonReleased fires spuriously the tick after Suppress(), so the
+    // whole lifecycle is polled here off the raw mouse state. A pending press
+    // becomes a real drag only after the cursor moves past the threshold; until
+    // then nothing is suppressed, so a plain click reaches the widget under it.
+    private void UpdateJournalDrag()
+    {
+        if (!_journalPendingDrag && !_journalDragging) return;
+
+        bool held = Microsoft.Xna.Framework.Input.Mouse.GetState().LeftButton
+            == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+        if (!held || _journalMenu!.GetChildMenu() != null)
+        {
+            if (_journalDragging) _journalContext!.PersistJournalOffset();
+            _journalDragging = false;
+            _journalPendingDrag = false;
+            return;
+        }
+
+        var cursor = Helper.Input.GetCursorPosition().GetScaledScreenPixels();
+        if (!_journalDragging)
+        {
+            if (System.Math.Abs(cursor.X - _journalPressPos.X)
+                + System.Math.Abs(cursor.Y - _journalPressPos.Y) <= JournalDragThreshold)
+                return;
+            _journalDragging = true;
+        }
+
+        _journalContext!.SetJournalTopLeft(new Microsoft.Xna.Framework.Point(
+            (int)(cursor.X - _journalGrab.X),
+            (int)(cursor.Y - _journalGrab.Y)));
+        // Now that it's a real drag, keep the held button from reaching the menu.
+        Helper.Input.Suppress(SButton.MouseLeft);
     }
 
     // Serve the journal's theme colours as a Content Patcher-editable data
@@ -64,9 +141,26 @@ public sealed class ModEntry : Mod
     {
         if (_journalMenu == null) return;
         if (ReferenceEquals(Game1.activeClickableMenu, _journalMenu))
+        {
             Game1.displayHUD = true;
-        else if (Game1.activeClickableMenu == null)
-            _journalMenu = null;
+            if (_journalContext != null)
+            {
+                UpdateJournalDrag();
+                // StardewUI only consults PositionSelector when the view
+                // re-measures, which a drag doesn't trigger. Push the position
+                // onto the menu every tick so the move actually applies.
+                var topLeft = _journalContext.GetJournalTopLeft();
+                _journalMenu.xPositionOnScreen = topLeft.X;
+                _journalMenu.yPositionOnScreen = topLeft.Y;
+            }
+        }
+        else
+        {
+            _journalDragging = false;
+            _journalPendingDrag = false;
+            if (Game1.activeClickableMenu == null)
+                _journalMenu = null;
+        }
     }
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
@@ -94,6 +188,15 @@ public sealed class ModEntry : Mod
         // to journal-Complete-button history.
         _completionWatcher = new CompletionWatcher(Helper, _mqfApi);
         _completionWatcher.Register();
+
+        // Top-right HUD stack for pinned quests. Reads ShowHudPin per-frame, so a
+        // GMCM toggle takes effect without re-registering.
+        _pinnedHud = new PinnedObjectiveHud(Helper, _mqfApi);
+        _pinnedHud.Register();
+
+        // Auto-pin newly accepted quests when the player opts in.
+        _newQuestPinner = new NewQuestPinner(Helper);
+        _newQuestPinner.Register();
         if (Config.HotReloadViews)
             _viewEngine.EnableHotReloading();
         _viewEngine.PreloadAssets();
@@ -153,6 +256,9 @@ public sealed class ModEntry : Mod
         // Zero the dim underlay so the game world stays visible behind the journal.
         var controller = _viewEngine.CreateMenuControllerFromAsset($"{_viewPrefix}/journal", ctx);
         controller.DimmingAmount = 0f;
+        // Drive the window position from the context so the title-bar drag can
+        // move it (and the offset persists across opens).
+        controller.PositionSelector = () => ctx.GetJournalTopLeft();
         var menu = controller.Menu;
         controller.Closed += () =>
         {

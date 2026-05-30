@@ -12,6 +12,17 @@ public sealed class ModConfig
     public bool EnableLookupAnythingIntegration { get; set; } = true;
     public bool DefaultPinNewQuests { get; set; }
 
+    // Journal window position, as a pixel offset from screen-centered (0,0 =
+    // centered). Set by dragging the journal's title bar; persisted so the
+    // window stays where you put it.
+    public int JournalOffsetX { get; set; }
+    public int JournalOffsetY { get; set; }
+
+    // Pinned-HUD top-left position in UI pixels. -1 on either axis means "use
+    // the default top-right anchor". Set by dragging the HUD panel.
+    public int HudPinX { get; set; } = -1;
+    public int HudPinY { get; set; } = -1;
+
     // Whole-journal zoom. 1.0 is the shipped size. Clamped at read time so a
     // bad value can't make the journal vanish or overflow the screen. A GMCM
     // slider for this lands with the step 13 config pass; for now it's a

@@ -188,7 +188,7 @@
                                vertical-content-alignment="middle"
                                focusable="true"
                                click=|PinSelected()|>
-                            <label text="Pin" />
+                            <label text={SelectedPinLabel} />
                         </frame>
                         <frame *if={SelectedShowComplete} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}

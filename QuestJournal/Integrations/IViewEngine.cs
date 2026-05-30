@@ -23,6 +23,10 @@ public interface IMenuController : IDisposable
 {
     IClickableMenu Menu { get; }
     float DimmingAmount { get; set; }
+    // Returns the menu's top-left screen position; called by StardewUI each
+    // frame. Setting it takes over from the engine's default centering, which
+    // is how the journal supports drag-to-move.
+    Func<Microsoft.Xna.Framework.Point> PositionSelector { get; set; }
     event Action Closed;
     void Close();
 }
