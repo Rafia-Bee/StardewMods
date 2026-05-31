@@ -10,6 +10,14 @@ public sealed class MoreQuestsFrameworkConfig
     // Data/SpecialOrders (vanilla + every loaded mod's), 2 per page.
     public int SpecialOrdersBoardPages { get; set; } = 1;
 
+    // Daily board note layout. Notes sit on an auto-sized grid; BoardNoteSpacing is the
+    // average gap in pixels between note papers (0 = touching, negative = overlapping), and
+    // each gap is jittered a little so the layout isn't perfectly uniform. BoardMaxNoteSize
+    // caps how big a single note can get when only a few are posted (it never grows past what
+    // fits the board either way).
+    public int BoardNoteSpacing { get; set; } = 14;
+    public int BoardMaxNoteSize { get; set; } = 256;
+
     // Keys are definition IDs. 0 disables. Missing keys use DefaultWeight.
     public Dictionary<string, int> QuestWeights { get; set; } = new();
 

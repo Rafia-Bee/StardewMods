@@ -36,6 +36,7 @@ internal sealed class MoreQuestsBillboard : Billboard
 
     private string _hoverTitle = "";
     private string _hoverText = "";
+    private Note? _hoveredNote;
 
     private sealed class Note
     {
@@ -44,6 +45,7 @@ internal sealed class MoreQuestsBillboard : Billboard
         public Color PadColor { get; init; }
         public Color PinColor { get; init; }
         public Texture2D? Portrait { get; init; }
+        public float Tilt { get; init; }
     }
 
     public MoreQuestsBillboard()
@@ -73,18 +75,13 @@ internal sealed class MoreQuestsBillboard : Billboard
         if (slots.Count == 0)
             return;
 
-        float scale = BoardLayout.ChooseScale(slots.Count);
-        int side = (int)(BoardLayout.PadSpriteSize * scale);
-
-        var placed = new List<Rectangle>(slots.Count);
         var rng = new Random(Game1.Date.TotalDays * 7919 + slots.Count);
+        var layout = BoardLayout.ComputeGridLayout(xPositionOnScreen, yPositionOnScreen, slots.Count, rng);
 
         for (int i = 0; i < slots.Count; i++)
         {
             var slot = slots[i];
-            Rectangle bounds = BoardLayout.ScatterBounds(xPositionOnScreen, yPositionOnScreen, side, side, placed, rng)
-                ?? BoardLayout.FallbackGridBounds(xPositionOnScreen, yPositionOnScreen, i, slots.Count, side);
-            placed.Add(bounds);
+            Rectangle bounds = layout[i];
 
             (Color padColor, Color pinColor) = BoardLayout.ColorsFor(slot.Posting.Category);
 
@@ -92,7 +89,7 @@ internal sealed class MoreQuestsBillboard : Billboard
                 bounds,
                 _padTexture,
                 new Rectangle(0, 0, BoardLayout.PadSpriteSize, BoardLayout.PadSpriteSize),
-                scale)
+                1f)
             {
                 myID = CcIndexBase - i,
                 leftNeighborID = SnapAutomatic,
@@ -107,7 +104,8 @@ internal sealed class MoreQuestsBillboard : Billboard
                 Slot = slot,
                 PadColor = padColor,
                 PinColor = pinColor,
-                Portrait = BoardLayout.TryGetPortrait(slot.Posting.QuestGiver)
+                Portrait = BoardLayout.TryGetPortrait(slot.Posting.QuestGiver),
+                Tilt = BoardLayout.TiltFor(Game1.Date.TotalDays, i)
             };
             _notes.Add(note);
             _notesByCc[cc.myID] = note;
@@ -123,18 +121,14 @@ internal sealed class MoreQuestsBillboard : Billboard
         }
         _hoverTitle = "";
         _hoverText = "";
+        _hoveredNote = null;
         foreach (var note in _notes)
         {
-            var cc = note.Cc;
-            if (cc.containsPoint(x, y))
+            if (note.Cc.containsPoint(x, y))
             {
                 _hoverTitle = note.Slot.Quest.questTitle ?? "";
                 _hoverText = QuestTooltip.BodyFor(note.Slot.Quest);
-                cc.scale = Math.Min(cc.scale + 0.04f, cc.baseScale + 0.5f);
-            }
-            else
-            {
-                cc.scale = Math.Max(cc.scale - 0.04f, cc.baseScale);
+                _hoveredNote = note;
             }
         }
     }
@@ -147,25 +141,41 @@ internal sealed class MoreQuestsBillboard : Billboard
             return;
         }
 
-        foreach (var note in _notes)
+        var target = NoteAt(x, y);
+        if (target != null)
         {
-            if (note.Cc.containsPoint(x, y))
+            BillboardSlots.Selected = target.Slot;
+            InnerBillboard = new Billboard(true);
+            InnerBillboard.acceptQuestButton.visible = true;
+            Game1.playSound("smallSelect");
+            if (Game1.options.SnappyMenus)
             {
-                BillboardSlots.Selected = note.Slot;
-                InnerBillboard = new Billboard(true);
-                InnerBillboard.acceptQuestButton.visible = true;
-                Game1.playSound("smallSelect");
-                if (Game1.options.SnappyMenus)
-                {
-                    InnerBillboard.snapToDefaultClickableComponent();
-                    currentlySnappedComponent = InnerBillboard.currentlySnappedComponent;
-                    snapCursorToCurrentSnappedComponent();
-                }
-                return;
+                InnerBillboard.snapToDefaultClickableComponent();
+                currentlySnappedComponent = InnerBillboard.currentlySnappedComponent;
+                snapCursorToCurrentSnappedComponent();
             }
+            return;
         }
 
         InvokeBaseLeftClick(x, y, playSound);
+    }
+
+    // Notes can overlap on the cork board. When the gamepad cursor is snapped onto a note,
+    // prefer that note so a covered one is still selectable (a plain hit-test would pick
+    // whichever note sits on top). Falls back to the topmost note under the point for mouse.
+    private Note? NoteAt(int x, int y)
+    {
+        if (currentlySnappedComponent != null
+            && _notesByCc.TryGetValue(currentlySnappedComponent.myID, out var snapped)
+            && snapped.Cc.containsPoint(x, y))
+            return snapped;
+
+        foreach (var note in _notes)
+        {
+            if (note.Cc.containsPoint(x, y))
+                return note;
+        }
+        return null;
     }
 
     private void InvokeBaseLeftClick(int x, int y, bool playSound)
@@ -280,28 +290,16 @@ internal sealed class MoreQuestsBillboard : Billboard
         }
         else
         {
-            var padSource = new Rectangle(0, 0, BoardLayout.PadSpriteSize, BoardLayout.PadSpriteSize);
+            Note? active = ActiveNote();
             foreach (var note in _notes)
             {
-                var cc = note.Cc;
-
-                b.Draw(_padTexture, cc.bounds, padSource, note.PadColor);
-
-                if (note.Portrait != null)
-                {
-                    int portraitSide = (int)(cc.bounds.Width * 0.28f);
-                    int padding = (int)(cc.bounds.Width * 0.08f);
-                    int px = cc.bounds.Left + padding;
-                    int py = cc.bounds.Bottom - portraitSide - padding;
-                    b.Draw(
-                        note.Portrait,
-                        new Rectangle(px, py, portraitSide, portraitSide),
-                        new Rectangle(0, 0, 64, 64),
-                        Color.White);
-                }
-
-                b.Draw(_pinTexture, cc.bounds, padSource, note.PinColor);
+                if (note != active)
+                    DrawNote(b, note, 1f);
             }
+            // Draw the focused note last and a touch bigger so the current selection reads
+            // clearly, on controller especially.
+            if (active != null)
+                DrawNote(b, active, 1.12f);
         }
 
         if (upperRightCloseButton != null && shouldDrawCloseButton())
@@ -319,5 +317,51 @@ internal sealed class MoreQuestsBillboard : Billboard
 
         Game1.mouseCursorTransparency = 1f;
         drawMouse(b);
+    }
+
+    // The note under the mouse, or (for a gamepad) the snapped one.
+    private Note? ActiveNote()
+    {
+        if (_hoveredNote != null)
+            return _hoveredNote;
+        if (currentlySnappedComponent != null
+            && _notesByCc.TryGetValue(currentlySnappedComponent.myID, out var snapped))
+            return snapped;
+        return null;
+    }
+
+    // Draws a note (pad, portrait, pin) rotated about its center by its tilt, scaled by
+    // sizeBoost. The portrait offset is rotated with it so the whole note tilts as one piece.
+    // Bounds are the visible paper, so the full sprite is scaled up from the paper width to
+    // put the transparent margins back; the paper then lines up with the clickable bounds.
+    private void DrawNote(SpriteBatch b, Note note, float sizeBoost)
+    {
+        var padSource = new Rectangle(0, 0, BoardLayout.PadSpriteSize, BoardLayout.PadSpriteSize);
+        var origin = new Vector2(BoardLayout.PadSpriteSize / 2f, BoardLayout.PadSpriteSize / 2f);
+        var center = new Vector2(note.Cc.bounds.Center.X, note.Cc.bounds.Center.Y);
+        float side = note.Cc.bounds.Width * (BoardLayout.PadSpriteSize / (float)BoardLayout.PadPaperWidth) * sizeBoost;
+        float scale = side / BoardLayout.PadSpriteSize;
+
+        b.Draw(_padTexture, center, padSource, note.PadColor, note.Tilt, origin, scale, SpriteEffects.None, 0.86f);
+
+        if (note.Portrait != null)
+        {
+            float portraitSide = side * 0.28f;
+            // Lower-left corner of the note, matching the old static layout.
+            var offset = new Vector2(-0.28f * side, 0.28f * side);
+            var pos = center + Rotate(offset, note.Tilt);
+            b.Draw(
+                note.Portrait, pos, new Rectangle(0, 0, 64, 64), Color.White,
+                note.Tilt, new Vector2(32, 32), portraitSide / 64f, SpriteEffects.None, 0.87f);
+        }
+
+        b.Draw(_pinTexture, center, padSource, note.PinColor, note.Tilt, origin, scale, SpriteEffects.None, 0.88f);
+    }
+
+    private static Vector2 Rotate(Vector2 v, float angle)
+    {
+        float cos = (float)Math.Cos(angle);
+        float sin = (float)Math.Sin(angle);
+        return new Vector2(v.X * cos - v.Y * sin, v.X * sin + v.Y * cos);
     }
 }

@@ -58,6 +58,10 @@ internal static class GmcmRegistration
             () => t.Get("config.specialOrdersBoardPages"),
             () => t.Get("config.specialOrdersBoardPages.tooltip"),
             min: 1, max: 5);
+        AddInt(api, manifest, t, "BoardNoteSpacing",
+            () => ModEntry.Config.BoardNoteSpacing, v => ModEntry.Config.BoardNoteSpacing = v, -20, 60);
+        AddInt(api, manifest, t, "BoardMaxNoteSize",
+            () => ModEntry.Config.BoardMaxNoteSize, v => ModEntry.Config.BoardMaxNoteSize = v, 64, 256);
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.toggles"));
         api.AddBoolOption(manifest,

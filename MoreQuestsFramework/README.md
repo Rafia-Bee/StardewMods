@@ -555,7 +555,7 @@ The framework follows semver from 1.0 onward.
 
 `Mods/MoreQuestsFramework/config.json`. Shows up in GMCM when installed:
 
-- **Quest board:** `QuestsPerDay`, `SpecialOrdersBoardPages`, `AllowDuplicateGiverPerDay`, `SkipFriendshipQuestsAtMaxHeart`.
+- **Quest board:** `QuestsPerDay`, `SpecialOrdersBoardPages`, `AllowDuplicateGiverPerDay`, `SkipFriendshipQuestsAtMaxHeart`, `BoardNoteSpacing`, `BoardMaxNoteSize` (the last two set how far apart the help-wanted notes sit and how big a single note gets when only a few are posted).
 - **Master toggles:** `DifficultyScaling`, `FishingIgnoresVisitedLocations`, `ForagingIgnoresVisitedLocations`.
 - **Per-quest weights:** one entry per registered `IQuestDefinition` (built at runtime, so consumer mods' quests show up too).
 - **Mail quest chances:** per-`IQuestDefinition` `MailQuestChancePercent` sliders for mail-delivered quests (0 to 100; default 100). Applies to anything whose effective `Kind` is `PostingKind.Mail` *except* `BuildingBuilt` and `MailReceived` defs, since those triggers are diff-based and a failed roll would lose the quest forever. The slider rolls in `QuestPipeline.GenerateTriggered` before `ShouldFireToday`, so a failed roll doesn't burn the trigger's cooldown / yearly date / OneShot flag.
