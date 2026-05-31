@@ -21,6 +21,15 @@ The vanilla quest log is one flat scroll: a title, one objective line, a reward,
 
 - Press **F6** (you can rebind this in the settings).
 - If you have Better Game Menu, click the **Quest Journal tab** in the Esc menu.
+- If you have Iconic Framework, click the **journal icon** on your toolbar.
+
+## Playing with a controller
+
+The journal works with a gamepad. Once it's open you can move around it with the stick or d-pad, just like the game's own menus. To switch between tabs, use the shoulder buttons (LB/RB) or the triggers (LT/RT). To make a new custom tab, press X; to edit the custom tab you have selected, press Y. All of these can be rebound in the settings.
+
+If you have quests pinned to the HUD, you can open one with a controller too: point at it with the right stick and press A.
+
+To open it with a controller, the easiest way is [Star Control](https://www.nexusmods.com/stardewvalley/mods/27562). If you have it, the journal shows up in its radial menu (this works through Iconic Framework, so you'll want both installed). You can also bind the open-journal key to a controller button in the settings, or use the Quest Journal tab in the Esc menu.
 
 ## Dependencies
 
@@ -39,6 +48,7 @@ The vanilla quest log is one flat scroll: a title, one objective line, a reward,
 If you have Generic Mod Config Menu installed, there's an in-game settings page. Otherwise edit `Mods/QuestJournal/config.json`.
 
 - **Open journal key** - the hotkey that opens the journal (default F6).
+- **Controller buttons** - while the journal is open: previous tab (default LB/LT), next tab (default RB/RT), edit the selected custom tab (default Y), and make a new tab (default X). All rebindable.
 - **Add a game-menu tab** - adds a Quest Journal tab to the Esc menu. Needs a restart to take effect.
 - **Show pinned quests on the HUD** - draws your pinned quests in the top-right while you play.
 - **Auto-pin new quests** - pins a quest the moment you accept it (does nothing if "Show pinned quests on the HUD" is off).

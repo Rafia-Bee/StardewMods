@@ -155,28 +155,29 @@
                                    border-thickness="48, 12"
                                    padding="0, 4"
                                    horizontal-content-alignment="middle"
-                                   vertical-content-alignment="middle">
+                                   vertical-content-alignment="middle"
+                                   focusable="true">
                                 <label layout="stretch content"
                                        bold="true"
                                        horizontal-alignment="middle"
                                        max-lines="2"
                                        text={SelectedTitle} />
                             </frame>
-                            <label margin="0, 4" text={SelectedDescription} />
-                            <label *if={SelectedShowObjective} margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.objective} />
+                            <label margin="0, 4" focusable="true" text={SelectedDescription} />
+                            <label *if={SelectedShowObjective} margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.objective} />
                             <label *if={SelectedShowObjective} margin="8, 0" text={SelectedObjective} />
-                            <label *if={SelectedHasSteps} margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.steps} />
+                            <label *if={SelectedHasSteps} margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.steps} />
                             <label *repeat={:SelectedSteps} margin="8, 1" text={:RowText} />
-                            <label margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.rewards} />
+                            <label margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.rewards} />
                             <lane *repeat={:SelectedRewards} orientation="horizontal" margin="8, 1" vertical-content-alignment="middle">
                                 <label text="- " />
                                 <label text={:Summary} />
                             </lane>
-                            <label margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.giver} />
+                            <label margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.giver} />
                             <label margin="8, 0" text={SelectedGiverDisplay} />
-                            <label margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.daysleft} />
+                            <label margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.daysleft} />
                             <label margin="8, 0" text={SelectedDaysLeftDisplay} />
-                            <label margin="0, 12, 0, 4" color={HeaderColor} text={#journal.header.source} />
+                            <label margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.source} />
                             <label margin="8, 0" text={SelectedSourceDisplay} />
                             </lane>
                         </lane>

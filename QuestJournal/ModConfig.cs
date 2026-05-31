@@ -5,6 +5,28 @@ namespace QuestJournal;
 public sealed class ModConfig
 {
     public KeybindList OpenJournalKey { get; set; } = KeybindList.Parse("F6");
+
+    // Controller tab switching. The tab rail floats above the frame, so a
+    // gamepad can't focus it; these cycle the tabs instead. Default to both the
+    // shoulder and trigger on each side, matching common Stardew menus.
+    public KeybindList PrevTabKey { get; set; } = KeybindList.Parse("LeftShoulder, LeftTrigger");
+    public KeybindList NextTabKey { get; set; } = KeybindList.Parse("RightShoulder, RightTrigger");
+
+    // Opens the selected custom tab's editor. The "+"/"Edit tabs" controls float
+    // too, so a gamepad can't reach them; this opens the editor straight from
+    // the selected custom tab.
+    public KeybindList EditTabKey { get; set; } = KeybindList.Parse("ControllerY");
+
+    // Opens the new-tab editor. The floating "+" control can't take gamepad
+    // focus, so this gives controllers a direct way to create a custom tab.
+    public KeybindList AddTabKey { get; set; } = KeybindList.Parse("ControllerX");
+
+    // Opens the journal to the pinned quest under the controller pointer (moved
+    // with the right stick). The HUD is a world overlay, not a menu, so a pad
+    // can't otherwise activate it. Only fires when the pointer is over an entry,
+    // so A still works for world actions everywhere else.
+    public KeybindList HudActivateKey { get; set; } = KeybindList.Parse("ControllerA");
+
     public bool AddGameMenuTab { get; set; } = true;
     public bool ShowHudPin { get; set; } = true;
     public bool AllowItemCheats { get; set; }

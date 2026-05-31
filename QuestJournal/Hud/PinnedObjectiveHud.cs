@@ -66,12 +66,28 @@ internal sealed class PinnedObjectiveHud
 
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
     {
-        if (e.Button != SButton.MouseLeft) return;
         if (!ModEntry.Config.ShowHudPin || !Context.IsWorldReady) return;
         if (!Game1.displayHUD || Game1.eventUp || Game1.farmEvent != null) return;
         if (Game1.activeClickableMenu != null || _lastPanelBounds.Width == 0) return;
 
         var cursor = e.Cursor.GetScaledScreenPixels();
+
+        // Controller path. The pointer moves with the right stick, so we hit-test
+        // it just like the mouse. Only act (and suppress) when it's actually over
+        // a pinned entry, so the bind (A by default) still does its normal world
+        // job everywhere else. No drag-to-move on controller; that stays mouse.
+        if (ModEntry.Config.HudActivateKey.JustPressed())
+        {
+            string? key = KeyAt(cursor);
+            if (key != null)
+            {
+                ModEntry.Instance.OpenJournalToQuest(key);
+                _helper.Input.SuppressActiveKeybinds(ModEntry.Config.HudActivateKey);
+            }
+            return;
+        }
+
+        if (e.Button != SButton.MouseLeft) return;
         if (!_lastPanelBounds.Contains((int)cursor.X, (int)cursor.Y)) return;
 
         // Arm a pending press. The per-tick poll promotes it to a drag past the

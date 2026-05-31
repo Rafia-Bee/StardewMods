@@ -1,5 +1,6 @@
 {
     "journal.tab.tooltip": "Quest Journal",
+    "iconic.description": "Open the quest journal.",
 
     "journal.tab.active": "Active",
     "journal.tab.special": "Special Orders",
@@ -77,7 +78,22 @@
 
     "config.section.general": "General",
     "config.openKey": "Open journal key",
-    "config.openKey.tooltip": "The key that opens the Quest Journal when you're out in the world.",
+    "config.openKey.tooltip": "The hotkey that opens the Quest Journal.",
+
+    "config.section.controller": "Controller buttons",
+    "config.controller.link": "Controller buttons",
+    "config.controller.link.tooltip": "Rebind the gamepad buttons used inside the journal (tab switching, new tab, edit tab).",
+    "config.controller.note": "These buttons work while the journal is open. The tab strip can't be reached with the stick, so tabs are switched with these instead.",
+    "config.prevTab": "Previous tab",
+    "config.prevTab.tooltip": "Switches to the tab on the left. Defaults to the left shoulder and left trigger.",
+    "config.nextTab": "Next tab",
+    "config.nextTab.tooltip": "Switches to the tab on the right. Defaults to the right shoulder and right trigger.",
+    "config.editTab": "Edit selected tab",
+    "config.editTab.tooltip": "Opens the editor for the selected tab when it's one of your own custom tabs. Defaults to Y.",
+    "config.addTab": "New tab",
+    "config.addTab.tooltip": "Opens the editor to create a new custom tab. Defaults to X.",
+    "config.hudActivate": "Open pinned quest",
+    "config.hudActivate.tooltip": "Point at a pinned quest on the HUD (move the pointer with the right stick) and press this to open it in the journal. Defaults to A.",
     "config.gameMenuTab": "Add a game-menu tab",
     "config.gameMenuTab.tooltip": "Adds a Quest Journal tab to the in-game menu (the one you open with Esc). Takes effect after a restart.",
     "config.hudPin": "Show pinned quests on the HUD",

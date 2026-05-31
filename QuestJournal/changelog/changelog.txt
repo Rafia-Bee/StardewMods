@@ -1,3 +1,12 @@
+1.1.0
+- Added a journal icon for Iconic Framework. Click it to open the journal.
+- Works with a controller now. If you have Star Control, the journal shows up in its radial menu so you can open it with your gamepad.
+- Switch between tabs with a controller using the shoulder buttons (LB/RB) or the triggers (LT/RT).
+- Edit one of your own custom tabs with a controller: select it, then press Y to open its editor.
+- Make a new custom tab with a controller by pressing X.
+- Open a pinned quest from the HUD with a controller: point at it with the right stick and press A.
+- The controller buttons (tab switching and edit) can be rebound in the settings.
+
 1.0.0
 - First release.
 - Replaces the plain quest log with a full journal: a quest list on the left, all the details in the middle, and action buttons on the right.

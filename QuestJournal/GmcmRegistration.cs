@@ -25,6 +25,15 @@ internal static class GmcmRegistration
             v => ModEntry.Config.OpenJournalKey = v,
             () => t.Get("config.openKey"),
             () => t.Get("config.openKey.tooltip"));
+
+        // Controller binds live on their own subpage so the main page stays
+        // short. A link on the main page opens it; the page itself is registered
+        // at the bottom (GMCM requires AddPage after the main-page content).
+        const string controllerPageId = "controller";
+        api.AddPageLink(manifest, controllerPageId,
+            () => t.Get("config.controller.link"),
+            () => t.Get("config.controller.link.tooltip"));
+
         api.AddBoolOption(manifest,
             () => ModEntry.Config.AddGameMenuTab,
             v => ModEntry.Config.AddGameMenuTab = v,
@@ -70,5 +79,36 @@ internal static class GmcmRegistration
             v => ModEntry.Config.AllowWarpCheat = v,
             () => t.Get("config.warpCheat"),
             () => t.Get("config.warpCheat.tooltip"));
+
+        // Controller subpage. These binds only do anything while the journal is
+        // open; the tab strip and +/Edit controls float and can't take gamepad
+        // focus, so these drive tab switching and tab create/edit instead.
+        api.AddPage(manifest, controllerPageId, () => t.Get("config.section.controller"));
+        api.AddParagraph(manifest, () => t.Get("config.controller.note"));
+        api.AddKeybindList(manifest,
+            () => ModEntry.Config.PrevTabKey,
+            v => ModEntry.Config.PrevTabKey = v,
+            () => t.Get("config.prevTab"),
+            () => t.Get("config.prevTab.tooltip"));
+        api.AddKeybindList(manifest,
+            () => ModEntry.Config.NextTabKey,
+            v => ModEntry.Config.NextTabKey = v,
+            () => t.Get("config.nextTab"),
+            () => t.Get("config.nextTab.tooltip"));
+        api.AddKeybindList(manifest,
+            () => ModEntry.Config.EditTabKey,
+            v => ModEntry.Config.EditTabKey = v,
+            () => t.Get("config.editTab"),
+            () => t.Get("config.editTab.tooltip"));
+        api.AddKeybindList(manifest,
+            () => ModEntry.Config.AddTabKey,
+            v => ModEntry.Config.AddTabKey = v,
+            () => t.Get("config.addTab"),
+            () => t.Get("config.addTab.tooltip"));
+        api.AddKeybindList(manifest,
+            () => ModEntry.Config.HudActivateKey,
+            v => ModEntry.Config.HudActivateKey = v,
+            () => t.Get("config.hudActivate"),
+            () => t.Get("config.hudActivate.tooltip"));
     }
 }

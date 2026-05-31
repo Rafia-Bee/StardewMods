@@ -354,6 +354,38 @@ public sealed class JournalContext : INotifyPropertyChanged
         ReapplyFilter();
     }
 
+    // Controller tab cycling. The tab rail renders in a floating element, which
+    // StardewUI excludes from gamepad focus, so the stick can't reach the tabs.
+    // The shoulder/trigger buttons cycle through them instead (matching how the
+    // vanilla menus switch tabs on a controller). Cycles over Tabs, which holds
+    // only the selectable tabs (the +/Edit controls aren't in it), wrapping at
+    // both ends.
+    public void NextTab() => CycleTab(1);
+    public void PrevTab() => CycleTab(-1);
+
+    private void CycleTab(int step)
+    {
+        if (Tabs.Count == 0) return;
+        int current = 0;
+        for (int i = 0; i < Tabs.Count; i++)
+            if (Tabs[i].Id == _activeTabId) { current = i; break; }
+        int next = ((current + step) % Tabs.Count + Tabs.Count) % Tabs.Count;
+        SelectTab(Tabs[next].Id);
+    }
+
+    // Controller editor shortcut. The "+" / "Edit tabs" controls float above the
+    // frame, so a gamepad can't reach them to enter edit mode and click a custom
+    // tab. Instead, Y opens the editor straight from the selected tab when that
+    // tab is a custom one. Built-in tabs have no editor, so this no-ops on them.
+    public bool CanEditActiveTab => FindTab(_activeTabId)?.IsCustom == true;
+
+    public void EditActiveTab()
+    {
+        var tab = FindTab(_activeTabId);
+        if (tab?.IsCustom == true)
+            OpenTabEditor(tab);
+    }
+
     public void SelectRow(QuestRow row)
     {
         var previous = SelectedQuest;

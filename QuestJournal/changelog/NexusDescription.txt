@@ -23,20 +23,29 @@ Quest Journal replaces that log with a proper journal. A quest list down the lef
 [list]
 [*]Press [b]F6[/b] (you can change this key in the settings)[/*]
 [*]If you have Better Game Menu, click the [b]Quest Journal[/b] tab in the Esc menu[/*]
+[*]If you have Iconic Framework, click the [b]journal icon[/b] on your toolbar[/*]
 [/list]
+
+[size=4][b]Playing with a controller[/b][/size]
+The journal works with a gamepad. Once it's open you can move around it with the stick or d-pad, just like the game's own menus. To switch between tabs, use the shoulder buttons (LB/RB) or the triggers (LT/RT). To make a new custom tab, press X; to edit the custom tab you have selected, press Y. All of these can be rebound in the settings.
+
+If you have quests pinned to the HUD, you can open one with a controller too: point at it with the right stick and press A.
+
+To open it with a controller, the easiest way is [url=https://www.nexusmods.com/stardewvalley/mods/25257]Star Control[/url]. If you have it, the journal shows up in its radial menu (this works through Iconic Framework, so you'll want both installed).
 
 [size=4][b]Requirements[/b][/size]
 [b]Required:[/b]
 [list]
 [*][url=https://smapi.io/]SMAPI[/url] 4.1+[/*]
 [*]Stardew Valley 1.6+[/*]
-[*][url=https://www.nexusmods.com/stardewvalley/mods/28870]StardewUI[/url] - the journal is drawn with it, so it won't open without it[/*]
+[*][url=https://www.nexusmods.com/stardewvalley/mods/43861]StardewUI Continued[/url] - the journal is drawn with it, so it won't open without it[/*]
 [/list]
 [b]Optional (auto-detected):[/b]
 [list]
 [*][url=https://www.nexusmods.com/stardewvalley/mods/46361]More Quests Framework[/url] - unlocks the multi-step view, proper reward lists, and source-mod labels. Without it, vanilla quests still get the full journal[/*]
 [*][url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] - an in-game settings page[/*]
 [*][url=https://www.nexusmods.com/stardewvalley/mods/32032]Better Game Menu[/url] - when it's installed, the Quest Journal tab is added through its tab strip[/*]
+[*][url=https://www.nexusmods.com/stardewvalley/mods/11026]Iconic Framework[/url] - adds the journal icon to the shortcuts[/*]
 [/list]
 
 [size=4][b]Install[/b][/size]
@@ -50,6 +59,7 @@ Quest Journal replaces that log with a proper journal. A quest list down the lef
 If you have [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] installed, a settings page shows up in-game. Otherwise edit the [font=Courier New]config.json[/font] in the mod's folder.
 [list]
 [*][b]Open journal key[/b] - the hotkey that opens the journal (default F6)[/*]
+[*][b]Controller buttons[/b] - while the journal is open: previous/next tab (default shoulders and triggers), new tab (default X), and edit the selected custom tab (default Y). All rebindable[/*]
 [*][b]Add a game-menu tab[/b] - adds the Quest Journal tab to the Esc menu (needs a restart)[/*]
 [*][b]Show pinned quests on the HUD[/b] - draws your pinned quests in the top-right corner[/*]
 [*][b]Auto-pin new quests[/b] - pins a quest the moment you accept it (does nothing if Show pinned quests on the HUD is false)[/*]
@@ -72,8 +82,8 @@ This mod supports translations! Feel free to translate it to your language and u
 [*][b]ConcernedApe[/b] for Stardew Valley[/*]
 [*][b]Pathoschild[/b] for [url=https://smapi.io/]SMAPI[/url][/*]
 [*][b]focustense[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/28870]StardewUI[/url][/*]
-[*][b]Mushymato[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/43861]StardewUI Continued[/*]
+[*][b]Mushymato[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/43861]StardewUI Continued[/url][/*]
 [*][b]spacechase0[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url][/*]
 [/list]
 
-Thanks to the Stardew Valley modding community for the feedback and ideas!
+Thanks to the Stardew Valley modding community for the feedback and ideas![/url]

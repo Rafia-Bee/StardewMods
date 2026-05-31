@@ -71,6 +71,9 @@ public sealed class ModEntry : Mod
 
     private void OnInputButtonPressed(object? sender, ButtonPressedEventArgs e)
     {
+        // Controller tab switching and custom-tab editing run off configurable
+        // keybinds in OnButtonsChanged (KeybindList supports multi-key binds and
+        // GMCM rebinding). This handler is just the mouse drag-to-move arming.
         if (e.Button != SButton.MouseLeft) return;
         var frame = JournalFrameRect();
         if (frame == null) return;
@@ -119,12 +122,21 @@ public sealed class ModEntry : Mod
         Helper.Input.Suppress(SButton.MouseLeft);
     }
 
+    // Content path the journal icon is served at. Iconic Framework loads its
+    // icon textures through the game content pipeline, so the icon needs a
+    // content name rather than just the raw mod file.
+    private string IconAssetName => $"Mods/{ModManifest.UniqueID}/Icon";
+
     // Serve the journal's theme colours as a Content Patcher-editable data
     // asset (a string->hex dictionary). Authors override entries with EditData.
+    // Also serves the toolbar icon texture so Iconic Framework can load it.
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
     {
         if (e.NameWithoutLocale.IsEquivalentTo(JournalTheme.AssetName(ModManifest.UniqueID)))
             e.LoadFrom(JournalTheme.BuildDefaults, AssetLoadPriority.Low);
+        else if (e.NameWithoutLocale.IsEquivalentTo(IconAssetName))
+            e.LoadFromModFile<Microsoft.Xna.Framework.Graphics.Texture2D>(
+                "assets/sprites/menuIcon.png", AssetLoadPriority.Medium);
     }
 
     // Re-read the theme when a patch invalidates it, and repaint an open journal
@@ -211,6 +223,18 @@ public sealed class ModEntry : Mod
 
         GmcmRegistration.Register(Helper, ModManifest);
 
+        // Register a toolbar icon with Iconic Framework when it's installed.
+        // This is also how the journal reaches controller players: Star Control
+        // reads Iconic Framework's icons into its radial menu, so the same icon
+        // opens the journal from a gamepad without needing a bound key.
+        IconicFrameworkIntegration.Register(
+            Helper,
+            ModManifest,
+            IconAssetName,
+            () => Helper.Translation.Get("journal.tab.tooltip").Default("Quest Journal").ToString(),
+            () => Helper.Translation.Get("iconic.description").Default("Open the quest journal.").ToString(),
+            OpenJournal);
+
         if (Config.AddGameMenuTab)
         {
             // Prefer Better Game Menu's RegisterTab API when BGM is loaded.
@@ -243,10 +267,56 @@ public sealed class ModEntry : Mod
 
     private void OnButtonsChanged(object? sender, ButtonsChangedEventArgs e)
     {
+        // In-journal controller shortcuts. The tab rail and the "+"/"Edit"
+        // controls float above the frame, so a gamepad can't focus them; these
+        // configurable binds drive tab switching and custom-tab editing instead.
+        // Only while the journal is the active menu with no child popup open.
+        if (_journalContext != null && _journalMenu != null
+            && ReferenceEquals(Game1.activeClickableMenu, _journalMenu)
+            && _journalMenu.GetChildMenu() == null)
+        {
+            if (Config.NextTabKey.JustPressed())
+            {
+                _journalContext.NextTab();
+                Game1.playSound("smallSelect");
+                Helper.Input.SuppressActiveKeybinds(Config.NextTabKey);
+                return;
+            }
+            if (Config.PrevTabKey.JustPressed())
+            {
+                _journalContext.PrevTab();
+                Game1.playSound("smallSelect");
+                Helper.Input.SuppressActiveKeybinds(Config.PrevTabKey);
+                return;
+            }
+            if (Config.EditTabKey.JustPressed() && _journalContext.CanEditActiveTab)
+            {
+                _journalContext.EditActiveTab();
+                Game1.playSound("smallSelect");
+                Helper.Input.SuppressActiveKeybinds(Config.EditTabKey);
+                return;
+            }
+            if (Config.AddTabKey.JustPressed())
+            {
+                _journalContext.CreateTab();
+                Game1.playSound("smallSelect");
+                Helper.Input.SuppressActiveKeybinds(Config.AddTabKey);
+                return;
+            }
+        }
+
         if (!Context.IsPlayerFree && Game1.activeClickableMenu is not GameMenu)
             return;
         if (!Config.OpenJournalKey.JustPressed())
             return;
+        OpenJournal();
+    }
+
+    // Shared open path used by the hotkey and the Iconic Framework / Star
+    // Control icon. Replaces an open GameMenu, but won't ambush another menu
+    // (dialogue, shop, etc.) or fire when the view engine is missing.
+    internal void OpenJournal()
+    {
         if (_viewEngine == null)
             return;
 

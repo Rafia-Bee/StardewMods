@@ -52,6 +52,21 @@ public interface IGenericModConfigMenuApi
         Func<string> text,
         Func<string> tooltip = null);
 
+    void AddParagraph(
+        IManifest mod,
+        Func<string> text);
+
+    void AddPage(
+        IManifest mod,
+        string pageId,
+        Func<string> pageTitle = null);
+
+    void AddPageLink(
+        IManifest mod,
+        string pageId,
+        Func<string> text,
+        Func<string> tooltip = null);
+
     void AddTextOption(
         IManifest mod,
         Func<string> getValue,
