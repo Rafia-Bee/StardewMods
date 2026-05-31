@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
@@ -41,14 +42,41 @@ internal sealed class CustomBoardQuestMenu : IClickableMenu
                 (int)size.Y + 24),
             "")
         {
-            myID = 0
+            myID = AcceptButtonId,
+            upNeighborID = CloseButtonId
         };
 
         upperRightCloseButton = new ClickableTextureComponent(
             new Rectangle(xPositionOnScreen + width - 20, yPositionOnScreen, 48, 48),
             Game1.mouseCursors,
             new Rectangle(337, 494, 12, 12),
-            4f);
+            4f)
+        {
+            myID = CloseButtonId,
+            downNeighborID = AcceptButtonId
+        };
+
+        populateClickableComponentList();
+    }
+
+    private const int AcceptButtonId = 0;
+    private const int CloseButtonId = 1;
+
+    public override void populateClickableComponentList()
+    {
+        allClickableComponents = new List<ClickableComponent>();
+        if (acceptQuestButton != null)
+            allClickableComponents.Add(acceptQuestButton);
+        if (upperRightCloseButton != null)
+            allClickableComponents.Add(upperRightCloseButton);
+    }
+
+    public override void snapToDefaultClickableComponent()
+    {
+        currentlySnappedComponent = acceptQuestButton.visible
+            ? acceptQuestButton
+            : upperRightCloseButton;
+        snapCursorToCurrentSnappedComponent();
     }
 
     public override void performHoverAction(int x, int y)

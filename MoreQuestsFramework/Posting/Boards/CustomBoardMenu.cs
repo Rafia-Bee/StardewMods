@@ -16,6 +16,10 @@ internal sealed class CustomBoardMenu : IClickableMenu
     private const int MenuWidth = 338 * 4;
     private const int MenuHeight = 198 * 4;
     private const int CcIndexBase = -42100;
+    // -99998 routes a direction press to automaticSnapBehavior, which picks the nearest
+    // note in that direction. Lets the D-pad walk the scattered notes. (-7777 would route
+    // to customSnapBehavior, which we don't implement, so the cursor would never move.)
+    private const int SnapAutomatic = -99998;
 
     private readonly BoardDefinition _board;
     private readonly Texture2D _billboardTexture;
@@ -64,6 +68,23 @@ internal sealed class CustomBoardMenu : IClickableMenu
 
         BuildNotes();
         populateClickableComponentList();
+        if (Game1.options.SnappyMenus)
+            snapToDefaultClickableComponent();
+    }
+
+    // The base reflection scan can't find the note components (they live inside private Note
+    // wrappers, not a List<ClickableComponent>), so register them by hand for gamepad snap nav.
+    public override void populateClickableComponentList()
+    {
+        allClickableComponents = new List<ClickableComponent>();
+        foreach (var note in _notes)
+            allClickableComponents.Add(note.Cc);
+        if (upperRightCloseButton != null)
+        {
+            upperRightCloseButton.leftNeighborID = SnapAutomatic;
+            upperRightCloseButton.downNeighborID = SnapAutomatic;
+            allClickableComponents.Add(upperRightCloseButton);
+        }
     }
 
     private static Texture2D LoadOrFallback(string? assetName, string fallback)
@@ -112,10 +133,10 @@ internal sealed class CustomBoardMenu : IClickableMenu
                 scale)
             {
                 myID = CcIndexBase - i,
-                leftNeighborID = -7777,
-                rightNeighborID = -7777,
-                upNeighborID = -7777,
-                downNeighborID = -7777
+                leftNeighborID = SnapAutomatic,
+                rightNeighborID = SnapAutomatic,
+                upNeighborID = SnapAutomatic,
+                downNeighborID = SnapAutomatic
             };
 
             _notes.Add(new Note
@@ -173,17 +194,38 @@ internal sealed class CustomBoardMenu : IClickableMenu
             return;
         }
 
+        var target = NoteAt(x, y);
+        if (target != null)
+        {
+            InnerAcceptPopup = new CustomBoardQuestMenu(this, target.Slot, _billboardTexture);
+            InnerAcceptPopup.acceptQuestButton.visible = !target.Slot.Accepted;
+            if (playSound)
+                Game1.playSound("smallSelect");
+            if (Game1.options.SnappyMenus)
+            {
+                InnerAcceptPopup.snapToDefaultClickableComponent();
+                currentlySnappedComponent = InnerAcceptPopup.currentlySnappedComponent;
+                snapCursorToCurrentSnappedComponent();
+            }
+        }
+    }
+
+    // Notes can overlap on the cork board. When the gamepad cursor is snapped onto a note,
+    // prefer that note so a covered one is still selectable (a plain hit-test would pick
+    // whichever note sits on top). Falls back to the topmost note under the point for mouse.
+    private Note? NoteAt(int x, int y)
+    {
+        if (currentlySnappedComponent != null
+            && _notesByCc.TryGetValue(currentlySnappedComponent.myID, out var snapped)
+            && snapped.Cc.containsPoint(x, y))
+            return snapped;
+
         foreach (var note in _notes)
         {
             if (note.Cc.containsPoint(x, y))
-            {
-                InnerAcceptPopup = new CustomBoardQuestMenu(this, note.Slot, _billboardTexture);
-                InnerAcceptPopup.acceptQuestButton.visible = !note.Slot.Accepted;
-                if (playSound)
-                    Game1.playSound("smallSelect");
-                return;
-            }
+                return note;
         }
+        return null;
     }
 
     public override bool readyToClose()
@@ -199,9 +241,32 @@ internal sealed class CustomBoardMenu : IClickableMenu
         if (InnerAcceptPopup != null && IsMenuButton(key))
         {
             OnInnerAcceptClosed(reopen: false);
+            if (Game1.options.SnappyMenus)
+                snapToDefaultClickableComponent();
             return;
         }
         base.receiveKeyPress(key);
+    }
+
+    public override void applyMovementKey(int direction)
+    {
+        if (InnerAcceptPopup != null)
+        {
+            InnerAcceptPopup.applyMovementKey(direction);
+            currentlySnappedComponent = InnerAcceptPopup.currentlySnappedComponent;
+            return;
+        }
+        base.applyMovementKey(direction);
+    }
+
+    public override void receiveGamePadButton(Buttons b)
+    {
+        if (InnerAcceptPopup != null)
+        {
+            InnerAcceptPopup.receiveGamePadButton(b);
+            return;
+        }
+        base.receiveGamePadButton(b);
     }
 
     private static bool IsMenuButton(Keys key)
@@ -217,6 +282,12 @@ internal sealed class CustomBoardMenu : IClickableMenu
 
     public override void snapToDefaultClickableComponent()
     {
+        if (InnerAcceptPopup != null)
+        {
+            InnerAcceptPopup.snapToDefaultClickableComponent();
+            currentlySnappedComponent = InnerAcceptPopup.currentlySnappedComponent;
+            return;
+        }
         if (_notes.Count > 0)
         {
             currentlySnappedComponent = getComponentWithID(_notes[0].Cc.myID);
