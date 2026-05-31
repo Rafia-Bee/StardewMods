@@ -42,7 +42,7 @@ Quests are grouped by category below and listed alphabetically within each group
 | Gunther's Dinosaur Study | First Dinosaur Egg held (mail) | Gunther | Deliver one Dinosaur Egg | Gold + a Dinosaur Egg back, bumped one quality tier up | One-time |
 | Hay Supply Run | Mail | Marnie | Deliver hay scaled to your animal count | Animal-shop discount window (when the discount is on in config) | Cooldown 28 days, needs at least 4 animals |
 | Krobus's Void Note | First Void Egg held (mail) | Krobus | Deliver one Void Egg to Krobus | Friendship + Book of the Void | One-time, needs Krobus around at 1+ hearts |
-| Leah's Farm Painting | Every 21 days (mail) | Leah | Visit Leah's house with an animal following you | A 2x2 painting of a random farm animal, frame style picked in GMCM, mailed the next morning + Friendship | Needs Livestock Follows You, single-player, and 2+ hearts with Leah |
+| Leah's Farm Painting | Every 21 days (mail) | Leah | Visit Leah's house with an animal following you | A random 2x2 painting in the frame style you pick in GMCM, mailed the next morning + Friendship. No repeats: you get a different one each time until you've collected them all. Other mods can add their own paintings (see [Adding your own paintings](#adding-your-own-paintings)). | Needs Livestock Follows You, single-player, and 2+ hearts with Leah |
 | Marnie's Chicken Offer | Day after building a Coop (mail) | Marnie | Bring Mixed Seeds | A free White Chicken at Marnie's shop (or 800g if you don't visit in 14 days) + Friendship. With Livestock Bazaar, picking any chicken variant from her shop counts. | One-time |
 | Marnie's Cow Offer | Day after building a Barn (mail) | Marnie | With Livestock Follows You, bring her a Grazing Bell. Without it, buy a Milk Pail from her shop | A free White Cow at Marnie's shop (or 1500g if you don't visit in 14 days) + Friendship. With Livestock Bazaar, picking any cow variant counts. | One-time |
 | Marnie's Egg Request | After your first egg is laid (mail) | Marnie | Ship 10 of any edible egg (vanilla and modded) through the bin | Gold + Mayonnaise Machine recipe + Friendship | One-time |
@@ -184,6 +184,48 @@ A few quests use special `Quest` subclasses:
 - **`PurchaseFromShopQuest`**, backs Marnie's Cow Offer when she's asking for a Milk Pail. The pail is a tool so it can't be gifted to her like a regular delivery item, the quest just clears when you buy one from her shop. If you already own a Milk Pail, vanilla's shop won't list a second one, so sell or scrap the one you have first and the entry comes back.
 
 Multi-step quests run on the framework's `AdventureQuest`: Check on George (gift, chat, report), the festival mail quests (Submarine Fuel, Wizard's Ritual, Holiday Cookies), Check on Friends, the Gus festival feasts, Skull Cavern Deep Dive, Mines Deep Dive, Pierre's Stock-Up, the Weekly Specials, the Grand Feast (Special Order), Dinner Party, Clear Debris, Plant Trees, Spring Cleaning, and several others. All other quests use the framework's `MoreQuestsItemDeliveryQuest`, `MoreQuestsFishingQuest`, or `MoreQuestsShipQuest`, built by the framework's `QuestFactory`.
+
+## Adding your own paintings
+
+Leah's Farm Painting picks its reward from a list that other mods can add to. The list is a data asset, `Mods/RafiaBee.MoreQuests/LeahPaintings`, so a Content Patcher pack can drop in new paintings. Each one you add becomes both a possible quest reward and a placeable furniture item.
+
+A painting entry has three fields:
+
+- **Texture**: the asset name of your painting image. It should be 32x32 (a 2x2 painting).
+- **Frame**: which frame group it belongs to (`wood`, `night`, or `burgundy` by default). The quest only hands out paintings that match the frame the player picked in the config, so tag yours with the frame it visually has. If you use a brand-new frame name, it shows up as a new choice in the config after a game restart.
+- **DisplayName**: the name shown on the furniture. Optional. If you leave it out it falls back to "Leah's Painting".
+
+Here's a full Content Patcher example. It loads your image, then adds it to the list:
+
+```json
+{
+  "Format": "2.0.0",
+  "Changes": [
+    {
+      "Action": "Load",
+      "Target": "Mods/YourName.CoolPaintings/SunsetCow",
+      "FromFile": "assets/sunset_cow.png"
+    },
+    {
+      "Action": "EditData",
+      "Target": "Mods/RafiaBee.MoreQuests/LeahPaintings",
+      "Entries": {
+        "YourName.CoolPaintings_SunsetCow": {
+          "Texture": "Mods/YourName.CoolPaintings/SunsetCow",
+          "Frame": "wood",
+          "DisplayName": "Painting of a Cow at Sunset"
+        }
+      }
+    }
+  ]
+}
+```
+
+A couple of things to keep in mind:
+
+- Give your entry key a unique name (put your mod name in it like above) so it doesn't clash with another pack's painting.
+- The painting also becomes a furniture item with the id `RafiaBee.MoreQuests.LeahPainting.<your key>`, in case you want to spawn it directly.
+- You don't have to depend on MoreQuests in your pack, but the painting only shows up if MoreQuests is installed.
 
 ## Known limitations
 

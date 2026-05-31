@@ -243,9 +243,28 @@ internal static partial class Generators
         if (!Game1.player.friendshipData.TryGetValue("Leah", out var leahFriendship) || leahFriendship.Points < 2 * 250)
             return null;
 
-        string animal = ModEntry.LeahPaintingAnimals[Game1.random.Next(ModEntry.LeahPaintingAnimals.Length)];
         string frame = ModEntry.NormalizeLeahPaintingFrame(ModEntry.Config.LeahPaintingFrame);
-        string letterKey = $"{ModEntry.LeahPaintingRewardKeyPrefix}{animal}.{frame}";
+
+        // Reward pool: paintings in the chosen frame the player hasn't gotten yet (their old
+        // reward letters stay in the mail history, so we skip those). When the frame is fully
+        // collected the pool is empty and the quest just doesn't post.
+        var received = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var k in Game1.player.mailReceived) if (k != null) received.Add(k);
+        foreach (var k in Game1.player.mailForTomorrow) if (k != null) received.Add(k);
+        foreach (var k in Game1.player.mailbox) if (k != null) received.Add(k);
+
+        var pool = ModEntry.GetLeahPaintings()
+            .Where(p => p.Value != null
+                && string.Equals(p.Value.Frame?.Trim(), frame, StringComparison.OrdinalIgnoreCase)
+                && !received.Contains($"{ModEntry.LeahPaintingRewardKeyPrefix}{p.Key}"))
+            .Select(p => p.Key)
+            .ToList();
+
+        if (pool.Count == 0)
+            return null;
+
+        string paintingId = pool[Game1.random.Next(pool.Count)];
+        string letterKey = $"{ModEntry.LeahPaintingRewardKeyPrefix}{paintingId}";
 
         const string giver = "Leah";
 

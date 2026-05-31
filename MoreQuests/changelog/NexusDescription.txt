@@ -57,7 +57,7 @@ Cooldowns are tunable in the framework config. The defaults are: [b]Short = 2 da
 [*][b]When:[/b] Every 21 days (mail)[/*]
 [*][b]Giver:[/b] Leah[/*]
 [*][b]Objective:[/b] Visit Leah's house with an animal following you[/*]
-[*][b]Reward:[/b] A 2x2 painting of a random farm animal, frame style picked in GMCM, mailed the next morning + Friendship[/*]
+[*][b]Reward:[/b] A random 2x2 painting in the frame style you pick in GMCM, mailed the next morning + Friendship. You get a different one each time until you've collected them all, and other mods can add their own paintings to the pool[/*]
 [*][b]Notes:[/b] Needs Livestock Follows You, single-player, and 2+ hearts with Leah[/*]
 [/list]
 [b]Marnie's Chicken Offer[/b]

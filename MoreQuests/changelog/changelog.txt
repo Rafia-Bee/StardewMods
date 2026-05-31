@@ -1,3 +1,10 @@
+2.3.0
+- Leah's Farm Painting now sends a different painting each time, so you won't get the same one twice until you've collected them all.
+- Fixed Leah's thank-you letter. It used to thank you for bringing over a baby animal you can't actually walk around with, so now it just thanks you without naming one.
+- Other mods can now add their own paintings to Leah's quest with Content Patcher. There's a how-to in the README if you want to make some.
+- Your old paintings and progress carry over, nothing is lost.
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuests-v2.2.0...MoreQuests-v2.3.0]i18n changes here[/url] (look at i18n/default.json).
+
 2.2.0
 - Needs More Quests Framework 2.3.0 or newer.
 - New "Emily's Housewarming Challenge" quest: reach 5 hearts with Emily and she mails you a challenge to liven up your farmhouse. Place a rug, a light source, a wall decoration, and a few more pieces of furniture, then tell her it's ready. Only furniture you put down while the quest is going counts, so moving things around won't cheat it. Emily and Robin send you a surprise dresser, plus a friendship boost. You can change how many pieces it asks for in the settings.

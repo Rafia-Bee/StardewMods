@@ -60,6 +60,7 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.DayEnding += OnDayEnding;
         helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTick;
         helper.Events.Content.AssetRequested += OnAssetRequested;
+        helper.Events.Content.AssetsInvalidated += OnAssetsInvalidated;
         helper.Events.World.BuildingListChanged += OnBuildingListChanged;
         helper.Events.Player.InventoryChanged += MarnieMilkPailHook.OnInventoryChanged;
 
@@ -120,32 +121,45 @@ public sealed class ModEntry : Mod
     /// reads the suffix and builds the body + food attachment, so nothing is persisted per-quest.
     internal const string UnseenOfferingRewardKeyPrefix = "RafiaBee.MoreQuests.UnseenOfferingReward.";
 
-    /// Mail key prefix for Leah's painting reward. Suffix is `<animal>.<frame>` (e.g.
-    /// `...LeahPaintingReward.BabyBlueChicken.wood`). The asset edit reads the suffix and
-    /// builds a body + furniture attachment matching the painting the player earned.
+    /// Mail key prefix for Leah's painting reward. Suffix is the painting id (e.g.
+    /// `...LeahPaintingReward.BabyBlueChicken.wood`). The asset edit looks the id up in the
+    /// painting pool and attaches the matching furniture. The id is also how the quest dedupes,
+    /// since a received key sits in the player's mail history for good.
     internal const string LeahPaintingRewardKeyPrefix = "RafiaBee.MoreQuests.LeahPaintingReward.";
 
-    /// Unqualified furniture id prefix for Leah's paintings. Full id is
-    /// `<prefix><animal>.<frame>`; qualified is `(F)<prefix><animal>.<frame>`.
+    /// Unqualified furniture id prefix for Leah's paintings. Full id is `<prefix><paintingId>`;
+    /// qualified is `(F)<prefix><paintingId>`.
     internal const string LeahPaintingFurnitureIdPrefix = "RafiaBee.MoreQuests.LeahPainting.";
 
-    /// Asset name root for painting textures. Full path is `<root>/<animal>_<frame>`.
+    /// Asset name root for built-in painting textures. Full path is `<root>/<animal>_<frame>`.
     internal const string LeahPaintingTextureRoot = "Mods/RafiaBee.MoreQuests/LeahPainting";
 
-    /// File-system folder (relative to the mod) holding the 51 painting PNGs.
+    /// File-system folder (relative to the mod) holding the built-in painting PNGs.
     internal const string LeahPaintingAssetFolder = "assets/leahPaintings";
 
-    /// Animal sprite names. Populated at Entry() by scanning assets/leahPaintings/*.png.
-    internal static string[] LeahPaintingAnimals { get; private set; } = Array.Empty<string>();
+    /// The painting pool. A `Dictionary<string, LeahPaintingEntry>` keyed by painting id.
+    /// MoreQuests loads its built-in paintings here; Content Patcher packs add their own with
+    /// an EditData edit. The quest and the Data/Furniture edit both read the merged result.
+    internal const string LeahPaintingsDataAsset = "Mods/RafiaBee.MoreQuests/LeahPaintings";
 
-    /// Lowercase frame keys. Populated from the filename suffix.
+    /// Built-in paintings found by scanning assets/leahPaintings/*.png. Id is `<animal>.<frame>`
+    /// (kept dot-separated so saves from before the data-asset change still match); Stem is the
+    /// texture file name `<animal>_<frame>`. Feeds the data-asset load factory.
+    private readonly List<(string Id, string Animal, string Frame, string Stem)> _builtInPaintings = new();
+
+    /// Texture stems (`<animal>_<frame>`) of the built-in paintings. Validates texture-load
+    /// requests under LeahPaintingTextureRoot so we only serve files we actually ship.
+    private readonly HashSet<string> _builtInPaintingStems = new(StringComparer.Ordinal);
+
+    /// Lowercase frame keys present in the merged pool. Set at registration from the data asset.
     internal static string[] LeahPaintingFrames { get; private set; } = Array.Empty<string>();
 
     /// Title-cased frame options shown in GMCM. Derived from LeahPaintingFrames.
     internal static string[] LeahPaintingFrameOptions { get; private set; } = Array.Empty<string>();
 
-    /// Walks assets/leahPaintings for `<Animal>_<frame>.png` filenames and fills the
-    /// animal / frame lists. New PNGs dropped into the folder show up without code changes.
+    /// Walks assets/leahPaintings for `<Animal>_<frame>.png` filenames and records the built-in
+    /// paintings. New PNGs dropped into the folder show up without code changes; other mods add
+    /// paintings through the LeahPaintingsDataAsset data asset instead.
     private void ScanLeahPaintingAssets()
     {
         string dir = Path.Combine(Helper.DirectoryPath, LeahPaintingAssetFolder);
@@ -155,34 +169,62 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        var animals = new SortedSet<string>(StringComparer.Ordinal);
-        var frames = new SortedSet<string>(StringComparer.Ordinal);
-
         foreach (string path in Directory.EnumerateFiles(dir, "*.png"))
         {
             string stem = Path.GetFileNameWithoutExtension(path);
             int sep = stem.LastIndexOf('_');
             if (sep <= 0 || sep == stem.Length - 1)
                 continue;
-            animals.Add(stem.Substring(0, sep));
-            frames.Add(stem.Substring(sep + 1).ToLowerInvariant());
+            string animal = stem.Substring(0, sep);
+            string frame = stem.Substring(sep + 1).ToLowerInvariant();
+            _builtInPaintings.Add(($"{animal}.{frame}", animal, frame, stem));
+            _builtInPaintingStems.Add(stem);
         }
+    }
 
-        LeahPaintingAnimals = animals.ToArray();
+    /// Loads the merged painting pool (built-ins plus any Content Patcher additions). SMAPI
+    /// caches the asset, so repeated calls are cheap until something invalidates it.
+    internal static IReadOnlyDictionary<string, LeahPaintingEntry> GetLeahPaintings()
+    {
+        try
+        {
+            return Instance.Helper.GameContent.Load<Dictionary<string, LeahPaintingEntry>>(LeahPaintingsDataAsset);
+        }
+        catch (Exception ex)
+        {
+            Instance.Monitor.Log($"Couldn't load the Leah painting pool: {ex.Message}", LogLevel.Warn);
+            return new Dictionary<string, LeahPaintingEntry>();
+        }
+    }
+
+    /// Recomputes the frame list and GMCM options from the merged pool. Run once at
+    /// registration (after Content Patcher edits are available) and again whenever the pool is
+    /// invalidated, so the config dropdown reflects frames added by other mods.
+    private void RefreshLeahPaintingFrames()
+    {
+        var frames = new SortedSet<string>(StringComparer.Ordinal);
+        foreach (var entry in GetLeahPaintings().Values)
+            if (entry != null && !string.IsNullOrWhiteSpace(entry.Frame))
+                frames.Add(entry.Frame.Trim().ToLowerInvariant());
+
+        if (frames.Count == 0)
+            frames.Add("wood");
+
         LeahPaintingFrames = frames.ToArray();
-        LeahPaintingFrameOptions = frames
+        LeahPaintingFrameOptions = LeahPaintingFrames
             .Select(f => char.ToUpperInvariant(f[0]) + f.Substring(1))
             .ToArray();
     }
 
     internal static string NormalizeLeahPaintingFrame(string? configValue)
     {
+        string fallback = LeahPaintingFrames.Length > 0 ? LeahPaintingFrames[0] : "wood";
         if (string.IsNullOrWhiteSpace(configValue))
-            return "wood";
+            return fallback;
         string lower = configValue.Trim().ToLowerInvariant();
         foreach (var f in LeahPaintingFrames)
             if (lower == f) return f;
-        return "wood";
+        return fallback;
     }
 
     /// Asset edits and loads owned by the content mod: Data/mail reward letters, the
@@ -265,10 +307,31 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        if (e.NameWithoutLocale.IsEquivalentTo(LeahPaintingsDataAsset))
+        {
+            e.LoadFrom(() =>
+            {
+                var dict = new Dictionary<string, LeahPaintingEntry>(StringComparer.Ordinal);
+                foreach (var p in _builtInPaintings)
+                {
+                    string displayName = I18n.Get($"item.leahPainting.{p.Animal}.name",
+                        new { frame = I18n.Get($"item.leahPainting.frame.{p.Frame}").ToString() }).ToString();
+                    dict[p.Id] = new LeahPaintingEntry
+                    {
+                        Texture = $"{LeahPaintingTextureRoot}/{p.Stem}",
+                        Frame = p.Frame,
+                        DisplayName = displayName
+                    };
+                }
+                return dict;
+            }, AssetLoadPriority.Low);
+            return;
+        }
+
         if (e.NameWithoutLocale.StartsWith(LeahPaintingTextureRoot + "/"))
         {
             string stem = e.NameWithoutLocale.BaseName.Substring(LeahPaintingTextureRoot.Length + 1);
-            if (IsValidLeahPaintingStem(stem))
+            if (_builtInPaintingStems.Contains(stem))
             {
                 e.LoadFromModFile<Texture2D>($"{LeahPaintingAssetFolder}/{stem}.png", AssetLoadPriority.Low);
                 return;
@@ -280,19 +343,20 @@ public sealed class ModEntry : Mod
             e.Edit(asset =>
             {
                 var data = asset.AsDictionary<string, string>().Data;
-                foreach (var animal in LeahPaintingAnimals)
+                foreach (var (id, entry) in GetLeahPaintings())
                 {
-                    foreach (var frame in LeahPaintingFrames)
-                    {
-                        string id = $"{LeahPaintingFurnitureIdPrefix}{animal}.{frame}";
-                        string displayName = I18n.Get($"item.leahPainting.{animal}.name", new { frame = I18n.Get($"item.leahPainting.frame.{frame}").ToString() }).ToString();
-                        // Texture path uses backslashes so the '/' field separator in Data/Furniture
-                        // doesn't slice the path apart (ArgUtility.Get reads field 9 as the texture).
-                        string texture = $"Mods\\RafiaBee.MoreQuests\\LeahPainting\\{animal}_{frame}";
-                        // Format: name/type/tilesheetSize/boundingBox/rotations/price/placement/displayName/spriteIndex/texture
-                        // tilesheetSize -1 = default 2x2 for paintings, boundingBox -1 = default 2x2, indoors-only via placement 0.
-                        data[id] = $"{displayName}/painting/-1/-1/1/0/0/{displayName}/0/{texture}";
-                    }
+                    if (entry == null || string.IsNullOrWhiteSpace(entry.Texture))
+                        continue;
+                    string furnitureId = $"{LeahPaintingFurnitureIdPrefix}{id}";
+                    string displayName = string.IsNullOrWhiteSpace(entry.DisplayName)
+                        ? I18n.Get("item.leahPainting.generic.name").ToString()
+                        : entry.DisplayName;
+                    // Texture path uses backslashes so the '/' field separator in Data/Furniture
+                    // doesn't slice the path apart (ArgUtility.Get reads field 9 as the texture).
+                    string texture = entry.Texture.Replace('/', '\\');
+                    // Format: name/type/tilesheetSize/boundingBox/rotations/price/placement/displayName/spriteIndex/texture
+                    // tilesheetSize -1 = default 2x2 for paintings, boundingBox -1 = default 2x2, indoors-only via placement 0.
+                    data[furnitureId] = $"{displayName}/painting/-1/-1/1/0/0/{displayName}/0/{texture}";
                 }
             }, AssetEditPriority.Default);
             return;
@@ -424,23 +488,25 @@ public sealed class ModEntry : Mod
         });
     }
 
-    private static bool IsValidLeahPaintingStem(string stem)
+    /// When the painting pool changes (e.g. a Content Patcher pack edits it), rebuild
+    /// Data/Furniture so new paintings become placeable, and refresh the frame list so the
+    /// config dropdown stays in sync.
+    private void OnAssetsInvalidated(object? sender, AssetsInvalidatedEventArgs e)
     {
-        int sep = stem.LastIndexOf('_');
-        if (sep <= 0 || sep == stem.Length - 1)
-            return false;
-        string animal = stem.Substring(0, sep);
-        string frame = stem.Substring(sep + 1);
-        bool animalOk = false;
-        foreach (var a in LeahPaintingAnimals) if (a == animal) { animalOk = true; break; }
-        if (!animalOk) return false;
-        foreach (var f in LeahPaintingFrames) if (f == frame) return true;
-        return false;
+        foreach (var name in e.NamesWithoutLocale)
+        {
+            if (name.IsEquivalentTo(LeahPaintingsDataAsset))
+            {
+                Helper.GameContent.InvalidateCache("Data/Furniture");
+                RefreshLeahPaintingFrames();
+                break;
+            }
+        }
     }
 
     /// Walks the player's mail for Leah painting reward keys and writes one body per key.
-    /// Key suffix is `<animal>.<frame>`; the body uses the animal's display name and attaches
-    /// the matching `(F)<furnitureId>`.
+    /// Key suffix is the painting id. The body is generic (no animal name) and attaches the
+    /// matching `(F)<furnitureId>`, but only when the id is still a known painting.
     private void PopulateLeahPaintingRewardLetters(IDictionary<string, string> mail)
     {
         if (Game1.player == null)
@@ -451,21 +517,23 @@ public sealed class ModEntry : Mod
         CollectKeys(Game1.player.mailbox, seen);
         CollectKeys(Game1.player.mailReceived, seen);
 
+        var paintings = GetLeahPaintings();
+        string body = I18n.Get("mail.animal.leahFarmPainting.body").ToString();
+
         foreach (var key in seen)
         {
             if (!key.StartsWith(LeahPaintingRewardKeyPrefix, StringComparison.Ordinal))
                 continue;
-            string suffix = key.Substring(LeahPaintingRewardKeyPrefix.Length);
-            int sep = suffix.LastIndexOf('.');
-            if (sep <= 0 || sep == suffix.Length - 1)
+            string id = key.Substring(LeahPaintingRewardKeyPrefix.Length);
+            if (string.IsNullOrEmpty(id))
                 continue;
-            string animal = suffix.Substring(0, sep);
-            string frame = suffix.Substring(sep + 1);
 
-            string animalDisplay = I18n.Get($"item.leahPainting.animal.{animal}").ToString();
-            string body = I18n.Get("mail.animal.leahFarmPainting.body", new { animal = animalDisplay }).ToString();
-            string furnitureId = $"{LeahPaintingFurnitureIdPrefix}{animal}.{frame}";
-            mail[key] = body + $"%item id (F){furnitureId} %%";
+            // Only attach the furniture when the painting still exists (a CP pack that added
+            // it could have been removed). The body still lands so the letter isn't broken.
+            string attachment = paintings.ContainsKey(id)
+                ? $"%item id (F){LeahPaintingFurnitureIdPrefix}{id} %%"
+                : string.Empty;
+            mail[key] = body + attachment;
         }
     }
 
@@ -1158,6 +1226,9 @@ public sealed class ModEntry : Mod
 
         ApplyGuildBoardRouting(scope);
 
+        // Pull the frame options from the merged painting pool (built-ins + any Content Patcher
+        // additions) before GMCM reads them, so the dropdown lists every available frame.
+        RefreshLeahPaintingFrames();
         GmcmRegistration.Register(Helper, ModManifest);
     }
 

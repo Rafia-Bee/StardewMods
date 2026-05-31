@@ -546,7 +546,7 @@
     "quest.animal.leahFarmPainting.description": "I've been itching to paint something with a bit more life in it than my blueprints of sculptures. Bring one of your animals over to my place sometime soon, would you? I'd love some inspiration, and Marnie's cows refuse to stand still long enough for me to get a good look. I'll let you have a copy of the painting if it comes out nice.",
     "quest.animal.leahFarmPainting.step.visit": "Walk into Leah's house with at least one animal following you.",
     "quest.animal.leahFarmPainting.targetMessage": "My goodness, look at that face! Thank you.",
-    "mail.animal.leahFarmPainting.body": "Hey @,^^Thanks again for bringing your {{animal}} over yesterday. The painting is ready, hope you like it!^^  -Leah",
+    "mail.animal.leahFarmPainting.body": "Hey @,^^The painting from your visit is all done. I had fun with this one, hope it brightens up a wall.^^  -Leah",
 
     "quest.animal.marnieLivestockShow.title": "Show your animals around town",
     "quest.animal.marnieLivestockShow.description": "That deluxe barn of yours seems to be getting along great. Take a couple of your animals on a walk into Pelican Town when the weather's nice. The neighbors love seeing healthy livestock around the square, and I'd love hearing back about it.",
@@ -635,29 +635,13 @@
 
     "config.section.leahPainting": "Leah's farm painting",
     "config.LeahPaintingFrame": "Painting frame style",
-    "config.LeahPaintingFrame.tooltip": "Which frame Leah uses on the painting she sends you. The animal in the painting is always a surprise, only the frame is your choice.",
+    "config.LeahPaintingFrame.tooltip": "Which frame Leah uses on the painting she sends you. The painting itself is always a surprise, only the frame is your choice.",
+
+    "item.leahPainting.generic.name": "Leah's Painting",
 
     "item.leahPainting.frame.burgundy": "gold frame",
     "item.leahPainting.frame.night": "night frame",
     "item.leahPainting.frame.wood": "wood frame",
-
-    "item.leahPainting.animal.BabyBlueChicken": "baby blue chicken",
-    "item.leahPainting.animal.BabyBrownChicken": "baby brown chicken",
-    "item.leahPainting.animal.BabyBrownCow": "baby brown cow",
-    "item.leahPainting.animal.BabyGoat": "baby goat",
-    "item.leahPainting.animal.BabyGoldenChicken": "baby golden chicken",
-    "item.leahPainting.animal.BabyOstrich": "baby ostrich",
-    "item.leahPainting.animal.BabyPig": "baby pig",
-    "item.leahPainting.animal.BabyRabbit": "baby rabbit",
-    "item.leahPainting.animal.BabySheep": "baby sheep",
-    "item.leahPainting.animal.BabyVoidChicken": "baby void chicken",
-    "item.leahPainting.animal.BabyWhiteChicken": "baby white chicken",
-    "item.leahPainting.animal.BabyWhiteCow": "baby white cow",
-    "item.leahPainting.animal.BlueChicken": "blue chicken",
-    "item.leahPainting.animal.BrownChicken": "brown chicken",
-    "item.leahPainting.animal.BrownCow": "brown cow",
-    "item.leahPainting.animal.Dinosaur": "dinosaur",
-    "item.leahPainting.animal.Duck": "duck",
 
     "item.leahPainting.BabyBlueChicken.name": "Painting of a Baby Blue Chicken ({{frame}})",
     "item.leahPainting.BabyBrownChicken.name": "Painting of a Baby Brown Chicken ({{frame}})",
