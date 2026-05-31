@@ -6,6 +6,7 @@
 - Make a new custom tab with a controller by pressing X.
 - Open a pinned quest from the HUD with a controller: point at it with the right stick and press A.
 - The controller buttons (tab switching and edit) can be rebound in the settings.
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/QuestJournal-v1.0.0...QuestJournal-v1.1.0]i18n changes here[/url] (look at i18n/default.json).
 
 1.0.0
 - First release.
