@@ -77,7 +77,7 @@ public sealed class ModEntry : Mod
         if (e.Button != SButton.MouseLeft) return;
         var frame = JournalFrameRect();
         if (frame == null) return;
-        var cursor = e.Cursor.GetScaledScreenPixels();
+        var cursor = CursorUtil.UiSpace(e.Cursor);
         if (!frame.Value.Contains((int)cursor.X, (int)cursor.Y)) return;
         // Arm a potential drag without suppressing, so a plain click still
         // reaches the widget under it; the per-tick poll promotes it to a drag.
@@ -106,7 +106,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        var cursor = Helper.Input.GetCursorPosition().GetScaledScreenPixels();
+        var cursor = CursorUtil.UiSpace(Helper.Input.GetCursorPosition());
         if (!_journalDragging)
         {
             if (System.Math.Abs(cursor.X - _journalPressPos.X)

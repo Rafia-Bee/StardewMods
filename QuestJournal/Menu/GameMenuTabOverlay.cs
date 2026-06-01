@@ -46,7 +46,7 @@ internal sealed class GameMenuTabOverlay
             return;
         if (e.Button != SButton.MouseLeft && e.Button != SButton.ControllerA)
             return;
-        if (!_tab.bounds.Contains(e.Cursor.GetScaledScreenPixels().ToPoint()))
+        if (!_tab.bounds.Contains(CursorUtil.UiSpacePoint(e.Cursor)))
             return;
 
         var journal = _openJournal();
@@ -146,7 +146,7 @@ internal sealed class GameMenuTabOverlay
 
         gameMenu.drawMouse(batch);
 
-        if (_tab.bounds.Contains(_helper.Input.GetCursorPosition().GetScaledScreenPixels().ToPoint()))
+        if (_tab.bounds.Contains(CursorUtil.UiSpacePoint(_helper.Input.GetCursorPosition())))
         {
             IClickableMenu.drawHoverText(batch, _tab.label, Game1.smallFont);
         }

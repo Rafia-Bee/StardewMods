@@ -70,7 +70,7 @@ internal sealed class PinnedObjectiveHud
         if (!Game1.displayHUD || Game1.eventUp || Game1.farmEvent != null) return;
         if (Game1.activeClickableMenu != null || _lastPanelBounds.Width == 0) return;
 
-        var cursor = e.Cursor.GetScaledScreenPixels();
+        var cursor = CursorUtil.UiSpace(e.Cursor);
 
         // Controller path. The pointer moves with the right stick, so we hit-test
         // it just like the mouse. Only act (and suppress) when it's actually over
@@ -138,7 +138,7 @@ internal sealed class PinnedObjectiveHud
             return;
         }
 
-        var cursor = _helper.Input.GetCursorPosition().GetScaledScreenPixels();
+        var cursor = CursorUtil.UiSpace(_helper.Input.GetCursorPosition());
         if (!_dragging)
         {
             if (System.Math.Abs(cursor.X - _pressPos.X)
@@ -324,7 +324,7 @@ internal sealed class PinnedObjectiveHud
 
         // Hover highlight uses the same tint as the journal's quest-list rows, so
         // the HUD reads as a clickable list. Suppressed while dragging the panel.
-        var cursor = _helper.Input.GetCursorPosition().GetScaledScreenPixels();
+        var cursor = CursorUtil.UiSpace(_helper.Input.GetCursorPosition());
         bool canHover = !_dragging;
 
         float textX = boxX + Padding;

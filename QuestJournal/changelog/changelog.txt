@@ -1,3 +1,6 @@
+1.1.1
+- Fixed the pinned quest box on screen. If you changed your UI scale away from 100%, clicking a pinned quest could open the wrong one or do nothing. Clicks now land on the quest you actually clicked at any UI scale.
+
 1.1.0
 - Added a journal icon for Iconic Framework. Click it to open the journal.
 - Works with a controller now. If you have Star Control, the journal shows up in its radial menu so you can open it with your gamepad.
