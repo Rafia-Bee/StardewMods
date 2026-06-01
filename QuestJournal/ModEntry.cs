@@ -25,7 +25,6 @@ public sealed class ModEntry : Mod
     private IViewEngine? _viewEngine;
     private IMoreQuestsApi? _mqfApi;
     private string _viewPrefix = null!;
-    private GameMenuTabOverlay? _tabOverlay;
     private CompletionWatcher? _completionWatcher;
     private PinnedObjectiveHud? _pinnedHud;
     private NewQuestPinner? _newQuestPinner;
@@ -237,14 +236,16 @@ public sealed class ModEntry : Mod
 
         if (Config.AddGameMenuTab)
         {
-            // Prefer Better Game Menu's RegisterTab API when BGM is loaded.
-            // BGM replaces GameMenu wholesale, so the floating-overlay tab
-            // approach Ferngill uses can't reach BGM's tab strip. When BGM
-            // isn't around, fall back to the overlay for vanilla GameMenu.
-            var menuIcon = Helper.ModContent.Load<Microsoft.Xna.Framework.Graphics.Texture2D>("assets/sprites/menuIcon.png");
+            // The journal can only ride the Esc menu's tab strip through Better
+            // Game Menu's tab API. Without BGM we'd have to float our own tab
+            // over the vanilla GameMenu, which lands in the same top-right corner
+            // other tab mods use (UI Info Suite 2, etc.) and ends up stealing
+            // their clicks. So when BGM isn't installed we skip the tab entirely
+            // and leave the journal on the F6 hotkey and the Iconic Framework icon.
             var bgm = Helper.ModRegistry.GetApi<IBetterGameMenuApi>("leclair.bettergamemenu");
             if (bgm != null)
             {
+                var menuIcon = Helper.ModContent.Load<Microsoft.Xna.Framework.Graphics.Texture2D>("assets/sprites/menuIcon.png");
                 new BgmIntegration(
                     bgm,
                     BuildJournalMenu,
@@ -255,12 +256,9 @@ public sealed class ModEntry : Mod
             }
             else
             {
-                _tabOverlay = new GameMenuTabOverlay(
-                    Helper,
-                    BuildJournalMenu,
-                    Helper.Translation.Get("journal.tab.tooltip").Default("Quest Journal").ToString(),
-                    menuIcon);
-                _tabOverlay.Register();
+                Monitor.Log(
+                    "Better Game Menu isn't installed, so the Esc-menu tab is off (it would clash with other menu-tab mods). Open the journal with the F6 hotkey or the Iconic Framework icon instead.",
+                    LogLevel.Info);
             }
         }
     }

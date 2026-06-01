@@ -103,7 +103,7 @@
     "config.hudActivate": "Open pinned quest",
     "config.hudActivate.tooltip": "Point at a pinned quest on the HUD (move the pointer with the right stick) and press this to open it in the journal. Defaults to A.",
     "config.gameMenuTab": "Add a game-menu tab",
-    "config.gameMenuTab.tooltip": "Adds a Quest Journal tab to the in-game menu (the one you open with Esc). Takes effect after a restart.",
+    "config.gameMenuTab.tooltip": "Adds a Quest Journal tab to the in-game menu (the one you open with Esc). Needs the Better Game Menu mod, otherwise the tab is skipped so it doesn't clash with other menu-tab mods. You can always open the journal with the F6 hotkey or the Iconic Framework icon. Takes effect after a restart.",
     "config.hudPin": "Show pinned quests on the HUD",
     "config.hudPin.tooltip": "Draws your pinned quests in the top-right corner while you're playing.",
     "config.pinNew": "Auto-pin new quests",

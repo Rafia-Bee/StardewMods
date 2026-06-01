@@ -51,7 +51,7 @@ If you have Generic Mod Config Menu installed, there's an in-game settings page.
 
 - **Open journal key** - the hotkey that opens the journal (default F6).
 - **Controller buttons** - while the journal is open: previous tab (default LB/LT), next tab (default RB/RT), edit the selected custom tab (default Y), and make a new tab (default X). All rebindable.
-- **Add a game-menu tab** - adds a Quest Journal tab to the Esc menu. Needs a restart to take effect.
+- **Add a game-menu tab** - adds a Quest Journal tab to the Esc menu. This only works if you have Better Game Menu installed (without it the tab is left off so it doesn't get in the way of other menu mods). Needs a restart to take effect.
 - **Show pinned quests on the HUD** - draws your pinned quests in the top-right while you play.
 - **Auto-pin new quests** - pins a quest the moment you accept it (does nothing if "Show pinned quests on the HUD" is off).
 - **Debug logging** - writes extra status messages to the SMAPI console (handy for bug reports). Warnings and errors always show.
