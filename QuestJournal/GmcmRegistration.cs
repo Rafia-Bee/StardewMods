@@ -50,6 +50,11 @@ internal static class GmcmRegistration
             () => t.Get("config.pinNew"),
             () => t.Get("config.pinNew.tooltip"));
         api.AddBoolOption(manifest,
+            () => ModEntry.Config.MarkQuestsReadOnOpen,
+            v => ModEntry.Config.MarkQuestsReadOnOpen = v,
+            () => t.Get("config.markRead"),
+            () => t.Get("config.markRead.tooltip"));
+        api.AddBoolOption(manifest,
             () => ModEntry.Config.DebugLogging,
             v => ModEntry.Config.DebugLogging = v,
             () => t.Get("config.debugLogging"),

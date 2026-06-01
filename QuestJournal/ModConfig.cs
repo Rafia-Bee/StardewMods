@@ -35,6 +35,11 @@ public sealed class ModConfig
     public bool EnableLookupAnythingIntegration { get; set; } = true;
     public bool DefaultPinNewQuests { get; set; }
 
+    // When on, opening this journal counts as checking your quests, so the
+    // vanilla quest button stops flashing its "new quest" mark. On by default
+    // since most people use this journal instead of the old one.
+    public bool MarkQuestsReadOnOpen { get; set; } = true;
+
     // How the quests list is ordered. Stored by name (Deadline, Alphabetical,
     // Giver, Source, Category). Set from the dropdown in the journal or from
     // GMCM; a bad value falls back to Deadline at read time.

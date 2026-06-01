@@ -373,6 +373,8 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     public void Refresh()
     {
+        MarkVisibleQuestsRead();
+
         _activeRows.Clear();
         _claimableRows.Clear();
         var log = Game1.player.questLog;
@@ -422,6 +424,26 @@ public sealed class JournalContext : INotifyPropertyChanged
         }
 
         ReapplyFilter();
+    }
+
+    // Opening the journal counts as checking your quests, so the vanilla quest
+    // button stops flashing its "new quest" mark. Marks every quest and special
+    // order as seen, the same call the old journal makes when you open a quest.
+    // The flashing for a finished quest waiting on its reward is left alone; that
+    // clears when the reward is claimed. Skipped when the player turns it off.
+    private void MarkVisibleQuestsRead()
+    {
+        if (!ModEntry.Config.MarkQuestsReadOnOpen) return;
+        var farmer = Game1.player;
+        if (farmer == null) return;
+
+        foreach (var q in farmer.questLog)
+            q?.MarkAsViewed();
+
+        var orders = farmer.team?.specialOrders;
+        if (orders != null)
+            foreach (var so in orders)
+                so?.MarkAsViewed();
     }
 
     public void SelectTab(string id)
