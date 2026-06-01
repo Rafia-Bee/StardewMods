@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>QuestJournal</AssemblyName>
     <RootNamespace>QuestJournal</RootNamespace>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <TargetFramework>net6.0</TargetFramework>
