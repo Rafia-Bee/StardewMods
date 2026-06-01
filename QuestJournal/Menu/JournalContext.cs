@@ -1126,13 +1126,13 @@ public sealed class JournalContext : INotifyPropertyChanged
     private string BuildSpecialOrderDaysLeft(SpecialOrder so)
     {
         // SpecialOrder.dueDate.Value is absolute TotalDays (when the order
-        // expires), not a countdown. Subtract Game1.Date.TotalDays to get
-        // remaining days.
+        // expires), not a countdown. Subtract Game1.Date.TotalDays to get the same
+        // counter quests use, then run it through the shared deadline wording. The
+        // game fails an order the morning its counter hits 0, just like quests, so
+        // the two read the same in the journal.
         int totalDays = Game1.Date?.TotalDays ?? 0;
         int daysLeft = so.dueDate.Value - totalDays;
-        if (daysLeft <= 0) return _helper.Translation.Get("journal.days.duetoday").Default("Due today!").ToString();
-        if (daysLeft == 1) return _helper.Translation.Get("journal.days.duetomorrow").Default("Due tomorrow!").ToString();
-        return _helper.Translation.Get("journal.days.left", new { count = daysLeft }).Default($"{daysLeft} days left").ToString();
+        return BuildDeadlineDisplay(daysLeft);
     }
 
     private QuestRow BuildHistoryRow(CompletedQuestRecord r)
@@ -1334,11 +1334,28 @@ public sealed class JournalContext : INotifyPropertyChanged
     {
         int d = q.daysLeft.Value;
         if (d <= 0) return _helper.Translation.Get("journal.days.none").Default("No deadline").ToString();
-        // Vanilla yanks the quest the first morning daysLeft hits 0, so
-        // daysLeft==1 means "you sleep tonight and it expires", not "you
-        // have a full day". Flag it so the player notices before sleeping.
-        if (d == 1) return _helper.Translation.Get("journal.days.duetomorrow").Default("Due tomorrow!").ToString();
-        return _helper.Translation.Get("journal.days.left", new { count = d }).Default($"{d} days left").ToString();
+        return BuildDeadlineDisplay(d);
+    }
+
+    // Turns the game's raw day counter into a friendly, accurate deadline label.
+    // For quests this is daysLeft; for special orders it's dueDate minus today.
+    // Either way the quest/order is pulled the morning the counter would hit 0, so
+    // a counter of 1 means today is the last day to finish it. The real deadline is
+    // (counter - 1) days out: 1 is today (Final day), 2 is tomorrow (Due tomorrow),
+    // and anything higher counts down the days until the deadline. The base game's
+    // own quest screen says "Final Day" for the last day, so reuse its string so we
+    // match that wording in every language.
+    private string BuildDeadlineDisplay(int counter)
+    {
+        int untilDeadline = counter - 1;
+        if (untilDeadline <= 0)
+        {
+            try { return Game1.content.LoadString("Strings\\StringsFromCSFiles:Quest_FinalDay"); }
+            catch { return _helper.Translation.Get("journal.days.finalday").Default("Final day!").ToString(); }
+        }
+        if (untilDeadline == 1)
+            return _helper.Translation.Get("journal.days.duetomorrow").Default("Due tomorrow!").ToString();
+        return _helper.Translation.Get("journal.days.left", new { count = untilDeadline }).Default($"{untilDeadline} days left").ToString();
     }
 
     private static string BuildHistoryDateDisplay(int totalDays)

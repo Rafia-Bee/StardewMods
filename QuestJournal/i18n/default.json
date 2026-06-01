@@ -29,8 +29,8 @@
     "journal.status.failed": "Failed",
 
     "journal.days.none": "No deadline",
-    "journal.days.duetoday": "Due today!",
     "journal.days.duetomorrow": "Due tomorrow!",
+    "journal.days.finalday": "Final day!",
     "journal.days.left": "{{count}} days left",
 
     "journal.unknown": "Unknown",

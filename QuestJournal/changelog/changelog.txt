@@ -1,5 +1,6 @@
 1.1.1
 - Fixed the pinned quest box on screen. If you changed your UI scale away from 100%, clicking a pinned quest could open the wrong one or do nothing. Clicks now land on the quest you actually clicked at any UI scale.
+- The "days left" line now tells you the real deadline. A quest or special order is removed the morning after its last day, so the journal now says "Final day!" on the day you have to finish it, "Due tomorrow!" when the deadline is the next day, and counts down the real days after that. Heads up: this reads one lower than the vanilla number on purpose (the game's "2 days" is really "due tomorrow"), because that's how much time you actually have. Works the same for regular quests and special orders now.
 
 1.1.0
 - Added a journal icon for Iconic Framework. Click it to open the journal.
