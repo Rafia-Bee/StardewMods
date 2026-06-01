@@ -6,41 +6,88 @@
        horizontal-content-alignment="middle">
     <lane orientation="vertical" layout="stretch content" horizontal-content-alignment="middle">
         <label layout="stretch content" bold="true" horizontal-alignment="middle" text={:HeaderText} />
-        <label layout="stretch content" margin="0, 12, 0, 8" text={#tabeditor.intro} />
 
-        <label layout="stretch content" margin="0, 12, 0, 4" text={#tabeditor.name} />
+        <label layout="stretch content" margin="0, 16, 0, 4" text={#tabeditor.name} />
         <textinput layout="stretch 64px"
                    max-length="30"
                    background={@Mods/StardewUI/Sprites/TextBox}
                    text={<>Name} />
 
-        <label layout="stretch content" margin="0, 12, 0, 4" text={#tabeditor.title} />
+        <lane orientation="horizontal" layout="stretch content" margin="0, 12, 0, 4" vertical-content-alignment="middle">
+            <label text={#tabeditor.title} />
+            <frame layout="36px 36px" margin="8, 0, 0, 0"
+                   background={@Mods/StardewUI/Sprites/ButtonLight}
+                   horizontal-content-alignment="middle"
+                   vertical-content-alignment="middle"
+                   focusable="true"
+                   tooltip={:TitleHelp}>
+                <label bold="true" text="?" />
+            </frame>
+        </lane>
         <textinput layout="stretch 64px"
                    max-length="40"
                    background={@Mods/StardewUI/Sprites/TextBox}
                    text={<>TitleFilter} />
 
-        <label layout="stretch content" margin="0, 12, 0, 4" text={#tabeditor.source} />
+        <lane orientation="horizontal" layout="stretch content" margin="0, 12, 0, 4" vertical-content-alignment="middle">
+            <label text={#tabeditor.source} />
+            <frame layout="36px 36px" margin="8, 0, 0, 0"
+                   background={@Mods/StardewUI/Sprites/ButtonLight}
+                   horizontal-content-alignment="middle"
+                   vertical-content-alignment="middle"
+                   focusable="true"
+                   tooltip={:SourceHelp}>
+                <label bold="true" text="?" />
+            </frame>
+        </lane>
         <textinput layout="stretch 64px"
                    max-length="40"
                    background={@Mods/StardewUI/Sprites/TextBox}
                    text={<>SourceFilter} />
 
-        <label layout="stretch content" margin="0, 12, 0, 4" text={#tabeditor.category} />
+        <lane orientation="horizontal" layout="stretch content" margin="0, 12, 0, 4" vertical-content-alignment="middle">
+            <label text={#tabeditor.category} />
+            <frame layout="36px 36px" margin="8, 0, 0, 0"
+                   background={@Mods/StardewUI/Sprites/ButtonLight}
+                   horizontal-content-alignment="middle"
+                   vertical-content-alignment="middle"
+                   focusable="true"
+                   tooltip={:CategoryHelp}>
+                <label bold="true" text="?" />
+            </frame>
+        </lane>
         <textinput layout="stretch 64px"
                    max-length="40"
                    background={@Mods/StardewUI/Sprites/TextBox}
                    text={<>CategoryFilter} />
-        <label *if={:HasCategoryHint} layout="stretch content" margin="0, 4, 0, 0" text={:CategoryHint} />
 
-        <label layout="stretch content" margin="0, 12, 0, 4" text={#tabeditor.kind} />
+        <lane orientation="horizontal" layout="stretch content" margin="0, 12, 0, 4" vertical-content-alignment="middle">
+            <label text={#tabeditor.kind} />
+            <frame layout="36px 36px" margin="8, 0, 0, 0"
+                   background={@Mods/StardewUI/Sprites/ButtonLight}
+                   horizontal-content-alignment="middle"
+                   vertical-content-alignment="middle"
+                   focusable="true"
+                   tooltip={:KindHelp}>
+                <label bold="true" text="?" />
+            </frame>
+        </lane>
         <textinput layout="stretch 64px"
                    max-length="40"
                    background={@Mods/StardewUI/Sprites/TextBox}
                    text={<>KindFilter} />
-        <label *if={:HasKindHint} layout="stretch content" margin="0, 4, 0, 0" text={:KindHint} />
 
-        <label layout="stretch content" margin="0, 12, 0, 4" text={#tabeditor.deadline} />
+        <lane orientation="horizontal" layout="stretch content" margin="0, 12, 0, 4" vertical-content-alignment="middle">
+            <label text={#tabeditor.deadline} />
+            <frame layout="36px 36px" margin="8, 0, 0, 0"
+                   background={@Mods/StardewUI/Sprites/ButtonLight}
+                   horizontal-content-alignment="middle"
+                   vertical-content-alignment="middle"
+                   focusable="true"
+                   tooltip={:DeadlineHelp}>
+                <label bold="true" text="?" />
+            </frame>
+        </lane>
         <textinput layout="stretch 64px"
                    max-length="10"
                    background={@Mods/StardewUI/Sprites/TextBox}

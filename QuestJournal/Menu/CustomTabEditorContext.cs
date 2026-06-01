@@ -12,13 +12,23 @@ public sealed class CustomTabEditorContext : INotifyPropertyChanged
 
     public CustomTabEditorContext(string categoryHint, string kindHint, bool isEdit)
     {
-        CategoryHint = categoryHint;
-        KindHint = kindHint;
         ShowDelete = isEdit;
         var t = ModEntry.Instance?.Helper?.Translation;
-        HeaderText = isEdit
-            ? t?.Get("tabeditor.header.edit").Default("Edit tab").ToString() ?? "Edit tab"
-            : t?.Get("tabeditor.header.new").Default("New tab").ToString() ?? "New tab";
+        // The i18n is the single source of truth for this text. The optional
+        // fallback only matters if default.json is missing the key, which won't
+        // happen since it ships with the mod.
+        string Help(string key, string fallback = "") => t?.Get(key).Default(fallback).ToString() ?? fallback;
+        // The category and kind helps tack on the list of values that actually
+        // show up in the player's quests, when there is one.
+        string WithHint(string text, string hint) => string.IsNullOrEmpty(hint) ? text : text + " " + hint;
+
+        HeaderText = isEdit ? Help("tabeditor.header.edit", "Edit tab") : Help("tabeditor.header.new", "New tab");
+
+        TitleHelp = Help("tabeditor.help.title");
+        SourceHelp = Help("tabeditor.help.source");
+        CategoryHelp = WithHint(Help("tabeditor.help.category"), categoryHint);
+        KindHelp = WithHint(Help("tabeditor.help.kind"), kindHint);
+        DeadlineHelp = Help("tabeditor.help.deadline");
     }
 
     private string _name = string.Empty;
@@ -63,14 +73,14 @@ public sealed class CustomTabEditorContext : INotifyPropertyChanged
         set { if (_deadlineFilter == value) return; _deadlineFilter = value; Raise(nameof(DeadlineFilter)); }
     }
 
-    // Read-only hints showing which category/kind values exist in the player's
-    // current quests, so they know what's worth typing. Fixed for the popup's
-    // life, so no change notification needed. The Has* flags drive the *if so
-    // the hint label is hidden when nothing in the journal is classified.
-    public string CategoryHint { get; }
-    public string KindHint { get; }
-    public bool HasCategoryHint => !string.IsNullOrEmpty(CategoryHint);
-    public bool HasKindHint => !string.IsNullOrEmpty(KindHint);
+    // The "?" tooltip text for each filter field. Fixed for the popup's life, so
+    // no change notification needed. Category and Kind also list the values
+    // present in the player's quests.
+    public string TitleHelp { get; }
+    public string SourceHelp { get; }
+    public string CategoryHelp { get; }
+    public string KindHelp { get; }
+    public string DeadlineHelp { get; }
 
     // True when editing an existing tab, so the SML shows the Delete button and
     // an "Edit tab" header instead of "New tab". Fixed for the popup's life.
