@@ -127,7 +127,10 @@
                                        click=|Select()|
                                        pointer-enter=|HoverEnter()|
                                        pointer-leave=|HoverLeave()|>
-                                    <label bold={IsSelected} text={:Title} />
+                                    <lane orientation="horizontal" layout="stretch content" vertical-content-alignment="middle">
+                                        <image *if={ReadyToClaim} layout="22px 22px" margin="0, 0, 6, 0" fit="Contain" sprite={@Mods/RafiaBee.QuestJournal/Sprites/coin:Coin} tooltip={#journal.list.claimtag} />
+                                        <label bold={IsSelected} text={:Title} />
+                                    </lane>
                                 </frame>
                                 <frame *if={ShowDivider}
                                        layout="stretch 3px"
@@ -201,6 +204,14 @@
                         <lane orientation="vertical" layout={ActionLaneLayout} horizontal-content-alignment="middle">
                         <label *if={SelectedIsCompleted} margin="0, 12" color={HeaderColor} text={#journal.status.questcomplete} />
 
+                        <frame *if={SelectedCanClaim} layout="stretch content" margin="0, 4" padding="8, 14"
+                               background={@Mods/StardewUI/Sprites/ButtonLight}
+                               horizontal-content-alignment="middle"
+                               vertical-content-alignment="middle"
+                               focusable="true"
+                               click=|ClaimSelected()|>
+                            <label text={#journal.action.claim} />
+                        </frame>
                         <frame *if={SelectedShowDetails} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"

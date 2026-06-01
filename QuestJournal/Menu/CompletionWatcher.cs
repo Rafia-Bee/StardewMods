@@ -89,6 +89,18 @@ public sealed class CompletionWatcher
 
             if (q.completed.Value && !_recorded.Contains(q))
             {
+                // Mark it completed so if it later leaves the log (player claims
+                // via the vanilla journal, a story event yanks it, etc.) the
+                // disappearance branch records it as Completed, not Failed.
+                snap.LastSeenCompleted = true;
+
+                // A completed quest that still has a reward waiting sits in the
+                // log until the reward is collected. Leave it there so the player
+                // can claim the gold from the journal instead of dropping it into
+                // the Completed tab right away. It gets recorded when it's claimed
+                // (JournalContext.ClaimSelected) or when it leaves the log.
+                if (q.HasReward()) continue;
+
                 Record(snap, "Completed");
                 _recorded.Add(q);
             }

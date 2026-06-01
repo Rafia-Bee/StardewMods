@@ -88,6 +88,10 @@ public sealed class JournalContext : INotifyPropertyChanged
     // Complete pays the reward and clears the quest without doing the objective,
     // so it's a cheat too. Gated behind AllowCompleteCheat (default off).
     public bool SelectedShowComplete => SelectedShowActions && ModEntry.Config.AllowCompleteCheat;
+    // A finished quest or special order whose gold is still waiting. Shows a Claim
+    // button that pays the gold and clears it, same as the vanilla journal. Only
+    // claimable rows set CanClaim, and they always carry a live quest or order.
+    public bool SelectedCanClaim => _selectedQuest?.CanClaim == true;
     public bool SelectedShowCancel => _selectedQuest != null && _selectedQuest.CanCancel;
     public bool SelectedShowPostpone => _selectedQuest != null && _selectedQuest.CanPostpone;
     // Details / Pin / Warp work for live quests and special orders, not history
@@ -321,6 +325,14 @@ public sealed class JournalContext : INotifyPropertyChanged
     private TabRow? _addTab;
     private TabRow? _editTab;
     private List<QuestRow> _activeRows = new();
+    // Quests that finished by playing them but still have a reward waiting to be
+    // collected. They sit at the top of the Active tab with a Claim button so the
+    // gold can be taken from here instead of the vanilla journal.
+    private List<QuestRow> _claimableRows = new();
+    // Same idea for completed Special Orders whose gold is still waiting. Vanilla
+    // leaves the order in the team list until its reward box is clicked in the
+    // vanilla log. These ride at the top of the Special Orders tab.
+    private List<QuestRow> _claimableOrderRows = new();
     private List<QuestRow> _historyRows = new();
     private List<QuestRow> _specialOrderRows = new();
 
@@ -362,27 +374,42 @@ public sealed class JournalContext : INotifyPropertyChanged
     public void Refresh()
     {
         _activeRows.Clear();
+        _claimableRows.Clear();
         var log = Game1.player.questLog;
         for (int i = 0; i < log.Count; i++)
         {
             var q = log[i];
-            if (q == null || q.completed.Value) continue;
+            if (q == null) continue;
+            if (q.completed.Value)
+            {
+                // Vanilla removes a finished quest from the log right away unless
+                // it has a reward to collect, so a completed quest still sitting
+                // here has gold (or a reward note) waiting. Surface it as
+                // claimable. Anything else completed is skipped.
+                if (q.HasReward())
+                    _claimableRows.Add(BuildClaimableRow(q));
+                continue;
+            }
             _activeRows.Add(BuildActiveRow(q));
         }
 
         _specialOrderRows.Clear();
+        _claimableOrderRows.Clear();
         // Special Orders live in player.team.specialOrders, not questLog, so
-        // they need a parallel pass. Only in-progress orders go in the tab;
-        // completed/failed ones are removed by vanilla within a day or two
-        // and don't need a separate history bucket (yet).
+        // they need a parallel pass. In-progress orders go in the tab; failed
+        // ones are removed by vanilla within a day or two and don't need a
+        // history bucket (yet). A completed order whose gold is still waiting
+        // (HasMoneyReward) becomes a claimable row, same as a finished quest.
         var orders = Game1.player?.team?.specialOrders;
         if (orders != null)
         {
             foreach (var so in orders)
             {
                 if (so == null) continue;
-                if (so.questState.Value != SpecialOrderStatus.InProgress) continue;
-                _specialOrderRows.Add(BuildSpecialOrderRow(so));
+                if (so.questState.Value == SpecialOrderStatus.InProgress)
+                    _specialOrderRows.Add(BuildSpecialOrderRow(so));
+                else if (so.HasMoneyReward())
+                    _claimableOrderRows.Add(BuildClaimableOrderRow(so));
             }
         }
 
@@ -508,6 +535,56 @@ public sealed class JournalContext : INotifyPropertyChanged
         Game1.player.questLog.Remove(quest);
         PinnedObjectivesStore.Unpin(quest);
         Refresh();
+    }
+
+    // Collects the reward for a quest that was finished by playing it but whose
+    // gold is still waiting in the log. Pays the money, tidies the quest out of
+    // the log, and moves it into the Completed tab. This is the natural-completion
+    // counterpart to the vanilla journal's reward-collect click.
+    public void ClaimSelected()
+    {
+        if (_selectedQuest == null || !_selectedQuest.CanClaim) return;
+
+        if (_selectedQuest.Quest is Quest quest)
+        {
+            if (!quest.completed.Value) return;
+            // Record the history row now and tell the watcher we handled it, so
+            // it doesn't write a second copy when the quest leaves the log.
+            CompletedQuestStore.Add(BuildRecordFrom(_selectedQuest));
+            _completionWatcher?.MarkRecorded(quest);
+
+            PayClaim(quest.GetMoneyReward());
+            // Vanilla's own "reward taken" call: zeros the money and marks the
+            // quest for removal. We remove it right after either way.
+            quest.OnMoneyRewardClaimed();
+            Game1.player.questLog.Remove(quest);
+            PinnedObjectivesStore.Unpin(quest);
+        }
+        else if (_selectedQuest.SpecialOrder is SpecialOrder order)
+        {
+            if (!order.HasMoneyReward()) return;
+            PayClaim(order.GetMoneyReward());
+            // Drops us from the order's participants and flags it for removal,
+            // exactly like clicking its reward box in the vanilla log. The game
+            // removes it from the team list on its next Update.
+            order.OnMoneyRewardClaimed();
+            PinnedObjectivesStore.Unpin(order);
+        }
+        else return;
+
+        Refresh();
+    }
+
+    // Pays a claimed gold reward with the same coin sound and popup feedback for
+    // quests and special orders.
+    private void PayClaim(int money)
+    {
+        if (money <= 0) return;
+        Game1.player.Money += money;
+        Game1.playSound("money");
+        Game1.addHUDMessage(HUDMessage.ForCornerTextbox(
+            _helper.Translation.Get("journal.claim.received", new { amount = money })
+                .Default($"Received {money}g").ToString()));
     }
 
     public void RequestCancelSelected()
@@ -861,13 +938,18 @@ public sealed class JournalContext : INotifyPropertyChanged
     private void ReapplyFilter()
     {
         Quests.Clear();
+        // Claimable quests ride at the top, unsorted, so a freshly finished
+        // quest's reward is the first thing the player sees.
+        var claimable = new List<QuestRow>();
         var collected = new List<QuestRow>();
         var activeTab = FindTab(_activeTabId);
         if (activeTab?.CustomDef is CustomTabDef def)
         {
-            // Custom tabs search across all three buckets and keep only the
-            // rows matching the saved filters. A row only ever lives in one
-            // bucket, so there are no duplicates.
+            // Custom tabs search across all buckets and keep only the rows
+            // matching the saved filters. A row only ever lives in one bucket,
+            // so there are no duplicates.
+            AddMatching(claimable, _claimableRows, def);
+            AddMatching(claimable, _claimableOrderRows, def);
             AddMatching(collected, _activeRows, def);
             AddMatching(collected, _specialOrderRows, def);
             AddMatching(collected, _historyRows, def);
@@ -875,21 +957,27 @@ public sealed class JournalContext : INotifyPropertyChanged
         else switch (_activeTabId)
         {
             case TabActive:
+                foreach (var r in _claimableRows) AddRow(claimable, r);
                 foreach (var r in _activeRows) AddRow(collected, r);
                 break;
             case TabSpecial:
+                foreach (var r in _claimableOrderRows) AddRow(claimable, r);
                 foreach (var r in _specialOrderRows) AddRow(collected, r);
                 break;
             case TabCompleted:
                 foreach (var r in _historyRows) AddRow(collected, r);
                 break;
             case TabAll:
+                foreach (var r in _claimableRows) AddRow(claimable, r);
+                foreach (var r in _claimableOrderRows) AddRow(claimable, r);
                 foreach (var r in _activeRows) AddRow(collected, r);
                 foreach (var r in _specialOrderRows) AddRow(collected, r);
                 foreach (var r in _historyRows) AddRow(collected, r);
                 break;
         }
 
+        foreach (var r in claimable)
+            Quests.Add(r);
         foreach (var r in SortRows(collected))
             Quests.Add(r);
 
@@ -1155,6 +1243,66 @@ public sealed class JournalContext : INotifyPropertyChanged
             category: category,
             kind: kind,
             deadlineDays: DeadlineFromQuestCounter(q.daysLeft.Value));
+    }
+
+    // A completed quest still in the log, shown with a Claim button so the player
+    // can take its reward. Mirrors BuildActiveRow but flagged completed/claimable:
+    // no objective steps, deadline, cancel, or postpone. The reward lines still
+    // come through so the detail panel shows what's waiting.
+    private QuestRow BuildClaimableRow(Quest q)
+    {
+        var rewards = BuildRewardLines(q);
+        var (category, kind) = QuestSnapshotBuilder.ResolveCategoryKind(q, _mqfApi);
+        return new QuestRow(
+            title: q.questTitle ?? string.Empty,
+            description: q.questDescription ?? string.Empty,
+            objective: string.Empty,
+            rewardLines: rewards,
+            adventureSteps: new List<AdventureStepRow>(),
+            giverDisplay: ResolveGiverDisplay(q),
+            daysLeftDisplay: _helper.Translation.Get("journal.claim.ready").Default("Reward ready to collect").ToString(),
+            sourceDisplay: ResolveSourceDisplay(q),
+            warpTargets: null,
+            isCompleted: true,
+            canCancel: false,
+            canPostpone: false,
+            quest: q,
+            host: this,
+            category: category,
+            kind: kind,
+            canClaim: true);
+    }
+
+    // A completed Special Order whose gold hasn't been collected yet, shown with
+    // a Claim button. Only the money is outstanding here: vanilla auto-grants an
+    // order's other rewards (gems, items, friendship) the moment it completes and
+    // pays just the gold when you click its reward box, so that's all we surface.
+    private QuestRow BuildClaimableOrderRow(SpecialOrder so)
+    {
+        int money = so.GetMoneyReward();
+        var rewards = new List<RewardLineRow>
+        {
+            new RewardLineRow(kind: "Money", summary: T("journal.reward.money", new { amount = money }, $"{money}g"), amount: money)
+        };
+        return new QuestRow(
+            title: ResolveSoTitle(so),
+            description: SafeParse(so, so.questDescription.Value),
+            objective: string.Empty,
+            rewardLines: rewards,
+            adventureSteps: new List<AdventureStepRow>(),
+            giverDisplay: ResolveNpcDisplayName(so.requester.Value),
+            daysLeftDisplay: _helper.Translation.Get("journal.claim.ready").Default("Reward ready to collect").ToString(),
+            sourceDisplay: QuestSnapshotBuilder.ResolveSpecialOrderSource(so, _helper),
+            warpTargets: null,
+            isCompleted: true,
+            canCancel: false,
+            canPostpone: false,
+            quest: null,
+            host: this,
+            category: string.Empty,
+            kind: "SpecialOrder",
+            specialOrder: so,
+            canClaim: true);
     }
 
     // Turns a raw daysLeft counter into the "days until deadline" number we show:
@@ -1632,6 +1780,7 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedIsCompleted));
         Raise(nameof(SelectedShowActions));
         Raise(nameof(SelectedShowComplete));
+        Raise(nameof(SelectedCanClaim));
         Raise(nameof(SelectedShowCancel));
         Raise(nameof(SelectedShowPostpone));
         Raise(nameof(SelectedShowDetails));
@@ -1755,6 +1904,10 @@ public sealed class QuestRow : INotifyPropertyChanged
     public bool IsCompleted { get; }
     public bool CanCancel { get; }
     public bool CanPostpone { get; }
+    // True for a finished quest whose reward is still waiting to be collected.
+    // Drives the Claim button and the list badge. Constant for a row's lifetime.
+    public bool CanClaim { get; }
+    public bool ReadyToClaim => CanClaim;
     // Live quest reference for active rows. Null for historical rows
     // (snapshots from CompletedQuestStore) and for special-order rows.
     public Quest? Quest { get; }
@@ -1857,7 +2010,8 @@ public sealed class QuestRow : INotifyPropertyChanged
         string category = "",
         string kind = "",
         SpecialOrder? specialOrder = null,
-        int? deadlineDays = null)
+        int? deadlineDays = null,
+        bool canClaim = false)
     {
         Title = title;
         Description = description;
@@ -1874,6 +2028,7 @@ public sealed class QuestRow : INotifyPropertyChanged
         IsCompleted = isCompleted;
         CanCancel = canCancel;
         CanPostpone = canPostpone;
+        CanClaim = canClaim;
         Quest = quest;
         SpecialOrder = specialOrder;
         _host = host;

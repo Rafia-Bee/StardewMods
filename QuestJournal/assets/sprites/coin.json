@@ -1,0 +1,7 @@
+{
+    "Sprites": {
+        "Coin": {
+            "SourceRect": "0, 0, 16, 16"
+        }
+    }
+}

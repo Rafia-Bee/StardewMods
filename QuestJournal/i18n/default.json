@@ -46,6 +46,7 @@
     "journal.action.pin": "Pin",
     "journal.action.unpin": "Unpin",
     "journal.action.complete": "Complete Quest",
+    "journal.action.claim": "Claim Reward",
     "journal.action.warpto": "Warp to {{npc}}",
     "journal.action.warpmany": "Warp...",
     "journal.action.spawnitem": "Get quest item",
@@ -54,6 +55,10 @@
     "journal.action.cancel": "Cancel",
 
     "journal.cancel.confirm": "Cancel this quest?",
+
+    "journal.claim.ready": "Reward ready to collect",
+    "journal.claim.received": "Received {{amount}}g",
+    "journal.list.claimtag": "Claim reward",
 
     "journal.warp.title": "Warp to...",
     "journal.warp.notfound": "Can't find {{npc}} right now.",
