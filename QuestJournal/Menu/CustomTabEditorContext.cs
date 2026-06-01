@@ -56,6 +56,13 @@ public sealed class CustomTabEditorContext : INotifyPropertyChanged
         set { if (_kindFilter == value) return; _kindFilter = value; Raise(nameof(KindFilter)); }
     }
 
+    private string _deadlineFilter = string.Empty;
+    public string DeadlineFilter
+    {
+        get => _deadlineFilter;
+        set { if (_deadlineFilter == value) return; _deadlineFilter = value; Raise(nameof(DeadlineFilter)); }
+    }
+
     // Read-only hints showing which category/kind values exist in the player's
     // current quests, so they know what's worth typing. Fixed for the popup's
     // life, so no change notification needed. The Has* flags drive the *if so

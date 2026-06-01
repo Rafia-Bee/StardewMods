@@ -61,4 +61,8 @@ public sealed class CustomTabDef
     public string SourceFilter { get; set; } = string.Empty;
     public string CategoryFilter { get; set; } = string.Empty;
     public string KindFilter { get; set; } = string.Empty;
+    // A number keeps quests due within that many days; "None" keeps quests with
+    // no deadline. Blank ignores deadlines. Empty on tabs saved before this
+    // field existed, which reads the same as "ignore".
+    public string DeadlineFilter { get; set; } = string.Empty;
 }

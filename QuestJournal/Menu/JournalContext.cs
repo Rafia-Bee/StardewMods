@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using QuestJournal.Api;
 using QuestJournal.Cheats;
@@ -17,6 +18,17 @@ using StardewValley.SpecialOrders.Objectives;
 using StardewValley.SpecialOrders.Rewards;
 
 namespace QuestJournal.Menu;
+
+// How the quests list is ordered. Saved to config (by name) so it persists and
+// applies to every tab. The order here is the order shown in the dropdown.
+public enum SortMode
+{
+    Deadline,
+    Alphabetical,
+    Giver,
+    Source,
+    Category
+}
 
 public sealed class JournalContext : INotifyPropertyChanged
 {
@@ -137,6 +149,41 @@ public sealed class JournalContext : INotifyPropertyChanged
     }
 
     public void ClearSearch() => SearchText = string.Empty;
+
+    // Sort order for the quests list. Persisted to config and applied to every
+    // tab. SortKinds[i] is the mode for SortOptions[i] (the labels the dropdown
+    // shows), so the selected label maps back to a mode by index.
+    private static readonly SortMode[] SortKinds =
+    {
+        SortMode.Deadline, SortMode.Alphabetical, SortMode.Giver, SortMode.Source, SortMode.Category
+    };
+    private SortMode _sortMode = SortMode.Deadline;
+    public List<string> SortOptions { get; } = new();
+
+    public string SelectedSortLabel
+    {
+        get
+        {
+            int i = System.Array.IndexOf(SortKinds, _sortMode);
+            if (i >= 0 && i < SortOptions.Count) return SortOptions[i];
+            return SortOptions.Count > 0 ? SortOptions[0] : string.Empty;
+        }
+        set
+        {
+            int i = SortOptions.IndexOf(value ?? string.Empty);
+            if (i < 0) return;
+            var mode = SortKinds[i];
+            if (_sortMode == mode) return;
+            _sortMode = mode;
+            ModEntry.Config.QuestSort = mode.ToString();
+            _helper.WriteConfig(ModEntry.Config);
+            Raise(nameof(SelectedSortLabel));
+            ReapplyFilter();
+        }
+    }
+
+    private static SortMode ParseSortMode(string? name)
+        => System.Enum.TryParse<SortMode>(name, ignoreCase: true, out var m) ? m : SortMode.Deadline;
 
     // Edit mode (mirrors Better Crafting's category editing): off by default and
     // tabs just switch. When on, clicking a custom tab opens its editor to
@@ -302,6 +349,13 @@ public sealed class JournalContext : INotifyPropertyChanged
         Tabs.Add(new TabRow(TabAll, helper.Translation.Get("journal.tab.all").Default("All").ToString(), HandleTabActivate));
         _addTab = new TabRow("__add", helper.Translation.Get("journal.tab.new").Default("New tab").ToString(), _ => CreateTab()) { IsAddTab = true };
         _editTab = new TabRow("__edit", EditButtonLabel, _ => ToggleEditMode()) { IsEditTab = true };
+        // Same order as SortKinds, so a selected label maps to a mode by index.
+        SortOptions.Add(helper.Translation.Get("journal.sort.deadline").Default("Deadline").ToString());
+        SortOptions.Add(helper.Translation.Get("journal.sort.alphabetical").Default("Alphabetical (A-Z)").ToString());
+        SortOptions.Add(helper.Translation.Get("journal.sort.giver").Default("By giver").ToString());
+        SortOptions.Add(helper.Translation.Get("journal.sort.source").Default("By source").ToString());
+        SortOptions.Add(helper.Translation.Get("journal.sort.category").Default("By category").ToString());
+        _sortMode = ParseSortMode(ModEntry.Config.QuestSort);
         LoadCustomTabs();
     }
 
@@ -610,7 +664,8 @@ public sealed class JournalContext : INotifyPropertyChanged
             TitleFilter = def?.TitleFilter ?? string.Empty,
             SourceFilter = def?.SourceFilter ?? string.Empty,
             CategoryFilter = def?.CategoryFilter ?? string.Empty,
-            KindFilter = def?.KindFilter ?? string.Empty
+            KindFilter = def?.KindFilter ?? string.Empty,
+            DeadlineFilter = def?.DeadlineFilter ?? string.Empty
         };
         var controller = _viewEngine.CreateMenuControllerFromAsset($"{_viewPrefix}/custom_tab_editor", ctx);
         if (controller == null) return;
@@ -631,6 +686,7 @@ public sealed class JournalContext : INotifyPropertyChanged
                         match.SourceFilter = (c.SourceFilter ?? string.Empty).Trim();
                         match.CategoryFilter = (c.CategoryFilter ?? string.Empty).Trim();
                         match.KindFilter = (c.KindFilter ?? string.Empty).Trim();
+                        match.DeadlineFilter = (c.DeadlineFilter ?? string.Empty).Trim();
                         CustomTabStore.Save(list);
                     }
                     LoadCustomTabs();
@@ -650,7 +706,8 @@ public sealed class JournalContext : INotifyPropertyChanged
                         TitleFilter = (c.TitleFilter ?? string.Empty).Trim(),
                         SourceFilter = (c.SourceFilter ?? string.Empty).Trim(),
                         CategoryFilter = (c.CategoryFilter ?? string.Empty).Trim(),
-                        KindFilter = (c.KindFilter ?? string.Empty).Trim()
+                        KindFilter = (c.KindFilter ?? string.Empty).Trim(),
+                        DeadlineFilter = (c.DeadlineFilter ?? string.Empty).Trim()
                     };
                     CustomTabStore.Add(newDef);
                     LoadCustomTabs();
@@ -804,33 +861,38 @@ public sealed class JournalContext : INotifyPropertyChanged
     private void ReapplyFilter()
     {
         Quests.Clear();
+        var collected = new List<QuestRow>();
         var activeTab = FindTab(_activeTabId);
         if (activeTab?.CustomDef is CustomTabDef def)
         {
             // Custom tabs search across all three buckets and keep only the
             // rows matching the saved filters. A row only ever lives in one
             // bucket, so there are no duplicates.
-            AddMatching(_activeRows, def);
-            AddMatching(_specialOrderRows, def);
-            AddMatching(_historyRows, def);
+            AddMatching(collected, _activeRows, def);
+            AddMatching(collected, _specialOrderRows, def);
+            AddMatching(collected, _historyRows, def);
         }
         else switch (_activeTabId)
         {
             case TabActive:
-                foreach (var r in _activeRows) AddRow(r);
+                foreach (var r in _activeRows) AddRow(collected, r);
                 break;
             case TabSpecial:
-                foreach (var r in _specialOrderRows) AddRow(r);
+                foreach (var r in _specialOrderRows) AddRow(collected, r);
                 break;
             case TabCompleted:
-                foreach (var r in _historyRows) AddRow(r);
+                foreach (var r in _historyRows) AddRow(collected, r);
                 break;
             case TabAll:
-                foreach (var r in _activeRows) AddRow(r);
-                foreach (var r in _specialOrderRows) AddRow(r);
-                foreach (var r in _historyRows) AddRow(r);
+                foreach (var r in _activeRows) AddRow(collected, r);
+                foreach (var r in _specialOrderRows) AddRow(collected, r);
+                foreach (var r in _historyRows) AddRow(collected, r);
                 break;
         }
+
+        foreach (var r in SortRows(collected))
+            Quests.Add(r);
+
         // Rows are shared across tabs, so clear any stale selection/hover from
         // a previous tab before re-selecting. Divider goes under every row
         // except the last, so the list reads as separated entries without a
@@ -856,28 +918,191 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(IsEmpty));
     }
 
-    private void AddMatching(List<QuestRow> source, CustomTabDef def)
+    private void AddMatching(List<QuestRow> dest, List<QuestRow> source, CustomTabDef def)
     {
         foreach (var r in source)
-            if (MatchesFilter(r, def)) AddRow(r);
+            if (MatchesFilter(r, def)) AddRow(dest, r);
     }
 
     // Final gate before a row reaches the list: the search box. Empty search
     // lets everything through.
-    private void AddRow(QuestRow r)
+    private void AddRow(List<QuestRow> dest, QuestRow r)
     {
-        if (Contains(r.Title, _searchText)) Quests.Add(r);
+        if (Contains(r.Title, _searchText)) dest.Add(r);
+    }
+
+    // Orders the gathered rows by the current sort mode. OrderBy is stable, so
+    // ties keep their natural (bucket) order. Deadline and Category push their
+    // "empty" rows (no deadline / no category) to the bottom.
+    private IEnumerable<QuestRow> SortRows(List<QuestRow> rows)
+    {
+        switch (_sortMode)
+        {
+            case SortMode.Alphabetical:
+                return rows.OrderBy(r => r.Title, System.StringComparer.OrdinalIgnoreCase);
+            case SortMode.Giver:
+                return rows.OrderBy(r => r.GiverDisplay, System.StringComparer.OrdinalIgnoreCase)
+                           .ThenBy(r => r.Title, System.StringComparer.OrdinalIgnoreCase);
+            case SortMode.Source:
+                return rows.OrderBy(r => r.SourceDisplay, System.StringComparer.OrdinalIgnoreCase)
+                           .ThenBy(r => r.Title, System.StringComparer.OrdinalIgnoreCase);
+            case SortMode.Category:
+                return rows.OrderBy(r => string.IsNullOrWhiteSpace(r.Category) ? 1 : 0)
+                           .ThenBy(r => r.Category, System.StringComparer.OrdinalIgnoreCase)
+                           .ThenBy(r => r.Title, System.StringComparer.OrdinalIgnoreCase);
+            case SortMode.Deadline:
+            default:
+                return rows.OrderBy(r => r.DeadlineDays.HasValue ? 0 : 1)
+                           .ThenBy(r => r.DeadlineDays ?? int.MaxValue);
+        }
     }
 
     private static bool MatchesFilter(QuestRow r, CustomTabDef def)
     {
         // Every non-blank filter must match (AND). Blank filters are ignored.
-        return Contains(r.Title, def.TitleFilter)
-            && Contains(r.SourceDisplay, def.SourceFilter)
-            && Contains(r.Category, def.CategoryFilter)
-            && Contains(r.Kind, def.KindFilter);
+        // The Kind field ignores spaces so "Special Orders" matches "SpecialOrder"
+        // and "Daily Board" matches "DailyBoard".
+        return MatchesTextFilter(r.Title, def.TitleFilter)
+            && MatchesTextFilter(r.SourceDisplay, def.SourceFilter)
+            && MatchesTextFilter(r.Category, def.CategoryFilter)
+            && MatchesTextFilter(r.Kind, def.KindFilter, ignoreSpaces: true)
+            && MatchesDeadlineFilter(r, def.DeadlineFilter);
     }
 
+    // A custom-tab text field, split on commas into terms. Plain terms are OR-ed
+    // (the field must contain at least one of them), and a term starting with "!"
+    // excludes (the field must not contain it). So "RSV, More Quests" keeps rows
+    // from either, and "!Robin, crop order" keeps "crop order" rows that don't
+    // mention Robin. A bare "!" is ignored. ignoreSpaces strips spaces from both
+    // sides before comparing, so a kind typed with spaces still matches
+    // ("Special Orders" finds "SpecialOrder").
+    private static bool MatchesTextFilter(string? haystack, string? filter, bool ignoreSpaces = false)
+    {
+        if (string.IsNullOrWhiteSpace(filter)) return true;
+        string hay = haystack ?? string.Empty;
+        bool anyPositive = false, positiveHit = false;
+        foreach (string raw in filter.Split(','))
+        {
+            string term = raw.Trim();
+            if (term.Length == 0) continue;
+            bool negate = term[0] == '!';
+            if (negate)
+            {
+                term = term.Substring(1).Trim();
+                if (term.Length == 0) continue;
+            }
+            bool contains = ContainsTerm(hay, term, ignoreSpaces);
+            if (negate)
+            {
+                if (contains) return false;
+            }
+            else
+            {
+                anyPositive = true;
+                if (contains) positiveHit = true;
+            }
+        }
+        return !anyPositive || positiveHit;
+    }
+
+    private static bool ContainsTerm(string haystack, string needle, bool ignoreSpaces)
+    {
+        if (ignoreSpaces)
+        {
+            haystack = haystack.Replace(" ", string.Empty);
+            needle = needle.Replace(" ", string.Empty);
+        }
+        return haystack.IndexOf(needle, System.StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    // Deadline field, also comma-separated and OR/exclude like the text fields.
+    // Each term can be: "None" (no deadline), a number N (exactly N days), a
+    // range "A-B" (inclusive), or a comparison ">N" / ">=N" / "<N" / "<=N". So
+    // "5" is exactly 5 days, "<=5" is 5 or fewer, "3, 7" is exactly 3 or 7, and
+    // "None, >28" is "no deadline or more than 28 days out". A "!" term excludes,
+    // so "<=3, !2" is "3 or fewer except exactly 2". Completed history has no
+    // live deadline, so it's dropped whenever this field is set. Unparseable
+    // terms are ignored.
+    private static bool MatchesDeadlineFilter(QuestRow r, string? filter)
+    {
+        if (string.IsNullOrWhiteSpace(filter)) return true;
+        if (r.IsCompleted) return false;
+        int? d = r.DeadlineDays;
+        bool anyPositive = false, positiveHit = false;
+        foreach (string raw in filter.Split(','))
+        {
+            string term = raw.Trim();
+            if (term.Length == 0) continue;
+            bool negate = term[0] == '!';
+            if (negate)
+            {
+                term = term.Substring(1).Trim();
+                if (term.Length == 0) continue;
+            }
+            if (!TryMatchDeadlineTerm(term, d, out bool matched))
+                continue;
+            if (negate)
+            {
+                if (matched) return false;
+            }
+            else
+            {
+                anyPositive = true;
+                if (matched) positiveHit = true;
+            }
+        }
+        return !anyPositive || positiveHit;
+    }
+
+    // Parses one deadline term and reports whether the value d satisfies it.
+    // Returns false (term ignored) when it can't be parsed. A bare number means
+    // exactly that many days; use "<=N" for "N or fewer".
+    private static bool TryMatchDeadlineTerm(string term, int? d, out bool matched)
+    {
+        matched = false;
+        string t = term.Replace(" ", string.Empty);
+        if (t.Length == 0) return false;
+
+        if (t.Equals("None", System.StringComparison.OrdinalIgnoreCase))
+        {
+            matched = !d.HasValue;
+            return true;
+        }
+
+        // Range "A-B" inclusive. The dash is searched from index 1 so a leading
+        // minus sign isn't mistaken for a separator.
+        int dash = t.IndexOf('-', 1);
+        if (dash > 0 && dash < t.Length - 1
+            && int.TryParse(t.Substring(0, dash), out int lo)
+            && int.TryParse(t.Substring(dash + 1), out int hi))
+        {
+            if (lo > hi) (lo, hi) = (hi, lo);
+            matched = d.HasValue && d.Value >= lo && d.Value <= hi;
+            return true;
+        }
+
+        if (t.StartsWith(">=")) return TryDeadlineCompare(t, 2, d, (v, x) => v >= x, out matched);
+        if (t.StartsWith("<=")) return TryDeadlineCompare(t, 2, d, (v, x) => v <= x, out matched);
+        if (t.StartsWith(">")) return TryDeadlineCompare(t, 1, d, (v, x) => v > x, out matched);
+        if (t.StartsWith("<")) return TryDeadlineCompare(t, 1, d, (v, x) => v < x, out matched);
+
+        if (int.TryParse(t, out int n))
+        {
+            matched = d.HasValue && d.Value == n;
+            return true;
+        }
+        return false;
+    }
+
+    private static bool TryDeadlineCompare(string t, int skip, int? d, System.Func<int, int, bool> cmp, out bool matched)
+    {
+        matched = false;
+        if (!int.TryParse(t.Substring(skip), out int x)) return false;
+        matched = d.HasValue && cmp(d.Value, x);
+        return true;
+    }
+
+    // Plain substring match used by the search box (no negation, no space trick).
     private static bool Contains(string? haystack, string? filter)
     {
         if (string.IsNullOrEmpty(filter)) return true;
@@ -928,8 +1153,15 @@ public sealed class JournalContext : INotifyPropertyChanged
             quest: q,
             host: this,
             category: category,
-            kind: kind);
+            kind: kind,
+            deadlineDays: DeadlineFromQuestCounter(q.daysLeft.Value));
     }
+
+    // Turns a raw daysLeft counter into the "days until deadline" number we show:
+    // a counter of 1 is the final day (0 days out), 2 is due tomorrow (1), and so
+    // on. A counter of 0 or less means the quest has no time limit.
+    private static int? DeadlineFromQuestCounter(int counter)
+        => counter <= 0 ? (int?)null : counter - 1;
 
     private QuestRow BuildSpecialOrderRow(SpecialOrder so)
     {
@@ -960,6 +1192,12 @@ public sealed class JournalContext : INotifyPropertyChanged
         string source = QuestSnapshotBuilder.ResolveSpecialOrderSource(so, _helper);
         string giver = ResolveNpcDisplayName(so.requester.Value);
 
+        // Special orders always carry a due date, so they never read as "no
+        // deadline". dueDate is absolute, so subtract today to get the counter,
+        // then clamp the final-day case to 0 instead of letting it go negative.
+        int soDaysLeft = so.dueDate.Value - (Game1.Date?.TotalDays ?? 0);
+        int soDeadline = System.Math.Max(0, soDaysLeft - 1);
+
         return new QuestRow(
             title: ResolveSoTitle(so),
             description: SafeParse(so, so.questDescription.Value),
@@ -977,7 +1215,8 @@ public sealed class JournalContext : INotifyPropertyChanged
             specialOrder: so,
             host: this,
             category: string.Empty,
-            kind: "SpecialOrder");
+            kind: "SpecialOrder",
+            deadlineDays: soDeadline);
     }
 
     private static List<RewardLineRow> BuildSpecialOrderRewards(SpecialOrder so)
@@ -1499,6 +1738,10 @@ public sealed class QuestRow : INotifyPropertyChanged
     public IReadOnlyList<AdventureStepRow> AdventureSteps { get; }
     public string GiverDisplay { get; }
     public string DaysLeftDisplay { get; }
+    // Numeric days until the deadline, matching the number shown in DaysLeftDisplay
+    // ("5 days left" == 5, "Final day" == 0). Null means no deadline at all, and
+    // also for completed/history rows. Sorting and the deadline filter read this.
+    public int? DeadlineDays { get; }
     public string SourceDisplay { get; }
     // MoreQuests category / posting kind as plain strings (e.g. "Cooking",
     // "DailyBoard"), used only by custom-tab filtering. Blank for vanilla quests
@@ -1613,7 +1856,8 @@ public sealed class QuestRow : INotifyPropertyChanged
         JournalContext host,
         string category = "",
         string kind = "",
-        SpecialOrder? specialOrder = null)
+        SpecialOrder? specialOrder = null,
+        int? deadlineDays = null)
     {
         Title = title;
         Description = description;
@@ -1622,6 +1866,7 @@ public sealed class QuestRow : INotifyPropertyChanged
         AdventureSteps = adventureSteps ?? new List<AdventureStepRow>();
         GiverDisplay = giverDisplay;
         DaysLeftDisplay = daysLeftDisplay;
+        DeadlineDays = deadlineDays;
         SourceDisplay = sourceDisplay;
         Category = category ?? string.Empty;
         Kind = kind ?? string.Empty;

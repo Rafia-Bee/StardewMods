@@ -35,6 +35,11 @@ public sealed class ModConfig
     public bool EnableLookupAnythingIntegration { get; set; } = true;
     public bool DefaultPinNewQuests { get; set; }
 
+    // How the quests list is ordered. Stored by name (Deadline, Alphabetical,
+    // Giver, Source, Category). Set from the dropdown in the journal or from
+    // GMCM; a bad value falls back to Deadline at read time.
+    public string QuestSort { get; set; } = "Deadline";
+
     // When on, the journal writes its chatty status logs (everything below a
     // warning) to the SMAPI console. Warnings and errors always show. On by
     // default for now while the mod is new.

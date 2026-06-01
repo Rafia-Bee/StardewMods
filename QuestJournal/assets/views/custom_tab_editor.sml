@@ -40,6 +40,12 @@
                    text={<>KindFilter} />
         <label *if={:HasKindHint} layout="stretch content" margin="0, 4, 0, 0" text={:KindHint} />
 
+        <label layout="stretch content" margin="0, 12, 0, 4" text={#tabeditor.deadline} />
+        <textinput layout="stretch 64px"
+                   max-length="10"
+                   background={@Mods/StardewUI/Sprites/TextBox}
+                   text={<>DeadlineFilter} />
+
         <lane orientation="horizontal" margin="0, 24, 0, 0" horizontal-content-alignment="middle">
             <frame margin="0, 0, 12, 0"
                    padding="20, 12"

@@ -11,7 +11,8 @@ The vanilla quest log is one flat scroll: a title, one objective line, a reward,
 - **Honest deadlines.** The days-left line shows the real deadline. A quest or special order is removed the morning after its last day, so the journal says "Final day!" on the day you have to finish it, "Due tomorrow!" when the deadline is the next day, and counts down the real days after that. This reads one lower than the game's own number on purpose (the game's "2 days" is really "due tomorrow"), because that's how much time you actually have.
 - **Special Orders too.** The Special Orders board quests show up on their own tab with their rewards itemised.
 - **Pin to the HUD.** Pin any quest and its current objective shows in the top-right corner while you're out in the world. Click a pinned quest to jump straight to it in the journal. You can drag the pin panel anywhere you like.
-- **Custom tabs.** Build your own tabs that filter the list by title, source mod, category, or quest kind. They're saved per save file.
+- **Custom tabs.** Build your own tabs that filter the list by title, source mod, category, quest kind, or deadline. Saved per save file. Each box takes more than one word: separate them with commas to match any of them ("RSV, More Quests" in Source shows quests from either), and start a word with "!" to leave it out ("!Robin, crop order" in Title shows crop order quests that aren't from Robin). The Deadline box takes a number (exactly that many days left), "<=5" (5 or fewer), "None", a range like "1-3", a comparison like ">28", or a mix like "<=3, !2" (3 or fewer except exactly 2).
+- **Sort the list.** A Sort dropdown at the top left orders the list by deadline (soonest first), name, giver, source, or category. Your choice is remembered and used on every tab.
 - **Search bar.** Type in the box at the top to filter the list by quest title.
 - **Complete button** (optional, off by default). A button that finishes a quest and pays its reward without doing the objective. It's a shortcut, so you turn it on yourself.
 - **Warp helper** (optional, off by default). A button that warps you next to a quest's NPC. If a quest touches more than one NPC, you get a little picker.
@@ -54,6 +55,7 @@ If you have Generic Mod Config Menu installed, there's an in-game settings page.
 - **Show pinned quests on the HUD** - draws your pinned quests in the top-right while you play.
 - **Auto-pin new quests** - pins a quest the moment you accept it (does nothing if "Show pinned quests on the HUD" is off).
 - **Debug logging** - writes extra status messages to the SMAPI console (handy for bug reports). Warnings and errors always show.
+- **Sort quests by** - the order the list starts in (deadline, name, giver, source, or category). You can also change it from the dropdown inside the journal.
 - **Journal size** - makes the whole window bigger or smaller.
 - **Complete button** - adds the "complete quest" button, which finishes a quest and pays its reward without doing the objective. A cheat, so off by default.
 - **Item helper** - adds the "get the quest item" button. A cheat, so off by default.

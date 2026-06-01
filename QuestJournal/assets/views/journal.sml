@@ -79,8 +79,13 @@
         <lane orientation="vertical" layout="stretch stretch" horizontal-content-alignment="middle">
 
             <lane orientation="horizontal" layout="stretch content" margin="0, 0, 0, 8" vertical-content-alignment="middle">
+                <label margin="0, 0, 8, 0" text={#journal.sort.label} />
+                <dropdown layout="220px content"
+                          options={:SortOptions}
+                          selected-option={<>SelectedSortLabel} />
+                <frame layout="stretch content" />
                 <label margin="0, 0, 8, 0" text={#journal.search.label} />
-                <textinput layout="360px 56px"
+                <textinput layout="320px 56px"
                            max-length="40"
                            background={@Mods/StardewUI/Sprites/TextBox}
                            text={<>SearchText} />

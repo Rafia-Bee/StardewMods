@@ -63,6 +63,24 @@ internal static class GmcmRegistration
             () => t.Get("config.scale.tooltip"),
             min: 0.7f, max: 1.5f, interval: 0.05f);
 
+        // Default sort order for the quests list. The same orders are picked from
+        // the dropdown inside the journal; this just sets the starting point. The
+        // stored value is the order's name; the label shown is localized.
+        api.AddTextOption(manifest,
+            () => ModEntry.Config.QuestSort,
+            v => ModEntry.Config.QuestSort = v,
+            () => t.Get("config.sort"),
+            () => t.Get("config.sort.tooltip"),
+            allowedValues: new[] { "Deadline", "Alphabetical", "Giver", "Source", "Category" },
+            formatAllowedValue: v => v switch
+            {
+                "Alphabetical" => t.Get("journal.sort.alphabetical"),
+                "Giver" => t.Get("journal.sort.giver"),
+                "Source" => t.Get("journal.sort.source"),
+                "Category" => t.Get("journal.sort.category"),
+                _ => t.Get("journal.sort.deadline")
+            });
+
         api.AddSectionTitle(manifest, () => t.Get("config.section.cheats"));
         api.AddBoolOption(manifest,
             () => ModEntry.Config.AllowCompleteCheat,
