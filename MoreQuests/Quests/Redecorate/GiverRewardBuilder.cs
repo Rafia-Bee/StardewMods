@@ -3,10 +3,10 @@ using System.Globalization;
 using MoreQuestsFramework.Rewards;
 using StardewValley;
 
-namespace Architect.Services;
+namespace MoreQuests.Quests;
 
-// Builds the reward: up to RewardItemCount distinct items the giver personally loves
-// (not the universal-love list), topped up with items they like if they don't have
+// Builds the reward: up to RedecorateRewardItemCount distinct items the giver personally
+// loves (not the universal-love list), topped up with items they like if they don't have
 // enough loved ones. One copy of each.
 internal static class GiverRewardBuilder
 {
@@ -25,7 +25,7 @@ internal static class GiverRewardBuilder
         {
             foreach (string qualifiedId in source)
             {
-                if (picked.Count >= config.RewardItemCount)
+                if (picked.Count >= config.RedecorateRewardItemCount)
                     return;
                 if (seen.Add(qualifiedId))
                     picked.Add(qualifiedId);

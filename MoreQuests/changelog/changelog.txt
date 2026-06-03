@@ -1,7 +1,8 @@
-2.3.1
+2.4.0
+- New "Redecorate a Home" quest: a villager posts a job asking you to spruce up their place. They hand you a budget up front, you go buy furniture (lamps, rugs, chairs, tables) and set it up inside their home, and whatever you don't spend goes back to them. You only ever pay the overspend out of pocket. Finish it and they thank you with a handful of their favorite gifts. This was its own little "Architect" mod before, now it's just part of More Quests. The quest only shows up if you have Build Placement Unlocker installed, since that's what lets you put furniture in someone else's house.
 - Beach cleanup quests now tell you how many shells to collect, like "Collect 4 Cockle and talk to Elliott." They used to just say "Collect Cockle" with no number, so it was easy to come up short.
 - Handing shells to the quest giver before you have enough no longer gives them away as a gift. They'll just let you know how many more to bring.
-Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuests-v2.3.0...MoreQuests-v2.3.1]i18n changes here[/url] (look at i18n/default.json).
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuests-v2.3.0...MoreQuests-v2.4.0]i18n changes here[/url] (look at i18n/default.json).
 
 2.3.0
 - Leah's Farm Painting now sends a different painting each time, so you won't get the same one twice until you've collected them all.

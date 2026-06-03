@@ -214,6 +214,34 @@ public sealed class ModConfig
     /// quest is active (on top of needing a rug, a light source, and a wall decoration).
     public int EmilyHousewarmingCount { get; set; } = 8;
 
+    // ----- Redecorate quest (needs Build Placement Unlocker installed to post) -----
+    // A villager hands over a budget, you buy furniture and place it in their home, and
+    // whatever you don't spend goes back to them. Defaults are tuned so a careful shopper
+    // stays under budget and the leftover that returns to the NPC is small.
+
+    /// Relative weight of the Redecorate quest in the daily-board pool. 0 disables it.
+    public int RedecorateQuestWeight { get; set; } = 12;
+    /// Days the player has to finish once they accept.
+    public int RedecorateDeadlineDays { get; set; } = 7;
+    /// Days before the same NPC can post another redecoration quest.
+    public int RedecorateCooldownDays { get; set; } = 14;
+    /// How many distinct furniture objectives a quest asks for.
+    public int RedecorateMinObjectives { get; set; } = 2;
+    public int RedecorateMaxObjectives { get; set; } = 3;
+    /// How many pieces each objective asks for.
+    public int RedecorateMinPerObjective { get; set; } = 1;
+    public int RedecorateMaxPerObjective { get; set; } = 2;
+    /// Budget = (sum of reference prices x counts) x generosity, rounded to the nearest 100.
+    /// Above 1.0 leaves the player a little slack so staying under budget is achievable.
+    public double RedecorateBudgetGenerosity { get; set; } = 1.3;
+    /// Reference shop prices per category, used only to size the budget.
+    public int RedecorateReferenceLampPrice { get; set; } = 1000;
+    public int RedecorateReferenceRugPrice { get; set; } = 1000;
+    public int RedecorateReferenceChairPrice { get; set; } = 1000;
+    public int RedecorateReferenceTablePrice { get; set; } = 1500;
+    /// How many reward items the giver hands over (loved first, then liked).
+    public int RedecorateRewardItemCount { get; set; } = 5;
+
     /// When on, internal diagnostic logs are written at Trace level. Off in release builds
     /// by default so the SMAPI log stays quiet; flip on if you're chasing a bug.
     public bool DebugLogging { get; set; } = false;

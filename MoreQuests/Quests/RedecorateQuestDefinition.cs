@@ -1,41 +1,41 @@
 using System.Collections.Generic;
-using Architect.Services;
 using MoreQuestsFramework;
 using MoreQuestsFramework.Rewards;
-using StardewModdingAPI;
 using StardewValley;
 
-namespace Architect.Quests;
+namespace MoreQuests.Quests;
 
-public sealed class ArchitectQuestDefinition : IQuestDefinition, IEligibleGiverSource
+// The "redecorate an NPC's home" daily-board quest. Needs Build Placement Unlocker
+// installed, since that's what lets the player place furniture inside a villager's
+// house at all. Without it the quest never posts.
+public sealed class RedecorateQuestDefinition : IQuestDefinition, IEligibleGiverSource
 {
-    public const string QuestId = "RafiaBee.Architect.Redecorate";
-    public const string OwnerId = "RafiaBee.Architect";
+    public const string QuestId = "Social.Redecorate";
+    public const string OwnerId = "RafiaBee.MoreQuests";
 
-    private readonly IModHelper _helper;
-    private readonly ModConfig _config;
-
-    public ArchitectQuestDefinition(IModHelper helper, ModConfig config)
-    {
-        _helper = helper;
-        _config = config;
-    }
+    // The mod that unlocks furniture placement in NPC homes. The quest is pointless
+    // without it, so it only posts when this is loaded.
+    public const string BuildPlacementUnlockerId = "PureWinter.BuildPlacementUnlocker";
 
     public string Id => QuestId;
     public string OwnerUniqueId => OwnerId;
     public QuestCategory Category => QuestCategory.Social;
     public PostingKind Kind => PostingKind.DailyBoard;
-    public int DefaultWeight => _config.QuestWeight;
+    public int DefaultWeight => ModEntry.Config.RedecorateQuestWeight;
     public int MaxPerDay => 1;
-    public int CooldownDays => _config.CooldownDays;
+    public int CooldownDays => ModEntry.Config.RedecorateCooldownDays;
 
     public bool IsAvailable(QuestContext ctx)
     {
+        if (!ModEntry.Config.SocialQuestsEnabled)
+            return false;
+        if (!ModEntry.Instance.Helper.ModRegistry.IsLoaded(BuildPlacementUnlockerId))
+            return false;
         return GiverHomeResolver.EligibleGivers().Count > 0;
     }
 
     // Powers the mq_givers console command.
-    public System.Collections.Generic.IReadOnlyList<string> GetEligibleGivers()
+    public IReadOnlyList<string> GetEligibleGivers()
     {
         return GiverHomeResolver.EligibleGivers();
     }
@@ -51,13 +51,14 @@ public sealed class ArchitectQuestDefinition : IQuestDefinition, IEligibleGiverS
             return null;
 
         var objectives = RollObjectives();
-        int budget = BudgetSizer.Compute(objectives, _config);
-        var rewards = GiverRewardBuilder.Build(giver, _config);
+        int budget = BudgetSizer.Compute(objectives, ModEntry.Config);
+        var rewards = GiverRewardBuilder.Build(giver, ModEntry.Config);
 
-        var quest = new ArchitectQuest();
+        var quest = new RedecorateQuest();
         quest.Initialize(giver, home.Name, objectives, budget);
 
         string giverDisplay = NpcDisplay.Resolve(giver);
+        var i18n = ModEntry.I18n;
 
         return new QuestPosting
         {
@@ -68,12 +69,12 @@ public sealed class ArchitectQuestDefinition : IQuestDefinition, IEligibleGiverS
             Kind = PostingKind.DailyBoard,
             QuestType = BoardQuestType.Custom,
             QuestGiver = giver,
-            DeadlineDays = _config.DeadlineDays,
+            DeadlineDays = ModEntry.Config.RedecorateDeadlineDays,
             Rewards = rewards,
-            Title = _helper.Translation.Get("quest.architect.title", new { npc = giverDisplay }),
-            Description = _helper.Translation.Get("quest.architect.description", new { npc = giverDisplay, budget }),
-            CurrentObjective = _helper.Translation.Get("quest.architect.objective.summary", new { npc = giverDisplay }),
-            TargetMessage = _helper.Translation.Get("quest.architect.targetMessage"),
+            Title = i18n.Get("quest.redecorate.title", new { npc = giverDisplay }),
+            Description = i18n.Get("quest.redecorate.description", new { npc = giverDisplay, budget }),
+            CurrentObjective = i18n.Get("quest.redecorate.objective.summary", new { npc = giverDisplay }),
+            TargetMessage = i18n.Get("quest.redecorate.targetMessage"),
             PreBuiltQuest = quest
         };
     }
@@ -88,14 +89,15 @@ public sealed class ArchitectQuestDefinition : IQuestDefinition, IEligibleGiverS
             (pool[i], pool[j]) = (pool[j], pool[i]);
         }
 
-        int maxObjectives = System.Math.Min(_config.MaxObjectives, pool.Count);
-        int minObjectives = System.Math.Min(_config.MinObjectives, maxObjectives);
+        var config = ModEntry.Config;
+        int maxObjectives = System.Math.Min(config.RedecorateMaxObjectives, pool.Count);
+        int minObjectives = System.Math.Min(config.RedecorateMinObjectives, maxObjectives);
         int objectiveCount = Game1.random.Next(minObjectives, maxObjectives + 1);
 
         var result = new List<(string, int)>();
         for (int i = 0; i < objectiveCount; i++)
         {
-            int count = Game1.random.Next(_config.MinPerObjective, _config.MaxPerObjective + 1);
+            int count = Game1.random.Next(config.RedecorateMinPerObjective, config.RedecorateMaxPerObjective + 1);
             result.Add((pool[i], System.Math.Max(1, count)));
         }
         return result;

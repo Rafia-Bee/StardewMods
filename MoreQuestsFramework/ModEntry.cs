@@ -194,7 +194,7 @@ public sealed class ModEntry : Mod
             + "exposes that (implements IEligibleGiverSource). Reads live game state. Usage: "
             + "mq_givers <DefinitionId> to print one quest, or mq_givers all to write a "
             + "givers-report.json for every registered quest into the More Quests Framework "
-            + "mod folder. Examples: mq_givers RafiaBee.Architect.Redecorate, mq_givers all.",
+            + "mod folder. Examples: mq_givers Social.Redecorate, mq_givers all.",
             (_, args) => ListGiversByDefinitionId(args));
         // Defer GMCM + content-pack loading + RegistrationClosed until after every consumer
         // mod's GameLaunched has run.
@@ -954,7 +954,7 @@ public sealed class ModEntry : Mod
     {
         if (args.Length < 1)
         {
-            Monitor.Log("Usage: mq_givers <DefinitionId> | all. Example: mq_givers RafiaBee.Architect.Redecorate.", LogLevel.Info);
+            Monitor.Log("Usage: mq_givers <DefinitionId> | all. Example: mq_givers Social.Redecorate.", LogLevel.Info);
             return;
         }
         if (!Context.IsWorldReady)

@@ -30,6 +30,9 @@ public sealed class ModEntry : Mod
     /// i18n accessor for content-mod generators. Framework's QuestContext.Helper only sees framework keys.
     internal static ITranslationHelper I18n => Instance.Helper.Translation;
 
+    /// Watches furniture placements in NPC homes for the Redecorate quest.
+    private readonly Quests.FurniturePlacementWatcher _redecorateWatcher = new();
+
     // Gated diagnostic log. Off by default so the SMAPI log stays quiet in release.
     // Enable via GMCM (Debug logging) when chasing a bug.
     internal static void LogDebug(string message)
@@ -59,6 +62,8 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.DayStarted += OnDayStarted;
         helper.Events.GameLoop.DayEnding += OnDayEnding;
         helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTick;
+        helper.Events.GameLoop.OneSecondUpdateTicked += _redecorateWatcher.OnOneSecondUpdateTicked;
+        helper.Events.Player.Warped += _redecorateWatcher.OnWarped;
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.Content.AssetsInvalidated += OnAssetsInvalidated;
         helper.Events.World.BuildingListChanged += OnBuildingListChanged;
@@ -681,6 +686,11 @@ public sealed class ModEntry : Mod
     {
         if (e.DefinitionId == "Animal.HaySupplyRun")
             Helper.GameContent.InvalidateCache("Data/Shops");
+
+        // Returns the unused budget if a Redecorate quest leaves the log without completing
+        // (cancelled or expired). Completion settles itself inside questComplete.
+        if (e.Reason != QuestRemovalReason.Completed && e.Quest is Quests.RedecorateQuest rq)
+            rq.Settle();
     }
 
     private static readonly Dictionary<string, Action<ModEntry, StardewValley.Quests.Quest>> QuestCompletionHandlers = new(StringComparer.Ordinal)
@@ -1134,6 +1144,11 @@ public sealed class ModEntry : Mod
 
     private void OnQuestAccepted(object? sender, QuestAcceptedArgs e)
     {
+        // Pays the budget the moment a Redecorate quest lands in the log. GrantBudgetOnAccept
+        // is guarded so the reload-time re-fire of QuestAccepted can't pay twice.
+        if (e.Quest is Quests.RedecorateQuest rq)
+            rq.GrantBudgetOnAccept();
+
         if (e.DefinitionId == "Animal.HaySupplyRun")
         {
             Helper.GameContent.InvalidateCache("Data/Shops");
@@ -1208,6 +1223,7 @@ public sealed class ModEntry : Mod
         scope.RegisterCustomQuestType(typeof(AnyMonsterQuest));
         scope.RegisterCustomQuestType(typeof(CollectAndReportQuest));
         scope.RegisterCustomQuestType(typeof(PurchaseFromShopQuest));
+        scope.RegisterCustomQuestType(typeof(RedecorateQuest));
 
         // Mail-stash codecs for the two subclasses MarnieCowOffer can post via mail.
         // Without these, a save+reload before opening the letter loses the quest.
@@ -1223,6 +1239,11 @@ public sealed class ModEntry : Mod
             CollectAndReportQuestStashCodec.Decode);
 
         Generators.RegisterAll(scope);
+
+        // The Redecorate quest is a self-contained IQuestDefinition (not a quests.json
+        // generator). It only posts when Build Placement Unlocker is installed; see
+        // RedecorateQuestDefinition.IsAvailable.
+        scope.RegisterQuest(new RedecorateQuestDefinition());
 
         ApplyGuildBoardRouting(scope);
 

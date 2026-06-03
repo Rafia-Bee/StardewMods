@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Xml.Serialization;
-using Architect.Services;
 using MoreQuestsFramework;
 using MoreQuestsFramework.Rewards;
 using Netcode;
@@ -10,14 +9,14 @@ using StardewValley;
 using StardewValley.Objects;
 using StardewValley.Quests;
 
-namespace Architect.Quests;
+namespace MoreQuests.Quests;
 
 // A redecoration quest. The giver hands over a budget on accept; the player buys
 // furniture and places it inside the giver's home. Each matching placement ticks an
 // objective and draws the budget down by that piece's price. On completion the unused
 // budget returns to the giver (net player cost = max(0, spent - budget)).
-[XmlType("Mods_RafiaBee_Architect_ArchitectQuest")]
-public sealed class ArchitectQuest : Quest, IRewardedQuest, IObjectiveLineSource
+[XmlType("Mods_RafiaBee_MoreQuests_RedecorateQuest")]
+public sealed class RedecorateQuest : Quest, IRewardedQuest, IObjectiveLineSource
 {
     public readonly NetString giverNpc = new();
     public readonly NetString homeLocation = new();
@@ -42,7 +41,7 @@ public sealed class ArchitectQuest : Quest, IRewardedQuest, IObjectiveLineSource
     [XmlIgnore]
     private bool _snapshotSeeded;
 
-    public ArchitectQuest()
+    public RedecorateQuest()
     {
         // Keep the posting's title so vanilla doesn't regenerate it.
         _loadedTitle = true;
@@ -156,11 +155,11 @@ public sealed class ArchitectQuest : Quest, IRewardedQuest, IObjectiveLineSource
             return;
 
         WriteObjectives(objectives);
+        // When the last piece goes down the quest doesn't auto-complete. The objective
+        // flips to "ask the giver what they think" and the reward only lands once the
+        // player talks to them (see OnNpcSocialized).
         reloadObjective();
         Game1.dayTimeMoneyBox.pingQuest(this);
-
-        if (AllObjectivesDone(objectives))
-            questComplete();
     }
 
     private List<(string category, int count, int progress)> ReadObjectives()
@@ -200,7 +199,7 @@ public sealed class ArchitectQuest : Quest, IRewardedQuest, IObjectiveLineSource
     public List<string> BuildObjectiveLines()
     {
         var lines = new List<string>();
-        var translation = ModEntry.Translation;
+        var translation = ModEntry.I18n;
         foreach (var o in ReadObjectives())
         {
             string key = FurnitureCategory.I18nKey(o.category);
@@ -214,23 +213,67 @@ public sealed class ArchitectQuest : Quest, IRewardedQuest, IObjectiveLineSource
         string budgetLine;
         if (remaining >= 0)
             budgetLine = translation != null
-                ? translation.Get("objective.budget", new { amount = remaining }).ToString()
+                ? translation.Get("quest.redecorate.objective.budget", new { amount = remaining }).ToString()
                 : $"Budget remaining: {remaining}g";
         else
             budgetLine = translation != null
-                ? translation.Get("objective.budget.over", new { amount = -remaining }).ToString()
+                ? translation.Get("quest.redecorate.objective.budget.over", new { amount = -remaining }).ToString()
                 : $"Over budget by {-remaining}g";
         lines.Add(budgetLine);
+
+        // Once everything's placed, the only thing left is to go hear what they think.
+        var objectives = ReadObjectives();
+        if (AllObjectivesDone(objectives))
+            lines.Add(AskOpinionLine());
 
         if (lines.Count == 0)
             lines.Add(string.Empty);
         return lines;
     }
 
+    private string AskOpinionLine()
+    {
+        string npc = NpcDisplay.Resolve(giverNpc.Value);
+        var translation = ModEntry.I18n;
+        return translation != null
+            ? translation.Get("quest.redecorate.objective.askOpinion", new { npc }).ToString()
+            : $"Ask {npc} what they think";
+    }
+
     public override void reloadObjective()
     {
+        // The actionable step is the headline. Before the room's done that's the first
+        // furniture line; after it's done it's "ask the giver".
+        if (AllObjectivesDone(ReadObjectives()))
+        {
+            currentObjective = AskOpinionLine();
+            return;
+        }
         var lines = BuildObjectiveLines();
         currentObjective = lines.Count > 0 ? lines[0] : string.Empty;
+    }
+
+    // Completion gate. The player buys + places the furniture, then talks to the giver to
+    // hear their opinion, which is what actually finishes the quest and pays out.
+    public override bool OnNpcSocialized(NPC npc, bool probe = false)
+    {
+        if (completed.Value || npc == null)
+            return false;
+        if (!string.Equals(npc.Name, giverNpc.Value, StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (!AllObjectivesDone(ReadObjectives()))
+            return false;
+        if (probe)
+            return true;
+
+        string opinion = ModEntry.I18n?.Get("quest.redecorate.targetMessage").ToString() ?? string.Empty;
+        if (!string.IsNullOrEmpty(opinion))
+        {
+            npc.CurrentDialogue.Push(new Dialogue(npc, null, opinion));
+            Game1.drawDialogue(npc);
+        }
+        questComplete();
+        return true;
     }
 
     // Returns the unused budget to the giver. Net player cost ends up max(0, spent - budget).

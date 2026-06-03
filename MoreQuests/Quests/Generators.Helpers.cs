@@ -255,7 +255,7 @@ internal static partial class Generators
     /// layer adds the gift-receiver specifics: not Dwarvish-speaking, CanReceiveGifts,
     /// and friendship.Points > 0 so pre-seeded-but-never-actually-met NPCs (East Scarp's
     /// ToriLK) don't get picked.
-    private static List<string> MetAdultHumanGiftReceivers()
+    internal static List<string> MetAdultHumanGiftReceivers()
     {
         var results = new List<string>();
         foreach (var name in DispatchRegistry.MetHumanNpcs())

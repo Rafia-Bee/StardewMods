@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
-using MoreQuestsFramework.Dispatch;
 using StardewValley;
 using StardewValley.GameData.Characters;
 using StardewValley.Locations;
 
-namespace Architect.Services;
+namespace MoreQuests.Quests;
 
 // Picks NPCs who can post a redecoration quest: a met, board-eligible villager who has a
 // real home the player can actually walk into and decorate.
@@ -85,10 +84,12 @@ internal static class GiverHomeResolver
         return false;
     }
 
+    // Met adult human villagers (the same gift-receiver filter the other MoreQuests
+    // social/gift quests use) who also have a real home the player can walk into.
     public static List<string> EligibleGivers()
     {
         var result = new List<string>();
-        foreach (var name in DispatchRegistry.MetHumanNpcs())
+        foreach (var name in Generators.MetAdultHumanGiftReceivers())
         {
             if (TryResolveHome(name, out _))
                 result.Add(name);

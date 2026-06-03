@@ -171,6 +171,18 @@
     "quest.social.george.step.reportEvelyn": "Let Evelyn know how George is doing.",
     "quest.social.george.targetMessage": "Thank you for looking in on him. He keeps saying he's fine but I know he misses his friends.",
 
+    "quest.redecorate.title": "{{npc}} wants to redecorate",
+    "quest.redecorate.description": "{{npc}} here. My place is feeling a little tired and I'd love a fresh look. I've set aside {{budget}}g for it. Could you pick out some furniture and set it up for me? Whatever you don't spend, I'll take back.",
+    "quest.redecorate.objective.summary": "Redecorate {{npc}}'s home",
+    "quest.redecorate.objective.askOpinion": "Ask {{npc}} what they think",
+    "quest.redecorate.targetMessage": "It looks wonderful. Thank you so much.",
+    "quest.redecorate.objective.lamp": "Lamps {{progress}}/{{count}}",
+    "quest.redecorate.objective.rug": "Rugs {{progress}}/{{count}}",
+    "quest.redecorate.objective.chair": "Chairs {{progress}}/{{count}}",
+    "quest.redecorate.objective.table": "Tables {{progress}}/{{count}}",
+    "quest.redecorate.objective.budget": "Budget remaining: {{amount}}g",
+    "quest.redecorate.objective.budget.over": "Over budget by {{amount}}g",
+
     "quest.animal.hay.title": "Hay supply run",
     "quest.animal.hay.description": "My hay supply is running low and I'm starting to get worried. Could you bring me some more? {{qty}} should be more than enough.",
     "quest.animal.hay.objective": "Bring hay to Marnie.",

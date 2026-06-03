@@ -19,6 +19,7 @@ A SMAPI content mod for Stardew Valley that adds a big batch of new daily-board,
 - **[Catch of the Day](https://www.nexusmods.com/stardewvalley/mods/43668)**, pairs nicely with fishing quests since it lets you track time/season/weather-specific fish.
 - **[Love of Cooking](https://www.nexusmods.com/stardewvalley/mods/6830)** or **[CookingSkill Redux (YACS)](https://www.nexusmods.com/stardewvalley/mods/22681)**, either one lets the cooking quests scale their ingredient counts off your cooking level. Without one of these the quests still work, they just fall back to a flat baseline.
 - **[Archaeology Skill](https://www.nexusmods.com/stardewvalley/mods/22199)**, makes the Archaeology Dig quest scale with your archaeology level and pay out in Hardwood Displays. Without it the quest still works (scales off Mining instead) and pays in geodes / troves.
+- **[Build Placement Unlocker](https://www.nexusmods.com/stardewvalley/mods/47064)** (`PureWinter.BuildPlacementUnlocker`), needed for the Redecorate a Home quest. It's the mod that lets you place furniture inside a villager's house at all, so the redecorate job only shows up on the board when it's installed. Everything else in More Quests works without it.
 
 ## Configuration
 
@@ -161,6 +162,7 @@ Quests are grouped by category below and listed alphabetically within each group
 | Elliott's Poem Inspiration | Daily board | Elliott | Bring Elliott one flower or gem | Friendship (big bump) | Cooldown Long, needs Elliott met |
 | Emily's Housewarming Challenge | Mail, once at 5 hearts with Emily | Emily | Decorate the farmhouse: place a rug, a light source, a wall decoration, and more furniture (only pieces placed while the quest is active count), then talk to Emily | A random dresser from Robin + Friendship with Emily | One time, 14-day deadline, count set in config |
 | Gift Delivery | Daily board | Any met villager | Drop off a loved or liked gift to one of the giver's friends | Gold + Friendship with both NPCs | Cooldown Long |
+| Redecorate a Home | Daily board | Any met adult villager with a home you can walk into | They hand you a budget up front. Buy furniture (lamps, rugs, chairs, tables) and place it inside their home, then go ask them what they think to finish. Whatever you don't spend goes back to them, so you only ever pay any overspend out of pocket | A handful of the giver's favorite gifts (loved first, then liked) | Cooldown 14 days. **Only shows up if you have [Build Placement Unlocker](https://www.nexusmods.com/stardewvalley/mods/47064) installed**, since that's what lets you place furniture inside someone else's house at all |
 
 ### Not planning to add
 
@@ -182,6 +184,7 @@ A few quests use special `Quest` subclasses:
 - **`AnySlimeQuest`**, backs Basic Slime Clearing. Counts any slime kill, not just one species.
 - **`CollectAndReportQuest`**, backs Beach Cleanup. You gather the items in the world, then talk to the giver to hand the stack in.
 - **`PurchaseFromShopQuest`**, backs Marnie's Cow Offer when she's asking for a Milk Pail. The pail is a tool so it can't be gifted to her like a regular delivery item, the quest just clears when you buy one from her shop. If you already own a Milk Pail, vanilla's shop won't list a second one, so sell or scrap the one you have first and the entry comes back.
+- **`RedecorateQuest`**, backs Redecorate a Home. It hands you the budget on accept, watches what furniture you place inside the giver's home, ticks the matching objectives, and draws the budget down by each piece's price. Once everything's placed the objective flips to "ask the giver what they think"; talking to them is what completes the quest, refunds the leftover budget, and pays the reward (cancelling claws the leftover back instead).
 
 Multi-step quests run on the framework's `AdventureQuest`: Check on George (gift, chat, report), the festival mail quests (Submarine Fuel, Wizard's Ritual, Holiday Cookies), Check on Friends, the Gus festival feasts, Skull Cavern Deep Dive, Mines Deep Dive, Pierre's Stock-Up, the Weekly Specials, the Grand Feast (Special Order), Dinner Party, Clear Debris, Plant Trees, Spring Cleaning, and several others. All other quests use the framework's `MoreQuestsItemDeliveryQuest`, `MoreQuestsFishingQuest`, or `MoreQuestsShipQuest`, built by the framework's `QuestFactory`.
 
