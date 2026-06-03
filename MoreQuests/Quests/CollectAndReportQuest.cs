@@ -56,17 +56,25 @@ public sealed class CollectAndReportQuest : Quest, IRewardedQuest
 
     /// Suppress gifting when the player right-clicks the report NPC while holding the
     /// requested item. Without this, vanilla consumes one as a gift even though we only
-    /// need them in inventory.
+    /// need them in inventory. If they don't have enough yet we still suppress the gift
+    /// and tell them how many more to bring, so the quest item never gets eaten.
     public override bool OnItemOfferedToNpc(NPC npc, Item item, bool probe = false)
     {
         if (!IsReportableTo(npc))
             return false;
         if (item == null || !ItemIdMatches(item))
             return false;
-        if (CountInInventory() < requiredCount.Value)
-            return false;
         if (probe)
             return true;
+        int have = CountInInventory();
+        if (have < requiredCount.Value)
+        {
+            string line = ModEntry.I18n.Get("quest.collectAndReport.notEnough",
+                new { qty = requiredCount.Value, item = item.DisplayName, have });
+            npc.CurrentDialogue.Push(new Dialogue(npc, null, line));
+            Game1.drawDialogue(npc);
+            return true;
+        }
         Complete(npc);
         return true;
     }

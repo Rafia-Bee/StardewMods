@@ -177,9 +177,10 @@
     "quest.animal.hay.targetMessage": "Thanks! The cows were getting antsy.",
 
     "quest.seasonal.beach.title": "{{npc}}'s beach cleanup",
-    "quest.seasonal.beach.description": "I almost hurt myself on a {{item}} the other day. Can someone pick them up from the beach? You can keep them, just let me know once you've gathered enough. - {{npc}}",
-    "quest.seasonal.beach.objective": "Collect {{item}} and talk to {{npc}}.",
+    "quest.seasonal.beach.description": "I almost hurt myself on a {{item}} the other day. Can someone pick up {{qty}} of them from the beach? You can keep them, just let me know once you've got them all. - {{npc}}",
+    "quest.seasonal.beach.objective": "Collect {{qty}} {{item}} and talk to {{npc}}.",
     "quest.seasonal.beach.targetMessage": "Thanks for clearing those out. Fun to look at but not so fun to step on!",
+    "quest.collectAndReport.notEnough": "That's a good start, but I was hoping for {{qty}} {{item}}. You've got {{have}} so far. Come back when you have the rest!",
 
     "quest.seasonal.floraltea.title": "Floral tea for {{npc}}",
     "quest.seasonal.floraltea.description": "I'd love to brew some floral tea this week. Could you bring me {{qty}} {{item}}?",
