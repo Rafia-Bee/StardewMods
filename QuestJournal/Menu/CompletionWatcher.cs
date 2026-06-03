@@ -106,14 +106,12 @@ public sealed class CompletionWatcher
             }
         }
 
-        // Detect quests that vanished from the log between ticks. Three
-        // disappearance shapes:
-        //   1. LastSeenCompleted=true: vanilla removed a no-reward quest
-        //      in the same tick it set completed.Value. Record as Completed.
-        //   2. Ignored: the journal's Cancel button told us to skip.
-        //   3. Anything else: vanilla auto-removed it (deadline expired,
-        //      story event yanked it, etc.). Record as Failed so the
-        //      player can still see what happened in the Completed tab.
+        // Detect quests that vanished from the log between ticks. A friendship-only
+        // quest leaves the log inside the same questComplete() call that sets
+        // completed.Value, so we may never see it in-log as completed; the removed
+        // Quest object still reports completed.Value=true. Genuine failures (deadline
+        // expired, story event yanked it) never complete, so they stay Failed.
+        // Ignored quests are skipped (the journal's Cancel button told us so).
         List<Quest>? toRemove = null;
         foreach (var kv in _tracked)
         {
@@ -121,7 +119,8 @@ public sealed class CompletionWatcher
             (toRemove ??= new List<Quest>()).Add(kv.Key);
             if (_recorded.Contains(kv.Key)) continue;
             if (_ignored.Contains(kv.Key)) continue;
-            string status = kv.Value.LastSeenCompleted ? "Completed" : "Failed";
+            bool wasCompleted = kv.Value.LastSeenCompleted || kv.Key.completed.Value;
+            string status = wasCompleted ? "Completed" : "Failed";
             Record(kv.Value, status);
             _recorded.Add(kv.Key);
         }
