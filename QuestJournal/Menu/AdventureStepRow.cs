@@ -13,9 +13,14 @@ public sealed class AdventureStepRow
     public bool Active { get; }
     public string Kind { get; }
 
+    // Plain rows are already-formatted objective lines (e.g. "Lights 0/2",
+    // "Budget remaining: 4000g"). They render the description verbatim, no checkbox
+    // marker, no index, no auto progress suffix.
+    public bool Plain { get; }
+
     public string IndexLabel => $"{Index + 1}.";
     public string DoneMarker => Done ? "[x]" : (Active ? "[>]" : "[ ]");
-    public bool ShowProgress => Count > 1 && !Done;
+    public bool ShowProgress => !Plain && Count > 1 && !Done;
     public string ProgressLabel => ShowProgress ? $"{Progress}/{Count}" : string.Empty;
     public string DisplayText => string.IsNullOrEmpty(Description) ? Kind : Description;
 
@@ -29,6 +34,8 @@ public sealed class AdventureStepRow
     {
         get
         {
+            if (Plain)
+                return DisplayText;
             var sb = new System.Text.StringBuilder(64);
             sb.Append(DoneMarker).Append(' ').Append(IndexLabel).Append(' ').Append(DisplayText);
             if (ShowProgress) sb.Append("  ").Append(ProgressLabel);
@@ -43,7 +50,8 @@ public sealed class AdventureStepRow
         int count,
         bool done,
         bool active,
-        string kind)
+        string kind,
+        bool plain = false)
     {
         Index = index;
         Description = description ?? string.Empty;
@@ -52,5 +60,6 @@ public sealed class AdventureStepRow
         Done = done;
         Active = active;
         Kind = kind ?? string.Empty;
+        Plain = plain;
     }
 }

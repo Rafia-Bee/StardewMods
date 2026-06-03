@@ -18,8 +18,18 @@ internal static class AdventureQuestPatches
 
     public static void GetObjectiveDescriptions_Postfix(Quest __instance, ref List<string> __result)
     {
-        if (__instance is not AdventureQuest adventure)
+        if (__instance is AdventureQuest adventure)
+        {
+            __result = adventure.BuildActiveObjectiveDescriptions();
             return;
-        __result = adventure.BuildActiveObjectiveDescriptions();
+        }
+        // Any other quest type (including third-party subclasses) can opt into
+        // multi-line objectives by implementing IObjectiveLineSource.
+        if (__instance is IObjectiveLineSource src)
+        {
+            var lines = src.GetObjectiveLines();
+            if (lines != null && lines.Count > 0)
+                __result = new List<string>(lines);
+        }
     }
 }

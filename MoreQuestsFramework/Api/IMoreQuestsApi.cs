@@ -83,6 +83,13 @@ public interface IMoreQuestsApi
     // the quest is vanilla / not an AdventureQuest, or every step is done.
     int? GetActiveStepIndex(Quest quest);
 
+    // The objective lines for a quest that implements IObjectiveLineSource (a quest
+    // showing more than one objective, e.g. a multi-requirement quest with a running
+    // budget line). Null for any other quest. Lets a journal UI render the lines
+    // without referencing the concrete quest type. Already-built AdventureQuests are
+    // covered by GetAdventureSteps; this is the seam for everything else.
+    IReadOnlyList<string>? GetObjectiveLines(Quest quest);
+
     // Best-effort NPC name for the quest's giver. Reads AdventureQuest.giverNpc
     // for framework Adventure quests; falls back to vanilla subclass target fields
     // (ItemDeliveryQuest.target, SlayMonsterQuest.target). Returns null when no

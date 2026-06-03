@@ -1652,13 +1652,39 @@ public sealed class JournalContext : INotifyPropertyChanged
         catch { return null; }
     }
 
+    // Catches the member-missing case on older MQF builds that predate GetObjectiveLines.
+    private IReadOnlyList<string>? SafeGetObjectiveLines(Quest q)
+    {
+        try { return _mqfApi!.GetObjectiveLines(q); }
+        catch { return null; }
+    }
+
     private List<AdventureStepRow> BuildAdventureSteps(Quest q)
     {
         var rows = new List<AdventureStepRow>();
         if (_mqfApi == null) return rows;
 
         var steps = SafeGetAdventureSteps(q);
-        if (steps == null || steps.Count == 0) return rows;
+        if (steps == null || steps.Count == 0)
+        {
+            // Not an AdventureQuest, but it may still expose pre-formatted objective
+            // lines (e.g. a budget-tracking redecoration quest). Render them verbatim.
+            var lines = SafeGetObjectiveLines(q);
+            if (lines != null)
+            {
+                for (int i = 0; i < lines.Count; i++)
+                    rows.Add(new AdventureStepRow(
+                        index: i,
+                        description: lines[i],
+                        progress: 0,
+                        count: 0,
+                        done: false,
+                        active: false,
+                        kind: string.Empty,
+                        plain: true));
+            }
+            return rows;
+        }
 
         // GetActiveStepIndex flags the row to highlight. Null means every
         // step is done; we'll fall back to whichever step still reports

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Architect</AssemblyName>
+    <RootNamespace>Architect</RootNamespace>
+    <Version>1.0.0</Version>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <TargetFramework>net6.0</TargetFramework>
+    <ModFolderName>Architect</ModFolderName>
+    <EnableModZip>true</EnableModZip>
+    <IgnoreModFilePaths>config.json</IgnoreModFilePaths>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="docs\**" />
+    <None Remove="docs\**" />
+    <EmbeddedResource Remove="docs\**" />
+    <Compile Remove="hiddenDocs\**" />
+    <None Remove="hiddenDocs\**" />
+    <EmbeddedResource Remove="hiddenDocs\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Compile-time reference for shared engine types (IQuestDefinition, QuestPosting,
+         QuestContext, RewardSpec, etc.). Private=false stops MSBuild from copying the
+         framework DLL next to ours; SMAPI loads the framework as its own mod via the
+         Dependencies entry in manifest.json and finds the shared types there at runtime. -->
+    <ProjectReference Include="..\MoreQuestsFramework\MoreQuestsFramework.csproj">
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

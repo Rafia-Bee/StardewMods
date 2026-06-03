@@ -16,6 +16,12 @@ public interface IMoreQuestsApi
 
     int? GetActiveStepIndex(Quest quest);
 
+    // Multi-line objectives for quests that aren't AdventureQuests but still want to
+    // show more than one objective line (e.g. a budget-tracking redecoration quest).
+    // Null for everything else. Name must match MQF's IMoreQuestsApi exactly; the
+    // proxy is name-based.
+    IReadOnlyList<string>? GetObjectiveLines(Quest quest);
+
     string? GetDefinitionId(Quest quest);
 
     // Best-effort NPC name for the quest's giver. Reads AdventureQuest.giverNpc

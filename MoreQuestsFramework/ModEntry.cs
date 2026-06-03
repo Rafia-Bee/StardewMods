@@ -187,6 +187,15 @@ public sealed class ModEntry : Mod
             + "morning after sleeping. Usage: mq_trigger <DefinitionId>. Example: "
             + "mq_trigger Animal.MarnieCowOffer.",
             (_, args) => TriggerByDefinitionId(args));
+
+        helper.ConsoleCommands.Add(
+            "mq_givers",
+            "Lists the NPCs currently eligible to be the giver for a quest, if its definition "
+            + "exposes that (implements IEligibleGiverSource). Reads live game state. Usage: "
+            + "mq_givers <DefinitionId> to print one quest, or mq_givers all to write a "
+            + "givers-report.json for every registered quest into the More Quests Framework "
+            + "mod folder. Examples: mq_givers RafiaBee.Architect.Redecorate, mq_givers all.",
+            (_, args) => ListGiversByDefinitionId(args));
         // Defer GMCM + content-pack loading + RegistrationClosed until after every consumer
         // mod's GameLaunched has run.
         helper.Events.GameLoop.UpdateTicking += OnFirstTick;
@@ -939,6 +948,139 @@ public sealed class ModEntry : Mod
         }
 
         Monitor.Log($"mq_trigger: posted '{id}' ({posting.Kind}).", LogLevel.Info);
+    }
+
+    private void ListGiversByDefinitionId(string[] args)
+    {
+        if (args.Length < 1)
+        {
+            Monitor.Log("Usage: mq_givers <DefinitionId> | all. Example: mq_givers RafiaBee.Architect.Redecorate.", LogLevel.Info);
+            return;
+        }
+        if (!Context.IsWorldReady)
+        {
+            Monitor.Log("mq_givers ignored: load a save first.", LogLevel.Warn);
+            return;
+        }
+
+        if (string.Equals(args[0], "all", System.StringComparison.OrdinalIgnoreCase))
+        {
+            WriteGiversReport();
+            return;
+        }
+
+        string id = args[0];
+        if (!_registry.TryGet(id, out var def) || def == null)
+        {
+            Monitor.Log($"mq_givers: no quest definition registered with id '{id}'. Run with a valid id from `RegisteredQuestIds()`.", LogLevel.Warn);
+            return;
+        }
+        if (def is not IEligibleGiverSource source)
+        {
+            Monitor.Log($"mq_givers: '{id}' doesn't expose an eligible-giver list (its definition doesn't implement IEligibleGiverSource).", LogLevel.Info);
+            return;
+        }
+
+        var givers = source.GetEligibleGivers();
+        if (givers == null || givers.Count == 0)
+        {
+            Monitor.Log($"mq_givers: '{id}' has no eligible givers right now.", LogLevel.Info);
+            return;
+        }
+
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"mq_givers: '{id}' has {givers.Count} eligible giver(s):");
+        foreach (string name in givers)
+        {
+            string display = NpcDisplay.Resolve(name);
+            sb.Append(string.Equals(display, name, System.StringComparison.Ordinal)
+                ? $"\n  - {name}"
+                : $"\n  - {display} ({name})");
+        }
+        Monitor.Log(sb.ToString(), LogLevel.Info);
+    }
+
+    private void WriteGiversReport()
+    {
+        var quests = new List<GiversReportEntry>();
+        int exposing = 0;
+
+        foreach (string id in _registry.RegisteredIds())
+        {
+            if (!_registry.TryGet(id, out var def) || def == null)
+                continue;
+
+            var entry = new GiversReportEntry
+            {
+                Id = def.Id,
+                Owner = def.OwnerUniqueId,
+                Category = def.Category.ToString(),
+                Kind = def.Kind.ToString(),
+                ExposesGivers = def is IEligibleGiverSource,
+            };
+
+            if (def is IEligibleGiverSource source)
+            {
+                exposing++;
+                var rows = new List<GiverRow>();
+                var givers = source.GetEligibleGivers();
+                if (givers != null)
+                {
+                    foreach (string name in givers)
+                        rows.Add(new GiverRow { Name = name, DisplayName = NpcDisplay.Resolve(name) });
+                }
+                entry.EligibleGiverCount = rows.Count;
+                entry.EligibleGivers = rows;
+            }
+
+            quests.Add(entry);
+        }
+
+        var report = new GiversReport
+        {
+            Season = Game1.currentSeason,
+            DayOfMonth = Game1.dayOfMonth,
+            Year = Game1.year,
+            TotalQuests = quests.Count,
+            QuestsExposingGivers = exposing,
+            Quests = quests,
+        };
+
+        string saveName = StardewModdingAPI.Constants.SaveFolderName ?? "unknown";
+        string fileName = $"givers_report_{saveName}.json";
+        Helper.Data.WriteJsonFile(fileName, report);
+        Monitor.Log(
+            $"mq_givers all: wrote {quests.Count} quest(s) ({exposing} expose a giver list) to '{fileName}' "
+            + "in the More Quests Framework mod folder.",
+            LogLevel.Info);
+    }
+
+    private sealed class GiversReport
+    {
+        public string Season { get; set; } = string.Empty;
+        public int DayOfMonth { get; set; }
+        public int Year { get; set; }
+        public int TotalQuests { get; set; }
+        public int QuestsExposingGivers { get; set; }
+        public List<GiversReportEntry> Quests { get; set; } = new();
+    }
+
+    private sealed class GiversReportEntry
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Owner { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string Kind { get; set; } = string.Empty;
+        public bool ExposesGivers { get; set; }
+        // Null when the quest doesn't expose givers; empty when it does but nobody qualifies now.
+        public int? EligibleGiverCount { get; set; }
+        public List<GiverRow>? EligibleGivers { get; set; }
+    }
+
+    private sealed class GiverRow
+    {
+        public string Name { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
     }
 
     private void RefreshOffers()

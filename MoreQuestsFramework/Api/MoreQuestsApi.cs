@@ -223,6 +223,11 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         return idx < 0 ? null : idx;
     }
 
+    public IReadOnlyList<string>? GetObjectiveLines(Quest quest)
+    {
+        return quest is IObjectiveLineSource s ? s.GetObjectiveLines() : null;
+    }
+
     public string? GetGiverNpc(Quest quest)
     {
         if (quest == null)
