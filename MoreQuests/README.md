@@ -35,20 +35,42 @@ Cooldowns are tunable in the framework config. The defaults are: **Short = 2 day
 
 Quests are grouped by category below and listed alphabetically within each group.
 
+### How gold rewards work
+
+The reward column spells out the gold each quest pays. There are two kinds:
+
+**Flat tier rewards.** Some quests just hand you a fixed amount. The amount comes from a difficulty tier set in the framework config, so you can raise or lower all of them at once. The defaults are:
+
+| Tier | Default | Config setting |
+| --- | --- | --- |
+| Beginner | 100g | `GoldBeginnerBase` |
+| Basic | 300g | `GoldBasicBase` |
+| Intermediate | 500g | `GoldIntermediateBase` |
+| Advanced | 1000g | `GoldAdvancedBase` |
+| Expert | 3000g | `GoldExpertBase` |
+
+**Sell-price rewards.** Other quests pay based on what you turn in: the item's sell price, times how many you bring, times one of three multipliers. The multipliers are also in the framework config:
+
+- **0.8** (below sell, `RewardMultiplierBelowSell`), pays a bit under what you'd get selling them yourself.
+- **1.05** (above sell, `RewardMultiplierAboveSell`), pays a bit over.
+- **1.15** (fish premium, `RewardMultiplierFishPremium`), the best rate, used for the big fish hauls.
+
+A quest's reward line below names the tier (for flat rewards) or the formula (for sell-price rewards) so you know exactly what you're getting.
+
 ### Animal
 
 | Quest | When | Quest Giver | Objective | Reward | Notes |
 | --- | --- | --- | --- | --- | --- |
 | Alex's Protein Shakes | Every 14 days (mail) | Alex | Deliver eggs scaled to your chicken count | Friendship + Energy Tonic, Muscle Remedy, or Life Elixir | Needs to have met Alex and have at least one chicken |
-| Gunther's Dinosaur Study | First Dinosaur Egg held (mail) | Gunther | Deliver one Dinosaur Egg | Gold + a Dinosaur Egg back, bumped one quality tier up | One-time |
+| Gunther's Dinosaur Study | First Dinosaur Egg held (mail) | Gunther | Deliver one Dinosaur Egg | 1000g (flat, Advanced tier) + a Dinosaur Egg back, bumped one quality tier up | One-time |
 | Hay Supply Run | Mail | Marnie | Deliver hay scaled to your animal count | Animal-shop discount window (when the discount is on in config) | Cooldown 28 days, needs at least 4 animals |
 | Krobus's Void Note | First Void Egg held (mail) | Krobus | Deliver one Void Egg to Krobus | Friendship + Book of the Void | One-time, needs Krobus around at 1+ hearts |
 | Leah's Farm Painting | Every 21 days (mail) | Leah | Visit Leah's house with an animal following you | A random 2x2 painting in the frame style you pick in GMCM, mailed the next morning + Friendship. No repeats: you get a different one each time until you've collected them all. Other mods can add their own paintings (see [Adding your own paintings](#adding-your-own-paintings)). | Needs Livestock Follows You, single-player, and 2+ hearts with Leah |
 | Marnie's Chicken Offer | Day after building a Coop (mail) | Marnie | Bring Mixed Seeds | A free White Chicken at Marnie's shop (or 800g if you don't visit in 14 days) + Friendship. With Livestock Bazaar, picking any chicken variant from her shop counts. | One-time |
 | Marnie's Cow Offer | Day after building a Barn (mail) | Marnie | With Livestock Follows You, bring her a Grazing Bell. Without it, buy a Milk Pail from her shop | A free White Cow at Marnie's shop (or 1500g if you don't visit in 14 days) + Friendship. With Livestock Bazaar, picking any cow variant counts. | One-time |
-| Marnie's Egg Request | After your first egg is laid (mail) | Marnie | Ship 10 of any edible egg (vanilla and modded) through the bin | Gold + Mayonnaise Machine recipe + Friendship | One-time |
+| Marnie's Egg Request | After your first egg is laid (mail) | Marnie | Ship 10 of any edible egg (vanilla and modded) through the bin | 300g (flat, Basic tier) + Mayonnaise Machine recipe + Friendship | One-time |
 | Marnie's Livestock Show | After your Deluxe Barn is built with 2+ animals (mail) | Marnie | Walk into Town with 2+ animals following you | Big friendship bump with Marnie | One-time, needs Livestock Follows You, single-player, and non-winter |
-| Marnie's Milk Request | After your first milk is produced (mail) | Marnie | Ship 10 of any milk (cow, goat, modded buffalo / llama / etc.) through the bin | Gold + Cheese Press recipe + Friendship | One-time |
+| Marnie's Milk Request | After your first milk is produced (mail) | Marnie | Ship 10 of any milk (cow, goat, modded buffalo / llama / etc.) through the bin | 300g (flat, Basic tier) + Cheese Press recipe + Friendship | One-time |
 | Robin's Silo Offer | 2 days after your first Coop or Barn, if you don't have a Silo (mail) | Robin | Bring one of: 100 Stone, 10 Clay, or 5 Copper Bars | Free Silo on Robin's carpenter menu (the build cost gets zeroed once) + Friendship | One-time |
 
 ### Cooking
@@ -56,25 +78,25 @@ Quests are grouped by category below and listed alphabetically within each group
 | Quest | When | Quest Giver | Objective | Reward | Notes |
 | --- | --- | --- | --- | --- | --- |
 | Craving a Meal | Daily board | Any met villager | Bring them a dish they love, like, or feel neutral about | Friendship + a random dish they'd love | Cooldown Short |
-| Dinner Party | Daily board | Any met villager | Deliver multiple loved, liked, or neutral dishes the host accepts | Gold (sell-price scaled) + Friendship | Cooldown Long |
-| Saloon Grand Feast | Special Orders board | Gus, Pika, Rosa, or Celestine | Ship the combined ingredients across several complex recipes | Big gold reward + friendship to everyone who'd love the chosen dishes + per-dish taste reaction | Cooldown Long, one-week window |
-| Weekly Special (Common) | Daily board | Gus, Pika, Rosa, or Celestine | Deliver in-season ingredients the chef picks from a visited-location pool | Gold + small friendship to everyone who'd love the matching dish + taste reaction | Cooldown Medium, needs Cooking 2 or Farming 3 |
-| Weekly Special (Complex) | Daily board | Gus, Pika, Rosa, or Celestine | Same as Common, but the pool spans all four seasons and asks for more | Bigger gold + medium friendship + stronger taste reaction | Cooldown Medium, needs Cooking 4 or Farming 5 |
+| Dinner Party | Daily board | Any met villager | Deliver multiple loved, liked, or neutral dishes the host accepts | Gold: the dishes' sell prices added up, times how many of each you bring, times 1.05 (above sell). At least 100g. + Friendship | Cooldown Long |
+| Saloon Grand Feast | Special Orders board | Gus, Pika, Rosa, or Celestine | Ship the combined ingredients across several complex recipes | 3000g (flat, Expert tier) + friendship to everyone who'd love the chosen dishes + per-dish taste reaction | Cooldown Long, one-week window |
+| Weekly Special (Common) | Daily board | Gus, Pika, Rosa, or Celestine | Deliver in-season ingredients the chef picks from a visited-location pool | 100g (flat, Beginner tier) + small friendship to everyone who'd love the matching dish + taste reaction | Cooldown Medium, needs Cooking 2 or Farming 3 |
+| Weekly Special (Complex) | Daily board | Gus, Pika, Rosa, or Celestine | Same as Common, but the pool spans all four seasons and asks for more | 500g (flat, Intermediate tier) + medium friendship + stronger taste reaction | Cooldown Medium, needs Cooking 4 or Farming 5 |
 
 ### Farming
 
 | Quest | When | Quest Giver | Objective | Reward | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Basic Crop Delivery | Daily board | Any met villager | Deliver X of an in-season crop (any quality) | Gold based on the crop's sell price | Cooldown Medium |
+| Basic Crop Delivery | Daily board | Any met villager | Deliver X of an in-season crop (any quality) | Gold: the crop's sell price, times how many you bring, times 0.8 (below sell) | Cooldown Medium |
 | Caroline's Tea Garden | Daily board | Caroline | Bring an off-season flower or forage she loves or likes (no herbs) | Friendship + 2x count Tea Leaves | Cooldown Long, needs Foraging 3 and 1 heart with Caroline |
-| Crop Cycle | Daily board | A farmer NPC (Pierre, Evelyn, plus modded farmers from SVE, RSV, East Scarp, Coal Point Farm, Ripley) | Sow X seeds of an in-season crop, water them, harvest them, then deliver the haul to the giver | Gold (below sell price) + 2x count Hyper Speed-Gro fertilizer | Cooldown Long, 28-day deadline, needs Farming 4. The crop pick respects how many days are left in the current season so you can't roll a crop that won't mature in time. Sprinklers, rain, and Junimo Huts all count toward the watering and harvesting steps. |
+| Crop Cycle | Daily board | A farmer NPC (Pierre, Evelyn, plus modded farmers from SVE, RSV, East Scarp, Coal Point Farm, Ripley) | Sow X seeds of an in-season crop, water them, harvest them, then deliver the haul to the giver | Gold: the crop's sell price (counted as at least 20g each), times the haul, times 0.8 (below sell) + 2x count Hyper Speed-Gro fertilizer | Cooldown Long, 28-day deadline, needs Farming 4. The crop pick respects how many days are left in the current season so you can't roll a crop that won't mature in time. Sprinklers, rain, and Junimo Huts all count toward the watering and harvesting steps. |
 | Dehydrator Request | Mail when you learn the Dehydrator recipe | Any met adult villager | Ship a Farming-scaled number of dried mushrooms or dried fruit | 2 hearts of friendship | One-time, no deadline |
 | Keg Request | Mail when you learn the Keg recipe | Any met adult villager | Ship a Farming-scaled number of wine, juice, mead, beer, or pale ale | 2 hearts of friendship | One-time, no deadline |
-| Massive Harvest Request | Daily board | Morris or MorrisTod (SVE) | Ship a Farming-scaled stack of one in-season crop | Gold (below sell price, but the stack is big) + a taste reaction from villagers who love that crop | Cooldown Long, needs Farming 7 |
+| Massive Harvest Request | Daily board | Morris or MorrisTod (SVE) | Ship a Farming-scaled stack of one in-season crop | Gold: the crop's sell price (counted as at least 30g each), times the big stack, times 0.8 (below sell) + a taste reaction from villagers who love that crop | Cooldown Long, needs Farming 7 |
 | Pierre's Stock-Up | Daily board | Pierre | Deliver bulk in-season crops (a few different kinds, qty scales with Farming) | Seed-shop discount on the matching seeds at Pierre's | Cooldown Long, needs Farming 4 |
-| Premium Crop Order | Daily board | Any met villager | Deliver X Iridium-quality in-season crops | Gold + rare or ancient seeds (count scales with the haul) | Cooldown Long, needs Farming 7 |
+| Premium Crop Order | Daily board | Any met villager | Deliver X Iridium-quality in-season crops | 1000g (flat, Advanced tier) + rare or ancient seeds (count scales with the haul) | Cooldown Long, needs Farming 7 |
 | Preserves Jar Request | Mail when you learn the Preserves Jar recipe | Any met adult villager | Ship a Farming-scaled number of jams or pickles (any kind) | 2 hearts of friendship | One-time, no deadline |
-| Quality Crop Delivery | Daily board | Any met villager | Deliver X Silver-or-better in-season crops | Gold (scales with sell price) + Friendship | Cooldown Short, needs Farming 2 |
+| Quality Crop Delivery | Daily board | Any met villager | Deliver X Silver-or-better in-season crops | Gold: the crop's sell price, times how many you bring, times 1.05 (above sell), kept within 300g to 500g (Basic to Intermediate tier) + Friendship | Cooldown Short, needs Farming 2 |
 
 ### Festival
 
@@ -83,12 +105,12 @@ Quests are grouped by category below and listed alphabetically within each group
 | Evelyn's Holiday Cookies | Winter 21 mail | Evelyn | Deliver Flour, Sugar, and any edible egg | Big friendship bump + 6 cookies | One-time per year |
 | Festival Decor: East Scarp Spirit's Eve | Fall 24 | Rosa | Ship purple-dye items, slime, and stone | Friendship with the ES festival NPCs | One-time per year, 3-day deadline, needs ES / Eli and Dylan / Lurking in the Dark |
 | Egg Hunt Sabotage | Talk to Vincent Spring 10 to 12 | Vincent | Win the Egg Festival hunt for the kids | Big friendship bump with every kid you've met + a thank-you letter the next morning + a fancy egg | One-time per year, fails on Spring 14 if you don't win |
-| Festival Decor: Egg Festival | Spring 10 | Lewis | Ship hay bales | Gold + a random Pierre Egg Festival stall item | One-time per year, 3-day deadline |
+| Festival Decor: Egg Festival | Spring 10 | Lewis | Ship hay bales | 100g (flat, Beginner tier) + a random Pierre Egg Festival stall item | One-time per year, 3-day deadline |
 | Festival Decor: Fair | Fall 12 | Lewis | Ship Wood, any sign (Wood / Stone / Dark), and fall flowers (scales with Farming and Foraging) | A bump to your grange score OR extra Fair star tokens (pick which in GMCM) | One-time per year, 3-day deadline |
-| Festival Decor: Luau | Summer 6 | Lewis | Ship Fiber, Hardwood, and Wood Lamp-posts (qty scales with Foraging) | Gold + a random Pierre Luau stall item | One-time per year, 4-day deadline |
-| Festival Decor: Moonlight Jellies | Summer 21 | Lewis | Ship Torches and Wood (qty scales with Foraging) | Gold + a random Pierre Moonlight Jellies stall item | One-time per year, 6-day deadline |
+| Festival Decor: Luau | Summer 6 | Lewis | Ship Fiber, Hardwood, and Wood Lamp-posts (qty scales with Foraging) | 500g (flat, Intermediate tier) + a random Pierre Luau stall item | One-time per year, 4-day deadline |
+| Festival Decor: Moonlight Jellies | Summer 21 | Lewis | Ship Torches and Wood (qty scales with Foraging) | 300g (flat, Basic tier) + a random Pierre Moonlight Jellies stall item | One-time per year, 6-day deadline |
 | Festival Decor: Ridgeside Gathering | Fall 15 | Lenny | Ship Tub o' Flowers, Wood, and any tables (qty scales with Farming and Foraging) | Friendship with the RSV festival NPCs + Tub o' Flowers recipe on accept | One-time per year, needs RSV |
-| Festival Decor: Spirit's Eve | Fall 22 | Wizard | Ship Pumpkin Seeds, Cloth, and Torches (qty scales with Farming) | Gold + a random rarecrow | One-time per year, 4-day deadline |
+| Festival Decor: Spirit's Eve | Fall 22 | Wizard | Ship Pumpkin Seeds, Cloth, and Torches (qty scales with Farming) | 500g (flat, Intermediate tier) + a random rarecrow | One-time per year, 4-day deadline |
 | Gus's Feast: Egg Festival | Spring 6 mail | Gus | Deliver one spring crop and one spring forage | A sample of a spring dish made from your ingredients | One-time per year |
 | Gus's Feast: Fair | Fall 8 | Gus | Deliver a few different fall ingredients | A sample dish + bonus points on the Fair grange judging | One-time per year |
 | Gus's Feast: Luau | Summer 8 | Gus | Deliver a few first-year-friendly summer or spring ingredients | A sample dish + a nudge up the Luau governor reaction tier | One-time per year |
@@ -109,14 +131,14 @@ Quests are grouped by category below and listed alphabetically within each group
 | --- | --- | --- | --- | --- | --- |
 | Fish Smoker Request | Mail when you learn the Fish Smoker recipe | Any met adult villager | Ship a Fishing-scaled number of smoked fish (any kind) | 2 hearts of friendship | One-time, no deadline |
 | Know Your Waters | Daily board, first few days of a season | A fisherman NPC (Willy + modded) | Catch one of every kind of fish that lives at one visited spot this season, then report back in person | Pick from three answers when you report back: proud gives 2 Fish Smokers, modest gives 1 Fish Smoker + 1 Bait And Bobber book, owning up to a hard time gives 3 Bait And Bobber books | Cooldown 30 days, due by the end of the season |
-| Legendary Fish Quest | Daily board | Willy | Catch a legendary or boss fish that's in season (vanilla + any modded fish flagged `IsBossFish`, like RSV's Deep Ridge Angler, Waterfall Snakehead, Sockeye Salmon) | Big gold reward + 5 Challenge Bait | Cooldown Long, needs Fishing 6. Skips fish you've already caught and won't repeat back-to-back |
-| Location Overpopulation | Daily board | Ecology-minded NPC (Demetrius, Maddie, Mr. Aguar, Dylan, etc.) | Catch a specific fish at a specific spot (only spots you've visited) | Gold + 2x catch count in Challenge Bait | Cooldown Medium, needs Fishing 2 |
-| Medium Fishing Haul | Daily board | Pierre or a Joja rep (Morris, MorrisTod) | Catch the Medium Haul amount of one specific in-season fish | Gold (below sell) + an ecology pushback from Demetrius, Maddie, Mr. Aguar, Dylan, etc. | Cooldown Medium, needs Fishing 5 |
-| Quality Fish Delivery | Daily board | A fisherman NPC (Willy + modded) | Catch and deliver X Gold-quality fish of a specific in-season type | Gold (below sell) + Friendship | Cooldown Short, needs Fishing 4 |
-| Rainy Day Catch | Mail when tomorrow is forecast rain | A fisherman NPC (Willy, Blair, Carmen, etc.) | Catch fish that only spawn in rain | Gold + a rare tackle | Cooldown Short, needs Fishing 3 |
-| Seafood Night | Daily board | Saloon chef (Gus, Pika, Rosa, Celestine) | Catch the Large Haul amount of one edible non-poisonous in-season fish (Pufferfish excluded) | Big gold (fish-premium scaled) + a multi-day ecology fallout chain with Linus included | Cooldown Long, needs Fishing 8 |
-| Simple Fishing Request | Daily board | Any adult villager with a fish in their loved or liked list | Catch a few of one common fish at a spot you've visited | Gold based on sell price | Cooldown Short |
-| Size Overpopulation | Daily board | Ecology-minded NPC | Catch X fish at or above a size threshold (Small, Medium, or Large bucket) | Gold + 3x count Wild Bait | Cooldown Medium, needs Fishing 3 |
+| Legendary Fish Quest | Daily board | Willy | Catch a legendary or boss fish that's in season (vanilla + any modded fish flagged `IsBossFish`, like RSV's Deep Ridge Angler, Waterfall Snakehead, Sockeye Salmon) | 3000g (flat, Expert tier) + 5 Challenge Bait | Cooldown Long, needs Fishing 6. Skips fish you've already caught and won't repeat back-to-back |
+| Location Overpopulation | Daily board | Ecology-minded NPC (Demetrius, Maddie, Mr. Aguar, Dylan, etc.) | Catch a specific fish at a specific spot (only spots you've visited) | 500g (flat, Intermediate tier) + 2x catch count in Challenge Bait | Cooldown Medium, needs Fishing 2 |
+| Medium Fishing Haul | Daily board | Pierre or a Joja rep (Morris, MorrisTod) | Catch the Medium Haul amount of one specific in-season fish | Gold: the fish's sell price, times the haul, times 0.8 (below sell) + an ecology pushback from Demetrius, Maddie, Mr. Aguar, Dylan, etc. | Cooldown Medium, needs Fishing 5 |
+| Quality Fish Delivery | Daily board | A fisherman NPC (Willy + modded) | Catch and deliver X Gold-quality fish of a specific in-season type | Gold: the fish's sell price, times how many you deliver, times 0.8 (below sell) + Friendship | Cooldown Short, needs Fishing 4 |
+| Rainy Day Catch | Mail when tomorrow is forecast rain | A fisherman NPC (Willy, Blair, Carmen, etc.) | Catch fish that only spawn in rain | Gold: the fish's sell price, times how many you catch, times 0.8 (below sell) + a rare tackle | Cooldown Short, needs Fishing 3 |
+| Seafood Night | Daily board | Saloon chef (Gus, Pika, Rosa, Celestine) | Catch the Large Haul amount of one edible non-poisonous in-season fish (Pufferfish excluded) | Gold: the fish's sell price, times the large haul, times 1.15 (fish premium, the best rate) + a multi-day ecology fallout chain with Linus included | Cooldown Long, needs Fishing 8 |
+| Simple Fishing Request | Daily board | Any adult villager with a fish in their loved or liked list | Catch a few of one common fish at a spot you've visited | Gold: the fish's sell price, times how many you catch, times 1.05 (above sell) | Cooldown Short |
+| Size Overpopulation | Daily board | Ecology-minded NPC | Catch X fish at or above a size threshold (Small, Medium, or Large bucket) | 500g (flat, Intermediate tier) + 3x count Wild Bait | Cooldown Medium, needs Fishing 3 |
 
 ### Foraging
 
@@ -126,20 +148,20 @@ Quests are grouped by category below and listed alphabetically within each group
 | Feed Wild Critters | Daily board | Any child villager (Jas, Vincent, Leo, etc.) | Drop 3 to 6 of one current-season forage in Cindersap Forest. The items vanish as you drop them | Friendship + every 3rd completion, Marnie gives a discount on your next pet | Cooldown Long |
 | Forage with Linus | Daily board | Linus | Gift loved or liked forage to a few different villagers (count scales with Foraging) | Big friendship bump with Linus | Cooldown Long, needs Linus met |
 | Plant Trees | Daily board | A conservation NPC (Linus, Demetrius, Dylan, Kimpoi, Aster, etc.) | Plant X trees anywhere outside the farm | Friendship | Cooldown Long |
-| Rare Forage Hunt | Daily board | Any met villager | Gather a few rare forageables (Rainbow Shell, Cactus Fruit, Magma Cap, plus any modded forage that isn't in this season) | Gold + 2x count of one in-season seed | Cooldown Medium, needs Foraging 1 |
-| Seasonal Foraging | Daily board | Any met villager | Gather and ship X seasonal forage | Gold | Cooldown Short |
+| Rare Forage Hunt | Daily board | Any met villager | Gather a few rare forageables (Rainbow Shell, Cactus Fruit, Magma Cap, plus any modded forage that isn't in this season) | 500g (flat, Intermediate tier) + 2x count of one in-season seed | Cooldown Medium, needs Foraging 1 |
+| Seasonal Foraging | Daily board | Any met villager | Gather and ship X seasonal forage | 100g (flat, Beginner tier) | Cooldown Short |
 
 ### Mining
 
 | Quest | When | Quest Giver | Objective | Reward | Notes |
 | --- | --- | --- | --- | --- | --- |
 | Archaeology Dig | Daily board | SVE Gunther or Jasper from East Scarp | Find and dig up X artifact spots anywhere, keep what you find, then report back | 2X Hardwood Displays (with Archaeology Skill installed) or 2X random geodes / troves otherwise | Cooldown Medium. Quest only shows up if at least one of the eligible NPCs is around (vanilla Gunther isn't friendable so he doesn't count). X scales with your Archaeology level (or Mining level without the mod) when Difficulty Scaling is on. |
-| Bar Delivery | Daily board | A blacksmith (Clint or modded equivalents) | Deliver X metal bars (tier scales with mine depth, up to Radioactive on Ginger Island unlock) | Gold + a random geode or trove | Cooldown Medium, needs Mining 1 and mine floor 40+ |
-| Basic Slime Clearing | Adventurer's Guild board | Marlon (or modded combat NPCs) | Slay X slimes in the mines | Gold | Cooldown Medium |
-| Mines Deep Dive | Adventurer's Guild board | Marlon | Reach floor X in The Mines (max 120) and ship an ore or stone haul | Gold + bars matching the floor band | Cooldown Short, needs Mining 1 and mine floor 5+ |
-| Monster Hunt | Adventurer's Guild board | Marlon (or modded combat NPCs) | Slay X monsters of any kind | Gold + a combat-buff food (sized to a random magnitude bucket) | Cooldown Medium |
+| Bar Delivery | Daily board | A blacksmith (Clint or modded equivalents) | Deliver X metal bars (tier scales with mine depth, up to Radioactive on Ginger Island unlock) | 500g (flat, Intermediate tier) + a random geode or trove | Cooldown Medium, needs Mining 1 and mine floor 40+ |
+| Basic Slime Clearing | Adventurer's Guild board | Marlon (or modded combat NPCs) | Slay X slimes in the mines | Gold: 100g for every 2 slimes the post asks for (rounded down, at least 100g), so usually 100g to 600g | Cooldown Medium |
+| Mines Deep Dive | Adventurer's Guild board | Marlon | Reach floor X in The Mines (max 120) and ship an ore or stone haul | 500g (flat, Intermediate tier) + bars matching the floor band | Cooldown Short, needs Mining 1 and mine floor 5+ |
+| Monster Hunt | Adventurer's Guild board | Marlon (or modded combat NPCs) | Slay X monsters of any kind | 500g (flat, Intermediate tier) + a combat-buff food (sized to a random magnitude bucket) | Cooldown Medium |
 | Monster Parts | Adventurer's Guild board | A combat NPC (Wizard, Lance from SVE, MarlonFay, Mr. Aguar from RSV, Jio, Daia, Eli from EliAndDylan, Mariam from VMV) | Deliver one rare monster drop (Bat Wing, Solar Essence, Void Essence, or Bug Meat) at a Combat-scaled qty | A random gem or artifact sized to clear a solid gold value + a taste reaction from Krobus / Dwarf / Sen at 1+ hearts | Cooldown Medium, needs Combat 2, mine floor 40+, and 1+ heart with one of the underground NPCs |
-| Rare Material Request | Adventurer's Guild board | A blacksmith (Clint or modded equivalents) | Deliver X of a random gem (vanilla or modded) | Gold + Artifact Trove count matching the gems | Cooldown Medium, needs Mining 7 |
+| Rare Material Request | Adventurer's Guild board | A blacksmith (Clint or modded equivalents) | Deliver X of a random gem (vanilla or modded) | 1000g (flat, Advanced tier) + Artifact Trove count matching the gems | Cooldown Medium, needs Mining 7 |
 | Skull Cavern Deep Dive | Adventurer's Guild board | Marlon | Reach floor X in Skull Cavern and ship a Mining-scaled ore haul | Radioactive Bars in the mail next morning (1 per 5 ores, min 2) | Cooldown Long, needs Skull Cavern unlocked, max floor configurable |
 | The Unseen Offering | Adventurer's Guild board | A magician NPC (Wizard, Lance, Vael, Ivaras, Alecto when installed) | Leave X of any poisonous food (any item with Edibility -200 to -10: Void Mayonnaise, Pufferfish, Red Mushroom, Sea Cucumber, etc., + modded items count too) inside a glowing ritual circle marked by a beam of light, out in Cindersap Forest, the Mountain, the Backwoods, the Desert, or a Mines reward floor (floor 10, 20, 30 etc x10 floors are reward floors) | A combat +2 food in the mail next morning | Cooldown Medium, needs Combat 5 and Ginger Island unlocked. The Mines only get picked once you've reached floor 120, so the elevator can take you to the marked floor. Circle size is configurable. |
 
@@ -163,7 +185,7 @@ Quests are grouped by category below and listed alphabetically within each group
 | Check on George | Daily board | Evelyn | Gift George, talk to him, report to Evelyn | Friendship with both | Cooldown 21 days |
 | Elliott's Poem Inspiration | Daily board | Elliott | Bring Elliott one flower or gem | Friendship (big bump) | Cooldown Long, needs Elliott met |
 | Emily's Housewarming Challenge | Mail, once at 5 hearts with Emily | Emily | Decorate the farmhouse: place a rug, a light source, a wall decoration, and more furniture (only pieces placed while the quest is active count), then talk to Emily | A random dresser from Robin + Friendship with Emily | One time, 14-day deadline, count set in config |
-| Gift Delivery | Daily board | Any met villager | Drop off a loved or liked gift to one of the giver's friends | Gold + Friendship with both NPCs | Cooldown Long |
+| Gift Delivery | Daily board | Any met villager | Drop off a loved or liked gift to one of the giver's friends | Gold: the gift's sell price times 0.8 (below sell), at least 50g + Friendship with both NPCs | Cooldown Long |
 | Redecorate a Home | Daily board | Any met adult villager with a home you can walk into | They hand you a budget up front. Buy furniture (lamps, rugs, chairs, tables) and place it inside their home, then go ask them what they think to finish. Whatever you don't spend goes back to them, so you only ever pay any overspend out of pocket | A handful of the giver's favorite gifts (loved first, then liked) | Cooldown 14 days. **Only shows up if you have [Build Placement Unlocker](https://www.nexusmods.com/stardewvalley/mods/47064) installed**, since that's what lets you place furniture inside someone else's house at all |
 
 ### Not planning to add
