@@ -41,6 +41,7 @@
     "config.weight.Fishing.LocationOverpopulation": "Location overpopulation",
     "config.weight.Fishing.SizeOverpopulation": "Size overpopulation",
     "config.weight.Fishing.LegendaryFish": "Legendary fish request",
+    "config.weight.Fishing.KnowYourWaters": "Know your waters",
     "config.weight.Mining.BasicSlimeClearing": "Basic slime clearing",
     "config.weight.Mining.BarDelivery": "Clint's bar delivery",
     "config.weight.Mining.MonsterParts": "Monster parts request",
@@ -50,6 +51,7 @@
     "config.weight.Mining.SkullCavernDeepDive": "Skull Cavern deep dive",
     "config.weight.Mining.ArchaeologyDig": "Archaeology dig",
     "config.weight.Mining.UnseenOffering": "The unseen offering",
+    "config.weight.Mining.ClearTheFloor": "Clear the floor",
     "config.weight.Foraging.Seasonal": "Seasonal foraging",
     "config.weight.Foraging.RareForageHunt": "Rare forage hunt",
     "config.weight.Foraging.ForageWithLinus": "Foraging with Linus",
@@ -60,6 +62,7 @@
     "config.weight.Social.CheckOnGeorge": "Check on George",
     "config.weight.Social.GiftDelivery": "Gift delivery",
     "config.weight.Social.CheckOnFriends": "Check on friends",
+    "config.weight.Social.Redecorate": "Redecorate a home",
     "config.weight.Seasonal.BeachCleanup": "Beach cleanup",
     "config.weight.Seasonal.FloralTea": "Floral tea",
     "config.weight.Seasonal.HeatWaveRelief": "Heat wave relief",
@@ -228,5 +231,7 @@
     "config.mailChance.Festival.WrappingPaper": "Winter Star wrapping paper chance %",
     "config.mailChance.Fishing.FishSmokerRequest": "Fish smoker request chance %",
     "config.mailChance.Fishing.RainyDayCatchMail": "Rainy Day Catch chance %",
-    "config.mailChance.Fishing.RainyDayCatchMail.tooltip": "Chance (0 to 100) that the Rainy Day Catch quest mail arrives on a day where tomorrow is forecast as rain. 100 = always when rain is forecast, 0 disables the quest."
+    "config.mailChance.Fishing.RainyDayCatchMail.tooltip": "Chance (0 to 100) that the Rainy Day Catch quest mail arrives on a day where tomorrow is forecast as rain. 100 = always when rain is forecast, 0 disables the quest.",
+    "config.mailChance.Seasonal.BattenDownTheHatches": "Batten down the hatches chance %",
+    "config.mailChance.Social.EmilyHousewarming": "Emily's Housewarming chance %"
 }
