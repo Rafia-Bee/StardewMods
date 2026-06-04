@@ -41,6 +41,7 @@ public sealed class ModEntry : Mod
     private QuestRegistry _registry = null!;
     private GeneratorRegistry _generators = null!;
     private CustomStepRegistry _customSteps = null!;
+    private ReportBackRegistry _reportBack = null!;
     private CustomTriggerRegistry _customTriggers = null!;
     private CustomRewardRegistry _customRewards = null!;
     private CustomConditionRegistry _customConditions = null!;
@@ -68,6 +69,7 @@ public sealed class ModEntry : Mod
     private bool _fairTokensAppliedThisSession;
     private ConsequenceEngine? _consequenceEngine;
     private ConsequenceDialogueWatcher? _consequenceWatcher;
+    private ReportBackWatcher? _reportBackWatcher;
 
     internal DispatchRegistry Dispatch { get; private set; } = null!;
     internal CombatFoodRegistry CombatFood { get; private set; } = null!;
@@ -91,6 +93,7 @@ public sealed class ModEntry : Mod
         _registry = new QuestRegistry(Monitor);
         _generators = new GeneratorRegistry(Monitor);
         _customSteps = new CustomStepRegistry(Monitor);
+        _reportBack = new ReportBackRegistry(Monitor);
         _customTriggers = new CustomTriggerRegistry(Monitor);
         _customRewards = new CustomRewardRegistry(Monitor);
         RewardApplier.CustomRewards = _customRewards;
@@ -111,7 +114,7 @@ public sealed class ModEntry : Mod
         _mailStashCodecs.Register(VanillaFishingQuestStashCodec.Kind, typeof(StardewValley.Quests.FishingQuest), VanillaFishingQuestStashCodec.Encode, VanillaFishingQuestStashCodec.Decode);
         _mailStashCodecs.Register(VanillaSlayMonsterQuestStashCodec.Kind, typeof(StardewValley.Quests.SlayMonsterQuest), VanillaSlayMonsterQuestStashCodec.Encode, VanillaSlayMonsterQuestStashCodec.Decode);
         _mailStashCodecs.Register(VanillaResourceCollectionQuestStashCodec.Kind, typeof(StardewValley.Quests.ResourceCollectionQuest), VanillaResourceCollectionQuestStashCodec.Encode, VanillaResourceCollectionQuestStashCodec.Decode);
-        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, Dispatch, _boards, CombatFood, _mailStashCodecs, Monitor, () => _spaceCore, RefreshOffers, () => _ctx);
+        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _reportBack, _customTriggers, _customRewards, _customConditions, _customBoardQuests, Dispatch, _boards, CombatFood, _mailStashCodecs, Monitor, () => _spaceCore, RefreshOffers, () => _ctx);
 
         _boardRenderer = new BoardWorldRenderer(helper, Monitor, _boards);
         _boardRenderer.Register();
@@ -425,6 +428,8 @@ public sealed class ModEntry : Mod
         ConsequenceEngine.Active = _consequenceEngine;
         _consequenceWatcher = new ConsequenceDialogueWatcher(_stateStore.State, Monitor);
         _consequenceWatcher.Reset();
+        _reportBackWatcher = new ReportBackWatcher(_reportBack, _api.ResolveOwner, Monitor);
+        _reportBackWatcher.Reset();
         Patches.ConsequenceDialoguePatches.ActiveState = _stateStore.State;
 
         _watching.Clear();
@@ -1118,6 +1123,7 @@ public sealed class ModEntry : Mod
 
         _dialogueWatcher?.Tick();
         _consequenceWatcher?.Tick();
+        _reportBackWatcher?.Tick();
         PollClumpsOnQuestLog();
         ApplyFairStarTokensIfFairActive();
         // Bypasses Data/SpecialOrders.Rewards entirely so third-party content packs

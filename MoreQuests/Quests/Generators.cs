@@ -79,6 +79,7 @@ internal static partial class Generators
 
         // Fishing
         Reg(fw, "FishSmokerRequest", FishSmokerRequest);
+        Reg(fw, "KnowYourWaters", KnowYourWaters);
         Reg(fw, "LegendaryFishQuest", LegendaryFishQuest);
         Reg(fw, "LocationFishOverpopulation", LocationFishOverpopulation);
         Reg(fw, "MediumFishingHaul", MediumFishingHaul);
@@ -123,6 +124,9 @@ internal static partial class Generators
         Reg(fw, "EmilyHousewarming", EmilyHousewarming);
         Reg(fw, "GiftDelivery", GiftDelivery);
         Reg(fw, "GuntherMuseumDonation", GuntherMuseumDonation);
+
+        // Report-back prompts (talk-to-giver question dialogues that branch the reward).
+        RegisterKnowYourWatersReportBack(fw);
     }
 
     /// Wraps fw.RegisterGenerator with a category master-toggle check. Drops the posting

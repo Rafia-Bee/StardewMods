@@ -432,6 +432,18 @@
     "quest.fishing.qualityFish.step.deliver": "Bring {{qty}} {{quality}} {{item}} to {{npc}}.",
     "quest.fishing.qualityFish.targetMessage": "Beautiful! You're a talented fisherman, @!",
 
+    "quest.fishing.knowYourWaters.title": "Know your waters: {{location}}",
+    "quest.fishing.knowYourWaters.description": "A real angler knows every fish in their water. Reckon you can pull one of each kind that swims at {{location}} this season? The whole lot, nothing skipped. Bring proof you've caught them all and come find me, and I'll know you've truly earned the title round here.",
+    "quest.fishing.knowYourWaters.step.catch": "Catch a {{item}} at {{location}}.",
+    "quest.fishing.knowYourWaters.step.report": "Report back to {{npc}}.",
+    "quest.fishing.knowYourWaters.report.question": "You sure have come a long way since you first picked up that flimsy little beginner rod! Tell me, which fish was the hardest to catch?",
+    "quest.fishing.knowYourWaters.report.option.proud": "I'm a professional. There's no such thing as \"hard to catch\".",
+    "quest.fishing.knowYourWaters.report.option.modest": "I lost a few on the line, honestly. It gave me a real respect for your trade.",
+    "quest.fishing.knowYourWaters.report.option.struggled": "It was awful. Please don't ask me to do that again.",
+    "quest.fishing.knowYourWaters.report.reply.proud": "Ha! Confident, aren't you! Well, the catch speaks for itself. Here, this is for you.",
+    "quest.fishing.knowYourWaters.report.reply.modest": "Now that's the right attitude. Most folks never stop to feel it. Take this, and this too, you've earned them.",
+    "quest.fishing.knowYourWaters.report.reply.struggled": "Hah! Honest to a fault. That's exactly why you stuck it out, though. Here, take these. You've more than earned them.",
+
     "quest.festival.moonlightJellies.title": "Lights for the Moonlight Jellies",
     "quest.festival.moonlightJellies.description": "Lewis here. I'm decking the pier out for the Dance of the Moonlight Jellies and could use a hand. Ship {{torches}} torches and {{wood}} wood through the bin and I'll see something nice gets sent your way.",
     "quest.festival.moonlightJellies.step.torches": "Ship {{count}} torches.",

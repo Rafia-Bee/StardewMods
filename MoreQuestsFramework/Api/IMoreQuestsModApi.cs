@@ -64,6 +64,15 @@ public interface IMoreQuestsModApi
     // and prefer GetActiveCustomSteps for genuinely event-driven progress.
     void RegisterCustomAdventureStep(string name, Func<CustomStepContext, int> handler);
 
+    // Registers a "report back" interaction for AdventureQuest Custom steps. Point a
+    // Custom step's Targets[0] at this name (Targets[1] optionally names the NPC to
+    // report to, otherwise the quest's giver is used). When the player talks to that NPC
+    // while the step is active (all its Requires done), the framework has the NPC ask the
+    // prompt's Question, shows the answer buttons, runs the picked option's OnChosen, and
+    // marks the step done. Hand out the chosen reward inside OnChosen. Bare names are
+    // scoped to the calling mod; "OtherMod/Name" works for cross-mod references.
+    void RegisterReportBackChoice(string name, ReportBackPrompt prompt);
+
     // Event-driven escape hatch for Custom steps. Returns a snapshot of every
     // active Custom step whose Targets[0] resolves to the given handler name (bare
     // names are scoped to the calling mod, "OtherMod/Name" works for cross-mod

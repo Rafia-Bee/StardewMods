@@ -460,6 +460,181 @@ internal static partial class Generators
         };
     }
 
+    /// Handler id the report-back Custom step points at (Targets[0]). Registered with
+    /// the framework in RegisterKnowYourWatersReportBack.
+    private const string KnowYourWatersReportHandler = "KnowYourWaters.Report";
+
+    private const string FishSmokerId = "(BC)FishSmoker";
+    private const string BaitAndBobberBookId = "(O)SkillBook_1";
+
+    /// "Know your waters": catch one of every (non-boss) fish that lives at a single
+    /// visited location this season, then report back to the giver in person. Talking to
+    /// the giver after the catch set is done opens a question with three answers; the more
+    /// humble the answer, the better the reward (see RegisterKnowYourWatersReportBack).
+    /// Giver from the FishermenNpcs pool. Season-long deadline, so it's posted early in a
+    /// season (gated by DayRange in quests.json).
+    private static QuestPosting? KnowYourWaters(QuestContext ctx)
+    {
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.FishermenNpcs);
+        if (giver == null)
+            return null;
+
+        var visited = Game1.player?.locationsVisited;
+        if (visited == null || visited.Count == 0)
+            return null;
+        var visitedSet = new HashSet<string>(visited, StringComparer.OrdinalIgnoreCase);
+
+        // Real, catchable, non-boss fish for this season, keyed by id. GetSeasonalFish
+        // already drops trap fish, seaweed/algae, and out-of-season legendaries; we just
+        // strip the boss/legendary entries on top.
+        var bossIds = new HashSet<string>(
+            ctx.Items.GetBossFish().Select(f => f.QualifiedItemId),
+            StringComparer.OrdinalIgnoreCase);
+        var allowed = new Dictionary<string, ResolvedItem>(StringComparer.OrdinalIgnoreCase);
+        foreach (var f in ctx.Items.GetSeasonalFish(ctx.Season))
+        {
+            if (bossIds.Contains(f.QualifiedItemId))
+                continue;
+            allowed[f.QualifiedItemId] = f;
+        }
+        if (allowed.Count == 0)
+            return null;
+
+        // Each visited location that has at least two of those fish is a candidate.
+        var candidates = new List<(string Loc, List<ResolvedItem> Fish)>();
+        foreach (var (locName, data) in ctx.Data.Locations)
+        {
+            if (string.Equals(locName, "Default", StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (!visitedSet.Contains(locName) || data.Fish == null)
+                continue;
+
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var fish = new List<ResolvedItem>();
+            foreach (var spawn in data.Fish)
+            {
+                if (spawn?.ItemId == null)
+                    continue;
+                string qualified = StardewValley.ItemRegistry.QualifyItemId(spawn.ItemId) ?? spawn.ItemId;
+                if (!allowed.TryGetValue(qualified, out var item))
+                    continue;
+                if (seen.Add(qualified))
+                    fish.Add(item);
+            }
+            if (fish.Count >= 2)
+                candidates.Add((locName, fish));
+        }
+        if (candidates.Count == 0)
+            return null;
+
+        var chosen = candidates[Game1.random.Next(candidates.Count)];
+        string locationDisplay = LocationDisplayName(chosen.Loc);
+
+        var steps = new List<AdventureStepState>(chosen.Fish.Count + 1);
+        var catchNames = new List<string>(chosen.Fish.Count);
+        for (int i = 0; i < chosen.Fish.Count; i++)
+        {
+            string name = $"Catch{i}";
+            catchNames.Add(name);
+            steps.Add(new AdventureStepState
+            {
+                Name = name,
+                Kind = AdventureStepKind.Catch,
+                Items = new List<string> { chosen.Fish[i].QualifiedItemId },
+                Count = 1,
+                LocationName = chosen.Loc,
+                Description = ModEntry.I18n.Get("quest.fishing.knowYourWaters.step.catch", new { item = chosen.Fish[i].DisplayName, location = locationDisplay })
+            });
+        }
+        steps.Add(new AdventureStepState
+        {
+            Name = "Report",
+            Kind = AdventureStepKind.Custom,
+            Targets = new List<string> { KnowYourWatersReportHandler },
+            Requires = catchNames,
+            Count = 1,
+            Description = ModEntry.I18n.Get("quest.fishing.knowYourWaters.step.report", new { npc = giver })
+        });
+
+        var quest = new AdventureQuest();
+        quest.Initialize(steps, giver: giver);
+
+        // Posted early in a season, due by the last day of that season (day 28).
+        int deadline = Math.Max(1, 29 - Game1.dayOfMonth);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Fishing,
+            Tier = DifficultyTier.Advanced,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = deadline,
+            Title = ModEntry.I18n.Get("quest.fishing.knowYourWaters.title", new { location = locationDisplay }),
+            Description = ModEntry.I18n.Get("quest.fishing.knowYourWaters.description", new { location = locationDisplay }),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Registers the three-answer "report back" prompt for Know Your Waters. The humblest
+    /// answer hands over the most (three fishing books); the proud answer two Fish Smokers;
+    /// the modest one in between. Called once from Generators.RegisterAll.
+    private static void RegisterKnowYourWatersReportBack(IMoreQuestsModApi fw)
+    {
+        fw.RegisterReportBackChoice(KnowYourWatersReportHandler, new ReportBackPrompt
+        {
+            Question = ModEntry.I18n.Get("quest.fishing.knowYourWaters.report.question"),
+            Options = new List<ReportBackOption>
+            {
+                new ReportBackOption
+                {
+                    Answer = ModEntry.I18n.Get("quest.fishing.knowYourWaters.report.option.proud"),
+                    Reply = ModEntry.I18n.Get("quest.fishing.knowYourWaters.report.reply.proud"),
+                    OnChosen = ctx => GrantKnowYourWatersReward(ctx, tier: 1)
+                },
+                new ReportBackOption
+                {
+                    Answer = ModEntry.I18n.Get("quest.fishing.knowYourWaters.report.option.modest"),
+                    Reply = ModEntry.I18n.Get("quest.fishing.knowYourWaters.report.reply.modest"),
+                    OnChosen = ctx => GrantKnowYourWatersReward(ctx, tier: 2)
+                },
+                new ReportBackOption
+                {
+                    Answer = ModEntry.I18n.Get("quest.fishing.knowYourWaters.report.option.struggled"),
+                    Reply = ModEntry.I18n.Get("quest.fishing.knowYourWaters.report.reply.struggled"),
+                    OnChosen = ctx => GrantKnowYourWatersReward(ctx, tier: 3)
+                }
+            }
+        });
+    }
+
+    private static void GrantKnowYourWatersReward(ReportBackContext ctx, int tier)
+    {
+        switch (tier)
+        {
+            case 1:
+                GiveQuestItem(ctx.Player, FishSmokerId, 2);
+                break;
+            case 2:
+                GiveQuestItem(ctx.Player, FishSmokerId, 1);
+                GiveQuestItem(ctx.Player, BaitAndBobberBookId, 1);
+                break;
+            default:
+                GiveQuestItem(ctx.Player, BaitAndBobberBookId, 3);
+                break;
+        }
+    }
+
+    private static void GiveQuestItem(Farmer player, string qualifiedId, int count)
+    {
+        if (player == null || count <= 0)
+            return;
+        var item = StardewValley.ItemRegistry.Create(qualifiedId, count);
+        if (item == null)
+            return;
+        player.addItemByMenuIfNecessary(item);
+    }
+
     /// Mail quest when tomorrow is forecast rain. Filters to rainy Data/Fish entries
     /// with a runtime gate that the player is actually fishing in rain. Reward:
     /// GoldIntermediateBase + one rare tackle.

@@ -23,6 +23,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     private readonly QuestRegistry _registry;
     private readonly GeneratorRegistry _generators;
     private readonly CustomStepRegistry _customSteps;
+    private readonly ReportBackRegistry _reportBack;
     private readonly CustomTriggerRegistry _customTriggers;
     private readonly CustomRewardRegistry _customRewards;
     private readonly CustomConditionRegistry _customConditions;
@@ -56,6 +57,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         QuestRegistry registry,
         GeneratorRegistry generators,
         CustomStepRegistry customSteps,
+        ReportBackRegistry reportBack,
         CustomTriggerRegistry customTriggers,
         CustomRewardRegistry customRewards,
         CustomConditionRegistry customConditions,
@@ -72,6 +74,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         _registry = registry;
         _generators = generators;
         _customSteps = customSteps;
+        _reportBack = reportBack;
         _customTriggers = customTriggers;
         _customRewards = customRewards;
         _customConditions = customConditions;
@@ -92,7 +95,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
             throw new ArgumentNullException(nameof(mod));
         if (_modScopes.TryGetValue(mod.UniqueID, out var existing))
             return existing;
-        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _dispatch, _boards, _mailStashCodecs, _monitor, _spaceCore, ResolveQuestOwner);
+        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _reportBack, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _dispatch, _boards, _mailStashCodecs, _monitor, _spaceCore, ResolveQuestOwner);
         _modScopes[mod.UniqueID] = scope;
         return scope;
     }
@@ -441,6 +444,8 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     internal void ClearState() => _state = null;
 
     internal CustomStepRegistry CustomSteps => _customSteps;
+    internal ReportBackRegistry ReportBack => _reportBack;
+    internal string? ResolveOwner(Quest quest) => ResolveQuestOwner(quest);
     internal CustomTriggerRegistry CustomTriggers => _customTriggers;
     internal CustomRewardRegistry CustomRewards => _customRewards;
     internal CustomConditionRegistry CustomConditions => _customConditions;

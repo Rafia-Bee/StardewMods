@@ -520,6 +520,22 @@ Multi-step Adventure quests carry a `Steps[]` list. Each entry has a `Kind` driv
 
   Push-driven Custom steps often need to dedupe by some game-state key (a tile coord, a unique entity id, a kill event identifier) so the same source event firing twice doesn't double-credit. Use `handle.AddProgressOnceForKey(key)` (or `AdventureQuest.TryAddCustomStepProgressOnceForKey` directly) instead of `AddProgress`. The key is stored in the step's `CreditedKeys` list (the same NetStringList Talk and GiftUniqueNpcs steps already use), so dedupe survives save/reload at no extra storage cost.
 
+  **Report back with a choice.** For a quest that ends "go tell so-and-so and pick how it went", register a prompt with `RegisterReportBackChoice(name, ReportBackPrompt)`. The prompt is the question the NPC asks plus a list of options, each with an answer button, an optional reply line, and an `OnChosen` callback. Point a Custom step's `Targets[0]` at the prompt name (and gate it with `Requires[]` so it only opens once the rest of the quest is done). When the player talks to the report-to NPC (`Targets[1]` if set, otherwise the quest's giver) while that step is active, the NPC asks the question with their portrait, the player picks an answer, your `OnChosen` runs (hand out that answer's reward here), and the step is marked done. Because the reward lives in the callback, different answers can pay out differently. Example:
+
+  ```csharp
+  scope.RegisterReportBackChoice("MyQuest.Report", new ReportBackPrompt
+  {
+      Question = "So, how did it go?",
+      Options =
+      {
+          new ReportBackOption { Answer = "Easy.",   Reply = "Ha, of course.", OnChosen = ctx => Give(ctx.Player, "(O)388", 10) },
+          new ReportBackOption { Answer = "Brutal.",  Reply = "I owe you one.",  OnChosen = ctx => Give(ctx.Player, "(O)388", 50) },
+      }
+  });
+  ```
+
+  Then the step: `{ "Name": "Report", "Kind": "Custom", "Targets": ["MyQuest.Report"], "Requires": ["Catch"], "Count": 1, "Description": "{i18n:my.step.report}" }`. Escaping the question leaves the step active so the player can talk again.
+
 Step ordering is enforced by `Requires[]` (other step `Name`s that must be Done before the step becomes active). `$giver` in `Targets[]` rewrites to the resolved giver at quest-creation time. None of the step observers add Harmony patches, every kind rides an existing SMAPI event or a framework-owned tick.
 
 ### Decor-shipping bypass

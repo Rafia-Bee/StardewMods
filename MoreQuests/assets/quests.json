@@ -14,6 +14,18 @@
             "Generator": "SimpleFishingRequest"
         },
         {
+            "Name": "Fishing.KnowYourWaters",
+            "Category": "Fishing",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 15,
+                "MaxPerDay": 1,
+                "CooldownDays": 30,
+                "Available": { "DayRange": "1-5" }
+            },
+            "Generator": "KnowYourWaters"
+        },
+        {
             "Name": "Mining.BasicSlimeClearing",
             "Category": "Mining",
             "Trigger": {

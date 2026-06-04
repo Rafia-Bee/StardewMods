@@ -20,6 +20,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
     private readonly QuestRegistry _registry;
     private readonly GeneratorRegistry _generators;
     private readonly CustomStepRegistry _customSteps;
+    private readonly ReportBackRegistry _reportBack;
     private readonly CustomTriggerRegistry _customTriggers;
     private readonly CustomRewardRegistry _customRewards;
     private readonly CustomConditionRegistry _customConditions;
@@ -38,6 +39,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         QuestRegistry registry,
         GeneratorRegistry generators,
         CustomStepRegistry customSteps,
+        ReportBackRegistry reportBack,
         CustomTriggerRegistry customTriggers,
         CustomRewardRegistry customRewards,
         CustomConditionRegistry customConditions,
@@ -53,6 +55,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         _registry = registry;
         _generators = generators;
         _customSteps = customSteps;
+        _reportBack = reportBack;
         _customTriggers = customTriggers;
         _customRewards = customRewards;
         _customConditions = customConditions;
@@ -87,6 +90,9 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
 
     public void RegisterCustomAdventureStep(string name, Func<CustomStepContext, int> handler)
         => _customSteps.Register(Owner.UniqueID, name, handler);
+
+    public void RegisterReportBackChoice(string name, ReportBackPrompt prompt)
+        => _reportBack.Register(Owner.UniqueID, name, prompt);
 
     public IReadOnlyList<ICustomStepHandle> GetActiveCustomSteps(string handlerName)
     {
