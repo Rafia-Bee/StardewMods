@@ -61,6 +61,10 @@ public sealed class ModConfig
     public int HudPinX { get; set; } = -1;
     public int HudPinY { get; set; } = -1;
 
+    // How see-through the pinned-HUD panel is. 1.0 is solid, lower fades it
+    // toward invisible. Clamped at read time so a bad value can't make it vanish.
+    public float HudPinOpacity { get; set; } = 1f;
+
     // Whole-journal zoom. 1.0 is the shipped size. Clamped at read time so a
     // bad value can't make the journal vanish or overflow the screen. A GMCM
     // slider for this lands with the step 13 config pass; for now it's a

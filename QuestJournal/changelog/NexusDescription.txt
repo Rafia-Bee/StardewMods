@@ -68,6 +68,7 @@ If you have [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod C
 [*][b]Show pinned quests on the HUD[/b] - draws your pinned quests in the top-right corner[/*]
 [*][b]Auto-pin new quests[/b] - pins a quest the moment you accept it (does nothing if Show pinned quests on the HUD is false)[/*]
 [*][b]Journal size[/b] - makes the whole window bigger or smaller[/*]
+[*][b]Pinned quests opacity[/b] - how see-through the pinned quests panel is on the HUD. Turn it down to let it fade into the background[/*]
 [*][b]Complete button[/b], [b]Item helper[/b], and [b]Warp helper[/b] - the optional cheat buttons, all off by default[/*]
 [/list]
 

@@ -60,6 +60,7 @@ If you have Generic Mod Config Menu installed, there's an in-game settings page.
 - **Debug logging** - writes extra status messages to the SMAPI console (handy for bug reports). Warnings and errors always show.
 - **Sort quests by** - the order the list starts in (deadline, name, giver, source, or category). You can also change it from the dropdown inside the journal.
 - **Journal size** - makes the whole window bigger or smaller.
+- **Pinned quests opacity** - how see-through the pinned quests panel is on the HUD. Turn it down to let it fade into the background.
 - **Complete button** - adds the "complete quest" button, which finishes a quest and pays its reward without doing the objective. A cheat, so off by default.
 - **Item helper** - adds the "get the quest item" button. A cheat, so off by default.
 - **Warp helper** - adds the "warp to the NPC" button. A cheat, so off by default.

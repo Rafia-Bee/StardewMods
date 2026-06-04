@@ -318,9 +318,11 @@ internal sealed class PinnedObjectiveHud
         boxY = Math.Clamp(boxY, 0, Math.Max(0, Game1.uiViewport.Height - height));
         _lastPanelBounds = new Rectangle(boxX, boxY, PanelWidth, height);
 
+        float opacity = Math.Clamp(ModEntry.Config.HudPinOpacity, 0.2f, 1f);
+
         IClickableMenu.drawTextureBox(
             b, Game1.menuTexture, new Rectangle(0, 256, 60, 60),
-            boxX, boxY, PanelWidth, height, Color.White, 1f, drawShadow: true);
+            boxX, boxY, PanelWidth, height, Color.White * opacity, 1f, drawShadow: true);
 
         // Hover highlight uses the same tint as the journal's quest-list rows, so
         // the HUD reads as a clickable list. Suppressed while dragging the panel.
@@ -334,14 +336,14 @@ internal sealed class PinnedObjectiveHud
             var entryRect = new Rectangle(boxX + 4, (int)y - 2, PanelWidth - 8, (int)(titleH + objH) + 4);
             _entryBounds.Add((entryRect, key));
             if (canHover && entryRect.Contains((int)cursor.X, (int)cursor.Y))
-                b.Draw(Game1.staminaRect, entryRect, JournalTheme.HoverTint);
+                b.Draw(Game1.staminaRect, entryRect, JournalTheme.HoverTint * opacity);
 
-            b.DrawString(font, title, new Vector2(textX, y), Game1.textColor);
+            b.DrawString(font, title, new Vector2(textX, y), Game1.textColor * opacity);
             y += titleH;
             if (objective.Length > 0)
             {
                 y += 2f;
-                b.DrawString(font, objective, new Vector2(textX + ObjectiveIndent, y), Game1.textColor * 0.8f);
+                b.DrawString(font, objective, new Vector2(textX + ObjectiveIndent, y), Game1.textColor * (0.8f * opacity));
                 y += font.MeasureString(objective).Y;
             }
             y += EntryGap;
@@ -349,7 +351,7 @@ internal sealed class PinnedObjectiveHud
         if (overflowLine != null)
         {
             y += 2f;
-            b.DrawString(font, overflowLine, new Vector2(textX, y), Game1.textColor * 0.7f);
+            b.DrawString(font, overflowLine, new Vector2(textX, y), Game1.textColor * (0.7f * opacity));
         }
     }
 }

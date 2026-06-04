@@ -67,6 +67,12 @@ internal static class GmcmRegistration
             () => t.Get("config.scale"),
             () => t.Get("config.scale.tooltip"),
             min: 0.7f, max: 1.5f, interval: 0.05f);
+        api.AddNumberOption(manifest,
+            () => ModEntry.Config.HudPinOpacity,
+            v => ModEntry.Config.HudPinOpacity = v,
+            () => t.Get("config.hudOpacity"),
+            () => t.Get("config.hudOpacity.tooltip"),
+            min: 0.2f, max: 1f, interval: 0.05f);
 
         // Default sort order for the quests list. The same orders are picked from
         // the dropdown inside the journal; this just sets the starting point. The
