@@ -4,6 +4,7 @@
 - Fixed a quest that a villager only offers during a set range of days showing up after that range was over. If you hadn't talked to them during the window, the quest could pop up the next time you chatted, even days later. Now it's quietly dropped once the window passes. (For example, a quest Vincent only gives during the Egg Festival days no longer appears if you talk to him afterward.)
 - For mod authors: a quest can now show more than one objective line at once, handy for a checklist-style job or showing something like a running budget. The Quest Journal mod shows these lines too.
 - For mod authors: a quest can now say which villagers are allowed to give it, and there's a new console command to check. Run "mq_givers <quest id>" to print who's eligible for that one, or "mq_givers all" to write a file listing every quest and its eligible givers (named after your save) into the framework's mod folder. Good for testing.
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuestsFramework-v2.5.0...MoreQuestsFramework-v2.6.0]i18n changes here[/url] (look at i18n/default.json).
 
 2.5.0
 - The help-wanted board got a tidy-up. The notes used to scatter and pile on top of each other, so when a lot of quests were up some ended up buried and hard to click. Now they sit on a neat layout that fits every note no matter how many are posted, and each one is easy to pick on mouse or controller. They still get a slight random lean so it looks like a real cork board.
