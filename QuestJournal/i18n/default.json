@@ -115,6 +115,8 @@
     "config.gameMenuTab.tooltip": "Adds a Quest Journal tab to the in-game menu (the one you open with Esc). Needs the Better Game Menu mod, otherwise the tab is skipped so it doesn't clash with other menu-tab mods. You can always open the journal with the F6 hotkey or the Iconic Framework icon. Takes effect after a restart.",
     "config.hudPin": "Show pinned quests on the HUD",
     "config.hudPin.tooltip": "Draws your pinned quests in the top-right corner while you're playing.",
+    "config.hudHoverSteps": "Show all steps on hover",
+    "config.hudHoverSteps.tooltip": "Some quests have several steps running at once, but the HUD only shows the first one. Turn this on to see all of them in a tooltip when you hover a pinned quest, without opening the journal.",
     "config.pinNew": "Auto-pin new quests",
     "config.pinNew.tooltip": "Automatically pins a quest to the HUD the moment you accept it.",
     "config.markRead": "Clear the new-quest mark on open",

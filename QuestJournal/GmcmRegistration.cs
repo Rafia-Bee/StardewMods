@@ -45,6 +45,11 @@ internal static class GmcmRegistration
             () => t.Get("config.hudPin"),
             () => t.Get("config.hudPin.tooltip"));
         api.AddBoolOption(manifest,
+            () => ModEntry.Config.HudHoverObjectiveTooltip,
+            v => ModEntry.Config.HudHoverObjectiveTooltip = v,
+            () => t.Get("config.hudHoverSteps"),
+            () => t.Get("config.hudHoverSteps.tooltip"));
+        api.AddBoolOption(manifest,
             () => ModEntry.Config.DefaultPinNewQuests,
             v => ModEntry.Config.DefaultPinNewQuests = v,
             () => t.Get("config.pinNew"),

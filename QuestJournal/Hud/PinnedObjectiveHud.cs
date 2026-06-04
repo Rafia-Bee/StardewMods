@@ -170,7 +170,7 @@ internal sealed class PinnedObjectiveHud
         var pinned = PinnedObjectivesStore.Load();
         if (pinned.Count == 0) return;
 
-        var entries = new List<(string Title, string Objective, string Key)>();
+        var entries = new List<(string Title, string Objective, IReadOnlyList<string> All, string Key)>();
         int hiddenOverflow = 0;
         var log = Game1.player.questLog;
         for (int i = 0; i < log.Count; i++)
@@ -180,7 +180,8 @@ internal sealed class PinnedObjectiveHud
             string key = PinnedObjectivesStore.KeyFor(q);
             if (string.IsNullOrEmpty(key) || !pinned.Contains(key)) continue;
             if (entries.Count >= MaxEntries) { hiddenOverflow++; continue; }
-            entries.Add((q.questTitle ?? string.Empty, ResolveObjective(q), key));
+            var (hud, all) = ResolveObjective(q);
+            entries.Add((q.questTitle ?? string.Empty, hud, all, key));
         }
 
         // Special orders live in team.specialOrders, not the quest log, so they
@@ -194,7 +195,8 @@ internal sealed class PinnedObjectiveHud
                 string key = PinnedObjectivesStore.KeyFor(so);
                 if (string.IsNullOrEmpty(key) || !pinned.Contains(key)) continue;
                 if (entries.Count >= MaxEntries) { hiddenOverflow++; continue; }
-                entries.Add((ResolveSpecialOrderTitle(so), ResolveSpecialOrderObjective(so), key));
+                var soAll = ResolveSpecialOrderObjectives(so);
+                entries.Add((ResolveSpecialOrderTitle(so), soAll.Count > 0 ? soAll[0] : string.Empty, soAll, key));
             }
         }
 
@@ -213,9 +215,11 @@ internal sealed class PinnedObjectiveHud
         catch { return so.GetName() ?? string.Empty; }
     }
 
-    // First not-yet-complete objective, with its progress count when it has one.
-    private static string ResolveSpecialOrderObjective(SpecialOrder so)
+    // Every not-yet-complete objective, each with its progress count when it has
+    // one. The first is shown on the HUD, the rest fill out the hover tooltip.
+    private static IReadOnlyList<string> ResolveSpecialOrderObjectives(SpecialOrder so)
     {
+        var lines = new List<string>();
         try
         {
             foreach (var obj in so.objectives)
@@ -226,15 +230,17 @@ internal sealed class PinnedObjectiveHud
                 int max = obj.GetMaxCount();
                 if (max > 1)
                     desc = $"{desc} ({obj.GetCount()}/{max})";
-                return desc;
+                lines.Add(desc);
             }
         }
         catch { }
-        return string.Empty;
+        return lines;
     }
 
-    // Active step for MQF Adventure quests, otherwise the vanilla currentObjective.
-    private string ResolveObjective(Quest q)
+    // Returns the one line shown on the HUD plus every step still to do. An MQF
+    // Adventure quest can have several steps, but the HUD only has room for one,
+    // so the full set feeds the hover tooltip.
+    private (string Hud, IReadOnlyList<string> All) ResolveObjective(Quest q)
     {
         if (_mqfApi != null)
         {
@@ -243,37 +249,54 @@ internal sealed class PinnedObjectiveHud
                 var steps = _mqfApi.GetAdventureSteps(q);
                 if (steps != null && steps.Count > 0)
                 {
-                    IAdventureStepInfo? step = null;
+                    // Every step still to do, not just the one flagged active. A
+                    // quest's later steps stay inactive until the earlier ones are
+                    // done, but the player still wants to see what's coming, same as
+                    // the journal shows them.
+                    var all = new List<string>();
+                    foreach (var s in steps)
+                    {
+                        if (s.Done) continue;
+                        string d = string.IsNullOrEmpty(s.Description) ? s.Kind : s.Description;
+                        if (s.Count > 1) d = $"{d} ({s.Progress}/{s.Count})";
+                        all.Add(d);
+                    }
+
+                    string hud;
                     int? idx = _mqfApi.GetActiveStepIndex(q);
                     if (idx.HasValue && idx.Value >= 0 && idx.Value < steps.Count)
-                        step = steps[idx.Value];
+                    {
+                        var s = steps[idx.Value];
+                        string d = string.IsNullOrEmpty(s.Description) ? s.Kind : s.Description;
+                        if (s.Count > 1 && !s.Done) d = $"{d} ({s.Progress}/{s.Count})";
+                        hud = d;
+                    }
                     else
-                    {
-                        foreach (var s in steps)
-                            if (s.Active && !s.Done) { step = s; break; }
-                    }
-                    if (step != null)
-                    {
-                        string desc = string.IsNullOrEmpty(step.Description) ? step.Kind : step.Description;
-                        if (step.Count > 1 && !step.Done)
-                            desc = $"{desc} ({step.Progress}/{step.Count})";
-                        return desc;
-                    }
+                        hud = all.Count > 0 ? all[0] : (q.currentObjective ?? string.Empty);
+
+                    if (all.Count == 0 && !string.IsNullOrEmpty(hud))
+                        all.Add(hud);
+                    return (hud, all);
                 }
+
+                var objLines = _mqfApi.GetObjectiveLines(q);
+                if (objLines != null && objLines.Count > 0)
+                    return (objLines[0], new List<string>(objLines));
             }
             catch { }
         }
-        return q.currentObjective ?? string.Empty;
+        string obj = q.currentObjective ?? string.Empty;
+        return (obj, string.IsNullOrEmpty(obj) ? new List<string>() : new List<string> { obj });
     }
 
-    private void DrawStack(SpriteBatch b, List<(string Title, string Objective, string Key)> entries, int hiddenOverflow)
+    private void DrawStack(SpriteBatch b, List<(string Title, string Objective, IReadOnlyList<string> All, string Key)> entries, int hiddenOverflow)
     {
         var font = Game1.smallFont;
         int innerWidth = PanelWidth - Padding * 2;
 
-        var blocks = new List<(string Title, string Objective, float TitleH, float ObjH, string Key)>();
+        var blocks = new List<(string Title, string Objective, float TitleH, float ObjH, string Key, string RawTitle, IReadOnlyList<string> All)>();
         float totalHeight = Padding * 2;
-        foreach (var (title, objective, key) in entries)
+        foreach (var (title, objective, all, key) in entries)
         {
             string wrappedTitle = Game1.parseText(title, font, innerWidth);
             string wrappedObj = string.IsNullOrEmpty(objective)
@@ -281,7 +304,7 @@ internal sealed class PinnedObjectiveHud
                 : Game1.parseText(objective, font, innerWidth - ObjectiveIndent);
             float titleH = font.MeasureString(wrappedTitle).Y;
             float objH = wrappedObj.Length == 0 ? 0f : font.MeasureString(wrappedObj).Y + 2f;
-            blocks.Add((wrappedTitle, wrappedObj, titleH, objH, key));
+            blocks.Add((wrappedTitle, wrappedObj, titleH, objH, key, title, all));
             totalHeight += titleH + objH + EntryGap;
         }
 
@@ -329,14 +352,26 @@ internal sealed class PinnedObjectiveHud
         var cursor = CursorUtil.UiSpace(_helper.Input.GetCursorPosition());
         bool canHover = !_dragging;
 
+        // When the cursor is over an entry that has more lines than the one shown,
+        // remember its full text so a tooltip can be drawn on top after the stack.
+        string? tooltipTitle = null;
+        string? tooltipBody = null;
+
         float textX = boxX + Padding;
         float y = boxY + Padding;
-        foreach (var (title, objective, titleH, objH, key) in blocks)
+        foreach (var (title, objective, titleH, objH, key, rawTitle, all) in blocks)
         {
             var entryRect = new Rectangle(boxX + 4, (int)y - 2, PanelWidth - 8, (int)(titleH + objH) + 4);
             _entryBounds.Add((entryRect, key));
             if (canHover && entryRect.Contains((int)cursor.X, (int)cursor.Y))
+            {
                 b.Draw(Game1.staminaRect, entryRect, JournalTheme.HoverTint * opacity);
+                if (ModEntry.Config.HudHoverObjectiveTooltip && all.Count > 1)
+                {
+                    tooltipTitle = rawTitle;
+                    tooltipBody = string.Join("\n", all);
+                }
+            }
 
             b.DrawString(font, title, new Vector2(textX, y), Game1.textColor * opacity);
             y += titleH;
@@ -353,5 +388,10 @@ internal sealed class PinnedObjectiveHud
             y += 2f;
             b.DrawString(font, overflowLine, new Vector2(textX, y), Game1.textColor * (0.7f * opacity));
         }
+
+        // Drawn last so it sits on top of the panel. drawHoverText anchors itself
+        // to the cursor and keeps the box on screen.
+        if (tooltipBody != null)
+            IClickableMenu.drawHoverText(b, tooltipBody, font, 0, 0, -1, tooltipTitle);
     }
 }
