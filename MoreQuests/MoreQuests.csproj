@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>MoreQuests</AssemblyName>
     <RootNamespace>MoreQuests</RootNamespace>
-    <Version>2.3.0</Version>
+    <Version>2.4.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <TargetFramework>net6.0</TargetFramework>

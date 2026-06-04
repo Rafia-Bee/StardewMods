@@ -1,4 +1,5 @@
 2.4.0
+- Needs More Quests Framework 2.6.0 or newer.
 - New "Clear the floor" quest on the Adventurer's Guild board: a combat villager asks you to put down a batch of monsters across a stretch of mine floors. It picks floors you've already been to, or the Skull Cavern once you've unlocked it, and finishing it earns you a Glow Ring.
 - New "Batten down the hatches" quest: when a storm is on the way, a villager mails you a heads-up and asks you to get some lightning rods up on the farm before it hits. Put up enough of them and a battery pack turns up in your mailbox the next morning. Only comes up if you've learned how to craft lightning rods.
 - New "Know your waters" fishing quest: an angler asks you to catch one of every kind of fish that lives at one spot this season, the whole set, nothing skipped. Once you've caught them all, go talk to them and they'll ask which fish gave you the most trouble. How you answer changes your reward, and being humble about it pays off best. It shows up on the help-wanted board in the first few days of a season so you have the whole season to finish.
