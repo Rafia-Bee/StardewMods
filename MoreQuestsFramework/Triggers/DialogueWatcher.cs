@@ -74,6 +74,39 @@ internal sealed class DialogueWatcher
         _lastSpeaker = null;
     }
 
+    // Drops pending offers whose Available conditions no longer hold. Runs at day-start
+    // before the re-enqueue sweep. Without this, a quest queued inside its window (e.g.
+    // Vincent's egg-hunt sabotage, only offered spring 10-12) would sit in saved state
+    // and fire on the next chat with the NPC long after the window closed. Date and
+    // season conditions only change at day boundaries, so a day-start check is enough.
+    public void PruneUnavailable()
+    {
+        if (_state.PendingDialogueQuests.Count == 0)
+            return;
+
+        List<string>? stale = null;
+        foreach (var (defId, _) in _state.PendingDialogueQuests)
+        {
+            if (!_registry.TryGet(defId, out var def) || def == null)
+                continue;
+            if (def.IsAvailable(_ctx))
+                continue;
+            (stale ??= new List<string>()).Add(defId);
+        }
+
+        if (stale == null)
+            return;
+
+        foreach (var defId in stale)
+        {
+            _state.PendingDialogueQuests.Remove(defId);
+            _injectedToday.Remove(defId);
+            _offerTextByDef.Remove(defId);
+            _postingCache.Remove(defId);
+            ModEntry.LogDebug($"DialogueWatcher: dropped pending '{defId}'; no longer available.");
+        }
+    }
+
     public void ResetDay()
     {
         _chatCountToday.Clear();

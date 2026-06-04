@@ -569,6 +569,7 @@ public sealed class ModEntry : Mod
 
         if (_dialogueWatcher != null)
         {
+            _dialogueWatcher.PruneUnavailable();
             foreach (var (def, npc) in _pipeline.GenerateNpcDialogueQueue())
                 _dialogueWatcher.Enqueue(def.Id, npc);
         }
