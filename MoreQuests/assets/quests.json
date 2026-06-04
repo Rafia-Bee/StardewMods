@@ -38,6 +38,18 @@
             "Generator": "BasicSlimeClearing"
         },
         {
+            "Name": "Mining.ClearTheFloor",
+            "Category": "Mining",
+            "Trigger": {
+                "Source": "CustomBoard",
+                "Weight": 25,
+                "MaxPerDay": 1,
+                "CooldownTier": "Long",
+                "Available": { "MinDeepestMineLevel": "1" }
+            },
+            "Generator": "ClearTheFloor"
+        },
+        {
             "Name": "Mining.BarDelivery",
             "Category": "Mining",
             "Trigger": {

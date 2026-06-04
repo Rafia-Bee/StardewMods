@@ -26,6 +26,90 @@ internal static partial class Generators
     /// $edibility token (see AdventureQuest.TokenMatches).
     private static readonly string OfferingItemToken = $"$edibility:{OfferingEdibilityMin}:{OfferingEdibilityMax}";
 
+    /// Glow Ring reward for "Clear the floor". Fixed item per the quest design.
+    private const string GlowRingItemId = "(O)517";
+
+    /// Width of the floor band for "Clear the floor". The player slays monsters on any floor in
+    /// [start, start + width].
+    private const int ClearFloorBandWidth = 5;
+
+    /// "Clear the floor": slay a batch of monsters on a random run of floors, in the Mines or
+    /// (once unlocked) the Skull Cavern. The band sits inside what the player has actually
+    /// reached, and Skull Cavern respects the deepest-floor config. Posts to the Adventurer's
+    /// Guild board (falls back to help-wanted when that's off) from a CombatNpcs giver.
+    /// Reward: a Glow Ring.
+    private static QuestPosting? ClearTheFloor(QuestContext ctx)
+    {
+        if (Game1.player.deepestMineLevel < 1)
+            return null;
+
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.CombatNpcs);
+        if (giver == null)
+            return null;
+
+        // Skull Cavern only enters the pool once it's unlocked (deepest past floor 120).
+        bool skullUnlocked = Game1.player.deepestMineLevel > 120;
+        bool useSkull = skullUnlocked && Game1.random.Next(2) == 0;
+
+        int low, high, minFloor, maxFloor;
+        string locationLabel;
+        if (useSkull)
+        {
+            int reachable = Math.Min(Game1.player.deepestMineLevel - 120,
+                Math.Max(1, ModEntry.Config.SkullCavernMaxLevel));
+            int start = Game1.random.Next(1, Math.Max(1, reachable - ClearFloorBandWidth) + 1);
+            low = start;
+            high = Math.Min(reachable, start + ClearFloorBandWidth);
+            minFloor = 120 + low;
+            maxFloor = 120 + high;
+            locationLabel = ModEntry.I18n.Get("quest.combat.clearFloor.loc.skullCavern");
+        }
+        else
+        {
+            int reachable = Math.Min(120, Game1.player.deepestMineLevel);
+            int start = Game1.random.Next(1, Math.Max(1, reachable - ClearFloorBandWidth) + 1);
+            low = start;
+            high = Math.Min(reachable, start + ClearFloorBandWidth);
+            minFloor = low;
+            maxFloor = high;
+            locationLabel = ModEntry.I18n.Get("quest.combat.clearFloor.loc.mines");
+        }
+
+        int qty = ctx.Config.DifficultyScaling
+            ? Math.Clamp(Game1.random.Next(2, Math.Max(3, 2 * Game1.player.CombatLevel)), 2, 20)
+            : Game1.random.Next(2, 6);
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "SlayInBand",
+                Kind = AdventureStepKind.Slay,
+                Count = qty,
+                MinFloor = minFloor,
+                MaxFloor = maxFloor,
+                Description = ModEntry.I18n.Get("quest.combat.clearFloor.objective",
+                    new { qty, low, high, location = locationLabel })
+            }
+        }, giver: giver);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Mining,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = qty,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards = { new ObjectReward(GlowRingItemId) },
+            Title = ModEntry.I18n.Get("quest.combat.clearFloor.title"),
+            Description = ModEntry.I18n.Get("quest.combat.clearFloor.description",
+                new { npc = giver, qty, low, high, location = locationLabel }),
+            PreBuiltQuest = quest
+        };
+    }
+
     /// "The Unseen Offering": collect inedible, spoiled-food items and leave them inside a
     /// ritual circle a magic-themed NPC has marked, to appease the entities that share the
     /// valley. Posts to the Adventurer's Guild board (Mining category); falls back to

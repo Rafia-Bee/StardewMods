@@ -281,6 +281,12 @@
     "mail.mining.deepDiveReward.body": "Dear farmer,^^Your haul came through clean. The Guild had everything smelted overnight and ran the numbers. Here's your share of the bars - {{count}} {{bar}}, payment in full. There's plenty more work like this if you're up for it.",
     "mail.mining.deepDiveReward.skullCavern.body": "Dear farmer,^^Thanks for the ores. While smelting them, we got a few of these strange looking bars - {{count}} {{bar}} to be exact. Maybe you can find some use for them.",
 
+    "quest.combat.clearFloor.title": "Clear the floor",
+    "quest.combat.clearFloor.description": "Word is the monsters are crawling thick around {{location}}, floors {{low}} to {{high}}. Drop in and put down {{qty}} of them for me, whatever you run into down there. Just thin the ranks so the rest of us can breathe a little easier.",
+    "quest.combat.clearFloor.objective": "Slay {{qty}} monsters in {{location}}, floors {{low}} to {{high}}",
+    "quest.combat.clearFloor.loc.mines": "the Mines",
+    "quest.combat.clearFloor.loc.skullCavern": "the Skull Cavern",
+
     "quest.combat.unseenOffering.title": "{{npc}}'s offering",
     "quest.combat.unseenOffering.description": "A portal has opened in {{location}}. It seems the unseen ones who share the world with us mortals are restless again. Lay down some poisonous items as an offering, {{count}} should be enough to placate them before things turn hostile. Find the portal, make sure to leave the offering within its bounds, and don't linger around after you've left it. I'll be in touch.",
     "quest.combat.unseenOffering.step": "Leave {{count}} items with edibility between {{min}} and {{max}} inside the ring in {{location}}.",

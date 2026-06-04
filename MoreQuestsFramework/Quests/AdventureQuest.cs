@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using MoreQuestsFramework.Rewards;
 using Netcode;
 using StardewValley;
+using StardewValley.Locations;
 using StardewValley.Monsters;
 using StardewValley.Objects;
 using StardewValley.Quests;
@@ -347,7 +348,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             var step = steps[i];
             if (step.Done || !RequiresMet(steps, step)) continue;
             if (step.Kind != AdventureStepKind.Slay) continue;
-            TryAdvanceSlay(i, step, monster, probe);
+            TryAdvanceSlay(i, step, location, monster, probe);
         }
         return false;
     }
@@ -1162,9 +1163,18 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         return false;
     }
 
-    // Empty Targets = any monster. Tame monsters never count; bomb kills do.
-    private bool TryAdvanceSlay(int idx, AdventureStepState step, Monster monster, bool probe)
+    // Empty Targets = any monster. Tame monsters never count; bomb kills do. A MinFloor/MaxFloor
+    // gate, when set, only counts kills made on a mine floor in that absolute mineLevel range
+    // (Mines 1-120, Skull Cavern 121+).
+    private bool TryAdvanceSlay(int idx, AdventureStepState step, GameLocation location, Monster monster, bool probe)
     {
+        if (step.MinFloor > 0 || step.MaxFloor > 0)
+        {
+            if (location is not MineShaft shaft) return false;
+            int floor = shaft.mineLevel;
+            if (floor < step.MinFloor || floor > step.MaxFloor) return false;
+        }
+
         bool matched = step.Targets.Count == 0;
         if (!matched)
         {

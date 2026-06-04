@@ -45,6 +45,11 @@ public sealed class AdventureStepState
     public string LocationName { get; set; } = string.Empty;
     // Catch size in inches. Squid/Octopus/pond returns report -1 and fail this gate.
     public int MinSize { get; set; }
+    // Slay floor gate, in absolute MineShaft.mineLevel (Mines 1-120, Skull Cavern 121+).
+    // Both 0 = no gate, count a kill anywhere. Otherwise the kill must be on a mine floor
+    // in [MinFloor, MaxFloor].
+    public int MinFloor { get; set; }
+    public int MaxFloor { get; set; }
     // Sun/Rain/Storm/Snow/Wind (sunny/rainy aliases). "Rain" matches Rain+Storm.
     public string Weather { get; set; } = string.Empty;
     public int Progress { get; set; }
@@ -77,6 +82,8 @@ internal static class AdventureStepCodec
         sb.Append("|AllowDecor=").Append(s.AllowDecorShipping ? "1" : "0");
         sb.Append("|Loc=").Append(Sanitise(s.LocationName));
         sb.Append("|MinSize=").Append(s.MinSize);
+        sb.Append("|MinFloor=").Append(s.MinFloor);
+        sb.Append("|MaxFloor=").Append(s.MaxFloor);
         sb.Append("|Weather=").Append(Sanitise(s.Weather));
         sb.Append("|Progress=").Append(s.Progress);
         sb.Append("|Done=").Append(s.Done ? "1" : "0");
@@ -153,6 +160,14 @@ internal static class AdventureStepCodec
                 case "MinSize":
                     int.TryParse(val, out int minSize);
                     state.MinSize = minSize;
+                    break;
+                case "MinFloor":
+                    int.TryParse(val, out int minFloor);
+                    state.MinFloor = minFloor;
+                    break;
+                case "MaxFloor":
+                    int.TryParse(val, out int maxFloor);
+                    state.MaxFloor = maxFloor;
                     break;
                 case "Weather":
                     state.Weather = val;

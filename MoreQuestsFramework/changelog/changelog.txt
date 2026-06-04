@@ -1,4 +1,5 @@
 2.6.0
+- For mod authors: a "slay monsters" step can now require the kills happen on a set range of mine floors, covering both the Mines and the Skull Cavern.
 - For mod authors: quests can now end with the player reporting back to a villager and picking from a few answers, where the answer they choose decides the reward. Register the question and answers with the new RegisterReportBackChoice and point a Custom step at it. See the README for an example.
 - Fixed a quest that a villager only offers during a set range of days showing up after that range was over. If you hadn't talked to them during the window, the quest could pop up the next time you chatted, even days later. Now it's quietly dropped once the window passes. (For example, a quest Vincent only gives during the Egg Festival days no longer appears if you talk to him afterward.)
 - For mod authors: a quest can now show more than one objective line at once, handy for a checklist-style job or showing something like a running budget. The Quest Journal mod shows these lines too.

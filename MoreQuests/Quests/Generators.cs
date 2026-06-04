@@ -101,6 +101,7 @@ internal static partial class Generators
         Reg(fw, "ArchaeologyDig", ArchaeologyDig);
         Reg(fw, "BarDelivery", BarDelivery);
         Reg(fw, "BasicSlimeClearing", BasicSlimeClearing);
+        Reg(fw, "ClearTheFloor", ClearTheFloor);
         Reg(fw, "MinesDeepDive", MinesDeepDive);
         Reg(fw, "MonsterHunt", MonsterHunt);
         Reg(fw, "MonsterParts", MonsterParts);
