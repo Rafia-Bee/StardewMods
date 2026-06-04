@@ -149,6 +149,7 @@ Quests are grouped by category below and listed alphabetically within each group
 
 | Quest | When | Quest Giver | Objective | Reward | Notes |
 | --- | --- | --- | --- | --- | --- |
+| Batten Down the Hatches | Mail, the day before a storm | Conservation folks (Linus, Demetrius, etc.) | Put up some lightning rods on the farm before the storm hits | A battery pack in the mail the next day, plus a little friendship | Only if you know the Lightning Rod recipe, Cooldown 14 days |
 | Beach Cleanup | Daily board | Beach folks (Elliott, Willy, Dylan from ES, etc.) | Collect beach forage, then report back | Friendship with the giver | Year-round, Cooldown Long |
 | Floral Tea | Daily board | Any adult villager who doesn't dislike tea | Bring them an in-season flower they love or like | Friendship | Year-round (skips when there's no in-season flower), Cooldown Medium |
 | Heat Wave Relief | Daily board | Harvey or Paula (RSV) | Deliver Ice Cream, Melon, or Juice | Friendship + a random item from the Hospital shop | Summer only, Cooldown Medium |

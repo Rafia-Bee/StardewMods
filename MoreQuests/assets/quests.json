@@ -86,6 +86,17 @@
             "Generator": "HaySupplyRun"
         },
         {
+            "Name": "Seasonal.BattenDownTheHatches",
+            "Category": "Seasonal",
+            "Trigger": {
+                "Source": "WeatherForecast",
+                "Weather": "Storm",
+                "CooldownDays": 14,
+                "Available": { "KnownCraftingRecipe": "Lightning Rod" }
+            },
+            "Generator": "BattenDownTheHatches"
+        },
+        {
             "Name": "Seasonal.BeachCleanup",
             "Category": "Seasonal",
             "Trigger": {

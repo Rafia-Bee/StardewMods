@@ -96,6 +96,12 @@ public sealed class ModEntry : Mod
     internal const string CropCycleWaterHandler = "CropCycle.Water";
     internal const string CropCycleHarvestHandler = "CropCycle.Harvest";
 
+    /// Custom step handler id for Seasonal.BattenDownTheHatches. Polled from the same
+    /// OneSecondUpdateTicked sweep, counting lightning rods on the farm. Dedupes by
+    /// `Farm|x|y`; rods present when the quest posted are pre-credited in the generator.
+    internal const string BattenDownStepHandler = "BattenDown.PlaceRods";
+    internal const string BattenDownRewardMailKey = "RafiaBee.MoreQuests.BattenDownReward";
+
     internal const string EggHuntSabotageRewardMailKey = "RafiaBee.MoreQuests.EggHuntSabotageReward";
 
     /// ModData flag set on Spring 13 when the player wins the egg hunt while the
@@ -482,6 +488,10 @@ public sealed class ModEntry : Mod
             string wizardBody = I18n.Get("mail.festival.wizardsRitualReward.body").ToString();
             mail["RafiaBee.MoreQuests.WizardsRitualReward"] = wizardBody + "%item object Book_Mystery 1 %%";
 
+            // Battery pack the morning after the storm, charged up by a rod taking a strike.
+            string battenDownBody = I18n.Get("mail.seasonal.battenDownReward.body").ToString();
+            mail[BattenDownRewardMailKey] = battenDownBody + "%item object 787 1 %%";
+
             // Thank-you note from the kids the day after winning the egg hunt. No attachment;
             // the iridium egg is granted in code on Spring 14 morning since mail tokens don't
             // carry item quality.
@@ -754,6 +764,8 @@ public sealed class ModEntry : Mod
         if (Game1.player == null || ModScope == null)
             return;
 
+        PollBattenDownRods();
+
         var sow = ModScope.GetActiveCustomSteps(CropCycleSowHandler);
         var water = ModScope.GetActiveCustomSteps(CropCycleWaterHandler);
         if (sow.Count == 0 && water.Count == 0)
@@ -796,6 +808,33 @@ public sealed class ModEntry : Mod
                         handle.AddProgressOnceForKey(tileKey);
                     }
                 }
+            }
+        }
+    }
+
+    /// Credits Seasonal.BattenDownTheHatches for each lightning rod standing on the farm.
+    /// Dedupes by tile (`Farm|x|y`) so picking a rod up and dropping it back never re-credits,
+    /// and the generator pre-seeds existing rods into CreditedKeys so only new placements count.
+    private void PollBattenDownRods()
+    {
+        var steps = ModScope!.GetActiveCustomSteps(BattenDownStepHandler);
+        if (steps.Count == 0)
+            return;
+
+        var farm = Game1.getFarm();
+        if (farm?.Objects == null)
+            return;
+
+        foreach (var pair in farm.Objects.Pairs)
+        {
+            if (pair.Value?.QualifiedItemId != "(BC)9")
+                continue;
+            string tileKey = $"Farm|{(int)pair.Key.X}|{(int)pair.Key.Y}";
+            foreach (var handle in steps)
+            {
+                if (!handle.IsActive)
+                    continue;
+                handle.AddProgressOnceForKey(tileKey);
             }
         }
     }

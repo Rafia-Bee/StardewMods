@@ -645,6 +645,13 @@
     "quest.foraging.plantTrees.step": "Plant {{count}} trees anywhere outside the farm.",
     "quest.foraging.plantTrees.targetMessage": "Beautiful work. The forest will thank you for years.",
 
+    "quest.seasonal.battenDown.title": "Batten down the hatches",
+    "quest.seasonal.battenDown.description": "Big storm rolling in soon by the look of that sky. If you keep animals and crops out in the open, you'll want lightning rods up before it hits, at least {{count}} of them. Far better a rod takes the strike than your barn roof or your best tree.",
+    "quest.seasonal.battenDown.objective": "Put up {{count}} lightning rods on the farm before the storm.",
+    "quest.seasonal.battenDown.step": "Place {{count}} lightning rods on the farm.",
+    "quest.seasonal.battenDown.targetMessage": "Good. Let the sky do its worst now, the farm's ready for it.",
+    "mail.seasonal.battenDownReward.body": "Glad you got those rods up in time. I have no use for this, it's better in your hands. Stay dry out there.",
+
     "quest.seasonal.springCleaning.title": "Spring cleaning",
     "quest.seasonal.springCleaning.description": "The weeds are getting out of hand and it's an eyesore. If someone could get rid of {{count}} weeds around town, I would be very grateful.",
     "quest.seasonal.springCleaning.objective": "Clear weeds from anywhere but the farm.",

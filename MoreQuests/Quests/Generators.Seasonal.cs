@@ -312,6 +312,87 @@ internal static partial class Generators
         };
     }
 
+    // Lightning Rod is big-craftable id 9. Placed rods report this QualifiedItemId.
+    private const string LightningRodQualifiedId = "(BC)9";
+
+    /// Mail, fires the day before a storm (WeatherForecast trigger in quests.json). A
+    /// ConservationGuide giver warns about the incoming storm and asks the player to get
+    /// lightning rods up on the farm before it hits. Single Custom step tracked by a farm
+    /// sweep in ModEntry.OnOneSecondTick. Rods already standing when the quest posts are
+    /// pre-credited so only new placements count. Gated on knowing the Lightning Rod recipe
+    /// (also enforced in quests.json Available). Reward: a battery pack mailed the next day.
+    private static QuestPosting? BattenDownTheHatches(QuestContext ctx)
+    {
+        if (!(Game1.player?.craftingRecipes?.ContainsKey("Lightning Rod") ?? false))
+            return null;
+
+        string? giver = ctx.Dispatch.Pick(DispatchRoles.ConservationGuide);
+        if (giver == null)
+            return null;
+
+        int count;
+        if (ctx.Config.DifficultyScaling)
+        {
+            int foraging = Difficulty.GetSkillLevel(QuestCategory.Foraging);
+            count = Game1.random.Next(2, Math.Max(1, foraging / 2));
+        }
+        else
+        {
+            count = Game1.random.Next(1, 4);
+        }
+
+        var step = new AdventureStepState
+        {
+            Name = "PlaceRods",
+            Kind = AdventureStepKind.Custom,
+            Targets = new List<string> { ModEntry.BattenDownStepHandler },
+            Items = new List<string> { LightningRodQualifiedId },
+            Count = count,
+            CreditedKeys = ExistingFarmRodTileKeys(),
+            Description = ModEntry.I18n.Get("quest.seasonal.battenDown.step", new { count })
+        };
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[] { step }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.seasonal.battenDown.targetMessage"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Seasonal,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ctx.Config),
+            Rewards =
+            {
+                new FriendshipReward(giver, ctx.Config.FriendshipBasic),
+                new MailReward(ModEntry.BattenDownRewardMailKey, MailWhen.Tomorrow)
+            },
+            Title = ModEntry.I18n.Get("quest.seasonal.battenDown.title"),
+            Description = ModEntry.I18n.Get("quest.seasonal.battenDown.description", new { count }),
+            CurrentObjective = ModEntry.I18n.Get("quest.seasonal.battenDown.objective", new { count }),
+            TargetMessage = ModEntry.I18n.Get("quest.seasonal.battenDown.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
+    /// Tile keys (same `Farm|x|y` format the poll uses) for every lightning rod already on
+    /// the farm. Seeding these into the step's CreditedKeys means pre-existing rods never
+    /// count, so the quest only credits rods the player puts up after it posts.
+    internal static List<string> ExistingFarmRodTileKeys()
+    {
+        var keys = new List<string>();
+        var farm = Game1.getFarm();
+        if (farm?.Objects == null)
+            return keys;
+        foreach (var pair in farm.Objects.Pairs)
+        {
+            if (pair.Value?.QualifiedItemId == LightningRodQualifiedId)
+                keys.Add($"Farm|{(int)pair.Key.X}|{(int)pair.Key.Y}");
+        }
+        return keys;
+    }
+
     /// Spring-only single-step ClearWeeds AdventureQuest. Any met human can be the giver;
     /// the player clears SpringCleaningCount weeds anywhere except the farm. Wildcard
     /// targets avoid the "Town has no weeds today" dead-end. Reward: FriendshipBasic.

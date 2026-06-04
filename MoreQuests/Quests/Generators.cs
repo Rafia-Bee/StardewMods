@@ -109,6 +109,7 @@ internal static partial class Generators
         Reg(fw, "UnseenOffering", UnseenOffering);
 
         // Seasonal
+        Reg(fw, "BattenDownTheHatches", BattenDownTheHatches);
         Reg(fw, "BeachCleanup", BeachCleanup);
         Reg(fw, "FloralTea", FloralTea);
         Reg(fw, "HeatWaveRelief", HeatWaveRelief);
