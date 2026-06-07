@@ -1,8 +1,7 @@
 namespace QuestJournal.Menu;
 
-// One row in the journal's step list for a multi-step Adventure quest.
-// Mirrors the bits of MQF's AdventureStepInfo the UI actually renders.
-// Built fresh on every selection change; not observable.
+// One row in a multi-step quest's checklist shown in the journal.
+// Holds the step's progress and builds the display text (checkbox, number, count).
 public sealed class AdventureStepRow
 {
     public int Index { get; }
@@ -13,9 +12,6 @@ public sealed class AdventureStepRow
     public bool Active { get; }
     public string Kind { get; }
 
-    // Plain rows are already-formatted objective lines (e.g. "Lights 0/2",
-    // "Budget remaining: 4000g"). They render the description verbatim, no checkbox
-    // marker, no index, no auto progress suffix.
     public bool Plain { get; }
 
     public string IndexLabel => $"{Index + 1}.";
@@ -24,12 +20,6 @@ public sealed class AdventureStepRow
     public string ProgressLabel => ShowProgress ? $"{Progress}/{Count}" : string.Empty;
     public string DisplayText => string.IsNullOrEmpty(Description) ? Kind : Description;
 
-    // Combined "[x] 1. description 0/2" string. Long descriptions cause
-    // StardewUI's layout to loop infinitely when split across a horizontal
-    // lane of multiple labels (seen on Lumisteria's Fancy Goods SO with
-    // 60-char step descriptions). Rendering as a single label inside a
-    // vertical lane lets StardewUI wrap naturally with the parent's width
-    // constraint.
     public string RowText
     {
         get

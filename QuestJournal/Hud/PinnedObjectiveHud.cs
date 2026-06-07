@@ -14,18 +14,13 @@ using StardewValley.SpecialOrders;
 
 namespace QuestJournal.Hud;
 
-// Draws the pinned quests as a top-right stack while the player is in the world.
-// Each entry is the quest title plus its current objective (the active step for
-// MQF Adventure quests), resolved live from player.questLog every frame so the
-// text tracks progress without the journal being open.
+// Draws the little on-screen box that lists your pinned quests and their current objective.
+// Handles clicking an entry to open the journal, and dragging the box around to reposition it (saved to config).
 internal sealed class PinnedObjectiveHud
 {
     private readonly IModHelper _helper;
     private readonly IMoreQuestsApi? _mqfApi;
 
-    // Box geometry. panelWidth and the top offset are the most likely things to
-    // tune in-game; the offset is meant to clear the date/time/money box in the
-    // top-right corner.
     private const int PanelWidth = 380;
     private const int Padding = 16;
     private const int RightMargin = 16;
@@ -36,14 +31,9 @@ internal sealed class PinnedObjectiveHud
 
     private const int DragThreshold = 8;
 
-    // _lastPanelBounds is the rect drawn last frame, used to hit-test a grab and
-    // as the saved position on release. _entryBounds is one rect per drawn quest
-    // entry (with its pin key) so a press can be hit-tested to a specific quest.
     private Rectangle _lastPanelBounds;
     private readonly List<(Rectangle Bounds, string Key)> _entryBounds = new();
     private bool _dragging;
-    // A press inside the panel starts pending: it becomes a drag once the cursor
-    // travels past the threshold, otherwise the release opens the clicked quest.
     private bool _pendingPress;
     private Vector2 _pressPos;
     private string? _pressedKey;
@@ -72,10 +62,6 @@ internal sealed class PinnedObjectiveHud
 
         var cursor = CursorUtil.UiSpace(e.Cursor);
 
-        // Controller path. The pointer moves with the right stick, so we hit-test
-        // it just like the mouse. Only act (and suppress) when it's actually over
-        // a pinned entry, so the bind (A by default) still does its normal world
-        // job everywhere else. No drag-to-move on controller; that stays mouse.
         if (ModEntry.Config.HudActivateKey.JustPressed())
         {
             string? key = KeyAt(cursor);
@@ -90,15 +76,12 @@ internal sealed class PinnedObjectiveHud
         if (e.Button != SButton.MouseLeft) return;
         if (!_lastPanelBounds.Contains((int)cursor.X, (int)cursor.Y)) return;
 
-        // Arm a pending press. The per-tick poll promotes it to a drag past the
-        // threshold; a release before that fires the click on _pressedKey.
         _pendingPress = true;
         _pressPos = cursor;
         _grabOffset = new Vector2(cursor.X - _lastPanelBounds.X, cursor.Y - _lastPanelBounds.Y);
         _dragBoxX = _lastPanelBounds.X;
         _dragBoxY = _lastPanelBounds.Y;
         _pressedKey = KeyAt(cursor);
-        // Swallow the click so pressing the panel doesn't swing a tool.
         _helper.Input.Suppress(e.Button);
     }
 
@@ -109,11 +92,6 @@ internal sealed class PinnedObjectiveHud
         return null;
     }
 
-    // Drives the whole drag from a per-tick poll. The cursor is polled (CursorMoved
-    // doesn't fire while a button is held) and the END is detected from the raw XNA
-    // mouse state, NOT SMAPI's ButtonReleased: Suppress() makes SMAPI fire a release
-    // the next tick, which would kill the drag instantly. The raw state reflects the
-    // real hardware button regardless of suppression.
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
     {
         if (!_pendingPress && !_dragging) return;
@@ -129,7 +107,6 @@ internal sealed class PinnedObjectiveHud
             }
             else if (_pendingPress && !held && Game1.activeClickableMenu == null && _pressedKey != null)
             {
-                // Released without dragging: a click. Open the journal on it.
                 ModEntry.Instance.OpenJournalToQuest(_pressedKey);
             }
             _dragging = false;
@@ -150,20 +127,16 @@ internal sealed class PinnedObjectiveHud
 
         _dragBoxX = (int)(cursor.X - _grabOffset.X);
         _dragBoxY = (int)(cursor.Y - _grabOffset.Y);
-        // Keep the held button from swinging a tool under the panel.
         _helper.Input.Suppress(SButton.MouseLeft);
     }
 
     private void OnRenderedHud(object? sender, RenderedHudEventArgs e)
     {
-        // Clear the hit-test rects up front so a stale panel can't catch a click
-        // on a frame where the HUD isn't actually drawn.
         _lastPanelBounds = Rectangle.Empty;
         _entryBounds.Clear();
 
         if (!ModEntry.Config.ShowHudPin) return;
         if (!Context.IsWorldReady || Game1.player == null) return;
-        // Don't draw over a menu, an event/cutscene, or when the player hid the HUD.
         if (!Game1.displayHUD || Game1.eventUp || Game1.farmEvent != null) return;
         if (Game1.activeClickableMenu != null) return;
 
@@ -184,8 +157,6 @@ internal sealed class PinnedObjectiveHud
             entries.Add((q.questTitle ?? string.Empty, hud, all, key));
         }
 
-        // Special orders live in team.specialOrders, not the quest log, so they
-        // need a parallel pass. Only in-progress ones are shown.
         var orders = Game1.player.team?.specialOrders;
         if (orders != null)
         {
@@ -205,8 +176,6 @@ internal sealed class PinnedObjectiveHud
         DrawStack(e.SpriteBatch, entries, hiddenOverflow);
     }
 
-    // Resolved fresh from the raw field, not the cached GetName(), so a late
-    // string patch still reads right (mirrors the journal).
     private static string ResolveSpecialOrderTitle(SpecialOrder so)
     {
         string? raw = so.questName.Value;
@@ -215,8 +184,6 @@ internal sealed class PinnedObjectiveHud
         catch { return so.GetName() ?? string.Empty; }
     }
 
-    // Every not-yet-complete objective, each with its progress count when it has
-    // one. The first is shown on the HUD, the rest fill out the hover tooltip.
     private static IReadOnlyList<string> ResolveSpecialOrderObjectives(SpecialOrder so)
     {
         var lines = new List<string>();
@@ -237,9 +204,6 @@ internal sealed class PinnedObjectiveHud
         return lines;
     }
 
-    // Returns the one line shown on the HUD plus every step still to do. An MQF
-    // Adventure quest can have several steps, but the HUD only has room for one,
-    // so the full set feeds the hover tooltip.
     private (string Hud, IReadOnlyList<string> All) ResolveObjective(Quest q)
     {
         if (_mqfApi != null)
@@ -249,10 +213,6 @@ internal sealed class PinnedObjectiveHud
                 var steps = _mqfApi.GetAdventureSteps(q);
                 if (steps != null && steps.Count > 0)
                 {
-                    // Every step still to do, not just the one flagged active. A
-                    // quest's later steps stay inactive until the earlier ones are
-                    // done, but the player still wants to see what's coming, same as
-                    // the journal shows them.
                     var all = new List<string>();
                     foreach (var s in steps)
                     {
@@ -336,7 +296,6 @@ internal sealed class PinnedObjectiveHud
             boxX = Game1.uiViewport.Width - PanelWidth - RightMargin;
             boxY = TopOffset;
         }
-        // Keep the panel on screen whatever the position source.
         boxX = Math.Clamp(boxX, 0, Math.Max(0, Game1.uiViewport.Width - PanelWidth));
         boxY = Math.Clamp(boxY, 0, Math.Max(0, Game1.uiViewport.Height - height));
         _lastPanelBounds = new Rectangle(boxX, boxY, PanelWidth, height);
@@ -347,13 +306,9 @@ internal sealed class PinnedObjectiveHud
             b, Game1.menuTexture, new Rectangle(0, 256, 60, 60),
             boxX, boxY, PanelWidth, height, Color.White * opacity, 1f, drawShadow: true);
 
-        // Hover highlight uses the same tint as the journal's quest-list rows, so
-        // the HUD reads as a clickable list. Suppressed while dragging the panel.
         var cursor = CursorUtil.UiSpace(_helper.Input.GetCursorPosition());
         bool canHover = !_dragging;
 
-        // When the cursor is over an entry that has more lines than the one shown,
-        // remember its full text so a tooltip can be drawn on top after the stack.
         string? tooltipTitle = null;
         string? tooltipBody = null;
 
@@ -389,8 +344,6 @@ internal sealed class PinnedObjectiveHud
             b.DrawString(font, overflowLine, new Vector2(textX, y), Game1.textColor * (0.7f * opacity));
         }
 
-        // Drawn last so it sits on top of the panel. drawHoverText anchors itself
-        // to the cursor and keeps the box on screen.
         if (tooltipBody != null)
             IClickableMenu.drawHoverText(b, tooltipBody, font, 0, 0, -1, tooltipTitle);
     }

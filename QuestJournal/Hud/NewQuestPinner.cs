@@ -6,12 +6,9 @@ using StardewValley.SpecialOrders;
 
 namespace QuestJournal.Hud;
 
-// Auto-pins quests the player picks up after a save loads, when
-// DefaultPinNewQuests is on. SMAPI has no "quest added" event, so this watches
-// the quest log (and special orders, which live in team.specialOrders, not the
-// log) on a one-second tick and pins anything it hasn't seen before. On save
-// load it primes the seen-set with the existing quests/orders so old ones
-// aren't bulk-pinned, only genuinely new ones are.
+// Watches for brand new quests and special orders and auto-pins them.
+// Primes a list of already-seen quests on load, then checks once a second for
+// anything new. Only pins automatically when that config option is on.
 internal sealed class NewQuestPinner
 {
     private readonly IModHelper _helper;
@@ -38,8 +35,6 @@ internal sealed class NewQuestPinner
         _primed = false;
     }
 
-    // Snapshot the current quests + special orders as already-seen so they don't
-    // get auto-pinned.
     private void Prime()
     {
         _seen.Clear();
@@ -84,7 +79,6 @@ internal sealed class NewQuestPinner
             if (_seen.Add(key) && ModEntry.Config.DefaultPinNewQuests)
                 PinnedObjectivesStore.Pin(q);
         }
-        // Special orders, accepted from the SO board into team.specialOrders.
         var orders = Game1.player.team?.specialOrders;
         if (orders != null)
         {
@@ -98,7 +92,6 @@ internal sealed class NewQuestPinner
                     PinnedObjectivesStore.Pin(so);
             }
         }
-        // Forget quests/orders that left so re-accepting one pins it again.
         _seen.RemoveWhere(k => !current.Contains(k));
     }
 }

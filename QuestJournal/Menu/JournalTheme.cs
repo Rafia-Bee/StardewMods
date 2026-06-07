@@ -4,11 +4,9 @@ using StardewModdingAPI;
 
 namespace QuestJournal.Menu;
 
-// Journal UI colours, loaded from a Content Patcher-editable data asset so
-// other mod authors can re-theme the journal. The asset is a plain
-// string->hex dictionary at "Mods/<UniqueID>/Theme"; an author overrides any
-// entry with a small EditData patch. Anything missing or unparseable falls
-// back to the default below, so a bad value can't break the journal.
+// Holds the journal's color theme (tints, divider, header).
+// Loads colors from a game-content asset so packs can override them, falls back
+// to defaults, and parses hex color strings (3, 4, 6, or 8 digits).
 public static class JournalTheme
 {
     public const string KeySelectedTint = "SelectedTint";
@@ -16,15 +14,10 @@ public static class JournalTheme
     public const string KeyDividerColor = "DividerColor";
     public const string KeyHeaderColor = "HeaderColor";
 
-    // Hex is #RGB, #RGBA, #RRGGBB, or #RRGGBBAA. The row/divider defaults are
-    // translucent black so they darken whatever's underneath without imposing a
-    // hue, which means they sit naturally on top of any UI recolour mod. Black
-    // also darkens by the alpha factor the same way under either alpha-blend
-    // model, so there's no brightness blow-out to worry about.
-    private const string DefaultSelectedTint = "#00000066"; // ~40% dark wash, selected row
-    private const string DefaultHoverTint = "#00000033";    // ~20% dark wash, hovered row
-    private const string DefaultDividerColor = "#0000004D"; // ~30% dark line
-    private const string DefaultHeaderColor = "#113366FF";  // section heading blue
+    private const string DefaultSelectedTint = "#00000066";
+    private const string DefaultHoverTint = "#00000033";
+    private const string DefaultDividerColor = "#0000004D";
+    private const string DefaultHeaderColor = "#113366FF";
 
     public static Color SelectedTint { get; private set; } = Parse(DefaultSelectedTint);
     public static Color HoverTint { get; private set; } = Parse(DefaultHoverTint);
@@ -62,9 +55,6 @@ public static class JournalTheme
 
     private static Color Parse(string hex) => TryParse(hex, out var c) ? c : Color.White;
 
-    // Accepts #RGB, #RGBA, #RRGGBB, #RRGGBBAA, with or without the leading '#'.
-    // Colours are stored straight (not premultiplied), matching how the journal
-    // drew its tint constants before theming.
     public static bool TryParse(string? hex, out Color color)
     {
         color = Color.White;
@@ -99,7 +89,7 @@ public static class JournalTheme
         return true;
     }
 
-    private static int Nibble(char c) => Hex(c) * 17; // e.g. 'F' -> 0xFF
+    private static int Nibble(char c) => Hex(c) * 17;
 
     private static int Octet(string s, int i) => Hex(s[i]) * 16 + Hex(s[i + 1]);
 

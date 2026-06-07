@@ -6,9 +6,9 @@ using StardewModdingAPI.Utilities;
 
 namespace QuestJournal;
 
-// Local mirror of GMCM's API surface, matching the bits we use. GMCM is an
-// optional dependency, so we never reference its assembly directly; SMAPI's
-// proxy maps these signatures onto the real ones at runtime.
+// The subset of Generic Mod Config Menu's API we call into.
+// Just the method signatures we need to build our config page. GMCM provides the
+// real implementation at runtime.
 public interface IGenericModConfigMenuApi
 {
     void Register(IManifest mod, Action reset, Action save, bool titleScreenOnly = false);

@@ -3,9 +3,7 @@ using StardewValley.Menus;
 
 namespace QuestJournal.Integrations;
 
-// Local mirror of focustense.StardewUI's IViewEngine. SMAPI's ModRegistry.GetApi
-// duck-types our interface against the real one, so we don't take a project /
-// assembly reference to StardewUI. Only methods we actually use are declared.
+// Our copy of the StardewUI view engine API. We use it to build the journal menus from asset files.
 public interface IViewEngine
 {
     void RegisterSprites(string assetPrefix, string modDirectory);
@@ -17,15 +15,10 @@ public interface IViewEngine
     IMenuController CreateMenuControllerFromAsset(string assetName, object? context = null);
 }
 
-// Local mirror of StardewUI's IMenuController. Only the bits we touch are
-// declared; SMAPI duck-types this against the real one.
 public interface IMenuController : IDisposable
 {
     IClickableMenu Menu { get; }
     float DimmingAmount { get; set; }
-    // Returns the menu's top-left screen position; called by StardewUI each
-    // frame. Setting it takes over from the engine's default centering, which
-    // is how the journal supports drag-to-move.
     Func<Microsoft.Xna.Framework.Point> PositionSelector { get; set; }
     event Action Closed;
     void Close();

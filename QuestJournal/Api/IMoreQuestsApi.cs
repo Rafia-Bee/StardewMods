@@ -3,11 +3,8 @@ using StardewValley.Quests;
 
 namespace QuestJournal.Api;
 
-// Local duck-typed mirror of MoreQuestsFramework's IMoreQuestsApi. SMAPI's
-// ModRegistry.GetApi proxies the real API against this interface so we don't
-// take a ProjectReference / assembly reference on MoreQuestsFramework.dll. Only
-// the slice the journal actually uses is declared. Property and method names
-// must match MQF's IMoreQuestsApi exactly; the proxy is name-based.
+// The MoreQuests mod's API as we see it. Lets us pull extra quest details
+// (rewards, steps, objectives, giver, item requirements) for the journal.
 public interface IMoreQuestsApi
 {
     IReadOnlyList<IQuestRewardLine> GetRewardLines(Quest quest);
@@ -16,18 +13,10 @@ public interface IMoreQuestsApi
 
     int? GetActiveStepIndex(Quest quest);
 
-    // Multi-line objectives for quests that aren't AdventureQuests but still want to
-    // show more than one objective line (e.g. a budget-tracking redecoration quest).
-    // Null for everything else. Name must match MQF's IMoreQuestsApi exactly; the
-    // proxy is name-based.
     IReadOnlyList<string>? GetObjectiveLines(Quest quest);
 
     string? GetDefinitionId(Quest quest);
 
-    // Best-effort NPC name for the quest's giver. Reads AdventureQuest.giverNpc
-    // for framework Adventure / mail / board quests and falls back to vanilla
-    // subclass target fields (ItemDeliveryQuest.target, SlayMonsterQuest.target).
-    // Null when the framework can't infer a giver.
     string? GetGiverNpc(Quest quest);
 
     IQuestInfo? GetQuestInfo(string definitionId);

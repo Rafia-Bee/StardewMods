@@ -7,16 +7,10 @@ using StardewValley.SpecialOrders;
 
 namespace QuestJournal.Menu;
 
-// Shared snapshot builders for QuestJournal. Both the journal panel
-// (JournalContext) and the natural-completion watcher need to derive the
-// same reward lines / giver / source for a given Quest. Keeping this
-// centralised avoids the two paths drifting apart and capturing
-// different fields for the same quest.
+// Pulls the display details for a quest: reward lines, who gave it, its category, and what mod it came from.
+// Asks the MoreQuests API first when it's around, then falls back to reading vanilla quest fields, quest data, or sniffing NPC names out of the text.
 internal static class QuestSnapshotBuilder
 {
-    // These run from both the journal (instance helper) and the completion
-    // watcher (static context), so they pull the translation helper off the
-    // mod entry. Falls back to the English literal if it isn't ready yet.
     private static string T(string key, string fallback)
         => ModEntry.Instance?.Helper?.Translation.Get(key).Default(fallback).ToString() ?? fallback;
 
@@ -27,14 +21,6 @@ internal static class QuestSnapshotBuilder
     {
         var lines = new List<RewardLineRow>();
 
-        // Always ask MQF first, regardless of IsManagedQuest. The framework's
-        // _managed table is a ConditionalWeakTable populated only at quest
-        // creation, so save-reloaded quests fall out of it even though their
-        // SerializedRewards (NetStringList) survives the save trip. Gating
-        // here on IsManagedQuest would silently drop the MQF lines for every
-        // quest that pre-existed the current session. GetRewardLines itself
-        // already returns an empty array for non-IRewardedQuest quests, so
-        // calling it unconditionally is safe for vanilla quests too.
         if (mqfApi != null)
         {
             IReadOnlyList<IQuestRewardLine>? mqfLines = null;
@@ -65,11 +51,6 @@ internal static class QuestSnapshotBuilder
 
     private static void SynthesiseVanillaRewardLines(Quest q, List<RewardLineRow> lines)
     {
-        // GetMoneyReward() is virtual on Quest; ItemDeliveryQuest overrides
-        // it to fall back to `item.Price * 3` when moneyReward.Value hasn't
-        // been materialised. Other subclasses (ResourceCollection, Fishing,
-        // SlayMonster) don't override and instead store their payout in a
-        // sibling `reward` NetInt, so we have to probe those explicitly.
         int gold = q.GetMoneyReward();
         if (gold <= 0)
             gold = ResolveSubclassReward(q);
@@ -77,8 +58,6 @@ internal static class QuestSnapshotBuilder
             lines.Add(new RewardLineRow(kind: "Money", summary: T("journal.reward.money", new { amount = gold }, $"{gold}g"), amount: gold));
 
         string? desc = q.rewardDescription.Value;
-        // Vanilla quest data uses "-1" as the "no reward description" sentinel
-        // (see Data/Quests). Suppress it so the panel doesn't show "- -1".
         if (!string.IsNullOrEmpty(desc) && desc != "-1")
             lines.Add(new RewardLineRow(kind: "Custom", summary: desc!));
 
@@ -111,10 +90,6 @@ internal static class QuestSnapshotBuilder
     {
         if (q == null) return null;
 
-        // MQF first. AdventureQuest stores the giver in giverNpc.Value (a NetString that
-        // survives save reload), and MQF's GetGiverNpc also returns the vanilla subclass
-        // fields when applicable. Doing this first means save-reloaded MQF mail/board
-        // quests don't fall through to a null giver.
         if (mqfApi != null)
         {
             string? fromMqf = null;
@@ -135,25 +110,12 @@ internal static class QuestSnapshotBuilder
                 return sliq.npcName.Value;
         }
 
-        // Data/Quests fallback. Vanilla ItemDelivery / LostItem / SecretLostItem /
-        // Monster all carry the giver NPC in the first conditions field. This
-        // catches cases where the subclass field is empty (Basic quest type
-        // overriding a row that originally had an NPC, scripted quest creation
-        // that bypassed loadQuestInfo, etc.).
         string? fromData = ResolveGiverFromQuestData(q.id?.Value);
         if (!string.IsNullOrEmpty(fromData)) return fromData;
 
-        // Heuristic last resort: story quests (base Quest, ItemHarvestQuest,
-        // CraftingQuest, SocializeQuest, ...) don't have an NPC field at all,
-        // but the title and description nearly always name the giver in plain
-        // text. Scan the combined text for any string that matches a known NPC
-        // (internal name) and return the first one found. Falls back to the
-        // possessive form ("Marnie's") so "Marnie's Request" resolves to Marnie.
         string? fromText = ResolveGiverFromText(q);
         if (!string.IsNullOrEmpty(fromText)) return fromText;
 
-        // Diagnostic: log the quest type + id when we can't infer a giver, so
-        // future bug reports include enough info to extend this resolver.
         try
         {
             ModEntry.DebugLog(
@@ -172,12 +134,6 @@ internal static class QuestSnapshotBuilder
         if (string.IsNullOrEmpty(title) && string.IsNullOrEmpty(description))
             return null;
 
-        // Game1.characterData keys are NPC internal names ("Marnie", "Marlon",
-        // "Clint", ...) plus Pet/Horse template ids we want to skip. Match each
-        // candidate as a whole word, allowing an optional possessive "'s" suffix
-        // so titles like "Marnie's Request" resolve. Title is searched first so
-        // a quest titled after one NPC but mentioning others in the body still
-        // attributes to the title NPC.
         IEnumerable<string> candidates;
         try
         {
@@ -194,14 +150,12 @@ internal static class QuestSnapshotBuilder
     private static string MatchNpcInText(string text, IEnumerable<string> npcs)
     {
         if (string.IsNullOrEmpty(text)) return string.Empty;
-        // Track the earliest index so we return the first-mentioned NPC, not
-        // whatever the dictionary happened to enumerate first.
         string best = string.Empty;
         int bestIdx = int.MaxValue;
         foreach (string name in npcs)
         {
             if (string.IsNullOrEmpty(name)) continue;
-            if (name.Length < 3) continue; // skip stub ids ("X1", "Pet", etc.)
+            if (name.Length < 3) continue;
             int idx = IndexOfWholeWord(text, name);
             if (idx >= 0 && idx < bestIdx)
             {
@@ -219,8 +173,6 @@ internal static class QuestSnapshotBuilder
         {
             int found = haystack.IndexOf(needle, from, StringComparison.OrdinalIgnoreCase);
             if (found < 0) return -1;
-            // Require a non-letter boundary on both sides. Trailing apostrophe
-            // ("Marnie's") counts as a non-letter so possessives still match.
             bool leftOk = found == 0 || !char.IsLetter(haystack[found - 1]);
             int after = found + needle.Length;
             bool rightOk = after >= haystack.Length || !char.IsLetter(haystack[after]);
@@ -242,7 +194,6 @@ internal static class QuestSnapshotBuilder
             if (string.IsNullOrEmpty(conditions)) return null;
             string[] split = conditions.Split(' ');
             if (split.Length == 0) return null;
-            // First conditions token is the NPC name for the quest types that name one.
             switch (type)
             {
                 case "ItemDelivery":
@@ -250,8 +201,6 @@ internal static class QuestSnapshotBuilder
                 case "SecretLostItem":
                     return string.IsNullOrEmpty(split[0]) ? null : split[0];
                 case "Monster":
-                    // Monster quests: conditions are "<monster> <count> [<targetNpc> [<ignoreFarm>]]".
-                    // The optional target NPC is the giver; fall back to null when it's missing.
                     if (split.Length >= 3 && !string.IsNullOrEmpty(split[2]) && split[2] != "null")
                         return split[2];
                     return null;
@@ -262,11 +211,6 @@ internal static class QuestSnapshotBuilder
         catch { return null; }
     }
 
-    // MoreQuests category + posting kind for a quest, as plain strings for
-    // custom-tab filtering. Only framework quests carry these; vanilla and
-    // anything MQF doesn't claim come back blank. Enum values arrive over
-    // Pintail's proxy, so ToString() gives the member name ("Cooking",
-    // "DailyBoard"), which is exactly what we filter on.
     public static (string Category, string Kind) ResolveCategoryKind(Quest q, IMoreQuestsApi? mqfApi)
     {
         if (q == null) return (string.Empty, string.Empty);
@@ -285,16 +229,9 @@ internal static class QuestSnapshotBuilder
             catch { }
         }
 
-        // MQF didn't claim this quest: it's vanilla, a non-MQF modded quest, or
-        // one that was already in the log before it got stamped. Classify it by
-        // its vanilla subclass so custom "kind" tabs still catch it. Category
-        // stays blank since vanilla quests carry no theme.
         return (string.Empty, ClassifyVanillaKind(q));
     }
 
-    // Best-effort quest-type label from the vanilla subclass. Names match MQF's
-    // BoardQuestType so a "kind" tab reads the same whether the quest came from
-    // MQF or vanilla. Anything without a known subclass is bucketed as Story.
     private static string ClassifyVanillaKind(Quest q) => q switch
     {
         ItemDeliveryQuest => "ItemDelivery",
@@ -312,12 +249,6 @@ internal static class QuestSnapshotBuilder
 
     public static string ResolveSourceDisplay(Quest q, IMoreQuestsApi? mqfApi, IModHelper helper)
     {
-        // MQF first. Many framework quests run as vanilla subclasses at
-        // runtime (a MoreQuests "bring 10 potatoes to Robin" is still an
-        // ItemDeliveryQuest), so the subclass check below would
-        // misattribute them to vanilla if we ran it first. GetDefinitionId
-        // returns null for anything MQF doesn't claim, so falling through
-        // for vanilla billboard quests is safe.
         if (mqfApi != null)
         {
             try
@@ -337,11 +268,6 @@ internal static class QuestSnapshotBuilder
             catch { }
         }
 
-        // Modded quest id by dotted-prefix convention. Both mod-authored vanilla
-        // quests (e.g. "TheLimeyDragon.Ayeisha_Quest2") and most CP quest packs
-        // namespace their ids with the author/mod prefix. Try longest-UniqueID
-        // prefix match first so "RSV.Foo.Bar" doesn't get claimed by a plain
-        // "RSV" mod when a more specific "RSV.Foo" pack is loaded.
         string? questId = q.id?.Value;
         if (!string.IsNullOrEmpty(questId) && questId!.Contains('.'))
         {
@@ -367,18 +293,6 @@ internal static class QuestSnapshotBuilder
                 return bestMatch.Manifest.Name;
         }
 
-        // Vanilla quest subclasses + base Quest. Story quests (Getting Started,
-        // Mr. Qi's Plane Ride, etc.) are plain Quest instances with no
-        // subclass, so we have to whitelist the bare type, not just the
-        // subclasses. For these types we still have to decide whether the
-        // entry came from vanilla Data/Quests or from a mod that edited the
-        // same asset. We don't have a clean signal for that without scanning
-        // content packs, so we lean on the id shape: pure-numeric ids ("1",
-        // "21", "126") are how vanilla story / billboard quests are keyed, so
-        // those stay "Stardew Valley". An id that contains any letter
-        // ("VincentCheezeQuest") is almost certainly a mod-injected row, so
-        // we surface the id verbatim. The player gets a hint that something
-        // outside vanilla is involved without us guessing the wrong mod.
         if (q is ItemDeliveryQuest or FishingQuest or ResourceCollectionQuest or SlayMonsterQuest
             || q.GetType() == typeof(Quest))
         {
@@ -387,10 +301,6 @@ internal static class QuestSnapshotBuilder
             return "Stardew Valley";
         }
 
-        // Other modded Quest subclass. Best-effort: match the defining
-        // assembly's short name against each loaded mod's manifest name
-        // or UniqueID. Falls back to the assembly name itself (better than
-        // a bare "Modded") and only "Modded" when even that's empty.
         string? asmName = q.GetType().Assembly.GetName().Name;
         if (string.IsNullOrEmpty(asmName)) return "Modded";
 
@@ -418,19 +328,10 @@ internal static class QuestSnapshotBuilder
         return false;
     }
 
-    // Special Orders don't go through MQF, so we can't ask the framework
-    // who owns them. The next-best thing is the questKey itself: most
-    // modded SOs prefix the key with their UniqueID or namespace
-    // (e.g. "Lumisteria.MtVapiusSpecialOrders.MtVapiusFlowers",
-    // "RSV.SpecialOrder.BugSteak"). Vanilla keys are unprefixed plain
-    // strings ("Caroline", "Lewis", "Wizard2", ...), so a dot in the
-    // key is a strong signal it's modded. Match against loaded mods by
-    // longest-UniqueID-prefix.
     public static string ResolveSpecialOrderSource(SpecialOrder so, IModHelper helper)
     {
         if (so == null) return "Stardew Valley";
 
-        // Qi board first; orderType.Value == "Qi" is set by vanilla.
         if (so.orderType.Value == "Qi") return "Mr. Qi";
 
         string key = so.questKey.Value ?? string.Empty;
@@ -444,8 +345,6 @@ internal static class QuestSnapshotBuilder
             var m = mod.Manifest;
             if (m == null || string.IsNullOrEmpty(m.UniqueID)) continue;
             string uid = m.UniqueID;
-            // Prefix match at a "." boundary so "RSV" doesn't accidentally
-            // claim "RSVMod.Other.Thing". Also accept exact match.
             if (key.Equals(uid, StringComparison.OrdinalIgnoreCase)
                 || key.StartsWith(uid + ".", StringComparison.OrdinalIgnoreCase))
             {
@@ -459,9 +358,6 @@ internal static class QuestSnapshotBuilder
         if (bestMatch?.Manifest != null)
             return bestMatch.Manifest.Name;
 
-        // Dot present but no mod claimed it. Best effort: surface the
-        // first dotted segment so the player at least sees the namespace
-        // rather than a wrong "Stardew Valley" attribution.
         int dot = key.IndexOf('.');
         return dot > 0 ? key.Substring(0, dot) : "Stardew Valley";
     }

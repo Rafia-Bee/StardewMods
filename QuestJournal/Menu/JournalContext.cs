@@ -19,8 +19,6 @@ using StardewValley.SpecialOrders.Rewards;
 
 namespace QuestJournal.Menu;
 
-// How the quests list is ordered. Saved to config (by name) so it persists and
-// applies to every tab. The order here is the order shown in the dropdown.
 public enum SortMode
 {
     Deadline,
@@ -30,16 +28,16 @@ public enum SortMode
     Category
 }
 
+// The view-model behind the quest journal menu. It pulls quests and special orders
+// out of the game, sorts and filters them into tabs, and tracks the selected quest.
+// It also drives the action buttons (pin, warp, complete, cancel, postpone, claim)
+// and handles custom tabs, search, sorting, and where the window sits on screen.
 public sealed class JournalContext : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ObservableCollection<TabRow> Tabs { get; } = new();
-    // Tabs that don't fit on the bottom row, packed into rows that stack above
-    // it (see RebuildTabRows). The bottom row itself is BottomRowTabs.
     public ObservableCollection<TabRowGroup> OverflowRowGroups { get; } = new();
-    // The first tabs, which share the always-visible bottom row with the "+"
-    // and "Edit tabs" controls.
     public ObservableCollection<TabRow> BottomRowTabs { get; } = new();
     public ObservableCollection<QuestRow> Quests { get; } = new();
     public ObservableCollection<RewardLineRow> SelectedRewards { get; } = new();
@@ -60,17 +58,12 @@ public sealed class JournalContext : INotifyPropertyChanged
         }
     }
 
-    // Detail / action panels bind directly to these hoisted props so changes
-    // to SelectedQuest are visible to StardewUI. *context={SelectedQuest}
-    // didn't reliably re-render reactively, so we flatten.
     public string SelectedTitle => _selectedQuest?.Title ?? string.Empty;
     public string SelectedDescription => _selectedQuest?.Description ?? string.Empty;
     public string SelectedObjective => _selectedQuest?.Objective ?? string.Empty;
     public string SelectedGiverDisplay => _selectedQuest?.GiverDisplay ?? string.Empty;
     public string SelectedDaysLeftDisplay => _selectedQuest?.DaysLeftDisplay ?? string.Empty;
     public string SelectedSourceDisplay => _selectedQuest?.SourceDisplay ?? string.Empty;
-    // Single NPC reads "Warp to X"; multiple touches open the dropdown, so the
-    // button just says "Warp...". Empty when nothing's selected or warpable.
     public string SelectedWarpLabel
     {
         get
@@ -85,22 +78,13 @@ public sealed class JournalContext : INotifyPropertyChanged
     }
     public bool SelectedIsCompleted => _selectedQuest?.IsCompleted == true;
     public bool SelectedShowActions => _selectedQuest != null && !_selectedQuest.IsCompleted && _selectedQuest.Quest != null;
-    // Complete pays the reward and clears the quest without doing the objective,
-    // so it's a cheat too. Gated behind AllowCompleteCheat (default off).
     public bool SelectedShowComplete => SelectedShowActions && ModEntry.Config.AllowCompleteCheat;
-    // A finished quest or special order whose gold is still waiting. Shows a Claim
-    // button that pays the gold and clears it, same as the vanilla journal. Only
-    // claimable rows set CanClaim, and they always carry a live quest or order.
     public bool SelectedCanClaim => _selectedQuest?.CanClaim == true;
     public bool SelectedShowCancel => _selectedQuest != null && _selectedQuest.CanCancel;
     public bool SelectedShowPostpone => _selectedQuest != null && _selectedQuest.CanPostpone;
-    // Details / Pin / Warp work for live quests and special orders, not history
-    // rows. Complete / Postpone / Cancel stay quest-only.
     public bool SelectedShowDetails => _selectedQuest != null && !_selectedQuest.IsCompleted
         && (_selectedQuest.Quest != null || _selectedQuest.SpecialOrder != null);
     public bool SelectedShowPin => SelectedShowDetails;
-    // Warp is gated behind AllowWarpCheat (default off) and needs at least one
-    // resolvable NPC to warp to, else the button has nothing to do.
     public bool SelectedShowWarp => SelectedShowDetails && ModEntry.Config.AllowWarpCheat
         && _selectedQuest != null && _selectedQuest.WarpTargets.Count > 0;
     public bool SelectedIsPinned =>
@@ -109,9 +93,6 @@ public sealed class JournalContext : INotifyPropertyChanged
     public string SelectedPinLabel => _helper.Translation
         .Get(SelectedIsPinned ? "journal.action.unpin" : "journal.action.pin")
         .Default(SelectedIsPinned ? "Unpin" : "Pin").ToString();
-    // Item helper (cheat). Spawns the target item for item-style quests, or
-    // advances the catch counter for fishing quests. Hidden unless AllowItemCheats
-    // is on and the live quest actually has something the helper can do.
     public bool SelectedShowItemHelper => _selectedQuest?.Quest is Quest q
         && ModEntry.Config.AllowItemCheats
         && AdaptiveItemSpawner.CanHelp(q, _mqfApi, _helper, out _);
@@ -125,9 +106,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             return string.Empty;
         }
     }
-    // SML swaps between the single Objective line and the multi-step list
-    // based on these. A stepped Adventure quest renders the step list and
-    // hides the objective; everything else keeps the single objective.
     public bool SelectedHasSteps => _selectedQuest?.AdventureSteps.Count > 0;
     public bool SelectedShowObjective => !SelectedHasSteps && !string.IsNullOrEmpty(SelectedObjective);
 
@@ -135,9 +113,6 @@ public sealed class JournalContext : INotifyPropertyChanged
     public bool NoSelection => _selectedQuest == null;
     public bool IsEmpty => Quests.Count == 0;
 
-    // Free-text search box in the top row. Filters the current tab's rows by
-    // title (case-insensitive substring). Two-way bound so typing re-filters
-    // live; cleared text shows the whole tab again.
     private string _searchText = string.Empty;
     public string SearchText
     {
@@ -154,9 +129,6 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     public void ClearSearch() => SearchText = string.Empty;
 
-    // Sort order for the quests list. Persisted to config and applied to every
-    // tab. SortKinds[i] is the mode for SortOptions[i] (the labels the dropdown
-    // shows), so the selected label maps back to a mode by index.
     private static readonly SortMode[] SortKinds =
     {
         SortMode.Deadline, SortMode.Alphabetical, SortMode.Giver, SortMode.Source, SortMode.Category
@@ -189,9 +161,6 @@ public sealed class JournalContext : INotifyPropertyChanged
     private static SortMode ParseSortMode(string? name)
         => System.Enum.TryParse<SortMode>(name, ignoreCase: true, out var m) ? m : SortMode.Deadline;
 
-    // Edit mode (mirrors Better Crafting's category editing): off by default and
-    // tabs just switch. When on, clicking a custom tab opens its editor to
-    // rename / re-filter / delete it. Built-in tabs always just switch.
     private bool _editMode;
     public bool EditMode
     {
@@ -202,8 +171,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             _editMode = value;
             Raise(nameof(EditMode));
             Raise(nameof(EditButtonLabel));
-            // The edit tab lives on the rail and its label flips with the mode,
-            // which changes its width, so re-pack the rows.
             if (_editTab != null)
             {
                 _editTab.Label = EditButtonLabel;
@@ -216,27 +183,16 @@ public sealed class JournalContext : INotifyPropertyChanged
         : _helper.Translation.Get("journal.tab.edit").Default("Edit tabs").ToString();
     public void ToggleEditMode() => EditMode = !_editMode;
 
-    // Shared fallback label for a missing giver / source.
     private string UnknownLabel => _helper.Translation.Get("journal.unknown").Default("Unknown").ToString();
 
-    // Static translation helpers for the Special Order reward builders below,
-    // which stay static (no instance state). Falls back to the English literal
-    // before the mod entry is ready.
     private static string T(string key, string fallback)
         => ModEntry.Instance?.Helper?.Translation.Get(key).Default(fallback).ToString() ?? fallback;
 
     private static string T(string key, object tokens, string fallback)
         => ModEntry.Instance?.Helper?.Translation.Get(key, tokens).Default(fallback).ToString() ?? fallback;
 
-    // Section-heading colour for the detail panel, themed via JournalTheme.
     public Color HeaderColor => JournalTheme.HeaderColor;
 
-    // Whole-journal zoom, done as a real layout resize (not a transform). Every
-    // structural dimension is base * scale, so the actual layout boxes grow and
-    // StardewUI's hit-testing/centring stays correct. A transform was tried
-    // first but only scaled the pixels, leaving clicks mapped to the 1x layout.
-    // Font size is fixed by the engine, so text stays native size; the boxes
-    // just get roomier. Clamped so a bad config value can't break the journal.
     private float Scale
     {
         get
@@ -251,9 +207,6 @@ public sealed class JournalContext : INotifyPropertyChanged
     private string Px(float baseValue)
         => ((int)System.Math.Round(baseValue * Scale)).ToString(System.Globalization.CultureInfo.InvariantCulture) + "px";
 
-    // Heights stretch so the panels fill the frame instead of leaving dead space
-    // below them, and they stay filled at any JournalScale. Only the widths are
-    // fixed per panel.
     public string RootLayout => $"{Px(1100)} {Px(720)}";
     public string PanelRowLayout => "content stretch";
     public string ListPanelLayout => $"{Px(240)} stretch";
@@ -261,11 +214,6 @@ public sealed class JournalContext : INotifyPropertyChanged
     public string ActionPanelLayout => $"{Px(236)} stretch";
     public string ActionLaneLayout => "stretch content";
 
-    // Drag-to-move. GetJournalTopLeft is the screen-centered position plus a
-    // persisted offset; ModEntry pushes it onto the menu every tick (StardewUI's
-    // PositionSelector only re-evaluates on re-measure, which a drag doesn't
-    // trigger). The drag itself is handled in ModEntry via SMAPI input, which
-    // calls SetJournalTopLeft as the cursor moves.
     private Point _journalOffset;
 
     public int JournalFrameWidth => (int)System.Math.Round(1100 * Scale);
@@ -295,14 +243,9 @@ public sealed class JournalContext : INotifyPropertyChanged
         _helper.WriteConfig(ModEntry.Config);
     }
 
-    // The "+" and "Edit tabs" controls are bound directly (not via a repeat) so
-    // they can be pinned to the right edge of the bottom row.
     public TabRow? AddTab => _addTab;
     public TabRow? EditTab => _editTab;
 
-    // Left margin of the controls float, which positions the "+"/"Edit" icons at
-    // a fixed spot on the right (independent of how many tabs exist or how wide
-    // they render). Recomputed by RebuildTabRows.
     private string _controlsLeftMargin = "0, 0, 0, -8";
     public string ControlsLeftMargin
     {
@@ -310,7 +253,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         private set { if (_controlsLeftMargin == value) return; _controlsLeftMargin = value; Raise(nameof(ControlsLeftMargin)); }
     }
 
-    // Repaint an open journal after the theme asset is repatched.
     public void RefreshTheme()
     {
         Raise(nameof(HeaderColor));
@@ -319,19 +261,10 @@ public sealed class JournalContext : INotifyPropertyChanged
     }
 
     private string _activeTabId = TabActive;
-    // The "+" and "Edit tabs" controls ride the rail as trailing tabs so they
-    // pack and stack with everything else. They're not in Tabs (which is the
-    // selectable model); RebuildTabRows appends them after the real tabs.
     private TabRow? _addTab;
     private TabRow? _editTab;
     private List<QuestRow> _activeRows = new();
-    // Quests that finished by playing them but still have a reward waiting to be
-    // collected. They sit at the top of the Active tab with a Claim button so the
-    // gold can be taken from here instead of the vanilla journal.
     private List<QuestRow> _claimableRows = new();
-    // Same idea for completed Special Orders whose gold is still waiting. Vanilla
-    // leaves the order in the team list until its reward box is clicked in the
-    // vanilla log. These ride at the top of the Special Orders tab.
     private List<QuestRow> _claimableOrderRows = new();
     private List<QuestRow> _historyRows = new();
     private List<QuestRow> _specialOrderRows = new();
@@ -363,7 +296,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             Tabs.Add(new TabRow(TabAll, helper.Translation.Get("journal.tab.all").Default("All").ToString(), HandleTabActivate));
         _addTab = new TabRow("__add", helper.Translation.Get("journal.tab.new").Default("New tab").ToString(), _ => CreateTab()) { IsAddTab = true };
         _editTab = new TabRow("__edit", EditButtonLabel, _ => ToggleEditMode()) { IsEditTab = true };
-        // Same order as SortKinds, so a selected label maps to a mode by index.
         SortOptions.Add(helper.Translation.Get("journal.sort.deadline").Default("Deadline").ToString());
         SortOptions.Add(helper.Translation.Get("journal.sort.alphabetical").Default("Alphabetical (A-Z)").ToString());
         SortOptions.Add(helper.Translation.Get("journal.sort.giver").Default("By giver").ToString());
@@ -386,10 +318,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             if (q == null) continue;
             if (q.completed.Value)
             {
-                // Vanilla removes a finished quest from the log right away unless
-                // it has a reward to collect, so a completed quest still sitting
-                // here has gold (or a reward note) waiting. Surface it as
-                // claimable. Anything else completed is skipped.
                 if (q.HasReward())
                     _claimableRows.Add(BuildClaimableRow(q));
                 continue;
@@ -399,11 +327,6 @@ public sealed class JournalContext : INotifyPropertyChanged
 
         _specialOrderRows.Clear();
         _claimableOrderRows.Clear();
-        // Special Orders live in player.team.specialOrders, not questLog, so
-        // they need a parallel pass. In-progress orders go in the tab; failed
-        // ones are removed by vanilla within a day or two and don't need a
-        // history bucket (yet). A completed order whose gold is still waiting
-        // (HasMoneyReward) becomes a claimable row, same as a finished quest.
         var orders = Game1.player?.team?.specialOrders;
         if (orders != null)
         {
@@ -419,7 +342,6 @@ public sealed class JournalContext : INotifyPropertyChanged
 
         _historyRows.Clear();
         var history = CompletedQuestStore.Load();
-        // Newest first so the Completed tab reads top-down chronologically.
         for (int i = history.Count - 1; i >= 0; i--)
         {
             _historyRows.Add(BuildHistoryRow(history[i]));
@@ -428,11 +350,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         ReapplyFilter();
     }
 
-    // Opening the journal counts as checking your quests, so the vanilla quest
-    // button stops flashing its "new quest" mark. Marks every quest and special
-    // order as seen, the same call the old journal makes when you open a quest.
-    // The flashing for a finished quest waiting on its reward is left alone; that
-    // clears when the reward is claimed. Skipped when the player turns it off.
     private void MarkVisibleQuestsRead()
     {
         if (!ModEntry.Config.MarkQuestsReadOnOpen) return;
@@ -451,20 +368,12 @@ public sealed class JournalContext : INotifyPropertyChanged
     public void SelectTab(string id)
     {
         if (_activeTabId == id) return;
-        // Guard against a click that targets a tab no longer in the list (e.g.
-        // one just removed via the editor). No matching row, do nothing.
         if (FindTab(id) == null) return;
         _activeTabId = id;
         UpdateTabSelection();
         ReapplyFilter();
     }
 
-    // Controller tab cycling. The tab rail renders in a floating element, which
-    // StardewUI excludes from gamepad focus, so the stick can't reach the tabs.
-    // The shoulder/trigger buttons cycle through them instead (matching how the
-    // vanilla menus switch tabs on a controller). Cycles over Tabs, which holds
-    // only the selectable tabs (the +/Edit controls aren't in it), wrapping at
-    // both ends.
     public void NextTab() => CycleTab(1);
     public void PrevTab() => CycleTab(-1);
 
@@ -478,10 +387,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         SelectTab(Tabs[next].Id);
     }
 
-    // Controller editor shortcut. The "+" / "Edit tabs" controls float above the
-    // frame, so a gamepad can't reach them to enter edit mode and click a custom
-    // tab. Instead, Y opens the editor straight from the selected tab when that
-    // tab is a custom one. Built-in tabs have no editor, so this no-ops on them.
     public bool CanEditActiveTab => FindTab(_activeTabId)?.IsCustom == true;
 
     public void EditActiveTab()
@@ -501,14 +406,12 @@ public sealed class JournalContext : INotifyPropertyChanged
         SelectedQuest = row;
     }
 
-    // Used by the HUD click-through to select the quest/order behind a pin key.
     public bool SelectQuestByKey(string key)
     {
         if (string.IsNullOrEmpty(key)) return false;
         var match = FindRowByKey(key);
         if (match == null)
         {
-            // Quests live in the Active tab, special orders ("so:") in Special.
             SelectTab(key.StartsWith("so:", System.StringComparison.Ordinal) ? TabSpecial : TabActive);
             match = FindRowByKey(key);
         }
@@ -535,18 +438,11 @@ public sealed class JournalContext : INotifyPropertyChanged
         var quest = _selectedQuest.Quest;
         if (quest == null) return;
 
-        // Snapshot BEFORE questComplete: vanilla auto-removes the quest from
-        // player.questLog if it has no money + no rewardDescription, so we'd
-        // lose the chance to read its state afterward.
         CompletedQuestStore.Add(BuildRecordFrom(_selectedQuest));
-        // Tell the watcher we already handled this one so it doesn't write a
-        // duplicate row when it later sees the completed.Value flip.
         _completionWatcher?.MarkRecorded(quest);
 
         quest.questComplete();
 
-        // Vanilla questComplete doesn't pay moneyReward (the journal's claim
-        // button does in vanilla flow). Pay it manually + zero it.
         int money = quest.GetMoneyReward();
         if (money > 0)
         {
@@ -554,17 +450,11 @@ public sealed class JournalContext : INotifyPropertyChanged
             quest.moneyReward.Value = 0;
         }
 
-        // Always remove from log so vanilla journal stops showing a stale
-        // empty-claim row, even if vanilla questComplete already removed it.
         Game1.player.questLog.Remove(quest);
         PinnedObjectivesStore.Unpin(quest);
         Refresh();
     }
 
-    // Collects the reward for a quest that was finished by playing it but whose
-    // gold is still waiting in the log. Pays the money, tidies the quest out of
-    // the log, and moves it into the Completed tab. This is the natural-completion
-    // counterpart to the vanilla journal's reward-collect click.
     public void ClaimSelected()
     {
         if (_selectedQuest == null || !_selectedQuest.CanClaim) return;
@@ -572,14 +462,10 @@ public sealed class JournalContext : INotifyPropertyChanged
         if (_selectedQuest.Quest is Quest quest)
         {
             if (!quest.completed.Value) return;
-            // Record the history row now and tell the watcher we handled it, so
-            // it doesn't write a second copy when the quest leaves the log.
             CompletedQuestStore.Add(BuildRecordFrom(_selectedQuest));
             _completionWatcher?.MarkRecorded(quest);
 
             PayClaim(quest.GetMoneyReward());
-            // Vanilla's own "reward taken" call: zeros the money and marks the
-            // quest for removal. We remove it right after either way.
             quest.OnMoneyRewardClaimed();
             Game1.player.questLog.Remove(quest);
             PinnedObjectivesStore.Unpin(quest);
@@ -588,9 +474,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         {
             if (!order.HasMoneyReward()) return;
             PayClaim(order.GetMoneyReward());
-            // Drops us from the order's participants and flags it for removal,
-            // exactly like clicking its reward box in the vanilla log. The game
-            // removes it from the team list on its next Update.
             order.OnMoneyRewardClaimed();
             PinnedObjectivesStore.Unpin(order);
         }
@@ -599,8 +482,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         Refresh();
     }
 
-    // Pays a claimed gold reward with the same coin sound and popup feedback for
-    // quests and special orders.
     private void PayClaim(int money)
     {
         if (money <= 0) return;
@@ -624,9 +505,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             message,
             _ =>
             {
-                // The watcher would otherwise see the disappearance and
-                // record this as Failed. The player chose to drop it,
-                // so mark it ignored before the actual removal.
                 _completionWatcher?.MarkIgnore(quest);
                 Game1.player.questLog.Remove(quest);
                 PinnedObjectivesStore.Unpin(quest);
@@ -652,10 +530,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         Refresh();
     }
 
-    // Item helper (cheat, gated behind AllowItemCheats). Spawns the quest's
-    // target item into the bag, or for a fishing quest advances the catch
-    // counter by one. Rebuilds the list so progress/objective reflect the
-    // change, then keeps the same quest selected so repeat clicks stay put.
     public void ItemHelperSelected()
     {
         if (!ModEntry.Config.AllowItemCheats) return;
@@ -689,7 +563,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         }
     }
 
-    // Toggles the HUD pin for the selected quest or special order.
     public void PinSelected()
     {
         if (_selectedQuest?.Quest is Quest q)
@@ -702,7 +575,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedPinLabel));
     }
 
-    // One NPC warps straight there; more than one opens a picker popup.
     public void WarpSelected()
     {
         var targets = _selectedQuest?.WarpTargets;
@@ -733,8 +605,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         Game1.activeClickableMenu?.SetChildMenu(controller.Menu);
     }
 
-    // Tab clicks route through here so edit mode can intercept. Built-in tabs
-    // always just switch; a custom tab in edit mode opens its editor instead.
     private void HandleTabActivate(TabRow row)
     {
         if (_editMode && row.IsCustom)
@@ -745,13 +615,8 @@ public sealed class JournalContext : INotifyPropertyChanged
         SelectTab(row.Id);
     }
 
-    // Bound to the "+" button. Parameterless so the StarML event binding has an
-    // unambiguous target.
     public void CreateTab() => OpenTabEditor(null);
 
-    // Create (existing == null) or edit (existing != null) a custom tab. The
-    // same popup handles both; when editing it pre-fills the fields and shows a
-    // Delete button. Opened as a child menu so Esc returns to the journal.
     public void OpenTabEditor(TabRow? existing = null)
     {
         if (_viewEngine == null) return;
@@ -777,7 +642,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             {
                 if (def != null)
                 {
-                    // Edit in place: keep the id so selection/persistence stay stable.
                     var list = CustomTabStore.Load();
                     var match = list.Find(t => t.Id == def.Id);
                     if (match != null)
@@ -792,8 +656,6 @@ public sealed class JournalContext : INotifyPropertyChanged
                     }
                     LoadCustomTabs();
                     controller.Close();
-                    // Force a reapply even if this tab is already active, so the
-                    // changed filters take effect right away.
                     _activeTabId = def.Id;
                     UpdateTabSelection();
                     ReapplyFilter();
@@ -837,8 +699,6 @@ public sealed class JournalContext : INotifyPropertyChanged
     private static string NameOrDefault(string? name)
         => string.IsNullOrWhiteSpace(name) ? "Tab" : name!.Trim();
 
-    // Drops the existing custom rows (the four built-ins stay at the front) and
-    // re-adds them from the store. Called on open and after every add/delete.
     private void LoadCustomTabs()
     {
         for (int i = Tabs.Count - 1; i >= 0; i--)
@@ -849,13 +709,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         RebuildTabRows();
     }
 
-    // Lays out the rail. The "+" and "Edit tabs" controls live in their own
-    // floating element pinned to a fixed spot at the bottom-right (computed from
-    // the frame width and control width only, so they never drift as tabs are
-    // added). The first tabs share that bottom level; any that don't fit beside
-    // the controls wrap to rows that stack above. Tabs are uniform width (widest
-    // label, clamped; longer labels truncate with the full name in the tooltip),
-    // measured off Game1.smallFont so the packed width matches the draw.
     private void RebuildTabRows()
     {
         OverflowRowGroups.Clear();
@@ -872,9 +725,9 @@ public sealed class JournalContext : INotifyPropertyChanged
         }
         float uniformContent = System.Math.Min(widest, maxContent);
 
-        const float padding = 16f;       // "8, 0" horizontal padding, both sides
-        const float interMargin = 8f;    // each tab's right margin
-        const int tabHeight = 60;        // fixed so middle-alignment can center content
+        const float padding = 16f;
+        const float interMargin = 8f;
+        const int tabHeight = 60;
         int frameWidth = (int)System.Math.Ceiling(uniformContent) + (int)padding;
         string widthLayout = frameWidth.ToString(System.Globalization.CultureInfo.InvariantCulture)
             + "px " + tabHeight + "px";
@@ -892,25 +745,20 @@ public sealed class JournalContext : INotifyPropertyChanged
         float footprint = frameWidth + interMargin;
         float outerWidth = 1100f * Scale;
 
-        // The control pair renders ~103px wide (measured in-game at scale 1.0,
-        // not the nominal 62px each) and is pinned 36px from the frame's right.
         const float controlsRenderWidth = 103f;
         const float rightInset = 36f;
-        const float railLeft = 36f;      // must match the rail float's left margin
-        const float gapNudge = 5f;       // tuned in-game: a touch more space after the last tab
+        const float railLeft = 36f;
+        const float gapNudge = 5f;
         float controlsLeft = outerWidth - rightInset - controlsRenderWidth + gapNudge;
         ControlsLeftMargin = ((int)controlsLeft).ToString(System.Globalization.CultureInfo.InvariantCulture) + ", 0, 0, -8";
 
-        // How many tabs fit on the bottom row before running into the controls.
-        const float gap = 12f;           // breathing room between last tab and controls
+        const float gap = 12f;
         float bottomArea = controlsLeft - railLeft - gap;
         int bottomCapacity = System.Math.Max(0, (int)((bottomArea + interMargin) / footprint));
         int bottomCount = System.Math.Min(Tabs.Count, bottomCapacity);
         for (int i = 0; i < bottomCount; i++)
             BottomRowTabs.Add(Tabs[i]);
 
-        // Remaining tabs wrap to rows above the bottom row, using the full rail
-        // width (frame width minus the rail's 36px left margin).
         float available = outerWidth - railLeft;
         int overflowCapacity = System.Math.Max(1, (int)((available + interMargin) / footprint));
         var chunks = new List<List<TabRow>>();
@@ -922,8 +770,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             chunks.Add(chunk);
         }
 
-        // Emit highest chunk first so the first overflow row sits directly above
-        // the bottom row (the vertical lane renders top-to-bottom).
         for (int i = chunks.Count - 1; i >= 0; i--)
         {
             var group = new TabRowGroup();
@@ -932,7 +778,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         }
     }
 
-    // Cuts a label to fit maxWidth (in the given font), appending an ellipsis.
     private static string Truncate(string s, Microsoft.Xna.Framework.Graphics.SpriteFont font, float maxWidth)
     {
         if (string.IsNullOrEmpty(s)) return s;
@@ -962,16 +807,11 @@ public sealed class JournalContext : INotifyPropertyChanged
     private void ReapplyFilter()
     {
         Quests.Clear();
-        // Claimable quests ride at the top, unsorted, so a freshly finished
-        // quest's reward is the first thing the player sees.
         var claimable = new List<QuestRow>();
         var collected = new List<QuestRow>();
         var activeTab = FindTab(_activeTabId);
         if (activeTab?.CustomDef is CustomTabDef def)
         {
-            // Custom tabs search across all buckets and keep only the rows
-            // matching the saved filters. A row only ever lives in one bucket,
-            // so there are no duplicates.
             AddMatching(claimable, _claimableRows, def);
             AddMatching(claimable, _claimableOrderRows, def);
             AddMatching(collected, _activeRows, def);
@@ -1005,10 +845,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         foreach (var r in SortRows(collected))
             Quests.Add(r);
 
-        // Rows are shared across tabs, so clear any stale selection/hover from
-        // a previous tab before re-selecting. Divider goes under every row
-        // except the last, so the list reads as separated entries without a
-        // dangling line at the bottom.
         for (int i = 0; i < Quests.Count; i++)
         {
             Quests[i].IsSelected = false;
@@ -1016,8 +852,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             Quests[i].ShowDivider = i < Quests.Count - 1;
         }
 
-        // Auto-select the first row so the detail panel isn't blank when the
-        // tab has rows. Drop selection when the tab is empty.
         if (Quests.Count > 0)
         {
             Quests[0].IsSelected = true;
@@ -1036,16 +870,11 @@ public sealed class JournalContext : INotifyPropertyChanged
             if (MatchesFilter(r, def)) AddRow(dest, r);
     }
 
-    // Final gate before a row reaches the list: the search box. Empty search
-    // lets everything through.
     private void AddRow(List<QuestRow> dest, QuestRow r)
     {
         if (Contains(r.Title, _searchText)) dest.Add(r);
     }
 
-    // Orders the gathered rows by the current sort mode. OrderBy is stable, so
-    // ties keep their natural (bucket) order. Deadline and Category push their
-    // "empty" rows (no deadline / no category) to the bottom.
     private IEnumerable<QuestRow> SortRows(List<QuestRow> rows)
     {
         switch (_sortMode)
@@ -1071,9 +900,6 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     private static bool MatchesFilter(QuestRow r, CustomTabDef def)
     {
-        // Every non-blank filter must match (AND). Blank filters are ignored.
-        // The Kind field ignores spaces so "Special Orders" matches "SpecialOrder"
-        // and "Daily Board" matches "DailyBoard".
         return MatchesTextFilter(r.Title, def.TitleFilter)
             && MatchesTextFilter(r.SourceDisplay, def.SourceFilter)
             && MatchesTextFilter(r.Category, def.CategoryFilter)
@@ -1081,13 +907,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             && MatchesDeadlineFilter(r, def.DeadlineFilter);
     }
 
-    // A custom-tab text field, split on commas into terms. Plain terms are OR-ed
-    // (the field must contain at least one of them), and a term starting with "!"
-    // excludes (the field must not contain it). So "RSV, More Quests" keeps rows
-    // from either, and "!Robin, crop order" keeps "crop order" rows that don't
-    // mention Robin. A bare "!" is ignored. ignoreSpaces strips spaces from both
-    // sides before comparing, so a kind typed with spaces still matches
-    // ("Special Orders" finds "SpecialOrder").
     private static bool MatchesTextFilter(string? haystack, string? filter, bool ignoreSpaces = false)
     {
         if (string.IsNullOrWhiteSpace(filter)) return true;
@@ -1127,14 +946,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         return haystack.IndexOf(needle, System.StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    // Deadline field, also comma-separated and OR/exclude like the text fields.
-    // Each term can be: "None" (no deadline), a number N (exactly N days), a
-    // range "A-B" (inclusive), or a comparison ">N" / ">=N" / "<N" / "<=N". So
-    // "5" is exactly 5 days, "<=5" is 5 or fewer, "3, 7" is exactly 3 or 7, and
-    // "None, >28" is "no deadline or more than 28 days out". A "!" term excludes,
-    // so "<=3, !2" is "3 or fewer except exactly 2". Completed history has no
-    // live deadline, so it's dropped whenever this field is set. Unparseable
-    // terms are ignored.
     private static bool MatchesDeadlineFilter(QuestRow r, string? filter)
     {
         if (string.IsNullOrWhiteSpace(filter)) return true;
@@ -1166,9 +977,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         return !anyPositive || positiveHit;
     }
 
-    // Parses one deadline term and reports whether the value d satisfies it.
-    // Returns false (term ignored) when it can't be parsed. A bare number means
-    // exactly that many days; use "<=N" for "N or fewer".
     private static bool TryMatchDeadlineTerm(string term, int? d, out bool matched)
     {
         matched = false;
@@ -1181,8 +989,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             return true;
         }
 
-        // Range "A-B" inclusive. The dash is searched from index 1 so a leading
-        // minus sign isn't mistaken for a separator.
         int dash = t.IndexOf('-', 1);
         if (dash > 0 && dash < t.Length - 1
             && int.TryParse(t.Substring(0, dash), out int lo)
@@ -1214,7 +1020,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         return true;
     }
 
-    // Plain substring match used by the search box (no negation, no space trick).
     private static bool Contains(string? haystack, string? filter)
     {
         if (string.IsNullOrEmpty(filter)) return true;
@@ -1222,9 +1027,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             && haystack.IndexOf(filter, System.StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    // Collects the distinct category/kind values present across the player's
-    // current quests so the editor popup can hint what's worth typing. Empty
-    // when nothing in the journal is classified (e.g. vanilla-only save).
     private string BuildHint(System.Func<QuestRow, string> selector)
     {
         var seen = new SortedSet<string>(System.StringComparer.OrdinalIgnoreCase);
@@ -1269,10 +1071,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             deadlineDays: DeadlineFromQuestCounter(q.daysLeft.Value));
     }
 
-    // A completed quest still in the log, shown with a Claim button so the player
-    // can take its reward. Mirrors BuildActiveRow but flagged completed/claimable:
-    // no objective steps, deadline, cancel, or postpone. The reward lines still
-    // come through so the detail panel shows what's waiting.
     private QuestRow BuildClaimableRow(Quest q)
     {
         var rewards = BuildRewardLines(q);
@@ -1297,10 +1095,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             canClaim: true);
     }
 
-    // A completed Special Order whose gold hasn't been collected yet, shown with
-    // a Claim button. Only the money is outstanding here: vanilla auto-grants an
-    // order's other rewards (gems, items, friendship) the moment it completes and
-    // pays just the gold when you click its reward box, so that's all we surface.
     private QuestRow BuildClaimableOrderRow(SpecialOrder so)
     {
         int money = so.GetMoneyReward();
@@ -1329,18 +1123,11 @@ public sealed class JournalContext : INotifyPropertyChanged
             canClaim: true);
     }
 
-    // Turns a raw daysLeft counter into the "days until deadline" number we show:
-    // a counter of 1 is the final day (0 days out), 2 is due tomorrow (1), and so
-    // on. A counter of 0 or less means the quest has no time limit.
     private static int? DeadlineFromQuestCounter(int counter)
         => counter <= 0 ? (int?)null : counter - 1;
 
     private QuestRow BuildSpecialOrderRow(SpecialOrder so)
     {
-        // SOs use OrderObjective lists; render them through the existing
-        // AdventureStepRow surface so the SML view doesn't have to learn a
-        // third row type. Active highlighting is off because SO objectives
-        // can complete in any order (no Requires graph).
         var steps = new List<AdventureStepRow>();
         int idx = 0;
         foreach (OrderObjective obj in so.objectives)
@@ -1364,9 +1151,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         string source = QuestSnapshotBuilder.ResolveSpecialOrderSource(so, _helper);
         string giver = ResolveNpcDisplayName(so.requester.Value);
 
-        // Special orders always carry a due date, so they never read as "no
-        // deadline". dueDate is absolute, so subtract today to get the counter,
-        // then clamp the final-day case to 0 instead of letting it go negative.
         int soDaysLeft = so.dueDate.Value - (Game1.Date?.TotalDays ?? 0);
         int soDeadline = System.Math.Max(0, soDaysLeft - 1);
 
@@ -1393,14 +1177,6 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     private static List<RewardLineRow> BuildSpecialOrderRewards(SpecialOrder so)
     {
-        // SO rewards are an OrderReward polymorphic list rather than a single
-        // money payout. Vanilla ships five concrete subclasses; we render the
-        // four that are player-facing (Money / Gems / Friendship / Object)
-        // and skip Mail and ResetEvent since they're internal mechanics with
-        // no useful surface for the journal. Each branch is wrapped so a
-        // modded subclass throwing on a getter can't take the whole journal
-        // down; on failure we add a placeholder line so the player sees
-        // there's something there.
         var lines = new List<RewardLineRow>();
         foreach (OrderReward reward in so.rewards)
         {
@@ -1475,14 +1251,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         return AsciiFold(internalName!);
     }
 
-    // StardewUI's text rendering hangs the game when it encounters glyphs
-    // missing from the SpriteFont atlas (seen with the modded NPC name
-    // "Adelaide" written as "Adélaïde"). Stripping diacritics via
-    // Unicode FormD decomposition gives us plain ASCII fallbacks the font
-    // is guaranteed to have. Applied only to strings we generate or
-    // surface in our own rendered content; vanilla strings (descriptions,
-    // parsed objectives) pass through untouched since vanilla renders them
-    // fine on its own.
     private static string AsciiFold(string s)
     {
         if (string.IsNullOrEmpty(s)) return s;
@@ -1519,13 +1287,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         catch { return raw!; }
     }
 
-    // SpecialOrder.GetName() caches its result in _localizedName the first time
-    // it's called. If that first call happens before a content pack (like
-    // Ridgeside Village) has patched its [key] strings into
-    // Strings/SpecialOrderStrings, the unresolved fallback path gets cached and
-    // every later read shows the literal "Strings\SpecialOrderStrings:..." key.
-    // The objective rows already dodge this by going through the cache-free
-    // Parse(), so we resolve the title fresh from the raw field the same way.
     private static string ResolveSoTitle(SpecialOrder so)
     {
         string? raw = so.questName.Value;
@@ -1536,11 +1297,6 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     private string BuildSpecialOrderDaysLeft(SpecialOrder so)
     {
-        // SpecialOrder.dueDate.Value is absolute TotalDays (when the order
-        // expires), not a countdown. Subtract Game1.Date.TotalDays to get the same
-        // counter quests use, then run it through the shared deadline wording. The
-        // game fails an order the morning its counter hits 0, just like quests, so
-        // the two read the same in the journal.
         int totalDays = Game1.Date?.TotalDays ?? 0;
         int daysLeft = so.dueDate.Value - totalDays;
         return BuildDeadlineDisplay(daysLeft);
@@ -1552,9 +1308,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         string statusLabel = failed
             ? _helper.Translation.Get("journal.status.failed").Default("Failed").ToString()
             : _helper.Translation.Get("journal.status.completed").Default("Completed").ToString();
-        // CompletedOnTotalDays==0 happens on pre-fix records where we never
-        // wrote the field. Fall back to the bare status string so old rows
-        // still read sanely instead of saying "Completed Spring 1, Y1".
         string dateSlot = r.CompletedOnTotalDays > 0
             ? $"{statusLabel} {BuildHistoryDateDisplay(r.CompletedOnTotalDays)}"
             : statusLabel;
@@ -1574,9 +1327,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         }
         else if (!string.IsNullOrEmpty(r.RewardSummary))
         {
-            // Older history records (pre Step 5) only stored an aggregate
-            // string. Surface it as a single "Custom" line so the panel still
-            // renders something readable.
             rewards.Add(new RewardLineRow(kind: "Custom", summary: r.RewardSummary));
         }
         else
@@ -1654,7 +1404,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         catch { return null; }
     }
 
-    // Catches the member-missing case on older MQF builds that predate GetObjectiveLines.
     private IReadOnlyList<string>? SafeGetObjectiveLines(Quest q)
     {
         try { return _mqfApi!.GetObjectiveLines(q); }
@@ -1669,8 +1418,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         var steps = SafeGetAdventureSteps(q);
         if (steps == null || steps.Count == 0)
         {
-            // Not an AdventureQuest, but it may still expose pre-formatted objective
-            // lines (e.g. a budget-tracking redecoration quest). Render them verbatim.
             var lines = SafeGetObjectiveLines(q);
             if (lines != null)
             {
@@ -1688,9 +1435,6 @@ public sealed class JournalContext : INotifyPropertyChanged
             return rows;
         }
 
-        // GetActiveStepIndex flags the row to highlight. Null means every
-        // step is done; we'll fall back to whichever step still reports
-        // Active so a finished-but-not-cleared quest still renders sanely.
         int? activeIdx = SafeGetActiveStepIndex(q);
         for (int i = 0; i < steps.Count; i++)
         {
@@ -1708,9 +1452,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         return rows;
     }
 
-    // The NPCs a quest can warp to: its giver plus any NPC named in the active
-    // Adventure step's Targets. Each is filtered to a character that actually
-    // resolves so the dropdown never offers a warp that goes nowhere.
     private List<WarpNpc> BuildWarpTargets(Quest q)
     {
         var result = new List<WarpNpc>();
@@ -1774,14 +1515,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         return BuildDeadlineDisplay(d);
     }
 
-    // Turns the game's raw day counter into a friendly, accurate deadline label.
-    // For quests this is daysLeft; for special orders it's dueDate minus today.
-    // Either way the quest/order is pulled the morning the counter would hit 0, so
-    // a counter of 1 means today is the last day to finish it. The real deadline is
-    // (counter - 1) days out: 1 is today (Final day), 2 is tomorrow (Due tomorrow),
-    // and anything higher counts down the days until the deadline. The base game's
-    // own quest screen says "Final Day" for the last day, so reuse its string so we
-    // match that wording in every language.
     private string BuildDeadlineDisplay(int counter)
     {
         int untilDeadline = counter - 1;
@@ -1797,8 +1530,6 @@ public sealed class JournalContext : INotifyPropertyChanged
 
     private static string BuildHistoryDateDisplay(int totalDays)
     {
-        // Inverse of WorldDate.TotalDays: (year-1)*112 + season*28 + (day-1).
-        // 4 seasons of 28 days each. TotalDays==0 == Spring 1, Y1.
         if (totalDays < 0) totalDays = 0;
         int year = totalDays / 112 + 1;
         int remainder = totalDays % 112;
@@ -1854,21 +1585,15 @@ public sealed class TabRow : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public string Id { get; }
-    // Settable so the "Edit tabs"/"Done" control tab can flip its own label.
     private string _label = string.Empty;
     public string Label
     {
         get => _label;
         set { if (_label == value) return; _label = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Label))); }
     }
-    // Non-null only for player-defined tabs. In edit mode, clicking a custom
-    // tab opens its editor instead of switching to it.
     public CustomTabDef? CustomDef { get; }
     public bool IsCustom => CustomDef != null;
 
-    // The two rail controls render an icon instead of a label and use a narrow
-    // icon-sized width (the rest of the rail stays uniform). Everything else is
-    // a normal text tab.
     public bool IsAddTab { get; init; }
     public bool IsEditTab { get; init; }
     public bool IsTextTab => !IsAddTab && !IsEditTab;
@@ -1887,13 +1612,8 @@ public sealed class TabRow : INotifyPropertyChanged
         }
     }
 
-    // Inactive tabs dim slightly so the active one reads as selected (the tab
-    // frames don't raise like vanilla tabs, so opacity carries the cue).
     public float TabOpacity => _isActive ? 1f : 0.85f;
 
-    // Set by RebuildTabRows so every tab is the same width (uniform rail). The
-    // full name lives in Label (used for the tooltip); DisplayLabel is the text
-    // actually drawn, truncated to fit the uniform width.
     private string _displayLabel = string.Empty;
     public string DisplayLabel
     {
@@ -1919,8 +1639,6 @@ public sealed class TabRow : INotifyPropertyChanged
     public void Activate() => _onActivate(this);
 }
 
-// One horizontal row of tabs on the rail. RebuildTabRows fills these so the
-// SML can repeat rows (vertical) then tabs within each row (horizontal).
 public sealed class TabRowGroup
 {
     public ObservableCollection<TabRow> Tabs { get; } = new();
@@ -1937,39 +1655,22 @@ public sealed class QuestRow : INotifyPropertyChanged
     public IReadOnlyList<AdventureStepRow> AdventureSteps { get; }
     public string GiverDisplay { get; }
     public string DaysLeftDisplay { get; }
-    // Numeric days until the deadline, matching the number shown in DaysLeftDisplay
-    // ("5 days left" == 5, "Final day" == 0). Null means no deadline at all, and
-    // also for completed/history rows. Sorting and the deadline filter read this.
     public int? DeadlineDays { get; }
     public string SourceDisplay { get; }
-    // MoreQuests category / posting kind as plain strings (e.g. "Cooking",
-    // "DailyBoard"), used only by custom-tab filtering. Blank for vanilla quests
-    // and for buckets we don't classify. Not shown in the detail panel.
     public string Category { get; }
     public string Kind { get; }
-    // NPCs this quest can warp to (giver + active-step targets), distinct and
-    // already filtered to characters that actually resolve. Empty for history
-    // rows. One entry warps directly; more open the dropdown.
     public IReadOnlyList<WarpNpc> WarpTargets { get; }
     public bool IsCompleted { get; }
     public bool CanCancel { get; }
     public bool CanPostpone { get; }
-    // True for a finished quest whose reward is still waiting to be collected.
-    // Drives the Claim button and the list badge. Constant for a row's lifetime.
     public bool CanClaim { get; }
     public bool ReadyToClaim => CanClaim;
-    // Live quest reference for active rows. Null for historical rows
-    // (snapshots from CompletedQuestStore) and for special-order rows.
     public Quest? Quest { get; }
-    // Live special-order reference for Special Orders tab rows. Null otherwise.
     public SpecialOrder? SpecialOrder { get; }
     public bool IsSpecialOrder => SpecialOrder != null;
 
     private readonly JournalContext _host;
 
-    // Selection (sticks until another row is clicked) and hover both feed
-    // RowTint. RowTint is the highlight colour drawn over the row's solid
-    // background sprite: selected wins over hover, otherwise transparent.
     private bool _isSelected;
     public bool IsSelected
     {
@@ -1993,8 +1694,6 @@ public sealed class QuestRow : INotifyPropertyChanged
         set { if (_showDivider == value) return; _showDivider = value; Raise(nameof(ShowDivider)); }
     }
 
-    // Colours come from JournalTheme (a Content Patcher-editable asset), so a
-    // re-theme patch flows through here. Selected wins over hover, else nothing.
     public Color RowTint => _isSelected ? JournalTheme.SelectedTint : (_isHovered ? JournalTheme.HoverTint : Color.Transparent);
     public Color DividerTint => JournalTheme.DividerColor;
 
@@ -2016,7 +1715,6 @@ public sealed class QuestRow : INotifyPropertyChanged
         Raise(nameof(RowTint));
     }
 
-    // Called when the theme asset is repatched so an open journal repaints.
     public void RaiseThemeColors()
     {
         Raise(nameof(RowTint));
@@ -2025,8 +1723,6 @@ public sealed class QuestRow : INotifyPropertyChanged
 
     private void Raise(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-    // Aggregate text capture for legacy CompletedQuestRecord.RewardSummary so
-    // pre-Step-5 saves still render readable history rows after this change.
     public string RewardSummaryAggregate
     {
         get

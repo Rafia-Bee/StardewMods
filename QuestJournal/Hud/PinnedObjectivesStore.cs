@@ -6,23 +6,16 @@ using StardewValley.SpecialOrders;
 
 namespace QuestJournal.Hud;
 
-// Per-save set of pinned quest ids, kept in Game1.player.modData under a stable
-// key so it round-trips with the save (mirrors CompletedQuestStore). The HUD
-// resolves these ids back to live quests every frame, so the store only holds
-// the keys, not any quest text; the objective shown always reflects the quest's
-// current progress.
+// Tracks which quests and special orders the player has pinned.
+// Stores the pinned keys as JSON in the player's modData, with a small cache so
+// we don't reparse every read. Has pin, unpin, toggle, and lookup helpers.
 internal static class PinnedObjectivesStore
 {
     private const string ModDataKey = "RafiaBee.QuestJournal/PinnedQuests";
 
-    // Cheap cache so the HUD's per-frame Load doesn't re-parse the same JSON 60
-    // times a second. Re-parses only when the stored string actually changes.
     private static string _cachedJson = string.Empty;
     private static HashSet<string> _cached = new();
 
-    // A quest's stable pin key. The data-quest id is preferred (numeric for
-    // vanilla, dotted for MQF, and it survives a save reload). Falls back to the
-    // title for the rare quest with no id so the pin still works that session.
     public static string KeyFor(Quest q)
     {
         if (q == null) return string.Empty;
@@ -32,8 +25,6 @@ internal static class PinnedObjectivesStore
         return string.IsNullOrEmpty(title) ? string.Empty : "title:" + title;
     }
 
-    // "so:" prefix keeps an order's key from colliding with a numeric quest id
-    // in the same pin set.
     public static string KeyFor(SpecialOrder so)
     {
         if (so == null) return string.Empty;
@@ -69,7 +60,6 @@ internal static class PinnedObjectivesStore
     public static bool IsPinned(Quest q) => IsPinnedKey(KeyFor(q));
     public static bool IsPinned(SpecialOrder so) => IsPinnedKey(KeyFor(so));
 
-    // Flips the pin and persists. Returns the new pinned state.
     public static bool Toggle(Quest q) => ToggleKey(KeyFor(q));
     public static bool Toggle(SpecialOrder so) => ToggleKey(KeyFor(so));
 

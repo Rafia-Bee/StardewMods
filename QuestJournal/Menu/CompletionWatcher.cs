@@ -7,16 +7,9 @@ using StardewValley.Quests;
 
 namespace QuestJournal.Menu;
 
-// Watches Game1.player.questLog every tick so quests completed by playing
-// them (delivery, fishing, slay, etc.) make it into the Completed tab.
-// CompletedQuestStore.Add was previously only called from the journal's
-// Complete button, so natural completions were silently dropped.
-//
-// Approach: snapshot every active quest on first sight, refresh the
-// objective each tick, and record the snapshot the moment we observe
-// `quest.completed.Value` flip true. Removals without a completed flip
-// (cancellations) are skipped so the Completed tab doesn't fill with
-// cancelled rows.
+// Watches the player's quest log every tick and notices when a quest gets completed or
+// drops off (failed). When that happens it snapshots the quest details and rewards and
+// saves a record to the completed-quest store so the journal's history tab can show it.
 public sealed class CompletionWatcher
 {
     private readonly IModHelper _helper;
@@ -38,17 +31,11 @@ public sealed class CompletionWatcher
         _helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
     }
 
-    // JournalContext.CompleteSelected writes its own record before calling
-    // quest.questComplete(), so we don't want the watcher to record a second
-    // copy when it later sees completed.Value flip. Mark it as already-handled.
     public void MarkRecorded(Quest quest)
     {
         if (quest != null) _recorded.Add(quest);
     }
 
-    // Tells the watcher "the player intentionally dropped this; don't
-    // record it as Failed when it disappears". The journal's Cancel
-    // button calls this right before removing the quest from the log.
     public void MarkIgnore(Quest quest)
     {
         if (quest != null) _ignored.Add(quest);
@@ -80,25 +67,13 @@ public sealed class CompletionWatcher
             }
             else
             {
-                // Refresh the objective so the recorded snapshot reflects the
-                // last live state. Rewards stay frozen at first sight: vanilla
-                // questComplete zeros moneyReward, so re-reading post-flip
-                // would lose the payout.
                 snap.Objective = q.currentObjective ?? snap.Objective;
             }
 
             if (q.completed.Value && !_recorded.Contains(q))
             {
-                // Mark it completed so if it later leaves the log (player claims
-                // via the vanilla journal, a story event yanks it, etc.) the
-                // disappearance branch records it as Completed, not Failed.
                 snap.LastSeenCompleted = true;
 
-                // A completed quest that still has a reward waiting sits in the
-                // log until the reward is collected. Leave it there so the player
-                // can claim the gold from the journal instead of dropping it into
-                // the Completed tab right away. It gets recorded when it's claimed
-                // (JournalContext.ClaimSelected) or when it leaves the log.
                 if (q.HasReward()) continue;
 
                 Record(snap, "Completed");
@@ -106,12 +81,6 @@ public sealed class CompletionWatcher
             }
         }
 
-        // Detect quests that vanished from the log between ticks. A friendship-only
-        // quest leaves the log inside the same questComplete() call that sets
-        // completed.Value, so we may never see it in-log as completed; the removed
-        // Quest object still reports completed.Value=true. Genuine failures (deadline
-        // expired, story event yanked it) never complete, so they stay Failed.
-        // Ignored quests are skipped (the journal's Cancel button told us so).
         List<Quest>? toRemove = null;
         foreach (var kv in _tracked)
         {

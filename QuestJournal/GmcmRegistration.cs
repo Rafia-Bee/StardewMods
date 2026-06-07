@@ -2,8 +2,9 @@ using StardewModdingAPI;
 
 namespace QuestJournal;
 
-// Registers the Quest Journal settings with GMCM. GMCM is optional, so this
-// no-ops when it isn't installed (config.json still works either way).
+// Wires up the Generic Mod Config Menu page for this mod.
+// Builds all the config rows (keybinds, toggles, sliders, dropdowns) and the
+// separate controller page. Does nothing if GMCM isn't installed.
 internal static class GmcmRegistration
 {
     public static void Register(IModHelper helper, IManifest manifest)
@@ -26,9 +27,6 @@ internal static class GmcmRegistration
             () => t.Get("config.openKey"),
             () => t.Get("config.openKey.tooltip"));
 
-        // Controller binds live on their own subpage so the main page stays
-        // short. A link on the main page opens it; the page itself is registered
-        // at the bottom (GMCM requires AddPage after the main-page content).
         const string controllerPageId = "controller";
         api.AddPageLink(manifest, controllerPageId,
             () => t.Get("config.controller.link"),
@@ -89,9 +87,6 @@ internal static class GmcmRegistration
             () => t.Get("config.hudOpacity.tooltip"),
             min: 0.2f, max: 1f, interval: 0.05f);
 
-        // Default sort order for the quests list. The same orders are picked from
-        // the dropdown inside the journal; this just sets the starting point. The
-        // stored value is the order's name; the label shown is localized.
         api.AddTextOption(manifest,
             () => ModEntry.Config.QuestSort,
             v => ModEntry.Config.QuestSort = v,
@@ -124,9 +119,6 @@ internal static class GmcmRegistration
             () => t.Get("config.warpCheat"),
             () => t.Get("config.warpCheat.tooltip"));
 
-        // Controller subpage. These binds only do anything while the journal is
-        // open; the tab strip and +/Edit controls float and can't take gamepad
-        // focus, so these drive tab switching and tab create/edit instead.
         api.AddPage(manifest, controllerPageId, () => t.Get("config.section.controller"));
         api.AddParagraph(manifest, () => t.Get("config.controller.note"));
         api.AddKeybindList(manifest,

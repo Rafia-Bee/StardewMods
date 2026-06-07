@@ -5,10 +5,8 @@ using StardewValley.Menus;
 
 namespace QuestJournal.Integrations;
 
-// Local duck-typed mirror of leclair.bettergamemenu's IBetterGameMenuApi.
-// Only the methods + nested types we actually use are declared. SMAPI's
-// ModRegistry.GetApi proxies our interface against the real one; signatures
-// must match exactly.
+// Our copy of the Better Game Menu mod's API so we can add our own tab to it.
+// Just the methods we need: register a tab and listen for tab changes.
 public interface ITabChangedEvent
 {
     IClickableMenu Menu { get; }

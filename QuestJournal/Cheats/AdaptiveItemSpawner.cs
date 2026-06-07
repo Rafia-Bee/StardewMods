@@ -9,22 +9,16 @@ using StardewValley.Quests;
 
 namespace QuestJournal.Cheats;
 
-// The "item helper" behind AllowItemCheats. For item-style quests it drops the
-// target item(s) into the player's bag (at the required quality) so they can
-// still do the real turn-in; for fishing quests, where holding the fish doesn't
-// help, it advances the catch counter instead. Only called from the journal's
-// action panel.
+// The "get quest item" cheat helper. Figures out what a quest is asking for (vanilla fishing,
+// delivery, collection quests, or MoreQuests adventure steps) and drops those items into the
+// player's bag. Can also auto-finish fishing quests. Resolves token items like $forage too.
 internal static class AdaptiveItemSpawner
 {
-    // True when the helper has something useful to do, and sets the button label
-    // to match (catch-all for fishing, otherwise spawn). Reads the live quest so
-    // a finished step hides the button on its own.
     public static bool CanHelp(Quest quest, IMoreQuestsApi? mqfApi, IModHelper helper, out string label)
     {
         label = string.Empty;
         if (quest == null || quest.completed.Value) return false;
 
-        // Fishing: advance the catch counter (a fish in the bag doesn't help).
         if (quest is FishingQuest fq)
         {
             if (fq.numberFished.Value >= fq.numberToFish.Value) return false;
@@ -32,8 +26,6 @@ internal static class AdaptiveItemSpawner
             return true;
         }
 
-        // Ask MoreQuests what the quest wants. This handles required quality and
-        // "$any" tokens, plus MoreQuests delivery/ship and plain vanilla quests.
         var req = SafeGetItemRequirement(quest, mqfApi);
         if (req != null && !string.IsNullOrEmpty(req.ItemId))
         {
@@ -41,7 +33,6 @@ internal static class AdaptiveItemSpawner
             return true;
         }
 
-        // Vanilla fallback when MoreQuests isn't installed.
         switch (quest)
         {
             case ItemDeliveryQuest idq when !string.IsNullOrEmpty(idq.ItemId.Value):
@@ -52,7 +43,6 @@ internal static class AdaptiveItemSpawner
                 return true;
         }
 
-        // MoreQuests Adventure quest: spawn the active step's item, if any.
         if (TryGetActiveStepItems(quest, mqfApi, out _, out _, out _))
         {
             label = helper.Translation.Get("journal.action.spawnitem").Default("Get quest item").ToString();
@@ -61,7 +51,6 @@ internal static class AdaptiveItemSpawner
         return false;
     }
 
-    // Does the help and returns a short HUD message (empty when nothing was done).
     public static string Apply(Quest quest, IMoreQuestsApi? mqfApi, IModHelper helper)
     {
         if (quest == null || quest.completed.Value) return string.Empty;
@@ -99,14 +88,7 @@ internal static class AdaptiveItemSpawner
         if (string.IsNullOrEmpty(fq.ItemId.Value)) return string.Empty;
         int remaining = fq.numberToFish.Value - fq.numberFished.Value;
         if (remaining <= 0) return string.Empty;
-        // Drop the actual fish in the bag too, like the item helper does for
-        // delivery quests, so the player ends up holding what they "caught".
         SpawnItem(fq.ItemId.Value, remaining, 0, helper);
-        // Run the game's own catch hook for the whole remaining count first, so it
-        // arms completion / the return-to-NPC objective. Then force the counter to
-        // the target as a fallback, since OnFishCaught's fish-id match wasn't
-        // advancing some pre-existing quests. The quest finishes the normal way
-        // after this (talk to the giver, or the Complete button).
         try { fq.OnFishCaught(fq.ItemId.Value, remaining, 1, probe: false); } catch { }
         if (fq.numberFished.Value < fq.numberToFish.Value)
         {
@@ -121,8 +103,6 @@ internal static class AdaptiveItemSpawner
     private static string SpawnItem(string itemId, int amount, int quality, IModHelper helper)
     {
         if (string.IsNullOrEmpty(itemId) || amount <= 0) return string.Empty;
-        // Guard against unresolved tokens (e.g. "$forage") so we never spawn an
-        // Error Item; a real id has registry data.
         ParsedItemData? data;
         try { data = ItemRegistry.GetData(itemId); }
         catch { data = null; }
@@ -133,7 +113,6 @@ internal static class AdaptiveItemSpawner
         catch { return string.Empty; }
         if (item == null) return string.Empty;
 
-        // Try the bag first; anything that doesn't fit drops at the player's feet.
         Item? leftover = Game1.player.addItemToInventory(item);
         if (leftover != null && leftover.Stack > 0)
             Game1.createItemDebris(leftover, Game1.player.getStandingPosition(),
@@ -159,10 +138,6 @@ internal static class AdaptiveItemSpawner
             var step = steps[idx.Value];
             var items = step.Items;
             if (items == null || items.Count == 0) return false;
-            // First item we can actually spawn. A concrete id is used as-is; a
-            // "$" token (e.g. "$edible-egg", "$category:-5", "$tag:forage_item")
-            // gets resolved to one real item that satisfies it, so the helper
-            // still works for "any egg" style steps.
             foreach (var candidate in items)
             {
                 if (string.IsNullOrEmpty(candidate)) continue;
@@ -178,7 +153,6 @@ internal static class AdaptiveItemSpawner
                 break;
             }
             if (string.IsNullOrEmpty(itemId)) return false;
-            // Give what's left for the step, or one when the step has no count.
             count = step.Count > 0 ? System.Math.Max(1, step.Count - step.Progress) : 1;
             quality = step.MinQuality;
             return true;
@@ -186,15 +160,9 @@ internal static class AdaptiveItemSpawner
         catch { return false; }
     }
 
-    // Resolved-token cache. The item catalogue doesn't change during a session,
-    // and CanHelp runs on every detail-panel render, so a token is scanned once.
     private static readonly Dictionary<string, string> TokenItemCache =
         new(StringComparer.OrdinalIgnoreCase);
 
-    // Picks one concrete object that satisfies a MoreQuests "$" item token, so
-    // the helper can spawn it for "any egg"/"any forage" style steps. Mirrors
-    // MoreQuests' own token matching. Empty string when nothing matches (the
-    // result is cached either way).
     private static string ResolveTokenItem(string token)
     {
         if (string.IsNullOrEmpty(token)) return string.Empty;

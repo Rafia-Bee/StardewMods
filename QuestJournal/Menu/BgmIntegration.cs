@@ -5,18 +5,13 @@ using StardewValley.Menus;
 
 namespace QuestJournal.Menu;
 
-// Registers the journal as a tab on Better Game Menu's strip. Clicking the
-// tab closes the BGM menu and opens the journal as a standalone activeMenu,
-// matching the F6 hotkey path. BGM's RegisterTab still needs a non-null
-// getPageInstance so we hand back a tiny throwaway page; in practice the
-// TabChanged handler swaps activeClickableMenu out from under BGM before
-// the placeholder is ever visible.
+// Adds a journal tab to the Better Game Menu when that mod is installed.
+// Registers the tab with its icon, and when the player clicks it we open our
+// standalone journal menu. The page itself is just an empty placeholder.
 internal sealed class BgmIntegration
 {
     internal const string TabId = "RafiaBee.QuestJournal/Journal";
 
-    // Between Options (160) and Exit (200) so the journal sits on the right
-    // side of the strip without being last.
     private const int Order = 180;
 
     private readonly IBetterGameMenuApi _api;
@@ -34,8 +29,6 @@ internal sealed class BgmIntegration
 
     public void Register()
     {
-        // The mod's own 16x16 tab icon (assets/sprites/menuIcon.png), at 3x with
-        // a small downward nudge to sit centered in the tab.
         var iconDraw = _api.CreateDraw(
             _icon,
             new Rectangle(0, 0, 16, 16),
@@ -62,10 +55,6 @@ internal sealed class BgmIntegration
             Game1.activeClickableMenu = journal;
     }
 
-    // BGM requires a non-null page even though we immediately swap it out.
-    // Use a borderless empty IClickableMenu sized to the BGM container so
-    // there's no jarring flash in the frame between TabChanged firing and
-    // activeClickableMenu being reassigned.
     private static IClickableMenu CreatePlaceholderPage(IClickableMenu container)
     {
         return new IClickableMenuPlaceholder(

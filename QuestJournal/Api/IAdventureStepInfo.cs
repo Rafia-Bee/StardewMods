@@ -2,9 +2,7 @@ using System.Collections.Generic;
 
 namespace QuestJournal.Api;
 
-// Local duck-typed mirror of MoreQuestsFramework's AdventureStepInfo. SMAPI's
-// proxy resolves property names against the real class so the journal can read
-// the snapshot without a hard reference to MQF. Keep names aligned 1:1.
+// Details for one step of a multi-step quest, as exposed by the MoreQuests API.
 public interface IAdventureStepInfo
 {
     string Name { get; }

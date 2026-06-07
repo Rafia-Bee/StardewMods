@@ -3,9 +3,9 @@ using System.ComponentModel;
 
 namespace QuestJournal.Menu;
 
-// Backing context for custom_tab_editor.sml. The text fields are two-way bound
-// so they fill in as the player types; Save/Delete/Cancel route back to the
-// JournalContext through the actions it wires up after creating the popup.
+// Backing data for the custom tab editor popup (the new/edit tab form).
+// Holds the editable filter fields and help text, raises change notifications so
+// the UI updates, and forwards the save, delete, and cancel buttons.
 public sealed class CustomTabEditorContext : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -14,12 +14,7 @@ public sealed class CustomTabEditorContext : INotifyPropertyChanged
     {
         ShowDelete = isEdit;
         var t = ModEntry.Instance?.Helper?.Translation;
-        // The i18n is the single source of truth for this text. The optional
-        // fallback only matters if default.json is missing the key, which won't
-        // happen since it ships with the mod.
         string Help(string key, string fallback = "") => t?.Get(key).Default(fallback).ToString() ?? fallback;
-        // The category and kind helps tack on the list of values that actually
-        // show up in the player's quests, when there is one.
         string WithHint(string text, string hint) => string.IsNullOrEmpty(hint) ? text : text + " " + hint;
 
         HeaderText = isEdit ? Help("tabeditor.header.edit", "Edit tab") : Help("tabeditor.header.new", "New tab");
@@ -73,17 +68,12 @@ public sealed class CustomTabEditorContext : INotifyPropertyChanged
         set { if (_deadlineFilter == value) return; _deadlineFilter = value; Raise(nameof(DeadlineFilter)); }
     }
 
-    // The "?" tooltip text for each filter field. Fixed for the popup's life, so
-    // no change notification needed. Category and Kind also list the values
-    // present in the player's quests.
     public string TitleHelp { get; }
     public string SourceHelp { get; }
     public string CategoryHelp { get; }
     public string KindHelp { get; }
     public string DeadlineHelp { get; }
 
-    // True when editing an existing tab, so the SML shows the Delete button and
-    // an "Edit tab" header instead of "New tab". Fixed for the popup's life.
     public bool ShowDelete { get; }
     public string HeaderText { get; }
 

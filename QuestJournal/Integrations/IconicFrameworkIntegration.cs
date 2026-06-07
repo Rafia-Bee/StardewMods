@@ -4,11 +4,8 @@ using StardewModdingAPI;
 
 namespace QuestJournal.Integrations;
 
-// Registers a single toolbar icon with Iconic Framework. One registration
-// covers two surfaces at once: the on-screen toolbar icon (mouse / keyboard)
-// and, because Star Control reads Iconic Framework's icons, an entry in its
-// controller radial menu. Iconic Framework is optional, so this no-ops cleanly
-// when it isn't installed.
+// Adds a toolbar button via the Iconic Framework mod (if it's installed) that opens the journal.
+// Quietly does nothing when that mod isn't present.
 internal static class IconicFrameworkIntegration
 {
     private const string IconicModId = "furyx639.ToolbarIcons";

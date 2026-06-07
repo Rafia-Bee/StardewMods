@@ -1,10 +1,7 @@
 namespace QuestJournal.Menu;
 
-// Single itemised reward line for the detail panel. Mirrors the shape of
-// MQF's QuestRewardLine but stays in QuestJournal's own type system so it
-// can carry vanilla-quest synthesised rows (Money / Friendship / Custom)
-// alongside MQF-derived ones. Kept immutable; rows are rebuilt whenever
-// the selected quest changes.
+// One reward line shown in the journal (item, money, friendship, etc).
+// Just holds the display values for that line.
 public sealed class RewardLineRow
 {
     public string Kind { get; }

@@ -1,8 +1,6 @@
 namespace QuestJournal.Api;
 
-// Local duck-typed mirror of MoreQuestsFramework's QuestItemRequirement. SMAPI's
-// proxy maps these against the real class by property name, so keep them aligned
-// 1:1.
+// Describes an item a quest wants from you: which item, how many, and the quality.
 public interface IQuestItemRequirement
 {
     string ItemId { get; }

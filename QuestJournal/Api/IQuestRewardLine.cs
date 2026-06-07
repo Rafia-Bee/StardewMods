@@ -1,9 +1,6 @@
 namespace QuestJournal.Api;
 
-// Local duck-typed mirror of MoreQuestsFramework's QuestRewardLine. SMAPI
-// wraps each real QuestRewardLine instance with a proxy that implements this
-// interface based on matching property names, so the journal can read the
-// fields without referencing MQF's assembly. Keep names aligned 1:1.
+// One reward line from the MoreQuests API (kind, summary, item, amount, etc).
 public interface IQuestRewardLine
 {
     string Kind { get; }
