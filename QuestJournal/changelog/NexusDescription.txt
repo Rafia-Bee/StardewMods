@@ -65,6 +65,7 @@ If you have [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod C
 [*][b]Open journal key[/b] - the hotkey that opens the journal (default F6)[/*]
 [*][b]Controller buttons[/b] - while the journal is open: previous/next tab (default shoulders and triggers), new tab (default X), and edit the selected custom tab (default Y). All rebindable[/*]
 [*][b]Add a game-menu tab[/b] - adds the Quest Journal tab to the Esc menu. Only works with Better Game Menu installed (without it the tab is left off so it doesn't clash with other menu mods). Needs a restart[/*]
+[*][b]Show the Completed tab[/b] and [b]Show the All tab[/b] - turn either off to hide that tab from the journal if you only want to see the quests you're working on. Both on by default[/*]
 [*][b]Show pinned quests on the HUD[/b] - draws your pinned quests in the top-right corner[/*]
 [*][b]Show all steps on hover[/b] - some quests have more than one step, but the HUD only shows the first. Rest the mouse on a pinned quest to see all the steps still left to do in a little popup, without opening the journal[/*]
 [*][b]Auto-pin new quests[/b] - pins a quest the moment you accept it (does nothing if Show pinned quests on the HUD is false)[/*]

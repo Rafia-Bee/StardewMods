@@ -29,6 +29,8 @@ public sealed class ModConfig
 
     public bool AddGameMenuTab { get; set; } = true;
     public bool ShowHudPin { get; set; } = true;
+    public bool ShowCompletedTab { get; set; } = true;
+    public bool ShowAllTab { get; set; } = true;
 
     // When on, hovering a pinned quest on the HUD pops a tooltip listing all of
     // its remaining steps. Handy for multi-step quests, where the HUD only has

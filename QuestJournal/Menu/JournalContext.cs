@@ -357,8 +357,10 @@ public sealed class JournalContext : INotifyPropertyChanged
         _journalOffset = new Point(ModEntry.Config.JournalOffsetX, ModEntry.Config.JournalOffsetY);
         Tabs.Add(new TabRow(TabActive, helper.Translation.Get("journal.tab.active").Default("Active").ToString(), HandleTabActivate));
         Tabs.Add(new TabRow(TabSpecial, helper.Translation.Get("journal.tab.special").Default("Special Orders").ToString(), HandleTabActivate));
-        Tabs.Add(new TabRow(TabCompleted, helper.Translation.Get("journal.tab.completed").Default("Completed").ToString(), HandleTabActivate));
-        Tabs.Add(new TabRow(TabAll, helper.Translation.Get("journal.tab.all").Default("All").ToString(), HandleTabActivate));
+        if (ModEntry.Config.ShowCompletedTab)
+            Tabs.Add(new TabRow(TabCompleted, helper.Translation.Get("journal.tab.completed").Default("Completed").ToString(), HandleTabActivate));
+        if (ModEntry.Config.ShowAllTab)
+            Tabs.Add(new TabRow(TabAll, helper.Translation.Get("journal.tab.all").Default("All").ToString(), HandleTabActivate));
         _addTab = new TabRow("__add", helper.Translation.Get("journal.tab.new").Default("New tab").ToString(), _ => CreateTab()) { IsAddTab = true };
         _editTab = new TabRow("__edit", EditButtonLabel, _ => ToggleEditMode()) { IsEditTab = true };
         // Same order as SortKinds, so a selected label maps to a mode by index.

@@ -1,3 +1,7 @@
+1.5.0
+- New: you can hide the Completed and All tabs. If you only care about the quests you're working on, the extra tabs can feel like clutter. There are two new on/off settings ("Show the Completed tab" and "Show the All tab") under General. Turn either one off and that tab disappears from the journal the next time you open it. Both are on to start, so nothing changes unless you want it to.
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/QuestJournal-v1.4.0...QuestJournal-v1.5.0]i18n changes here[/url] (look at i18n/default.json).
+
 1.4.0
 - New: an opacity slider for the pinned quests box on screen. If the pinned quests in the corner feel too in-your-face, you can now turn them down so they fade into the background instead of turning them off completely. It's in the settings under Appearance, "Pinned quests opacity". Drag it down to make the whole box (the panel and the text) more see-through.
 - New: hover a pinned quest to see all its steps. Some quests have more than one step, but the box on screen only has room to show the first one. Now you can rest your mouse on a pinned quest and a little popup shows every step still left to do, so you can check what's coming without opening the journal. There's a setting to turn this off ("Show all steps on hover").

@@ -40,6 +40,16 @@ internal static class GmcmRegistration
             () => t.Get("config.gameMenuTab"),
             () => t.Get("config.gameMenuTab.tooltip"));
         api.AddBoolOption(manifest,
+            () => ModEntry.Config.ShowCompletedTab,
+            v => ModEntry.Config.ShowCompletedTab = v,
+            () => t.Get("config.showCompletedTab"),
+            () => t.Get("config.showCompletedTab.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.ShowAllTab,
+            v => ModEntry.Config.ShowAllTab = v,
+            () => t.Get("config.showAllTab"),
+            () => t.Get("config.showAllTab.tooltip"));
+        api.AddBoolOption(manifest,
             () => ModEntry.Config.ShowHudPin,
             v => ModEntry.Config.ShowHudPin = v,
             () => t.Get("config.hudPin"),
