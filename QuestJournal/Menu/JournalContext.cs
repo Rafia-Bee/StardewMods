@@ -1205,6 +1205,14 @@ public sealed class JournalContext : INotifyPropertyChanged
         return _helper.Translation.Get("tabeditor.hint", new { values }).Default($"In your quests: {values}").ToString();
     }
 
+    // Read the description through GetDescription() rather than the raw field. Behaviour is identical for vanilla,
+    // but it also picks up text other mods append by patching that method (e.g. QuestHelper's fishing hints).
+    private static string BuildDescription(Quest q)
+    {
+        try { return q.GetDescription() ?? q.questDescription ?? string.Empty; }
+        catch { return q.questDescription ?? string.Empty; }
+    }
+
     private QuestRow BuildActiveRow(Quest q)
     {
         var rewards = BuildRewardLines(q);
@@ -1212,7 +1220,7 @@ public sealed class JournalContext : INotifyPropertyChanged
         var (category, kind) = QuestSnapshotBuilder.ResolveCategoryKind(q, _mqfApi);
         return new QuestRow(
             title: q.questTitle ?? string.Empty,
-            description: q.questDescription ?? string.Empty,
+            description: BuildDescription(q),
             objective: q.currentObjective ?? string.Empty,
             rewardLines: rewards,
             adventureSteps: steps,
@@ -1236,7 +1244,7 @@ public sealed class JournalContext : INotifyPropertyChanged
         var (category, kind) = QuestSnapshotBuilder.ResolveCategoryKind(q, _mqfApi);
         return new QuestRow(
             title: q.questTitle ?? string.Empty,
-            description: q.questDescription ?? string.Empty,
+            description: BuildDescription(q),
             objective: string.Empty,
             rewardLines: rewards,
             adventureSteps: new List<AdventureStepRow>(),
