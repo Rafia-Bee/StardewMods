@@ -3,7 +3,8 @@ using QuestJournal.Hud;
 namespace QuestJournal.Api;
 
 // The object handed to other mods from ModEntry.GetApi(). Thin wrapper over the registry and the pin store.
-internal sealed class QuestJournalApi : IQuestJournalApi
+// Must be public so SMAPI can expose it to other mods.
+public sealed class QuestJournalApi : IQuestJournalApi
 {
     private readonly ExternalEntryRegistry _registry;
 

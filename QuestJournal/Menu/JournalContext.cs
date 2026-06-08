@@ -116,6 +116,8 @@ public sealed class JournalContext : INotifyPropertyChanged
     }
     public bool SelectedHasSteps => _selectedQuest?.AdventureSteps.Count > 0;
     public bool SelectedShowObjective => !SelectedHasSteps && !string.IsNullOrEmpty(SelectedObjective);
+    public bool SelectedShowRewards => SelectedRewards.Count > 0;
+    public bool SelectedShowGiver => !string.IsNullOrEmpty(SelectedGiverDisplay);
 
     public bool HasSelection => _selectedQuest != null;
     public bool NoSelection => _selectedQuest == null;
@@ -289,6 +291,7 @@ public sealed class JournalContext : INotifyPropertyChanged
     private const string TabSpecial = "special";
     private const string TabCompleted = "completed";
     private const string TabAll = "all";
+    private const string TabPlacementPrefix = "placement:";
 
     public JournalContext(IModHelper helper, IViewEngine? viewEngine, IMoreQuestsApi? mqfApi, string viewPrefix, CompletionWatcher? completionWatcher, ExternalEntryRegistry? externalEntries = null)
     {
@@ -367,6 +370,7 @@ public sealed class JournalContext : INotifyPropertyChanged
                 _externalRows.Add(BuildExternalRow(entry));
         }
 
+        RebuildPlacementTabs();
         ReapplyFilter();
     }
 
@@ -432,12 +436,34 @@ public sealed class JournalContext : INotifyPropertyChanged
         var match = FindRowByKey(key);
         if (match == null)
         {
-            SelectTab(key.StartsWith("so:", System.StringComparison.Ordinal) ? TabSpecial : TabActive);
+            SelectTab(ResolveTabForKey(key));
             match = FindRowByKey(key);
         }
         if (match == null) return false;
         SelectRow(match);
         return true;
+    }
+
+    // Which tab shows the row for this key. Special orders sit on the Special tab, an external entry with its
+    // own placement sits on that tab, everything else on Active.
+    private string ResolveTabForKey(string key)
+    {
+        if (key.StartsWith("so:", System.StringComparison.Ordinal))
+            return TabSpecial;
+        if (key.StartsWith("ext:", System.StringComparison.Ordinal))
+        {
+            foreach (var r in _externalRows)
+            {
+                if (r.External is IJournalEntry e && PinnedObjectivesStore.KeyFor(e.OwnerId, e.Key) == key)
+                {
+                    string? p = e.Placement;
+                    if (!string.IsNullOrWhiteSpace(p) && !p!.Equals("Active", System.StringComparison.OrdinalIgnoreCase))
+                        return TabPlacementPrefix + p;
+                    break;
+                }
+            }
+        }
+        return TabActive;
     }
 
     private QuestRow? FindRowByKey(string key)
@@ -783,6 +809,48 @@ public sealed class JournalContext : INotifyPropertyChanged
         RebuildTabRows();
     }
 
+    // Builds one tab per distinct placement name the registered entries asked for (anything that isn't the
+    // Active tab). Skips the work when the set of names hasn't changed so the tab rail doesn't churn.
+    private void RebuildPlacementTabs()
+    {
+        var desired = new List<string>();
+        var seen = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+        foreach (var r in _externalRows)
+        {
+            string? p = r.External?.Placement;
+            if (string.IsNullOrWhiteSpace(p) || p!.Equals("Active", System.StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (seen.Add(p)) desired.Add(p);
+        }
+
+        var current = new List<string>();
+        foreach (var t in Tabs)
+            if (t.IsPlacement && t.PlacementGroup != null) current.Add(t.PlacementGroup);
+
+        bool same = current.Count == desired.Count;
+        if (same)
+            for (int i = 0; i < current.Count; i++)
+                if (!string.Equals(current[i], desired[i], System.StringComparison.Ordinal)) { same = false; break; }
+        if (same) return;
+
+        for (int i = Tabs.Count - 1; i >= 0; i--)
+            if (Tabs[i].IsPlacement) Tabs.RemoveAt(i);
+        foreach (var p in desired)
+            Tabs.Add(new TabRow(TabPlacementPrefix + p, p, HandleTabActivate) { PlacementGroup = p });
+
+        if (FindTab(_activeTabId) == null)
+            _activeTabId = TabActive;
+
+        UpdateTabSelection();
+        RebuildTabRows();
+    }
+
+    private static bool PlacementIsActive(QuestRow r)
+    {
+        string? p = r.External?.Placement;
+        return string.IsNullOrWhiteSpace(p) || p!.Equals("Active", System.StringComparison.OrdinalIgnoreCase);
+    }
+
     private void RebuildTabRows()
     {
         OverflowRowGroups.Clear();
@@ -893,12 +961,18 @@ public sealed class JournalContext : INotifyPropertyChanged
             AddMatching(collected, _historyRows, def);
             AddMatching(collected, _externalRows, def);
         }
+        else if (activeTab?.PlacementGroup is string grp)
+        {
+            foreach (var r in _externalRows)
+                if (string.Equals(r.External?.Placement, grp, System.StringComparison.OrdinalIgnoreCase))
+                    AddRow(collected, r);
+        }
         else switch (_activeTabId)
         {
             case TabActive:
                 foreach (var r in _claimableRows) AddRow(claimable, r);
                 foreach (var r in _activeRows) AddRow(collected, r);
-                foreach (var r in _externalRows) AddRow(collected, r);
+                foreach (var r in _externalRows) if (PlacementIsActive(r)) AddRow(collected, r);
                 break;
             case TabSpecial:
                 foreach (var r in _claimableOrderRows) AddRow(claimable, r);
@@ -1723,6 +1797,8 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedPinLabel));
         Raise(nameof(SelectedHasSteps));
         Raise(nameof(SelectedShowObjective));
+        Raise(nameof(SelectedShowRewards));
+        Raise(nameof(SelectedShowGiver));
         Raise(nameof(HasSelection));
         Raise(nameof(NoSelection));
     }
@@ -1743,6 +1819,9 @@ public sealed class TabRow : INotifyPropertyChanged
     }
     public CustomTabDef? CustomDef { get; }
     public bool IsCustom => CustomDef != null;
+
+    public string? PlacementGroup { get; init; }
+    public bool IsPlacement => PlacementGroup != null;
 
     public bool IsAddTab { get; init; }
     public bool IsEditTab { get; init; }

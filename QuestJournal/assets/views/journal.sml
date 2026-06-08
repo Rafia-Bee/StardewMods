@@ -177,13 +177,13 @@
                             <label *if={SelectedShowObjective} margin="8, 0" text={SelectedObjective} />
                             <label *if={SelectedHasSteps} margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.steps} />
                             <label *repeat={:SelectedSteps} margin="8, 1" text={:RowText} />
-                            <label margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.rewards} />
+                            <label *if={SelectedShowRewards} margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.rewards} />
                             <lane *repeat={:SelectedRewards} orientation="horizontal" margin="8, 1" vertical-content-alignment="middle">
                                 <label text="- " />
                                 <label text={:Summary} />
                             </lane>
-                            <label margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.giver} />
-                            <label margin="8, 0" text={SelectedGiverDisplay} />
+                            <label *if={SelectedShowGiver} margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.giver} />
+                            <label *if={SelectedShowGiver} margin="8, 0" text={SelectedGiverDisplay} />
                             <label margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.daysleft} />
                             <label margin="8, 0" text={SelectedDaysLeftDisplay} />
                             <label margin="0, 12, 0, 4" focusable="true" color={HeaderColor} text={#journal.header.source} />

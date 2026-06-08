@@ -86,8 +86,37 @@ public sealed class ModEntry : Mod
             });
 
         helper.ConsoleCommands.Add(
+            "qj_addtabtest",
+            "Add a test entry into a named tab. Usage: qj_addtabtest <tab> [title...]",
+            (_, args) =>
+            {
+                if (args.Length < 1)
+                {
+                    Monitor.Log("Usage: qj_addtabtest <tab> [title...]", LogLevel.Info);
+                    return;
+                }
+                string tab = args[0];
+                string title = args.Length > 1 ? string.Join(" ", args, 1, args.Length - 1) : $"{tab} task";
+                const string owner = "RafiaBee.QuestJournal.Test";
+                string key = "tab-" + tab + "-" + title;
+                _externalEntries.AddOrUpdate(new Api.JournalEntry
+                {
+                    OwnerId = owner,
+                    Key = key,
+                    Title = title,
+                    Description = "A test to-do placed in its own tab.",
+                    Objective = title,
+                    Source = "Test",
+                    Placement = tab,
+                    OnComplete = () => _externalEntries.Remove(owner, key),
+                    OnCancel = () => _externalEntries.Remove(owner, key)
+                });
+                Monitor.Log($"Added test entry into the '{tab}' tab.", LogLevel.Info);
+            });
+
+        helper.ConsoleCommands.Add(
             "qj_cleartest",
-            "Remove all test external journal entries added by qj_addtest.",
+            "Remove all test external journal entries added by qj_addtest or qj_addtabtest.",
             (_, _) =>
             {
                 _externalEntries.Clear("RafiaBee.QuestJournal.Test");
