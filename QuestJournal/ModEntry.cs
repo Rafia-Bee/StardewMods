@@ -214,7 +214,7 @@ public sealed class ModEntry : Mod
         _completionWatcher = new CompletionWatcher(Helper, _mqfApi);
         _completionWatcher.Register();
 
-        _pinnedHud = new PinnedObjectiveHud(Helper, _mqfApi);
+        _pinnedHud = new PinnedObjectiveHud(Helper, _mqfApi, _externalEntries);
         _pinnedHud.Register();
 
         _newQuestPinner = new NewQuestPinner(Helper);

@@ -20,6 +20,7 @@ internal sealed class PinnedObjectiveHud
 {
     private readonly IModHelper _helper;
     private readonly IMoreQuestsApi? _mqfApi;
+    private readonly ExternalEntryRegistry? _externalEntries;
 
     private const int PanelWidth = 380;
     private const int Padding = 16;
@@ -41,10 +42,11 @@ internal sealed class PinnedObjectiveHud
     private int _dragBoxX;
     private int _dragBoxY;
 
-    public PinnedObjectiveHud(IModHelper helper, IMoreQuestsApi? mqfApi)
+    public PinnedObjectiveHud(IModHelper helper, IMoreQuestsApi? mqfApi, ExternalEntryRegistry? externalEntries = null)
     {
         _helper = helper;
         _mqfApi = mqfApi;
+        _externalEntries = externalEntries;
     }
 
     public void Register()
@@ -183,6 +185,19 @@ internal sealed class PinnedObjectiveHud
             }
         }
 
+        if (_externalEntries != null)
+        {
+            foreach (var entry in _externalEntries.Snapshot())
+            {
+                if (entry.Completed) continue;
+                string key = PinnedObjectivesStore.KeyFor(entry.OwnerId, entry.Key);
+                if (string.IsNullOrEmpty(key) || !pinned.Contains(key)) continue;
+                if (entries.Count >= MaxEntries) { hiddenOverflow++; continue; }
+                var (hud, all) = ResolveExternalObjective(entry);
+                entries.Add((entry.Title ?? string.Empty, hud, all, key));
+            }
+        }
+
         if (entries.Count == 0) return;
 
         DrawStack(e.SpriteBatch, entries, hiddenOverflow);
@@ -214,6 +229,17 @@ internal sealed class PinnedObjectiveHud
         }
         catch { }
         return lines;
+    }
+
+    private static (string Hud, IReadOnlyList<string> All) ResolveExternalObjective(IJournalEntry e)
+    {
+        var all = new List<string>();
+        if (e.Steps != null)
+            foreach (var s in e.Steps)
+                if (!string.IsNullOrEmpty(s)) all.Add(s);
+        string hud = all.Count > 0 ? all[0] : (e.Objective ?? string.Empty);
+        if (all.Count == 0 && !string.IsNullOrEmpty(hud)) all.Add(hud);
+        return (hud, all);
     }
 
     private (string Hud, IReadOnlyList<string> All) ResolveObjective(Quest q)

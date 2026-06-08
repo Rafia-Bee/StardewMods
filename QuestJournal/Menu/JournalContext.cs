@@ -90,12 +90,14 @@ public sealed class JournalContext : INotifyPropertyChanged
     public bool SelectedShowPostpone => _selectedQuest != null && _selectedQuest.CanPostpone;
     public bool SelectedShowDetails => _selectedQuest != null && !_selectedQuest.IsCompleted
         && (_selectedQuest.Quest != null || _selectedQuest.SpecialOrder != null);
-    public bool SelectedShowPin => SelectedShowDetails;
+    public bool SelectedShowPin => SelectedShowDetails
+        || (_selectedQuest?.External != null && !_selectedQuest.IsCompleted);
     public bool SelectedShowWarp => SelectedShowDetails && ModEntry.Config.AllowWarpCheat
         && _selectedQuest != null && _selectedQuest.WarpTargets.Count > 0;
     public bool SelectedIsPinned =>
         (_selectedQuest?.Quest is Quest q && PinnedObjectivesStore.IsPinned(q))
-        || (_selectedQuest?.SpecialOrder is SpecialOrder so && PinnedObjectivesStore.IsPinned(so));
+        || (_selectedQuest?.SpecialOrder is SpecialOrder so && PinnedObjectivesStore.IsPinned(so))
+        || (_selectedQuest?.External is IJournalEntry e && PinnedObjectivesStore.IsPinned(e.OwnerId, e.Key));
     public string SelectedPinLabel => _helper.Translation
         .Get(SelectedIsPinned ? "journal.action.unpin" : "journal.action.pin")
         .Default(SelectedIsPinned ? "Unpin" : "Pin").ToString();
@@ -446,6 +448,8 @@ public sealed class JournalContext : INotifyPropertyChanged
                 return r;
             if (r.SpecialOrder is SpecialOrder so && PinnedObjectivesStore.KeyFor(so) == key)
                 return r;
+            if (r.External is IJournalEntry e && PinnedObjectivesStore.KeyFor(e.OwnerId, e.Key) == key)
+                return r;
         }
         return null;
     }
@@ -636,6 +640,8 @@ public sealed class JournalContext : INotifyPropertyChanged
             PinnedObjectivesStore.Toggle(q);
         else if (_selectedQuest?.SpecialOrder is SpecialOrder so)
             PinnedObjectivesStore.Toggle(so);
+        else if (_selectedQuest?.External is IJournalEntry e)
+            PinnedObjectivesStore.ToggleExternal(e.OwnerId, e.Key);
         else
             return;
         _selectedQuest.RaisePinned();
