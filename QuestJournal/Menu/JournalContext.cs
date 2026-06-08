@@ -84,6 +84,8 @@ public sealed class JournalContext : INotifyPropertyChanged
         && soComplete.questState.Value == SpecialOrderStatus.InProgress
         && ModEntry.Config.AllowCompleteCheat;
     public bool SelectedCanClaim => _selectedQuest?.CanClaim == true;
+    public bool SelectedShowExternalComplete => _selectedQuest?.External?.OnComplete != null && !_selectedQuest.IsCompleted;
+    public bool SelectedShowExternalCancel => _selectedQuest?.External?.OnCancel != null;
     public bool SelectedShowCancel => _selectedQuest != null && _selectedQuest.CanCancel;
     public bool SelectedShowPostpone => _selectedQuest != null && _selectedQuest.CanPostpone;
     public bool SelectedShowDetails => _selectedQuest != null && !_selectedQuest.IsCompleted
@@ -566,6 +568,32 @@ public sealed class JournalContext : INotifyPropertyChanged
         if (quest == null || quest.completed.Value) return;
         if (quest.daysLeft.Value <= 0) return;
         quest.daysLeft.Value += 7;
+        Refresh();
+    }
+
+    public void ExternalCompleteSelected()
+    {
+        var entry = _selectedQuest?.External;
+        if (entry?.OnComplete == null) return;
+        try { entry.OnComplete.Invoke(); }
+        catch (System.Exception ex)
+        {
+            ModEntry.Instance?.Monitor?.Log(
+                $"A mod's '{entry.Source}' entry threw while completing: {ex.Message}", StardewModdingAPI.LogLevel.Warn);
+        }
+        Refresh();
+    }
+
+    public void ExternalCancelSelected()
+    {
+        var entry = _selectedQuest?.External;
+        if (entry?.OnCancel == null) return;
+        try { entry.OnCancel.Invoke(); }
+        catch (System.Exception ex)
+        {
+            ModEntry.Instance?.Monitor?.Log(
+                $"A mod's '{entry.Source}' entry threw while cancelling: {ex.Message}", StardewModdingAPI.LogLevel.Warn);
+        }
         Refresh();
     }
 
@@ -1676,6 +1704,8 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedShowComplete));
         Raise(nameof(SelectedShowCompleteOrder));
         Raise(nameof(SelectedCanClaim));
+        Raise(nameof(SelectedShowExternalComplete));
+        Raise(nameof(SelectedShowExternalCancel));
         Raise(nameof(SelectedShowCancel));
         Raise(nameof(SelectedShowPostpone));
         Raise(nameof(SelectedShowDetails));

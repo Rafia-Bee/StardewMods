@@ -213,6 +213,22 @@
                                click=|ClaimSelected()|>
                             <label text={#journal.action.claim} />
                         </frame>
+                        <frame *if={SelectedShowExternalComplete} layout="stretch content" margin="0, 4" padding="8, 14"
+                               background={@Mods/StardewUI/Sprites/ButtonLight}
+                               horizontal-content-alignment="middle"
+                               vertical-content-alignment="middle"
+                               focusable="true"
+                               click=|ExternalCompleteSelected()|>
+                            <label text={#journal.action.markdone} />
+                        </frame>
+                        <frame *if={SelectedShowExternalCancel} layout="stretch content" margin="0, 4" padding="8, 14"
+                               background={@Mods/StardewUI/Sprites/ButtonLight}
+                               horizontal-content-alignment="middle"
+                               vertical-content-alignment="middle"
+                               focusable="true"
+                               click=|ExternalCancelSelected()|>
+                            <label text={#journal.action.remove} />
+                        </frame>
                         <frame *if={SelectedShowDetails} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"

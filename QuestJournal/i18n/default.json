@@ -53,6 +53,8 @@
     "journal.action.catchall": "Catch all",
     "journal.action.postpone": "Postpone (+7 days)",
     "journal.action.cancel": "Cancel",
+    "journal.action.markdone": "Mark done",
+    "journal.action.remove": "Remove",
 
     "journal.cancel.confirm": "Cancel this quest?",
 

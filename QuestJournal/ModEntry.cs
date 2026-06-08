@@ -68,16 +68,19 @@ public sealed class ModEntry : Mod
                 string title = args.Length > 1
                     ? string.Join(" ", args, 1, args.Length - 1)
                     : "Find 5 strawberries";
+                const string owner = "RafiaBee.QuestJournal.Test";
                 _externalEntries.AddOrUpdate(new Api.JournalEntry
                 {
-                    OwnerId = "RafiaBee.QuestJournal.Test",
+                    OwnerId = owner,
                     Key = key,
                     Title = title,
                     Description = "A test to-do registered through the Quest Journal API.",
                     Objective = title,
                     Source = "Test",
                     Category = "Personal",
-                    DeadlineDays = 3
+                    DeadlineDays = 3,
+                    OnComplete = () => _externalEntries.Remove(owner, key),
+                    OnCancel = () => _externalEntries.Remove(owner, key)
                 });
                 Monitor.Log($"Added test entry '{key}'. Open the journal and check the Active tab.", LogLevel.Info);
             });
