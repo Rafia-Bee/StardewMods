@@ -58,7 +58,7 @@ public sealed class JournalContext : INotifyPropertyChanged
         }
     }
 
-    public string SelectedTitle => _selectedQuest?.Title ?? string.Empty;
+    public string SelectedTitle => _selectedQuest?.BannerTitle ?? string.Empty;
     public string SelectedDescription => _selectedQuest?.Description ?? string.Empty;
     public string SelectedObjective => _selectedQuest?.Objective ?? string.Empty;
     public string SelectedGiverDisplay => _selectedQuest?.GiverDisplay ?? string.Empty;
@@ -1878,6 +1878,10 @@ public sealed class QuestRow : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public string Title { get; }
+    // The list rows use Title; the detail header uses this. External entries can override it; everything else
+    // just falls back to Title.
+    public string BannerTitle =>
+        External is IJournalEntry e && !string.IsNullOrEmpty(e.BannerTitle) ? e.BannerTitle : Title;
     public string Description { get; }
     public string Objective { get; }
     public IReadOnlyList<RewardLineRow> RewardLines { get; }

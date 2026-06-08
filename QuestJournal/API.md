@@ -39,6 +39,11 @@ public interface IJournalEntry
     string Key { get; }
 
     string Title { get; }
+
+    // Optional. Shown in the detail header and pinned HUD instead of Title. Leave empty to just use Title.
+    // Handy when Title is a specific label for the list rows but you want a short fixed header up top.
+    string BannerTitle { get; }
+
     string Description { get; }
 
     // A single objective line. Shown when there are no Steps.
@@ -86,6 +91,7 @@ public sealed class JournalEntry : IJournalEntry
     public string OwnerId { get; set; } = "";
     public string Key { get; set; } = "";
     public string Title { get; set; } = "";
+    public string BannerTitle { get; set; } = "";
     public string Description { get; set; } = "";
     public string Objective { get; set; } = "";
     public IReadOnlyList<string> Steps { get; set; } = new List<string>();

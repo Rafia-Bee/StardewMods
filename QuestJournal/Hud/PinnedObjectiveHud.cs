@@ -194,7 +194,8 @@ internal sealed class PinnedObjectiveHud
                 if (string.IsNullOrEmpty(key) || !pinned.Contains(key)) continue;
                 if (entries.Count >= MaxEntries) { hiddenOverflow++; continue; }
                 var (hud, all) = ResolveExternalObjective(entry);
-                entries.Add((entry.Title ?? string.Empty, hud, all, key));
+                string title = string.IsNullOrEmpty(entry.BannerTitle) ? (entry.Title ?? string.Empty) : entry.BannerTitle;
+                entries.Add((title, hud, all, key));
             }
         }
 
@@ -292,17 +293,18 @@ internal sealed class PinnedObjectiveHud
         var font = Game1.smallFont;
         int innerWidth = PanelWidth - Padding * 2;
 
-        var blocks = new List<(string Title, string Objective, float TitleH, float ObjH, string Key, string RawTitle, IReadOnlyList<string> All)>();
+        var blocks = new List<(string Title, string Objective, float TitleH, float ObjH, string Key, string RawTitle, IReadOnlyList<string> All, bool ObjTruncated)>();
         float totalHeight = Padding * 2;
         foreach (var (title, objective, all, key) in entries)
         {
-            string wrappedTitle = Game1.parseText(title, font, innerWidth);
+            string wrappedTitle = FitToWidth(title, font, innerWidth);
+            bool objTruncated = false;
             string wrappedObj = string.IsNullOrEmpty(objective)
                 ? string.Empty
-                : Game1.parseText(objective, font, innerWidth - ObjectiveIndent);
+                : FitToWidth(objective, font, innerWidth - ObjectiveIndent, out objTruncated);
             float titleH = font.MeasureString(wrappedTitle).Y;
             float objH = wrappedObj.Length == 0 ? 0f : font.MeasureString(wrappedObj).Y + 2f;
-            blocks.Add((wrappedTitle, wrappedObj, titleH, objH, key, title, all));
+            blocks.Add((wrappedTitle, wrappedObj, titleH, objH, key, title, all, objTruncated));
             totalHeight += titleH + objH + EntryGap;
         }
 
@@ -352,14 +354,16 @@ internal sealed class PinnedObjectiveHud
 
         float textX = boxX + Padding;
         float y = boxY + Padding;
-        foreach (var (title, objective, titleH, objH, key, rawTitle, all) in blocks)
+        foreach (var (title, objective, titleH, objH, key, rawTitle, all, objTruncated) in blocks)
         {
             var entryRect = new Rectangle(boxX + 4, (int)y - 2, PanelWidth - 8, (int)(titleH + objH) + 4);
             _entryBounds.Add((entryRect, key));
             if (canHover && entryRect.Contains((int)cursor.X, (int)cursor.Y))
             {
                 b.Draw(Game1.staminaRect, entryRect, JournalTheme.HoverTint * opacity);
-                if (ModEntry.Config.HudHoverObjectiveTooltip && all.Count > 1)
+                // Multi-step entries show every line; a single objective only needs the tooltip when it was
+                // truncated to fit, so the full text is still reachable on hover.
+                if (ModEntry.Config.HudHoverObjectiveTooltip && (all.Count > 1 || objTruncated))
                 {
                     tooltipTitle = rawTitle;
                     tooltipBody = string.Join("\n", all);
@@ -384,5 +388,40 @@ internal sealed class PinnedObjectiveHud
 
         if (tooltipBody != null)
             IClickableMenu.drawHoverText(b, tooltipBody, font, 0, 0, -1, tooltipTitle);
+    }
+
+    // Word-wrap to the panel width, but parseText only breaks on spaces. If a line is still too wide (an
+    // unbreakable token like a giant number), fall back to a hard single-line cut so nothing spills past the
+    // border, no matter what title a mod hands us.
+    private static string FitToWidth(string text, SpriteFont font, int maxWidth)
+        => FitToWidth(text, font, maxWidth, out _);
+
+    private static string FitToWidth(string text, SpriteFont font, int maxWidth, out bool truncated)
+    {
+        truncated = false;
+        if (string.IsNullOrEmpty(text)) return text;
+        string wrapped = Game1.parseText(text, font, maxWidth);
+        if (font.MeasureString(wrapped).X <= maxWidth)
+            return wrapped;
+        truncated = true;
+        return HardTruncate(text, font, maxWidth);
+    }
+
+    private static string HardTruncate(string s, SpriteFont font, int maxWidth)
+    {
+        const string ellipsis = "...";
+        float ellipsisW = font.MeasureString(ellipsis).X;
+        var sb = new System.Text.StringBuilder();
+        foreach (char ch in s)
+        {
+            if (ch == '\n') break;
+            sb.Append(ch);
+            if (font.MeasureString(sb).X + ellipsisW > maxWidth)
+            {
+                sb.Length--;
+                break;
+            }
+        }
+        return sb.ToString().TrimEnd() + ellipsis;
     }
 }

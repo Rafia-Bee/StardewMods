@@ -37,6 +37,11 @@ public interface IJournalEntry
     string Key { get; }
 
     string Title { get; }
+
+    // Optional. Shown in the detail header and pinned HUD instead of Title. Leave empty to just use Title.
+    // Handy when Title is a specific label for the list rows but you want a short fixed header up top.
+    string BannerTitle { get; }
+
     string Description { get; }
 
     // A single objective line. Shown when there are no Steps.

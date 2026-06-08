@@ -10,6 +10,7 @@ public sealed class JournalEntry : IJournalEntry
     public string OwnerId { get; set; } = string.Empty;
     public string Key { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
+    public string BannerTitle { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Objective { get; set; } = string.Empty;
     public IReadOnlyList<string> Steps { get; set; } = new List<string>();
