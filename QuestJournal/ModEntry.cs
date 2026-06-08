@@ -26,6 +26,7 @@ public sealed class ModEntry : Mod
     private IViewEngine? _viewEngine;
     private IMoreQuestsApi? _mqfApi;
     private string _viewPrefix = null!;
+    private readonly ExternalEntryRegistry _externalEntries = new();
     private CompletionWatcher? _completionWatcher;
     private PinnedObjectiveHud? _pinnedHud;
     private NewQuestPinner? _newQuestPinner;
@@ -50,6 +51,45 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.Content.AssetsInvalidated += OnAssetsInvalidated;
+
+        RegisterConsoleCommands(helper);
+    }
+
+    public override object GetApi() => new QuestJournalApi(_externalEntries);
+
+    private void RegisterConsoleCommands(IModHelper helper)
+    {
+        helper.ConsoleCommands.Add(
+            "qj_addtest",
+            "Add a test external journal entry through the Quest Journal API. Usage: qj_addtest [key] [title...]",
+            (_, args) =>
+            {
+                string key = args.Length > 0 ? args[0] : "test1";
+                string title = args.Length > 1
+                    ? string.Join(" ", args, 1, args.Length - 1)
+                    : "Find 5 strawberries";
+                _externalEntries.AddOrUpdate(new Api.JournalEntry
+                {
+                    OwnerId = "RafiaBee.QuestJournal.Test",
+                    Key = key,
+                    Title = title,
+                    Description = "A test to-do registered through the Quest Journal API.",
+                    Objective = title,
+                    Source = "Test",
+                    Category = "Personal",
+                    DeadlineDays = 3
+                });
+                Monitor.Log($"Added test entry '{key}'. Open the journal and check the Active tab.", LogLevel.Info);
+            });
+
+        helper.ConsoleCommands.Add(
+            "qj_cleartest",
+            "Remove all test external journal entries added by qj_addtest.",
+            (_, _) =>
+            {
+                _externalEntries.Clear("RafiaBee.QuestJournal.Test");
+                Monitor.Log("Cleared test external entries.", LogLevel.Info);
+            });
     }
 
     private Microsoft.Xna.Framework.Rectangle? JournalFrameRect()
@@ -290,7 +330,7 @@ public sealed class ModEntry : Mod
     private IClickableMenu? BuildJournalMenu()
     {
         if (_viewEngine == null) return null;
-        var ctx = new JournalContext(Helper, _viewEngine, _mqfApi, _viewPrefix, _completionWatcher);
+        var ctx = new JournalContext(Helper, _viewEngine, _mqfApi, _viewPrefix, _completionWatcher, _externalEntries);
         _journalContext = ctx;
         ctx.Refresh();
         var controller = _viewEngine.CreateMenuControllerFromAsset($"{_viewPrefix}/journal", ctx);
@@ -301,6 +341,7 @@ public sealed class ModEntry : Mod
         {
             if (ReferenceEquals(_journalMenu, menu))
                 _journalMenu = null;
+            ctx.Detach();
             controller.Dispose();
         };
         _journalMenu = menu;

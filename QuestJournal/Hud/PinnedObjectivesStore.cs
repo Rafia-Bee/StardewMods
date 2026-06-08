@@ -32,6 +32,11 @@ internal static class PinnedObjectivesStore
         return string.IsNullOrEmpty(key) ? string.Empty : "so:" + key;
     }
 
+    public static string KeyFor(string ownerId, string key)
+        => string.IsNullOrEmpty(ownerId) || string.IsNullOrEmpty(key)
+            ? string.Empty
+            : "ext:" + ownerId + "/" + key;
+
     public static HashSet<string> Load()
     {
         if (Game1.player == null) return new HashSet<string>();
@@ -59,6 +64,17 @@ internal static class PinnedObjectivesStore
 
     public static bool IsPinned(Quest q) => IsPinnedKey(KeyFor(q));
     public static bool IsPinned(SpecialOrder so) => IsPinnedKey(KeyFor(so));
+    public static bool IsPinned(string ownerId, string key) => IsPinnedKey(KeyFor(ownerId, key));
+
+    public static bool ToggleExternal(string ownerId, string key) => ToggleKey(KeyFor(ownerId, key));
+
+    public static void SetExternalPinned(string ownerId, string key, bool pinned)
+    {
+        string k = KeyFor(ownerId, key);
+        if (string.IsNullOrEmpty(k)) return;
+        if (pinned) PinKey(k);
+        else UnpinKey(k);
+    }
 
     public static bool Toggle(Quest q) => ToggleKey(KeyFor(q));
     public static bool Toggle(SpecialOrder so) => ToggleKey(KeyFor(so));

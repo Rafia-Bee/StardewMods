@@ -272,25 +272,30 @@ public sealed class JournalContext : INotifyPropertyChanged
     private List<QuestRow> _claimableOrderRows = new();
     private List<QuestRow> _historyRows = new();
     private List<QuestRow> _specialOrderRows = new();
+    private List<QuestRow> _externalRows = new();
 
     private readonly IViewEngine? _viewEngine;
     private readonly IMoreQuestsApi? _mqfApi;
     private readonly IModHelper _helper;
     private readonly string _viewPrefix;
     private readonly CompletionWatcher? _completionWatcher;
+    private readonly ExternalEntryRegistry? _externalEntries;
 
     private const string TabActive = "active";
     private const string TabSpecial = "special";
     private const string TabCompleted = "completed";
     private const string TabAll = "all";
 
-    public JournalContext(IModHelper helper, IViewEngine? viewEngine, IMoreQuestsApi? mqfApi, string viewPrefix, CompletionWatcher? completionWatcher)
+    public JournalContext(IModHelper helper, IViewEngine? viewEngine, IMoreQuestsApi? mqfApi, string viewPrefix, CompletionWatcher? completionWatcher, ExternalEntryRegistry? externalEntries = null)
     {
         _helper = helper;
         _viewEngine = viewEngine;
         _mqfApi = mqfApi;
         _viewPrefix = viewPrefix;
         _completionWatcher = completionWatcher;
+        _externalEntries = externalEntries;
+        if (_externalEntries != null)
+            _externalEntries.Changed += OnExternalEntriesChanged;
         _journalOffset = new Point(ModEntry.Config.JournalOffsetX, ModEntry.Config.JournalOffsetY);
         Tabs.Add(new TabRow(TabActive, helper.Translation.Get("journal.tab.active").Default("Active").ToString(), HandleTabActivate));
         Tabs.Add(new TabRow(TabSpecial, helper.Translation.Get("journal.tab.special").Default("Special Orders").ToString(), HandleTabActivate));
@@ -349,6 +354,13 @@ public sealed class JournalContext : INotifyPropertyChanged
         for (int i = history.Count - 1; i >= 0; i--)
         {
             _historyRows.Add(BuildHistoryRow(history[i]));
+        }
+
+        _externalRows.Clear();
+        if (_externalEntries != null)
+        {
+            foreach (var entry in _externalEntries.Snapshot())
+                _externalRows.Add(BuildExternalRow(entry));
         }
 
         ReapplyFilter();
@@ -845,12 +857,14 @@ public sealed class JournalContext : INotifyPropertyChanged
             AddMatching(collected, _activeRows, def);
             AddMatching(collected, _specialOrderRows, def);
             AddMatching(collected, _historyRows, def);
+            AddMatching(collected, _externalRows, def);
         }
         else switch (_activeTabId)
         {
             case TabActive:
                 foreach (var r in _claimableRows) AddRow(claimable, r);
                 foreach (var r in _activeRows) AddRow(collected, r);
+                foreach (var r in _externalRows) AddRow(collected, r);
                 break;
             case TabSpecial:
                 foreach (var r in _claimableOrderRows) AddRow(claimable, r);
@@ -865,6 +879,7 @@ public sealed class JournalContext : INotifyPropertyChanged
                 foreach (var r in _activeRows) AddRow(collected, r);
                 foreach (var r in _specialOrderRows) AddRow(collected, r);
                 foreach (var r in _historyRows) AddRow(collected, r);
+                foreach (var r in _externalRows) AddRow(collected, r);
                 break;
         }
 
@@ -1419,6 +1434,68 @@ public sealed class JournalContext : INotifyPropertyChanged
         };
     }
 
+    private QuestRow BuildExternalRow(IJournalEntry e)
+    {
+        var steps = new List<AdventureStepRow>();
+        var entrySteps = e.Steps;
+        if (entrySteps != null && entrySteps.Count > 0)
+        {
+            for (int i = 0; i < entrySteps.Count; i++)
+                steps.Add(new AdventureStepRow(
+                    index: i,
+                    description: entrySteps[i] ?? string.Empty,
+                    progress: 0,
+                    count: 0,
+                    done: false,
+                    active: false,
+                    kind: string.Empty,
+                    plain: true));
+        }
+
+        return new QuestRow(
+            title: e.Title ?? string.Empty,
+            description: e.Description ?? string.Empty,
+            objective: e.Objective ?? string.Empty,
+            rewardLines: new List<RewardLineRow>(),
+            adventureSteps: steps,
+            giverDisplay: string.Empty,
+            daysLeftDisplay: BuildExternalDeadlineDisplay(e.DeadlineDays),
+            sourceDisplay: string.IsNullOrEmpty(e.Source) ? UnknownLabel : e.Source,
+            warpTargets: null,
+            isCompleted: e.Completed,
+            canCancel: false,
+            canPostpone: false,
+            quest: null,
+            host: this,
+            category: e.Category ?? string.Empty,
+            kind: "External",
+            deadlineDays: e.DeadlineDays,
+            external: e);
+    }
+
+    private string BuildExternalDeadlineDisplay(int? days)
+    {
+        if (!days.HasValue)
+            return _helper.Translation.Get("journal.days.none").Default("No deadline").ToString();
+        int d = days.Value;
+        if (d <= 0)
+        {
+            try { return Game1.content.LoadString("Strings\\StringsFromCSFiles:Quest_FinalDay"); }
+            catch { return _helper.Translation.Get("journal.days.finalday").Default("Final day!").ToString(); }
+        }
+        if (d == 1)
+            return _helper.Translation.Get("journal.days.duetomorrow").Default("Due tomorrow!").ToString();
+        return _helper.Translation.Get("journal.days.left", new { count = d }).Default($"{d} days left").ToString();
+    }
+
+    private void OnExternalEntriesChanged() => Refresh();
+
+    public void Detach()
+    {
+        if (_externalEntries != null)
+            _externalEntries.Changed -= OnExternalEntriesChanged;
+    }
+
     private void UpdateTabSelection()
     {
         foreach (var t in Tabs)
@@ -1704,7 +1781,9 @@ public sealed class QuestRow : INotifyPropertyChanged
     public bool ReadyToClaim => CanClaim;
     public Quest? Quest { get; }
     public SpecialOrder? SpecialOrder { get; }
+    public IJournalEntry? External { get; }
     public bool IsSpecialOrder => SpecialOrder != null;
+    public bool IsExternal => External != null;
 
     public bool IsPinned
     {
@@ -1712,6 +1791,7 @@ public sealed class QuestRow : INotifyPropertyChanged
         {
             if (Quest is Quest q) return PinnedObjectivesStore.IsPinned(q);
             if (SpecialOrder is SpecialOrder so) return PinnedObjectivesStore.IsPinned(so);
+            if (External is IJournalEntry e) return PinnedObjectivesStore.IsPinned(e.OwnerId, e.Key);
             return false;
         }
     }
@@ -1806,7 +1886,8 @@ public sealed class QuestRow : INotifyPropertyChanged
         string kind = "",
         SpecialOrder? specialOrder = null,
         int? deadlineDays = null,
-        bool canClaim = false)
+        bool canClaim = false,
+        IJournalEntry? external = null)
     {
         Title = title;
         Description = description;
@@ -1826,6 +1907,7 @@ public sealed class QuestRow : INotifyPropertyChanged
         CanClaim = canClaim;
         Quest = quest;
         SpecialOrder = specialOrder;
+        External = external;
         _host = host;
     }
 
