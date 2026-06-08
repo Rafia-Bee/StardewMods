@@ -49,6 +49,7 @@ To open it with a controller, the easiest way is [url=https://www.nexusmods.com/
 [b]Optional (auto-detected):[/b]
 [list]
 [*][url=https://www.nexusmods.com/stardewvalley/mods/46361]More Quests Framework[/url] - unlocks the multi-step view, proper reward lists, and source-mod labels. Without it, vanilla quests still get the full journal[/*]
+[*][url=https://www.nexusmods.com/stardewvalley/mods/41150]Quest Helper[/url] - when it's installed, its fishing and cooking hints show up in the quest details here in the journal, not just the old quest log[/*]
 [*][url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] - an in-game settings page[/*]
 [*][url=https://www.nexusmods.com/stardewvalley/mods/32032]Better Game Menu[/url] - when it's installed, the Quest Journal tab is added through its tab strip[/*]
 [*][url=https://www.nexusmods.com/stardewvalley/mods/11026]Iconic Framework[/url] - adds the journal icon to the shortcuts[/*]

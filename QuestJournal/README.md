@@ -46,6 +46,7 @@ To open it with a controller, the easiest way is [Star Control](https://www.nexu
 **Optional (auto-detected at runtime)**
 
 - **[More Quests Framework](../MoreQuestsFramework/README.md)** (`RafiaBee.MoreQuestsFramework`) **2.4.0 or newer**, bundled in this repo. When it's installed, multi-step Adventure quests show each step with its progress, rewards are itemised properly, and quests are labelled with the mod they came from. Without it, vanilla quests still get the full journal treatment.
+- **[Quest Helper](https://www.nexusmods.com/stardewvalley/mods/41150)**. When it's installed, its fishing and cooking hints show up in the quest details here in the journal, not just the old quest log.
 - **[Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098)**, for an in-game settings page.
 - **[Better Game Menu](https://www.nexusmods.com/stardewvalley/mods/32032)**. When it's installed, the Quest Journal tab shows up in the Esc menu.
 
