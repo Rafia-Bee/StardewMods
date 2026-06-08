@@ -59,6 +59,10 @@
     "journal.claim.ready": "Reward ready to collect",
     "journal.claim.received": "Received {{amount}}g",
     "journal.list.claimtag": "Claim reward",
+    "journal.list.pinnedtag": "Pinned",
+
+    "hud.toggle.on": "Pinned quests shown",
+    "hud.toggle.off": "Pinned quests hidden",
 
     "journal.warp.title": "Warp to...",
     "journal.warp.notfound": "Can't find {{npc}} right now.",
@@ -96,6 +100,10 @@
     "config.section.general": "General",
     "config.openKey": "Open journal key",
     "config.openKey.tooltip": "The hotkey that opens the Quest Journal.",
+    "config.togglePin": "Pin or unpin key",
+    "config.togglePin.tooltip": "Pins or unpins a quest. Inside the journal it works on the quest you have selected. While playing, point at a pinned quest on the HUD and press it to unpin that one. Defaults to P.",
+    "config.toggleHud": "Show or hide pinned quests key",
+    "config.toggleHud.tooltip": "Shows or hides the pinned quests box on the HUD while you're playing. Not set to a key to start with, so pick one here if you want it.",
 
     "config.section.controller": "Controller buttons",
     "config.controller.link": "Controller buttons",
@@ -119,6 +127,8 @@
     "config.showAllTab.tooltip": "Shows the All tab in the journal, which lists every quest at once. Turn it off to hide it. Reopen the journal for a change to apply.",
     "config.hudPin": "Show pinned quests on the HUD",
     "config.hudPin.tooltip": "Draws your pinned quests in the top-right corner while you're playing.",
+    "config.pinnedFirst": "Pinned quests at the top",
+    "config.pinnedFirst.tooltip": "Floats your pinned quests to the top of the quest list so they're easy to find. Turn it off to leave the list in its normal order.",
     "config.hudHoverSteps": "Show all steps on hover",
     "config.hudHoverSteps.tooltip": "Some quests have several steps running at once, but the HUD only shows the first one. Turn this on to see all of them in a tooltip when you hover a pinned quest, without opening the journal.",
     "config.pinNew": "Auto-pin new quests",

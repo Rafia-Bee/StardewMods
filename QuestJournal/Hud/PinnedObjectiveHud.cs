@@ -73,6 +73,18 @@ internal sealed class PinnedObjectiveHud
             return;
         }
 
+        if (ModEntry.Config.TogglePinKey.JustPressed())
+        {
+            string? key = KeyAt(cursor);
+            if (key != null)
+            {
+                PinnedObjectivesStore.UnpinByKey(key);
+                Game1.playSound("smallSelect");
+                _helper.Input.SuppressActiveKeybinds(ModEntry.Config.TogglePinKey);
+            }
+            return;
+        }
+
         if (e.Button != SButton.MouseLeft) return;
         if (!_lastPanelBounds.Contains((int)cursor.X, (int)cursor.Y)) return;
 

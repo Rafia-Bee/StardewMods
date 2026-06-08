@@ -69,6 +69,8 @@ internal static class PinnedObjectivesStore
     public static void Unpin(Quest q) => UnpinKey(KeyFor(q));
     public static void Unpin(SpecialOrder so) => UnpinKey(KeyFor(so));
 
+    public static void UnpinByKey(string key) => UnpinKey(key);
+
     private static bool IsPinnedKey(string key)
         => !string.IsNullOrEmpty(key) && Load().Contains(key);
 

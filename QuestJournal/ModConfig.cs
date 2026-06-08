@@ -17,8 +17,12 @@ public sealed class ModConfig
 
     public KeybindList HudActivateKey { get; set; } = KeybindList.Parse("ControllerA");
 
+    public KeybindList TogglePinKey { get; set; } = KeybindList.Parse("P");
+    public KeybindList ToggleHudKey { get; set; } = new KeybindList();
+
     public bool AddGameMenuTab { get; set; } = true;
     public bool ShowHudPin { get; set; } = true;
+    public bool PinnedFirst { get; set; } = true;
     public bool ShowCompletedTab { get; set; } = true;
     public bool ShowAllTab { get; set; } = true;
 

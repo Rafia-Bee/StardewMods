@@ -129,6 +129,7 @@
                                        pointer-leave=|HoverLeave()|>
                                     <lane orientation="horizontal" layout="stretch content" vertical-content-alignment="middle">
                                         <image *if={ReadyToClaim} layout="22px 22px" margin="0, 0, 6, 0" fit="Contain" sprite={@Mods/RafiaBee.QuestJournal/Sprites/coin:Coin} tooltip={#journal.list.claimtag} />
+                                        <image *if={IsPinned} layout="18px 20px" margin="0, 0, 6, 0" fit="Contain" sprite={@Mods/RafiaBee.QuestJournal/Sprites/pin:Pin} tooltip={#journal.list.pinnedtag} />
                                         <label bold={IsSelected} text={:Title} />
                                     </lane>
                                 </frame>

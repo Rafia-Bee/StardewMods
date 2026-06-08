@@ -26,6 +26,16 @@ internal static class GmcmRegistration
             v => ModEntry.Config.OpenJournalKey = v,
             () => t.Get("config.openKey"),
             () => t.Get("config.openKey.tooltip"));
+        api.AddKeybindList(manifest,
+            () => ModEntry.Config.TogglePinKey,
+            v => ModEntry.Config.TogglePinKey = v,
+            () => t.Get("config.togglePin"),
+            () => t.Get("config.togglePin.tooltip"));
+        api.AddKeybindList(manifest,
+            () => ModEntry.Config.ToggleHudKey,
+            v => ModEntry.Config.ToggleHudKey = v,
+            () => t.Get("config.toggleHud"),
+            () => t.Get("config.toggleHud.tooltip"));
 
         const string controllerPageId = "controller";
         api.AddPageLink(manifest, controllerPageId,
@@ -52,6 +62,11 @@ internal static class GmcmRegistration
             v => ModEntry.Config.ShowHudPin = v,
             () => t.Get("config.hudPin"),
             () => t.Get("config.hudPin.tooltip"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.PinnedFirst,
+            v => ModEntry.Config.PinnedFirst = v,
+            () => t.Get("config.pinnedFirst"),
+            () => t.Get("config.pinnedFirst.tooltip"));
         api.AddBoolOption(manifest,
             () => ModEntry.Config.HudHoverObjectiveTooltip,
             v => ModEntry.Config.HudHoverObjectiveTooltip = v,

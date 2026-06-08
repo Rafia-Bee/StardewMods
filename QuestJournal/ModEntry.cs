@@ -247,6 +247,24 @@ public sealed class ModEntry : Mod
                 Helper.Input.SuppressActiveKeybinds(Config.AddTabKey);
                 return;
             }
+            if (Config.TogglePinKey.JustPressed() && Game1.keyboardDispatcher.Subscriber == null)
+            {
+                _journalContext.PinSelected();
+                Game1.playSound("smallSelect");
+                Helper.Input.SuppressActiveKeybinds(Config.TogglePinKey);
+                return;
+            }
+        }
+
+        if (Config.ToggleHudKey.JustPressed() && Context.IsPlayerFree)
+        {
+            Config.ShowHudPin = !Config.ShowHudPin;
+            Helper.WriteConfig(Config);
+            Game1.addHUDMessage(HUDMessage.ForCornerTextbox(
+                Helper.Translation.Get(Config.ShowHudPin ? "hud.toggle.on" : "hud.toggle.off")
+                    .Default(Config.ShowHudPin ? "Pinned quests shown" : "Pinned quests hidden").ToString()));
+            Helper.Input.SuppressActiveKeybinds(Config.ToggleHudKey);
+            return;
         }
 
         if (!Context.IsPlayerFree && Game1.activeClickableMenu is not GameMenu)

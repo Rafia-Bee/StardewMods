@@ -598,6 +598,7 @@ public sealed class JournalContext : INotifyPropertyChanged
             PinnedObjectivesStore.Toggle(so);
         else
             return;
+        _selectedQuest.RaisePinned();
         Raise(nameof(SelectedIsPinned));
         Raise(nameof(SelectedPinLabel));
     }
@@ -903,6 +904,14 @@ public sealed class JournalContext : INotifyPropertyChanged
     }
 
     private IEnumerable<QuestRow> SortRows(List<QuestRow> rows)
+    {
+        var sorted = SortByMode(rows);
+        if (ModEntry.Config.PinnedFirst)
+            sorted = sorted.OrderByDescending(r => r.IsPinned);
+        return sorted;
+    }
+
+    private IEnumerable<QuestRow> SortByMode(List<QuestRow> rows)
     {
         switch (_sortMode)
         {
@@ -1696,6 +1705,18 @@ public sealed class QuestRow : INotifyPropertyChanged
     public Quest? Quest { get; }
     public SpecialOrder? SpecialOrder { get; }
     public bool IsSpecialOrder => SpecialOrder != null;
+
+    public bool IsPinned
+    {
+        get
+        {
+            if (Quest is Quest q) return PinnedObjectivesStore.IsPinned(q);
+            if (SpecialOrder is SpecialOrder so) return PinnedObjectivesStore.IsPinned(so);
+            return false;
+        }
+    }
+
+    public void RaisePinned() => Raise(nameof(IsPinned));
 
     private readonly JournalContext _host;
 
