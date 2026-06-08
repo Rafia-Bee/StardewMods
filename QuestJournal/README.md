@@ -21,6 +21,7 @@ The vanilla quest log is one flat scroll: a title, one objective line, a reward,
 - **Warp helper** (optional, off by default). A button that warps you next to a quest's NPC. If a quest touches more than one NPC, you get a little picker.
 - **Item helper** (optional, off by default). A button that hands you the item a quest is asking for so you can do the real turn-in, or bumps a fishing quest's catch count.
 - **Resize the window.** Scale the whole journal up or down to taste.
+- **Other mods can add their own to-dos.** Quest Journal has a small hook other mods can use to drop their own tasks into the journal. They show up in the list just like quests, you can pin them to the corner of the screen, and the mod that added them can give you a button to mark one done or remove it. So if a mod you use adds something like "find 5 strawberries", it can sit right next to your real quests. This only does something if you have a mod that uses it.
 
 ## How to open it
 
@@ -71,6 +72,10 @@ If you have Generic Mod Config Menu installed, there's an in-game settings page.
 - **Warp helper** - adds the "warp to the NPC" button. A cheat, so off by default.
 
 The journal's colours can also be re-themed by a Content Patcher pack through the `Mods/RafiaBee.QuestJournal/Theme` data asset, so it can match UI recolour mods.
+
+## For mod authors
+
+Quest Journal has a small API so your mod can add its own entries (tasks, reminders, anything) to the journal. They show in the list like quests, can be pinned to the HUD, and can carry your own "mark done" and "remove" buttons. See [API.md](API.md) for how to use it.
 
 ## Known limitations
 
