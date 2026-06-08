@@ -32,6 +32,7 @@ public sealed class ModEntry : Mod
     private NewQuestPinner? _newQuestPinner;
     private IClickableMenu? _journalMenu;
     private JournalContext? _journalContext;
+    private bool _deluxeJournalLoaded;
 
     private bool _journalDragging;
     private bool _journalPendingDrag;
@@ -51,6 +52,7 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.Content.AssetsInvalidated += OnAssetsInvalidated;
+        helper.Events.Display.MenuChanged += OnMenuChanged;
 
         RegisterConsoleCommands(helper);
     }
@@ -200,6 +202,18 @@ public sealed class ModEntry : Mod
         _journalContext?.RefreshTheme();
     }
 
+    // When DeluxeJournal isn't installed, let the vanilla quest-log icon open our journal instead.
+    private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
+    {
+        if (!Config.ReplaceVanillaQuestLog || _deluxeJournalLoaded) return;
+        if (_viewEngine == null) return;
+        if (e.NewMenu is not QuestLog) return;
+
+        var journal = BuildJournalMenu();
+        if (journal != null)
+            Game1.activeClickableMenu = journal;
+    }
+
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
     {
         if (_journalMenu == null) return;
@@ -235,6 +249,8 @@ public sealed class ModEntry : Mod
         _viewEngine.RegisterSprites($"Mods/{ModManifest.UniqueID}/Sprites", "assets/sprites");
 
         JournalTheme.Reload(Helper, ModManifest.UniqueID);
+
+        _deluxeJournalLoaded = Helper.ModRegistry.IsLoaded("MolsonCAD.DeluxeJournal");
 
         _mqfApi = Helper.ModRegistry.GetApi<IMoreQuestsApi>("RafiaBee.MoreQuestsFramework");
         if (_mqfApi == null)

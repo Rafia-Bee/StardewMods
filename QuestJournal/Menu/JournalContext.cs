@@ -87,6 +87,9 @@ public sealed class JournalContext : INotifyPropertyChanged
     public bool SelectedShowExternalComplete => _selectedQuest?.External?.OnComplete != null && !_selectedQuest.IsCompleted;
     public bool SelectedShowExternalCancel => _selectedQuest?.External?.OnCancel != null;
     public bool SelectedShowCancel => _selectedQuest != null && _selectedQuest.CanCancel;
+    public bool SelectedShowCancelOrder => _selectedQuest != null && !_selectedQuest.IsCompleted
+        && _selectedQuest.SpecialOrder is SpecialOrder soCancel
+        && soCancel.questState.Value == SpecialOrderStatus.InProgress;
     public bool SelectedShowPostpone => _selectedQuest != null && _selectedQuest.CanPostpone;
     public bool SelectedShowDetails => _selectedQuest != null && !_selectedQuest.IsCompleted
         && (_selectedQuest.Quest != null || _selectedQuest.SpecialOrder != null);
@@ -579,6 +582,33 @@ public sealed class JournalContext : INotifyPropertyChanged
                 _completionWatcher?.MarkIgnore(quest);
                 Game1.player.questLog.Remove(quest);
                 PinnedObjectivesStore.Unpin(quest);
+                if (savedMenu != null)
+                    Game1.activeClickableMenu = savedMenu;
+                Refresh();
+            },
+            _ =>
+            {
+                if (savedMenu != null)
+                    Game1.activeClickableMenu = savedMenu;
+            });
+        Game1.activeClickableMenu = dialog;
+    }
+
+    public void RequestCancelSelectedOrder()
+    {
+        if (_selectedQuest?.SpecialOrder is not SpecialOrder order) return;
+        if (order.questState.Value != SpecialOrderStatus.InProgress) return;
+
+        var savedMenu = Game1.activeClickableMenu;
+        var message = _helper.Translation.Get("journal.cancel.confirmorder")
+            .Default("Give up this special order? Anything you donated to it goes back to the lost and found box at the desk.").ToString();
+        var dialog = new ConfirmationDialog(
+            message,
+            _ =>
+            {
+                order.OnFail();
+                Game1.player.team.specialOrders.Remove(order);
+                PinnedObjectivesStore.Unpin(order);
                 if (savedMenu != null)
                     Game1.activeClickableMenu = savedMenu;
                 Refresh();
@@ -1795,6 +1825,7 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedShowExternalComplete));
         Raise(nameof(SelectedShowExternalCancel));
         Raise(nameof(SelectedShowCancel));
+        Raise(nameof(SelectedShowCancelOrder));
         Raise(nameof(SelectedShowPostpone));
         Raise(nameof(SelectedShowDetails));
         Raise(nameof(SelectedShowPin));

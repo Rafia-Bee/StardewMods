@@ -293,6 +293,14 @@
                                click=|RequestCancelSelected()|>
                             <label text={#journal.action.cancel} />
                         </frame>
+                        <frame *if={SelectedShowCancelOrder} layout="stretch content" margin="0, 4" padding="8, 14"
+                               background={@Mods/StardewUI/Sprites/ButtonLight}
+                               horizontal-content-alignment="middle"
+                               vertical-content-alignment="middle"
+                               focusable="true"
+                               click=|RequestCancelSelectedOrder()|>
+                            <label text={#journal.action.cancel} />
+                        </frame>
                         </lane>
                     </scrollable>
                 </frame>

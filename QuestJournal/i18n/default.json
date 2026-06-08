@@ -57,6 +57,7 @@
     "journal.action.remove": "Remove",
 
     "journal.cancel.confirm": "Cancel this quest?",
+    "journal.cancel.confirmorder": "Give up this special order? Anything you donated to it goes back to the lost and found box at the desk.",
 
     "journal.claim.ready": "Reward ready to collect",
     "journal.claim.received": "Received {{amount}}g",
@@ -123,6 +124,8 @@
     "config.hudActivate.tooltip": "Point at a pinned quest on the HUD (move the pointer with the right stick) and press this to open it in the journal. Defaults to A.",
     "config.gameMenuTab": "Add a game-menu tab",
     "config.gameMenuTab.tooltip": "Adds a Quest Journal tab to the in-game menu (the one you open with Esc). Needs the Better Game Menu mod, otherwise the tab is skipped so it doesn't clash with other menu-tab mods. You can always open the journal with the F6 hotkey or the Iconic Framework icon. Takes effect after a restart.",
+    "config.replaceQuestLog": "Replace the vanilla quest log",
+    "config.replaceQuestLog.tooltip": "Makes the vanilla quest icon (the one on the toolbar) open this journal instead of the plain quest log. Skipped automatically if you have Deluxe Journal installed, since that already takes over the quest log. Off by default.",
     "config.showCompletedTab": "Show the Completed tab",
     "config.showCompletedTab.tooltip": "Shows the Completed tab in the journal, which lists quests you've already finished. Turn it off to hide it. Reopen the journal for a change to apply.",
     "config.showAllTab": "Show the All tab",

@@ -21,6 +21,7 @@ public sealed class ModConfig
     public KeybindList ToggleHudKey { get; set; } = new KeybindList();
 
     public bool AddGameMenuTab { get; set; } = true;
+    public bool ReplaceVanillaQuestLog { get; set; }
     public bool ShowHudPin { get; set; } = true;
     public bool PinnedFirst { get; set; } = true;
     public bool ShowCompletedTab { get; set; } = true;
