@@ -236,6 +236,14 @@
                                click=|CompleteSelected()|>
                             <label text={#journal.action.complete} />
                         </frame>
+                        <frame *if={SelectedShowCompleteOrder} layout="stretch content" margin="0, 4" padding="8, 14"
+                               background={@Mods/StardewUI/Sprites/ButtonLight}
+                               horizontal-content-alignment="middle"
+                               vertical-content-alignment="middle"
+                               focusable="true"
+                               click=|CompleteOrderSelected()|>
+                            <label text={#journal.action.complete} />
+                        </frame>
                         <frame *if={SelectedShowWarp} layout="stretch content" margin="0, 4" padding="8, 14"
                                background={@Mods/StardewUI/Sprites/ButtonLight}
                                horizontal-content-alignment="middle"

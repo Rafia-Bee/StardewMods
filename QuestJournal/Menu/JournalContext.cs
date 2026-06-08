@@ -79,6 +79,10 @@ public sealed class JournalContext : INotifyPropertyChanged
     public bool SelectedIsCompleted => _selectedQuest?.IsCompleted == true;
     public bool SelectedShowActions => _selectedQuest != null && !_selectedQuest.IsCompleted && _selectedQuest.Quest != null;
     public bool SelectedShowComplete => SelectedShowActions && ModEntry.Config.AllowCompleteCheat;
+    public bool SelectedShowCompleteOrder => _selectedQuest != null && !_selectedQuest.IsCompleted
+        && _selectedQuest.SpecialOrder is SpecialOrder soComplete
+        && soComplete.questState.Value == SpecialOrderStatus.InProgress
+        && ModEntry.Config.AllowCompleteCheat;
     public bool SelectedCanClaim => _selectedQuest?.CanClaim == true;
     public bool SelectedShowCancel => _selectedQuest != null && _selectedQuest.CanCancel;
     public bool SelectedShowPostpone => _selectedQuest != null && _selectedQuest.CanPostpone;
@@ -452,6 +456,29 @@ public sealed class JournalContext : INotifyPropertyChanged
 
         Game1.player.questLog.Remove(quest);
         PinnedObjectivesStore.Unpin(quest);
+        Refresh();
+    }
+
+    public void CompleteOrderSelected()
+    {
+        if (_selectedQuest == null || _selectedQuest.IsCompleted) return;
+        if (_selectedQuest.SpecialOrder is not SpecialOrder order) return;
+        if (order.questState.Value != SpecialOrderStatus.InProgress) return;
+
+        foreach (OrderObjective obj in order.objectives)
+        {
+            if (obj == null) continue;
+            obj.SetCount(obj.GetMaxCount());
+        }
+        order.ConfirmCompleteDonations();
+        foreach (OrderObjective obj in order.objectives)
+        {
+            if (obj == null) continue;
+            obj.CheckCompletion(play_sound: false);
+        }
+        order.CheckCompletion();
+
+        PinnedObjectivesStore.Unpin(order);
         Refresh();
     }
 
@@ -1561,6 +1588,7 @@ public sealed class JournalContext : INotifyPropertyChanged
         Raise(nameof(SelectedIsCompleted));
         Raise(nameof(SelectedShowActions));
         Raise(nameof(SelectedShowComplete));
+        Raise(nameof(SelectedShowCompleteOrder));
         Raise(nameof(SelectedCanClaim));
         Raise(nameof(SelectedShowCancel));
         Raise(nameof(SelectedShowPostpone));
