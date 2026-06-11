@@ -152,7 +152,7 @@ namespace LoanableTractor.Framework
             if (!spawned)
             {
                 Game1.player.Money += totalCost;
-                this.Monitor.Log("Failed to spawn loaned tractor — refunding gold.", LogLevel.Warn);
+                this.Monitor.Log("Failed to spawn loaned tractor, refunding gold.", LogLevel.Warn);
                 return false;
             }
 
@@ -198,7 +198,7 @@ namespace LoanableTractor.Framework
                     string repoKey = ccRepo ? "hud.tractor.repossessed.pierre" : "hud.tractor.repossessed";
                     Game1.addHUDMessage(new HUDMessage(
                         this.Helper.Translation.Get(repoKey), HUDMessage.error_type));
-                    this.Monitor.Log("Tractor repossessed — insufficient funds.", LogLevel.Info);
+                    this.Monitor.Log("Tractor repossessed, insufficient funds.", LogLevel.Info);
                     return;
                 }
                 Game1.player.Money -= cost;
@@ -301,7 +301,7 @@ namespace LoanableTractor.Framework
             if (mount != null && mount.modData.ContainsKey(LoanedTractorModDataKey))
                 return;
 
-            // Player arrived without mount — warp the tractor to them
+            // Player arrived without mount, warp the tractor to them
             Horse tractor = this.FindLoanedTractor();
             if (tractor != null && tractor != Game1.player?.mount)
             {
@@ -358,7 +358,7 @@ namespace LoanableTractor.Framework
                 this.ActiveTractorIds.Add(tractorId);
             }
 
-            this.Monitor.Log($"Recovered lost loaned tractor — re-spawned at player's position in {player.currentLocation.Name}.", LogLevel.Trace);
+            this.Monitor.Log($"Recovered lost loaned tractor, re-spawned at player's position in {player.currentLocation.Name}.", LogLevel.Trace);
         }
 
         /// <summary>
@@ -444,7 +444,7 @@ namespace LoanableTractor.Framework
                 var farm = Game1.getFarm();
                 if (farm == null)
                 {
-                    this.Monitor.Log("Cannot spawn tractor — farm not found.", LogLevel.Error);
+                    this.Monitor.Log("Cannot spawn tractor, farm not found.", LogLevel.Error);
                     return false;
                 }
 

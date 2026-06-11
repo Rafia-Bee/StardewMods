@@ -1,21 +1,21 @@
 {
-    "mail.joja.intro": "Dear @,^^Congratulations! As a valued member of the Joja community, you've been pre-approved for our Joja AgriLease™ Tractor Rental Program!^^Why break your back with a hoe when Joja's state-of-the-art farming machinery can do the heavy lifting? For just a small daily fee, a certified Joja tractor will be delivered straight to your farm — no garage required, no long-term commitment, no questions asked!*^^Simply visit your mailbox to access the loan service.^^Work smarter. Work Joja.™^^— Joja Corp. Customer Retention Division^^*Tractor must be returned by end of business day. Joja Corp. is not responsible for crop damage, fence destruction, or existential dread caused by corporate farming equipment. Daily fee is non-refundable. Terms subject to change without notice.",
+    "mail.joja.intro": "Dear @,^^Congratulations! As a valued member of the Joja community, you've been pre-approved for our Joja AgriLease™ Tractor Rental Program!^^Why break your back with a hoe when Joja's state-of-the-art farming machinery can do the heavy lifting? For just a small daily fee, a certified Joja tractor will be delivered straight to your farm, no garage required, no long-term commitment, no questions asked!*^^Simply visit your mailbox to access the loan service.^^Work smarter. Work Joja.™^^- Joja Corp. Customer Retention Division^^*Tractor must be returned by end of business day. Joja Corp. is not responsible for crop damage, fence destruction, or existential dread caused by corporate farming equipment. Daily fee is non-refundable. Terms subject to change without notice.",
 
-    "mail.pierre.intro": "Dear @,^^Pierre here! Now that the Community Center is back up and running, I've been thinking about ways to help out local farmers like you.^^I've put together a farm equipment rental service — for a small daily fee, I can have a tractor delivered to your farm. No long-term contracts, no corporate fine print. Just honest, straightforward help from your friendly neighborhood grocer.^^Stop by your mailbox whenever you'd like to rent one!^^— Pierre^^P.S. Tell Caroline I said hi if you see her. She never believes me when I say I'm branching out.",
+    "mail.pierre.intro": "Dear @,^^Pierre here! Now that the Community Center is back up and running, I've been thinking about ways to help out local farmers like you.^^I've put together a farm equipment rental service, for a small daily fee, I can have a tractor delivered to your farm. No long-term contracts, no corporate fine print. Just honest, straightforward help from your friendly neighborhood grocer.^^Stop by your mailbox whenever you'd like to rent one!^^- Pierre^^P.S. Tell Caroline I said hi if you see her. She never believes me when I say I'm branching out.",
 
-    "mail.pierre.transition": "Dear @,^^Big news! Now that the Community Center is restored, I've taken over the tractor rental service from Joja. No more corporate fees or fine print — just a fair deal from your local grocer.^^Same tractor, same mailbox rental — just friendlier service. Stop by whenever you need one!^^— Pierre",
+    "mail.pierre.transition": "Dear @,^^Big news! Now that the Community Center is restored, I've taken over the tractor rental service from Joja. No more corporate fees or fine print, just a fair deal from your local grocer.^^Same tractor, same mailbox rental, just friendlier service. Stop by whenever you need one!^^- Pierre",
 
     "dialogue.mailbox.title.joja": "Joja AgriLease™ Service",
     "dialogue.mailbox.title.pierre": "Pierre's Farm Equipment Rental",
     "dialogue.mailbox.loan": "Loan Tractor ({{cost}}g)",
     "dialogue.mailbox.cancel": "Cancel",
 
-    "dialogue.mailbox.weekend_surcharge.joja": "Weekend Premium™ in effect — {{percent}}% surcharge applied. Joja thanks you for your flexibility!",
-    "dialogue.mailbox.weekend_surcharge.pierre": "Weekend rates are a little higher today — {{percent}}% surcharge. Sorry about that!",
+    "dialogue.mailbox.weekend_surcharge.joja": "Weekend Premium™ in effect, {{percent}}% surcharge applied. Joja thanks you for your flexibility!",
+    "dialogue.mailbox.weekend_surcharge.pierre": "Weekend rates are a little higher today, {{percent}}% surcharge. Sorry about that!",
 
     "dialogue.mailbox.seasonal_promo.joja.spring": "Spring Planting Special! 15% off all rentals this season. Joja grows with you.™",
-    "dialogue.mailbox.seasonal_promo.joja.winter": "Off-Season Clearance! 20% off rentals — our tractors need the exercise anyway.",
-    "dialogue.mailbox.seasonal_promo.pierre.spring": "Spring Planting Special! 15% off rentals this season — let's get those fields ready!",
+    "dialogue.mailbox.seasonal_promo.joja.winter": "Off-Season Clearance! 20% off rentals, our tractors need the exercise anyway.",
+    "dialogue.mailbox.seasonal_promo.pierre.spring": "Spring Planting Special! 15% off rentals this season, let's get those fields ready!",
     "dialogue.mailbox.seasonal_promo.pierre.winter": "Off-Season Discount! 20% off rentals this winter. Not much else going on, figured I'd pass the savings along.",
 
     "hud.tractor.delivered": "A Joja tractor has been delivered! It will be collected at the end of the day.",
@@ -23,26 +23,26 @@
     "hud.tractor.collected": "The Joja tractor has been collected. Thank you for choosing Joja AgriLease™!",
     "hud.tractor.collected.pierre": "Pierre's tractor has been collected. Thanks for renting from Pierre!",
     "hud.tractor.repossessed": "Your Joja AgriLease™ tractor has been repossessed due to insufficient funds. Better luck next harvest!",
-    "hud.tractor.repossessed.pierre": "Pierre had to take the tractor back — you didn't have enough gold to cover the rental. Come back when you're ready!",
+    "hud.tractor.repossessed.pierre": "Pierre had to take the tractor back, you didn't have enough gold to cover the rental. Come back when you're ready!",
     "hud.tractor.insufficient.funds": "You don't have enough gold to loan a tractor.",
     "hud.tractor.already.loaned": "You've already loaned a tractor today.",
 
     "hud.tractor.condition.joja.1": "This unit's been through a few fields... the engine sputters, but Joja guarantees it meets minimum operational standards!™",
-    "hud.tractor.condition.joja.2": "Today's tractor comes with 'character' — a grinding noise and a steering wheel that pulls left. Joja quality!™",
+    "hud.tractor.condition.joja.2": "Today's tractor comes with 'character', a grinding noise and a steering wheel that pulls left. Joja quality!™",
     "hud.tractor.condition.joja.3": "A slightly pre-loved tractor has been delivered! The previous renter may have used it for demolition derby practice.",
     "hud.tractor.condition.pierre.1": "Pierre's loaner tractor is a bit older, but it should do the job. He mentioned the last renter was... enthusiastic.",
     "hud.tractor.condition.pierre.2": "The tractor Pierre sent over has seen better days. He swears the rattling is 'totally normal.'",
-    "hud.tractor.condition.pierre.3": "Pierre's tractor arrived making some interesting sounds. He said it just needs to warm up — might be a little slower today.",
+    "hud.tractor.condition.pierre.3": "Pierre's tractor arrived making some interesting sounds. He said it just needs to warm up, might be a little slower today.",
 
-    "mail.late.return": "Dear @,^^It has come to our attention that your Joja AgriLease™ tractor was not returned by close of business yesterday. As outlined in Section 14(b) of your rental agreement, a late return fee of {{penalty}}g has been applied to your account.^^Remember: Joja time is money!™^^— Joja Corp. Equipment Recovery Division",
-    "mail.late.return.pierre": "Hey @,^^Looks like the tractor wasn't returned on time yesterday. I had to add a {{penalty}}g late fee to your tab — nothing personal, it's just how the rental works.^^No hard feelings! Swing by when you need another one.^^— Pierre",
+    "mail.late.return": "Dear @,^^It has come to our attention that your Joja AgriLease™ tractor was not returned by close of business yesterday. As outlined in Section 14(b) of your rental agreement, a late return fee of {{penalty}}g has been applied to your account.^^Remember: Joja time is money!™^^- Joja Corp. Equipment Recovery Division",
+    "mail.late.return.pierre": "Hey @,^^Looks like the tractor wasn't returned on time yesterday. I had to add a {{penalty}}g late fee to your tab, nothing personal, it's just how the rental works.^^No hard feelings! Swing by when you need another one.^^- Pierre",
 
-    "loyalty.bronze": "Congratulations! You've reached Joja Bronze Member status — 10% discount on future tractor loans!",
-    "loyalty.silver": "Congratulations! You've reached Joja Silver Member status — 20% discount on future tractor loans!",
-    "loyalty.gold": "Congratulations! You've reached Joja Gold Member status — 30% discount on future tractor loans!",
+    "loyalty.bronze": "Congratulations! You've reached Joja Bronze Member status, 10% discount on future tractor loans!",
+    "loyalty.silver": "Congratulations! You've reached Joja Silver Member status, 20% discount on future tractor loans!",
+    "loyalty.gold": "Congratulations! You've reached Joja Gold Member status, 30% discount on future tractor loans!",
 
     "loyalty.bronze.pierre": "Pierre says thanks for being a loyal customer! You've earned a 10% discount on future tractor rentals.",
-    "loyalty.silver.pierre": "Pierre's impressed — you've been renting so often he's giving you a 20% loyalty discount from now on!",
+    "loyalty.silver.pierre": "Pierre's impressed, you've been renting so often he's giving you a 20% loyalty discount from now on!",
     "loyalty.gold.pierre": "You're Pierre's top customer! He's giving you a 30% loyalty discount on all future tractor rentals.",
 
     "config.loan_cost_per_day.name": "Loan Cost Per Day",
@@ -78,7 +78,7 @@
     "config.enable_mailbox_loan.tooltip": "If enabled, the tractor loan option shows up when you check an empty mailbox. Disable this if you use another mod that changes mailbox behavior.",
 
     "dialogue.breakdown.message.joja": "Heads up! Today's Joja AgriLease™ tractor has a busted {{feature}} feature. You could fix it yourself, but it'll cost about {{percent}}% of your current stamina. Otherwise, {{feature}} just won't work on the tractor today. Your call!",
-    "dialogue.breakdown.message.pierre": "Bad news — today's loaner tractor has a broken {{feature}} feature. Pierre says you could fix it yourself, but it'd burn about {{percent}}% of your current stamina. If you skip the fix, {{feature}} just won't work on the tractor today.",
+    "dialogue.breakdown.message.pierre": "Bad news, today's loaner tractor has a broken {{feature}} feature. Pierre says you could fix it yourself, but it'd burn about {{percent}}% of your current stamina. If you skip the fix, {{feature}} just won't work on the tractor today.",
     "dialogue.breakdown.fix": "Fix it (-{{percent}}% stamina)",
     "dialogue.breakdown.skip": "Leave it broken",
 
@@ -93,7 +93,7 @@
     "hud.tractor.breakdown.fixed.joja": "You rolled up your sleeves and fixed the tractor's {{feature}} feature. Joja applauds your initiative!™",
     "hud.tractor.breakdown.fixed.pierre": "You managed to fix the tractor's {{feature}} feature. Nice work!",
     "hud.tractor.breakdown.active.joja": "Note: Today's {{feature}} feature is out of service. Joja apologizes for any inconvenience!™",
-    "hud.tractor.breakdown.active.pierre": "Heads up — the tractor's {{feature}} feature won't be working today. Pierre says sorry about that.",
+    "hud.tractor.breakdown.active.pierre": "Heads up, the tractor's {{feature}} feature won't be working today. Pierre says sorry about that.",
 
     "bubble.morris.1": "Now that's what I like to see...",
     "bubble.morris.2": "Joja AgriLease really paying off!",

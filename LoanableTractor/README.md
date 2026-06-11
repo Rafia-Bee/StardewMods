@@ -2,7 +2,7 @@
 
 A [Stardew Valley](https://www.stardewvalley.net/) mod that lets you rent a tractor for a daily fee, so you can use heavy farming equipment in the early game before you can afford to build the tractor garage.
 
-Before the Community Center is complete, the rental service is branded as **Joja AgriLease™** — complete with corporate fine print and trademark symbols. After you restore the Community Center, the service switches over to **Pierre's Farm Equipment Rental** with a friendlier, small-town tone.
+Before the Community Center is complete, the rental service is branded as **Joja AgriLease™**, complete with corporate fine print and trademark symbols. After you restore the Community Center, the service switches over to **Pierre's Farm Equipment Rental** with a friendlier, small-town tone.
 
 ![Stardew Valley](https://img.shields.io/badge/Stardew%20Valley-1.6%2B-green)
 ![SMAPI](https://img.shields.io/badge/SMAPI-4.1%2B-blue)
@@ -17,9 +17,9 @@ The loaned tractor works exactly like the regular Tractor Mod tractor. You can t
 
 ### Pricing Flavor
 
-- **Weekend Surcharges** — Renting on Saturday or Sunday costs extra (configurable, default 25%). The mailbox dialogue tells you when the surcharge is active.
-- **Seasonal Promotions** — Spring (15% off) and Winter (20% off) discounts are applied automatically with themed notices in the dialogue.
-- **Tractor Condition** — When Speed Reduction is enabled, there's a 10% chance each day that the tractor arrives in rough shape. You'll get a flavor message about the tractor's condition, and it'll be a bit slower that day. The messages differ depending on whether you're renting from Joja or Pierre.
+- **Weekend Surcharges**: Renting on Saturday or Sunday costs extra (configurable, default 25%). The mailbox dialogue tells you when the surcharge is active.
+- **Seasonal Promotions**: Spring (15% off) and Winter (20% off) discounts are applied automatically with themed notices in the dialogue.
+- **Tractor Condition**: When Speed Reduction is enabled, there's a 10% chance each day that the tractor arrives in rough shape. You'll get a flavor message about the tractor's condition, and it'll be a bit slower that day. The messages differ depending on whether you're renting from Joja or Pierre.
 
 ## Requirements
 

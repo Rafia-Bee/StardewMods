@@ -184,14 +184,14 @@ v1.6.0
 - Fixed modded spawned objects not collected as forage (Issue #34 follow-up): items spawned by FTM-based mods (Sunberry Village Twilight Feathers, Alchemistry, etc.) that do not have standard forage categories are now collected. The grabber now uses the game's IsSpawnedObject flag, matching vanilla pickup behavior. Profession quality boosts and foraging XP are only applied to true forageables.
 
 v1.5.0
-- Item debris collection: new "Collect Item Debris" config option (default: Off) lets the auto-grabber pick up items dropped as ground debris -- monster loot, fallen items, and modded forage drops (e.g. Twilight Feathers from Sunberry Village). Found on the Other Harvesting config page.
+- Item debris collection: new "Collect Item Debris" config option (default: Off) lets the auto-grabber pick up items dropped as ground debris, monster loot, fallen items, and modded forage drops (e.g. Twilight Feathers from Sunberry Village). Found on the Other Harvesting config page.
 - Fixed modded forage not collected (Issue #34): items spawned by FTM-based mods (Sunberry Village, Alchemistry, etc.) that do not have standard forage categories are now collected. The grabber now uses the game's own IsSpawnedObject flag to detect ground items, matching vanilla pickup behavior.
 - Global Grabber X/Y offset config options now use text input fields instead of sliders, making it easier to enter precise pixel values. Values are still clamped to -500..500.
 
 v1.4.0
 - Forage toggle: new "Collect Forage Items" config option (default: On) lets you turn off automatic forage collection. Found on the Other Harvesting config page.
 - Sleep-time collection: forage items are now collected one last time when you go to bed, catching anything that appeared during the day.
-- Forage grabbers no longer fire on every object change -- they only run at day start, on global grab, and at bedtime. Reduces unnecessary processing, especially on large farms.
+- Forage grabbers no longer fire on every object change, they only run at day start, on global grab, and at bedtime. Reduces unnecessary processing, especially on large farms.
 - Forage crop harvesting (spring onions, ginger) now uses the game's own harvest logic instead of hardcoded item IDs. Modded forage crops are now supported automatically.
 - Garbage can scanning now only checks the Buildings tile layer instead of all map layers, and caches results per location. Significantly faster on large or modded maps.
 - Artifact spot drop quantities now use seeded randomization for consistency.
@@ -201,7 +201,7 @@ v1.3.1
 - All player-facing text (config labels, tooltips, HUD messages, button text) now uses SMAPI's i18n system, enabling community translations.
 
 v1.3.0
-- In-menu Global Grabber button: open any auto-grabber and tap the star button to designate it as the Global Grabber. Gold star = designated, silver star = not. Works on mobile, PC, and console -- no hover or hotkey needed.
+- In-menu Global Grabber button: open any auto-grabber and tap the star button to designate it as the Global Grabber. Gold star = designated, silver star = not. Works on mobile, PC, and console, no hover or hotkey needed.
 - Auto-Fire Global Grabber: new config option that automatically fires the designated global grabber at the start of each day. Enables fully hands-free global grabbing on mobile.
 - Configurable button position: Global Button X/Y Offset settings let you reposition the star button if it overlaps with Chests Anywhere or other mod buttons.
 

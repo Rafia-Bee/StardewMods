@@ -1,21 +1,21 @@
 [size=4][b]What does this mod do?[/b][/size]
 
-Ever wished you could use the tractor early in your playthrough, but couldn't scrape together the gold and materials for Robin's garage? This mod lets you rent one for a daily fee — no garage needed.
+Ever wished you could use the tractor early in your playthrough, but couldn't scrape together the gold and materials for Robin's garage? This mod lets you rent one for a daily fee, no garage needed.
 
 Before you complete the Community Center, the service is run by [b]Joja AgriLease™[/b] with all the corporate fine print you'd expect. After the Community Center is restored, it switches over to [b]Pierre's Farm Equipment Rental[/b] with a friendlier, small-town feel.
 
-Walk up to your mailbox when it's empty, select [b]"Loan Tractor"[/b], pay the fee, and a tractor appears next to you for the rest of the day. Full Tractor Mod functionality — till, water, harvest, clear rocks, chop trees, everything.
+Walk up to your mailbox when it's empty, select [b]"Loan Tractor"[/b], pay the fee, and a tractor appears next to you for the rest of the day. Full Tractor Mod functionality, till, water, harvest, clear rocks, chop trees, everything.
 
 [size=4][b]Features[/b][/size]
 [list]
-[*][b]Joja ↔ Pierre flavor[/b] — All text dynamically switches based on Community Center completion[/*]
-[*][b]Tractor breakdowns[/b] — Loaned tractors have a chance of arriving with a broken feature. Fix it with stamina, or go without it for the day[/*]
-[*][b]Loan keybind[/b] — Set a hotkey to open the loan menu from anywhere, no mailbox required[/*]
-[*][b]Weekend surcharges[/b] — Renting on weekends costs a bit extra (configurable)[/*]
-[*][b]Seasonal promotions[/b] — Discounts in certain seasons, announced in the mailbox dialogue[/*]
-[*][b]Tractor condition reports[/b] — Sometimes your rental arrives in rough shape with a fun flavor message[/*]
-[*][b]Loyalty program[/b] — The more you rent, the bigger your discount[/*]
-[*][b]Late return penalty[/b] — Pass out at 2am with the tractor? That's a fee[/*]
+[*][b]Joja ↔ Pierre flavor[/b]: All text dynamically switches based on Community Center completion[/*]
+[*][b]Tractor breakdowns[/b]: Loaned tractors have a chance of arriving with a broken feature. Fix it with stamina, or go without it for the day[/*]
+[*][b]Loan keybind[/b]: Set a hotkey to open the loan menu from anywhere, no mailbox required[/*]
+[*][b]Weekend surcharges[/b]: Renting on weekends costs a bit extra (configurable)[/*]
+[*][b]Seasonal promotions[/b]: Discounts in certain seasons, announced in the mailbox dialogue[/*]
+[*][b]Tractor condition reports[/b]: Sometimes your rental arrives in rough shape with a fun flavor message[/*]
+[*][b]Loyalty program[/b]: The more you rent, the bigger your discount[/*]
+[*][b]Late return penalty[/b]: Pass out at 2am with the tractor? That's a fee[/*]
 [/list]
 
 [size=4][b]How to use[/b][/size]
@@ -30,29 +30,29 @@ Walk up to your mailbox when it's empty, select [b]"Loan Tractor"[/b], pay the f
 [size=4][b]Configuration[/b][/size]
 If you have [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] installed, you can tweak these from the in-game options. Otherwise, edit [font=Courier New]config.json[/font] in the mod folder.
 [list]
-[*][b]Loan Tractor Keybind[/b] (default: None) — Press this key to open the loan menu from anywhere instead of going to the mailbox.[/*]
-[*][b]Enable Mailbox Loan[/b] (default: Yes) — Whether the loan option appears when you check an empty mailbox. Turn this off if you use another mod that changes mailbox behavior.[/*]
-[*][b]Loan Cost Per Day[/b] (default: 500g) — How much it costs to rent per day. Minimum 100g.[/*]
-[*][b]Max Loan Days[/b] (default: 1) — How many days you can rent in one go.[/*]
-[*][b]Charge Upfront[/b] (default: Yes) — Pay the full cost upfront for multi-day rentals.[/*]
-[*][b]Allow Loan With Garage[/b] (default: No) — Keep the rental option even after building the garage.[/*]
-[*][b]Late Return Penalty[/b] (default: Yes) — Extra fee if you pass out at 2am with the tractor out.[/*]
-[*][b]Penalty Amount[/b] (default: 250g) — How much the late penalty costs.[/*]
-[*][b]Enable Speed Reduction[/b] (default: No) — 10% chance each day that the loaned tractor is slower. Also enables tractor condition flavor text.[/*]
-[*][b]Enable Breakdown Chance[/b] (default: Yes) — Loaned tractors have a chance of arriving with a broken feature.[/*]
-[*][b]Breakdown Chance %[/b] (default: 10%) — How likely a feature is to be broken on loan.[/*]
-[*][b]Fix Stamina Cost %[/b] (default: 50%) — Percentage of your current stamina it costs to fix a broken feature.[/*]
-[*][b]Enable Weekend Surcharge[/b] (default: Yes) — Renting on Saturday or Sunday costs extra.[/*]
-[*][b]Weekend Surcharge %[/b] (default: 25%) — How much extra weekend rentals cost.[/*]
+[*][b]Loan Tractor Keybind[/b] (default: None). Press this key to open the loan menu from anywhere instead of going to the mailbox.[/*]
+[*][b]Enable Mailbox Loan[/b] (default: Yes). Whether the loan option appears when you check an empty mailbox. Turn this off if you use another mod that changes mailbox behavior.[/*]
+[*][b]Loan Cost Per Day[/b] (default: 500g). How much it costs to rent per day. Minimum 100g.[/*]
+[*][b]Max Loan Days[/b] (default: 1). How many days you can rent in one go.[/*]
+[*][b]Charge Upfront[/b] (default: Yes). Pay the full cost upfront for multi-day rentals.[/*]
+[*][b]Allow Loan With Garage[/b] (default: No). Keep the rental option even after building the garage.[/*]
+[*][b]Late Return Penalty[/b] (default: Yes). Extra fee if you pass out at 2am with the tractor out.[/*]
+[*][b]Penalty Amount[/b] (default: 250g). How much the late penalty costs.[/*]
+[*][b]Enable Speed Reduction[/b] (default: No). 10% chance each day that the loaned tractor is slower. Also enables tractor condition flavor text.[/*]
+[*][b]Enable Breakdown Chance[/b] (default: Yes). Loaned tractors have a chance of arriving with a broken feature.[/*]
+[*][b]Breakdown Chance %[/b] (default: 10%). How likely a feature is to be broken on loan.[/*]
+[*][b]Fix Stamina Cost %[/b] (default: 50%). Percentage of your current stamina it costs to fix a broken feature.[/*]
+[*][b]Enable Weekend Surcharge[/b] (default: Yes). Renting on Saturday or Sunday costs extra.[/*]
+[*][b]Weekend Surcharge %[/b] (default: 25%). How much extra weekend rentals cost.[/*]
 [/list]
 
 [size=4][b]Loyalty Program[/b][/size]
 The more you rent, the more you save. Keep using the loan service and you'll unlock loyalty tiers with discounts on future rentals.
 [spoiler]
 [list]
-[*][b]Bronze Member[/b] (10 loans) — 10% discount[/*]
-[*][b]Silver Member[/b] (25 loans) — 20% discount[/*]
-[*][b]Gold Member[/b] (50 loans) — 30% discount[/*]
+[*][b]Bronze Member[/b] (10 loans): 10% discount[/*]
+[*][b]Silver Member[/b] (25 loans): 20% discount[/*]
+[*][b]Gold Member[/b] (50 loans): 30% discount[/*]
 [/list]
 [/spoiler]
 
@@ -60,20 +60,20 @@ The more you rent, the more you save. Keep using the loan service and you'll unl
 Pricing shifts with the calendar. The mailbox dialogue will always show you the current rate before you commit.
 [spoiler]
 [list]
-[*][b]Weekends[/b] — Saturday and Sunday rentals have a surcharge (default 25%) applied on top of the base cost.[/*]
-[*][b]Spring[/b] — 15% discount (Spring Planting Special)[/*]
-[*][b]Winter[/b] — 20% discount (Off-Season Clearance)[/*]
+[*][b]Weekends[/b]: Saturday and Sunday rentals have a surcharge (default 25%) applied on top of the base cost.[/*]
+[*][b]Spring[/b]: 15% discount (Spring Planting Special)[/*]
+[*][b]Winter[/b]: 20% discount (Off-Season Clearance)[/*]
 [/list]
 Surcharges and promos stack with loyalty discounts. The displayed price reflects all adjustments.[/spoiler]
 
 [size=4][b]Tractor Breakdowns[/b][/size]
-Every time you loan a tractor, there's a chance a random feature arrives broken — hoeing, watering, harvesting, tree chopping, rock breaking, seed planting, or fertilizing. You'll get a dialogue asking if you want to fix it yourself (costs a percentage of your current stamina) or go without that feature for the day.
+Every time you loan a tractor, there's a chance a random feature arrives broken, hoeing, watering, harvesting, tree chopping, rock breaking, seed planting, or fertilizing. You'll get a dialogue asking if you want to fix it yourself (costs a percentage of your current stamina) or go without that feature for the day.
 [spoiler]
 [list]
 [*]The breakdown check happens before the tractor spawns or gold is deducted.[/*]
 [*]Stamina cost is based on your [b]current[/b] stamina, not your max. So doing it first thing in the morning costs more than later in the day.[/*]
 [*]If you skip the fix, that specific tractor attachment is disabled until the end of the day. The tractor still works for everything else.[/*]
-[*]Player-owned tractors are never affected — only loaned tractors.[/*]
+[*]Player-owned tractors are never affected: only loaned tractors.[/*]
 [/list]
 [/spoiler]
 
@@ -90,8 +90,8 @@ There are three random condition messages each for Joja (corporate damage contro
 [/list]
 [b]Optional:[/b]
 [list]
-[*][url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] — In-game settings menu[/*]
-[*][url=https://www.nexusmods.com/stardewvalley/mods/7842]Mail Services Mod[/url] — The loan option coexists with gift-shipping in the mailbox[/*]
+[*][url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url]. In-game settings menu[/*]
+[*][url=https://www.nexusmods.com/stardewvalley/mods/7842]Mail Services Mod[/url]. The loan option coexists with gift-shipping in the mailbox[/*]
 [/list]
 
 [size=4][b]Install[/b][/size]
@@ -119,7 +119,7 @@ You'll see the option, but selecting it shows an error and nothing gets deducted
 Yes! The rental service switches from Joja AgriLease™ to Pierre's Farm Equipment Rental. All the mail, dialogue, and HUD messages get a friendlier tone. Pricing mechanics work the same way.
 
 [b]Does this work with custom tractor textures?[/b]
-Yes — the loaned tractor uses whatever textures you have set up for Tractor Mod.
+Yes, the loaned tractor uses whatever textures you have set up for Tractor Mod.
 
 [b]I loaned the tractor but I don't see it on my farm?[/b]
 The tractor will appear in the "closest" free tile around the mailbox. If you don't see it, just press the keybind for summoning the tractor (configured in Pathoschild's Tractor mod config) and it'll appear.

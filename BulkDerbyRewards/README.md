@@ -1,6 +1,6 @@
 # Bulk Derby Rewards
 
-Exchange all your Golden Tags at once during the Trout Derby and collect prizes from a chest-style menu — just like the SquidFest reward system.
+Exchange all your Golden Tags at once during the Trout Derby and collect prizes from a chest-style menu, just like the SquidFest reward system.
 
 ## What It Does
 

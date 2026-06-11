@@ -276,7 +276,7 @@ public class ModConfigTests
         {
             // Pins the invariant that Clone re-instantiates each nested group rather
             // than aliasing it. If the groups aliased, setting a scalar on the clone
-            // would silently mutate the original — the exact bug PerSaveConfigManager's
+            // would silently mutate the original, the exact bug PerSaveConfigManager's
             // Clone snapshot is meant to prevent.
             var original = new ModConfig();
             var clone = original.Clone();

@@ -4,36 +4,36 @@ Adopted the existing [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/starde
 
 ## Features
 
-- **Crop harvesting** — Harvests ground crops and indoor pot crops within a configurable range and shape (diamond or square). Fully delegates to the game's own harvest logic, so modded crops, quality overrides, and extra harvest chances all work correctly.
-- **Fruit trees** — Picks fruit from mature fruit trees, including quality based on tree age.
-- **Berry bushes** — Collects berries from salmonberry and blackberry bushes.
-- **Seed trees** — Shakes trees for seeds, hazelnuts, coconuts, and other drops. Uses the game's own shake logic, so modded trees work too.
-- **Tree moss** — Strips moss from trees.
-- **Animal products** — Collects milk, wool, eggs, feathers, and other animal products from barns and coops, extended to work with the global grabber system.
-- **Slime balls** — Collects slime balls in slime hutches.
-- **Farm cave mushrooms** — Grabs mushrooms from cave boxes (works anywhere you place them). Configured under the Machine Collection page.
-- **Artifact spots** — Digs up artifact spots for loot.
-- **Ore panning** — Collects ore from panning sites.
-- **Seed spots** — Digs up raccoon seed spots.
-- **Hardwood stumps** — Fells large stumps and hollow logs for hardwood in all locations.
-- **Town garbage cans** — Searches garbage cans for items.
-- **Forage** — Picks up all forageable items (truffles, beach forage, etc.) with quality based on your foraging skill. Also collects modded spawned forage.
-- **Green rain weeds** — Breaks apart large green rain bushes for moss, fiber, and mossy seeds.
-- **Item debris** — Collects items dropped as ground debris (monster loot, fallen items, modded forage drops).
-- **Machine collection** — Automatically collects finished outputs from all vanilla machines: Crab Pots, Bee Houses, Tappers, Heavy Tappers, Mushroom Logs, Leaf Baskets, Fish Ponds, Mushroom Boxes, Kegs, Preserves Jars, Cheese Presses, Mayonnaise Machines, Looms, Oil Makers, Furnaces, Charcoal Kilns, Recycling Machines, Seed Makers, Bone Mills, Geode Crushers, Wood Chippers, Deconstructors, Fish Smokers, Bait Makers, Dehydrators, Crystalariums, Lightning Rods, Worm Bins, Solar Panels, Slime Egg Presses, Coffee Makers, Soda Machines, and statues. Also collects from modded machines. Per-machine toggles available.
-- **Exclude quest items** — Prevents the grabber from collecting quest items like the Lucky Purple Shorts. Enabled by default.
-- **Item exclusion list** — Specify items by their qualified item ID that the grabber should never collect.
-- **Yield reporting** — Logs what each auto-grabber collected to the SMAPI console, with an optional in-game toast showing the total.
-- **Chest-full warnings** — Shows a HUD warning when auto-grabber chests are full, so you never silently lose items.
-- **Replant reminder** — Notifies you when single-harvest crops are collected, reminding you to replant. A second reminder fires later in the day at a configurable time.
-- **Auto-grabber naming** — Name individual auto-grabbers via the in-menu Name button. Named grabbers show their name in HUD warnings and grab summaries. Also reads names from Chests Anywhere as a fallback.
-- **Experience gain** — Optionally awards farming/foraging XP as if you did it yourself.
-- **Global grabber mode** — Lets all auto-grabbers work across all locations, or fire on demand with a hotkey. Designate via in-menu star button (mobile-friendly) or hover + hotkey.
-- **Auto-fire global grabber** — Optionally fires the designated global grabber automatically each morning, perfect for mobile.
-- **Per-save config** — Each save file gets its own independent config. Changing settings in one save won't affect your other saves. The global `config.json` is used as the template for new saves.
-- **Location filtering** — Skip festival areas automatically, and choose exactly which locations the grabbers should ignore via a config menu page.
-- **Select Visited Only** — Enables only locations you've actually visited, skipping the rest. Newly discovered locations are auto-enabled when you walk into them.
-- **Specialized Grabbers** — An optional progression system that replaces the "one grabber does everything" model with six specialized grabbers, each collecting a specific category of items.
+- **Crop harvesting**: Harvests ground crops and indoor pot crops within a configurable range and shape (diamond or square). Fully delegates to the game's own harvest logic, so modded crops, quality overrides, and extra harvest chances all work correctly.
+- **Fruit trees**: Picks fruit from mature fruit trees, including quality based on tree age.
+- **Berry bushes**: Collects berries from salmonberry and blackberry bushes.
+- **Seed trees**: Shakes trees for seeds, hazelnuts, coconuts, and other drops. Uses the game's own shake logic, so modded trees work too.
+- **Tree moss**: Strips moss from trees.
+- **Animal products**: Collects milk, wool, eggs, feathers, and other animal products from barns and coops, extended to work with the global grabber system.
+- **Slime balls**: Collects slime balls in slime hutches.
+- **Farm cave mushrooms**: Grabs mushrooms from cave boxes (works anywhere you place them). Configured under the Machine Collection page.
+- **Artifact spots**: Digs up artifact spots for loot.
+- **Ore panning**: Collects ore from panning sites.
+- **Seed spots**: Digs up raccoon seed spots.
+- **Hardwood stumps**: Fells large stumps and hollow logs for hardwood in all locations.
+- **Town garbage cans**: Searches garbage cans for items.
+- **Forage**: Picks up all forageable items (truffles, beach forage, etc.) with quality based on your foraging skill. Also collects modded spawned forage.
+- **Green rain weeds**: Breaks apart large green rain bushes for moss, fiber, and mossy seeds.
+- **Item debris**: Collects items dropped as ground debris (monster loot, fallen items, modded forage drops).
+- **Machine collection**: Automatically collects finished outputs from all vanilla machines: Crab Pots, Bee Houses, Tappers, Heavy Tappers, Mushroom Logs, Leaf Baskets, Fish Ponds, Mushroom Boxes, Kegs, Preserves Jars, Cheese Presses, Mayonnaise Machines, Looms, Oil Makers, Furnaces, Charcoal Kilns, Recycling Machines, Seed Makers, Bone Mills, Geode Crushers, Wood Chippers, Deconstructors, Fish Smokers, Bait Makers, Dehydrators, Crystalariums, Lightning Rods, Worm Bins, Solar Panels, Slime Egg Presses, Coffee Makers, Soda Machines, and statues. Also collects from modded machines. Per-machine toggles available.
+- **Exclude quest items**: Prevents the grabber from collecting quest items like the Lucky Purple Shorts. Enabled by default.
+- **Item exclusion list**: Specify items by their qualified item ID that the grabber should never collect.
+- **Yield reporting**: Logs what each auto-grabber collected to the SMAPI console, with an optional in-game toast showing the total.
+- **Chest-full warnings**: Shows a HUD warning when auto-grabber chests are full, so you never silently lose items.
+- **Replant reminder**: Notifies you when single-harvest crops are collected, reminding you to replant. A second reminder fires later in the day at a configurable time.
+- **Auto-grabber naming**: Name individual auto-grabbers via the in-menu Name button. Named grabbers show their name in HUD warnings and grab summaries. Also reads names from Chests Anywhere as a fallback.
+- **Experience gain**: Optionally awards farming/foraging XP as if you did it yourself.
+- **Global grabber mode**: Lets all auto-grabbers work across all locations, or fire on demand with a hotkey. Designate via in-menu star button (mobile-friendly) or hover + hotkey.
+- **Auto-fire global grabber**: Optionally fires the designated global grabber automatically each morning, perfect for mobile.
+- **Per-save config**: Each save file gets its own independent config. Changing settings in one save won't affect your other saves. The global `config.json` is used as the template for new saves.
+- **Location filtering**: Skip festival areas automatically, and choose exactly which locations the grabbers should ignore via a config menu page.
+- **Select Visited Only**: Enables only locations you've actually visited, skipping the rest. Newly discovered locations are auto-enabled when you walk into them.
+- **Specialized Grabbers**: An optional progression system that replaces the "one grabber does everything" model with six specialized grabbers, each collecting a specific category of items.
 
 ## Configuration
 
@@ -104,7 +104,7 @@ Individual toggles (all default On when machines enabled): Crab Pots, Fish Ponds
 | Designate Global Grabber | G | Hotkey to designate a grabber as the global collection point |
 | Global Button X/Y Offset | 0 | Adjust star button position in the auto-grabber menu |
 | Name Button X/Y Offset | 0 | Adjust Name button position in the auto-grabber menu |
-| Enabled Locations | — | Toggle individual locations on or off |
+| Enabled Locations | - | Toggle individual locations on or off |
 | Select Visited Only | Off | Only enable locations you've actually visited |
 
 ## Install
@@ -118,16 +118,16 @@ Individual toggles (all default On when machines enabled): Crab Pots, Fish Ponds
 - Stardew Valley 1.6+
 - SMAPI 4.0+
 - Works alongside other grabber mods
-- Compatible with [Vanilla Plus Professions](https://www.nexusmods.com/stardewvalley/mods/22992) — VPP's Combat-Farm slime drops, Shaker tree drops, and Gleaner/Wayfarer forage are all auto-collected
-- Compatible with [Sunberry Village](https://www.nexusmods.com/stardewvalley/mods/22702) — optional config toggle to exclude FTM-spawned ore nodes and supply crates
-- Compatible with [Machine Progression System](https://www.nexusmods.com/stardewvalley/mods/15530) — upgraded crab pots, bee houses, tappers, and mushroom logs are collected alongside vanilla machines
-- Compatible with [Fishnets](https://www.nexusmods.com/stardewvalley/mods/13819) — fish nets are collected alongside crab pots, with bait consumed on collection
-- Compatible with [Cloths and Colors (Textile Expansion)](https://www.nexusmods.com/stardewvalley/mods/39216) — Leaf Baskets are collected as part of machine collection
-- Compatible with [Automate](https://www.nexusmods.com/stardewvalley/mods/1063) — DGF skips machines Automate is already managing, preventing duplicate collection. Respects per-chest settings so input-only chests won't block DGF from collecting
-- Compatible with [Smart Filtered Hopper](https://github.com/yxlimo/StardewValleyMods) — hoppers are no longer treated as chest connectors during Automate chain scanning
-- Compatible with [Wild Flowers](https://www.nexusmods.com/stardewvalley/mods/9535) — harvests fully grown wildflowers from grass tiles. Respects the Harvest Flowers setting
-- Compatible with [Custom Bush](https://www.nexusmods.com/stardewvalley/mods/20791) — bushes from Custom Bush produce the correct items with proper quality
-- Compatible with [Agromancy](https://www.nexusmods.com/stardewvalley/mods/43202) — extra crop yield and bonus seeds from yield-boosted crops (e.g. grape trellises) go into the auto-grabber instead of falling on the ground
+- Compatible with [Vanilla Plus Professions](https://www.nexusmods.com/stardewvalley/mods/22992): VPP's Combat-Farm slime drops, Shaker tree drops, and Gleaner/Wayfarer forage are all auto-collected
+- Compatible with [Sunberry Village](https://www.nexusmods.com/stardewvalley/mods/22702): optional config toggle to exclude FTM-spawned ore nodes and supply crates
+- Compatible with [Machine Progression System](https://www.nexusmods.com/stardewvalley/mods/15530): upgraded crab pots, bee houses, tappers, and mushroom logs are collected alongside vanilla machines
+- Compatible with [Fishnets](https://www.nexusmods.com/stardewvalley/mods/13819): fish nets are collected alongside crab pots, with bait consumed on collection
+- Compatible with [Cloths and Colors (Textile Expansion)](https://www.nexusmods.com/stardewvalley/mods/39216): Leaf Baskets are collected as part of machine collection
+- Compatible with [Automate](https://www.nexusmods.com/stardewvalley/mods/1063): DGF skips machines Automate is already managing, preventing duplicate collection. Respects per-chest settings so input-only chests won't block DGF from collecting
+- Compatible with [Smart Filtered Hopper](https://github.com/yxlimo/StardewValleyMods): hoppers are no longer treated as chest connectors during Automate chain scanning
+- Compatible with [Wild Flowers](https://www.nexusmods.com/stardewvalley/mods/9535): harvests fully grown wildflowers from grass tiles. Respects the Harvest Flowers setting
+- Compatible with [Custom Bush](https://www.nexusmods.com/stardewvalley/mods/20791): bushes from Custom Bush produce the correct items with proper quality
+- Compatible with [Agromancy](https://www.nexusmods.com/stardewvalley/mods/43202): extra crop yield and bonus seeds from yield-boosted crops (e.g. grape trellises) go into the auto-grabber instead of falling on the ground
 - Collects roe and other produce from Fish Ponds automatically
 - Provides a mod API (`IDeluxeGrabberFixApi`) for other mods to override mushroom, berry bush, fruit tree, and slime harvest behavior, plus an `OnItemGrabbed` event and `IsGrabberActive` query
 

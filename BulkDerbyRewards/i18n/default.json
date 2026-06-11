@@ -4,7 +4,7 @@
     "dialogue.single_exchange": "Exchange your Golden Tag for a prize?",
     "dialogue.yes": "Yes",
     "dialogue.no": "No",
-    "hud.prizes_dropped": "Some prizes were dropped on the ground — your inventory was full!",
+    "hud.prizes_dropped": "Some prizes were dropped on the ground, your inventory was full!",
 
     "config.enabled.name": "Enabled",
     "config.enabled.tooltip": "Enable bulk exchange for the Trout Derby booth.",

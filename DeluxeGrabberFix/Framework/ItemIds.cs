@@ -31,7 +31,7 @@ internal static class ItemIds
     public const string FishNetBaitModDataKey = "MindMeltMax.Fishnets.FishNets";
     public const string FishNetTileIndexModDataKey = "MindMeltMax.Fishnets.TileIndex";
 
-    // Furniture qualified IDs — cosmetic wall decorations from artifact spot rare drops
+    // Furniture qualified IDs, cosmetic wall decorations from artifact spot rare drops
     public const string CatalogueWall = "(F)1369";
     public const int WallDecorSmallRangeStart = 1362;
     public const int WallDecorSmallRangeEnd = 1370;

@@ -7,7 +7,7 @@ namespace DeluxeGrabberFix.Framework;
 
 /// <summary>
 /// A toggleable "Global Grabber" button rendered on the auto-grabber's ItemGrabMenu.
-/// Works on all platforms (PC, mobile, console) since it uses tap/click — no hover or hotkey required.
+/// Works on all platforms (PC, mobile, console) since it uses tap/click, no hover or hotkey required.
 /// </summary>
 internal class GlobalGrabberButton
 {

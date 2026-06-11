@@ -81,7 +81,7 @@ internal static class TroutDerbyPrizes
         }
         catch
         {
-            // Ignored — fall through to warning.
+            // Ignored, fall through to warning.
         }
 
         ModEntry.ModMonitor?.Log($"Could not create item '{qualifiedId}' (qty {quantity}). "

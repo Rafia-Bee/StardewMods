@@ -19,7 +19,7 @@ internal class AnimalProductGrabber : MapGrabber
 
         bool grabbed = false;
 
-        // Collect tool-harvest products (milk, wool) from animals —
+        // Collect tool-harvest products (milk, wool) from animals,
         // mirrors vanilla auto-grabber DayUpdate logic for (BC)165.
         // In SDV 1.6, all GameLocations have an animals dictionary,
         // so this works on Farm, AnimalHouse, and any modded location.

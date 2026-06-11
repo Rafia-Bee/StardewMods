@@ -53,7 +53,7 @@ internal class GenericObjectGrabber : ObjectsMapGrabber
 
         // Collect modded spawned objects (e.g., FTM forage from Sunberry Village,
         // Alchemistry) that don't have standard forage categories.
-        // The game uses isSpawnedObject — not isForage() — to determine if a
+        // The game uses isSpawnedObject, not isForage(), to determine if a
         // ground item is player-collectible (see GameLocation.checkAction).
         // Artifact spots and seed spots do NOT set this flag, so they're safe.
         if (obj.IsSpawnedObject)

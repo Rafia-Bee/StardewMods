@@ -28,7 +28,7 @@ internal class ArtifactSpotsGrabber : ObjectsMapGrabber
             return false;
 
         // FTM BuriedItems: subclass of Object with a custom Items field containing the real contents.
-        // Without this check, these get mishandled as vanilla artifact spots — wrong drops, real items destroyed.
+        // Without this check, these get mishandled as vanilla artifact spots, wrong drops, real items destroyed.
         if (obj.GetType() != typeof(Object))
             return TryGrabBuriedItems(tile, obj);
 

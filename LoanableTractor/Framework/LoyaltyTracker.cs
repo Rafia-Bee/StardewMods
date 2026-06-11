@@ -35,9 +35,9 @@ namespace LoanableTractor.Framework
         {
             return this.CurrentLoyaltyTier switch
             {
-                1 => 0.10f, // Bronze — 10%
-                2 => 0.20f, // Silver — 20%
-                3 => 0.30f, // Gold   — 30%
+                1 => 0.10f, // Bronze, 10%
+                2 => 0.20f, // Silver, 20%
+                3 => 0.30f, // Gold, 30%
                 _ => 0.00f  // None
             };
         }
