@@ -127,6 +127,10 @@ internal static partial class Generators
         Reg(fw, "GiftDelivery", GiftDelivery);
         Reg(fw, "GuntherMuseumDonation", GuntherMuseumDonation);
 
+        // Story arcs. Registered directly (not through Reg) so they're never silenced by a
+        // category master-toggle, since they're hand-authored storylines, not board filler.
+        fw.RegisterGenerator("MorrisManOfMeans", MorrisManOfMeans);
+
         // Report-back prompts (talk-to-giver question dialogues that branch the reward).
         RegisterKnowYourWatersReportBack(fw);
     }

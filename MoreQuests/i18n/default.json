@@ -183,6 +183,10 @@
     "quest.redecorate.objective.budget": "Budget remaining: {{amount}}g",
     "quest.redecorate.objective.budget.over": "Over budget by {{amount}}g",
 
+    "quest.story.morrisManOfMeans.title": "A person of means",
+    "quest.story.morrisManOfMeans.description": "I've had my eye on you. You've got ambition, and ambition is the one thing Joja can't manufacture. Before I bring you in on anything worth your while, I need to know you're not just another small-timer playing at business. So here's a simple test. Pull together {{gold}}g on your own, starting now. Earn that, and we'll talk about what comes next.",
+    "quest.story.morrisManOfMeans.objective": "Earn money to prove yourself to Morris",
+
     "quest.animal.hay.title": "Hay supply run",
     "quest.animal.hay.description": "My hay supply is running low and I'm starting to get worried. Could you bring me some more? {{qty}} should be more than enough.",
     "quest.animal.hay.objective": "Bring hay to Marnie.",

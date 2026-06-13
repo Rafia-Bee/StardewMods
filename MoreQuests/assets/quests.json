@@ -190,6 +190,16 @@
             "Generator": "EmilyHousewarming"
         },
         {
+            "Name": "Story.MorrisManOfMeans",
+            "Category": "Social",
+            "Trigger": {
+                "Source": "OneShot",
+                "When": "FirstMoneyEarned >= 15000",
+                "Available": { "NpcExists": "Morris", "IsCommunityCenterCompleted": "false" }
+            },
+            "Generator": "MorrisManOfMeans"
+        },
+        {
             "Name": "Festival.GusSpring",
             "Category": "Festival",
             "Trigger": {

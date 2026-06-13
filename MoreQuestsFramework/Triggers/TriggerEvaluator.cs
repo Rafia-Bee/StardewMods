@@ -262,7 +262,7 @@ internal sealed class TriggerEvaluator
     // Forms: "FirstStat <name>[|<name>...] >= <n>", "FirstShipped <id>",
     // "FirstItemOwned <id>" (proxied to basicShipped + recipesCooked), "FirstHeldItem <id>",
     // "FirstCraftingRecipe <Name>", "FirstCookingRecipe <Name>",
-    // "FirstFriendship <Npc> >= <hearts>".
+    // "FirstFriendship <Npc> >= <hearts>", "FirstMoneyEarned >= <n>".
     private bool EvaluateOneShotPredicate(string when)
     {
         var parts = when.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -314,6 +314,13 @@ internal sealed class TriggerEvaluator
                 if (parts.Length < 4 || parts[2] != ">=" || !int.TryParse(parts[3], out int hearts))
                     return false;
                 return Game1.player.getFriendshipHeartLevelForNPC(parts[1]) >= hearts;
+
+            case "firstmoneyearned":
+                // "FirstMoneyEarned >= <n>". Reads lifetime earnings (Farmer.totalMoneyEarned),
+                // which Stats doesn't track, so this can't be a FirstStat clause.
+                if (parts.Length < 3 || parts[1] != ">=" || !uint.TryParse(parts[2], out uint minEarned))
+                    return false;
+                return Game1.player.totalMoneyEarned >= minEarned;
 
             default:
                 _monitor.Log($"OneShot 'When' clause not recognised: '{when}'.", LogLevel.Warn);

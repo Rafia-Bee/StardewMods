@@ -190,6 +190,55 @@ internal static class VanillaResourceCollectionQuestStashCodec
     }
 }
 
+internal static class MoreQuestsEarnMoneyQuestStashCodec
+{
+    public const string Kind = "MoreQuestsFramework.MoreQuestsEarnMoneyQuest";
+
+    public static IList<string> Encode(Quest q)
+    {
+        var m = (MoreQuestsEarnMoneyQuest)q;
+        var list = new List<string>
+        {
+            m.target.Value ?? string.Empty,
+            m.goldTarget.Value.ToString(CultureInfo.InvariantCulture),
+            m.baselineCaptured.Value ? "1" : "0",
+            m.baselineEarned.Value.ToString(CultureInfo.InvariantCulture),
+            m.earnedSoFar.Value.ToString(CultureInfo.InvariantCulture),
+            m.baseObjective.Value ?? string.Empty,
+            m.serializedRewards.Count.ToString(CultureInfo.InvariantCulture)
+        };
+        for (int i = 0; i < m.serializedRewards.Count; i++)
+            list.Add(m.serializedRewards[i] ?? string.Empty);
+        list.Add(m.targetMessage ?? string.Empty);
+        return list;
+    }
+
+    public static Quest? Decode(IList<string> payload)
+    {
+        if (payload.Count < 7) return null;
+        int i = 0;
+        var m = new MoreQuestsEarnMoneyQuest();
+        m.target.Value = payload[i++];
+        if (!int.TryParse(payload[i++], NumberStyles.Integer, CultureInfo.InvariantCulture, out int target)) return null;
+        m.goldTarget.Value = target;
+        m.baselineCaptured.Value = payload[i++] == "1";
+        if (!long.TryParse(payload[i++], NumberStyles.Integer, CultureInfo.InvariantCulture, out long baseline)) return null;
+        m.baselineEarned.Value = baseline;
+        if (!int.TryParse(payload[i++], NumberStyles.Integer, CultureInfo.InvariantCulture, out int earned)) return null;
+        m.earnedSoFar.Value = earned;
+        m.baseObjective.Value = payload[i++];
+        if (!int.TryParse(payload[i++], NumberStyles.Integer, CultureInfo.InvariantCulture, out int rewardCount)) return null;
+        for (int j = 0; j < rewardCount; j++)
+        {
+            if (i >= payload.Count) return null;
+            m.serializedRewards.Add(payload[i++]);
+        }
+        if (i < payload.Count)
+            m.targetMessage = payload[i++];
+        return m;
+    }
+}
+
 internal static class MoreQuestsShipQuestStashCodec
 {
     public const string Kind = "MoreQuestsFramework.MoreQuestsShipQuest";

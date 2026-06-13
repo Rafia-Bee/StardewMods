@@ -60,6 +60,12 @@ internal static class QuestFactory
                 targetMessage = p.TargetMessage
             },
             BoardQuestType.Ship => BuildShipQuest(p, itemId, giver),
+            BoardQuestType.EarnMoney => new MoreQuestsEarnMoneyQuest
+            {
+                target = { Value = giver },
+                goldTarget = { Value = Math.Max(1, p.ObjectiveQuantity) },
+                targetMessage = p.TargetMessage
+            },
             // Adventure quests are always PreBuiltQuest (step list lives on the subclass).
             BoardQuestType.Adventure => null,
             BoardQuestType.Custom => BuildCustom(p, giver, deliveryTarget),

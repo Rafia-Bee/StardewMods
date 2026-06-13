@@ -25,6 +25,10 @@ public enum BoardQuestType
     // Ship: counted at DayEnding by scanning the shipping bin. Items are NOT
     // removed by the framework, vanilla still sells them as normal.
     Ship,
+    // EarnMoney: no item or turn-in. Snapshots the player's lifetime earnings when the
+    // quest starts and completes once they've earned ObjectiveQuantity gold MORE from
+    // that point. Progress is polled once a second off the quest log.
+    EarnMoney,
     Adventure,
     Custom
 }

@@ -110,6 +110,7 @@ public sealed class ModEntry : Mod
         _mailStashCodecs = new MailStashCodecRegistry(Monitor);
         _mailStashCodecs.Register(AdventureQuestStashCodec.Kind, typeof(AdventureQuest), AdventureQuestStashCodec.Encode, AdventureQuestStashCodec.Decode);
         _mailStashCodecs.Register(MoreQuestsShipQuestStashCodec.Kind, typeof(MoreQuestsShipQuest), MoreQuestsShipQuestStashCodec.Encode, MoreQuestsShipQuestStashCodec.Decode);
+        _mailStashCodecs.Register(MoreQuestsEarnMoneyQuestStashCodec.Kind, typeof(MoreQuestsEarnMoneyQuest), MoreQuestsEarnMoneyQuestStashCodec.Encode, MoreQuestsEarnMoneyQuestStashCodec.Decode);
         _mailStashCodecs.Register(VanillaItemDeliveryQuestStashCodec.Kind, typeof(StardewValley.Quests.ItemDeliveryQuest), VanillaItemDeliveryQuestStashCodec.Encode, VanillaItemDeliveryQuestStashCodec.Decode);
         _mailStashCodecs.Register(VanillaFishingQuestStashCodec.Kind, typeof(StardewValley.Quests.FishingQuest), VanillaFishingQuestStashCodec.Encode, VanillaFishingQuestStashCodec.Decode);
         _mailStashCodecs.Register(VanillaSlayMonsterQuestStashCodec.Kind, typeof(StardewValley.Quests.SlayMonsterQuest), VanillaSlayMonsterQuestStashCodec.Encode, VanillaSlayMonsterQuestStashCodec.Decode);
@@ -327,6 +328,7 @@ public sealed class ModEntry : Mod
             _spaceCore.RegisterSerializerType(typeof(MoreQuestsFishingQuest));
             _spaceCore.RegisterSerializerType(typeof(AdventureQuest));
             _spaceCore.RegisterSerializerType(typeof(MoreQuestsShipQuest));
+            _spaceCore.RegisterSerializerType(typeof(MoreQuestsEarnMoneyQuest));
             ModEntry.LogDebug("Registered framework Quest subclasses with SpaceCore.");
         }
         else
@@ -736,6 +738,18 @@ public sealed class ModEntry : Mod
         }
     }
 
+    private void ObserveEarnMoneyOnQuestLog()
+    {
+        if (Game1.player == null)
+            return;
+        var log = Game1.player.questLog;
+        for (int i = 0; i < log.Count; i++)
+        {
+            if (log[i] is MoreQuestsEarnMoneyQuest m && !m.completed.Value)
+                m.ObserveMoney();
+        }
+    }
+
     private void ObserveBuildOnQuestLog()
     {
         if (Game1.player == null || _triggers == null)
@@ -1125,6 +1139,7 @@ public sealed class ModEntry : Mod
         _consequenceWatcher?.Tick();
         _reportBackWatcher?.Tick();
         PollClumpsOnQuestLog();
+        ObserveEarnMoneyOnQuestLog();
         ApplyFairStarTokensIfFairActive();
         // Bypasses Data/SpecialOrders.Rewards entirely so third-party content packs
         // that mutate that array can't intercept the grant.
