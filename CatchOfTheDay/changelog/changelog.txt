@@ -1,3 +1,7 @@
+To be released
+- Added a "Tracked Fish" box where you type fish names to always show them on the HUD when catchable today
+- Tracked fish ignore your weather, time, already-caught, and sell-price filters, and get their own highlight color
+
 1.1.0
 - Added keybind (default: Delete) to hide specific fish from the HUD while hovering over them
 - Hidden fish are managed on a dedicated GMCM subpage where you can selectively unhide them

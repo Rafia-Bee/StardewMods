@@ -26,6 +26,7 @@ internal sealed class WeatherFishHud
 
     private List<FishEntry> _entries = new();
     private Dictionary<string, List<string>> _bundleNeeds = new();
+    private HashSet<string> _trackedNames = new(StringComparer.OrdinalIgnoreCase);
     private int _lastFishCaughtCount = -1;
     private string? _hoveredFishId;
 
@@ -63,6 +64,7 @@ internal sealed class WeatherFishHud
         RefreshBundleNeeds();
 
         var config = _getConfig();
+        _trackedNames = ParseTrackedNames(config.TrackedFish);
         var fishMap = new Dictionary<string, FishEntry>();
         var rawFishData = DataLoader.Fish(Game1.content);
 
@@ -282,24 +284,29 @@ internal sealed class WeatherFishHud
                 continue;
 
             var windows = GetTimeWindows(itemData.ItemId, rawFishData);
+            bool isTracked = _trackedNames.Count > 0 && _trackedNames.Contains(itemData.DisplayName);
             bool matchesWeatherToggle = weatherReq != null && IsWeatherTracked(weatherReq, config);
             bool matchesTimeSlot = MatchesAnyTimeSlot(windows, config.TimeSlots) != null;
 
-            if (!matchesWeatherToggle && !matchesTimeSlot)
+            if (!matchesWeatherToggle && !matchesTimeSlot && !isTracked)
                 continue;
 
-            if (config.HideAlreadyCaught && Game1.player.fishCaught.ContainsKey(itemData.QualifiedItemId))
-                continue;
+            // A fish you explicitly track should always show, so skip the show/hide filters for it.
+            if (!isTracked)
+            {
+                if (config.HideAlreadyCaught && Game1.player.fishCaught.ContainsKey(itemData.QualifiedItemId))
+                    continue;
 
-            if (config.HiddenFishIds.Contains(itemData.QualifiedItemId))
-                continue;
+                if (config.HiddenFishIds.Contains(itemData.QualifiedItemId))
+                    continue;
+            }
 
             int sellPrice = 0;
             var tempItem = ItemRegistry.Create(itemData.QualifiedItemId);
             if (tempItem is StardewValley.Object obj)
                 sellPrice = obj.sellToStorePrice();
 
-            if (config.MinSellPrice > 0 && sellPrice < config.MinSellPrice)
+            if (!isTracked && config.MinSellPrice > 0 && sellPrice < config.MinSellPrice)
                 continue;
 
             string displayName = itemData.DisplayName;
@@ -315,7 +322,8 @@ internal sealed class WeatherFishHud
                     itemData.GetTexture(),
                     itemData.GetSourceRect(),
                     sellPrice,
-                    GetTimeWindows(itemData.ItemId, rawFishData)
+                    GetTimeWindows(itemData.ItemId, rawFishData),
+                    isTracked
                 );
                 fishMap[spawn.ItemId] = entry;
             }
@@ -371,8 +379,27 @@ internal sealed class WeatherFishHud
         return windows;
     }
 
+    private static HashSet<string> ParseTrackedNames(string input)
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(input))
+            return set;
+
+        foreach (var part in input.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+            set.Add(part);
+
+        return set;
+    }
+
     private static Color GetIconBackground(FishEntry fish, ModConfig config)
     {
+        if (fish.IsTracked)
+        {
+            var trackedColor = ParseHexColor(config.TrackedFishColor);
+            if (trackedColor.A > 0)
+                return trackedColor;
+        }
+
         int currentTime = Game1.timeOfDay;
 
         bool catchableNow = fish.TimeWindows.Count == 0
@@ -606,9 +633,10 @@ internal sealed class WeatherFishHud
         public Rectangle SourceRect { get; }
         public int SellPrice { get; }
         public List<(int Start, int End)> TimeWindows { get; }
+        public bool IsTracked { get; }
         public List<LocationTime> LocationTimes { get; } = new();
 
-        public FishEntry(string itemId, string qualifiedItemId, string displayName, Texture2D texture, Rectangle sourceRect, int sellPrice, List<(int Start, int End)> timeWindows)
+        public FishEntry(string itemId, string qualifiedItemId, string displayName, Texture2D texture, Rectangle sourceRect, int sellPrice, List<(int Start, int End)> timeWindows, bool isTracked)
         {
             ItemId = itemId;
             QualifiedItemId = qualifiedItemId;
@@ -617,6 +645,7 @@ internal sealed class WeatherFishHud
             SourceRect = sourceRect;
             SellPrice = sellPrice;
             TimeWindows = timeWindows;
+            IsTracked = isTracked;
         }
     }
 

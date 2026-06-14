@@ -120,6 +120,37 @@ public class ModEntry : Mod
             min: 0, max: 5000, interval: 25
         );
 
+        api.AddTextOption(
+            ModManifest,
+            () => _config.TrackedFish,
+            v => _config.TrackedFish = v,
+            () => Helper.Translation.Get("config.tracked-fish.name"),
+            () => Helper.Translation.Get("config.tracked-fish.tooltip")
+        );
+
+        if (_colorApi != null)
+        {
+            _colorApi.AddColorOption(
+                ModManifest,
+                () => ParseHexColor(_config.TrackedFishColor),
+                v => _config.TrackedFishColor = ColorToHex(v),
+                () => Helper.Translation.Get("config.tracked-fish-color.name"),
+                () => Helper.Translation.Get("config.tracked-fish-color.tooltip"),
+                showAlpha: true,
+                colorPickerStyle: 1
+            );
+        }
+        else
+        {
+            api.AddTextOption(
+                ModManifest,
+                () => _config.TrackedFishColor,
+                v => _config.TrackedFishColor = v,
+                () => Helper.Translation.Get("config.tracked-fish-color.name"),
+                () => Helper.Translation.Get("config.tracked-fish-color.tooltip")
+            );
+        }
+
         api.AddKeybindList(
             ModManifest,
             () => _config.HideFishKey,

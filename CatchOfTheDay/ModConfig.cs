@@ -16,6 +16,8 @@ public sealed class ModConfig
     public bool ShowBundleNeeds { get; set; } = true;
     public bool HideAlreadyCaught { get; set; } = false;
     public int MinSellPrice { get; set; } = 0;
+    public string TrackedFish { get; set; } = "";
+    public string TrackedFishColor { get; set; } = "#FFD70080";
     public KeybindList HideFishKey { get; set; } = KeybindList.Parse("Delete");
     public List<string> HiddenFishIds { get; set; } = new();
     public List<TimeSlotConfig> TimeSlots { get; set; } = new()

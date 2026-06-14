@@ -17,6 +17,7 @@ A Stardew Valley mod that shows weather-exclusive fish icons on the HUD. Support
 - Updates dynamically when the day starts or you visit a new location
 - **Per-weather toggles** -- choose exactly which weather types to track
 - **Hide individual fish** -- press a keybind (default: Delete) while hovering a fish icon to permanently hide it from the HUD
+- **Track a specific fish** -- type a fish name in the settings and it always shows on the HUD (with its own highlight color) whenever it's catchable today, even if your filters would normally hide it
 - **Configurable background colors** -- highlight fish catchable right now or matching a time slot with custom tint colors
 - Fully configurable via [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098) (optional)
 
@@ -37,6 +38,8 @@ All settings can be changed in-game via Generic Mod Config Menu, or by editing `
 | `HideAlreadyCaught` | `false` | Hide fish you've already caught at least once |
 | `MinSellPrice` | `0` | Only show fish worth at least this much gold (0 = show all) |
 | `HideFishKey` | `Delete` | Keybind to hide/unhide the currently hovered fish icon |
+| `TrackedFish` | *(empty)* | Comma-separated fish names to always show on the HUD when catchable today |
+| `TrackedFishColor` | `#FFD70080` | Highlight tint for tracked fish (RRGGBBAA hex) |
 | `TimeSlots` | *(5 empty slots)* | Time ranges + colors for showing time-restricted fish (see below) |
 | `TrackRain` | `true` | Show rain-exclusive fish on rainy days |
 | `TrackStorm` | `true` | Show storm-exclusive fish during thunderstorms |
@@ -61,6 +64,12 @@ Format: hours in 24h format, dash for range, comma for multiple ranges. Examples
 - `6-11,14-18` -- morning and afternoon, skipping lunch
 
 Configure in GMCM under the "Time Slots" page, or in `config.json` under the `TimeSlots` array.
+
+### Tracked Fish
+
+Hunting for one specific fish? Type its name into the "Tracked Fish" box in GMCM (or the `TrackedFish` setting in `config.json`). That fish will show on the HUD whenever it's catchable today in a place you've visited, even if a weather toggle, time slot, the "hide already caught" option, or the minimum sell price would normally keep it off the list. Tracked fish get their own highlight color so they're easy to spot.
+
+Type the fish's exact in-game name, and separate multiple fish with commas, like `Sturgeon, Catfish`.
 
 ## Installation
 

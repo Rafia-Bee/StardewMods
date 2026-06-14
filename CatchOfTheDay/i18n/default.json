@@ -16,6 +16,11 @@
     "config.min-sell-price.name": "Minimum Sell Price",
     "config.min-sell-price.tooltip": "Only show fish worth at least this much gold. Accounts for fishing professions like Fisher and Angler. Set to 0 to show all fish.",
 
+    "config.tracked-fish.name": "Tracked Fish",
+    "config.tracked-fish.tooltip": "Type the names of fish you want to keep an eye on, separated by commas (like 'Sturgeon, Catfish'). They'll show on the HUD whenever they're catchable today, even if a weather or time filter would normally hide them. Use the exact in-game name.",
+    "config.tracked-fish-color.name": "Tracked Fish Background",
+    "config.tracked-fish-color.tooltip": "Background color used to highlight your tracked fish so they stand out. Use hex format like #FFD70080 (RRGGBBAA). Set to #00000000 for transparent.",
+
     "config.hide-fish-key.name": "Hide Fish Key",
     "config.hide-fish-key.tooltip": "Press this key while hovering over a fish icon to hide it from the HUD. Press again on a hidden fish to bring it back.",
     "config.page-hidden-fish.name": "Hidden Fish",
