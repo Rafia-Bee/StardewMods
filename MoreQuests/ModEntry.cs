@@ -109,6 +109,14 @@ public sealed class ModEntry : Mod
     /// in quests.json). It's a bare flag, not a readable letter, so there's nothing to open.
     internal const string MorrisQualityControlFlag = "RafiaBee.MoreQuests.Morris.QualityControlUnlocked";
 
+    /// Conversation topic for the Joja arc's fallout (Step 3). Switched on for a few days
+    /// when Step 2 completes; while it's on, Caroline, Gus, and Evelyn (or Susan with SVE)
+    /// each gripe once about the sad produce Pierre stocked. The matching dialogue lines
+    /// are injected into their dialogue in OnAssetRequested. Underscores only, since this
+    /// doubles as a dialogue key.
+    internal const string PierreBadProduceTopic = "RafiaBee_MoreQuests_PierreBadProduce";
+    private const int PierreBadProduceTopicDays = 3;
+
     /// ModData flag set on Spring 13 when the player wins the egg hunt while the
     /// Festival.EggHuntSabotage quest is active. Picked up on Spring 14 morning to grant
     /// the iridium-quality egg directly (mail attachments can't carry quality).
@@ -480,6 +488,29 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        // Joja arc fallout (Step 3): griping about Pierre's produce, keyed to the gossip
+        // topic so it only fires while that topic is switched on. The fertilizer wisdom
+        // goes to Susan when SVE is installed, otherwise Evelyn.
+        if (e.NameWithoutLocale.IsEquivalentTo("Characters/Dialogue/Caroline"))
+        {
+            e.Edit(asset => asset.AsDictionary<string, string>().Data[PierreBadProduceTopic]
+                = I18n.Get("dialogue.pierreBadProduce.caroline").ToString());
+            return;
+        }
+        if (e.NameWithoutLocale.IsEquivalentTo("Characters/Dialogue/Gus"))
+        {
+            e.Edit(asset => asset.AsDictionary<string, string>().Data[PierreBadProduceTopic]
+                = I18n.Get("dialogue.pierreBadProduce.gus").ToString());
+            return;
+        }
+        string fertilizerNpc = MoreQuestsFramework.ModCompat.HasSve(Helper.ModRegistry) ? "Susan" : "Evelyn";
+        if (e.NameWithoutLocale.IsEquivalentTo($"Characters/Dialogue/{fertilizerNpc}"))
+        {
+            e.Edit(asset => asset.AsDictionary<string, string>().Data[PierreBadProduceTopic]
+                = I18n.Get("dialogue.pierreBadProduce.fertilizer").ToString());
+            return;
+        }
+
         if (!e.NameWithoutLocale.IsEquivalentTo("Data/mail"))
             return;
         e.Edit(asset =>
@@ -712,6 +743,7 @@ public sealed class ModEntry : Mod
     {
         ["Animal.HaySupplyRun"]         = (m, _) => m.Helper.GameContent.InvalidateCache("Data/Shops"),
         ["Story.MorrisManOfMeans"]      = (m, _) => m.UnlockMorrisQualityControl(),
+        ["Story.MorrisQualityControl"]  = (m, _) => m.StartPierreBadProduceGossip(),
         ["Animal.GuntherDinosaurStudy"] = (m, q) => m.GrantUpgradedDinosaurEgg(q),
         ["Animal.MarnieChickenOffer"]   = (m, _) => m.GrantMarnieChickenCredit(),
         ["Animal.MarnieCowOffer"]       = (m, _) => m.GrantMarnieCowCredit(),
@@ -755,6 +787,17 @@ public sealed class ModEntry : Mod
             return;
         if (!Game1.player.mailReceived.Contains(MorrisQualityControlFlag))
             Game1.player.mailReceived.Add(MorrisQualityControlFlag);
+    }
+
+    /// Step 3 of the Joja arc. Step 2 is done, so switch on the town gossip topic for a few
+    /// days. Caroline, Gus, and Evelyn (or Susan with SVE) each have a line keyed to this
+    /// topic, so they grumble about Pierre's produce next time you chat with them. The
+    /// player did the sabotage in secret, so nobody pins it on them.
+    private void StartPierreBadProduceGossip()
+    {
+        if (Game1.player == null)
+            return;
+        Game1.player.activeDialogueEvents[PierreBadProduceTopic] = PierreBadProduceTopicDays;
     }
 
     private void GrantMarnieCredit(string modDataKey, string hudKey)

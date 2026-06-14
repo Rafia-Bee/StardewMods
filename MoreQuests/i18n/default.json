@@ -194,6 +194,10 @@
     "quest.story.morrisQualityControl.description": "Good. You're exactly the kind of self-starter Joja likes. So here's the real job. Pierre loves to crow about 'fresh and local,' so let's test how local. Get your hands on the cheapest produce you can find, the sad base-quality stuff nobody really wants, and sell it straight into his shop. {{count}} pieces, nothing worth more than {{value}}g each. He'll stock it without a second look, and when folks bite into garbage with Pierre's name on it, well, that's his problem, not ours.",
     "quest.story.morrisQualityControl.objective": "Sell cheap crops to Pierre's shop",
 
+    "dialogue.pierreBadProduce.caroline": "People are being so unfair to Pierre. One bad batch of produce and suddenly everyone in town is a critic. He works himself to the bone for this place. It wasn't his fault.$s",
+    "dialogue.pierreBadProduce.gus": "I bought a crate of vegetables from Pierre's for the saloon and half of it was barely fit to serve. I had to scrap the evening special and start over. I'll be checking every delivery twice from now on.$a",
+    "dialogue.pierreBadProduce.fertilizer": "Good soil and good fertilizer, that's the whole secret to produce worth eating. Whatever ended up on Pierre's shelves clearly had neither. A real shame. Folks have forgotten how to grow things properly.",
+
     "quest.animal.hay.title": "Hay supply run",
     "quest.animal.hay.description": "My hay supply is running low and I'm starting to get worried. Could you bring me some more? {{qty}} should be more than enough.",
     "quest.animal.hay.objective": "Bring hay to Marnie.",
