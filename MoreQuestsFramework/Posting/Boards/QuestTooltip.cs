@@ -28,18 +28,18 @@ internal static class QuestTooltip
                     if (!string.IsNullOrEmpty(alt))
                         ids.Add(alt);
                 }
-                return BuildWithItemIds("Deliver", ids) ?? FallbackObjective(quest);
+                return BuildWithItemIds("deliver", ids) ?? FallbackObjective(quest);
             }
             case ItemDeliveryQuest deliver:
-                return BuildWithItemIds("Deliver", new[] { deliver.ItemId.Value }) ?? FallbackObjective(quest);
+                return BuildWithItemIds("deliver", new[] { deliver.ItemId.Value }) ?? FallbackObjective(quest);
             case MoreQuestsShipQuest mqShip:
-                return BuildWithItemIds("Ship", new[] { mqShip.itemId.Value }) ?? FallbackObjective(quest);
+                return BuildWithItemIds("ship", new[] { mqShip.itemId.Value }) ?? FallbackObjective(quest);
             case FishingQuest fish:
-                return BuildWithItemIds("Fish", new[] { fish.ItemId.Value }) ?? FallbackObjective(quest);
+                return BuildWithItemIds("fish", new[] { fish.ItemId.Value }) ?? FallbackObjective(quest);
             case ResourceCollectionQuest collect:
-                return BuildWithItemIds("Collect", new[] { collect.ItemId.Value }) ?? FallbackObjective(quest);
+                return BuildWithItemIds("collect", new[] { collect.ItemId.Value }) ?? FallbackObjective(quest);
             case SlayMonsterQuest slay:
-                return BuildLiteral("Slay", new[] { slay.monsterName.Value }) ?? FallbackObjective(quest);
+                return BuildLiteral("slay", new[] { slay.monsterName.Value }) ?? FallbackObjective(quest);
             case AdventureQuest adv:
                 return BuildFromAdventure(adv) ?? FallbackObjective(quest);
         }
@@ -64,22 +64,23 @@ internal static class QuestTooltip
         return null;
     }
 
+    // Returns the i18n verb-line key suffix (lowercase) for an adventure step kind.
     private static string? VerbForKind(string kind) => kind switch
     {
-        nameof(AdventureStepKind.Deliver) => "Deliver",
-        nameof(AdventureStepKind.Gift) => "Gift",
-        nameof(AdventureStepKind.GiftUniqueNpcs) => "Gift",
-        nameof(AdventureStepKind.Catch) => "Catch",
-        nameof(AdventureStepKind.Slay) => "Slay",
-        nameof(AdventureStepKind.Ship) => "Ship",
-        nameof(AdventureStepKind.Plant) => "Plant",
-        nameof(AdventureStepKind.Collect) => "Collect",
-        nameof(AdventureStepKind.DropItems) => "Drop",
-        nameof(AdventureStepKind.DropItemsInRadius) => "Drop",
+        nameof(AdventureStepKind.Deliver) => "deliver",
+        nameof(AdventureStepKind.Gift) => "gift",
+        nameof(AdventureStepKind.GiftUniqueNpcs) => "gift",
+        nameof(AdventureStepKind.Catch) => "catch",
+        nameof(AdventureStepKind.Slay) => "slay",
+        nameof(AdventureStepKind.Ship) => "ship",
+        nameof(AdventureStepKind.Plant) => "plant",
+        nameof(AdventureStepKind.Collect) => "collect",
+        nameof(AdventureStepKind.DropItems) => "drop",
+        nameof(AdventureStepKind.DropItemsInRadius) => "drop",
         _ => null
     };
 
-    private static string? BuildWithItemIds(string verb, IEnumerable<string> ids)
+    private static string? BuildWithItemIds(string verbKey, IEnumerable<string> ids)
     {
         var names = new List<string>();
         foreach (var raw in ids)
@@ -89,14 +90,25 @@ internal static class QuestTooltip
                 names.Add(name);
         }
         if (names.Count == 0) return null;
-        return $"{verb} {OxfordJoin(names)}";
+        return FormatLine(verbKey, OxfordJoin(names));
     }
 
-    private static string? BuildLiteral(string verb, IEnumerable<string> names)
+    private static string? BuildLiteral(string verbKey, IEnumerable<string> names)
     {
         var list = names.Where(n => !string.IsNullOrEmpty(n)).ToList();
         if (list.Count == 0) return null;
-        return $"{verb} {OxfordJoin(list)}";
+        return FormatLine(verbKey, OxfordJoin(list));
+    }
+
+    // Looks up "Deliver {{items}}" etc. so translators control both the verb and word order.
+    private static string FormatLine(string verbKey, string items)
+        => Translate($"tooltip.line.{verbKey}", new { items });
+
+    private static string Translate(string key, object? tokens = null)
+    {
+        var translation = ModEntry.Translation;
+        if (translation == null) return key;
+        return (tokens == null ? translation.Get(key) : translation.Get(key, tokens)).ToString();
     }
 
     // Category sentinels (e.g. "-4" for fish) get a friendly name; real item ids resolve
@@ -121,48 +133,52 @@ internal static class QuestTooltip
         }
     }
 
-    private static string CategoryName(int category) => category switch
+    private static string CategoryName(int category)
     {
-        -2 => "gem",
-        -4 => "fish",
-        -5 => "egg",
-        -6 => "milk",
-        -7 => "cooked dish",
-        -8 => "crafted item",
-        -12 => "mineral",
-        -15 => "metal bar",
-        -16 => "resource",
-        -17 => "shipped item",
-        -18 => "animal product",
-        -19 => "fertilizer",
-        -20 => "junk",
-        -21 => "bait",
-        -22 => "tackle",
-        -23 => "shell",
-        -24 => "decor",
-        -25 => "cooking ingredient",
-        -26 => "artisan good",
-        -27 => "tapper item",
-        -28 => "monster loot",
-        -29 => "equipment",
-        -74 => "seed",
-        -75 => "vegetable",
-        -79 => "fruit",
-        -80 => "flower",
-        -81 => "forage item",
-        -95 => "hat",
-        -96 => "ring",
-        -98 => "weapon",
-        -99 => "tool",
-        _ => "item"
-    };
+        string key = category switch
+        {
+            -2 => "gem",
+            -4 => "fish",
+            -5 => "egg",
+            -6 => "milk",
+            -7 => "cookedDish",
+            -8 => "craftedItem",
+            -12 => "mineral",
+            -15 => "metalBar",
+            -16 => "resource",
+            -17 => "shippedItem",
+            -18 => "animalProduct",
+            -19 => "fertilizer",
+            -20 => "junk",
+            -21 => "bait",
+            -22 => "tackle",
+            -23 => "shell",
+            -24 => "decor",
+            -25 => "cookingIngredient",
+            -26 => "artisanGood",
+            -27 => "tapperItem",
+            -28 => "monsterLoot",
+            -29 => "equipment",
+            -74 => "seed",
+            -75 => "vegetable",
+            -79 => "fruit",
+            -80 => "flower",
+            -81 => "forageItem",
+            -95 => "hat",
+            -96 => "ring",
+            -98 => "weapon",
+            -99 => "tool",
+            _ => "item"
+        };
+        return Translate($"tooltip.category.{key}");
+    }
 
     private static string OxfordJoin(IReadOnlyList<string> list) => list.Count switch
     {
         0 => string.Empty,
         1 => list[0],
-        2 => $"{list[0]} and {list[1]}",
-        _ => string.Join(", ", list.Take(list.Count - 1)) + ", and " + list[^1]
+        2 => Translate("tooltip.join.two", new { first = list[0], second = list[1] }),
+        _ => Translate("tooltip.join.many", new { items = string.Join(", ", list.Take(list.Count - 1)), last = list[^1] })
     };
 
     private static string FallbackObjective(Quest quest)
