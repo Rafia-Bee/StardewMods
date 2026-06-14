@@ -1,3 +1,8 @@
+To be released
+- For mod authors: a new "earn money" quest type. It asks the player to earn a set amount of gold and finishes on its own once they've earned that much, counting only from the moment it started, so money they already had doesn't count.
+- For mod authors: a new "sell to a shop" quest type. It counts items the player sells over a chosen shop's counter, like Pierre's or Joja's, and you can narrow it down by item type, price, and quality. The items still sell as normal.
+- For mod authors: a quest that fires once can now trigger the first time the player has earned a set amount of gold across their whole save.
+
 2.6.0
 - For mod authors: a "slay monsters" step can now require the kills happen on a set range of mine floors, covering both the Mines and the Skull Cavern.
 - For mod authors: quests can now end with the player reporting back to a villager and picking from a few answers, where the answer they choose decides the reward. Register the question and answers with the new RegisterReportBackChoice and point a Custom step at it. See the README for an example.

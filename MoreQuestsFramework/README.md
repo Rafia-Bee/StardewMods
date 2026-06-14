@@ -15,7 +15,7 @@ This mod powers [More Quests](../MoreQuests/README.md) and ships four configurab
   - `Periodic`, every N in-game days.
   - `DateLocked`, a specific date, optionally yearly.
   - `DateRange`, every day inside a closed date range.
-  - `OneShot`, fires once per save when the `When` predicate first comes true. Predicate forms: `FirstStat <name>[|<name>...] >= <n>`, `FirstShipped <id>`, `FirstItemOwned <id>`, `FirstHeldItem <id>`, `FirstCraftingRecipe <Name>`, `FirstCookingRecipe <Name>`, `FirstFriendship <Npc> >= <hearts>`.
+  - `OneShot`, fires once per save when the `When` predicate first comes true. Predicate forms: `FirstStat <name>[|<name>...] >= <n>`, `FirstShipped <id>`, `FirstItemOwned <id>`, `FirstHeldItem <id>`, `FirstCraftingRecipe <Name>`, `FirstCookingRecipe <Name>`, `FirstFriendship <Npc> >= <hearts>`, `FirstMoneyEarned >= <n>` (lifetime gold the player has earned, which the stats don't track so it needs its own form).
   - `BuildingBuilt`, the morning after a given farm building finishes construction (with optional `DayDelay`).
   - `MailReceived`, the day a given mail flag enters the player's received list (with optional `DayDelay`).
   - `WeatherForecast`, when tomorrow's weather matches. Handy for rainy-day mail that arrives the night before.
@@ -347,6 +347,28 @@ The bin sweep is observe-only: shipped items still sell at full price AND credit
 The handler is registered via `IMoreQuestsModApi.RegisterCustomBoardQuestType`. It receives a `CustomBoardQuestContext` (definition id, owner, giver, primary / alternative item ids, count, quality gate, target message, deadline) and returns a `Quest` instance. The framework applies title / description / money / reward encoding the same way it does for built-in board kinds.
 
 Bare handler names resolve under the calling mod's UniqueID; `"OtherMod.UniqueID/Name"` works for cross-mod references. A Custom-kind posting whose handler isn't registered (consumer mod uninstalled) drops with the same Warn line as any other failed Build.
+
+#### Single-objective `EarnMoney`
+
+```jsonc
+"Objective": { "Kind": "EarnMoney", "Count": 10000 }
+```
+
+No item and nothing to turn in. `Count` is the gold target. The quest takes a snapshot of how much the player has earned over their whole save when it starts, then completes on its own once they've earned that much *more* from that point on. So it's a "from here" target, not a check on the wallet or on lifetime earnings, and money the player already had can't pre-satisfy it. The journal shows progress as `(earned/target g)`, updated about once a second.
+
+#### Single-objective `Sell`
+
+Counts items the player sells across a shop counter, rather than handing them to the giver. While a shop is open the framework watches the player's inventory and counts anything sold that matches the filters. Nothing is taken by the framework, the sale goes through normally and the player keeps the money. Set this up on the `QuestPosting` from a generator (the filter fields aren't on the JSON `Objective` yet):
+
+| Field | What it does |
+| --- | --- |
+| `SellShopId` | The shop that counts, matched on `ShopMenu.ShopId` (Pierre's is `SeedShop`, Joja's is `Joja`). Required. A sale at any other shop is ignored. |
+| `SellCategories` | Object categories that count (for example `-75` Vegetable, `-79` Fruit, `-80` Flower). Read together with the item id list as an OR. Leave empty to skip the category check. |
+| `SellMaxValue` | Highest single-item store price that still counts, exclusive. 0 means no cap. Good for targeting cheap goods only. |
+| `SellMaxQuality` | Highest quality that counts (0 base, 1 silver, 2 gold, 4 iridium). Defaults to 0, so base quality only. |
+| `ObjectiveQuantity` | How many the player has to sell. |
+
+If you set neither item ids nor categories, anything that clears the price and quality gates counts.
 
 #### Optional quest-level fields (single-step quests)
 

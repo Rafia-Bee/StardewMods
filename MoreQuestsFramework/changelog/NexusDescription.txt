@@ -13,6 +13,8 @@ If you only want the gameplay content, install [b]More Quests[/b] and this frame
 [*][b]Quality-aware deliveries[/b] - quests can require Silver, Gold, or Iridium quality items[/*]
 [*][b]Fish filters[/b] - catch-by-location, catch-by-size, catch-by-weather, filtered by fish that spawn in your visited locations only (configurable) all built in[/*]
 [*][b]Shipping observer[/b] - shipping items quests supported, with an opt-in bypass for shipping furniture / decor if you want a quest to ship decor items but don't have Ship Anything mod[/*]
+[*][b]Earn-money quests[/b] - a quest can ask the player to earn a set amount of gold and finish on its own once they've earned that much from when it started (money they already had doesn't count)[/*]
+[*][b]Sell-to-shop quests[/b] - a quest can count items the player sells over a chosen shop's counter (Pierre's, Joja's, and so on), narrowed by item type, price, and quality[/*]
 [*][b]Multi-step Adventure quests[/b] - chains of Deliver / Talk / Gift / GiftUniqueNpcs / Ship / Catch / Slay / Visit / Build / Plant / Collect / ClearWeeds / ClearDebris / DropItems / DigArtifactSpot / DonateMuseum / Decorate / ReachLevel / Custom steps, with optional ordering[/*]
 [*][b]Report-back quests[/b] - a quest can end with the player reporting to a villager and picking from a few answers, where the answer they choose decides the reward (register the question and answers, point a Custom step at it)[/*]
 [*][b]Reward kinds[/b] - gold, friendship, items, recipes, mail letters, shop discounts (timed, optional whitelist), animal-purchase discounts, festival biases (Luau, Fair), Fair grange tokens, plus a Custom hook so consumer mods can register their own reward kinds[/*]

@@ -126,7 +126,7 @@ public sealed class TriggerDef
 
 public sealed class ObjectiveDef
 {
-    // Deliver | Resource | Fish | Slay | Ship | Socialize | Custom.
+    // Deliver | Resource | Fish | Slay | Ship | Socialize | EarnMoney | Sell | Custom.
     public string Kind { get; set; } = "Deliver";
 
     // Used only when Kind = "Custom". Handler id registered via
