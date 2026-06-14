@@ -1,6 +1,7 @@
-To be released
+1.2.0
 - Added a "Tracked Fish" box where you type fish names to always show them on the HUD when catchable today
 - Tracked fish ignore your weather, time, already-caught, and sell-price filters, and get their own highlight color
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/CatchOfTheDay-v1.0.0...CatchOfTheDay-v1.2.0]i18n changes here[/url] (look at i18n/default.json).
 
 1.1.0
 - Added keybind (default: Delete) to hide specific fish from the HUD while hovering over them
