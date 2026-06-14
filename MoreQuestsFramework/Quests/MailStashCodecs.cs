@@ -239,6 +239,80 @@ internal static class MoreQuestsEarnMoneyQuestStashCodec
     }
 }
 
+internal static class MoreQuestsSellQuestStashCodec
+{
+    public const string Kind = "MoreQuestsFramework.MoreQuestsSellQuest";
+
+    public static IList<string> Encode(Quest q)
+    {
+        var s = (MoreQuestsSellQuest)q;
+        var list = new List<string>
+        {
+            s.target.Value ?? string.Empty,
+            s.shopId.Value ?? string.Empty,
+            s.itemId.Value ?? string.Empty,
+            s.maxValue.Value.ToString(CultureInfo.InvariantCulture),
+            s.maxQuality.Value.ToString(CultureInfo.InvariantCulture),
+            s.numberToSell.Value.ToString(CultureInfo.InvariantCulture),
+            s.numberSold.Value.ToString(CultureInfo.InvariantCulture),
+            s.baseObjective.Value ?? string.Empty,
+            s.alternativeItemIds.Count.ToString(CultureInfo.InvariantCulture)
+        };
+        for (int i = 0; i < s.alternativeItemIds.Count; i++)
+            list.Add(s.alternativeItemIds[i] ?? string.Empty);
+        list.Add(s.categories.Count.ToString(CultureInfo.InvariantCulture));
+        for (int i = 0; i < s.categories.Count; i++)
+            list.Add(s.categories[i].ToString(CultureInfo.InvariantCulture));
+        list.Add(s.serializedRewards.Count.ToString(CultureInfo.InvariantCulture));
+        for (int i = 0; i < s.serializedRewards.Count; i++)
+            list.Add(s.serializedRewards[i] ?? string.Empty);
+        list.Add(s.targetMessage ?? string.Empty);
+        return list;
+    }
+
+    public static Quest? Decode(IList<string> payload)
+    {
+        if (payload.Count < 9) return null;
+        int i = 0;
+        var s = new MoreQuestsSellQuest();
+        s.target.Value = payload[i++];
+        s.shopId.Value = payload[i++];
+        s.itemId.Value = payload[i++];
+        if (!int.TryParse(payload[i++], NumberStyles.Integer, CultureInfo.InvariantCulture, out int maxValue)) return null;
+        s.maxValue.Value = maxValue;
+        if (!int.TryParse(payload[i++], NumberStyles.Integer, CultureInfo.InvariantCulture, out int maxQuality)) return null;
+        s.maxQuality.Value = maxQuality;
+        if (!int.TryParse(payload[i++], NumberStyles.Integer, CultureInfo.InvariantCulture, out int toSell)) return null;
+        s.numberToSell.Value = toSell;
+        if (!int.TryParse(payload[i++], NumberStyles.Integer, CultureInfo.InvariantCulture, out int sold)) return null;
+        s.numberSold.Value = sold;
+        s.baseObjective.Value = payload[i++];
+
+        if (!int.TryParse(payload[i++], NumberStyles.Integer, CultureInfo.InvariantCulture, out int altIdCount)) return null;
+        for (int j = 0; j < altIdCount; j++)
+        {
+            if (i >= payload.Count) return null;
+            s.alternativeItemIds.Add(payload[i++]);
+        }
+        if (i >= payload.Count || !int.TryParse(payload[i++], NumberStyles.Integer, CultureInfo.InvariantCulture, out int catCount)) return null;
+        for (int j = 0; j < catCount; j++)
+        {
+            if (i >= payload.Count) return null;
+            if (!int.TryParse(payload[i++], NumberStyles.Integer, CultureInfo.InvariantCulture, out int cat)) return null;
+            s.categories.Add(cat);
+        }
+        if (i >= payload.Count || !int.TryParse(payload[i++], NumberStyles.Integer, CultureInfo.InvariantCulture, out int rewardCount)) return null;
+        for (int j = 0; j < rewardCount; j++)
+        {
+            if (i >= payload.Count) return null;
+            s.serializedRewards.Add(payload[i++]);
+        }
+        if (i < payload.Count)
+            s.targetMessage = payload[i++];
+        return s;
+    }
+}
+
 internal static class MoreQuestsShipQuestStashCodec
 {
     public const string Kind = "MoreQuestsFramework.MoreQuestsShipQuest";

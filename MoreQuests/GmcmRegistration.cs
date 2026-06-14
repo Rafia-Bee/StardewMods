@@ -146,6 +146,8 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "CheckOnFriendsCount", () => ModEntry.Config.CheckOnFriendsCount, v => ModEntry.Config.CheckOnFriendsCount = v, 1, 10);
         api.AddSectionTitle(manifest, () => t.Get("config.section.emilyHousewarming"));
         AddInt(api, manifest, t, "EmilyHousewarmingCount", () => ModEntry.Config.EmilyHousewarmingCount, v => ModEntry.Config.EmilyHousewarmingCount = v, 3, 20);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.morrisQualityControl"));
+        AddInt(api, manifest, t, "MorrisQualityControlMaxCropPrice", () => ModEntry.Config.MorrisQualityControlMaxCropPrice, v => ModEntry.Config.MorrisQualityControlMaxCropPrice = v, 1, 1000);
 
         // ----- Seasonal -----
         api.AddPage(manifest, PageSeasonal, () => t.Get("config.page.seasonal"));

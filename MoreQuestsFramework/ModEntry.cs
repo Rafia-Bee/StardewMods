@@ -111,6 +111,7 @@ public sealed class ModEntry : Mod
         _mailStashCodecs.Register(AdventureQuestStashCodec.Kind, typeof(AdventureQuest), AdventureQuestStashCodec.Encode, AdventureQuestStashCodec.Decode);
         _mailStashCodecs.Register(MoreQuestsShipQuestStashCodec.Kind, typeof(MoreQuestsShipQuest), MoreQuestsShipQuestStashCodec.Encode, MoreQuestsShipQuestStashCodec.Decode);
         _mailStashCodecs.Register(MoreQuestsEarnMoneyQuestStashCodec.Kind, typeof(MoreQuestsEarnMoneyQuest), MoreQuestsEarnMoneyQuestStashCodec.Encode, MoreQuestsEarnMoneyQuestStashCodec.Decode);
+        _mailStashCodecs.Register(MoreQuestsSellQuestStashCodec.Kind, typeof(MoreQuestsSellQuest), MoreQuestsSellQuestStashCodec.Encode, MoreQuestsSellQuestStashCodec.Decode);
         _mailStashCodecs.Register(VanillaItemDeliveryQuestStashCodec.Kind, typeof(StardewValley.Quests.ItemDeliveryQuest), VanillaItemDeliveryQuestStashCodec.Encode, VanillaItemDeliveryQuestStashCodec.Decode);
         _mailStashCodecs.Register(VanillaFishingQuestStashCodec.Kind, typeof(StardewValley.Quests.FishingQuest), VanillaFishingQuestStashCodec.Encode, VanillaFishingQuestStashCodec.Decode);
         _mailStashCodecs.Register(VanillaSlayMonsterQuestStashCodec.Kind, typeof(StardewValley.Quests.SlayMonsterQuest), VanillaSlayMonsterQuestStashCodec.Encode, VanillaSlayMonsterQuestStashCodec.Decode);
@@ -165,6 +166,7 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
         helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTick;
         helper.Events.Player.Warped += OnPlayerWarped;
+        helper.Events.Player.InventoryChanged += OnInventoryChanged;
         helper.Events.World.TerrainFeatureListChanged += OnTerrainFeatureListChanged;
         helper.Events.World.ObjectListChanged += OnObjectListChanged;
         helper.Events.Display.MenuChanged += OnMenuChanged;
@@ -329,6 +331,7 @@ public sealed class ModEntry : Mod
             _spaceCore.RegisterSerializerType(typeof(AdventureQuest));
             _spaceCore.RegisterSerializerType(typeof(MoreQuestsShipQuest));
             _spaceCore.RegisterSerializerType(typeof(MoreQuestsEarnMoneyQuest));
+            _spaceCore.RegisterSerializerType(typeof(MoreQuestsSellQuest));
             ModEntry.LogDebug("Registered framework Quest subclasses with SpaceCore.");
         }
         else
@@ -747,6 +750,56 @@ public sealed class ModEntry : Mod
         {
             if (log[i] is MoreQuestsEarnMoneyQuest m && !m.completed.Value)
                 m.ObserveMoney();
+        }
+    }
+
+    // Counts items the player sells across a shop counter toward any Sell quest. Selling
+    // drops the stack out of the player's inventory while the shop menu is open, so a drop
+    // here is a sale. Buying adds or grows a stack, which we skip.
+    private void OnInventoryChanged(object? sender, StardewModdingAPI.Events.InventoryChangedEventArgs e)
+    {
+        if (!Context.IsWorldReady || !e.IsLocalPlayer || Game1.player == null)
+            return;
+        if (Game1.activeClickableMenu is not StardewValley.Menus.ShopMenu shop)
+            return;
+        string shopId = shop.ShopId ?? string.Empty;
+        if (string.IsNullOrEmpty(shopId))
+            return;
+
+        bool anySellQuest = false;
+        var log = Game1.player.questLog;
+        for (int i = 0; i < log.Count; i++)
+        {
+            if (log[i] is MoreQuestsSellQuest sq && !sq.completed.Value)
+            {
+                anySellQuest = true;
+                break;
+            }
+        }
+        if (!anySellQuest)
+            return;
+
+        var sells = new List<(Item item, int count)>();
+        foreach (var item in e.Removed)
+        {
+            if (item != null && item.Stack > 0)
+                sells.Add((item, item.Stack));
+        }
+        foreach (var change in e.QuantityChanged)
+        {
+            int dropped = change.OldSize - change.NewSize;
+            if (change.Item != null && dropped > 0)
+                sells.Add((change.Item, dropped));
+        }
+        if (sells.Count == 0)
+            return;
+
+        for (int i = 0; i < log.Count; i++)
+        {
+            if (log[i] is not MoreQuestsSellQuest sq || sq.completed.Value)
+                continue;
+            foreach (var (item, count) in sells)
+                sq.ObserveSale(shopId, item, count);
         }
     }
 

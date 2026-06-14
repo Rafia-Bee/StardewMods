@@ -50,6 +50,11 @@ public sealed class ModConfig
     public int FishHaulLargeQty { get; set; } = 30;
     public int CropMassiveQty { get; set; } = 50;
 
+    /// Joja "Quality control" quest (Morris arc Step 2): a crop only counts as cheap junk
+    /// if its base sell price is under this. Raise it if other mods bump crop values so
+    /// there are still crops cheap enough to qualify. Clamped to at least 1 at read time.
+    public int MorrisQualityControlMaxCropPrice { get; set; } = 30;
+
     /// How many distinct item variations a "mixed bag" quest asks for (e.g. Pierre's
     /// seasonal-crop spread). Clamped to [2, 5] at read time.
     public int RequestVariationCount { get; set; } = 3;

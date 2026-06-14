@@ -91,7 +91,8 @@ internal sealed class QuestPackLoader
         {
             string kindLower = def.Objective.Kind?.ToLowerInvariant() ?? "";
             if (kindLower != "slay" && kindLower != "custom"
-                && kindLower != "earnmoney" && kindLower != "earn" && kindLower != "money")
+                && kindLower != "earnmoney" && kindLower != "earn" && kindLower != "money"
+                && kindLower != "sell" && kindLower != "sellitem")
             {
                 _monitor.Log($"'{ownerUniqueId}/{label}': declarative Objective is missing 'Item'. Skipping.", LogLevel.Warn);
                 return false;

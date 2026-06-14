@@ -29,6 +29,10 @@ public enum BoardQuestType
     // quest starts and completes once they've earned ObjectiveQuantity gold MORE from
     // that point. Progress is polled once a second off the quest log.
     EarnMoney,
+    // Sell: counts items the player sells INTO a named shop (not turned in to the giver).
+    // Watches inventory drops while that shop's menu is open. Items leave normally, the
+    // framework just counts them. Filtered by id/category, max store price, and quality.
+    Sell,
     Adventure,
     Custom
 }
@@ -76,6 +80,20 @@ public sealed class QuestPosting
     public string? TargetMonster { get; set; }
     public string? TargetLocation { get; set; }
     public int MinQuality { get; set; }
+
+    // Sell quests only. The shop the player has to sell into, matched on ShopMenu.ShopId
+    // (Pierre's is "SeedShop", JojaMart's is "Joja"). A sale anywhere else doesn't count.
+    public string SellShopId { get; set; } = string.Empty;
+    // Object categories that count toward a Sell quest (negative ids, e.g. -75 Vegetable,
+    // -79 Fruit, -80 Flower). Empty means category isn't checked. Combined with the item
+    // id list as an OR: a sold item counts if it matches an id OR sits in one of these.
+    public List<int> SellCategories { get; set; } = new();
+    // Sell quests only. Highest single-item store price that still counts (exclusive).
+    // 0 means no price cap. Lets a quest target cheap goods only.
+    public int SellMaxValue { get; set; }
+    // Sell quests only. Highest item quality that counts (0 base, 1 silver, 2 gold,
+    // 4 iridium). Default 0 so only base-quality items count.
+    public int SellMaxQuality { get; set; }
 
     public string CatchLocationName { get; set; } = string.Empty;
 

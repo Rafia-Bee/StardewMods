@@ -28,6 +28,7 @@
     "config.section.weeklySpecial": "Saloon weekly special",
     "config.section.checkOnFriends": "Check on Friends",
     "config.section.emilyHousewarming": "Emily's Housewarming",
+    "config.section.morrisQualityControl": "Morris: Quality Control",
     "config.section.feedWildCritters": "Feed Wild Critters",
     "config.section.festivalShopDiscount": "Festival shop discounts",
     "config.section.gusFeasts": "Gus's festival feasts",
@@ -102,6 +103,8 @@
     "config.CheckOnFriendsCount.tooltip": "How many distinct villagers the Check on Friends quest asks you to talk to before reporting back to the giver.",
     "config.EmilyHousewarmingCount": "Emily's Housewarming furniture count",
     "config.EmilyHousewarmingCount.tooltip": "How many furniture pieces you need to place in the farmhouse for Emily's Housewarming quest. Only furniture you put down while the quest is active counts, and you also need a rug, a light source, and a wall decoration among them.",
+    "config.MorrisQualityControlMaxCropPrice": "Quality Control max crop price",
+    "config.MorrisQualityControlMaxCropPrice.tooltip": "For Morris's Quality Control quest, a crop only counts as cheap junk if its base sell price is under this. The default 30 fits vanilla. If you use mods that make crops worth more, raise this so there are still crops cheap enough to dump on Pierre.",
     "config.FeedWildCrittersPerPetCredit": "Completions per Marnie pet discount",
     "config.FeedWildCrittersPerPetCredit.tooltip": "How many Feed Wild Critters quests you have to finish before Marnie gives you a discount on your next pet. The counter resets after each discount.",
     "config.MarniePetDiscountPercent": "Marnie pet discount percent",
@@ -186,6 +189,10 @@
     "quest.story.morrisManOfMeans.title": "A person of means",
     "quest.story.morrisManOfMeans.description": "I've had my eye on you. You've got ambition, and ambition is the one thing Joja can't manufacture. Before I bring you in on anything worth your while, I need to know you're not just another small-timer playing at business. So here's a simple test. Pull together {{gold}}g on your own, starting now. Earn that, and we'll talk about what comes next.",
     "quest.story.morrisManOfMeans.objective": "Earn money to prove yourself to Morris",
+
+    "quest.story.morrisQualityControl.title": "Quality control",
+    "quest.story.morrisQualityControl.description": "Good. You're exactly the kind of self-starter Joja likes. So here's the real job. Pierre loves to crow about 'fresh and local,' so let's test how local. Get your hands on the cheapest produce you can find, the sad base-quality stuff nobody really wants, and sell it straight into his shop. {{count}} pieces, nothing worth more than {{value}}g each. He'll stock it without a second look, and when folks bite into garbage with Pierre's name on it, well, that's his problem, not ours.",
+    "quest.story.morrisQualityControl.objective": "Sell cheap crops to Pierre's shop",
 
     "quest.animal.hay.title": "Hay supply run",
     "quest.animal.hay.description": "My hay supply is running low and I'm starting to get worried. Could you bring me some more? {{qty}} should be more than enough.",

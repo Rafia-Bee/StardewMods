@@ -195,9 +195,20 @@
             "Trigger": {
                 "Source": "OneShot",
                 "When": "FirstMoneyEarned >= 15000",
-                "Available": { "NpcExists": "Morris", "IsCommunityCenterCompleted": "false" }
+                "Available": { "IsCommunityCenterCompleted": "false" }
             },
             "Generator": "MorrisManOfMeans"
+        },
+        {
+            "Name": "Story.MorrisQualityControl",
+            "Category": "Social",
+            "Trigger": {
+                "Source": "MailReceived",
+                "Flag": "RafiaBee.MoreQuests.Morris.QualityControlUnlocked",
+                "DayDelay": 0,
+                "Available": { "NpcExists": "Pierre", "IsCommunityCenterCompleted": "false" }
+            },
+            "Generator": "MorrisQualityControl"
         },
         {
             "Name": "Festival.GusSpring",

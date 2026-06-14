@@ -66,6 +66,7 @@ internal static class QuestFactory
                 goldTarget = { Value = Math.Max(1, p.ObjectiveQuantity) },
                 targetMessage = p.TargetMessage
             },
+            BoardQuestType.Sell => BuildSellQuest(p, itemId, giver),
             // Adventure quests are always PreBuiltQuest (step list lives on the subclass).
             BoardQuestType.Adventure => null,
             BoardQuestType.Custom => BuildCustom(p, giver, deliveryTarget),
@@ -113,6 +114,28 @@ internal static class QuestFactory
             quest.alternativeItemQuantities.Add(qty);
         }
         return quest;
+    }
+
+    private static MoreQuestsSellQuest BuildSellQuest(QuestPosting p, string itemId, string giver)
+    {
+        var sell = new MoreQuestsSellQuest
+        {
+            target = { Value = giver },
+            shopId = { Value = p.SellShopId ?? string.Empty },
+            itemId = { Value = string.IsNullOrEmpty(p.ObjectiveItemId) ? string.Empty : itemId },
+            maxValue = { Value = Math.Max(0, p.SellMaxValue) },
+            maxQuality = { Value = Math.Max(0, p.SellMaxQuality) },
+            numberToSell = { Value = Math.Max(1, p.ObjectiveQuantity) },
+            targetMessage = p.TargetMessage
+        };
+        foreach (int cat in p.SellCategories)
+            sell.categories.Add(cat);
+        for (int i = 0; i < p.AlternativeObjectiveItemIds.Count; i++)
+        {
+            string alt = p.AlternativeObjectiveItemIds[i];
+            sell.alternativeItemIds.Add(ItemRegistry.QualifyItemId(alt) ?? alt);
+        }
+        return sell;
     }
 
     private static MoreQuestsShipQuest BuildShipQuest(QuestPosting p, string itemId, string giver)

@@ -465,6 +465,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             "socialize" => BoardQuestType.Socialize,
             "ship" => BoardQuestType.Ship,
             "earnmoney" or "earn" or "money" => BoardQuestType.EarnMoney,
+            "sell" or "sellitem" => BoardQuestType.Sell,
             "custom" => BoardQuestType.Custom,
             _ => BoardQuestType.ItemDelivery
         };

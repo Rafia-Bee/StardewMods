@@ -104,6 +104,11 @@ public sealed class ModEntry : Mod
 
     internal const string EggHuntSabotageRewardMailKey = "RafiaBee.MoreQuests.EggHuntSabotageReward";
 
+    /// Progression flag for the Joja arc. Set on the player the moment Step 1 ("A man of
+    /// means") completes; the Step 2 quest ("Quality control") triggers on it (MailReceived
+    /// in quests.json). It's a bare flag, not a readable letter, so there's nothing to open.
+    internal const string MorrisQualityControlFlag = "RafiaBee.MoreQuests.Morris.QualityControlUnlocked";
+
     /// ModData flag set on Spring 13 when the player wins the egg hunt while the
     /// Festival.EggHuntSabotage quest is active. Picked up on Spring 14 morning to grant
     /// the iridium-quality egg directly (mail attachments can't carry quality).
@@ -706,6 +711,7 @@ public sealed class ModEntry : Mod
     private static readonly Dictionary<string, Action<ModEntry, StardewValley.Quests.Quest>> QuestCompletionHandlers = new(StringComparer.Ordinal)
     {
         ["Animal.HaySupplyRun"]         = (m, _) => m.Helper.GameContent.InvalidateCache("Data/Shops"),
+        ["Story.MorrisManOfMeans"]      = (m, _) => m.UnlockMorrisQualityControl(),
         ["Animal.GuntherDinosaurStudy"] = (m, q) => m.GrantUpgradedDinosaurEgg(q),
         ["Animal.MarnieChickenOffer"]   = (m, _) => m.GrantMarnieChickenCredit(),
         ["Animal.MarnieCowOffer"]       = (m, _) => m.GrantMarnieCowCredit(),
@@ -739,6 +745,17 @@ public sealed class ModEntry : Mod
     private void GrantMarnieCowCredit() => GrantMarnieCredit(
         MarniePurchasePatches.CowCreditKey,
         "quest.animal.marnieCowOffer.creditIssued");
+
+    /// Step 1 of the Joja arc is done, so unlock Step 2. Sets a bare progression flag the
+    /// Step 2 quest triggers on (MailReceived), so it posts itself the next morning. No
+    /// letter to open, the flag just marks "Morris's real ask is now available."
+    private void UnlockMorrisQualityControl()
+    {
+        if (Game1.player == null)
+            return;
+        if (!Game1.player.mailReceived.Contains(MorrisQualityControlFlag))
+            Game1.player.mailReceived.Add(MorrisQualityControlFlag);
+    }
 
     private void GrantMarnieCredit(string modDataKey, string hudKey)
     {
