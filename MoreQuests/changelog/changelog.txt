@@ -1,9 +1,11 @@
-To be released
+2.5.0
+- Needs More Quests Framework 2.7.0 or newer.
 - New Joja questline. Once you've earned a bit of money, Morris from JojaMart writes to you, and what looks like a simple "prove yourself" test turns into a quiet plan to make Pierre's shop look bad. Win Morris over, sneak a pile of cheap junk produce onto Pierre's shelves, then let the town grumble about it for a few days. Nobody ever finds out it was you. Only shows up while the Community Center is still standing, since Morris leaves town once it's finished.
 - New "Don't get caught" quest, Pierre's turn to get back at Joja. Once you're friendly enough with him, Pierre asks you to sneak into JojaMart after midnight (the door only opens between midnight and 2am), pack the shelves with the cheapest pickled rice and wheat you can find, put up a "sale" sign with a pickle on it, then go home and act normal. For a few days after, the town jokes about Morris and his sad pickle sale, and the sign comes down once the talk dies off. Nobody ever pins it on you. Only shows up while the Community Center is still standing.
 - New setting for that questline: you can change how cheap a crop has to be to count as junk for the sabotage step. Raise it if you run mods that make crops worth more.
 - Marnie's hay request and Alex's protein quest were coming around too often, so they're spaced out more now. Marnie's hay run shows up about once a year instead of once a season, and Alex's protein quest now comes once every two seasons instead of twice a season.
 - The keg quest now counts coffee and green tea, not just wine, juice, mead, beer, and pale ale.
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuests-v2.4.0...MoreQuests-v2.5.0]i18n changes here[/url] (look at i18n/default.json).
 
 2.4.0
 - Needs More Quests Framework 2.6.0 or newer.
