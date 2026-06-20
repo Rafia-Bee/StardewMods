@@ -1,4 +1,4 @@
-To be released
+2.7.0
 - The help-wanted board now shows your prize ticket stars as soon as you open it, instead of only after you click a quest note. Hovering the stars tells you how many more quests you need before your next prize ticket.
 - Fixed the quest board's hover tooltip showing words like "Deliver", "Collect", and "Slay" in English even when you played in another language. They can now be translated, along with the catch-all item names (like "fish" or "metal bar") that show when a quest asks for any item of a type.
 - For mod authors: a new "earn money" quest type. It asks the player to earn a set amount of gold and finishes on its own, counting only from the moment it started so money they already had doesn't count.
@@ -7,6 +7,7 @@ To be released
 - For mod authors: a reusable "deposit box" you can hook up to a quest step. It opens the same drop box window the game uses for community center style donations, you decide which items it takes, and the step counts up for each item dropped in. It comes with the bobbing "!" marker so you can flag where the box is.
 - For mod authors: a new "craft" step type. It counts the player crafting a set item (matched by item id or by a context tag, so "any sign" works) and reads the game's own crafting counter, so it counts no matter which crafting menu is used, including Better Crafting. A spawned-in item never counts.
 - For mod authors: a way to check how many quests are still up on the help-wanted board and not yet taken. Handy if your mod shows a "new quest" marker and wants to hide it once the board is cleared. There's also a new "mq_boardcount" console command that prints the count and lists what's left.
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuestsFramework-v2.6.0...MoreQuestsFramework-v2.7.0]i18n changes here[/url] (look at i18n/default.json).
 
 2.6.0
 - For mod authors: a "slay monsters" step can now require the kills happen on a set range of mine floors, covering both the Mines and the Skull Cavern.
