@@ -73,6 +73,18 @@ public interface IMoreQuestsApi
     // to re-roll, so callers should re-query rather than caching.
     IReadOnlyList<CustomBoardSlotInfo> GetCustomBoardSlots(string? boardOwnerUniqueId = null, string? boardName = null);
 
+    // Snapshot of every quest still sitting unaccepted on the vanilla quest board (the
+    // help-wanted billboard by Pierre's). A slot leaves the list the moment the player
+    // accepts it, so this is exactly "what's left to accept today". Refreshes at
+    // day-start and on RefreshOffers, so re-query rather than caching. Empty when no
+    // save is loaded or the board has nothing posted.
+    IReadOnlyList<DailyBoardSlotInfo> GetDailyBoardSlots();
+
+    // Convenience count over GetDailyBoardSlots: how many daily-board quests are still
+    // waiting to be accepted right now. Handy for hiding a "new quest" notification icon
+    // once the player has taken everything off the board.
+    int CountUnacceptedDailyBoardQuests();
+
     // Read-only snapshot of every step on an AdventureQuest. Null when the quest
     // isn't an AdventureQuest. Each AdventureStepInfo carries name, kind, progress,
     // count, done/active flags, description, and the raw Requires/Targets/Items

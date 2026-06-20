@@ -5,6 +5,7 @@ To be released
 - For mod authors: a quest that fires once can now trigger the first time the player has earned a set amount of gold across their whole save.
 - For mod authors: a reusable "deposit box" you can hook up to a quest step. It opens the same drop box window the game uses for those community center style donations, you decide which items it takes, and the step counts up for each item dropped in (the items are used up). It comes with the little bobbing "!" marker so you can flag where the box is. Good for "leave these goods here" jobs.
 - For mod authors: a new "craft" step type. It counts the player crafting a set item (matched by item id or by a context tag, so "any sign" works), and it reads the game's own crafting counter, so it counts no matter which crafting menu the player uses, including Better Crafting, and a spawned-in item never counts.
+- For mod authors: a way to check how many quests are still up on the help-wanted board (the one by Pierre's) and not yet taken. Handy if your mod shows a "new quest" marker and wants to hide it once the board is cleared. There's also a new "mq_boardcount" console command that prints the count and lists what's left, good for testing.
 
 2.6.0
 - For mod authors: a "slay monsters" step can now require the kills happen on a set range of mine floors, covering both the Mines and the Skull Cavern.

@@ -202,6 +202,13 @@ public sealed class ModEntry : Mod
             + "givers-report.json for every registered quest into the More Quests Framework "
             + "mod folder. Examples: mq_givers Social.Redecorate, mq_givers all.",
             (_, args) => ListGiversByDefinitionId(args));
+
+        helper.ConsoleCommands.Add(
+            "mq_boardcount",
+            "Prints how many daily quests are still unaccepted on the vanilla quest board "
+            + "(the help-wanted billboard by Pierre's), then lists each one. Mirrors the "
+            + "CountUnacceptedDailyBoardQuests / GetDailyBoardSlots API. Usage: mq_boardcount.",
+            (_, _) => PrintBoardCount());
         // Defer GMCM + content-pack loading + RegistrationClosed until after every consumer
         // mod's GameLaunched has run.
         helper.Events.GameLoop.UpdateTicking += OnFirstTick;
@@ -1022,6 +1029,20 @@ public sealed class ModEntry : Mod
         }
 
         Monitor.Log($"mq_trigger: posted '{id}' ({posting.Kind}).", LogLevel.Info);
+    }
+
+    private void PrintBoardCount()
+    {
+        if (!Context.IsWorldReady)
+        {
+            Monitor.Log("mq_boardcount ignored: load a save first.", LogLevel.Warn);
+            return;
+        }
+
+        var slots = _api.GetDailyBoardSlots();
+        Monitor.Log($"{_api.CountUnacceptedDailyBoardQuests()} unaccepted quest(s) on the vanilla board.", LogLevel.Info);
+        foreach (var slot in slots)
+            Monitor.Log($"  {slot.DefinitionId} (owner {slot.OwnerUniqueId})", LogLevel.Info);
     }
 
     private void ListGiversByDefinitionId(string[] args)

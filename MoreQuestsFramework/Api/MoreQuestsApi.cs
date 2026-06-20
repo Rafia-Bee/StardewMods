@@ -437,6 +437,32 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         return list;
     }
 
+    public IReadOnlyList<DailyBoardSlotInfo> GetDailyBoardSlots()
+    {
+        var list = new List<DailyBoardSlotInfo>();
+        foreach (var slot in BillboardSlots.Slots)
+        {
+            list.Add(new DailyBoardSlotInfo(
+                slot.SyncId,
+                slot.Quest,
+                slot.Posting.DefinitionId,
+                slot.Posting.OwnerUniqueId,
+                slot.Accepted));
+        }
+        return list;
+    }
+
+    public int CountUnacceptedDailyBoardQuests()
+    {
+        int count = 0;
+        foreach (var slot in BillboardSlots.Slots)
+        {
+            if (!slot.Accepted)
+                count++;
+        }
+        return count;
+    }
+
     // Called from ModEntry once StateStore has finished loading. Before this call,
     // the LastFiredDay / OneShotFired lookups return null (no save loaded yet).
     internal void WireState(FrameworkState state) => _state = state;
