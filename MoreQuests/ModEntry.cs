@@ -64,6 +64,7 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTick;
         helper.Events.GameLoop.OneSecondUpdateTicked += _redecorateWatcher.OnOneSecondUpdateTicked;
         helper.Events.Player.Warped += _redecorateWatcher.OnWarped;
+        helper.Events.Player.Warped += OnPlayerWarped;
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.Content.AssetsInvalidated += OnAssetsInvalidated;
         helper.Events.World.BuildingListChanged += OnBuildingListChanged;
@@ -71,6 +72,8 @@ public sealed class ModEntry : Mod
 
         var harmony = new Harmony(ModManifest.UniqueID);
         MarniePurchasePatches.Apply(harmony, Monitor);
+        JojaBreakInPatches.Apply(harmony, Monitor);
+        JojaShelfPatches.Apply(harmony, Helper, Monitor);
     }
 
     internal const string AdventureBoardAssetRoot = "Mods/RafiaBee.MoreQuests/AdventureBoard";
@@ -96,6 +99,18 @@ public sealed class ModEntry : Mod
     internal const string CropCycleWaterHandler = "CropCycle.Water";
     internal const string CropCycleHarvestHandler = "CropCycle.Harvest";
 
+    /// Custom step handler ids for Story.PierreDontGetCaught. None are polled handlers; each
+    /// is driven by a content-side patch or sweep via GetActiveCustomSteps:
+    /// - BreakIn: JojaBreakInPatches opens the Joja door in the 12am-2am window and marks it
+    ///   done on entry.
+    /// - Stock: JojaShelfPatches turns the shelves into deposit boxes for cheap pickles.
+    /// - Sign: PollPierreSign watches Town for a stamped rice/wheat pickle sign by the Joja door.
+    /// - LayLow: resolved overnight in OnDayEnding once the sign is up.
+    internal const string PierreBreakInHandler = "PierreDontGetCaught.BreakIn";
+    internal const string PierreStockHandler = "PierreDontGetCaught.Stock";
+    internal const string PierreSignHandler = "PierreDontGetCaught.Sign";
+    internal const string PierreLayLowHandler = "PierreDontGetCaught.LayLow";
+
     /// Custom step handler id for Seasonal.BattenDownTheHatches. Polled from the same
     /// OneSecondUpdateTicked sweep, counting lightning rods on the farm. Dedupes by
     /// `Farm|x|y`; rods present when the quest posted are pre-credited in the generator.
@@ -116,6 +131,23 @@ public sealed class ModEntry : Mod
     /// doubles as a dialogue key.
     internal const string PierreBadProduceTopic = "RafiaBee_MoreQuests_PierreBadProduce";
     private const int PierreBadProduceTopicDays = 3;
+
+    /// Conversation topic for the fallout of "Don't get caught". Switched on for a few days
+    /// when the quest completes; while it's on, Gus and Lewis each remark once that Morris's big
+    /// Joja sale turned out to be nothing but pickled wheat and rice (lines injected into their
+    /// dialogue in OnAssetRequested). Pierre, who was in on it, instead crows about the sale to
+    /// the whole store as a speech bubble on entry (OnPlayerWarped). Underscores only.
+    internal const string MorrisCheapskateTopic = "RafiaBee_MoreQuests_MorrisCheapskate";
+    private const int MorrisCheapskateTopicDays = 3;
+
+    /// Set on the player while the Cheapskate Morris gossip is running. The morning that topic
+    /// expires, the prank "sale" sign outside Joja is cleaned up (the gossip's died down, so the
+    /// evidence goes too) and this flag is cleared.
+    internal const string PierreSignCleanupKey = "RafiaBee.MoreQuests.PierreSignCleanupPending";
+
+    /// How close to the Joja Mart door (in Town tiles) a stamped pickle sign has to be to
+    /// count for the Sign step.
+    private const int PierreSignRadius = 8;
 
     /// ModData flag set on Spring 13 when the player wins the egg hunt while the
     /// Festival.EggHuntSabotage quest is active. Picked up on Spring 14 morning to grant
@@ -499,8 +531,12 @@ public sealed class ModEntry : Mod
         }
         if (e.NameWithoutLocale.IsEquivalentTo("Characters/Dialogue/Gus"))
         {
-            e.Edit(asset => asset.AsDictionary<string, string>().Data[PierreBadProduceTopic]
-                = I18n.Get("dialogue.pierreBadProduce.gus").ToString());
+            e.Edit(asset =>
+            {
+                var data = asset.AsDictionary<string, string>().Data;
+                data[PierreBadProduceTopic] = I18n.Get("dialogue.pierreBadProduce.gus").ToString();
+                data[MorrisCheapskateTopic] = I18n.Get("dialogue.morrisCheapskate.gus").ToString();
+            });
             return;
         }
         string fertilizerNpc = MoreQuestsFramework.ModCompat.HasSve(Helper.ModRegistry) ? "Susan" : "Evelyn";
@@ -508,6 +544,16 @@ public sealed class ModEntry : Mod
         {
             e.Edit(asset => asset.AsDictionary<string, string>().Data[PierreBadProduceTopic]
                 = I18n.Get("dialogue.pierreBadProduce.fertilizer").ToString());
+            return;
+        }
+        // "Don't get caught" fallout: Gus and Lewis gossip about Morris's sad pickle sale (Gus's
+        // line is folded into his block above). Pierre gets no conversation line, he was in on it,
+        // so it'd be odd for him to tell the player about it. Instead he crows about the sale to
+        // the whole store as a speech bubble when you walk in (OnPlayerWarped).
+        if (e.NameWithoutLocale.IsEquivalentTo("Characters/Dialogue/Lewis"))
+        {
+            e.Edit(asset => asset.AsDictionary<string, string>().Data[MorrisCheapskateTopic]
+                = I18n.Get("dialogue.morrisCheapskate.lewis").ToString());
             return;
         }
 
@@ -744,6 +790,7 @@ public sealed class ModEntry : Mod
         ["Animal.HaySupplyRun"]         = (m, _) => m.Helper.GameContent.InvalidateCache("Data/Shops"),
         ["Story.MorrisManOfMeans"]      = (m, _) => m.UnlockMorrisQualityControl(),
         ["Story.MorrisQualityControl"]  = (m, _) => m.StartPierreBadProduceGossip(),
+        ["Story.PierreDontGetCaught"]   = (m, _) => m.StartMorrisCheapskateGossip(),
         ["Animal.GuntherDinosaurStudy"] = (m, q) => m.GrantUpgradedDinosaurEgg(q),
         ["Animal.MarnieChickenOffer"]   = (m, _) => m.GrantMarnieChickenCredit(),
         ["Animal.MarnieCowOffer"]       = (m, _) => m.GrantMarnieCowCredit(),
@@ -800,6 +847,167 @@ public sealed class ModEntry : Mod
         Game1.player.activeDialogueEvents[PierreBadProduceTopic] = PierreBadProduceTopicDays;
     }
 
+    /// Fallout of "Don't get caught". The job's done, so switch on the town gossip about
+    /// Morris's sad pickle sale for a few days. Pierre, Gus, and Lewis each have a line keyed
+    /// to this topic. Nobody knows the player did it.
+    private void StartMorrisCheapskateGossip()
+    {
+        if (Game1.player == null)
+            return;
+        Game1.player.activeDialogueEvents[MorrisCheapskateTopic] = MorrisCheapskateTopicDays;
+        Game1.player.modData[PierreSignCleanupKey] = "1";
+    }
+
+    /// Once the Cheapskate Morris topic has run its course, take down the prank "sale" sign
+    /// outside Joja. Driven off the topic actually being gone rather than a counted day, so it
+    /// lines up with the gossip ending no matter how the day count lands. Stateless beyond the
+    /// pending flag, so it survives a save/reload mid-gossip.
+    private void ProcessPierreSignCleanup(Farmer player)
+    {
+        if (!player.modData.ContainsKey(PierreSignCleanupKey))
+            return;
+        if (player.activeDialogueEvents.ContainsKey(MorrisCheapskateTopic))
+            return;
+        RemovePierreSign();
+        player.modData.Remove(PierreSignCleanupKey);
+    }
+
+    private void RemovePierreSign()
+    {
+        var town = Game1.getLocationFromName("Town");
+        if (town?.Objects == null)
+            return;
+        var door = FindJojaDoorTile(town);
+        if (!door.HasValue)
+            return;
+
+        Microsoft.Xna.Framework.Vector2? signTile = null;
+        foreach (var pair in town.Objects.Pairs)
+        {
+            if (pair.Value is not StardewValley.Objects.Sign sign)
+                continue;
+            if (Math.Abs((int)pair.Key.X - door.Value.X) > PierreSignRadius
+                || Math.Abs((int)pair.Key.Y - door.Value.Y) > PierreSignRadius)
+                continue;
+            if (!JojaShelfPatches.IsCheapPickle(sign.displayItem.Value))
+                continue;
+            signTile = pair.Key;
+            break;
+        }
+        if (signTile.HasValue)
+            town.Objects.Remove(signTile.Value);
+    }
+
+    private int _pierreSaleBubbleDay = -1;
+
+    /// While the Cheapskate Morris topic is on, Pierre crows about his "fresh and local" sale to
+    /// the whole store the moment you step into the SeedShop, an overhead speech bubble rather
+    /// than a one-on-one line, so he's playing it up for the room and never lets on he set it up.
+    /// Once per day so re-entering doesn't spam it.
+    private void OnPlayerWarped(object? sender, WarpedEventArgs e)
+    {
+        if (!Context.IsWorldReady || !e.IsLocalPlayer || e.NewLocation == null)
+            return;
+        if (e.NewLocation.Name != "SeedShop" || Game1.player == null)
+            return;
+        if (!Game1.player.activeDialogueEvents.ContainsKey(MorrisCheapskateTopic))
+            return;
+        if (_pierreSaleBubbleDay == Game1.Date.TotalDays)
+            return;
+
+        NPC? pierre = null;
+        foreach (var npc in e.NewLocation.characters)
+        {
+            if (npc?.Name == "Pierre")
+            {
+                pierre = npc;
+                break;
+            }
+        }
+        if (pierre == null)
+            return;
+
+        _pierreSaleBubbleDay = Game1.Date.TotalDays;
+        pierre.showTextAboveHead(
+            I18n.Get("quest.story.pierreDontGetCaught.pierreSaleBubble").ToString(),
+            null, 2, 4000);
+    }
+
+    /// Sign step of "Don't get caught". Once the shelves are stocked, watch Town for a sign the
+    /// player placed near the Joja door with a cheap rice/wheat pickle stamped onto it (vanilla
+    /// hold-pickle-then-right-click-sign sets the sign's displayItem). The craft + place + stamp
+    /// all funnel into that one observable end state, so finding such a sign finishes the step.
+    private void PollPierreSign()
+    {
+        if (ModScope == null)
+            return;
+        var steps = ModScope.GetActiveCustomSteps(PierreSignHandler);
+        if (steps.Count == 0)
+            return;
+        var town = Game1.getLocationFromName("Town");
+        if (town?.Objects == null)
+            return;
+        var door = FindJojaDoorTile(town);
+        if (!door.HasValue)
+            return;
+
+        foreach (var pair in town.Objects.Pairs)
+        {
+            if (pair.Value is not StardewValley.Objects.Sign sign)
+                continue;
+            if (Math.Abs((int)pair.Key.X - door.Value.X) > PierreSignRadius
+                || Math.Abs((int)pair.Key.Y - door.Value.Y) > PierreSignRadius)
+                continue;
+            if (!JojaShelfPatches.IsCheapPickle(sign.displayItem.Value))
+                continue;
+            foreach (var handle in steps)
+                if (handle.IsActive)
+                    handle.MarkDone();
+            return;
+        }
+    }
+
+    /// LayLow step of "Don't get caught": go home and sleep on it. The step only goes active
+    /// after the sign is up (it Requires Sign), so any sleep at that point finishes the quest,
+    /// which fires the reward and the Cheapskate Morris gossip.
+    private void ResolvePierreLayLow()
+    {
+        if (ModScope == null)
+            return;
+        foreach (var handle in ModScope.GetActiveCustomSteps(PierreLayLowHandler))
+            if (handle.IsActive)
+                handle.MarkDone();
+    }
+
+    /// The Joja Mart door tile in Town, found once by scanning for the warp Action that points
+    /// at JojaMart (so it tracks map edits instead of a hardcoded coordinate). Cached.
+    private static Microsoft.Xna.Framework.Point? _jojaDoorTile;
+
+    private static Microsoft.Xna.Framework.Point? FindJojaDoorTile(GameLocation town)
+    {
+        if (_jojaDoorTile.HasValue)
+            return _jojaDoorTile;
+        var buildings = town.Map?.GetLayer("Buildings");
+        if (buildings == null)
+            return null;
+        for (int x = 0; x < buildings.LayerWidth; x++)
+        {
+            for (int y = 0; y < buildings.LayerHeight; y++)
+            {
+                var tile = buildings.Tiles[x, y];
+                if (tile == null)
+                    continue;
+                if (tile.Properties.TryGetValue("Action", out var val) && val != null
+                    && val.ToString().IndexOf("JojaMart", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    _jojaDoorTile = new Microsoft.Xna.Framework.Point(x, y);
+                    return _jojaDoorTile;
+                }
+            }
+        }
+        return null;
+    }
+
     private void GrantMarnieCredit(string modDataKey, string hudKey)
     {
         var player = Game1.player;
@@ -825,6 +1033,7 @@ public sealed class ModEntry : Mod
             return;
 
         PollBattenDownRods();
+        PollPierreSign();
 
         var sow = ModScope.GetActiveCustomSteps(CropCycleSowHandler);
         var water = ModScope.GetActiveCustomSteps(CropCycleWaterHandler);
@@ -951,6 +1160,7 @@ public sealed class ModEntry : Mod
 
         PushEggHuntSabotageChildLines();
         TryGrantEggHuntSabotageEgg();
+        ProcessPierreSignCleanup(player);
     }
 
     /// Spring 10-13, when Festival.EggHuntSabotage is active, push a randomly-picked
@@ -1010,6 +1220,7 @@ public sealed class ModEntry : Mod
     private void OnDayEnding(object? sender, DayEndingEventArgs e)
     {
         ResolveEggHuntSabotageOutcome();
+        ResolvePierreLayLow();
     }
 
     /// On Spring 13 evening, resolve any active Festival.EggHuntSabotage quest by the

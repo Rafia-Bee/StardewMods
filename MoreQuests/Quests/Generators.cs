@@ -131,6 +131,7 @@ internal static partial class Generators
         // category master-toggle, since they're hand-authored storylines, not board filler.
         fw.RegisterGenerator("MorrisManOfMeans", MorrisManOfMeans);
         fw.RegisterGenerator("MorrisQualityControl", MorrisQualityControl);
+        fw.RegisterGenerator("PierreDontGetCaught", PierreDontGetCaught);
 
         // Report-back prompts (talk-to-giver question dialogues that branch the reward).
         RegisterKnowYourWatersReportBack(fw);

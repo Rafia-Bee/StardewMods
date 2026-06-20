@@ -558,6 +558,13 @@ Multi-step Adventure quests carry a `Steps[]` list. Each entry has a `Kind` driv
 
   Then the step: `{ "Name": "Report", "Kind": "Custom", "Targets": ["MyQuest.Report"], "Requires": ["Catch"], "Count": 1, "Description": "{i18n:my.step.report}" }`. Escaping the question leaves the step active so the player can talk again.
 
+  **Deposit box.** For a "leave these goods in a box" step, call `scope.TryOpenDepositBox(handlerName, isAccepted)` from wherever the player opens the box (a tile `Action`, a Harmony patch on a clicked object, and so on). It opens the vanilla `QuestContainerMenu` (the community-center donation grid) wired to the active Custom step for that handler: `isAccepted` decides which of the player's items can go in, the step is credited by the number deposited (capped at its remaining `Count`), and those items are consumed when the menu closes. It returns false and opens nothing when no matching Custom step is active. Pair it with `MoreQuestsFramework.Rendering.DepositBoxIndicator.Draw(spriteBatch, tileX, tileY)` from a `Display.RenderedWorld` handler to float the vanilla bobbing "!" bubble over the box tile. Example:
+
+  ```csharp
+  // when the player acts on your box tile and the step is active:
+  scope.TryOpenDepositBox("MyQuest.FillCrate", item => item.QualifiedItemId == "(O)24");
+  ```
+
 Step ordering is enforced by `Requires[]` (other step `Name`s that must be Done before the step becomes active). `$giver` in `Targets[]` rewrites to the resolved giver at quest-creation time. None of the step observers add Harmony patches, every kind rides an existing SMAPI event or a framework-owned tick.
 
 ### Decor-shipping bypass

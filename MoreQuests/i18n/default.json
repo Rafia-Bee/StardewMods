@@ -194,9 +194,21 @@
     "quest.story.morrisQualityControl.description": "Good. You're exactly the kind of self-starter Joja likes. So here's the real job. Pierre loves to crow about 'fresh and local,' so let's test how local. Get your hands on the cheapest produce you can find, the sad base-quality stuff nobody really wants, and sell it straight into his shop. {{count}} pieces, nothing worth more than {{value}}g each. He'll stock it without a second look, and when folks bite into garbage with Pierre's name on it, well, that's his problem, not ours.",
     "quest.story.morrisQualityControl.objective": "Sell cheap crops to Pierre's shop",
 
+    "quest.story.pierreDontGetCaught.title": "Don't get caught",
+    "quest.story.pierreDontGetCaught.description": "I know what Morris has been having people do, and two can play that game. Here's the plan, and you didn't hear it from me. Joja locks up at night, but the door sticks if you jiggle it after midnight. Slip inside after midnight, when there's nobody around, and we'll make that place look like it's running the saddest clearance sale in the valley. Just get in first. I'll tell you the rest once you're standing in the aisles.",
+    "quest.story.pierreDontGetCaught.step.breakIn": "Sneak into JojaMart between midnight and 2am.",
+    "quest.story.pierreDontGetCaught.step.stock": "Stock {{count}} jars of pickled rice or wheat onto Joja's shelves.",
+    "quest.story.pierreDontGetCaught.step.sign": "Craft a sign, place it outside Joja, and stamp a pickle onto it.",
+    "quest.story.pierreDontGetCaught.step.layLow": "Go home, get some sleep, and act normal.",
+    "quest.story.pierreDontGetCaught.depositTitle": "Joja shelf",
+    "quest.story.pierreDontGetCaught.pierreSaleBubble": "Fresh and local, everyone! None of that sad pickled rice they're peddling over at Joja!",
+
     "dialogue.pierreBadProduce.caroline": "People are being so unfair to Pierre. One bad batch of produce and suddenly everyone in town is a critic. He works himself to the bone for this place. It wasn't his fault.$s",
     "dialogue.pierreBadProduce.gus": "I bought a crate of vegetables from Pierre's for the saloon and half of it was barely fit to serve. I had to scrap the evening special and start over. I'll be checking every delivery twice from now on.$a",
     "dialogue.pierreBadProduce.fertilizer": "Good soil and good fertilizer, that's the whole secret to produce worth eating. Whatever ended up on Pierre's shelves clearly had neither. A real shame. Folks have forgotten how to grow things properly.",
+
+    "dialogue.morrisCheapskate.gus": "So everybody runs over to Joja for this big sale Morris kept bragging about, and it's nothing but pickled grain. Pickled grain! I haven't laughed that hard in months. Cheapest man in the valley, that Morris.$h",
+    "dialogue.morrisCheapskate.lewis": "I stopped in at Joja to see what all the fuss was about. A whole sale display of pickled wheat and unmilled rice. If that's Joja showing us their best, I think Pierre's stand is safer.",
 
     "quest.animal.hay.title": "Hay supply run",
     "quest.animal.hay.description": "My hay supply is running low and I'm starting to get worried. Could you bring me some more? {{qty}} should be more than enough.",

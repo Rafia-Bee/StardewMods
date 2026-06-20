@@ -6,6 +6,7 @@ using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Rewards;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
+using StardewValley;
 using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Api;
@@ -83,6 +84,16 @@ public interface IMoreQuestsModApi
     // useful when polling isn't a fit (e.g. credit one tick per "boss slain"
     // OnMonsterSlain event).
     IReadOnlyList<ICustomStepHandle> GetActiveCustomSteps(string handlerName);
+
+    // Opens the vanilla deposit grid (the same QuestContainerMenu the special-order
+    // donation box uses) wired to an active Custom step. `isAccepted` gates which of the
+    // player's items can go in; anything it rejects can't be placed. The step is credited
+    // by the number of items deposited, capped at its remaining Count, and those items are
+    // consumed when the menu closes. Returns false (and opens nothing) when no Custom step
+    // for `handlerName` is currently active or it's already full. A reusable "leave goods
+    // in a box" interaction: pair it with a world indicator and a right-click hook (e.g. a
+    // Harmony patch on the target tiles) to turn any spot into a quest drop box.
+    bool TryOpenDepositBox(string handlerName, Func<Item, bool> isAccepted, int rows = 3, string? title = null);
 
     // Handler for TriggerSource.Custom quests. The framework checks the definition's
     // CooldownDays first, then calls the handler at DayStarted to decide whether the

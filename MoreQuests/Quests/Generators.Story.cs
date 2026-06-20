@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using MoreQuestsFramework;
 using MoreQuestsFramework.Api;
+using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Rewards;
 using StardewValley;
 
@@ -73,5 +75,83 @@ internal static partial class Generators
 
         posting.Rewards.Add(new MoneyReward(3000));
         return posting;
+    }
+
+    // "Don't get caught". Pierre's counter-prank against Morris: break into Joja after
+    // midnight and set the place up to look like it's running a sad, cheap sale. The whole
+    // job is mailed at once, so all four objectives show in the journal the moment you accept,
+    // and each Requires the one before it. The beats are driven by content-side patches and
+    // polls (see ModEntry.Pierre* handlers): the break-in opens the locked Joja door between
+    // 12am and 2am, the shelves become deposit boxes for cheap pickles, the sign watches for
+    // a stamped pickle sign placed outside Joja, and the lay-low finish resolves overnight.
+    internal const int PierreStockPickleCount = 12;
+
+    private static QuestPosting? PierreDontGetCaught(QuestContext ctx)
+    {
+        const string giver = "Pierre";
+
+        var steps = new List<AdventureStepState>
+        {
+            new()
+            {
+                Name = "BreakIn",
+                Kind = AdventureStepKind.Custom,
+                Targets = new List<string> { ModEntry.PierreBreakInHandler },
+                Count = 1,
+                Description = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.step.breakIn")
+            },
+            new()
+            {
+                Name = "Stock",
+                Kind = AdventureStepKind.Custom,
+                Targets = new List<string> { ModEntry.PierreStockHandler },
+                Count = PierreStockPickleCount,
+                Requires = new List<string> { "BreakIn" },
+                Description = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.step.stock",
+                    new { count = PierreStockPickleCount })
+            },
+            new()
+            {
+                Name = "Sign",
+                Kind = AdventureStepKind.Custom,
+                Targets = new List<string> { ModEntry.PierreSignHandler },
+                Count = 1,
+                Requires = new List<string> { "Stock" },
+                Description = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.step.sign")
+            },
+            new()
+            {
+                Name = "LayLow",
+                Kind = AdventureStepKind.Custom,
+                Targets = new List<string> { ModEntry.PierreLayLowHandler },
+                Count = 1,
+                Requires = new List<string> { "Sign" },
+                Description = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.step.layLow")
+            }
+        };
+
+        // No completion dialogue: the quest finishes on sleep, so there's no talk-to-Pierre
+        // turn-in where a message would ever show.
+        var quest = new AdventureQuest();
+        quest.Initialize(steps, giver: giver);
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Social,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.None, ctx.Config),
+            Rewards =
+            {
+                new MoneyReward(3000),
+                new FriendshipReward("Pierre", 500)
+            },
+            Title = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.title"),
+            Description = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.description",
+                new { count = PierreStockPickleCount }),
+            PreBuiltQuest = quest
+        };
     }
 }

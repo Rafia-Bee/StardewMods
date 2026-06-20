@@ -11,6 +11,7 @@ using MoreQuestsFramework.Rewards;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Menus;
 using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Api;
@@ -120,6 +121,72 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
             }
         }
         return (IReadOnlyList<ICustomStepHandle>?)results ?? Array.Empty<ICustomStepHandle>();
+    }
+
+    public bool TryOpenDepositBox(string handlerName, Func<Item, bool> isAccepted, int rows = 3, string? title = null)
+    {
+        if (string.IsNullOrWhiteSpace(handlerName) || isAccepted == null)
+            return false;
+        if (rows < 1)
+            rows = 1;
+
+        int remaining = 0;
+        foreach (var h in GetActiveCustomSteps(handlerName))
+            remaining += Math.Max(0, h.Count - h.Progress);
+        if (remaining <= 0)
+            return false;
+
+        int capacity = rows * 3;
+        var container = new List<Item?>(capacity);
+        for (int i = 0; i < capacity; i++)
+            container.Add(null);
+
+        int AcceptedInContainer()
+        {
+            int n = 0;
+            foreach (var it in container)
+                if (it != null)
+                    n += it.Stack;
+            return n;
+        }
+
+        // The real gate is the capacity check, not the highlight: a 0 cap blocks placement,
+        // so anything isAccepted rejects can't go in, and accepted items stop at the count
+        // the step still needs. Highlight just dims the rest.
+        bool Highlight(Item item) => item != null && isAccepted(item);
+        int Cap(Item item)
+        {
+            if (item == null || !isAccepted(item))
+                return 0;
+            return Math.Max(0, remaining - AcceptedInContainer());
+        }
+
+        void OnConfirm()
+        {
+            int deposited = AcceptedInContainer();
+            for (int i = 0; i < container.Count; i++)
+                container[i] = null;
+            if (deposited <= 0)
+                return;
+            int left = deposited;
+            foreach (var h in GetActiveCustomSteps(handlerName))
+            {
+                if (left <= 0)
+                    break;
+                int give = Math.Min(Math.Max(0, h.Count - h.Progress), left);
+                if (give > 0)
+                {
+                    h.AddProgress(give);
+                    left -= give;
+                }
+            }
+        }
+
+        var menu = new QuestContainerMenu(container!, rows, Highlight, Cap, null, OnConfirm);
+        if (!string.IsNullOrEmpty(title))
+            menu.ItemsToGrabMenu.descriptionTitle = title;
+        Game1.activeClickableMenu = menu;
+        return true;
     }
 
     public void RegisterCustomTrigger(string name, Func<CustomTriggerContext, bool> handler)

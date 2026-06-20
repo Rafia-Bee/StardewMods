@@ -211,6 +211,16 @@
             "Generator": "MorrisQualityControl"
         },
         {
+            "Name": "Story.PierreDontGetCaught",
+            "Category": "Social",
+            "Trigger": {
+                "Source": "OneShot",
+                "When": "FirstFriendship Pierre >= 4",
+                "Available": { "NpcExists": "Pierre", "IsCommunityCenterCompleted": "false" }
+            },
+            "Generator": "PierreDontGetCaught"
+        },
+        {
             "Name": "Festival.GusSpring",
             "Category": "Festival",
             "Trigger": {
