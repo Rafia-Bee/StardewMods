@@ -22,6 +22,11 @@ internal sealed class MoreQuestsBillboard : Billboard
     private readonly Texture2D _pinTexture;
     public static Billboard? InnerBillboard { get; set; }
 
+    // Prize ticket lands every 3rd completed daily-board quest. Counter is vanilla's
+    // cumulative BillboardQuestsDone stat, so it never resets day to day.
+    private const int PrizeCadence = 3;
+    private string _prizeHoverText = "";
+
     private const int CcIndexBase = -42000;
     // IClickableMenu has no named constant for this; -99998 routes to automaticSnapBehavior,
     // which picks the nearest CC in the requested direction. Lets D-pad navigate scattered notes.
@@ -122,6 +127,7 @@ internal sealed class MoreQuestsBillboard : Billboard
         _hoverTitle = "";
         _hoverText = "";
         _hoveredNote = null;
+        _prizeHoverText = "";
         foreach (var note in _notes)
         {
             if (note.Cc.containsPoint(x, y))
@@ -131,6 +137,9 @@ internal sealed class MoreQuestsBillboard : Billboard
                 _hoveredNote = note;
             }
         }
+
+        if (_hoveredNote == null && PrizeProgressBounds().Contains(x, y))
+            _prizeHoverText = PrizeProgressTooltip();
     }
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
@@ -302,6 +311,8 @@ internal sealed class MoreQuestsBillboard : Billboard
                 DrawNote(b, active, 1.12f);
         }
 
+        DrawPrizeStars(b);
+
         if (upperRightCloseButton != null && shouldDrawCloseButton())
             upperRightCloseButton.draw(b);
 
@@ -314,9 +325,57 @@ internal sealed class MoreQuestsBillboard : Billboard
                 0, 0, -1,
                 string.IsNullOrEmpty(_hoverTitle) ? null : _hoverTitle);
         }
+        else if (!string.IsNullOrEmpty(_prizeHoverText))
+        {
+            IClickableMenu.drawHoverText(b, _prizeHoverText, Game1.smallFont);
+        }
 
         Game1.mouseCursorTransparency = 1f;
         drawMouse(b);
+    }
+
+    // Vanilla's prize-ticket stars (every 3rd completed daily-board quest drops a PrizeTicket).
+    // The single-quest panel already draws these, but the cork board overview replaces vanilla's
+    // whole draw, so without this you never see them until you open a note. Mirrors vanilla
+    // Billboard.draw exactly: normally BillboardQuestsDone % 3 stars, but a full row of 3 right
+    // after the completion that lands on a multiple of 3, in the same spot and sprite.
+    private void DrawPrizeStars(SpriteBatch b)
+    {
+        var pos = new Vector2(xPositionOnScreen, yPositionOnScreen);
+        int done = (int)Game1.stats.Get("BillboardQuestsDone");
+        bool full = done % PrizeCadence == 0 && Game1.questOfTheDay != null && Game1.questOfTheDay.completed.Value;
+        int stars = full ? PrizeCadence : done % PrizeCadence;
+        for (int j = 0; j < stars; j++)
+        {
+            b.Draw(
+                _billboardTexture,
+                pos + new Vector2(18 + 12 * j, 36) * 4f,
+                new Rectangle(140, 397, 10, 11),
+                Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.6f);
+        }
+    }
+
+    // Hover zone over the three star slots so the player can read how close they are even when
+    // the row is empty (0/3 draws no stars).
+    private Rectangle PrizeProgressBounds()
+    {
+        int left = xPositionOnScreen + 18 * 4;
+        int top = yPositionOnScreen + 36 * 4;
+        int right = xPositionOnScreen + (18 + 12 * (PrizeCadence - 1) + 10) * 4;
+        int bottom = yPositionOnScreen + (36 + 11) * 4;
+        return new Rectangle(left, top, right - left, bottom - top);
+    }
+
+    private static string PrizeProgressTooltip()
+    {
+        int remaining = PrizeCadence - (int)Game1.stats.Get("BillboardQuestsDone") % PrizeCadence;
+        var t = ModEntry.Translation;
+        if (t == null)
+            return remaining == 1
+                ? "One more quest until a prize ticket."
+                : $"{remaining} more quests until a prize ticket.";
+        string key = remaining == 1 ? "billboard.prizeProgress.one" : "billboard.prizeProgress.many";
+        return t.Get(key, new { count = remaining }).ToString();
     }
 
     // The note under the mouse, or (for a gamepad) the snapped one.

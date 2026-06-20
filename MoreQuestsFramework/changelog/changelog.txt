@@ -1,4 +1,5 @@
 To be released
+- The help-wanted board now shows your prize ticket stars as soon as you open it. Before, you only saw them after clicking a quest note. Hovering over the stars also tells you how many more quests you need to finish before your next prize ticket.
 - Fixed the quest board's hover tooltip showing words like "Deliver", "Collect", and "Slay" in English even when you played in another language. These were stuck in English before. They can now be translated, along with the catch-all item names (like "fish" or "metal bar") that show when a quest asks for any item of a type.
 - For mod authors: a new "earn money" quest type. It asks the player to earn a set amount of gold and finishes on its own once they've earned that much, counting only from the moment it started, so money they already had doesn't count.
 - For mod authors: a new "sell to a shop" quest type. It counts items the player sells over a chosen shop's counter, like Pierre's or Joja's, and you can narrow it down by item type, price, and quality. The items still sell as normal.

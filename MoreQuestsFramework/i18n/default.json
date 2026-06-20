@@ -202,6 +202,9 @@
     "tooltip.line.plant": "Plant {{items}}",
     "tooltip.line.drop": "Drop {{items}}",
 
+    "billboard.prizeProgress.one": "One more quest until a prize ticket.",
+    "billboard.prizeProgress.many": "{{count}} more quests until a prize ticket.",
+
     "tooltip.join.two": "{{first}} and {{second}}",
     "tooltip.join.many": "{{items}}, and {{last}}",
 
