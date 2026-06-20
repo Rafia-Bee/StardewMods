@@ -316,7 +316,7 @@ If you want a quest to survive any exclusion list without falling back to mail, 
 Use `Steps[]` instead of `Objective`. Each step has:
 
 - `Name`, referenced by other steps' `Requires[]`.
-- `Kind`, one of: `Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `ClearWeeds`, `ClearDebris`, `DropItems`, `DropItemsInRadius`, `DigArtifactSpot`, `DonateMuseum`, `Decorate`, `Custom`.
+- `Kind`, one of: `Deliver`, `Talk`, `Gift`, `GiftUniqueNpcs`, `Ship`, `Catch`, `Slay`, `Visit`, `Build`, `ReachLevel`, `Plant`, `Collect`, `Craft`, `ClearWeeds`, `ClearDebris`, `DropItems`, `DropItemsInRadius`, `DigArtifactSpot`, `DonateMuseum`, `Decorate`, `Custom`.
 - `Description`, the journal line.
 - Step-kind-specific targeting fields (`Targets[]`, `Items[]`, `Count`, etc.).
 
@@ -514,6 +514,7 @@ Multi-step Adventure quests carry a `Steps[]` list. Each entry has a `Kind` driv
 - `DigArtifactSpot`, `World.ObjectListChanged` removed list filtered by `QualifiedItemId == "(O)590"`. `Targets[0]` = location, `Count` = artifact spots dug.
 - `Decorate`, per-second poll of `location.furniture`. `Targets[0]` = location (e.g. `FarmHouse`), `Count` = pieces to place, `Items[0]` = the category that counts: `rug`, `light`, `wall`, `other` (none of those three), or `any`. Only furniture placed while the step is active credits: the baseline is a high-water mark of the matching count, seeded on the first poll and never lowered, so furniture already in the room and furniture moved around never count. Use one step per category to spell out "place a rug, a light, a wall piece, and N others".
 - `Collect`, `Player.InventoryChanged` additions for matching item ids.
+- `Craft`, per-second read of the player's craft counter (`Farmer.craftingRecipes`), which both vanilla and Better Crafting bump, so it counts no matter which crafting menu is used and a spawned-in item never counts. `Count` = how many to craft. `Items` lists what counts: item ids (qualified `(BC)37` or bare `37`) and/or `tag:<contextTag>` tokens matched against each recipe's output (e.g. `tag:sign_item` for "any sign"); an empty `Items` counts any craft. Like `Decorate`, the baseline is seeded on the first poll, so crafts from before the step went active don't count.
 - `Custom`, escape hatch for consumer-mod step handlers. `Targets[0]` is the handler id registered through `IMoreQuestsModApi.RegisterCustomAdventureStep`. The framework polls the handler once per second while the step is active; the handler reads `CustomStepContext` and returns an `int` delta to credit against `Step.Progress` (returning enough to reach `Count` marks the step Done). Bare names resolve under the calling mod's UniqueID; pass `"OtherMod.UniqueID/Name"` to reference another mod's handler. Example:
 
   ```csharp

@@ -46,6 +46,13 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     // piece around can't credit. Only genuinely new placements do.
     [XmlIgnore] private Dictionary<(int StepIndex, string Key), int>? _decorBaselines;
 
+    // Craft step state, per step index. _craftBaselines is the total craft count of matching
+    // recipes seen on first poll (transient, same idea as the decorate high-water mark, so
+    // crafts before the step went active never count). _craftMatch caches which recipe names
+    // produce a matching item, rebuilt only when the player's known-recipe count changes.
+    [XmlIgnore] private Dictionary<int, int>? _craftBaselines;
+    [XmlIgnore] private Dictionary<int, (int Known, HashSet<string> Recipes)>? _craftMatch;
+
     // Transient cache for a deferred (mine) DropItemsInRadius zone, keyed by the live floor
     // instance so a new visit (new instance) re-picks. Not netfields, so it never syncs or saves.
     [XmlIgnore] private GameLocation? _zoneLoc;
@@ -804,6 +811,94 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             }
         }
     }
+
+    // Credits Craft steps by watching the player's per-recipe craft counter
+    // (player.craftingRecipes), which both vanilla crafting and Better Crafting bump, so it
+    // doesn't matter which crafting menu is used and a spawned-in item never counts. Items
+    // lists what counts: item ids (qualified or bare) and/or "tag:<contextTag>" tokens matched
+    // against each recipe's output. An empty Items list counts any craft. Polled once a second.
+    public void ObserveCraft()
+    {
+        if (completed.Value || Game1.player?.craftingRecipes == null)
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.Craft) continue;
+
+            int matched = CountMatchingCrafts(i, step);
+            _craftBaselines ??= new Dictionary<int, int>();
+            if (!_craftBaselines.TryGetValue(i, out int baseline))
+            {
+                _craftBaselines[i] = matched;
+                continue;
+            }
+            if (matched <= baseline)
+                continue;
+            int delta = matched - baseline;
+            _craftBaselines[i] = matched;
+            CreditCount(i, step, delta);
+        }
+    }
+
+    private int CountMatchingCrafts(int idx, AdventureStepState step)
+    {
+        var recipes = Game1.player.craftingRecipes;
+        _craftMatch ??= new Dictionary<int, (int, HashSet<string>)>();
+        int known = recipes.Keys.Count();
+        if (!_craftMatch.TryGetValue(idx, out var cached) || cached.Known != known)
+        {
+            cached = (known, BuildMatchingRecipeSet(step));
+            _craftMatch[idx] = cached;
+        }
+        int total = 0;
+        foreach (var name in cached.Recipes)
+            if (recipes.ContainsKey(name))
+                total += recipes[name];
+        return total;
+    }
+
+    private static HashSet<string> BuildMatchingRecipeSet(AdventureStepState step)
+    {
+        var recipes = Game1.player.craftingRecipes;
+        var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var tags = new List<string>();
+        foreach (var raw in step.Items)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) continue;
+            string t = raw.Trim();
+            if (t.StartsWith("tag:", StringComparison.OrdinalIgnoreCase))
+                tags.Add(t.Substring(4).Trim());
+            else
+                ids.Add(StripItemQualifier(t));
+        }
+        bool matchAny = ids.Count == 0 && tags.Count == 0;
+
+        var set = new HashSet<string>();
+        foreach (var name in recipes.Keys)
+        {
+            if (matchAny) { set.Add(name); continue; }
+            Item? output;
+            try { output = new CraftingRecipe(name).createItem(); }
+            catch { continue; }
+            if (output == null) continue;
+            if (ids.Contains(output.QualifiedItemId) || ids.Contains(StripItemQualifier(output.ItemId)))
+            {
+                set.Add(name);
+                continue;
+            }
+            foreach (var tag in tags)
+            {
+                if (output.HasContextTag(tag)) { set.Add(name); break; }
+            }
+        }
+        return set;
+    }
+
+    private static string StripItemQualifier(string id) =>
+        id.StartsWith("(") ? id.Substring(id.IndexOf(')') + 1) : id;
 
     private static string? NormalizeDecorCategory(string raw) =>
         raw?.Trim().ToLowerInvariant() switch

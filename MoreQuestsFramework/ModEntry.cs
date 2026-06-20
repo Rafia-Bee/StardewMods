@@ -888,6 +888,7 @@ public sealed class ModEntry : Mod
             // where they stand). Multi-location quests re-baseline on the next warp.
             a.PollResourceClumps(Game1.currentLocation);
             a.ObserveDecorate(Game1.currentLocation);
+            a.ObserveCraft();
             a.PollCustomSteps(step => ResolveCustomStepHandler(a, step));
         }
     }

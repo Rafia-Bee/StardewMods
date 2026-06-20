@@ -195,6 +195,7 @@
     "tooltip.line.ship": "Ship {{items}}",
     "tooltip.line.fish": "Fish {{items}}",
     "tooltip.line.collect": "Collect {{items}}",
+    "tooltip.line.craft": "Craft {{items}}",
     "tooltip.line.slay": "Slay {{items}}",
     "tooltip.line.gift": "Gift {{items}}",
     "tooltip.line.catch": "Catch {{items}}",

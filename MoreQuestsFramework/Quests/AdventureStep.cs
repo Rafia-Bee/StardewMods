@@ -28,6 +28,7 @@ public enum AdventureStepKind
     DigArtifactSpot,
     DonateMuseum,
     Decorate,
+    Craft,
     Custom
 }
 

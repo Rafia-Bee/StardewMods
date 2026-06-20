@@ -112,11 +112,20 @@ internal static partial class Generators
             },
             new()
             {
+                Name = "CraftSign",
+                Kind = AdventureStepKind.Craft,
+                Items = new List<string> { "tag:sign_item" },
+                Count = 1,
+                Requires = new List<string> { "Stock" },
+                Description = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.step.craftSign")
+            },
+            new()
+            {
                 Name = "Sign",
                 Kind = AdventureStepKind.Custom,
                 Targets = new List<string> { ModEntry.PierreSignHandler },
                 Count = 1,
-                Requires = new List<string> { "Stock" },
+                Requires = new List<string> { "CraftSign" },
                 Description = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.step.sign")
             },
             new()

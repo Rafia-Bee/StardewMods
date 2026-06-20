@@ -75,6 +75,7 @@ internal static class QuestTooltip
         nameof(AdventureStepKind.Ship) => "ship",
         nameof(AdventureStepKind.Plant) => "plant",
         nameof(AdventureStepKind.Collect) => "collect",
+        nameof(AdventureStepKind.Craft) => "craft",
         nameof(AdventureStepKind.DropItems) => "drop",
         nameof(AdventureStepKind.DropItemsInRadius) => "drop",
         _ => null
