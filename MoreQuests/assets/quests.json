@@ -94,7 +94,7 @@
         {
             "Name": "Animal.HaySupplyRun",
             "Category": "Animal",
-            "Trigger": { "Source": "Mail", "Weight": 0, "MaxPerDay": 1, "CooldownDays": 28 },
+            "Trigger": { "Source": "Mail", "Weight": 0, "MaxPerDay": 1, "CooldownDays": 84 },
             "Generator": "HaySupplyRun"
         },
         {
@@ -785,7 +785,7 @@
             "Category": "Animal",
             "Trigger": {
                 "Source": "Periodic",
-                "EveryDays": 14,
+                "EveryDays": 56,
                 "Available": { "NpcExists": "Alex", "NpcMet": "Alex" }
             },
             "Generator": "AlexProteinShakes"

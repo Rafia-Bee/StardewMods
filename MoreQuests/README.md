@@ -61,9 +61,9 @@ A quest's reward line below names the tier (for flat rewards) or the formula (fo
 
 | Quest | When | Quest Giver | Objective | Reward | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Alex's Protein Shakes | Every 14 days (mail) | Alex | Deliver eggs scaled to your chicken count | Friendship + Energy Tonic, Muscle Remedy, or Life Elixir | Needs to have met Alex and have at least one chicken |
+| Alex's Protein Shakes | Every 56 days (mail) | Alex | Deliver eggs scaled to your chicken count | Friendship + Energy Tonic, Muscle Remedy, or Life Elixir | Needs to have met Alex and have at least one chicken |
 | Gunther's Dinosaur Study | First Dinosaur Egg held (mail) | Gunther | Deliver one Dinosaur Egg | 1000g (flat, Advanced tier) + a Dinosaur Egg back, bumped one quality tier up | One-time |
-| Hay Supply Run | Mail | Marnie | Deliver hay scaled to your animal count | Animal-shop discount window (when the discount is on in config) | Cooldown 28 days, needs at least 4 animals |
+| Hay Supply Run | Mail | Marnie | Deliver hay scaled to your animal count | Animal-shop discount window (when the discount is on in config) | Cooldown 84 days, needs at least 4 animals |
 | Krobus's Void Note | First Void Egg held (mail) | Krobus | Deliver one Void Egg to Krobus | Friendship + Book of the Void | One-time, needs Krobus around at 1+ hearts |
 | Leah's Farm Painting | Every 21 days (mail) | Leah | Visit Leah's house with an animal following you | A random 2x2 painting in the frame style you pick in GMCM, mailed the next morning + Friendship. No repeats: you get a different one each time until you've collected them all. Other mods can add their own paintings (see [Adding your own paintings](#adding-your-own-paintings)). | Needs Livestock Follows You, single-player, and 2+ hearts with Leah |
 | Marnie's Chicken Offer | Day after building a Coop (mail) | Marnie | Bring Mixed Seeds | A free White Chicken at Marnie's shop (or 800g if you don't visit in 14 days) + Friendship. With Livestock Bazaar, picking any chicken variant from her shop counts. | One-time |
