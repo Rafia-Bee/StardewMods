@@ -197,7 +197,7 @@ The reward line for each quest spells out the gold it pays. There are two kinds.
 [list]
 [*][b]When:[/b] Mail when you learn the Keg recipe[/*]
 [*][b]Giver:[/b] Any met adult villager[/*]
-[*][b]Objective:[/b] Ship a Farming-scaled number of wine, juice, mead, beer, or pale ale[/*]
+[*][b]Objective:[/b] Ship a Farming-scaled number of wine, juice, mead, beer, pale ale, coffee, or green tea[/*]
 [*][b]Reward:[/b] 2 hearts of friendship[/*]
 [*][b]Notes:[/b] One-time, no deadline[/*]
 [/list]

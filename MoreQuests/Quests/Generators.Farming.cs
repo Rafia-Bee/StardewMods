@@ -35,13 +35,13 @@ internal static partial class Generators
     }
 
     /// One-time mail when the player learns the Keg recipe. Asks for any keg output: wine,
-    /// juice, mead, beer, or pale ale. Same qty scaling as PreservesJarRequest.
+    /// juice, mead, beer, pale ale, coffee, or green tea. Same qty scaling as PreservesJarRequest.
     private static QuestPosting? KegRequest(QuestContext ctx)
     {
         return BuildFarmingShipRequest(
             ctx,
             primaryItemId: "(O)348",
-            alternativeItemIds: new[] { "(O)350", "(O)459", "(O)346", "(O)303" },
+            alternativeItemIds: new[] { "(O)350", "(O)459", "(O)346", "(O)303", "(O)395", "(O)614" },
             titleKey: "quest.farming.kegRequest.title",
             descriptionKey: "quest.farming.kegRequest.description",
             objectiveKey: "quest.farming.kegRequest.objective",

@@ -3,6 +3,7 @@ To be released
 - New "Don't get caught" quest, Pierre's turn to get back at Joja. Once you're friendly enough with him, Pierre asks you to sneak into JojaMart after midnight (the door only opens for you between midnight and 2am), pack the shelves with the cheapest pickled rice and wheat you can find, put up a "sale" sign out front with a pickle on it, then go home and act normal. For a few days after, the town jokes about Morris and his sad pickle sale while Pierre quietly enjoys it, and the sign you put up comes down once the talk dies off. Like the rest of it, nobody ever pins it on you. Only shows up while the Community Center is still standing.
 - New setting for that questline: you can change how cheap a crop has to be to count as junk for the sabotage step. Raise it if you run mods that make crops worth more, so you can still find something cheap enough to sell.
 - Marnie's hay request and Alex's protein quest were coming around too often, so they're spaced out more now. Marnie's hay run shows up about once a year instead of once a season, and Alex's protein quest now comes once every two seasons instead of twice a season.
+- The keg quest now counts coffee and green tea. Before it only took wine, juice, mead, beer, and pale ale, so coffee you made in a keg wasn't being recognized.
 
 2.4.0
 - Needs More Quests Framework 2.6.0 or newer.
