@@ -145,6 +145,14 @@ public sealed class ModEntry : Mod
     /// evidence goes too) and this flag is cleared.
     internal const string PierreSignCleanupKey = "RafiaBee.MoreQuests.PierreSignCleanupPending";
 
+    /// Set on the player once they craft a sign while the heist is on. The Sign step won't
+    /// finish without it, so a spawned-in sign doesn't count, the player has to make one. We
+    /// watch the per-recipe craft counter (player.craftingRecipes), which both vanilla and
+    /// Better Crafting bump, against a baseline taken when the heist starts, so it works no
+    /// matter which crafting menu the player uses.
+    internal const string PierreSignCraftedKey = "RafiaBee.MoreQuests.PierreSignCrafted";
+    internal const string PierreSignCraftBaselineKey = "RafiaBee.MoreQuests.PierreSignCraftBaseline";
+
     /// How close to the Joja Mart door (in Town tiles) a stamped pickle sign has to be to
     /// count for the Sign step.
     private const int PierreSignRadius = 8;
@@ -848,8 +856,9 @@ public sealed class ModEntry : Mod
     }
 
     /// Fallout of "Don't get caught". The job's done, so switch on the town gossip about
-    /// Morris's sad pickle sale for a few days. Pierre, Gus, and Lewis each have a line keyed
-    /// to this topic. Nobody knows the player did it.
+    /// Morris's sad pickle sale for a few days (Gus and Lewis have lines keyed to the topic;
+    /// Pierre crows about it in his shop instead). Also flags the prank sign for cleanup once
+    /// the gossip ends. Nobody knows the player did it.
     private void StartMorrisCheapskateGossip()
     {
         if (Game1.player == null)
@@ -933,16 +942,54 @@ public sealed class ModEntry : Mod
             null, 2, 4000);
     }
 
-    /// Sign step of "Don't get caught". Once the shelves are stocked, watch Town for a sign the
-    /// player placed near the Joja door with a cheap rice/wheat pickle stamped onto it (vanilla
-    /// hold-pickle-then-right-click-sign sets the sign's displayItem). The craft + place + stamp
-    /// all funnel into that one observable end state, so finding such a sign finishes the step.
+    /// Watches for the player crafting a sign during the heist so a spawned-in one doesn't count.
+    /// Reads the per-recipe craft counter (bumped by both vanilla crafting and Better Crafting)
+    /// against a baseline taken the first tick the heist is active, so any sign made after that
+    /// flags it. Works regardless of which crafting menu the player uses.
+    private void PollPierreSignCraft()
+    {
+        if (ModScope == null || Game1.player == null)
+            return;
+        bool heistActive =
+            ModScope.GetActiveCustomSteps(PierreBreakInHandler).Count > 0
+            || ModScope.GetActiveCustomSteps(PierreStockHandler).Count > 0
+            || ModScope.GetActiveCustomSteps(PierreSignHandler).Count > 0;
+        if (!heistActive)
+            return;
+
+        var data = Game1.player.modData;
+        int current = SignCraftCount();
+        if (!data.TryGetValue(PierreSignCraftBaselineKey, out var baseStr) || !int.TryParse(baseStr, out int baseline))
+        {
+            data[PierreSignCraftBaselineKey] = current.ToString();
+            return;
+        }
+        if (!data.ContainsKey(PierreSignCraftedKey) && current > baseline)
+            data[PierreSignCraftedKey] = "1";
+    }
+
+    private static int SignCraftCount()
+    {
+        int n = 0;
+        foreach (var pair in Game1.player.craftingRecipes.Pairs)
+            if (pair.Key.IndexOf("Sign", StringComparison.OrdinalIgnoreCase) >= 0)
+                n += pair.Value;
+        return n;
+    }
+
+    /// Sign step of "Don't get caught". Two things have to be true: the player crafted a sign
+    /// themselves while the heist was on (PollPierreSignCraft flags that, so spawning one in
+    /// doesn't count), and there's now a sign near the Joja door with a cheap rice/wheat pickle
+    /// stamped onto it (vanilla hold-pickle-then-right-click-sign sets the sign's displayItem).
+    /// When both hold, the step is done.
     private void PollPierreSign()
     {
-        if (ModScope == null)
+        if (ModScope == null || Game1.player == null)
             return;
         var steps = ModScope.GetActiveCustomSteps(PierreSignHandler);
         if (steps.Count == 0)
+            return;
+        if (!Game1.player.modData.ContainsKey(PierreSignCraftedKey))
             return;
         var town = Game1.getLocationFromName("Town");
         if (town?.Objects == null)
@@ -963,6 +1010,8 @@ public sealed class ModEntry : Mod
             foreach (var handle in steps)
                 if (handle.IsActive)
                     handle.MarkDone();
+            Game1.player.modData.Remove(PierreSignCraftedKey);
+            Game1.player.modData.Remove(PierreSignCraftBaselineKey);
             return;
         }
     }
@@ -1033,6 +1082,7 @@ public sealed class ModEntry : Mod
             return;
 
         PollBattenDownRods();
+        PollPierreSignCraft();
         PollPierreSign();
 
         var sow = ModScope.GetActiveCustomSteps(CropCycleSowHandler);
