@@ -27,7 +27,7 @@ If you only want the gameplay content, install [b]More Quests[/b] and this frame
 [spoiler]
 [list]
 [*][b]DailyBoard[/b] - weighted draw, picks per-day batch for the Help Wanted billboard[/*]
-[*][b]CustomBoard[/b] - routes to a registered per-location board's slot list[/*]
+[*][b]CustomBoard[/b] - routes a quest to one board by id (set with CustomBoardId), so boards from different mods stay separate[/*]
 [*][b]Mail[/b] / [b]Periodic[/b] - mail letter every N days[/*]
 [*][b]DateLocked[/b] - fires on a specific date (optionally yearly)[/*]
 [*][b]DateRange[/b] - active every day inside a closed date range (festival windows)[/*]

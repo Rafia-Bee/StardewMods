@@ -211,94 +211,232 @@ internal sealed class QuestPipeline
         return results;
     }
 
-    // Keyed by OwnerUniqueId/Name. Caller stamps slot lists directly since board-bound
-    // quests don't have a delivery channel (they live on the board until accepted).
-    public Dictionary<string, List<(QuestPosting posting, BoardDefinition board)>> GenerateCustomBoardPostings(BoardRegistry boardRegistry)
+    // Routes each CustomBoard quest to its home board by id, then lets catch-all boards
+    // mirror live postings. Returns one draw per built posting with the boards it appears
+    // on; the caller builds the Quest once and shares a single Slot across them.
+    public List<CustomBoardDraw> GenerateCustomBoardPostings(BoardRegistry boardRegistry)
     {
         var sw = Stopwatch.StartNew();
-        var result = new Dictionary<string, List<(QuestPosting, BoardDefinition)>>(System.StringComparer.OrdinalIgnoreCase);
+        var draws = new List<CustomBoardDraw>();
         if (boardRegistry == null || boardRegistry.All.Count == 0)
-            return result;
+            return draws;
 
-        var allDefs = new List<IQuestDefinition>();
+        var (boardsByKey, boardsByOwner) = CustomBoardRouting.BuildBoardMaps(boardRegistry);
+        var weights = _ctx.Config.QuestWeights;
+
+        var homeDefsByKey = new Dictionary<string, List<(IQuestDefinition Def, int Weight)>>(System.StringComparer.OrdinalIgnoreCase);
+        var homelessDefs = new List<(IQuestDefinition Def, int Weight)>();
         foreach (var def in _registry.All)
         {
             if (_registry.EffectiveSource(def) != TriggerSource.CustomBoard)
                 continue;
-            allDefs.Add(def);
+            int w = weights.TryGetValue(def.Id, out int configured) ? configured : def.DefaultWeight;
+            switch (CustomBoardRouting.ResolveHome(def, _registry.EffectiveBoard(def), boardsByKey, boardsByOwner, out string homeKey))
+            {
+                case CustomBoardRouting.HomeResolution.Home:
+                    if (!homeDefsByKey.TryGetValue(homeKey, out var group))
+                        homeDefsByKey[homeKey] = group = new List<(IQuestDefinition, int)>();
+                    group.Add((def, w));
+                    break;
+                case CustomBoardRouting.HomeResolution.Homeless:
+                    homelessDefs.Add((def, w));
+                    break;
+                default:
+                    ModEntry.LogDebug($"Custom-board draw: '{def.Id}' targets unknown board '{_registry.EffectiveBoard(def) ?? def.Trigger?.CustomBoardId}', dropping.");
+                    break;
+            }
         }
-        if (allDefs.Count == 0)
-            return result;
 
-        var weights = _ctx.Config.QuestWeights;
         var rng = Game1.random;
+        var drawByPosting = new Dictionary<QuestPosting, CustomBoardDraw>();
+        var homePostings = new List<(QuestPosting Posting, int Weight)>();
 
         foreach (var board in boardRegistry.All)
         {
-            string boardKey = (board.OwnerUniqueId ?? string.Empty) + "/" + (board.Name ?? string.Empty);
-            int target = System.Math.Max(1, board.PoolSize);
-
-            var pool = new List<(IQuestDefinition Def, int Weight)>();
-            foreach (var def in allDefs)
+            if (!homeDefsByKey.TryGetValue(CustomBoardRouting.KeyOf(board), out var group))
+                continue;
+            foreach (var (posting, w) in DrawFromPool(board, group, System.Math.Max(1, board.PoolSize), rng))
             {
-                if (!CategoryAllowedOnBoard(board, def))
-                    continue;
-                if (!def.IsAvailable(_ctx))
-                    continue;
-                if (_antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
-                    continue;
-                int w = weights.TryGetValue(def.Id, out int configured) ? configured : def.DefaultWeight;
-                if (w <= 0)
-                    continue;
-                pool.Add((def, w));
+                var draw = new CustomBoardDraw(posting, board);
+                draws.Add(draw);
+                drawByPosting[posting] = draw;
+                homePostings.Add((posting, w));
             }
+        }
 
-            var picked = new List<(QuestPosting, BoardDefinition)>();
-            var defCounts = new Dictionary<string, int>();
-            int safety = 200;
-            while (picked.Count < target && pool.Count > 0 && safety-- > 0)
+        var catchAlls = new List<BoardDefinition>();
+        foreach (var board in boardRegistry.All)
+            if (CustomBoardRouting.IsCatchAll(board))
+                catchAlls.Add(board);
+
+        var homelessPool = new List<(QuestPosting Posting, int Weight)>();
+        if (catchAlls.Count > 0)
+        {
+            foreach (var (def, w) in homelessDefs)
             {
-                var (def, _) = WeightedDraw(pool, rng);
-                if (def == null)
-                    break;
-
-                int count = defCounts.TryGetValue(def.Id, out int c) ? c : 0;
-                if (count >= def.MaxPerDay)
-                {
-                    pool.RemoveAll(x => x.Def.Id == def.Id);
+                if (w <= 0 || !def.IsAvailable(_ctx) || _antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
                     continue;
-                }
-
+                if (!AnyCatchAllAccepts(catchAlls, def.OwnerUniqueId))
+                    continue;
                 var posting = def.Build(_ctx);
                 if (posting == null)
-                {
-                    pool.RemoveAll(x => x.Def.Id == def.Id);
                     continue;
-                }
                 if (string.IsNullOrEmpty(posting.OwnerUniqueId))
                     posting.OwnerUniqueId = def.OwnerUniqueId;
-
-                picked.Add((posting, board));
-                _antiRepetition.RecordRecency(posting);
-                defCounts[def.Id] = count + 1;
-                if (defCounts[def.Id] >= def.MaxPerDay)
-                    pool.RemoveAll(x => x.Def.Id == def.Id);
+                var draw = new CustomBoardDraw(posting, null);
+                draws.Add(draw);
+                drawByPosting[posting] = draw;
+                homelessPool.Add((posting, w));
             }
+        }
 
-            result[boardKey] = picked;
+        foreach (var board in catchAlls)
+        {
+            int remaining = System.Math.Max(1, board.PoolSize) - draws.Count(d => d.Boards.Contains(board));
+            if (remaining <= 0)
+                continue;
+
+            var candidates = new List<(QuestPosting Posting, int Weight)>();
+            CollectCatchCandidates(board, homePostings, drawByPosting, candidates);
+            CollectCatchCandidates(board, homelessPool, drawByPosting, candidates);
+
+            foreach (var posting in SelectByStrategy(board.PoolStrategy, candidates, remaining, rng))
+                drawByPosting[posting].Boards.Add(board);
+        }
+
+        var survivors = new List<CustomBoardDraw>(draws.Count);
+        foreach (var draw in draws)
+        {
+            if (draw.Boards.Count == 0)
+                continue;
+            _antiRepetition.RecordRecency(draw.Posting);
+            survivors.Add(draw);
         }
 
         sw.Stop();
-        int total = result.Sum(kv => kv.Value.Count);
-        ModEntry.LogDebug($"Generated {total} custom-board posting(s) across {result.Count} board(s) in {sw.Elapsed.TotalMilliseconds:F1} ms.");
+        ModEntry.LogDebug($"Generated {survivors.Count} custom-board draw(s) across {boardRegistry.All.Count} board(s) in {sw.Elapsed.TotalMilliseconds:F1} ms.");
+        return survivors;
+    }
+
+    private List<(QuestPosting Posting, int Weight)> DrawFromPool(
+        BoardDefinition board, List<(IQuestDefinition Def, int Weight)> group, int target, System.Random rng)
+    {
+        var pool = new List<(IQuestDefinition Def, int Weight)>();
+        foreach (var (def, w) in group)
+        {
+            if (!CategoryAllowedOnBoard(board, def.Category))
+                continue;
+            if (!def.IsAvailable(_ctx))
+                continue;
+            if (_antiRepetition.DefinitionOnCooldown(def.Id, def.CooldownDays))
+                continue;
+            if (w <= 0)
+                continue;
+            pool.Add((def, w));
+        }
+
+        var picked = new List<(QuestPosting, int)>();
+        var defCounts = new Dictionary<string, int>();
+        int safety = 200;
+        while (picked.Count < target && pool.Count > 0 && safety-- > 0)
+        {
+            var (def, w) = WeightedDraw(pool, rng);
+            if (def == null)
+                break;
+
+            int count = defCounts.TryGetValue(def.Id, out int c) ? c : 0;
+            if (count >= def.MaxPerDay)
+            {
+                pool.RemoveAll(x => x.Def.Id == def.Id);
+                continue;
+            }
+
+            var posting = def.Build(_ctx);
+            if (posting == null)
+            {
+                pool.RemoveAll(x => x.Def.Id == def.Id);
+                continue;
+            }
+            if (string.IsNullOrEmpty(posting.OwnerUniqueId))
+                posting.OwnerUniqueId = def.OwnerUniqueId;
+
+            picked.Add((posting, w));
+            defCounts[def.Id] = count + 1;
+            if (defCounts[def.Id] >= def.MaxPerDay)
+                pool.RemoveAll(x => x.Def.Id == def.Id);
+        }
+        return picked;
+    }
+
+    private static bool AnyCatchAllAccepts(List<BoardDefinition> catchAlls, string ownerUniqueId)
+    {
+        foreach (var board in catchAlls)
+            if (CustomBoardRouting.Catches(board, ownerUniqueId))
+                return true;
+        return false;
+    }
+
+    private static void CollectCatchCandidates(
+        BoardDefinition board,
+        List<(QuestPosting Posting, int Weight)> source,
+        Dictionary<QuestPosting, CustomBoardDraw> drawByPosting,
+        List<(QuestPosting Posting, int Weight)> sink)
+    {
+        foreach (var (posting, w) in source)
+        {
+            if (drawByPosting[posting].Boards.Contains(board))
+                continue;
+            if (!CustomBoardRouting.Catches(board, posting.OwnerUniqueId))
+                continue;
+            if (!CategoryAllowedOnBoard(board, posting.Category))
+                continue;
+            sink.Add((posting, w));
+        }
+    }
+
+    private static List<QuestPosting> SelectByStrategy(
+        string? strategy, List<(QuestPosting Posting, int Weight)> candidates, int count, System.Random rng)
+    {
+        var result = new List<QuestPosting>();
+        if (candidates.Count == 0 || count <= 0)
+            return result;
+
+        if (string.Equals(strategy, "FirstAvailable", System.StringComparison.OrdinalIgnoreCase))
+        {
+            for (int i = 0; i < candidates.Count && result.Count < count; i++)
+                result.Add(candidates[i].Posting);
+            return result;
+        }
+
+        var pool = new List<(QuestPosting Posting, int Weight)>(candidates);
+        while (result.Count < count && pool.Count > 0)
+        {
+            int total = 0;
+            for (int i = 0; i < pool.Count; i++)
+                total += System.Math.Max(0, pool[i].Weight);
+            if (total <= 0)
+                break;
+            int roll = rng.Next(total);
+            int idx = 0;
+            for (; idx < pool.Count; idx++)
+            {
+                roll -= System.Math.Max(0, pool[idx].Weight);
+                if (roll < 0)
+                    break;
+            }
+            if (idx >= pool.Count)
+                idx = pool.Count - 1;
+            result.Add(pool[idx].Posting);
+            pool.RemoveAt(idx);
+        }
         return result;
     }
 
-    private static bool CategoryAllowedOnBoard(BoardDefinition board, IQuestDefinition def)
+    private static bool CategoryAllowedOnBoard(BoardDefinition board, QuestCategory category)
     {
         if (board.AllowedCategories == null || board.AllowedCategories.Count == 0)
             return true;
-        string defCategory = def.Category.ToString();
+        string defCategory = category.ToString();
         for (int i = 0; i < board.AllowedCategories.Count; i++)
         {
             if (string.Equals(board.AllowedCategories[i], defCategory, System.StringComparison.OrdinalIgnoreCase))

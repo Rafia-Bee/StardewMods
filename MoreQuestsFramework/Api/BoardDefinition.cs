@@ -56,6 +56,12 @@ public sealed class BoardDefinition
 
     public List<string>? AllowedCategories { get; set; }
 
+    // Catch-all / aggregator. When set, this board ALSO mirrors CustomBoard quests it
+    // isn't the declared target of, on top of its own quests. ["*"] catches every owner;
+    // a list of mod UniqueIDs curates which owners it picks up. Absent or empty means
+    // normal id-routing only (the default; a private board never needs this).
+    public List<string>? AllowedOwners { get; set; }
+
     public string OwnerUniqueId { get; set; } = "";
 
     public int TileX => Tile.Length >= 1 ? Tile[0] : 0;

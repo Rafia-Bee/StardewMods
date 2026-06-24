@@ -122,6 +122,13 @@ public sealed class TriggerDef
 
     // Custom. Handler id registered via IMoreQuestsModApi.RegisterCustomTrigger.
     public string? Custom { get; set; }
+
+    // CustomBoard source only. The custom board this quest posts to, by the board's unique
+    // id. Ignored for every other trigger source (DailyBoard, Mail, NpcDialogue, etc.), so
+    // leave it out unless Source is "CustomBoard". A bare name resolves under the quest's
+    // owner; "Owner.UniqueID/Name" targets another mod's board. Omitted = the owner's single
+    // board (warn + drop if the owner has 0 or 2+ boards).
+    public string? CustomBoardId { get; set; }
 }
 
 public sealed class ObjectiveDef

@@ -1584,7 +1584,7 @@ public sealed class ModEntry : Mod
     {
         if (Config.EnableAdventurersGuildBoard)
         {
-            scope.OverrideTriggerSource("Vanilla.SlayMonster", TriggerSource.CustomBoard);
+            scope.OverrideTriggerSource("Vanilla.SlayMonster", TriggerSource.CustomBoard, "AdventurersGuild");
             ApplyAdventureBoardConfig();
         }
         else

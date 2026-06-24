@@ -39,14 +39,15 @@ internal static class CustomBoardSlots
             : (IReadOnlyList<Slot>)Array.Empty<Slot>();
     }
 
-    public static void Replace(BoardDefinition board, IEnumerable<(Quest q, QuestPosting p)> entries, IMonitor? monitor = null)
+    // Stores already-built Slots under a board key. A Slot mirrored across a home board
+    // and one or more catch-all boards is the SAME object in each list, so accepting it
+    // on any board clears it everywhere (see AcceptSelected).
+    public static void SetSlotsByKey(string key, IReadOnlyList<Slot> slots)
     {
-        string key = KeyOf(board);
         if (!_byBoardKey.TryGetValue(key, out var list))
             _byBoardKey[key] = list = new List<Slot>();
         list.Clear();
-        foreach (var (q, p) in entries)
-            list.Add(new Slot(q, p, key));
+        list.AddRange(slots);
         ModEntry.LogDebug($"CustomBoardSlots[{key}] populated with {list.Count} quest(s).");
     }
 
@@ -63,13 +64,14 @@ internal static class CustomBoardSlots
         Selected = null;
     }
 
-    // Walks every populated board. Used by the public API to surface a snapshot
-    // without exposing the internal dictionary.
-    public static IEnumerable<Slot> AllSlots()
+    // Walks every populated board, pairing each slot with the board key it sits under.
+    // A mirrored slot is yielded once per board it appears on. Used by the public API to
+    // surface a snapshot without exposing the internal dictionary.
+    public static IEnumerable<(string BoardKey, Slot Slot)> AllSlots()
     {
-        foreach (var list in _byBoardKey.Values)
+        foreach (var (key, list) in _byBoardKey)
             foreach (var slot in list)
-                yield return slot;
+                yield return (key, slot);
     }
 
     public static Quest? AcceptSelected()
@@ -81,8 +83,11 @@ internal static class CustomBoardSlots
         // Start the per-definition cooldown only now that the player committed to the
         // quest. Posting alone never trips it; an ignored board slot is free to re-roll.
         ModEntry.Instance?.Anti?.RecordDefinitionAccepted(Selected.Posting.DefinitionId);
-        if (_byBoardKey.TryGetValue(Selected.BoardKey, out var list))
-            list.Remove(Selected);
+        // Remove by SyncId across every board: a posting mirrored onto a catch-all board
+        // is one logical quest, so accepting it on either board clears both.
+        string syncId = Selected.SyncId;
+        foreach (var list in _byBoardKey.Values)
+            list.RemoveAll(s => s.SyncId == syncId);
         Selected = null;
         return quest;
     }

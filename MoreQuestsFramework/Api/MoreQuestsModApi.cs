@@ -224,6 +224,16 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
     public void OverrideTriggerSource(string definitionId, TriggerSource source)
         => _registry.OverrideSource(definitionId, source);
 
+    public void OverrideTriggerSource(string definitionId, TriggerSource source, string board)
+    {
+        _registry.OverrideSource(definitionId, source);
+        if (!string.IsNullOrWhiteSpace(board))
+        {
+            string key = board.Contains('/') ? board : $"{Owner.UniqueID}/{board}";
+            _registry.OverrideBoard(definitionId, key);
+        }
+    }
+
     public void Unregister(string definitionId)
         => _registry.Unregister(definitionId);
 

@@ -414,17 +414,14 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     {
         var list = new List<CustomBoardSlotInfo>();
         bool filtered = !string.IsNullOrEmpty(boardOwnerUniqueId) && !string.IsNullOrEmpty(boardName);
-        foreach (var slot in CustomBoardSlots.AllSlots())
+        string filterKey = (boardOwnerUniqueId ?? "") + "/" + (boardName ?? "");
+        foreach (var (boardKey, slot) in CustomBoardSlots.AllSlots())
         {
-            if (filtered)
-            {
-                string key = (boardOwnerUniqueId ?? "") + "/" + (boardName ?? "");
-                if (!string.Equals(slot.BoardKey, key, StringComparison.OrdinalIgnoreCase))
-                    continue;
-            }
-            int slash = slot.BoardKey.IndexOf('/');
-            string owner = slash >= 0 ? slot.BoardKey.Substring(0, slash) : "";
-            string name = slash >= 0 ? slot.BoardKey.Substring(slash + 1) : slot.BoardKey;
+            if (filtered && !string.Equals(boardKey, filterKey, StringComparison.OrdinalIgnoreCase))
+                continue;
+            int slash = boardKey.IndexOf('/');
+            string owner = slash >= 0 ? boardKey.Substring(0, slash) : "";
+            string name = slash >= 0 ? boardKey.Substring(slash + 1) : boardKey;
             list.Add(new CustomBoardSlotInfo(
                 slot.SyncId,
                 slot.Quest,

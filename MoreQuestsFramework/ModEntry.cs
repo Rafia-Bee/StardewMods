@@ -285,6 +285,7 @@ public sealed class ModEntry : Mod
         LoadAssetsAndRegister();
         _registry.Freeze();
         _boards.Freeze();
+        CustomBoardRouting.ValidateRouting(_registry, _boards, Monitor);
         Monitor.Log("Reloaded quests and boards from MQF assets.", LogLevel.Info);
     }
 
@@ -362,6 +363,7 @@ public sealed class ModEntry : Mod
         _api.FireRegistrationClosed();
         _registry.Freeze();
         _boards.Freeze();
+        CustomBoardRouting.ValidateRouting(_registry, _boards, Monitor);
 
         GmcmRegistration.Register(Helper, ModManifest, Config, _registry, onReset: () => Config = new MoreQuestsFrameworkConfig());
     }
@@ -592,20 +594,27 @@ public sealed class ModEntry : Mod
         }
 
         CustomBoardSlots.ClearAll();
-        var customByBoard = _pipeline.GenerateCustomBoardPostings(_boards);
-        foreach (var (_, perBoard) in customByBoard)
+        var customDraws = _pipeline.GenerateCustomBoardPostings(_boards);
+        var slotsByBoardKey = new Dictionary<string, List<CustomBoardSlots.Slot>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var draw in customDraws)
         {
-            if (perBoard.Count == 0) continue;
-            var board = perBoard[0].board;
-            var entries = new List<(StardewValley.Quests.Quest q, QuestPosting p)>(perBoard.Count);
-            foreach (var (posting, _) in perBoard)
+            var quest = _poster.PrepareCustomBoardQuest(draw.Posting);
+            if (quest == null)
+                continue;
+            string homeKey = draw.Boards.Count > 0
+                ? (draw.Boards[0].OwnerUniqueId ?? "") + "/" + (draw.Boards[0].Name ?? "")
+                : "";
+            var slot = new CustomBoardSlots.Slot(quest, draw.Posting, homeKey);
+            foreach (var board in draw.Boards)
             {
-                var quest = _poster.PrepareCustomBoardQuest(posting);
-                if (quest != null)
-                    entries.Add((quest, posting));
+                string key = (board.OwnerUniqueId ?? "") + "/" + (board.Name ?? "");
+                if (!slotsByBoardKey.TryGetValue(key, out var list))
+                    slotsByBoardKey[key] = list = new List<CustomBoardSlots.Slot>();
+                list.Add(slot);
             }
-            CustomBoardSlots.Replace(board, entries, Monitor);
         }
+        foreach (var (key, slots) in slotsByBoardKey)
+            CustomBoardSlots.SetSlotsByKey(key, slots);
 
         // Single source of truth on the board.
         Game1.netWorldState.Value.SetQuestOfTheDay(null);

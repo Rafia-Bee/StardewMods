@@ -13,6 +13,10 @@ internal sealed class QuestRegistry
     private readonly List<IQuestDefinition> _ordered = new();
     private readonly Dictionary<string, TriggerSource> _sourceOverrides = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, TriggerSource> _pendingOverrides = new(StringComparer.OrdinalIgnoreCase);
+    // Target board for a quest routed to CustomBoard by override, keyed by quest id and
+    // already namespaced as owner/board. Read lazily by the custom-board draw, so order
+    // against registration doesn't matter. Survives CP hot reload like _sourceOverrides.
+    private readonly Dictionary<string, string> _boardOverrides = new(StringComparer.OrdinalIgnoreCase);
     private bool _frozen;
 
     public QuestRegistry(IMonitor monitor)
@@ -157,6 +161,23 @@ internal sealed class QuestRegistry
     {
         if (def == null) return TriggerSource.DailyBoard;
         return _sourceOverrides.TryGetValue(def.Id, out var s) ? s : def.Source;
+    }
+
+    // Names the board a quest routes to when it has no per-def Trigger.CustomBoardId (e.g. a
+    // framework-owned quest sent to a custom board by OverrideTriggerSource). The board
+    // key is expected pre-namespaced as owner/board.
+    public void OverrideBoard(string definitionId, string boardKey)
+    {
+        if (string.IsNullOrEmpty(definitionId) || string.IsNullOrWhiteSpace(boardKey))
+            return;
+        _boardOverrides[definitionId] = boardKey;
+        ModEntry.LogDebug($"Quest '{definitionId}' board override set to '{boardKey}'.");
+    }
+
+    public string? EffectiveBoard(IQuestDefinition def)
+    {
+        if (def == null) return null;
+        return _boardOverrides.TryGetValue(def.Id, out var key) ? key : null;
     }
 
     public void Freeze()

@@ -42,6 +42,12 @@ public interface IMoreQuestsModApi
     // No-ops with a warning if no quest with that id is registered.
     void OverrideTriggerSource(string definitionId, TriggerSource source);
 
+    // Same, but also names the board the quest posts to when source is CustomBoard. Use
+    // this for a quest that has no per-def Trigger.CustomBoardId (e.g. a framework-owned quest).
+    // A bare board name resolves under your mod's UniqueID;
+    // "Owner.UniqueID/Name" targets another mod's board.
+    void OverrideTriggerSource(string definitionId, TriggerSource source, string board);
+
     // Removes a quest definition from the registry. Allowed both before and after
     // freeze. Quests already in the player's journal keep working; the def just
     // stops being a draw candidate on the next DayStarted. No-ops with a warning

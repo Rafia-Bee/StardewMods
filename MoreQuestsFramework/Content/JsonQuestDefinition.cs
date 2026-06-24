@@ -453,7 +453,8 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             Duration: t.Duration,
             Weight: t.Weight,
             Custom: t.Custom,
-            DialogueText: t.DialogueText);
+            DialogueText: t.DialogueText,
+            CustomBoardId: t.CustomBoardId);
     }
 
     private static BoardQuestType ParseObjectiveKind(string kind)

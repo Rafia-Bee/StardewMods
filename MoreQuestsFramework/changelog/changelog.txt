@@ -1,3 +1,8 @@
+To be released
+- For mod authors: custom board quests now go to one board by id, so one mod's board quests no longer show up on another mod's board. A quest picks its board with the new "CustomBoardId" trigger field, or leaves it out to use your mod's only board.
+- For mod authors: a board can now be a catch-all that also shows quests from other mods, set with the new "AllowedOwners" field.
+- For mod authors: "OverrideTriggerSource" has a new form that also names the target board, for sending a quest that has no board of its own onto your board.
+
 2.7.0
 - The help-wanted board now shows your prize ticket stars as soon as you open it, instead of only after you click a quest note. Hovering the stars tells you how many more quests you need before your next prize ticket.
 - Fixed the quest board's hover tooltip showing words like "Deliver", "Collect", and "Slay" in English even when you played in another language. They can now be translated, along with the catch-all item names (like "fish" or "metal bar") that show when a quest asks for any item of a type.

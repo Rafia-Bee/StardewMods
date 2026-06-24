@@ -18,7 +18,8 @@ public sealed record TriggerInfo(
     string? Duration = null,
     int? Weight = null,
     string? Custom = null,
-    string? DialogueText = null)
+    string? DialogueText = null,
+    string? CustomBoardId = null)
 {
     public static readonly TriggerInfo Default = new();
 }
