@@ -19,7 +19,7 @@ public sealed class RedecorateQuestDefinition : IQuestDefinition, IEligibleGiver
 
     public string Id => QuestId;
     public string OwnerUniqueId => OwnerId;
-    public QuestCategory Category => QuestCategory.Social;
+    public string Category => QuestCategory.Social;
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => ModEntry.Config.RedecorateQuestWeight;
     public int MaxPerDay => 1;

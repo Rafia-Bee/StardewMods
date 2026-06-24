@@ -6,7 +6,7 @@ namespace MoreQuestsFramework.Quests.Vanilla;
 internal sealed class VanillaSlayMonster : IQuestDefinition
 {
     public string Id => "Vanilla.SlayMonster";
-    public QuestCategory Category => QuestCategory.Mining;
+    public string Category => QuestCategory.Mining;
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 12;
     public int MaxPerDay => 1;

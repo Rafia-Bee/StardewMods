@@ -15,7 +15,10 @@ internal sealed class StashedMailQuest
     // Enums stored as int so JSON survives renames.
     public int QuestType { get; set; }
     public string CustomQuestType { get; set; } = "";
-    public int Category { get; set; }
+    // Free-form category id. Old saves stored it as an int; Newtonsoft reads that back into
+    // the string fine. A mail quest is a letter with no board note, so this only rides along
+    // and isn't applied to the rehydrated quest.
+    public string Category { get; set; } = QuestCategory.Social;
     public int Tier { get; set; }
     public string QuestGiver { get; set; } = "";
     public string ObjectiveItemId { get; set; } = "";

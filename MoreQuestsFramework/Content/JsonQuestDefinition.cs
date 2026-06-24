@@ -40,7 +40,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         // Raw JSON Name preserves existing QuestWeights config keys for in-flight
         // saves. Collisions are logged + rejected by QuestRegistry.Register.
         Id = def.Name!;
-        Category = ParseEnum(def.Category, QuestCategory.Social);
+        Category = string.IsNullOrWhiteSpace(def.Category) ? QuestCategory.Social : def.Category;
         Source = ParseSource(def.Trigger?.Source);
         Kind = ResolveDelivery(Source, def.Trigger?.Delivery);
         Trigger = BuildTriggerInfo(def.Trigger);
@@ -50,7 +50,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
     }
 
     public string Id { get; }
-    public QuestCategory Category { get; }
+    public string Category { get; }
     public PostingKind Kind { get; }
     public TriggerSource Source { get; }
     public TriggerInfo Trigger { get; }

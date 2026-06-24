@@ -42,7 +42,7 @@ public sealed class QuestPosting
     public string DefinitionId { get; set; } = "";
     // UniqueID of the owning mod, used to attribute framework events.
     public string OwnerUniqueId { get; set; } = "";
-    public QuestCategory Category { get; set; }
+    public string Category { get; set; } = QuestCategory.Social;
     public DifficultyTier Tier { get; set; }
     public PostingKind Kind { get; set; } = PostingKind.DailyBoard;
     public BoardQuestType QuestType { get; set; }

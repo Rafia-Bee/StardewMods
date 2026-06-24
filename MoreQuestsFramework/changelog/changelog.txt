@@ -1,4 +1,5 @@
 To be released
+- For mod authors: quest categories are now open-ended. Recolor the nine built-in categories or add your own, each with its own note colors and the skill it scales with, by editing the new Categories asset from a Content Patcher pack or calling RegisterCategory in C#.
 - For mod authors: custom board quests now go to one board by id, so one mod's board quests no longer show up on another mod's board. A quest picks its board with the new "CustomBoardId" trigger field, or leaves it out to use your mod's only board.
 - For mod authors: a board can now be a catch-all that also shows quests from other mods, set with the new "AllowedOwners" field.
 - For mod authors: "OverrideTriggerSource" has a new form that also names the target board, for sending a quest that has no board of its own onto your board.

@@ -432,14 +432,13 @@ internal sealed class QuestPipeline
         return result;
     }
 
-    private static bool CategoryAllowedOnBoard(BoardDefinition board, QuestCategory category)
+    private static bool CategoryAllowedOnBoard(BoardDefinition board, string category)
     {
         if (board.AllowedCategories == null || board.AllowedCategories.Count == 0)
             return true;
-        string defCategory = category.ToString();
         for (int i = 0; i < board.AllowedCategories.Count; i++)
         {
-            if (string.Equals(board.AllowedCategories[i], defCategory, System.StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(board.AllowedCategories[i], category, System.StringComparison.OrdinalIgnoreCase))
                 return true;
         }
         return false;

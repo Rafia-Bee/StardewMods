@@ -28,7 +28,7 @@ Implementing `IQuestDefinition` means filling in:
 | Member | What it's for |
 | --- | --- |
 | `Id` | Unique definition id. Used for cooldown tracking and event attribution. |
-| `Category` | `QuestCategory` enum value. Drives GMCM category filtering. |
+| `Category` | Category id string (use the `QuestCategory` constants for the built-ins, or any custom id). Sets the note's pad/pin colors and the skill it scales against. |
 | `Kind` | `PostingKind`, picks the delivery channel (DailyBoard, Mail, NpcDialogue, etc.). |
 | `DefaultWeight` | Relative weight in the daily-board pool. 0 disables. |
 | `MaxPerDay` | Hard cap on copies of this definition per day. |

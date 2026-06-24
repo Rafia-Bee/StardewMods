@@ -5,7 +5,7 @@ namespace MoreQuestsFramework.Quests.Vanilla;
 internal sealed class VanillaResourceCollection : IQuestDefinition
 {
     public string Id => "Vanilla.ResourceCollection";
-    public QuestCategory Category => QuestCategory.Foraging;
+    public string Category => QuestCategory.Foraging;
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 15;
     public int MaxPerDay => 1;

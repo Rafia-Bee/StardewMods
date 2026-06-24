@@ -430,6 +430,47 @@ The matching `Generator` returns a `QuestPosting` with `Kind = PostingKind.Speci
 
 Vanilla owns accept, objective tracking, and reward grant from there. See [docs/example-csharp-generators/](docs/example-csharp-generators/) for a working JSON + generator pair.
 
+## Quest categories (colors and skill scaling)
+
+A quest's `Category` does two things: it sets the note's pad and pin colors on the board, and it names the skill the quest scales its difficulty/reward against (when Difficulty Scaling is on). Categories are open-ended strings, so you can recolor the nine built-ins or add your own.
+
+The built-ins are `Animal`, `Cooking`, `Farming`, `Festival`, `Fishing`, `Foraging`, `Mining`, `Seasonal`, `Social`. A quest with no `Category` (or an unknown one) falls back to `Social` (plain coloring, no skill scaling).
+
+Categories live in a Content Patcher-editable asset, `Mods/RafiaBee.MoreQuestsFramework/Categories`, a `Dictionary<string, CategoryDefinition>`. Each entry has:
+
+- `DisplayName` (optional, a name for the category).
+- `PadColor` and `PinColor`, the note paper and tack colors. Each is independent and optional, and accepts `#RRGGBB`, `#RRGGBBAA`, or `R,G,B`. A missing or invalid value falls back to `Social`'s color (a bad value logs a warning, it never crashes).
+- `Skill`, the skill the quest scales against. A vanilla skill name (`Farming`, `Fishing`, `Mining`, `Foraging`, `Combat`) reads that skill level; `Cooking` reads whichever cooking-skill mod is installed (Love of Cooking or Cooking Skill, 0 if neither); any other value is treated as a SpaceCore custom skill id; `None` (or omitted) means no scaling.
+
+### Recolor a built-in or add a new category (CP pack)
+
+```jsonc
+{
+    "Action": "EditData",
+    "Target": "Mods/RafiaBee.MoreQuestsFramework/Categories",
+    "Entries": {
+        "Farming": { "PadColor": "#C8E6A0", "PinColor": "#6B2D4F" },
+        "{{ModId}}_Cafe": { "DisplayName": "Cafe", "PadColor": "240,200,180", "PinColor": "#5F2D73", "Skill": "spacechase0.Cooking" }
+    }
+}
+```
+
+Editing a built-in key (`Farming`) recolors it; a new key adds a category. Namespace your own ids with `{{ModId}}_` so they can't collide with another mod's. Reference a category from a quest with `"Category": "{{ModId}}_Cafe"`. Edits hot-reload with `patch reload`, no restart needed.
+
+### Register a category from C#
+
+```csharp
+scope.RegisterCategory("Cafe", new CategoryDefinition
+{
+    DisplayName = "Cafe",
+    PadColor = "#F0C8B4",
+    PinColor = "#5F2D73",
+    Skill = "spacechase0.Cooking"
+});
+```
+
+The id is namespaced under your UniqueID automatically (`{ModId}_Cafe`), matching the board/quest id convention.
+
 ## Retexturing the pad and pin
 
 The cork-board notes are drawn from two textures the framework loads as game assets:
@@ -585,7 +626,7 @@ The framework follows semver from 1.0 onward.
 - **Minor** bumps when new public API, new schema fields, new reward / objective / trigger kinds, or new built-in conditions land. Consumer mods written against the previous minor keep working.
 - **Patch** bumps for bug fixes, performance work, or internal refactors with no API-visible change.
 
-2.0 is the cutover from the old `quests.json` / `LoadQuestsFromMod` path to the Content Patcher-editable asset path. Asset names (`Mods/RafiaBee.MoreQuestsFramework/Quests`, `.../Boards`, `.../CooldownTiers`) are part of the public contract; renaming them would be a major bump.
+2.0 is the cutover from the old `quests.json` / `LoadQuestsFromMod` path to the Content Patcher-editable asset path. Asset names (`Mods/RafiaBee.MoreQuestsFramework/Quests`, `.../Boards`, `.../CooldownTiers`, `.../Categories`) are part of the public contract; renaming them would be a major bump.
 
 ## Dependencies
 

@@ -218,6 +218,20 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         _boards.Register(board, Owner.UniqueID);
     }
 
+    public void RegisterCategory(string id, CategoryDefinition definition)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("Category id must not be empty.", nameof(id));
+        if (definition == null)
+            throw new ArgumentNullException(nameof(definition));
+        string key = id.StartsWith($"{Owner.UniqueID}_", StringComparison.OrdinalIgnoreCase)
+            ? id
+            : $"{Owner.UniqueID}_{id}";
+        ModEntry.RegisteredCategories[key] = definition;
+        // Force a re-merge if the asset was already loaded; a no-op before first load.
+        ModEntry.Instance.Helper.GameContent.InvalidateCache(ModEntry.CategoriesAssetName);
+    }
+
     public BoardDefinition? FindBoard(string name)
         => _boards.Find(Owner.UniqueID, name);
 

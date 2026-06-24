@@ -11,12 +11,12 @@ public sealed class QuestInfo
 {
     public string Id { get; }
     public string OwnerUniqueId { get; }
-    public QuestCategory Category { get; }
+    public string Category { get; }
     public PostingKind Kind { get; }
     public TriggerSource Source { get; }
     public TriggerSource EffectiveSource { get; }
 
-    public QuestInfo(string id, string ownerUniqueId, QuestCategory category, PostingKind kind, TriggerSource source, TriggerSource effectiveSource)
+    public QuestInfo(string id, string ownerUniqueId, string category, PostingKind kind, TriggerSource source, TriggerSource effectiveSource)
     {
         Id = id;
         OwnerUniqueId = ownerUniqueId;

@@ -71,7 +71,7 @@ public static class ModCompat
     // Reads a SpaceCore custom-skill level off the current player. Fail-closed: returns 0
     // when the API or player isn't available, or if SpaceCore throws for an unknown id, so
     // "Cooking N"-style condition checks still fail rather than blow up.
-    private static int GetCustomSkillLevel(string skillId)
+    internal static int GetCustomSkillLevel(string skillId)
     {
         if (SpaceCoreApi == null || Game1.player == null || string.IsNullOrEmpty(skillId))
             return 0;

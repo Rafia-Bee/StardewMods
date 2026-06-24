@@ -148,7 +148,7 @@ internal static partial class Generators
         });
     }
 
-    private static bool IsCategoryEnabled(QuestCategory cat) => cat switch
+    private static bool IsCategoryEnabled(string cat) => cat switch
     {
         QuestCategory.Animal => ModEntry.Config.AnimalQuestsEnabled,
         QuestCategory.Cooking => ModEntry.Config.CookingQuestsEnabled,

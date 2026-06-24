@@ -23,7 +23,7 @@ public sealed class AppleForLewisDefinition : IQuestDefinition
     }
 
     public string Id => "ExampleCSharpIQuestDef.AppleForLewis";
-    public QuestCategory Category => QuestCategory.Foraging;
+    public string Category => QuestCategory.Foraging;
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 20;
     public int MaxPerDay => 1;

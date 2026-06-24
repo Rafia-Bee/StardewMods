@@ -32,30 +32,6 @@ internal static class BoardLayout
     // than a perfect grid. The player tunes the average; this varies it note to note.
     public const float GapJitter = 8f;
 
-    // One distinct pad/pin pair per QuestCategory. Pad is the light note paper,
-    // pin is the darker tack. Pairs are picked so the nine categories stay
-    // visually separable on the cork board even at small scales.
-    // Pins are picked from a contrasting hue family from their pad (warm pad =
-    // cool pin and vice versa) so the tack always pops off the note paper.
-    public static readonly Color AnimalPadColor = new(244, 195, 155);
-    public static readonly Color AnimalPinColor = new(35, 75, 100);
-    public static readonly Color CookingPadColor = new(250, 215, 140);
-    public static readonly Color CookingPinColor = new(95, 45, 115);
-    public static readonly Color FarmingPadColor = new(210, 225, 140);
-    public static readonly Color FarmingPinColor = new(130, 40, 80);
-    public static readonly Color FestivalPadColor = new(240, 175, 175);
-    public static readonly Color FestivalPinColor = new(50, 95, 70);
-    public static readonly Color FishingPadColor = new(175, 210, 235);
-    public static readonly Color FishingPinColor = new(160, 75, 30);
-    public static readonly Color ForagingPadColor = new(180, 220, 165);
-    public static readonly Color ForagingPinColor = new(140, 50, 80);
-    public static readonly Color MiningPadColor = new(210, 205, 200);
-    public static readonly Color MiningPinColor = new(130, 35, 50);
-    public static readonly Color SeasonalPadColor = new(175, 225, 220);
-    public static readonly Color SeasonalPinColor = new(155, 60, 45);
-    public static readonly Color SocialPadColor = new(235, 195, 225);
-    public static readonly Color SocialPinColor = new(50, 110, 75);
-
     // Picks the column/row split that makes the notes as large as possible while still
     // fitting count of them in the cork area at the average spacing. Height is the tighter
     // dimension, so the sweet spot usually has more columns than rows (20 notes land on a
@@ -220,19 +196,10 @@ internal static class BoardLayout
         return new Rectangle(x, y, side, side);
     }
 
-    public static (Color pad, Color pin) ColorsFor(QuestCategory category) =>
-        category switch
-        {
-            QuestCategory.Animal => (AnimalPadColor, AnimalPinColor),
-            QuestCategory.Cooking => (CookingPadColor, CookingPinColor),
-            QuestCategory.Farming => (FarmingPadColor, FarmingPinColor),
-            QuestCategory.Festival => (FestivalPadColor, FestivalPinColor),
-            QuestCategory.Fishing => (FishingPadColor, FishingPinColor),
-            QuestCategory.Foraging => (ForagingPadColor, ForagingPinColor),
-            QuestCategory.Mining => (MiningPadColor, MiningPinColor),
-            QuestCategory.Seasonal => (SeasonalPadColor, SeasonalPinColor),
-            _ => (SocialPadColor, SocialPinColor)
-        };
+    // Pad/pin colors come from the Categories asset (parsed once into the registry).
+    // Unknown category falls back to Social's pair.
+    public static (Color pad, Color pin) ColorsFor(string category)
+        => ModEntry.Categories.ColorsFor(category);
 
     public static Texture2D? TryGetPortrait(string npcName)
     {

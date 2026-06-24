@@ -12,11 +12,12 @@ For the C# patterns, see [`../example-csharp-generators/`](../example-csharp-gen
 
 ## How it loads
 
-MQF seeds three empty game-content assets at startup:
+MQF seeds these game-content assets at startup:
 
 - `Mods/RafiaBee.MoreQuestsFramework/Quests` (Dictionary<string, QuestDef>)
 - `Mods/RafiaBee.MoreQuestsFramework/Boards` (Dictionary<string, BoardDef>)
 - `Mods/RafiaBee.MoreQuestsFramework/CooldownTiers` (Dictionary<string, int>)
+- `Mods/RafiaBee.MoreQuestsFramework/Categories` (Dictionary<string, CategoryDefinition>), pre-seeded with the nine built-in categories so you can EditData to recolor one or add your own.
 
 Any Content Patcher pack can `EditData` these. MQF reads the assets on the first update tick after `GameLaunched`, so by the time CP has finished registering its patches, the quests land in MQF's registry.
 
@@ -117,7 +118,7 @@ CP expands `{{ModId}}` on both sides, so the tier reference resolves to the same
 
 ## Custom boards (optional)
 
-A second `EditData` block targeting `Mods/RafiaBee.MoreQuestsFramework/Boards` adds an extra cork-board surface in-world that pulls from a category-specific quest pool:
+A second `EditData` block targeting `Mods/RafiaBee.MoreQuestsFramework/Boards` adds an extra cork-board surface in-world:
 
 ```jsonc
 {
@@ -129,12 +130,23 @@ A second `EditData` block targeting `Mods/RafiaBee.MoreQuestsFramework/Boards` a
             "Tile": [20, 4],
             "BoardSize": [2, 2],
             "Texture": "{{InternalAssetKey: assets/board.png}}",
-            "Categories": ["Mining", "Adventure"]
+            "PoolSize": 3
         }
     }
 }
 ```
 
-`Tile` is the floor tile the player stands on to interact (always walkable). The sprite renders directly above that tile, centered horizontally, scaled to `BoardSize` tiles wide and tall. Collision matches the sprite rect exactly, so the player blocks against the visible board. `BoardSize` defaults to `[1, 1]` if omitted.
+`Tile` is the floor tile the player stands on to interact (always walkable). The sprite renders directly above that tile, centered horizontally, scaled to `BoardSize` tiles wide and tall. Collision matches the sprite rect exactly, so the player blocks against the visible board. `BoardSize` defaults to `[1, 1]` if omitted. `PoolSize` caps how many notes the board shows per day (default 3).
 
-Quests with `Trigger.Source: "CustomBoard"` are eligible for these boards instead of the help-wanted billboard.
+A quest lands on a board by naming it: set `Trigger.Source: "CustomBoard"` and point `Trigger.CustomBoardId` at the board's id. Use a bare name (`{{ModId}}_HuntingBoard`) for your own board, or `OwnerId/Name` to target another mod's board. If you leave `CustomBoardId` out and your pack defines exactly one board, the quest falls back to that board.
+
+```jsonc
+"Trigger": { "Source": "CustomBoard", "CustomBoardId": "{{ModId}}_HuntingBoard", "Weight": 20 }
+```
+
+Two optional board fields fine-tune what shows up:
+
+- `AllowedCategories`: a list of category ids that limits which of the board's own quests can appear (an extra filter, not how quests are routed to the board). Omit it to allow any category.
+- `AllowedOwners`: makes the board a catch-all that also mirrors CustomBoard quests from other mods. `["*"]` catches everyone; a list of mod UniqueIDs curates which.
+
+Note `AllowedCategories` (a board filter) is unrelated to the `Categories` asset (which sets each quest note's pad/pin colors and skill scaling). A quest's `Category` always colors its note; `AllowedCategories` just gates which quests a board will draw.

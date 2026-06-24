@@ -1,4 +1,14 @@
 {
+    "category.animal": "Animal",
+    "category.cooking": "Cooking",
+    "category.farming": "Farming",
+    "category.festival": "Festival",
+    "category.fishing": "Fishing",
+    "category.foraging": "Foraging",
+    "category.mining": "Mining",
+    "category.seasonal": "Seasonal",
+    "category.social": "Social",
+
     "config.section.questBoard": "Quest Board",
     "config.questsPerDay": "Quests per day",
     "config.questsPerDay.tooltip": "How many quests appear on the help-wanted board each day (1-20).",

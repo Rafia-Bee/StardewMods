@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MoreQuestsFramework.Consequences;
+using MoreQuestsFramework.Content;
 using MoreQuestsFramework.Posting;
 using MoreQuestsFramework.Quests;
 using MoreQuestsFramework.Rewards;
@@ -33,6 +34,12 @@ public interface IMoreQuestsModApi
     void RegisterDispatchNpc(string role, string npcName, string? requiredModUniqueId = null);
 
     void RegisterBoard(BoardDefinition board);
+
+    // Registers a quest category (pad/pin color + the skill it scales against). The id is
+    // namespaced under the calling mod's UniqueID ({ownerUniqueId}_{id}) to avoid collisions,
+    // mirroring board/quest ids. To recolor a built-in category instead, EditData the
+    // Categories asset (Mods/RafiaBee.MoreQuestsFramework/Categories) from a CP pack.
+    void RegisterCategory(string id, CategoryDefinition definition);
 
     // Returned BoardDefinition is the live registry instance; mutating fields like
     // Tile or BoardSize takes effect on the next render.

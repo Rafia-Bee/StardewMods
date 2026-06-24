@@ -5,7 +5,7 @@ namespace MoreQuestsFramework.Quests.Vanilla;
 internal sealed class VanillaItemDelivery : IQuestDefinition
 {
     public string Id => "Vanilla.ItemDelivery";
-    public QuestCategory Category => QuestCategory.Social;
+    public string Category => QuestCategory.Social;
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 35;
     public int MaxPerDay => 5;

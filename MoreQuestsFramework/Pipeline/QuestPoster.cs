@@ -293,7 +293,7 @@ internal sealed class QuestPoster
             MailBody = body,
             QuestType = (int)posting.QuestType,
             CustomQuestType = posting.CustomQuestType,
-            Category = (int)posting.Category,
+            Category = posting.Category,
             Tier = (int)posting.Tier,
             QuestGiver = posting.QuestGiver,
             ObjectiveItemId = posting.ObjectiveItemId,
@@ -328,7 +328,7 @@ internal sealed class QuestPoster
         {
             DefinitionId = stash.DefinitionId,
             OwnerUniqueId = stash.OwnerUniqueId,
-            Category = (QuestCategory)stash.Category,
+            Category = stash.Category,
             Tier = (DifficultyTier)stash.Tier,
             QuestType = (BoardQuestType)stash.QuestType,
             CustomQuestType = stash.CustomQuestType,

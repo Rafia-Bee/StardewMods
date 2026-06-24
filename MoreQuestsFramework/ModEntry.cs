@@ -37,6 +37,16 @@ public sealed class ModEntry : Mod
     internal const string QuestsAssetName = "Mods/RafiaBee.MoreQuestsFramework/Quests";
     internal const string BoardsAssetName = "Mods/RafiaBee.MoreQuestsFramework/Boards";
     internal const string CooldownTiersAssetName = "Mods/RafiaBee.MoreQuestsFramework/CooldownTiers";
+    internal const string CategoriesAssetName = "Mods/RafiaBee.MoreQuestsFramework/Categories";
+
+    // Parsed pad/pin colors + skill per category. Seeded with the built-ins so it's safe
+    // to read before the asset loads; rebuilt on asset load and invalidation.
+    internal static CategoryRegistry Categories { get; private set; } = null!;
+
+    // Categories registered by C# consumers via RegisterCategory, merged into the
+    // Categories asset's seed so they survive invalidation like the built-ins.
+    internal static readonly Dictionary<string, CategoryDefinition> RegisteredCategories =
+        new(StringComparer.OrdinalIgnoreCase);
 
     private QuestRegistry _registry = null!;
     private GeneratorRegistry _generators = null!;
@@ -89,6 +99,8 @@ public sealed class ModEntry : Mod
         Instance = this;
         Translation = helper.Translation;
         Config = helper.ReadConfig<MoreQuestsFrameworkConfig>();
+
+        Categories = new CategoryRegistry(Monitor);
 
         _registry = new QuestRegistry(Monitor);
         _generators = new GeneratorRegistry(Monitor);
@@ -239,12 +251,19 @@ public sealed class ModEntry : Mod
     private void OnAssetsInvalidated(object? sender, AssetsInvalidatedEventArgs e)
     {
         bool questsOrBoardsTouched = false;
+        bool categoriesTouched = false;
         foreach (var name in e.NamesWithoutLocale)
         {
             _dataCache?.Invalidate(name.Name);
             if (name.IsEquivalentTo(QuestsAssetName) || name.IsEquivalentTo(BoardsAssetName))
                 questsOrBoardsTouched = true;
+            if (name.IsEquivalentTo(CategoriesAssetName))
+                categoriesTouched = true;
         }
+
+        // Category colors and skills can refresh live, no quest-pool reload needed.
+        if (categoriesTouched)
+            RebuildCategories();
         // CooldownTiers invalidation needs no action: the per-quest cooldown lookup
         // re-reads the asset on every CooldownDays access, so the next trigger pass
         // automatically picks up new tier values.
@@ -271,11 +290,19 @@ public sealed class ModEntry : Mod
             return dict.TryGetValue(name, out var days) ? days : null;
         };
 
+        RebuildCategories();
+
         var questsAsset = Helper.GameContent.Load<Dictionary<string, QuestDef>>(QuestsAssetName);
         _loader.LoadFromAsset(questsAsset, cooldownTierLookup);
 
         var boardsAsset = Helper.GameContent.Load<Dictionary<string, BoardDefinition>>(BoardsAssetName);
         _boardLoader.LoadFromAsset(boardsAsset);
+    }
+
+    private void RebuildCategories()
+    {
+        var asset = Helper.GameContent.Load<Dictionary<string, CategoryDefinition>>(CategoriesAssetName);
+        Categories.Rebuild(asset);
     }
 
     private void ReloadFromAssets()
@@ -318,6 +345,18 @@ public sealed class ModEntry : Mod
         if (e.NameWithoutLocale.IsEquivalentTo(CooldownTiersAssetName))
         {
             e.LoadFrom(() => new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase), AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(CategoriesAssetName))
+        {
+            e.LoadFrom(() =>
+            {
+                var seed = CategoryRegistry.BuildBuiltinSeed();
+                foreach (var pair in RegisteredCategories)
+                    seed[pair.Key] = pair.Value;
+                return seed;
+            }, AssetLoadPriority.Low);
         }
     }
 
@@ -1118,7 +1157,7 @@ public sealed class ModEntry : Mod
             {
                 Id = def.Id,
                 Owner = def.OwnerUniqueId,
-                Category = def.Category.ToString(),
+                Category = def.Category,
                 Kind = def.Kind.ToString(),
                 ExposesGivers = def is IEligibleGiverSource,
             };

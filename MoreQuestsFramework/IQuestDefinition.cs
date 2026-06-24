@@ -5,7 +5,7 @@ namespace MoreQuestsFramework;
 public interface IQuestDefinition
 {
     string Id { get; }
-    QuestCategory Category { get; }
+    string Category { get; }
     PostingKind Kind { get; }
 
     // UniqueID of the registering mod, used to attribute events. Empty = framework-owned.

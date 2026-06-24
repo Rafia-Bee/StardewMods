@@ -22,17 +22,21 @@ public enum DeadlineKind
     None
 }
 
-public enum QuestCategory
+// The nine built-in category ids. Categories are strings now (authors can register
+// their own via the Categories asset / RegisterCategory), so these are just the
+// well-known names the framework seeds. Kept as a class of const strings rather than
+// an enum so existing C# call sites like QuestCategory.Farming keep compiling.
+public static class QuestCategory
 {
-    Animal,
-    Cooking,
-    Farming,
-    Festival,
-    Fishing,
-    Foraging,
-    Mining,
-    Seasonal,
-    Social
+    public const string Animal = "Animal";
+    public const string Cooking = "Cooking";
+    public const string Farming = "Farming";
+    public const string Festival = "Festival";
+    public const string Fishing = "Fishing";
+    public const string Foraging = "Foraging";
+    public const string Mining = "Mining";
+    public const string Seasonal = "Seasonal";
+    public const string Social = "Social";
 }
 
 public static class Difficulty
@@ -46,19 +50,30 @@ public static class Difficulty
             _ => DifficultyTier.Beginner
         };
 
-    public static int GetSkillLevel(QuestCategory category)
+    // Reads the skill a category scales against from its registered definition, then
+    // resolves that to a level. Unknown category or unresolved skill scales 0.
+    public static int GetSkillLevel(string category)
+        => ResolveSkillLevel(ModEntry.Categories?.SkillFor(category));
+
+    // Skill resolution: a vanilla skill name reads Farmer.*Level; "Cooking" routes to
+    // whichever cooking-skill mod is installed (0 if none); "None"/empty scales 0;
+    // anything else is treated as a SpaceCore custom skill id.
+    private static int ResolveSkillLevel(string? skill)
     {
         var p = Game1.player;
-        return category switch
+        if (p == null || string.IsNullOrWhiteSpace(skill))
+            return 0;
+        switch (skill.ToLowerInvariant())
         {
-            QuestCategory.Farming => p.FarmingLevel,
-            QuestCategory.Fishing => p.FishingLevel,
-            QuestCategory.Mining => p.MiningLevel,
-            QuestCategory.Foraging => p.ForagingLevel,
-            QuestCategory.Cooking => Math.Max(p.FarmingLevel, p.ForagingLevel),
-            QuestCategory.Animal => p.FarmingLevel,
-            _ => 0
-        };
+            case "farming": return p.FarmingLevel;
+            case "fishing": return p.FishingLevel;
+            case "mining": return p.MiningLevel;
+            case "foraging": return p.ForagingLevel;
+            case "combat": return p.CombatLevel;
+            case "cooking": return ModCompat.GetCookingLevel(ModEntry.Instance.Helper.ModRegistry);
+            case "none": return 0;
+            default: return ModCompat.GetCustomSkillLevel(skill);
+        }
     }
 
     public static int GoldBase(DifficultyTier tier, MoreQuestsFrameworkConfig cfg) =>

@@ -5,7 +5,7 @@ namespace MoreQuestsFramework.Quests.Vanilla;
 internal sealed class VanillaFishing : IQuestDefinition
 {
     public string Id => "Vanilla.Fishing";
-    public QuestCategory Category => QuestCategory.Fishing;
+    public string Category => QuestCategory.Fishing;
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 10;
     public int MaxPerDay => 1;
