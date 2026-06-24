@@ -1,6 +1,6 @@
 # Example: C# Mod with Bundled JSON + Generators
 
-Pattern B from the framework README. A C# SMAPI mod that:
+Pattern B from the framework [README](../../README.md), which is the main reference for the full API, schema, and features. This page just walks through the example. A C# SMAPI mod that:
 
 1. Subscribes to the framework's `RegistrationOpen` event.
 2. Registers one or more named C# generator functions.

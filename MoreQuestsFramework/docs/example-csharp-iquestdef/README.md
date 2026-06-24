@@ -1,6 +1,6 @@
 # Example: C# Mod with `IQuestDefinition` Instances
 
-Pattern C from the framework README. A C# SMAPI mod that builds quest definitions in code and registers them directly via `scope.RegisterQuest(...)`. No JSON file at all.
+Pattern C from the framework [README](../../README.md), which is the main reference for the full API, schema, and features. This page just walks through the example. A C# SMAPI mod that builds quest definitions in code and registers them directly via `scope.RegisterQuest(...)`. No JSON file at all.
 
 ## When to use this pattern
 

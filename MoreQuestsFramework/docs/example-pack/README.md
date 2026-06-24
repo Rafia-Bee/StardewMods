@@ -2,6 +2,8 @@
 
 A Content Patcher pack that adds quests to the More Quests Framework via standard CP edits. No C# code, just `content.json` and translation strings.
 
+The main reference lives in the framework [README](../../README.md): the full schema, every condition key, reward kinds, custom boards, and quest categories. This page is just a worked example to crib from.
+
 For the C# patterns, see [`../example-csharp-generators/`](../example-csharp-generators/) (C# + JSON, injected via `IAssetRequested.Edit`) and [`../example-csharp-iquestdef/`](../example-csharp-iquestdef/) (pure C# using `RegisterQuest`).
 
 ## What it ships
