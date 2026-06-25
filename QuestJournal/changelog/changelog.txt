@@ -1,3 +1,6 @@
+To be released
+- Fixed: updated to work with the latest More Quests, which changed how quest categories work. Categories show correctly again.
+
 1.6.0
 - New: you can now cancel a special order. The game normally won't let you back out of a special order once you take it, so if you grab one you can't finish, you're stuck with it. Now in-progress orders have a Cancel button, same as regular quests. Anything you already donated to the order comes back to you in the lost and found box at the special orders desk.
 - New: an optional setting to make the game's own quest button open this journal. If you don't use Deluxe Journal, you can turn on "Replace the vanilla quest log" and then clicking the quest icon on your toolbar opens this journal instead of the plain old quest log. It's off to start. If you do have Deluxe Journal, this setting does nothing, since that mod already handles the quest button.

@@ -223,7 +223,7 @@ internal static class QuestSnapshotBuilder
                 {
                     var info = mqfApi.GetQuestInfo(defId!);
                     if (info != null)
-                        return (info.Category.ToString(), info.Kind.ToString());
+                        return (info.Category ?? string.Empty, info.Kind.ToString());
                 }
             }
             catch { }
