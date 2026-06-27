@@ -36,6 +36,7 @@ public sealed class ModEntry : Mod
     internal const string PinAssetRoot = "Mods/RafiaBee.MoreQuestsFramework/Pin";
     internal const string QuestsAssetName = "Mods/RafiaBee.MoreQuestsFramework/Quests";
     internal const string BoardsAssetName = "Mods/RafiaBee.MoreQuestsFramework/Boards";
+    internal const string NoticesAssetName = "Mods/RafiaBee.MoreQuestsFramework/Notices";
     internal const string CooldownTiersAssetName = "Mods/RafiaBee.MoreQuestsFramework/CooldownTiers";
     internal const string CategoriesAssetName = "Mods/RafiaBee.MoreQuestsFramework/Categories";
 
@@ -59,6 +60,10 @@ public sealed class ModEntry : Mod
     private QuestPackLoader _loader = null!;
     private BoardRegistry _boards = null!;
     private BoardPackLoader _boardLoader = null!;
+    private NoticeRegistry _notices = null!;
+    private NoticePackLoader _noticeLoader = null!;
+    private NoticeStore? _noticeStore;
+    private Func<string, int?>? _cooldownTierLookup;
     private MailStashCodecRegistry _mailStashCodecs = null!;
     private BoardWorldRenderer? _boardRenderer;
     private QuestPipeline? _pipeline;
@@ -117,6 +122,8 @@ public sealed class ModEntry : Mod
         _loader = new QuestPackLoader(_registry, _generators, Monitor);
         _boards = new BoardRegistry(Monitor);
         _boardLoader = new BoardPackLoader(_boards, Monitor);
+        _notices = new NoticeRegistry(Monitor);
+        _noticeLoader = new NoticePackLoader(_notices, Monitor);
         Dispatch = new DispatchRegistry(helper.ModRegistry, Monitor);
         CombatFood = new CombatFoodRegistry(Monitor);
         _mailStashCodecs = new MailStashCodecRegistry(Monitor);
@@ -128,7 +135,7 @@ public sealed class ModEntry : Mod
         _mailStashCodecs.Register(VanillaFishingQuestStashCodec.Kind, typeof(StardewValley.Quests.FishingQuest), VanillaFishingQuestStashCodec.Encode, VanillaFishingQuestStashCodec.Decode);
         _mailStashCodecs.Register(VanillaSlayMonsterQuestStashCodec.Kind, typeof(StardewValley.Quests.SlayMonsterQuest), VanillaSlayMonsterQuestStashCodec.Encode, VanillaSlayMonsterQuestStashCodec.Decode);
         _mailStashCodecs.Register(VanillaResourceCollectionQuestStashCodec.Kind, typeof(StardewValley.Quests.ResourceCollectionQuest), VanillaResourceCollectionQuestStashCodec.Encode, VanillaResourceCollectionQuestStashCodec.Decode);
-        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _reportBack, _customTriggers, _customRewards, _customConditions, _customBoardQuests, Dispatch, _boards, CombatFood, _mailStashCodecs, Monitor, () => _spaceCore, RefreshOffers, () => _ctx);
+        _api = new MoreQuestsApi(_registry, _generators, _customSteps, _reportBack, _customTriggers, _customRewards, _customConditions, _customBoardQuests, Dispatch, _boards, _notices, CombatFood, _mailStashCodecs, Monitor, () => _spaceCore, RefreshOffers, () => _ctx);
 
         _boardRenderer = new BoardWorldRenderer(helper, Monitor, _boards);
         _boardRenderer.Register();
@@ -289,6 +296,7 @@ public sealed class ModEntry : Mod
             var dict = Helper.GameContent.Load<Dictionary<string, int>>(CooldownTiersAssetName);
             return dict.TryGetValue(name, out var days) ? days : null;
         };
+        _cooldownTierLookup = cooldownTierLookup;
 
         RebuildCategories();
 
@@ -297,6 +305,9 @@ public sealed class ModEntry : Mod
 
         var boardsAsset = Helper.GameContent.Load<Dictionary<string, BoardDefinition>>(BoardsAssetName);
         _boardLoader.LoadFromAsset(boardsAsset);
+
+        var noticesAsset = Helper.GameContent.Load<Dictionary<string, NoticeDef>>(NoticesAssetName);
+        _noticeLoader.LoadFromAsset(noticesAsset);
     }
 
     private void RebuildCategories()
@@ -309,11 +320,13 @@ public sealed class ModEntry : Mod
     {
         _registry.Clear();
         _boards.Clear();
+        _notices.Clear();
         LoadAssetsAndRegister();
         _registry.Freeze();
         _boards.Freeze();
+        _notices.Freeze();
         CustomBoardRouting.ValidateRouting(_registry, _boards, Monitor);
-        Monitor.Log("Reloaded quests and boards from MQF assets.", LogLevel.Info);
+        Monitor.Log("Reloaded quests, boards, and notices from MQF assets.", LogLevel.Info);
     }
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
@@ -339,6 +352,12 @@ public sealed class ModEntry : Mod
         if (e.NameWithoutLocale.IsEquivalentTo(BoardsAssetName))
         {
             e.LoadFrom(() => new Dictionary<string, BoardDefinition>(StringComparer.OrdinalIgnoreCase), AssetLoadPriority.Low);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(NoticesAssetName))
+        {
+            e.LoadFrom(() => new Dictionary<string, NoticeDef>(StringComparer.OrdinalIgnoreCase), AssetLoadPriority.Low);
             return;
         }
 
@@ -402,6 +421,7 @@ public sealed class ModEntry : Mod
         _api.FireRegistrationClosed();
         _registry.Freeze();
         _boards.Freeze();
+        _notices.Freeze();
         CustomBoardRouting.ValidateRouting(_registry, _boards, Monitor);
 
         GmcmRegistration.Register(Helper, ModManifest, Config, _registry, _boards, onReset: () => Config = new MoreQuestsFrameworkConfig());
@@ -425,7 +445,12 @@ public sealed class ModEntry : Mod
         int prunedDeadIds = _stateStore.State.PruneDeadDefIds(_registry.RegisteredIds());
         if (prunedDeadIds > 0)
             ModEntry.LogDebug($"Pruned {prunedDeadIds} stale save-state entr{(prunedDeadIds == 1 ? "y" : "ies")} for quests no longer registered.");
+        int prunedDeadNotices = _stateStore.State.PruneDeadNoticeIds(_notices.RegisteredIds());
+        if (prunedDeadNotices > 0)
+            ModEntry.LogDebug($"Pruned {prunedDeadNotices} stale notice save-state entr{(prunedDeadNotices == 1 ? "y" : "ies")} for notices no longer registered.");
         _antiRepetition.WireState(_stateStore.State);
+        _noticeStore = new NoticeStore();
+        _noticeStore.WireState(_stateStore.State);
 
         _triggers = new TriggerEvaluator(_stateStore.State, Monitor, _customTriggers);
         _pipeline = new QuestPipeline(ctx, _registry, _antiRepetition, _triggers);
@@ -652,6 +677,21 @@ public sealed class ModEntry : Mod
                 list.Add(slot);
             }
         }
+
+        // Notice (bulletin) pins draw into their own per-board budget and append after the
+        // quest pins, so a notice-free board's slot list is identical to before.
+        if (_noticeStore != null)
+        {
+            foreach (var noticeDraw in _pipeline.GenerateBoardNotices(_notices, _boards, _noticeStore, _cooldownTierLookup))
+            {
+                string key = (noticeDraw.Board.OwnerUniqueId ?? "") + "/" + (noticeDraw.Board.Name ?? "");
+                var slot = new CustomBoardSlots.Slot(noticeDraw.Notice, key);
+                if (!slotsByBoardKey.TryGetValue(key, out var list))
+                    slotsByBoardKey[key] = list = new List<CustomBoardSlots.Slot>();
+                list.Add(slot);
+            }
+        }
+
         foreach (var (key, slots) in slotsByBoardKey)
             CustomBoardSlots.SetSlotsByKey(key, slots);
 

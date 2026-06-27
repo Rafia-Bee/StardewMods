@@ -61,6 +61,14 @@ public sealed class BoardDefinition
     // "WeightedRandom" (default) or "FirstAvailable".
     public string PoolStrategy { get; set; } = "WeightedRandom";
 
+    // How many bulletin notices (non-quest text pins) this board shows, separate from the
+    // quest PoolSize so notices and quests don't compete for slots. 0 hides notices. Only
+    // matters once a notice targets this board. Players get their own GMCM slider running
+    // NoticePoolSizeMin to NoticePoolSizeMax. Min can be 0, so a player may hide all notices.
+    public int NoticePoolSize { get; set; } = 2;
+    public int NoticePoolSizeMin { get; set; } = 0;
+    public int NoticePoolSizeMax { get; set; } = 5;
+
     // Note arrangement on the cork board. "Scatter" (default) = the loose pinned look custom
     // boards have always used, kept as the default so existing boards look unchanged.
     // "TiltedGrid" = the tidy auto-grid with per-note tilts (what the daily board uses).

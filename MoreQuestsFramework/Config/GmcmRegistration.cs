@@ -223,17 +223,31 @@ internal static class GmcmRegistration
         foreach (var board in boards.All)
         {
             var (min, max, def) = BoardPoolConfig.Bounds(board);
-            if (max <= min)
-                continue;
-            string key = BoardPoolConfig.KeyOf(board);
             string label = !string.IsNullOrWhiteSpace(board.Title) ? board.Title! : board.Name;
-            api.AddNumberOption(manifest,
-                () => ModEntry.Config.CustomBoardPoolSize.TryGetValue(key, out int v) ? System.Math.Clamp(v, min, max) : def,
-                v => ModEntry.Config.CustomBoardPoolSize[key] = System.Math.Clamp(v, min, max),
-                () => t.Get("config.customBoardPoolSize", new { board = label }).Default($"{label}: pins shown"),
-                () => t.Get("config.customBoardPoolSize.tooltip", new { board = label })
-                    .Default($"How many quests {label} shows at once ({min} to {max})."),
-                min: min, max: max);
+            if (max > min)
+            {
+                string key = BoardPoolConfig.KeyOf(board);
+                api.AddNumberOption(manifest,
+                    () => ModEntry.Config.CustomBoardPoolSize.TryGetValue(key, out int v) ? System.Math.Clamp(v, min, max) : def,
+                    v => ModEntry.Config.CustomBoardPoolSize[key] = System.Math.Clamp(v, min, max),
+                    () => t.Get("config.customBoardPoolSize", new { board = label }).Default($"{label}: pins shown"),
+                    () => t.Get("config.customBoardPoolSize.tooltip", new { board = label })
+                        .Default($"How many quests {label} shows at once ({min} to {max})."),
+                    min: min, max: max);
+            }
+
+            var (nmin, nmax, ndef) = NoticePoolConfig.Bounds(board);
+            if (nmax > nmin)
+            {
+                string nkey = NoticePoolConfig.KeyOf(board);
+                api.AddNumberOption(manifest,
+                    () => ModEntry.Config.CustomBoardNoticePoolSize.TryGetValue(nkey, out int v) ? System.Math.Clamp(v, nmin, nmax) : ndef,
+                    v => ModEntry.Config.CustomBoardNoticePoolSize[nkey] = System.Math.Clamp(v, nmin, nmax),
+                    () => t.Get("config.customBoardNoticePoolSize", new { board = label }).Default($"{label}: notices shown"),
+                    () => t.Get("config.customBoardNoticePoolSize.tooltip", new { board = label })
+                        .Default($"How many bulletin notices {label} shows at once ({nmin} to {nmax})."),
+                    min: nmin, max: nmax);
+            }
         }
     }
 

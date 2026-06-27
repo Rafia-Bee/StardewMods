@@ -31,7 +31,10 @@ internal sealed class CustomBoardMenu : IClickableMenu
     private string _hoverText = "";
     private Note? _hoveredNote;
 
-    public CustomBoardQuestMenu? InnerAcceptPopup { get; private set; }
+    // The open inner popup, or null. A quest pin opens CustomBoardQuestMenu (accept), a notice
+    // pin opens CustomBoardNoticeMenu (read-only). Both are IClickableMenu, so all the input
+    // forwarding below works on either.
+    private IClickableMenu? _innerPopup;
 
     private sealed class Note
     {
@@ -117,13 +120,17 @@ internal sealed class CustomBoardMenu : IClickableMenu
             return;
 
         var categories = new List<string>(slots.Count);
+        var types = new List<string>(slots.Count);
         foreach (var s in slots)
-            categories.Add(s.Posting.Category);
+        {
+            categories.Add(s.Category);
+            types.Add(s.Kind == SlotKind.Notice ? "Notice" : "Quest");
+        }
 
         int daySeed = Game1.Date.TotalDays + (_board.Name?.GetHashCode() ?? 0);
         var rng = new Random(Game1.Date.TotalDays * 7919 + slots.Count + (_board.Name?.GetHashCode() ?? 0));
         var placements = BoardLayout.ComputeLayout(
-            _board, categories, xPositionOnScreen, yPositionOnScreen, daySeed, rng);
+            _board, categories, xPositionOnScreen, yPositionOnScreen, daySeed, rng, types);
         var texCache = new Dictionary<string, Texture2D>();
 
         for (int i = 0; i < slots.Count; i++)
@@ -133,7 +140,7 @@ internal sealed class CustomBoardMenu : IClickableMenu
                 continue;
             var slot = slots[i];
 
-            (Color padColor, Color pinColor) = BoardLayout.ColorsFor(slot.Posting.Category);
+            (Color padColor, Color pinColor) = BoardLayout.ColorsFor(slot.Category);
 
             var cc = new ClickableTextureComponent(
                 placement.PaperBounds,
@@ -154,9 +161,9 @@ internal sealed class CustomBoardMenu : IClickableMenu
                 Slot = slot,
                 PadColor = padColor,
                 PinColor = pinColor,
-                PadTexture = BoardNoteRenderer.ResolvePad(slot.Posting.Category, _padTexture, texCache),
-                PinTexture = BoardNoteRenderer.ResolvePin(slot.Posting.Category, _pinTexture, texCache),
-                Icon = BoardNoteRenderer.ResolveIcon(slot.Posting.Icon, slot.Posting.Category, slot.Posting.QuestGiver, texCache),
+                PadTexture = BoardNoteRenderer.ResolvePad(slot.Category, _padTexture, texCache),
+                PinTexture = BoardNoteRenderer.ResolvePin(slot.Category, _pinTexture, texCache),
+                Icon = BoardNoteRenderer.ResolveIcon(slot.IconValue, slot.Category, slot.GiverName, texCache),
                 Tilt = placement.Tilt
             };
             _notes.Add(note);
@@ -166,9 +173,9 @@ internal sealed class CustomBoardMenu : IClickableMenu
 
     public override void performHoverAction(int x, int y)
     {
-        if (InnerAcceptPopup != null)
+        if (_innerPopup != null)
         {
-            InnerAcceptPopup.performHoverAction(x, y);
+            _innerPopup.performHoverAction(x, y);
             return;
         }
         _hoverTitle = "";
@@ -178,8 +185,7 @@ internal sealed class CustomBoardMenu : IClickableMenu
         {
             if (note.Cc.containsPoint(x, y))
             {
-                _hoverTitle = note.Slot.Quest.questTitle ?? "";
-                _hoverText = QuestTooltip.BodyFor(note.Slot.Quest);
+                (_hoverTitle, _hoverText) = HoverTextFor(note.Slot);
                 _hoveredNote = note;
             }
         }
@@ -187,11 +193,21 @@ internal sealed class CustomBoardMenu : IClickableMenu
             upperRightCloseButton.tryHover(x, y);
     }
 
+    // A quest pin shows its title + the quest's objective tooltip. A notice pin shows no
+    // tooltip (the whole notice reads in the popup on click; dumping the full body into a hover
+    // box was too much), so return empty and the draw skips the tooltip entirely.
+    private static (string title, string text) HoverTextFor(CustomBoardSlots.Slot slot)
+    {
+        if (slot.Kind == SlotKind.Notice)
+            return ("", "");
+        return (slot.Quest?.questTitle ?? "", slot.Quest != null ? QuestTooltip.BodyFor(slot.Quest) : "");
+    }
+
     public override void receiveLeftClick(int x, int y, bool playSound = true)
     {
-        if (InnerAcceptPopup != null)
+        if (_innerPopup != null)
         {
-            InnerAcceptPopup.receiveLeftClick(x, y, playSound);
+            _innerPopup.receiveLeftClick(x, y, playSound);
             return;
         }
 
@@ -206,14 +222,22 @@ internal sealed class CustomBoardMenu : IClickableMenu
         var target = NoteAt(x, y);
         if (target != null)
         {
-            InnerAcceptPopup = new CustomBoardQuestMenu(this, target.Slot, _billboardTexture);
-            InnerAcceptPopup.acceptQuestButton.visible = !target.Slot.Accepted;
+            if (target.Slot.Kind == SlotKind.Notice)
+            {
+                _innerPopup = new CustomBoardNoticeMenu(this, target.Slot.Notice!, _billboardTexture);
+            }
+            else
+            {
+                var accept = new CustomBoardQuestMenu(this, target.Slot, _billboardTexture);
+                accept.acceptQuestButton.visible = !target.Slot.Accepted;
+                _innerPopup = accept;
+            }
             if (playSound)
                 Game1.playSound("smallSelect");
             if (Game1.options.SnappyMenus)
             {
-                InnerAcceptPopup.snapToDefaultClickableComponent();
-                currentlySnappedComponent = InnerAcceptPopup.currentlySnappedComponent;
+                _innerPopup.snapToDefaultClickableComponent();
+                currentlySnappedComponent = _innerPopup.currentlySnappedComponent;
                 snapCursorToCurrentSnappedComponent();
             }
         }
@@ -239,17 +263,17 @@ internal sealed class CustomBoardMenu : IClickableMenu
 
     public override bool readyToClose()
     {
-        return InnerAcceptPopup == null;
+        return _innerPopup == null;
     }
 
     // Vanilla's IClickableMenu Esc/menu-button handler calls readyToClose then exits the
-    // outer menu. With the popup open we want Esc to close the popup instead, so intercept
+    // outer menu. With a popup open we want Esc to close the popup instead, so intercept
     // here and route to the same close path the close button uses.
     public override void receiveKeyPress(Keys key)
     {
-        if (InnerAcceptPopup != null && IsMenuButton(key))
+        if (_innerPopup != null && IsMenuButton(key))
         {
-            OnInnerAcceptClosed(reopen: false);
+            OnInnerPopupClosed(reopen: false);
             if (Game1.options.SnappyMenus)
                 snapToDefaultClickableComponent();
             return;
@@ -259,10 +283,10 @@ internal sealed class CustomBoardMenu : IClickableMenu
 
     public override void applyMovementKey(int direction)
     {
-        if (InnerAcceptPopup != null)
+        if (_innerPopup != null)
         {
-            InnerAcceptPopup.applyMovementKey(direction);
-            currentlySnappedComponent = InnerAcceptPopup.currentlySnappedComponent;
+            _innerPopup.applyMovementKey(direction);
+            currentlySnappedComponent = _innerPopup.currentlySnappedComponent;
             return;
         }
         base.applyMovementKey(direction);
@@ -270,9 +294,9 @@ internal sealed class CustomBoardMenu : IClickableMenu
 
     public override void receiveGamePadButton(Buttons b)
     {
-        if (InnerAcceptPopup != null)
+        if (_innerPopup != null)
         {
-            InnerAcceptPopup.receiveGamePadButton(b);
+            _innerPopup.receiveGamePadButton(b);
             return;
         }
         base.receiveGamePadButton(b);
@@ -291,10 +315,10 @@ internal sealed class CustomBoardMenu : IClickableMenu
 
     public override void snapToDefaultClickableComponent()
     {
-        if (InnerAcceptPopup != null)
+        if (_innerPopup != null)
         {
-            InnerAcceptPopup.snapToDefaultClickableComponent();
-            currentlySnappedComponent = InnerAcceptPopup.currentlySnappedComponent;
+            _innerPopup.snapToDefaultClickableComponent();
+            currentlySnappedComponent = _innerPopup.currentlySnappedComponent;
             return;
         }
         if (_notes.Count > 0)
@@ -304,19 +328,20 @@ internal sealed class CustomBoardMenu : IClickableMenu
         }
     }
 
-    // reopen=true rebuilds the cork board so the just-accepted slot drops out.
-    public void OnInnerAcceptClosed(bool reopen)
+    // reopen=true rebuilds the cork board so the just-accepted slot drops out. A notice popup
+    // never reopens (the board is unchanged), but a quest accept does.
+    public void OnInnerPopupClosed(bool reopen)
     {
-        InnerAcceptPopup = null;
+        _innerPopup = null;
         if (reopen)
             Game1.activeClickableMenu = new CustomBoardMenu(_board);
     }
 
     public override void draw(SpriteBatch b)
     {
-        if (InnerAcceptPopup != null)
+        if (_innerPopup != null)
         {
-            InnerAcceptPopup.draw(b);
+            _innerPopup.draw(b);
             return;
         }
 

@@ -1,0 +1,24 @@
+{
+    "Schema": "1.0",
+    "Notices": [
+        {
+            "Name": "Notice.GuildWelcome",
+            "CustomBoardId": "AdventurersGuild",
+            "Category": "Mining",
+            "Giver": "Marlon",
+            "Weight": 10,
+            "Title": "A word from Marlon",
+            "Body": "Marlon here. The guild keeps its doors open to anyone willing to face what waits below. Clear the deeper floors and bring me word of it, and you will not go unrewarded. Mind the dark, and mind your footing."
+        },
+        {
+            "Name": "Notice.GilOneTime",
+            "CustomBoardId": "AdventurersGuild",
+            "Category": "Mining",
+            "Giver": "Gil",
+            "Weight": 10,
+            "Once": true,
+            "Title": "Gil's one-time note",
+            "Body": "Gil here. Pull up a chair if you ever pass by the guild. I have a few stories from before my knees gave out, and not many left who want to hear them. I am only tacking this up the once, so do not come looking for it tomorrow."
+        }
+    ]
+}

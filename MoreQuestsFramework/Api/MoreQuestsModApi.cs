@@ -28,6 +28,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
     private readonly CustomBoardQuestRegistry _customBoardQuests;
     private readonly DispatchRegistry _dispatch;
     private readonly BoardRegistry _boards;
+    private readonly NoticeRegistry _notices;
     private readonly MailStashCodecRegistry _mailStashCodecs;
     private readonly IMonitor _monitor;
     private readonly Func<ISpaceCoreApi?> _spaceCore;
@@ -47,6 +48,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         CustomBoardQuestRegistry customBoardQuests,
         DispatchRegistry dispatch,
         BoardRegistry boards,
+        NoticeRegistry notices,
         MailStashCodecRegistry mailStashCodecs,
         IMonitor monitor,
         Func<ISpaceCoreApi?> spaceCore,
@@ -63,6 +65,7 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         _customBoardQuests = customBoardQuests;
         _dispatch = dispatch;
         _boards = boards;
+        _notices = notices;
         _mailStashCodecs = mailStashCodecs;
         _monitor = monitor;
         _spaceCore = spaceCore;
@@ -216,6 +219,13 @@ internal sealed class MoreQuestsModApi : IMoreQuestsModApi
         if (board == null)
             throw new ArgumentNullException(nameof(board));
         _boards.Register(board, Owner.UniqueID);
+    }
+
+    public void RegisterNotice(NoticeDef notice)
+    {
+        if (notice == null)
+            throw new ArgumentNullException(nameof(notice));
+        _notices.Register(notice, Owner.UniqueID);
     }
 
     public void RegisterCategory(string id, CategoryDefinition definition)

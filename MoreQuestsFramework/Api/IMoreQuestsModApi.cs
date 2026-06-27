@@ -35,6 +35,12 @@ public interface IMoreQuestsModApi
 
     void RegisterBoard(BoardDefinition board);
 
+    // Registers a bulletin notice: a non-quest text pin that posts to a custom board and opens
+    // a read-only popup instead of the quest-accept popup. The notice is namespaced under the
+    // calling mod's UniqueID like a quest/board. CP-only authors can EditData the Notices asset
+    // (Mods/RafiaBee.MoreQuestsFramework/Notices) instead of calling this.
+    void RegisterNotice(NoticeDef notice);
+
     // Registers a quest category (pad/pin color + the skill it scales against). The id is
     // namespaced under the calling mod's UniqueID ({ownerUniqueId}_{id}) to avoid collisions,
     // mirroring board/quest ids. To recolor a built-in category instead, EditData the

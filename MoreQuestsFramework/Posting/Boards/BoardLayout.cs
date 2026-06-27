@@ -60,11 +60,14 @@ internal static class BoardLayout
     };
 
     // The one layout entry point. Returns a placement per slot (aligned to `categories`), or
-    // null for a note a zoned board dropped because its category matched no zone and there's
-    // no catch-all. board == null means the daily board: a full-area tilted grid.
+    // null for a note a zoned board dropped because it matched no zone and there's no catch-all.
+    // board == null means the daily board: a full-area tilted grid. `types` is an optional
+    // per-slot pin type ("Quest" / "Notice"), aligned to `categories`, used only by Zoned
+    // boards that route by Type; pass null when type routing isn't needed.
     public static List<NotePlacement?> ComputeLayout(
         BoardDefinition? board, IReadOnlyList<string> categories,
-        int xPositionOnScreen, int yPositionOnScreen, int daySeed, Random rng)
+        int xPositionOnScreen, int yPositionOnScreen, int daySeed, Random rng,
+        IReadOnlyList<string>? types = null)
     {
         int count = categories.Count;
         var result = new List<NotePlacement?>(count);
@@ -80,7 +83,7 @@ internal static class BoardLayout
         LayoutMode mode = ParseMode(board?.Layout);
         if (mode == LayoutMode.Zoned && board?.Zones is { Count: > 0 })
         {
-            LayoutZoned(board, categories, fullArea, daySeed, rng, result);
+            LayoutZoned(board, categories, types, fullArea, daySeed, rng, result);
             return result;
         }
 
@@ -93,8 +96,8 @@ internal static class BoardLayout
     }
 
     private static void LayoutZoned(
-        BoardDefinition board, IReadOnlyList<string> categories, Rectangle fullArea,
-        int daySeed, Random rng, List<NotePlacement?> result)
+        BoardDefinition board, IReadOnlyList<string> categories, IReadOnlyList<string>? types,
+        Rectangle fullArea, int daySeed, Random rng, List<NotePlacement?> result)
     {
         var zones = board.Zones!;
         var buckets = new List<int>[zones.Count];
@@ -104,8 +107,9 @@ internal static class BoardLayout
         int catchAll = -1;
         for (int z = 0; z < zones.Count; z++)
         {
-            var cats = zones[z].Categories;
-            if (cats == null || cats.Count == 0)
+            bool noCats = zones[z].Categories == null || zones[z].Categories!.Count == 0;
+            bool noTypes = zones[z].Types == null || zones[z].Types!.Count == 0;
+            if (noCats && noTypes)
             {
                 catchAll = z;
                 break;
@@ -114,12 +118,13 @@ internal static class BoardLayout
 
         for (int i = 0; i < categories.Count; i++)
         {
-            int zoneIdx = MatchZone(zones, categories[i]);
+            string? type = types != null && i < types.Count ? types[i] : null;
+            int zoneIdx = MatchZone(zones, categories[i], type);
             if (zoneIdx < 0)
                 zoneIdx = catchAll;
             if (zoneIdx < 0)
             {
-                ModEntry.LogDebug($"Zoned board '{board.Name}': category '{categories[i]}' matched no zone and there's no catch-all zone; dropping note.");
+                ModEntry.LogDebug($"Zoned board '{board.Name}': pin (category '{categories[i]}', type '{type ?? "?"}') matched no zone and there's no catch-all zone; dropping note.");
                 continue;
             }
             buckets[zoneIdx].Add(i);
@@ -134,16 +139,28 @@ internal static class BoardLayout
         }
     }
 
-    private static int MatchZone(List<BoardZone> zones, string category)
+    // First zone that claims the pin wins. A zone claims it when the pin's category is in the
+    // zone's Categories OR (for type routing) the pin's type is in the zone's Types. A zone
+    // with neither list is the catch-all and is handled separately.
+    private static int MatchZone(List<BoardZone> zones, string category, string? type)
     {
         for (int z = 0; z < zones.Count; z++)
         {
             var cats = zones[z].Categories;
-            if (cats == null || cats.Count == 0)
-                continue;
-            for (int c = 0; c < cats.Count; c++)
-                if (string.Equals(cats[c], category, StringComparison.OrdinalIgnoreCase))
-                    return z;
+            if (cats != null && cats.Count > 0)
+            {
+                for (int c = 0; c < cats.Count; c++)
+                    if (string.Equals(cats[c], category, StringComparison.OrdinalIgnoreCase))
+                        return z;
+            }
+
+            var zoneTypes = zones[z].Types;
+            if (type != null && zoneTypes != null && zoneTypes.Count > 0)
+            {
+                for (int tIdx = 0; tIdx < zoneTypes.Count; tIdx++)
+                    if (string.Equals(zoneTypes[tIdx], type, StringComparison.OrdinalIgnoreCase))
+                        return z;
+            }
         }
         return -1;
     }

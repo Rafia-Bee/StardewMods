@@ -99,14 +99,14 @@ internal sealed class CustomBoardQuestMenu : IClickableMenu
         {
             if (playSound)
                 Game1.playSound("bigDeSelect");
-            _outer.OnInnerAcceptClosed(reopen: false);
+            _outer.OnInnerPopupClosed(reopen: false);
             return;
         }
 
         if (acceptQuestButton.visible && acceptQuestButton.containsPoint(x, y))
         {
-            int deadline = System.Math.Max(1, _slot.Posting.DeadlineDays);
-            Quest quest = _slot.Quest;
+            int deadline = System.Math.Max(1, _slot.Posting!.DeadlineDays);
+            Quest quest = _slot.Quest!;
             quest.dayQuestAccepted.Value = Game1.Date.TotalDays;
             quest.accepted.Value = true;
             quest.canBeCancelled.Value = true;
@@ -120,7 +120,7 @@ internal sealed class CustomBoardQuestMenu : IClickableMenu
             CustomBoardSlots.AcceptSelected();
 
             Game1.playSound("newArtifact");
-            _outer.OnInnerAcceptClosed(reopen: true);
+            _outer.OnInnerPopupClosed(reopen: true);
         }
     }
 
@@ -128,7 +128,7 @@ internal sealed class CustomBoardQuestMenu : IClickableMenu
     {
         if (playSound)
             Game1.playSound("bigDeSelect");
-        _outer.OnInnerAcceptClosed(reopen: false);
+        _outer.OnInnerPopupClosed(reopen: false);
     }
 
     public override void draw(SpriteBatch b)
@@ -145,7 +145,7 @@ internal sealed class CustomBoardQuestMenu : IClickableMenu
         SpriteFont font = LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ko
             ? Game1.smallFont
             : Game1.dialogueFont;
-        string description = Game1.parseText(_slot.Quest.questDescription, font, 640);
+        string description = Game1.parseText(_slot.Quest!.questDescription, font, 640);
         // Custom fonts can have taller line metrics, which makes the wrapped
         // description overflow past the parchment art and under the Accept button.
         // Measure the wrapped text and shrink it just enough to fit if needed.

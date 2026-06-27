@@ -63,10 +63,21 @@ internal static class CustomBoardRouting
         Dictionary<string, List<BoardDefinition>> byOwner,
         out string homeKey)
     {
-        homeKey = "";
-        string owner = def.OwnerUniqueId ?? "";
         string? board = !string.IsNullOrWhiteSpace(overrideBoard) ? overrideBoard : def.Trigger?.CustomBoardId;
+        return ResolveHome(def.OwnerUniqueId ?? "", board, byKey, byOwner, out homeKey);
+    }
 
+    // Core routing on a plain (owner, boardId), shared by quests and notices. A bare board id
+    // resolves under `owner`, "Owner.UniqueID/Name" targets another mod's board, and an omitted
+    // id falls back to the owner's single board (Homeless if the owner has 0 or 2+ boards).
+    public static HomeResolution ResolveHome(
+        string owner,
+        string? board,
+        Dictionary<string, BoardDefinition> byKey,
+        Dictionary<string, List<BoardDefinition>> byOwner,
+        out string homeKey)
+    {
+        homeKey = "";
         if (!string.IsNullOrWhiteSpace(board))
         {
             homeKey = board!.Contains('/') ? board! : owner + "/" + board;

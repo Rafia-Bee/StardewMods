@@ -23,6 +23,11 @@ public sealed class MoreQuestsFrameworkConfig
     // the board's PoolSizeMin..PoolSizeMax at read time, so out-of-range hand edits are safe.
     public Dictionary<string, int> CustomBoardPoolSize { get; set; } = new();
 
+    // Per-custom-board notice (bulletin) pin count chosen by the player. Same "{owner}/{name}"
+    // keys as CustomBoardPoolSize. A board not listed uses its authored NoticePoolSize. Clamped
+    // to the board's NoticePoolSizeMin..Max at read time. May be 0 to hide notices.
+    public Dictionary<string, int> CustomBoardNoticePoolSize { get; set; } = new();
+
     // Keys are definition IDs. 0 disables. Missing keys use DefaultWeight.
     public Dictionary<string, int> QuestWeights { get; set; } = new();
 

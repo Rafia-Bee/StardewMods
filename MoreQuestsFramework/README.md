@@ -544,6 +544,41 @@ On top of the routing fields, a board in the `.../Boards` asset takes these:
 
 The per-category `PadTexture` / `PinTexture` / `Icon` from the Categories section apply on custom boards too, so a zone full of one category can read completely differently from the next.
 
+## Bulletin notices (non-quest pins)
+
+A custom board can show **notices** alongside quests: little pins that are news, announcements, or hints. Clicking one opens a read-only text popup instead of the quest-accept popup. This turns a custom board into a general bulletin board.
+
+Notices live in their own content asset, `Mods/RafiaBee.MoreQuestsFramework/Notices`, a dictionary of `id -> notice` shaped just like the Quests and Boards assets. A CP pack `EditData`s it; a C# mod can call `RegisterNotice(...)` instead. Each notice rides the same board, the same category styling (pad/pin color, corner icon, per-category art), and the same `Available` condition keys as a quest, so anything you can gate a quest on you can gate a notice on.
+
+A notice takes these fields:
+
+- `CustomBoardId` which board it posts to, by id. Same routing as a quest's `Trigger.CustomBoardId`: a bare name resolves under your mod, `Owner.UniqueID/Name` targets another mod's board, and leaving it out falls back to your single board.
+- `Category` drives the pin's color, corner icon, and art, exactly like a quest's category. Defaults to `Social`. (A board's `AllowedCategories` only filters quests, not notices, so a notice shows regardless of the board's category list.)
+- `Title` the heading shown on hover and at the top of the popup. `Body` the popup text. Write both in first person, like the notice author is speaking. CP `{{i18n:key}}` tokens are resolved before the text reaches the framework.
+- `Weight` how likely this notice is to win a notice slot when more qualify than fit. Default 1, `0` hides it.
+- `Available` the same condition block quests use (season, date, day of week, random chance, mail flags, custom conditions, the `not:` prefix, `|` alternatives). Use this for "only in spring" or "only after the player has seen event X".
+- `CooldownDays` / `CooldownTier` how long the notice waits before it can show again after it last appeared. Use this to rotate news so the same announcement doesn't sit up forever. 0 (default) lets it show every day it qualifies.
+- `Once` show it once, then never again on that save (the seen flag is saved). Leave it off for a recurring notice.
+- `Giver` an NPC whose portrait fills the corner icon when the category icon is the default portrait. `Icon` an optional per-notice icon override (same values as a category's `Icon`).
+
+How many notices a board shows is set by `NoticePoolSize` on the board (with `NoticePoolSizeMin` / `NoticePoolSizeMax` for the player's GMCM slider, under "Custom boards"). It's a separate budget from `PoolSize`, so quests and notices never compete for slots: a board can show, say, 3 quests plus 2 notices. Set `NoticePoolSize` to 0 (or the player drags the slider to 0) to hide notices.
+
+```jsonc
+// In a CP pack: EditData "Mods/RafiaBee.MoreQuestsFramework/Notices"
+"{{ModId}}_TownNews": {
+    "CustomBoardId": "Some.OtherModId/TownBoard",
+    "Category": "Social",
+    "Giver": "Lewis",
+    "Title": "A word from the Mayor",
+    "Body": "Lewis here. The valley fair is coming up fast, so start setting aside your finest goods now.",
+    "Weight": 10,
+    "Available": { "Season": "fall" },
+    "CooldownDays": 3
+}
+```
+
+Boards can also split quests and notices into different regions: a `Zoned` board's zone takes a `Types` list (`["Quest"]` or `["Notice"]`) the same way it takes `Categories`, and a board's `Priority` block takes a `Types` map (e.g. `"Types": { "Notice": 2.0 }`) to bias notices against quests.
+
 ## Public API
 
 `IMoreQuestsApi` ([Api/IMoreQuestsApi.cs](Api/IMoreQuestsApi.cs)) is the public registration seam, marked Beta until framework v1.0. Fetch it once via `helper.ModRegistry.GetApi<IMoreQuestsApi>(...)`, then narrow to a per-mod scope through `GetModApi(ModManifest)`.

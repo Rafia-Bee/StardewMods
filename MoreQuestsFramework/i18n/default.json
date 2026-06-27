@@ -20,9 +20,11 @@
     "config.BoardMaxNoteSize.tooltip": "How big a single note can get, in pixels, when only a few quests are posted. Notes never grow larger than what fits the board, so on busy days this has no effect.",
 
     "config.section.customBoards": "Custom boards",
-    "config.section.customBoards.tooltip": "How many quests each board added by another mod shows at once. The range for each board is set by whoever made it.",
+    "config.section.customBoards.tooltip": "How many quests and notices each board added by another mod shows at once. The range for each board is set by whoever made it.",
     "config.customBoardPoolSize": "{{board}}: quests shown",
     "config.customBoardPoolSize.tooltip": "How many quests {{board}} pins up at once.",
+    "config.customBoardNoticePoolSize": "{{board}}: notices shown",
+    "config.customBoardNoticePoolSize.tooltip": "How many bulletin notices {{board}} pins up at once. Set to 0 to hide notices on this board.",
 
     "config.section.weights": "Quest type weights",
     "config.section.weights.tooltip": "Each daily-board quest type has a relative weight. Higher = more likely to appear. 0 disables that type. Browse by category below.",

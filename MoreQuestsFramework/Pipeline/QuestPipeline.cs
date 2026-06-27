@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using MoreQuestsFramework.Api;
+using MoreQuestsFramework.Conditions;
 using MoreQuestsFramework.Config;
 using MoreQuestsFramework.Registry;
+using MoreQuestsFramework.State;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
 using StardewValley;
@@ -317,6 +319,153 @@ internal sealed class QuestPipeline
         sw.Stop();
         ModEntry.LogDebug($"Generated {survivors.Count} custom-board draw(s) across {boardRegistry.All.Count} board(s) in {sw.Elapsed.TotalMilliseconds:F1} ms.");
         return survivors;
+    }
+
+    // Draws each board's bulletin notices into its own NoticePoolSize budget, kept separate
+    // from the quest draw so notices and quests never compete for slots. Phase 1: home-board
+    // routing only (no catch-all mirroring), each notice appears at most once. Honors Available,
+    // the per-notice Weight (scaled by the board's Priority Categories / Types "Notice" map),
+    // CooldownDays, and the one-shot seen flag.
+    public List<NoticeDraw> GenerateBoardNotices(
+        NoticeRegistry notices, BoardRegistry boards, NoticeStore store, Func<string, int?>? cooldownTierLookup)
+    {
+        var sw = Stopwatch.StartNew();
+        var draws = new List<NoticeDraw>();
+        if (notices == null || notices.All.Count == 0 || boards == null || boards.All.Count == 0)
+            return draws;
+
+        var (byKey, byOwner) = CustomBoardRouting.BuildBoardMaps(boards);
+
+        var byBoardKey = new Dictionary<string, List<(NoticeDef Def, int Weight)>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var def in notices.All)
+        {
+            string id = NoticeRegistry.KeyOf(def);
+            if (store.IsSeen(id))
+                continue;
+            if (def.Available != null && def.Available.Count > 0
+                && !ConditionEvaluator.Evaluate(def.Available, _ctx.Helper.ModRegistry))
+                continue;
+            if (store.OnCooldown(id, ResolveNoticeCooldown(def, cooldownTierLookup)))
+                continue;
+            if (def.Weight <= 0)
+                continue;
+
+            switch (CustomBoardRouting.ResolveHome(def.OwnerUniqueId ?? "", def.CustomBoardId, byKey, byOwner, out string homeKey))
+            {
+                case CustomBoardRouting.HomeResolution.Home:
+                    if (!byBoardKey.TryGetValue(homeKey, out var group))
+                        byBoardKey[homeKey] = group = new List<(NoticeDef, int)>();
+                    group.Add((def, def.Weight));
+                    break;
+                default:
+                    ModEntry.LogDebug($"Notice draw: '{id}' targets board '{def.CustomBoardId ?? "(owner default)"}' which isn't a single home board; dropping.");
+                    break;
+            }
+        }
+
+        var rng = Game1.random;
+        foreach (var board in boards.All)
+        {
+            if (!byBoardKey.TryGetValue(CustomBoardRouting.KeyOf(board), out var group))
+                continue;
+            int target = NoticePoolConfig.Effective(board, _ctx.Config);
+            if (target <= 0)
+                continue;
+            foreach (var def in SelectNotices(board, group, target, rng))
+            {
+                string id = NoticeRegistry.KeyOf(def);
+                draws.Add(new NoticeDraw(BuildNotice(def), board));
+                store.RecordPosted(id);
+                if (def.Once)
+                    store.MarkSeen(id);
+            }
+        }
+
+        sw.Stop();
+        ModEntry.LogDebug($"Generated {draws.Count} notice(s) across {boards.All.Count} board(s) in {sw.Elapsed.TotalMilliseconds:F1} ms.");
+        return draws;
+    }
+
+    private int ResolveNoticeCooldown(NoticeDef def, Func<string, int?>? cooldownTierLookup)
+    {
+        if (!string.IsNullOrEmpty(def.CooldownTier) && cooldownTierLookup != null)
+        {
+            int? resolved = cooldownTierLookup(def.CooldownTier!);
+            if (resolved.HasValue)
+                return resolved.Value;
+        }
+        return def.CooldownDays;
+    }
+
+    private static NoticeInstance BuildNotice(NoticeDef def) => new()
+    {
+        DefinitionId = NoticeRegistry.KeyOf(def),
+        OwnerUniqueId = def.OwnerUniqueId ?? "",
+        Category = string.IsNullOrWhiteSpace(def.Category) ? QuestCategory.Social : def.Category!,
+        Title = def.Title ?? "",
+        Body = def.Body ?? "",
+        Giver = def.Giver ?? "",
+        Icon = def.Icon ?? "",
+    };
+
+    // Weighted pick without replacement up to `count`, applying the board's Priority to each
+    // notice's weight (Categories[category] and Types["Notice"]). FirstAvailable takes them in
+    // registration order. No Priority leaves weights as authored, so the draw is unbiased.
+    private static List<NoticeDef> SelectNotices(
+        BoardDefinition board, List<(NoticeDef Def, int Weight)> group, int count, System.Random rng)
+    {
+        var result = new List<NoticeDef>();
+        if (group.Count == 0 || count <= 0)
+            return result;
+
+        if (string.Equals(board.PoolStrategy, "FirstAvailable", StringComparison.OrdinalIgnoreCase))
+        {
+            for (int i = 0; i < group.Count && result.Count < count; i++)
+                result.Add(group[i].Def);
+            return result;
+        }
+
+        var pool = new List<(NoticeDef Def, int Weight)>(group.Count);
+        foreach (var (def, w) in group)
+        {
+            int selWeight = ScaleWeight(w, NoticePriorityMultiplier(board.Priority, def.Category));
+            if (selWeight > 0)
+                pool.Add((def, selWeight));
+        }
+
+        while (result.Count < count && pool.Count > 0)
+        {
+            int total = 0;
+            for (int i = 0; i < pool.Count; i++)
+                total += System.Math.Max(0, pool[i].Weight);
+            if (total <= 0)
+                break;
+            int roll = rng.Next(total);
+            int idx = 0;
+            for (; idx < pool.Count; idx++)
+            {
+                roll -= System.Math.Max(0, pool[idx].Weight);
+                if (roll < 0)
+                    break;
+            }
+            if (idx >= pool.Count)
+                idx = pool.Count - 1;
+            result.Add(pool[idx].Def);
+            pool.RemoveAt(idx);
+        }
+        return result;
+    }
+
+    private static double NoticePriorityMultiplier(BoardPriority? priority, string? category)
+    {
+        if (priority == null)
+            return 1.0;
+        double m = 1.0;
+        if (priority.Categories != null && category != null && priority.Categories.TryGetValue(category, out double cm))
+            m *= cm;
+        if (priority.Types != null && priority.Types.TryGetValue("Notice", out double tm))
+            m *= tm;
+        return m < 0 ? 0 : m;
     }
 
     private List<(QuestPosting Posting, int Weight)> DrawFromPool(

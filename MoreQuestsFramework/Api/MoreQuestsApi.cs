@@ -30,6 +30,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     private readonly CustomBoardQuestRegistry _customBoardQuests;
     private readonly DispatchRegistry _dispatch;
     private readonly BoardRegistry _boards;
+    private readonly NoticeRegistry _notices;
     private readonly CombatFoodRegistry _combatFood;
     private readonly MailStashCodecRegistry _mailStashCodecs;
     private readonly IMonitor _monitor;
@@ -64,6 +65,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         CustomBoardQuestRegistry customBoardQuests,
         DispatchRegistry dispatch,
         BoardRegistry boards,
+        NoticeRegistry notices,
         CombatFoodRegistry combatFood,
         MailStashCodecRegistry mailStashCodecs,
         IMonitor monitor,
@@ -81,6 +83,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         _customBoardQuests = customBoardQuests;
         _dispatch = dispatch;
         _boards = boards;
+        _notices = notices;
         _combatFood = combatFood;
         _mailStashCodecs = mailStashCodecs;
         _monitor = monitor;
@@ -95,7 +98,7 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
             throw new ArgumentNullException(nameof(mod));
         if (_modScopes.TryGetValue(mod.UniqueID, out var existing))
             return existing;
-        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _reportBack, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _dispatch, _boards, _mailStashCodecs, _monitor, _spaceCore, ResolveQuestOwner);
+        var scope = new MoreQuestsModApi(mod, _registry, _generators, _customSteps, _reportBack, _customTriggers, _customRewards, _customConditions, _customBoardQuests, _dispatch, _boards, _notices, _mailStashCodecs, _monitor, _spaceCore, ResolveQuestOwner);
         _modScopes[mod.UniqueID] = scope;
         return scope;
     }
@@ -419,16 +422,19 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
         {
             if (filtered && !string.Equals(boardKey, filterKey, StringComparison.OrdinalIgnoreCase))
                 continue;
+            // This API surfaces quest pins only; notice pins carry no Quest/Posting.
+            if (slot.Kind != SlotKind.Quest)
+                continue;
             int slash = boardKey.IndexOf('/');
             string owner = slash >= 0 ? boardKey.Substring(0, slash) : "";
             string name = slash >= 0 ? boardKey.Substring(slash + 1) : boardKey;
             list.Add(new CustomBoardSlotInfo(
                 slot.SyncId,
-                slot.Quest,
+                slot.Quest!,
                 owner,
                 name,
-                slot.Posting.DefinitionId,
-                slot.Posting.OwnerUniqueId,
+                slot.Posting!.DefinitionId,
+                slot.Posting!.OwnerUniqueId,
                 slot.Accepted));
         }
         return list;

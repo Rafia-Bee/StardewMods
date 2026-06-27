@@ -8,7 +8,9 @@ namespace MoreQuestsFramework.State;
 internal sealed class FrameworkState
 {
     // Bumped on incompatible shape changes so StateStore.Load can branch and migrate.
-    public const int CurrentSchema = 1;
+    // v2 added the notice collections below; the bump is purely additive (a v1 save has no
+    // notice fields, so they deserialize as empty), so the migration is the existing no-op.
+    public const int CurrentSchema = 2;
 
     public int Schema { get; set; } = CurrentSchema;
 
@@ -48,6 +50,20 @@ internal sealed class FrameworkState
 
     public List<ActiveFairStarTokens> ActiveFairStarTokens { get; set; } = new();
 
+    // Bulletin notices. Keys are the namespaced {owner}/{Name} of the notice def.
+    // One-shot notices: a notice id lands here the day it's first shown and is then excluded
+    // from every future draw.
+    public List<string> SeenNotices { get; set; } = new();
+
+    // Per-notice cooldown clock: the TotalDays a notice was last shown. A recurring notice
+    // with CooldownDays > 0 waits that long before it can be drawn again.
+    public Dictionary<string, int> NoticeLastPostedDay { get; set; } = new();
+
+    // Reserved for the Phase 2 pinned / weekly-persistent notices (a notice that stays on the
+    // board for N days or the rest of the week without re-rolling). Unused today; defined now
+    // so adding the feature needs no second schema bump.
+    public List<PostedNotice> PostedNotices { get; set; } = new();
+
     // Drops entries keyed by a defId that no longer maps to a registered quest, so
     // uninstalling a consumer mod doesn't leave its keys lingering in the save forever.
     // Returns the total number of entries removed across all collections.
@@ -60,6 +76,28 @@ internal sealed class FrameworkState
         removed += DropMissing(OneShotFired, live);
         removed += DropMissing(ScheduledFireDay, live);
         removed += DropMissing(PendingDialogueQuests, live);
+        return removed;
+    }
+
+    // Drops saved notice flags whose {owner}/{Name} no longer maps to a registered notice, so
+    // uninstalling a notice pack doesn't leave its seen/cooldown entries in the save forever.
+    public int PruneDeadNoticeIds(IReadOnlyCollection<string> registeredNoticeIds)
+    {
+        var live = new HashSet<string>(registeredNoticeIds, StringComparer.OrdinalIgnoreCase);
+        int removed = 0;
+        if (SeenNotices.Count > 0)
+        {
+            int before = SeenNotices.Count;
+            SeenNotices.RemoveAll(id => !live.Contains(id));
+            removed += before - SeenNotices.Count;
+        }
+        removed += DropMissing(NoticeLastPostedDay, live);
+        if (PostedNotices.Count > 0)
+        {
+            int before = PostedNotices.Count;
+            PostedNotices.RemoveAll(p => !live.Contains(p.DefinitionId));
+            removed += before - PostedNotices.Count;
+        }
         return removed;
     }
 
@@ -79,6 +117,17 @@ internal sealed class FrameworkState
             dict.Remove(key);
         return dead.Count;
     }
+}
+
+// Phase 2 placeholder for a notice pinned to the board for a span of days (a fixed PinDays
+// window or the rest of the week). FirstPostedDay anchors the span; the notice re-appears
+// without re-rolling until ExpiresAfterDay, then a daily sweep drops the entry.
+internal sealed class PostedNotice
+{
+    // Namespaced {owner}/{Name} of the notice def.
+    public string DefinitionId { get; set; } = "";
+    public int FirstPostedDay { get; set; }
+    public int ExpiresAfterDay { get; set; }
 }
 
 internal sealed class ActiveFestivalBias

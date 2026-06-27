@@ -1,10 +1,16 @@
 using System;
 using System.Collections.Generic;
 using MoreQuestsFramework.Api;
+using MoreQuestsFramework.Pipeline;
 using StardewModdingAPI;
 using StardewValley.Quests;
 
 namespace MoreQuestsFramework.Posting.Boards;
+
+// A board pin is either a quest (opens the accept popup) or a notice (opens a read-only text
+// popup). The two share everything below the click: layout, the note renderer, hover, gamepad
+// snap. Only the click action and the hover text differ.
+internal enum SlotKind { Quest, Notice }
 
 // Mirrors BillboardSlots for the help-wanted board so BoardLayout can render either.
 internal static class CustomBoardSlots
@@ -15,18 +21,43 @@ internal static class CustomBoardSlots
     public sealed class Slot
     {
         public string SyncId { get; }
-        public Quest Quest { get; }
-        public QuestPosting Posting { get; }
+        public SlotKind Kind { get; }
+        public Quest? Quest { get; }
+        public QuestPosting? Posting { get; }
+        public NoticeInstance? Notice { get; }
         public string BoardKey { get; }
         public bool Accepted { get; set; }
 
         public Slot(Quest quest, QuestPosting posting, string boardKey)
         {
             SyncId = Guid.NewGuid().ToString("N");
+            Kind = SlotKind.Quest;
             Quest = quest;
             Posting = posting;
             BoardKey = boardKey;
         }
+
+        public Slot(NoticeInstance notice, string boardKey)
+        {
+            SyncId = Guid.NewGuid().ToString("N");
+            Kind = SlotKind.Notice;
+            Notice = notice;
+            BoardKey = boardKey;
+        }
+
+        // Styling fields the shared note renderer reads, resolved from whichever payload this
+        // slot carries so the draw code never has to branch on Kind.
+        public string Category => Kind == SlotKind.Quest
+            ? (Posting?.Category ?? QuestCategory.Social)
+            : (Notice?.Category ?? QuestCategory.Social);
+
+        public string IconValue => Kind == SlotKind.Quest
+            ? (Posting?.Icon ?? "")
+            : (Notice?.Icon ?? "");
+
+        public string GiverName => Kind == SlotKind.Quest
+            ? (Posting?.QuestGiver ?? "")
+            : (Notice?.Giver ?? "");
     }
 
     public static Slot? Selected { get; set; }
@@ -48,7 +79,7 @@ internal static class CustomBoardSlots
             _byBoardKey[key] = list = new List<Slot>();
         list.Clear();
         list.AddRange(slots);
-        ModEntry.LogDebug($"CustomBoardSlots[{key}] populated with {list.Count} quest(s).");
+        ModEntry.LogDebug($"CustomBoardSlots[{key}] populated with {list.Count} pin(s).");
     }
 
     public static void Clear(BoardDefinition board)
@@ -76,13 +107,13 @@ internal static class CustomBoardSlots
 
     public static Quest? AcceptSelected()
     {
-        if (Selected == null)
+        if (Selected == null || Selected.Kind != SlotKind.Quest)
             return null;
         Selected.Accepted = true;
         var quest = Selected.Quest;
         // Start the per-definition cooldown only now that the player committed to the
         // quest. Posting alone never trips it; an ignored board slot is free to re-roll.
-        ModEntry.Instance?.Anti?.RecordDefinitionAccepted(Selected.Posting.DefinitionId);
+        ModEntry.Instance?.Anti?.RecordDefinitionAccepted(Selected.Posting!.DefinitionId);
         // Remove by SyncId across every board: a posting mirrored onto a catch-all board
         // is one logical quest, so accepting it on either board clears both.
         string syncId = Selected.SyncId;
