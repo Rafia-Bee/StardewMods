@@ -11,6 +11,8 @@
             "Title": "Adventurer's Guild Board",
             "Indicator": { "Show": true, "Offset": [ 0, -8 ] },
             "PoolSize": 3,
+            "PoolSizeMin": 1,
+            "PoolSizeMax": 5,
             "PoolStrategy": "WeightedRandom",
             "AllowedCategories": [ "Mining" ]
         }

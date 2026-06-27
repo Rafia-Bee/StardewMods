@@ -165,6 +165,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         {
             DefinitionId = Id,
             Category = Category,
+            Icon = _def.Icon ?? string.Empty,
             Tier = ParseEnum(_def.Tier, DifficultyTier.Beginner),
             QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
@@ -248,6 +249,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         {
             DefinitionId = Id,
             Category = Category,
+            Icon = _def.Icon ?? string.Empty,
             Tier = ParseEnum(_def.Tier, DifficultyTier.Beginner),
             QuestType = ParseObjectiveKind(obj.Kind),
             CustomQuestType = obj.Custom ?? string.Empty,

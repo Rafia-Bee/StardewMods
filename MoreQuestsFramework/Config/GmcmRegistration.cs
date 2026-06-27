@@ -14,7 +14,7 @@ internal static class GmcmRegistration
         "Social", "Seasonal", "Cooking", "Animal", "Festival",
     };
 
-    public static void Register(IModHelper helper, IManifest manifest, MoreQuestsFrameworkConfig config, QuestRegistry registry, System.Action onReset)
+    public static void Register(IModHelper helper, IManifest manifest, MoreQuestsFrameworkConfig config, QuestRegistry registry, BoardRegistry boards, System.Action onReset)
     {
         var api = helper.ModRegistry.GetApi<IGenericModConfigMenuApi>(ModCompat.GenericModConfigMenu);
         if (api == null)
@@ -62,6 +62,8 @@ internal static class GmcmRegistration
             () => ModEntry.Config.BoardNoteSpacing, v => ModEntry.Config.BoardNoteSpacing = v, -20, 60);
         AddInt(api, manifest, t, "BoardMaxNoteSize",
             () => ModEntry.Config.BoardMaxNoteSize, v => ModEntry.Config.BoardMaxNoteSize = v, 64, 256);
+
+        AddCustomBoardPoolSizes(api, manifest, t, boards);
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.toggles"));
         api.AddBoolOption(manifest,
@@ -205,6 +207,33 @@ internal static class GmcmRegistration
                         .Default($"Chance (0 to 100) that {id} mail fires when its trigger condition matches. 100 = always, 0 disables the quest."),
                     min: 0, max: 100);
             }
+        }
+    }
+
+    // One pin-count slider per registered custom board. The slider runs the board's authored
+    // PoolSizeMin..Max and stores into the per-board config dict. No boards = no section.
+    private static void AddCustomBoardPoolSizes(IGenericModConfigMenuApi api, IManifest manifest, ITranslationHelper t, BoardRegistry boards)
+    {
+        if (boards == null || boards.All.Count == 0)
+            return;
+
+        api.AddSectionTitle(manifest, () => t.Get("config.section.customBoards"),
+            () => t.Get("config.section.customBoards.tooltip"));
+
+        foreach (var board in boards.All)
+        {
+            var (min, max, def) = BoardPoolConfig.Bounds(board);
+            if (max <= min)
+                continue;
+            string key = BoardPoolConfig.KeyOf(board);
+            string label = !string.IsNullOrWhiteSpace(board.Title) ? board.Title! : board.Name;
+            api.AddNumberOption(manifest,
+                () => ModEntry.Config.CustomBoardPoolSize.TryGetValue(key, out int v) ? System.Math.Clamp(v, min, max) : def,
+                v => ModEntry.Config.CustomBoardPoolSize[key] = System.Math.Clamp(v, min, max),
+                () => t.Get("config.customBoardPoolSize", new { board = label }).Default($"{label}: pins shown"),
+                () => t.Get("config.customBoardPoolSize.tooltip", new { board = label })
+                    .Default($"How many quests {label} shows at once ({min} to {max})."),
+                min: min, max: max);
         }
     }
 

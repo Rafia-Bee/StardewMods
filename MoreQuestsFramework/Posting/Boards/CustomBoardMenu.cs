@@ -29,6 +29,7 @@ internal sealed class CustomBoardMenu : IClickableMenu
     private readonly Dictionary<int, Note> _notesByCc = new();
     private string _hoverTitle = "";
     private string _hoverText = "";
+    private Note? _hoveredNote;
 
     public CustomBoardQuestMenu? InnerAcceptPopup { get; private set; }
 
@@ -38,7 +39,10 @@ internal sealed class CustomBoardMenu : IClickableMenu
         public CustomBoardSlots.Slot Slot { get; init; } = null!;
         public Color PadColor { get; init; }
         public Color PinColor { get; init; }
-        public Texture2D? Portrait { get; init; }
+        public Texture2D PadTexture { get; init; } = null!;
+        public Texture2D PinTexture { get; init; } = null!;
+        public BoardNoteRenderer.NoteIcon? Icon { get; init; }
+        public float Tilt { get; init; }
     }
 
     public CustomBoardMenu(BoardDefinition board)
@@ -106,31 +110,36 @@ internal sealed class CustomBoardMenu : IClickableMenu
     {
         _notes.Clear();
         _notesByCc.Clear();
+        _hoveredNote = null;
 
         var slots = CustomBoardSlots.SlotsFor(_board);
         if (slots.Count == 0)
             return;
 
-        float scale = BoardLayout.ChooseScale(slots.Count);
-        int side = (int)(BoardLayout.PadSpriteSize * scale);
+        var categories = new List<string>(slots.Count);
+        foreach (var s in slots)
+            categories.Add(s.Posting.Category);
 
-        var placed = new List<Rectangle>(slots.Count);
+        int daySeed = Game1.Date.TotalDays + (_board.Name?.GetHashCode() ?? 0);
         var rng = new Random(Game1.Date.TotalDays * 7919 + slots.Count + (_board.Name?.GetHashCode() ?? 0));
+        var placements = BoardLayout.ComputeLayout(
+            _board, categories, xPositionOnScreen, yPositionOnScreen, daySeed, rng);
+        var texCache = new Dictionary<string, Texture2D>();
 
         for (int i = 0; i < slots.Count; i++)
         {
+            var placement = placements[i];
+            if (placement == null)
+                continue;
             var slot = slots[i];
-            Rectangle bounds = BoardLayout.ScatterBounds(xPositionOnScreen, yPositionOnScreen, side, side, placed, rng)
-                ?? BoardLayout.FallbackGridBounds(xPositionOnScreen, yPositionOnScreen, i, slots.Count, side);
-            placed.Add(bounds);
 
             (Color padColor, Color pinColor) = BoardLayout.ColorsFor(slot.Posting.Category);
 
             var cc = new ClickableTextureComponent(
-                bounds,
+                placement.PaperBounds,
                 _padTexture,
                 new Rectangle(0, 0, BoardLayout.PadSpriteSize, BoardLayout.PadSpriteSize),
-                scale)
+                1f)
             {
                 myID = CcIndexBase - i,
                 leftNeighborID = SnapAutomatic,
@@ -139,15 +148,19 @@ internal sealed class CustomBoardMenu : IClickableMenu
                 downNeighborID = SnapAutomatic
             };
 
-            _notes.Add(new Note
+            var note = new Note
             {
                 Cc = cc,
                 Slot = slot,
                 PadColor = padColor,
                 PinColor = pinColor,
-                Portrait = BoardLayout.TryGetPortrait(slot.Posting.QuestGiver)
-            });
-            _notesByCc[cc.myID] = _notes[^1];
+                PadTexture = BoardNoteRenderer.ResolvePad(slot.Posting.Category, _padTexture, texCache),
+                PinTexture = BoardNoteRenderer.ResolvePin(slot.Posting.Category, _pinTexture, texCache),
+                Icon = BoardNoteRenderer.ResolveIcon(slot.Posting.Icon, slot.Posting.Category, slot.Posting.QuestGiver, texCache),
+                Tilt = placement.Tilt
+            };
+            _notes.Add(note);
+            _notesByCc[cc.myID] = note;
         }
     }
 
@@ -160,18 +173,14 @@ internal sealed class CustomBoardMenu : IClickableMenu
         }
         _hoverTitle = "";
         _hoverText = "";
+        _hoveredNote = null;
         foreach (var note in _notes)
         {
-            var cc = note.Cc;
-            if (cc.containsPoint(x, y))
+            if (note.Cc.containsPoint(x, y))
             {
                 _hoverTitle = note.Slot.Quest.questTitle ?? "";
                 _hoverText = QuestTooltip.BodyFor(note.Slot.Quest);
-                cc.scale = Math.Min(cc.scale + 0.04f, cc.baseScale + 0.5f);
-            }
-            else
-            {
-                cc.scale = Math.Max(cc.scale - 0.04f, cc.baseScale);
+                _hoveredNote = note;
             }
         }
         if (upperRightCloseButton != null)
@@ -331,27 +340,14 @@ internal sealed class CustomBoardMenu : IClickableMenu
         }
         else
         {
-            var padSource = new Rectangle(0, 0, BoardLayout.PadSpriteSize, BoardLayout.PadSpriteSize);
+            Note? active = ActiveNote();
             foreach (var note in _notes)
             {
-                var cc = note.Cc;
-                b.Draw(_padTexture, cc.bounds, padSource, note.PadColor);
-
-                if (note.Portrait != null)
-                {
-                    int portraitSide = (int)(cc.bounds.Width * 0.28f);
-                    int padding = (int)(cc.bounds.Width * 0.08f);
-                    int px = cc.bounds.Left + padding;
-                    int py = cc.bounds.Bottom - portraitSide - padding;
-                    b.Draw(
-                        note.Portrait,
-                        new Rectangle(px, py, portraitSide, portraitSide),
-                        new Rectangle(0, 0, 64, 64),
-                        Color.White);
-                }
-
-                b.Draw(_pinTexture, cc.bounds, padSource, note.PinColor);
+                if (note != active)
+                    DrawNote(b, note, 1f);
             }
+            if (active != null)
+                DrawNote(b, active, 1.12f);
         }
 
         if (!string.IsNullOrEmpty(_board.Title))
@@ -379,5 +375,22 @@ internal sealed class CustomBoardMenu : IClickableMenu
 
         Game1.mouseCursorTransparency = 1f;
         drawMouse(b);
+    }
+
+    private void DrawNote(SpriteBatch b, Note note, float sizeBoost) =>
+        BoardNoteRenderer.DrawNote(
+            b, note.PadTexture, note.PinTexture, note.PadColor, note.PinColor,
+            note.Icon, note.Cc.bounds, note.Tilt, sizeBoost);
+
+    // The note under the mouse, or (for a gamepad) the snapped one, drawn last and a touch
+    // bigger so the current selection reads clearly.
+    private Note? ActiveNote()
+    {
+        if (_hoveredNote != null)
+            return _hoveredNote;
+        if (currentlySnappedComponent != null
+            && _notesByCc.TryGetValue(currentlySnappedComponent.myID, out var snapped))
+            return snapped;
+        return null;
     }
 }

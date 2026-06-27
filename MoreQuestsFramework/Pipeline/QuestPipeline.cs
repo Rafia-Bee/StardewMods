@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using MoreQuestsFramework.Api;
+using MoreQuestsFramework.Config;
 using MoreQuestsFramework.Registry;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
@@ -255,7 +256,7 @@ internal sealed class QuestPipeline
         {
             if (!homeDefsByKey.TryGetValue(CustomBoardRouting.KeyOf(board), out var group))
                 continue;
-            foreach (var (posting, w) in DrawFromPool(board, group, System.Math.Max(1, board.PoolSize), rng))
+            foreach (var (posting, w) in DrawFromPool(board, group, BoardPoolConfig.Effective(board, _ctx.Config), rng))
             {
                 var draw = new CustomBoardDraw(posting, board);
                 draws.Add(draw);
@@ -292,7 +293,7 @@ internal sealed class QuestPipeline
 
         foreach (var board in catchAlls)
         {
-            int remaining = System.Math.Max(1, board.PoolSize) - draws.Count(d => d.Boards.Contains(board));
+            int remaining = BoardPoolConfig.Effective(board, _ctx.Config) - draws.Count(d => d.Boards.Contains(board));
             if (remaining <= 0)
                 continue;
 
@@ -300,7 +301,7 @@ internal sealed class QuestPipeline
             CollectCatchCandidates(board, homePostings, drawByPosting, candidates);
             CollectCatchCandidates(board, homelessPool, drawByPosting, candidates);
 
-            foreach (var posting in SelectByStrategy(board.PoolStrategy, candidates, remaining, rng))
+            foreach (var posting in SelectByStrategy(board.PoolStrategy, board.Priority, candidates, remaining, rng))
                 drawByPosting[posting].Boards.Add(board);
         }
 
@@ -321,7 +322,12 @@ internal sealed class QuestPipeline
     private List<(QuestPosting Posting, int Weight)> DrawFromPool(
         BoardDefinition board, List<(IQuestDefinition Def, int Weight)> group, int target, System.Random rng)
     {
+        // When the board declares no Priority, weights stay exactly as authored so the draw is
+        // unchanged. Only an opted-in board scales them, leaving the original weight intact for
+        // downstream catch-all selection.
+        bool usePriority = HasPriority(board.Priority);
         var pool = new List<(IQuestDefinition Def, int Weight)>();
+        var origWeight = usePriority ? new Dictionary<string, int>() : null;
         foreach (var (def, w) in group)
         {
             if (!CategoryAllowedOnBoard(board, def.Category))
@@ -332,7 +338,16 @@ internal sealed class QuestPipeline
                 continue;
             if (w <= 0)
                 continue;
-            pool.Add((def, w));
+            int selWeight = w;
+            if (usePriority)
+            {
+                double mult = PriorityMultiplier(board.Priority, def.Category, def.OwnerUniqueId);
+                selWeight = ScaleWeight(w, mult);
+                if (selWeight <= 0)
+                    continue;
+                origWeight![def.Id] = w;
+            }
+            pool.Add((def, selWeight));
         }
 
         var picked = new List<(QuestPosting, int)>();
@@ -360,7 +375,8 @@ internal sealed class QuestPipeline
             if (string.IsNullOrEmpty(posting.OwnerUniqueId))
                 posting.OwnerUniqueId = def.OwnerUniqueId;
 
-            picked.Add((posting, w));
+            int keepWeight = usePriority && origWeight!.TryGetValue(def.Id, out int ow) ? ow : w;
+            picked.Add((posting, keepWeight));
             defCounts[def.Id] = count + 1;
             if (defCounts[def.Id] >= def.MaxPerDay)
                 pool.RemoveAll(x => x.Def.Id == def.Id);
@@ -395,7 +411,7 @@ internal sealed class QuestPipeline
     }
 
     private static List<QuestPosting> SelectByStrategy(
-        string? strategy, List<(QuestPosting Posting, int Weight)> candidates, int count, System.Random rng)
+        string? strategy, BoardPriority? priority, List<(QuestPosting Posting, int Weight)> candidates, int count, System.Random rng)
     {
         var result = new List<QuestPosting>();
         if (candidates.Count == 0 || count <= 0)
@@ -408,7 +424,18 @@ internal sealed class QuestPipeline
             return result;
         }
 
-        var pool = new List<(QuestPosting Posting, int Weight)>(candidates);
+        // Apply the catch-all board's own Priority to its pick-up weights. No Priority leaves
+        // the original weights, so the draw is unchanged.
+        bool usePriority = HasPriority(priority);
+        var pool = new List<(QuestPosting Posting, int Weight)>(candidates.Count);
+        foreach (var (posting, w) in candidates)
+        {
+            int selWeight = usePriority
+                ? ScaleWeight(w, PriorityMultiplier(priority, posting.Category, posting.OwnerUniqueId))
+                : w;
+            pool.Add((posting, selWeight));
+        }
+
         while (result.Count < count && pool.Count > 0)
         {
             int total = 0;
@@ -430,6 +457,32 @@ internal sealed class QuestPipeline
             pool.RemoveAt(idx);
         }
         return result;
+    }
+
+    private static bool HasPriority(BoardPriority? p)
+        => p != null && ((p.Categories?.Count ?? 0) > 0 || (p.Owners?.Count ?? 0) > 0);
+
+    // Product of the matching category and owner multipliers (each 1.0 when not listed).
+    // A negative result is clamped to 0 (excluded).
+    private static double PriorityMultiplier(BoardPriority? priority, string? category, string? owner)
+    {
+        if (priority == null)
+            return 1.0;
+        double m = 1.0;
+        if (priority.Categories != null && category != null && priority.Categories.TryGetValue(category, out double cm))
+            m *= cm;
+        if (priority.Owners != null && owner != null && priority.Owners.TryGetValue(owner, out double om))
+            m *= om;
+        return m < 0 ? 0 : m;
+    }
+
+    // Scales a weight by a priority multiplier. Multiplies by 100 first so fractional
+    // multipliers (e.g. 0.5) keep resolution as integers; 0 excludes the entry.
+    private static int ScaleWeight(int weight, double mult)
+    {
+        if (mult <= 0)
+            return 0;
+        return System.Math.Max(1, (int)System.Math.Round(weight * mult * 100.0));
     }
 
     private static bool CategoryAllowedOnBoard(BoardDefinition board, string category)

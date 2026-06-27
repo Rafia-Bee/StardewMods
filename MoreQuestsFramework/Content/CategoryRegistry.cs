@@ -19,6 +19,9 @@ internal sealed class CategoryRegistry
     private readonly IMonitor _monitor;
     private Dictionary<string, (Color pad, Color pin)> _colors = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, string> _skills = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, string> _padTextures = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, string> _pinTextures = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, CategoryIconSpec> _icons = new(StringComparer.OrdinalIgnoreCase);
 
     public CategoryRegistry(IMonitor monitor)
     {
@@ -55,6 +58,9 @@ internal sealed class CategoryRegistry
     {
         var colors = new Dictionary<string, (Color, Color)>(StringComparer.OrdinalIgnoreCase);
         var skills = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var padTextures = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var pinTextures = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var icons = new Dictionary<string, CategoryIconSpec>(StringComparer.OrdinalIgnoreCase);
         if (asset != null)
         {
             foreach (var pair in asset)
@@ -65,10 +71,20 @@ internal sealed class CategoryRegistry
                 Color pin = ParseColor(pair.Value.PinColor, pair.Key, "PinColor") ?? DefaultPin;
                 colors[pair.Key] = (pad, pin);
                 skills[pair.Key] = string.IsNullOrWhiteSpace(pair.Value.Skill) ? "None" : pair.Value.Skill;
+                if (!string.IsNullOrWhiteSpace(pair.Value.PadTexture))
+                    padTextures[pair.Key] = pair.Value.PadTexture.Trim();
+                if (!string.IsNullOrWhiteSpace(pair.Value.PinTexture))
+                    pinTextures[pair.Key] = pair.Value.PinTexture.Trim();
+                var icon = BuildIconSpec(pair.Value);
+                if (icon != null)
+                    icons[pair.Key] = icon;
             }
         }
         _colors = colors;
         _skills = skills;
+        _padTextures = padTextures;
+        _pinTextures = pinTextures;
+        _icons = icons;
     }
 
     public (Color pad, Color pin) ColorsFor(string? category)
@@ -76,6 +92,42 @@ internal sealed class CategoryRegistry
 
     public string SkillFor(string? category)
         => !string.IsNullOrEmpty(category) && _skills.TryGetValue(category, out var s) ? s : "None";
+
+    // Category pad/pin texture override, or null to use the board / framework default.
+    public string? PadTextureFor(string? category)
+        => !string.IsNullOrEmpty(category) && _padTextures.TryGetValue(category, out var t) ? t : null;
+
+    public string? PinTextureFor(string? category)
+        => !string.IsNullOrEmpty(category) && _pinTextures.TryGetValue(category, out var t) ? t : null;
+
+    // Category icon spec, or the default (giver portrait, bottom-left, 0.28 scale).
+    public CategoryIconSpec IconFor(string? category)
+        => !string.IsNullOrEmpty(category) && _icons.TryGetValue(category, out var s) ? s : CategoryIconSpec.Default;
+
+    // Returns null when the entry sets nothing icon-related, so the default spec is shared.
+    private static CategoryIconSpec? BuildIconSpec(CategoryDefinition def)
+    {
+        bool any = !string.IsNullOrWhiteSpace(def.Icon)
+            || def.IconSource is { Length: >= 4 }
+            || def.IconScale.HasValue
+            || !string.IsNullOrWhiteSpace(def.IconAnchor)
+            || (def.IconX.HasValue && def.IconY.HasValue);
+        if (!any)
+            return null;
+
+        Rectangle? source = def.IconSource is { Length: >= 4 }
+            ? new Rectangle(def.IconSource[0], def.IconSource[1], def.IconSource[2], def.IconSource[3])
+            : null;
+        return new CategoryIconSpec
+        {
+            Value = string.IsNullOrWhiteSpace(def.Icon) ? null : def.Icon.Trim(),
+            Source = source,
+            Scale = def.IconScale is > 0 ? def.IconScale.Value : 0.28f,
+            Anchor = string.IsNullOrWhiteSpace(def.IconAnchor) ? "BottomLeft" : def.IconAnchor.Trim(),
+            X = def.IconX,
+            Y = def.IconY,
+        };
+    }
 
     // Accepts #RRGGBB, #RRGGBBAA, or R,G,B (0-255). Returns null for an empty value (caller
     // uses the default silently) and warns once-per-call on a non-empty unparseable value.

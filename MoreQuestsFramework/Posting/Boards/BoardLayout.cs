@@ -2,9 +2,21 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MoreQuestsFramework.Api;
 using StardewValley;
 
 namespace MoreQuestsFramework.Posting.Boards;
+
+// How a board arranges its notes.
+internal enum LayoutMode { TiltedGrid, Scatter, Zoned }
+
+// One note's final placement: the visible paper rect and its lean. The renderer expands the
+// paper rect back out to the full sprite, so gap 0 = papers touching.
+internal sealed class NotePlacement
+{
+    public Rectangle PaperBounds { get; init; }
+    public float Tilt { get; init; }
+}
 
 internal static class BoardLayout
 {
@@ -32,24 +44,185 @@ internal static class BoardLayout
     // than a perfect grid. The player tunes the average; this varies it note to note.
     public const float GapJitter = 8f;
 
+    private enum ZoneStyle { TiltedGrid, Scatter }
+
+    public static LayoutMode ParseMode(string? s) => s?.Trim().ToLowerInvariant() switch
+    {
+        "scatter" => LayoutMode.Scatter,
+        "zoned" => LayoutMode.Zoned,
+        _ => LayoutMode.TiltedGrid
+    };
+
+    private static ZoneStyle ParseZoneStyle(string? s) => s?.Trim().ToLowerInvariant() switch
+    {
+        "scatter" => ZoneStyle.Scatter,
+        _ => ZoneStyle.TiltedGrid
+    };
+
+    // The one layout entry point. Returns a placement per slot (aligned to `categories`), or
+    // null for a note a zoned board dropped because its category matched no zone and there's
+    // no catch-all. board == null means the daily board: a full-area tilted grid.
+    public static List<NotePlacement?> ComputeLayout(
+        BoardDefinition? board, IReadOnlyList<string> categories,
+        int xPositionOnScreen, int yPositionOnScreen, int daySeed, Random rng)
+    {
+        int count = categories.Count;
+        var result = new List<NotePlacement?>(count);
+        for (int i = 0; i < count; i++)
+            result.Add(null);
+        if (count == 0)
+            return result;
+
+        var fullArea = new Rectangle(
+            xPositionOnScreen + BoardRect.X, yPositionOnScreen + BoardRect.Y,
+            BoardRect.Width, BoardRect.Height);
+
+        LayoutMode mode = ParseMode(board?.Layout);
+        if (mode == LayoutMode.Zoned && board?.Zones is { Count: > 0 })
+        {
+            LayoutZoned(board, categories, fullArea, daySeed, rng, result);
+            return result;
+        }
+
+        var all = new List<int>(count);
+        for (int i = 0; i < count; i++)
+            all.Add(i);
+        LayoutZoneInArea(mode == LayoutMode.Scatter ? ZoneStyle.Scatter : ZoneStyle.TiltedGrid,
+            all, fullArea, daySeed, rng, result);
+        return result;
+    }
+
+    private static void LayoutZoned(
+        BoardDefinition board, IReadOnlyList<string> categories, Rectangle fullArea,
+        int daySeed, Random rng, List<NotePlacement?> result)
+    {
+        var zones = board.Zones!;
+        var buckets = new List<int>[zones.Count];
+        for (int z = 0; z < zones.Count; z++)
+            buckets[z] = new List<int>();
+
+        int catchAll = -1;
+        for (int z = 0; z < zones.Count; z++)
+        {
+            var cats = zones[z].Categories;
+            if (cats == null || cats.Count == 0)
+            {
+                catchAll = z;
+                break;
+            }
+        }
+
+        for (int i = 0; i < categories.Count; i++)
+        {
+            int zoneIdx = MatchZone(zones, categories[i]);
+            if (zoneIdx < 0)
+                zoneIdx = catchAll;
+            if (zoneIdx < 0)
+            {
+                ModEntry.LogDebug($"Zoned board '{board.Name}': category '{categories[i]}' matched no zone and there's no catch-all zone; dropping note.");
+                continue;
+            }
+            buckets[zoneIdx].Add(i);
+        }
+
+        for (int z = 0; z < zones.Count; z++)
+        {
+            if (buckets[z].Count == 0)
+                continue;
+            Rectangle area = ZoneArea(zones[z], fullArea);
+            LayoutZoneInArea(ParseZoneStyle(zones[z].Style), buckets[z], area, daySeed, rng, result);
+        }
+    }
+
+    private static int MatchZone(List<BoardZone> zones, string category)
+    {
+        for (int z = 0; z < zones.Count; z++)
+        {
+            var cats = zones[z].Categories;
+            if (cats == null || cats.Count == 0)
+                continue;
+            for (int c = 0; c < cats.Count; c++)
+                if (string.Equals(cats[c], category, StringComparison.OrdinalIgnoreCase))
+                    return z;
+        }
+        return -1;
+    }
+
+    // Maps a zone's percentage rect onto the cork area, clamped so it never spills past it.
+    private static Rectangle ZoneArea(BoardZone zone, Rectangle full)
+    {
+        int x = full.X + (int)Math.Round(zone.RectX / 100f * full.Width);
+        int y = full.Y + (int)Math.Round(zone.RectY / 100f * full.Height);
+        x = Math.Clamp(x, full.X, full.Right - 1);
+        y = Math.Clamp(y, full.Y, full.Bottom - 1);
+        int w = (int)Math.Round(zone.RectW / 100f * full.Width);
+        int h = (int)Math.Round(zone.RectH / 100f * full.Height);
+        w = Math.Max(1, Math.Min(w, full.Right - x));
+        h = Math.Max(1, Math.Min(h, full.Bottom - y));
+        return new Rectangle(x, y, w, h);
+    }
+
+    private static void LayoutZoneInArea(
+        ZoneStyle style, List<int> slotIndices, Rectangle area,
+        int daySeed, Random rng, List<NotePlacement?> result)
+    {
+        if (slotIndices.Count == 0)
+            return;
+        if (style == ZoneStyle.Scatter)
+            LayoutScatter(slotIndices, area, rng, result);
+        else
+            LayoutGrid(slotIndices, area, daySeed, rng, result);
+    }
+
+    private static void LayoutGrid(
+        List<int> slotIndices, Rectangle area, int daySeed, Random rng, List<NotePlacement?> result)
+    {
+        var bounds = ComputeGridInArea(area, slotIndices.Count, rng);
+        for (int k = 0; k < slotIndices.Count; k++)
+        {
+            int orig = slotIndices[k];
+            result[orig] = new NotePlacement { PaperBounds = bounds[k], Tilt = TiltFor(daySeed, orig) };
+        }
+    }
+
+    private static void LayoutScatter(
+        List<int> slotIndices, Rectangle area, Random rng, List<NotePlacement?> result)
+    {
+        int n = slotIndices.Count;
+        int scaleSprite = (int)(PadSpriteSize * ChooseScale(n));
+        var (_, _, gridFit) = ChooseGridInArea(area, n);
+        int noteSprite = Math.Clamp(Math.Min(scaleSprite, gridFit), PadSpriteSize, MaxNoteSize);
+        float scale = noteSprite / (float)PadSpriteSize;
+        int paperW = (int)Math.Round(PadPaperWidth * scale);
+        int paperH = (int)Math.Round(PadPaperHeight * scale);
+
+        // Grid positions for the same notes, used when a note can't find a non-overlapping
+        // scatter spot so it still lands inside the area rather than vanishing.
+        var fallback = ComputeGridInArea(area, n, rng);
+        var placed = new List<Rectangle>(n);
+        for (int k = 0; k < n; k++)
+        {
+            Rectangle b = ScatterInArea(area, paperW, paperH, placed, rng) ?? fallback[k];
+            placed.Add(b);
+            result[slotIndices[k]] = new NotePlacement { PaperBounds = b, Tilt = 0f };
+        }
+    }
+
     // Picks the column/row split that makes the notes as large as possible while still
-    // fitting count of them in the cork area at the average spacing. Height is the tighter
-    // dimension, so the sweet spot usually has more columns than rows (20 notes land on a
-    // 7x3 grid). Returns the full sprite size; paper dims are derived from it.
-    public static (int cols, int rows, int noteSize) ChooseGrid(int count)
+    // fitting `count` of them in `area` at the average spacing. Returns the full sprite size;
+    // paper dims are derived from it.
+    private static (int cols, int rows, int noteSize) ChooseGridInArea(Rectangle area, int count)
     {
         if (count <= 0)
             return (1, 1, MaxNoteSize);
 
-        // Size for the largest a gap can jitter to, so the random spacing never pushes the
-        // outer notes off the board.
         float maxGap = NoteSpacing + GapJitter;
         int bestCols = 1, bestRows = count, bestSize = 0;
         for (int cols = 1; cols <= count; cols++)
         {
             int rows = (count + cols - 1) / cols;
-            float scaleW = (BoardRect.Width - (cols - 1) * maxGap) / (cols * PadPaperWidth);
-            float scaleH = (BoardRect.Height - (rows - 1) * maxGap) / (rows * PadPaperHeight);
+            float scaleW = (area.Width - (cols - 1) * maxGap) / (cols * PadPaperWidth);
+            float scaleH = (area.Height - (rows - 1) * maxGap) / (rows * PadPaperHeight);
             int size = (int)(Math.Min(scaleW, scaleH) * PadSpriteSize);
             if (size > bestSize)
             {
@@ -63,25 +236,21 @@ internal static class BoardLayout
         return (bestCols, bestRows, noteSize);
     }
 
-    // Computes the clickable paper bounds for every note in one pass. Each gap is jittered
-    // around the average so the spacing isn't uniform; rows and the whole block are centered
-    // so the board never looks lopsided. Bounds are the visible paper rect (the drawing code
-    // expands them back out to the full sprite), so gap 0 = papers touching, negative = paper
-    // overlap. rng makes the jitter deterministic per day.
-    public static List<Rectangle> ComputeGridLayout(
-        int xPositionOnScreen, int yPositionOnScreen, int count, Random rng)
+    // Computes the clickable paper bounds for every note in one pass within `area`. Gaps are
+    // jittered around the average and rows + the whole block are centered, so the board never
+    // looks lopsided. Bounds are the visible paper rect. rng makes the jitter deterministic.
+    private static List<Rectangle> ComputeGridInArea(Rectangle area, int count, Random rng)
     {
         var result = new List<Rectangle>(Math.Max(0, count));
         if (count <= 0)
             return result;
 
-        var (cols, rows, noteSize) = ChooseGrid(count);
+        var (cols, rows, noteSize) = ChooseGridInArea(area, count);
         float scale = noteSize / (float)PadSpriteSize;
         float paperW = PadPaperWidth * scale;
         float paperH = PadPaperHeight * scale;
         int spacing = NoteSpacing;
 
-        // Vertical gaps between rows, then center the stack.
         float totalH = rows * paperH;
         var rowGaps = new float[Math.Max(0, rows - 1)];
         for (int r = 0; r < rowGaps.Length; r++)
@@ -89,13 +258,12 @@ internal static class BoardLayout
             rowGaps[r] = Jitter(spacing, rng);
             totalH += rowGaps[r];
         }
-        float cy = yPositionOnScreen + BoardRect.Y + (BoardRect.Height - totalH) / 2f;
+        float cy = area.Y + (area.Height - totalH) / 2f;
 
         for (int row = 0; row < rows; row++)
         {
             int itemsInRow = Math.Min(cols, count - row * cols);
 
-            // Horizontal gaps for this row, then center the row.
             float rowW = itemsInRow * paperW;
             var colGaps = new float[Math.Max(0, itemsInRow - 1)];
             for (int c = 0; c < colGaps.Length; c++)
@@ -103,7 +271,7 @@ internal static class BoardLayout
                 colGaps[c] = Jitter(spacing, rng);
                 rowW += colGaps[c];
             }
-            float px = xPositionOnScreen + BoardRect.X + (BoardRect.Width - rowW) / 2f;
+            float px = area.X + (area.Width - rowW) / 2f;
 
             for (int col = 0; col < itemsInRow; col++)
             {
@@ -148,12 +316,12 @@ internal static class BoardLayout
             _ => 2f
         };
 
-    // Returns null after 4000 tries with no non-overlapping spot; caller falls back to grid.
-    public static Rectangle? ScatterBounds(
-        int xPositionOnScreen, int yPositionOnScreen,
-        int w, int h, List<Rectangle> placed, Random rng)
+    // Returns null after 4000 tries with no non-overlapping spot inside `area`; caller falls
+    // back to the grid position.
+    private static Rectangle? ScatterInArea(
+        Rectangle area, int w, int h, List<Rectangle> placed, Random rng)
     {
-        if (w >= BoardRect.Width || h >= BoardRect.Height)
+        if (w >= area.Width || h >= area.Height)
             return null;
 
         const float xOverlap = 0.7f;
@@ -161,8 +329,8 @@ internal static class BoardLayout
         for (int tries = 0; tries < 4000; tries++)
         {
             var rect = new Rectangle(
-                xPositionOnScreen + BoardRect.X + rng.Next(0, BoardRect.Width - w),
-                yPositionOnScreen + BoardRect.Y + rng.Next(0, BoardRect.Height - h),
+                area.X + rng.Next(0, area.Width - w),
+                area.Y + rng.Next(0, area.Height - h),
                 w, h);
 
             bool clash = false;
@@ -179,21 +347,6 @@ internal static class BoardLayout
                 return rect;
         }
         return null;
-    }
-
-    public static Rectangle FallbackGridBounds(
-        int xPositionOnScreen, int yPositionOnScreen,
-        int i, int total, int side)
-    {
-        int cols = Math.Max(1, (int)Math.Ceiling(Math.Sqrt(total)));
-        int rows = (int)Math.Ceiling(total / (double)cols);
-        int cellW = BoardRect.Width / cols;
-        int cellH = BoardRect.Height / rows;
-        int col = i % cols;
-        int row = i / cols;
-        int x = xPositionOnScreen + BoardRect.X + col * cellW + (cellW - side) / 2;
-        int y = yPositionOnScreen + BoardRect.Y + row * cellH + (cellH - side) / 2;
-        return new Rectangle(x, y, side, side);
     }
 
     // Pad/pin colors come from the Categories asset (parsed once into the registry).

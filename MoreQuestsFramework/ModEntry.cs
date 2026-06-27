@@ -404,7 +404,7 @@ public sealed class ModEntry : Mod
         _boards.Freeze();
         CustomBoardRouting.ValidateRouting(_registry, _boards, Monitor);
 
-        GmcmRegistration.Register(Helper, ModManifest, Config, _registry, onReset: () => Config = new MoreQuestsFrameworkConfig());
+        GmcmRegistration.Register(Helper, ModManifest, Config, _registry, _boards, onReset: () => Config = new MoreQuestsFrameworkConfig());
     }
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)

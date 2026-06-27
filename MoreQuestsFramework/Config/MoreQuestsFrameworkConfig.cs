@@ -18,6 +18,11 @@ public sealed class MoreQuestsFrameworkConfig
     public int BoardNoteSpacing { get; set; } = 14;
     public int BoardMaxNoteSize { get; set; } = 256;
 
+    // Per-custom-board pin count chosen by the player. Keys are the board's "{owner}/{name}"
+    // id. A board not listed here uses its authored PoolSize. The stored value is clamped to
+    // the board's PoolSizeMin..PoolSizeMax at read time, so out-of-range hand edits are safe.
+    public Dictionary<string, int> CustomBoardPoolSize { get; set; } = new();
+
     // Keys are definition IDs. 0 disables. Missing keys use DefaultWeight.
     public Dictionary<string, int> QuestWeights { get; set; } = new();
 

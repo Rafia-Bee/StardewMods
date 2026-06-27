@@ -49,7 +49,9 @@ internal sealed class MoreQuestsBillboard : Billboard
         public BillboardSlots.Slot Slot { get; init; } = null!;
         public Color PadColor { get; init; }
         public Color PinColor { get; init; }
-        public Texture2D? Portrait { get; init; }
+        public Texture2D PadTexture { get; init; } = null!;
+        public Texture2D PinTexture { get; init; } = null!;
+        public BoardNoteRenderer.NoteIcon? Icon { get; init; }
         public float Tilt { get; init; }
     }
 
@@ -80,18 +82,26 @@ internal sealed class MoreQuestsBillboard : Billboard
         if (slots.Count == 0)
             return;
 
+        var categories = new List<string>(slots.Count);
+        foreach (var s in slots)
+            categories.Add(s.Posting.Category);
+
         var rng = new Random(Game1.Date.TotalDays * 7919 + slots.Count);
-        var layout = BoardLayout.ComputeGridLayout(xPositionOnScreen, yPositionOnScreen, slots.Count, rng);
+        var placements = BoardLayout.ComputeLayout(
+            null, categories, xPositionOnScreen, yPositionOnScreen, Game1.Date.TotalDays, rng);
+        var texCache = new Dictionary<string, Texture2D>();
 
         for (int i = 0; i < slots.Count; i++)
         {
+            var placement = placements[i];
+            if (placement == null)
+                continue;
             var slot = slots[i];
-            Rectangle bounds = layout[i];
 
             (Color padColor, Color pinColor) = BoardLayout.ColorsFor(slot.Posting.Category);
 
             var cc = new ClickableTextureComponent(
-                bounds,
+                placement.PaperBounds,
                 _padTexture,
                 new Rectangle(0, 0, BoardLayout.PadSpriteSize, BoardLayout.PadSpriteSize),
                 1f)
@@ -109,8 +119,10 @@ internal sealed class MoreQuestsBillboard : Billboard
                 Slot = slot,
                 PadColor = padColor,
                 PinColor = pinColor,
-                Portrait = BoardLayout.TryGetPortrait(slot.Posting.QuestGiver),
-                Tilt = BoardLayout.TiltFor(Game1.Date.TotalDays, i)
+                PadTexture = BoardNoteRenderer.ResolvePad(slot.Posting.Category, _padTexture, texCache),
+                PinTexture = BoardNoteRenderer.ResolvePin(slot.Posting.Category, _pinTexture, texCache),
+                Icon = BoardNoteRenderer.ResolveIcon(slot.Posting.Icon, slot.Posting.Category, slot.Posting.QuestGiver, texCache),
+                Tilt = placement.Tilt
             };
             _notes.Add(note);
             _notesByCc[cc.myID] = note;
@@ -389,38 +401,8 @@ internal sealed class MoreQuestsBillboard : Billboard
         return null;
     }
 
-    // Draws a note (pad, portrait, pin) rotated about its center by its tilt, scaled by
-    // sizeBoost. The portrait offset is rotated with it so the whole note tilts as one piece.
-    // Bounds are the visible paper, so the full sprite is scaled up from the paper width to
-    // put the transparent margins back; the paper then lines up with the clickable bounds.
-    private void DrawNote(SpriteBatch b, Note note, float sizeBoost)
-    {
-        var padSource = new Rectangle(0, 0, BoardLayout.PadSpriteSize, BoardLayout.PadSpriteSize);
-        var origin = new Vector2(BoardLayout.PadSpriteSize / 2f, BoardLayout.PadSpriteSize / 2f);
-        var center = new Vector2(note.Cc.bounds.Center.X, note.Cc.bounds.Center.Y);
-        float side = note.Cc.bounds.Width * (BoardLayout.PadSpriteSize / (float)BoardLayout.PadPaperWidth) * sizeBoost;
-        float scale = side / BoardLayout.PadSpriteSize;
-
-        b.Draw(_padTexture, center, padSource, note.PadColor, note.Tilt, origin, scale, SpriteEffects.None, 0.86f);
-
-        if (note.Portrait != null)
-        {
-            float portraitSide = side * 0.28f;
-            // Lower-left corner of the note, matching the old static layout.
-            var offset = new Vector2(-0.28f * side, 0.28f * side);
-            var pos = center + Rotate(offset, note.Tilt);
-            b.Draw(
-                note.Portrait, pos, new Rectangle(0, 0, 64, 64), Color.White,
-                note.Tilt, new Vector2(32, 32), portraitSide / 64f, SpriteEffects.None, 0.87f);
-        }
-
-        b.Draw(_pinTexture, center, padSource, note.PinColor, note.Tilt, origin, scale, SpriteEffects.None, 0.88f);
-    }
-
-    private static Vector2 Rotate(Vector2 v, float angle)
-    {
-        float cos = (float)Math.Cos(angle);
-        float sin = (float)Math.Sin(angle);
-        return new Vector2(v.X * cos - v.Y * sin, v.X * sin + v.Y * cos);
-    }
+    private void DrawNote(SpriteBatch b, Note note, float sizeBoost) =>
+        BoardNoteRenderer.DrawNote(
+            b, note.PadTexture, note.PinTexture, note.PadColor, note.PinColor,
+            note.Icon, note.Cc.bounds, note.Tilt, sizeBoost);
 }

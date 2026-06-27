@@ -43,6 +43,12 @@ public sealed class QuestPosting
     // UniqueID of the owning mod, used to attribute framework events.
     public string OwnerUniqueId { get; set; } = "";
     public string Category { get; set; } = QuestCategory.Social;
+
+    // Per-quest override for the board note's corner icon. Empty defers to the category's
+    // icon. "Portrait" draws the giver portrait, "None" draws nothing, anything else is an
+    // asset name. See CategoryDefinition.Icon.
+    public string Icon { get; set; } = "";
+
     public DifficultyTier Tier { get; set; }
     public PostingKind Kind { get; set; } = PostingKind.DailyBoard;
     public BoardQuestType QuestType { get; set; }

@@ -51,8 +51,32 @@ public sealed class BoardDefinition
 
     public int PoolSize { get; set; } = 3;
 
+    // Player-config bounds for PoolSize. The GMCM slider for this board runs PoolSizeMin to
+    // PoolSizeMax and defaults to PoolSize; the player's chosen value is clamped into that
+    // range. PoolSizeMin doubles as the floor, so a board never draws fewer than this even
+    // if the player drags the slider all the way down. Defaults give a 1 to 10 slider.
+    public int PoolSizeMin { get; set; } = 1;
+    public int PoolSizeMax { get; set; } = 10;
+
     // "WeightedRandom" (default) or "FirstAvailable".
     public string PoolStrategy { get; set; } = "WeightedRandom";
+
+    // Note arrangement on the cork board. "Scatter" (default) = the loose pinned look custom
+    // boards have always used, kept as the default so existing boards look unchanged.
+    // "TiltedGrid" = the tidy auto-grid with per-note tilts (what the daily board uses).
+    // "Zoned" = author-defined regions, each holding a set of categories with its own
+    // sub-layout (see Zones).
+    public string Layout { get; set; } = "Scatter";
+
+    // Used only when Layout is "Zoned". Each zone carves out a rectangle of the cork area
+    // and lays out the notes whose category lands in it. Order matters: the first zone whose
+    // Categories list matches a note wins. A zone with an empty/absent Categories list is the
+    // catch-all for anything no other zone claimed.
+    public List<BoardZone>? Zones { get; set; }
+
+    // Optional author bias for which entries win when more are eligible than there are slots.
+    // Absent or empty leaves the existing per-quest weighted RNG untouched.
+    public BoardPriority? Priority { get; set; }
 
     public List<string>? AllowedCategories { get; set; }
 
@@ -81,4 +105,39 @@ public sealed class BoardIndicator
 public sealed class BoardSpriteRef
 {
     public string? Texture { get; set; }
+}
+
+// One region of a "Zoned" board. Rect is [x, y, width, height] as percentages (0-100) of
+// the cork area, measured from its top-left corner. Style is the sub-layout used inside the
+// region ("TiltedGrid" or "Scatter"). Categories lists which quest categories live here;
+// leave it empty/absent to make this the catch-all region for anything no other zone claims.
+public sealed class BoardZone
+{
+    public int[] Rect { get; set; } = Array.Empty<int>();
+
+    public string Style { get; set; } = "TiltedGrid";
+
+    public List<string>? Categories { get; set; }
+
+    // Reserved for notice / ad / other non-quest entry types once those exist. Unused today.
+    public List<string>? Types { get; set; }
+
+    public float RectX => Rect.Length >= 1 ? Rect[0] : 0;
+    public float RectY => Rect.Length >= 2 ? Rect[1] : 0;
+    public float RectW => Rect.Length >= 3 ? Rect[2] : 100;
+    public float RectH => Rect.Length >= 4 ? Rect[3] : 100;
+}
+
+// Per-board bias applied on top of the per-quest weights before the weighted draw. Each map
+// is category-or-owner -> multiplier (1.0 = no change, 2.0 = twice as likely, 0 = excluded).
+// A category/owner not listed keeps multiplier 1.0, so an empty Priority is a no-op and the
+// board behaves exactly like the plain weighted RNG.
+public sealed class BoardPriority
+{
+    public Dictionary<string, double>? Categories { get; set; }
+
+    public Dictionary<string, double>? Owners { get; set; }
+
+    // Reserved for quest-vs-notice biasing once notices exist. Unused today.
+    public Dictionary<string, double>? Types { get; set; }
 }

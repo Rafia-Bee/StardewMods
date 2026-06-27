@@ -9,7 +9,7 @@ If you only want the gameplay content, install [b]More Quests[/b] and this frame
 [list]
 [*][b]Multi-slot Help Wanted billboard[/b] - vanilla's single "Quest of the Day" becomes a configurable batch of quests per day (massive thanks to [url=https://www.nexusmods.com/profile/aedenthorn/mods?gameId=1303]aedenthorn [/url]for open sourcing their code and the pad and pin textures, I got a lot of help from their [url=https://www.nexusmods.com/stardewvalley/mods/14640]Help Wanted[/url]mod for this feature.)[/*]
 [*][b]Optional paginated Special Orders board[/b] - adds left and right arrow keys to the top right corner of all special order boards to let you scroll through the generated special orders (if you configure pagination >1)[/*]
-[*][b]Custom pin-boards[/b] - mods can register their own boards at any tile in any location (the More Quests content mod uses this for the Adventurer's Guild board at the mine entrance)[/*]
+[*][b]Custom pin-boards[/b] - mods can register their own boards at any tile in any location (the More Quests content mod uses this for the Adventurer's Guild board at the mine entrance). Authors choose the layout (loose scatter, tidy tilted grid, or zoned regions that send different quest categories to different parts of the board), give each category its own note paper, pin, and corner picture, bias which quests win a pin, and let players set how many quests the board shows at once[/*]
 [*][b]Quality-aware deliveries[/b] - quests can require Silver, Gold, or Iridium quality items[/*]
 [*][b]Fish filters[/b] - catch-by-location, catch-by-size, catch-by-weather, filtered by fish that spawn in your visited locations only (configurable) all built in[/*]
 [*][b]Shipping observer[/b] - shipping items quests supported, with an opt-in bypass for shipping furniture / decor if you want a quest to ship decor items but don't have Ship Anything mod[/*]
@@ -45,7 +45,7 @@ If you only want the gameplay content, install [b]More Quests[/b] and this frame
 If you have [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] installed, the framework adds a page with every knob below. Otherwise edit [font=Courier New]config.json[/font] in the framework's mod folder.
 [spoiler]
 [list]
-[*][b]Quest board[/b] - QuestsPerDay, SpecialOrdersBoardPages, AllowDuplicateGiverPerDay, SkipFriendshipQuestsAtMaxHeart, plus Note spacing and Biggest note size to tweak how the help-wanted notes are arranged on the board[/*]
+[*][b]Quest board[/b] - QuestsPerDay, SpecialOrdersBoardPages, AllowDuplicateGiverPerDay, SkipFriendshipQuestsAtMaxHeart, plus Note spacing and Biggest note size to tweak how the help-wanted notes are arranged on the board, and a per-board pin count for any custom board whose author opted in (under "Custom boards")[/*]
 [*][b]Master toggles[/b] - DifficultyScaling, FishingIgnoresVisitedLocations, ForagingIgnoresVisitedLocations[/*]
 [*][b]Per-quest weights[/b] - one entry per registered quest, built at runtime so any consumer mod's quests show up automatically[/*]
 [*][b]Vanilla wrappers[/b] - toggle and tune the four bundled vanilla quest types[/*]

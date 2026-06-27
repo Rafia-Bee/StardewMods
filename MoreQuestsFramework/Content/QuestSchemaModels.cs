@@ -22,6 +22,11 @@ public sealed class QuestDef
     public string? Category { get; set; }
     public string? Tier { get; set; }
 
+    // Per-quest override for the note's corner icon, beating whatever this quest's category
+    // sets. Same values as CategoryDefinition.Icon: "Portrait" (default), "None", or an asset
+    // name. The icon's size and position still come from the category.
+    public string? Icon { get; set; }
+
     public TriggerDef? Trigger { get; set; }
 
     // When set, references a generator registered via RegisterGenerator(...);

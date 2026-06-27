@@ -3,6 +3,10 @@ To be released
 - For mod authors: custom board quests now go to one board by id, so one mod's board quests no longer show up on another mod's board. A quest picks its board with the new "CustomBoardId" trigger field, or leaves it out to use your mod's only board.
 - For mod authors: a board can now be a catch-all that also shows quests from other mods, set with the new "AllowedOwners" field.
 - For mod authors: "OverrideTriggerSource" has a new form that also names the target board, for sending a quest that has no board of its own onto your board.
+- Players can now set how many quests a custom board shows at once, when the board's author allows it. Look under "Custom boards" in the mod settings.
+- For mod authors: custom boards can now arrange their notes three ways: the loose scattered look (still the default), a tidy tilted grid like the help-wanted board, or "zoned", where you split the board into regions and send different quest categories to each, with its own look per region.
+- For mod authors: a category can now have its own note paper and pin art, not just colors, and the corner picture is yours to set: keep the giver's face, use your own image, or hide it for an anonymous note. A single quest can override just its corner picture.
+- For mod authors: when more quests qualify than a board has room for, you can nudge which ones win by category or by who posted them, instead of leaving it all to the weighted random pick.
 
 2.7.0
 - The help-wanted board now shows your prize ticket stars as soon as you open it, instead of only after you click a quest note. Hovering the stars tells you how many more quests you need before your next prize ticket.
