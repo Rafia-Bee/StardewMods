@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>MoreQuestsFramework</AssemblyName>
     <RootNamespace>MoreQuestsFramework</RootNamespace>
-    <Version>2.8.0-beta.1</Version>
+    <Version>2.8.0-beta.2</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <TargetFramework>net6.0</TargetFramework>
