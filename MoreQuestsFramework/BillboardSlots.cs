@@ -45,6 +45,15 @@ internal static class BillboardSlots
         Selected = null;
     }
 
+    // Adds one quest to the live board without touching the morning buffer. Used by
+    // mq_trigger so a forced daily-board quest shows up right away, without re-rolling
+    // the whole board or bringing back slots the player already accepted today.
+    public static void Append(Quest quest, QuestPosting posting)
+    {
+        _slots.Add(new Slot(quest, posting));
+        ModEntry.LogDebug($"BillboardSlots appended '{posting.DefinitionId}', now {_slots.Count} quest(s).");
+    }
+
     public static Quest? AcceptSelected(Slot? explicitSlot = null)
     {
         var target = explicitSlot ?? Selected;

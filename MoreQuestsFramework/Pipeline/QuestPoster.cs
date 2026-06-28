@@ -201,6 +201,24 @@ internal sealed class QuestPoster
         ModEntry.LogDebug($"Buffered {posting.DefinitionId} for billboard ({posting.QuestType}).");
     }
 
+    // Builds a daily-board quest and drops it straight onto the live billboard, skipping
+    // the morning buffer + CommitBoard replace. mq_trigger uses this so a forced quest
+    // appears immediately, even when it's on cooldown or out of its day range.
+    public Quest? PostToBoardImmediate(QuestPosting posting)
+    {
+        Quest? quest = posting.PreBuiltQuest ?? QuestFactory.Build(posting);
+        if (quest == null)
+        {
+            _monitor.Log($"Could not build Quest for {posting.DefinitionId} ({posting.QuestType}).", LogLevel.Warn);
+            return null;
+        }
+
+        ApplyPostingFields(quest, posting, dailyQuestDefault: false, daysLeft: 0);
+        _api.TrackPosted(quest, posting.OwnerUniqueId, posting.DefinitionId);
+        BillboardSlots.Append(quest, posting);
+        return quest;
+    }
+
     private void PostViaDialogue(QuestPosting posting)
     {
         if (_dialogueWatcher == null)

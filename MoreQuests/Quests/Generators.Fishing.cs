@@ -530,9 +530,16 @@ internal static partial class Generators
         var chosen = candidates[Game1.random.Next(candidates.Count)];
         string locationDisplay = LocationDisplayName(chosen.Loc);
 
-        var steps = new List<AdventureStepState>(chosen.Fish.Count + 1);
-        var catchNames = new List<string>(chosen.Fish.Count);
-        for (int i = 0; i < chosen.Fish.Count; i++)
+        // Trim to a random subset when the player capped how many distinct fish a single
+        // quest can ask for. 0 (the default) means no cap, so they catch the whole set.
+        var selectedFish = chosen.Fish;
+        int maxFish = ModEntry.Config.KnowYourWatersMaxFish;
+        if (maxFish > 0 && selectedFish.Count > maxFish)
+            selectedFish = selectedFish.OrderBy(_ => Game1.random.Next()).Take(maxFish).ToList();
+
+        var steps = new List<AdventureStepState>(selectedFish.Count + 1);
+        var catchNames = new List<string>(selectedFish.Count);
+        for (int i = 0; i < selectedFish.Count; i++)
         {
             string name = $"Catch{i}";
             catchNames.Add(name);
@@ -540,10 +547,10 @@ internal static partial class Generators
             {
                 Name = name,
                 Kind = AdventureStepKind.Catch,
-                Items = new List<string> { chosen.Fish[i].QualifiedItemId },
+                Items = new List<string> { selectedFish[i].QualifiedItemId },
                 Count = 1,
                 LocationName = chosen.Loc,
-                Description = ModEntry.I18n.Get("quest.fishing.knowYourWaters.step.catch", new { item = chosen.Fish[i].DisplayName, location = locationDisplay })
+                Description = ModEntry.I18n.Get("quest.fishing.knowYourWaters.step.catch", new { item = selectedFish[i].DisplayName, location = locationDisplay })
             });
         }
         steps.Add(new AdventureStepState

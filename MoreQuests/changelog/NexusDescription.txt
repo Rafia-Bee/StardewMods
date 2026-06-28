@@ -439,7 +439,7 @@ The reward line for each quest spells out the gold it pays. There are two kinds.
 [*][b]Giver:[/b] A fisherman NPC (Willy + modded)[/*]
 [*][b]Objective:[/b] Catch one of every kind of fish that lives at one visited spot this season, then report back in person[/*]
 [*][b]Reward:[/b] Pick from three answers when you report back: proud gives 2 Fish Smokers, modest gives 1 Fish Smoker + 1 Bait And Bobber book, owning up to a hard time gives 3 Bait And Bobber books[/*]
-[*][b]Notes:[/b] Cooldown 30 days, due by the end of the season[/*]
+[*][b]Notes:[/b] Cooldown 30 days, due by the end of the season. You can cap how many different fish it asks for in the config (default no limit), handy if fish mods give a spot too many kinds[/*]
 [/list]
 [b]Legendary Fish Quest[/b]
 [list]

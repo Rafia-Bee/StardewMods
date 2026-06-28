@@ -1096,6 +1096,16 @@ public sealed class ModEntry : Mod
             posting.OwnerUniqueId = def.OwnerUniqueId;
         posting.Kind = def.Kind;
 
+        // Daily-board quests go straight onto the live board. PostBatch only buffers them
+        // for the next CommitBoard, so without this the quest would never show.
+        if (posting.Kind == PostingKind.DailyBoard)
+        {
+            if (_poster.PostToBoardImmediate(posting) == null)
+                return;
+            Monitor.Log($"mq_trigger: posted '{id}' to the billboard. Open the board now to see it. Heads up: mq_refresh re-rolls the board and will drop it if it's on cooldown or out of its day range.", LogLevel.Info);
+            return;
+        }
+
         var preMailbox = new HashSet<string>(Game1.player.mailbox);
         _poster.PostBatch(new[] { posting });
 

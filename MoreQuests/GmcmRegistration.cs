@@ -101,6 +101,8 @@ internal static class GmcmRegistration
         api.AddSectionTitle(manifest, () => t.Get("config.section.fishHauls"));
         AddInt(api, manifest, t, "FishHaulMediumQty", () => ModEntry.Config.FishHaulMediumQty, v => ModEntry.Config.FishHaulMediumQty = v, 1, 200);
         AddInt(api, manifest, t, "FishHaulLargeQty", () => ModEntry.Config.FishHaulLargeQty, v => ModEntry.Config.FishHaulLargeQty = v, 1, 500);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.knowYourWaters"));
+        AddInt(api, manifest, t, "KnowYourWatersMaxFish", () => ModEntry.Config.KnowYourWatersMaxFish, v => ModEntry.Config.KnowYourWatersMaxFish = v, 0, 30);
 
         // ----- Mining -----
         api.AddPage(manifest, PageMining, () => t.Get("config.page.mining"));

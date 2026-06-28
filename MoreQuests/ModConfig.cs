@@ -50,6 +50,13 @@ public sealed class ModConfig
     public int FishHaulLargeQty { get; set; } = 30;
     public int CropMassiveQty { get; set; } = 50;
 
+    /// "Know your waters": the most distinct fish a single quest will ask you to catch. The
+    /// quest normally lists every fish that lives at the chosen spot this season, which can
+    /// balloon once fish mods are installed. Set this above 0 to trim the list down to a
+    /// random pick of that many fish. 0 (the default) means no limit, so you catch them all.
+    /// Negatives are treated the same as 0.
+    public int KnowYourWatersMaxFish { get; set; } = 0;
+
     /// Joja "Quality control" quest (Morris arc Step 2): a crop only counts as cheap junk
     /// if its base sell price is under this. Raise it if other mods bump crop values so
     /// there are still crops cheap enough to qualify. Clamped to at least 1 at read time.
