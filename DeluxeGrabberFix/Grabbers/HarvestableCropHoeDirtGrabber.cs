@@ -54,6 +54,11 @@ internal class HarvestableCropHoeDirtGrabber : TerrainFeaturesMapGrabber
         if (nearbyGrabbers.Count == 0)
             return false;
 
+        // Same idea when every grabber in range is full: leave the crop growing
+        // instead of harvesting it just to drop it on the floor (issue #114).
+        if (!AnyGrabberHasSpace(nearbyGrabbers))
+            return false;
+
         // try/finally so a thrown harvest (third-party Harmony patch on Crop.harvest,
         // a malformed crop, etc.) doesn't leave HarvestInterceptor._intercepting=true
         // and trip audit 4.6's reentry throw on every subsequent grab.

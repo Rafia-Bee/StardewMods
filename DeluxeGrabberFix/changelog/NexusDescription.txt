@@ -277,7 +277,7 @@ Yes. Remove the old mod and install this one. This version fixes the bugs listed
 Check the Enabled Locations page in the config menu to make sure the location isn't disabled. Also check if Skip Festival Locations is blocking it.
 
 [b]The auto-grabber chest is full, where do items go?[/b]
-Items that don't fit are left for the next day. For crops, overflow items are dropped on the ground near the crop tile. Consider using [url=https://www.nexusmods.com/stardewvalley/mods/43013]Bigger Auto-Grabber[/url] to expand the chest capacity.
+Items that don't fit are left for the next day. Grown crops just stay in the ground until the chest has room again, so your floor never gets covered in dropped crops (handy if you run a big greenhouse where one grabber can't hold the whole harvest). Consider using [url=https://www.nexusmods.com/stardewvalley/mods/43013]Bigger Auto-Grabber[/url] to expand the chest capacity, or place more than one grabber.
 
 [size=4][b]Credits[/b][/size]
 [list]

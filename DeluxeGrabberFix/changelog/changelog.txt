@@ -1,3 +1,6 @@
+To be released
+- Fixed crops piling up on the ground in big greenhouses when the auto-grabber chest was full. Once the chest fills up, the leftover grown crops now stay in the ground and get picked up later instead of being dumped on the floor.
+
 v1.22.0
 - Added Agromancy compatibility. Extra grapes (and bonus seeds) from yield-boosted crops now go straight into the auto-grabber instead of falling on the ground next to the trellis. No effect if you do not have Agromancy installed.
 

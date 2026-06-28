@@ -217,6 +217,21 @@ internal abstract class MapGrabber
             tile, pairs, range, rangeMode, IsSameLocationGrabber);
     }
 
+    // Issue #114: being in range isn't enough, the chest also needs a free slot.
+    // When every grabber in range is full we leave the crop growing instead of
+    // harvesting it and dropping it on the floor. One grabber can't hold a whole
+    // 50x50 greenhouse, so without this the floor filled up with crops every morning.
+    protected static bool AnyGrabberHasSpace(IEnumerable<KeyValuePair<Vector2, Object>> grabbers)
+    {
+        foreach (var grabber in grabbers)
+        {
+            if (grabber.Value.heldObject.Value is Chest chest
+                && chest.Items.Count < chest.GetActualCapacity())
+                return true;
+        }
+        return false;
+    }
+
     public Dictionary<InventoryEntry, int> GetInventory()
     {
         var dictionary = new Dictionary<InventoryEntry, int>();
