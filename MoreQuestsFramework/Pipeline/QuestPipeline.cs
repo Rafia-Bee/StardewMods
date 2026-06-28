@@ -322,10 +322,11 @@ internal sealed class QuestPipeline
     }
 
     // Draws each board's bulletin notices into its own NoticePoolSize budget, kept separate
-    // from the quest draw so notices and quests never compete for slots. Phase 1: home-board
-    // routing only (no catch-all mirroring), each notice appears at most once. Honors Available,
-    // the per-notice Weight (scaled by the board's Priority Categories / Types "Notice" map),
-    // CooldownDays, and the one-shot seen flag.
+    // from the quest draw so notices and quests never compete for slots. Home-board routing
+    // only (no catch-all mirroring), each notice appears at most once. Honors Available, the
+    // per-notice Weight (scaled by the board's Priority Categories / Types "Notice" map),
+    // CooldownDays, the one-shot seen flag, and pinned notices (PinDays / Lifetime), which keep
+    // showing without re-rolling until their window ends.
     public List<NoticeDraw> GenerateBoardNotices(
         NoticeRegistry notices, BoardRegistry boards, NoticeStore store, Func<string, int?>? cooldownTierLookup)
     {
@@ -336,10 +337,34 @@ internal sealed class QuestPipeline
 
         var (byKey, byOwner) = CustomBoardRouting.BuildBoardMaps(boards);
 
+        var defById = new Dictionary<string, NoticeDef>(StringComparer.OrdinalIgnoreCase);
+        foreach (var def in notices.All)
+            defById[NoticeRegistry.KeyOf(def)] = def;
+
+        // Carry forward notices still inside their pin window. They show again without being
+        // re-rolled, so resolve them to their home board up front and keep them out of the fresh
+        // draw below. The call also drops pins whose window has passed.
+        var carriedByBoardKey = new Dictionary<string, List<(NoticeDef Def, int ExpiresAfterDay)>>(StringComparer.OrdinalIgnoreCase);
+        var carriedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var pinned in store.ActivePinned())
+        {
+            if (!defById.TryGetValue(pinned.DefinitionId, out var def))
+                continue;
+            if (CustomBoardRouting.ResolveHome(def.OwnerUniqueId ?? "", def.CustomBoardId, byKey, byOwner, out string homeKey)
+                != CustomBoardRouting.HomeResolution.Home)
+                continue;
+            if (!carriedByBoardKey.TryGetValue(homeKey, out var carried))
+                carriedByBoardKey[homeKey] = carried = new List<(NoticeDef, int)>();
+            carried.Add((def, pinned.ExpiresAfterDay));
+            carriedIds.Add(pinned.DefinitionId);
+        }
+
         var byBoardKey = new Dictionary<string, List<(NoticeDef Def, int Weight)>>(StringComparer.OrdinalIgnoreCase);
         foreach (var def in notices.All)
         {
             string id = NoticeRegistry.KeyOf(def);
+            if (carriedIds.Contains(id))
+                continue;
             if (store.IsSeen(id))
                 continue;
             if (def.Available != null && def.Available.Count > 0
@@ -364,26 +389,66 @@ internal sealed class QuestPipeline
         }
 
         var rng = Game1.random;
+        int today = Game1.Date.TotalDays;
         foreach (var board in boards.All)
         {
-            if (!byBoardKey.TryGetValue(CustomBoardRouting.KeyOf(board), out var group))
-                continue;
+            string boardKey = CustomBoardRouting.KeyOf(board);
             int target = NoticePoolConfig.Effective(board, _ctx.Config);
             if (target <= 0)
                 continue;
-            foreach (var def in SelectNotices(board, group, target, rng))
+            int placed = 0;
+
+            // Pinned notices take their slots first. Re-stamp their cooldown each day they show
+            // so a cooldown after the pin window counts from the last day they were up.
+            if (carriedByBoardKey.TryGetValue(boardKey, out var carried))
             {
-                string id = NoticeRegistry.KeyOf(def);
-                draws.Add(new NoticeDraw(BuildNotice(def), board));
-                store.RecordPosted(id);
-                if (def.Once)
-                    store.MarkSeen(id);
+                foreach (var (def, expiresAfterDay) in carried)
+                {
+                    if (placed >= target)
+                        break;
+                    draws.Add(new NoticeDraw(BuildNotice(def, expiresAfterDay), board));
+                    store.RecordPosted(NoticeRegistry.KeyOf(def));
+                    placed++;
+                }
+            }
+
+            if (placed < target && byBoardKey.TryGetValue(boardKey, out var group))
+            {
+                foreach (var def in SelectNotices(board, group, target - placed, rng))
+                {
+                    string id = NoticeRegistry.KeyOf(def);
+                    int expiry = ComputePinExpiry(def, today);
+                    draws.Add(new NoticeDraw(BuildNotice(def, expiry), board));
+                    store.RecordPosted(id);
+                    if (expiry > today)
+                        store.Pin(id, today, expiry);
+                    if (def.Once)
+                        store.MarkSeen(id);
+                    placed++;
+                }
             }
         }
 
         sw.Stop();
         ModEntry.LogDebug($"Generated {draws.Count} notice(s) across {boards.All.Count} board(s) in {sw.Elapsed.TotalMilliseconds:F1} ms.");
         return draws;
+    }
+
+    // The TotalDays a notice's pin window ends, or a day before `today` when it isn't pinned.
+    // "Week" runs to the end of the current 7-day calendar block (days 1 to 7, 8 to 14, ...);
+    // PinDays N runs N days from today.
+    private static int ComputePinExpiry(NoticeDef def, int today)
+    {
+        if (!string.IsNullOrWhiteSpace(def.Lifetime)
+            && def.Lifetime.Trim().Equals("Week", StringComparison.OrdinalIgnoreCase))
+        {
+            int dayOfMonth = Game1.dayOfMonth;
+            int daysToWeekEnd = (7 - (dayOfMonth % 7)) % 7;
+            return today + daysToWeekEnd;
+        }
+        if (def.PinDays > 0)
+            return today + def.PinDays - 1;
+        return today - 1;
     }
 
     private int ResolveNoticeCooldown(NoticeDef def, Func<string, int?>? cooldownTierLookup)
@@ -397,16 +462,48 @@ internal sealed class QuestPipeline
         return def.CooldownDays;
     }
 
-    private static NoticeInstance BuildNotice(NoticeDef def) => new()
+    // expiresAfterDay is the pin window's last day (a TotalDays value), or a day before today
+    // when the notice isn't pinned. It feeds the {{daysRemaining}} body token.
+    private static NoticeInstance BuildNotice(NoticeDef def, int expiresAfterDay) => new()
     {
         DefinitionId = NoticeRegistry.KeyOf(def),
         OwnerUniqueId = def.OwnerUniqueId ?? "",
         Category = string.IsNullOrWhiteSpace(def.Category) ? QuestCategory.Social : def.Category!,
         Title = def.Title ?? "",
-        Body = def.Body ?? "",
+        Body = ExpandNoticeBody(def.Body ?? "", expiresAfterDay),
         Giver = def.Giver ?? "",
         Icon = def.Icon ?? "",
     };
+
+    // Replaces the [daysRemaining] token in a pinned notice's body with a short line about how
+    // long the pin has left, counting today as the last day. On a notice that isn't pinned the
+    // token is just dropped. Resolved per day-start, so it counts down as the window closes.
+    // Square brackets, not braces, so it doesn't clash with Content Patcher's own {{ }} tokens.
+    private static string ExpandNoticeBody(string body, int expiresAfterDay)
+    {
+        const string token = "[daysRemaining]";
+        if (string.IsNullOrEmpty(body) || !body.Contains(token))
+            return body;
+        int daysAfterToday = expiresAfterDay - Game1.Date.TotalDays;
+        string phrase;
+        if (daysAfterToday < 0)
+            phrase = "";
+        else if (daysAfterToday == 0)
+            phrase = Translate("notice.daysRemaining.last", null, "Last day for this notice");
+        else if (daysAfterToday == 1)
+            phrase = Translate("notice.daysRemaining.one", null, "Pinned for 1 more day");
+        else
+            phrase = Translate("notice.daysRemaining.many", new { count = daysAfterToday }, $"Pinned for {daysAfterToday} more days");
+        return body.Replace(token, phrase);
+    }
+
+    private static string Translate(string key, object? tokens, string fallback)
+    {
+        var t = ModEntry.Translation;
+        if (t == null)
+            return fallback;
+        return (tokens == null ? t.Get(key) : t.Get(key, tokens)).Default(fallback).ToString();
+    }
 
     // Weighted pick without replacement up to `count`, applying the board's Priority to each
     // notice's weight (Categories[category] and Types["Notice"]). FirstAvailable takes them in

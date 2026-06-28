@@ -81,12 +81,10 @@ public sealed class ModEntry : Mod
 
     private const string MqfQuestsAsset = "Mods/RafiaBee.MoreQuestsFramework/Quests";
     private const string MqfBoardsAsset = "Mods/RafiaBee.MoreQuestsFramework/Boards";
-    private const string MqfNoticesAsset = "Mods/RafiaBee.MoreQuestsFramework/Notices";
     private const string MqfCooldownTiersAsset = "Mods/RafiaBee.MoreQuestsFramework/CooldownTiers";
 
     private QuestPackDocument? _cachedQuests;
     private BoardPackDocument? _cachedBoards;
-    private NoticePackDocument? _cachedNotices;
 
     /// Custom step handler id for the final "win the egg hunt" step on Festival.EggHuntSabotage.
     /// The handler isn't registered as a polling handler. We drive it via the framework's
@@ -317,24 +315,6 @@ public sealed class ModEntry : Mod
                     if (string.IsNullOrWhiteSpace(def.Name))
                         continue;
                     def.OwnerUniqueId = ModManifest.UniqueID;
-                    dict[def.Name] = def;
-                }
-            }, AssetEditPriority.Early);
-            return;
-        }
-
-        if (e.NameWithoutLocale.IsEquivalentTo(MqfNoticesAsset))
-        {
-            if (!Config.EnableAdventurersGuildBoard)
-                return;
-            e.Edit(asset =>
-            {
-                var dict = asset.AsDictionary<string, NoticeDef>().Data;
-                foreach (var def in LoadNoticesCached().Notices)
-                {
-                    if (string.IsNullOrWhiteSpace(def.Name))
-                        continue;
-                    def.Owner = ModManifest.UniqueID;
                     dict[def.Name] = def;
                 }
             }, AssetEditPriority.Early);
@@ -1592,11 +1572,6 @@ public sealed class ModEntry : Mod
     private BoardPackDocument LoadBoardsCached()
     {
         return _cachedBoards ??= Helper.Data.ReadJsonFile<BoardPackDocument>("assets/boards.json") ?? new BoardPackDocument();
-    }
-
-    private NoticePackDocument LoadNoticesCached()
-    {
-        return _cachedNotices ??= Helper.Data.ReadJsonFile<NoticePackDocument>("assets/notices.json") ?? new NoticePackDocument();
     }
 
     /// Routes mining/monster quests to either the guild board or the help-wanted board

@@ -712,6 +712,60 @@
           ]
         }
       }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Mods/RafiaBee.MoreQuestsFramework/Boards",
+      "Entries": {
+        "{{ModId}}_NoticeBoard": {
+          "Location": "Town",
+          "Tile": [ 45, 56 ],
+          "Title": "{{i18n:example.board.title}}",
+          "NoticePoolSize": 3,
+          "NoticePoolSizeMin": 0,
+          "NoticePoolSizeMax": 5
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Mods/RafiaBee.MoreQuestsFramework/Notices",
+      "Entries": {
+        "{{ModId}}_Notice_TownNews": {
+          "CustomBoardId": "{{ModId}}_NoticeBoard",
+          "Category": "Seasonal",
+          "Giver": "Lewis",
+          "Weight": 10,
+          "Title": "{{i18n:example.notice.news.title}}",
+          "Body": "{{i18n:example.notice.news.body}}"
+        },
+        "{{ModId}}_Notice_Welcome": {
+          "CustomBoardId": "{{ModId}}_NoticeBoard",
+          "Category": "Social",
+          "Weight": 10,
+          "Once": true,
+          "Title": "{{i18n:example.notice.welcome.title}}",
+          "Body": "{{i18n:example.notice.welcome.body}}"
+        },
+        "{{ModId}}_Notice_RoadWork": {
+          "CustomBoardId": "{{ModId}}_NoticeBoard",
+          "Category": "Social",
+          "Giver": "Robin",
+          "Weight": 20,
+          "PinDays": 3,
+          "Title": "{{i18n:example.notice.pinned.title}}",
+          "Body": "{{i18n:example.notice.pinned.body}}"
+        },
+        "{{ModId}}_Notice_WeeklyBulletin": {
+          "CustomBoardId": "{{ModId}}_NoticeBoard",
+          "Category": "Seasonal",
+          "Giver": "Lewis",
+          "Weight": 20,
+          "Lifetime": "Week",
+          "Title": "{{i18n:example.notice.weekly.title}}",
+          "Body": "{{i18n:example.notice.weekly.body}}"
+        }
+      }
     }
   ]
 }

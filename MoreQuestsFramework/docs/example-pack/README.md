@@ -9,7 +9,7 @@ For the C# patterns, see [`../example-csharp-generators/`](../example-csharp-gen
 ## What it ships
 
 - `manifest.json`. Declares the pack as `ContentPackFor: Pathoschild.ContentPatcher` and lists `RafiaBee.MoreQuestsFramework` as a required dependency.
-- `content.json`. One `EditData` block targeting `Mods/RafiaBee.MoreQuestsFramework/Quests`, with one entry per example quest. Pick the one closest to what you want and crib from it.
+- `content.json`. An `EditData` block targeting `Mods/RafiaBee.MoreQuestsFramework/Quests` (one entry per example quest), plus smaller blocks adding an example notice board and a few notices. Pick the one closest to what you want and crib from it.
 - `i18n/default.json`. The translation strings the quests reference via `{{i18n:key}}` tokens. Content Patcher resolves these against this pack's own `i18n/` folder before MQF sees the data.
 
 ## How it loads
@@ -18,6 +18,7 @@ MQF seeds these game-content assets at startup:
 
 - `Mods/RafiaBee.MoreQuestsFramework/Quests` (Dictionary<string, QuestDef>)
 - `Mods/RafiaBee.MoreQuestsFramework/Boards` (Dictionary<string, BoardDef>)
+- `Mods/RafiaBee.MoreQuestsFramework/Notices` (Dictionary<string, NoticeDef>)
 - `Mods/RafiaBee.MoreQuestsFramework/CooldownTiers` (Dictionary<string, int>)
 - `Mods/RafiaBee.MoreQuestsFramework/Categories` (Dictionary<string, CategoryDefinition>), pre-seeded with the nine built-in categories so you can EditData to recolor one or add your own.
 
@@ -152,3 +153,16 @@ Two optional board fields fine-tune what shows up:
 - `AllowedOwners`: makes the board a catch-all that also mirrors CustomBoard quests from other mods. `["*"]` catches everyone; a list of mod UniqueIDs curates which.
 
 Note `AllowedCategories` (a board filter) is unrelated to the `Categories` asset (which sets each quest note's pad/pin colors and skill scaling). A quest's `Category` always colors its note; `AllowedCategories` just gates which quests a board will draw.
+
+## Notices (optional)
+
+This pack also ships a small bulletin board (`{{ModId}}_NoticeBoard` in `Town`) with a few **notices**: pins that open a bit of text instead of a quest to accept. They live in a third `EditData` block targeting `Mods/RafiaBee.MoreQuestsFramework/Notices`, and they show the four ways a notice can come and go:
+
+- `{{ModId}}_Notice_TownNews`: a plain recurring notice that can show any day.
+- `{{ModId}}_Notice_Welcome`: `Once: true`, so it shows one day and never again on that save.
+- `{{ModId}}_Notice_RoadWork`: `PinDays: 3`, so once it shows it stays up for three days without being re-rolled.
+- `{{ModId}}_Notice_WeeklyBulletin`: `Lifetime: "Week"`, so it holds until the week rolls over.
+
+A notice names its board with `CustomBoardId` (same rules as a quest), and `NoticePoolSize` on the board sets how many notices show at once, separate from the quest count. The two pinned ones put `[daysRemaining]` in their body text, which the framework swaps each day for a line like "Pinned for 2 more days" or "Last day for this notice", so the note counts itself down. (Square brackets, not `{{ }}`, so Content Patcher leaves it alone.)
+
+The board here sits at `Town` tile `[45, 56]` with no in-world art, so walk to that tile and click to open it. Set `Location`, `Tile`, and a `Texture` to put your own board where you want it.

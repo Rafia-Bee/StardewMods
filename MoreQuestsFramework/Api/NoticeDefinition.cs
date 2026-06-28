@@ -56,6 +56,16 @@ public sealed class NoticeDef
     // again on this save (the seen flag is saved). Leave false for a recurring notice.
     public bool Once { get; set; }
 
+    // Pin the notice up for this many days once it's drawn. While pinned it shows every day
+    // without being re-rolled, so it can't get bumped by other notices. 0 (default) means it
+    // isn't pinned, so it's a normal daily draw. Ignored when Lifetime is set.
+    public int PinDays { get; set; }
+
+    // A named pin window instead of a fixed day count. "Week" pins the notice until the end of
+    // the current week (the calendar's 7-day block: days 1 to 7, 8 to 14, and so on), so one
+    // entry holds for the rest of that week without re-rolling. Takes precedence over PinDays.
+    public string? Lifetime { get; set; }
+
     // Player-facing heading. Shown on the pin's hover tooltip and as the popup heading.
     // Write it in first person, like the notice author is speaking. CP resolves
     // {{i18n:key}} tokens before the text reaches the framework.

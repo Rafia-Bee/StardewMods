@@ -262,7 +262,7 @@ public sealed class ModEntry : Mod
         foreach (var name in e.NamesWithoutLocale)
         {
             _dataCache?.Invalidate(name.Name);
-            if (name.IsEquivalentTo(QuestsAssetName) || name.IsEquivalentTo(BoardsAssetName))
+            if (name.IsEquivalentTo(QuestsAssetName) || name.IsEquivalentTo(BoardsAssetName) || name.IsEquivalentTo(NoticesAssetName))
                 questsOrBoardsTouched = true;
             if (name.IsEquivalentTo(CategoriesAssetName))
                 categoriesTouched = true;

@@ -25,6 +25,9 @@
     "config.customBoardPoolSize.tooltip": "How many quests {{board}} pins up at once.",
     "config.customBoardNoticePoolSize": "{{board}}: notices shown",
     "config.customBoardNoticePoolSize.tooltip": "How many bulletin notices {{board}} pins up at once. Set to 0 to hide notices on this board.",
+    "notice.daysRemaining.many": "Pinned for {{count}} more days",
+    "notice.daysRemaining.one": "Pinned for 1 more day",
+    "notice.daysRemaining.last": "Last day for this notice",
 
     "config.section.weights": "Quest type weights",
     "config.section.weights.tooltip": "Each daily-board quest type has a relative weight. Higher = more likely to appear. 0 disables that type. Browse by category below.",

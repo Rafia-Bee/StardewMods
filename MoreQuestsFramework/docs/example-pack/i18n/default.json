@@ -84,5 +84,19 @@
     "example.weatherForecast.title": "EXAMPLE QUEST: Demetrius wants a rainy-day sample",
     "example.weatherForecast.description": "The forecast says rain tomorrow. Demetrius is studying how the fish behave in the wet. Catch a Catfish while it's raining and bring it to him.",
     "example.weatherForecast.objective": "Catch 1 Catfish in the rain.",
-    "example.weatherForecast.targetMessage": "Fantastic. They only show up when the water's stirred up like this."
+    "example.weatherForecast.targetMessage": "Fantastic. They only show up when the water's stirred up like this.",
+
+    "example.board.title": "EXAMPLE BOARD: Town bulletin board",
+
+    "example.notice.news.title": "EXAMPLE NOTICE: Town news",
+    "example.notice.news.body": "Lewis here. The valley fair lands at the end of fall, so start setting your best crops aside now.",
+
+    "example.notice.welcome.title": "EXAMPLE NOTICE: A welcome note",
+    "example.notice.welcome.body": "Welcome to the valley. This note only goes up the once, so you will not find it here tomorrow.",
+
+    "example.notice.pinned.title": "EXAMPLE NOTICE: Road work",
+    "example.notice.pinned.body": "Robin here. The path by the square is torn up while I patch it, so mind your step. [daysRemaining]",
+
+    "example.notice.weekly.title": "EXAMPLE NOTICE: This week in town",
+    "example.notice.weekly.body": "Lewis here. Here is what is on around town this week. [daysRemaining]"
 }

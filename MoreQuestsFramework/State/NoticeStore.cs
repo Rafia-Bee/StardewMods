@@ -46,4 +46,34 @@ internal sealed class NoticeStore
         if (!string.IsNullOrEmpty(id))
             _state.NoticeLastPostedDay[id] = Game1.Date.TotalDays;
     }
+
+    // Drops any pin whose window has passed and returns the ones still active. A pinned notice
+    // keeps showing every day until its window ends, without being re-rolled.
+    public IReadOnlyList<PostedNotice> ActivePinned()
+    {
+        int today = Game1.Date.TotalDays;
+        _state.PostedNotices.RemoveAll(p => today > p.ExpiresAfterDay);
+        return _state.PostedNotices;
+    }
+
+    public bool IsPinned(string id)
+    {
+        foreach (var p in _state.PostedNotices)
+            if (string.Equals(p.DefinitionId, id, StringComparison.OrdinalIgnoreCase))
+                return true;
+        return false;
+    }
+
+    // Pins a notice up to expiresAfterDay (a TotalDays value). No-ops if it's already pinned.
+    public void Pin(string id, int firstPostedDay, int expiresAfterDay)
+    {
+        if (string.IsNullOrEmpty(id) || IsPinned(id))
+            return;
+        _state.PostedNotices.Add(new PostedNotice
+        {
+            DefinitionId = id,
+            FirstPostedDay = firstPostedDay,
+            ExpiresAfterDay = expiresAfterDay,
+        });
+    }
 }
