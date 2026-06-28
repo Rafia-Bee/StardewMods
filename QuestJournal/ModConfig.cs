@@ -41,9 +41,6 @@ public sealed class ModConfig
 
     public bool DebugLogging { get; set; } = true;
 
-    public int JournalOffsetX { get; set; }
-    public int JournalOffsetY { get; set; }
-
     public int HudPinX { get; set; } = -1;
     public int HudPinY { get; set; } = -1;
 

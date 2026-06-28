@@ -249,13 +249,6 @@ public sealed class JournalContext : INotifyPropertyChanged
         _journalOffset = new Point(topLeft.X - c.X, topLeft.Y - c.Y);
     }
 
-    public void PersistJournalOffset()
-    {
-        ModEntry.Config.JournalOffsetX = _journalOffset.X;
-        ModEntry.Config.JournalOffsetY = _journalOffset.Y;
-        _helper.WriteConfig(ModEntry.Config);
-    }
-
     public TabRow? AddTab => _addTab;
     public TabRow? EditTab => _editTab;
 
@@ -306,7 +299,9 @@ public sealed class JournalContext : INotifyPropertyChanged
         _externalEntries = externalEntries;
         if (_externalEntries != null)
             _externalEntries.Changed += OnExternalEntriesChanged;
-        _journalOffset = new Point(ModEntry.Config.JournalOffsetX, ModEntry.Config.JournalOffsetY);
+        // Always open centered. You can still drag the window during a session, it just isn't
+        // remembered the next time you open it, so it never drifts off-center on open.
+        _journalOffset = Point.Zero;
         Tabs.Add(new TabRow(TabActive, helper.Translation.Get("journal.tab.active").Default("Active").ToString(), HandleTabActivate));
         Tabs.Add(new TabRow(TabSpecial, helper.Translation.Get("journal.tab.special").Default("Special Orders").ToString(), HandleTabActivate));
         if (ModEntry.Config.ShowCompletedTab)

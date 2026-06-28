@@ -1,4 +1,5 @@
 To be released
+- Fixed: the journal now always opens centered on the screen instead of sometimes sitting off to the side or drifting. You can still drag it around while it's open.
 - New: finished quests now show their name in green, so they're easy to tell apart from the ones you're still working on when a tab shows both.
 - New: a setting to keep finished quests in the Completed tab only, so they stop cluttering up your custom tabs and the All tab. It's off to start.
 - New: the filter boxes for custom tabs hold a lot more text now, so you can list out more names without running out of room.

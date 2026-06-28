@@ -157,7 +157,6 @@ public sealed class ModEntry : Mod
             == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
         if (!held || _journalMenu!.GetChildMenu() != null)
         {
-            if (_journalDragging) _journalContext!.PersistJournalOffset();
             _journalDragging = false;
             _journalPendingDrag = false;
             return;
