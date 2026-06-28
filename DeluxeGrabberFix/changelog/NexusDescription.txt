@@ -12,7 +12,7 @@ This is a bugfix-and-feature fork of Deluxe Grabber Redux 1.6. It fixes a bunch 
 
 [size=4][b]Features[/b][/size]
 [list]
-[*][b]Crop harvesting[/b]: Harvests ground crops and indoor pot crops within a configurable range and shape (diamond or square). Fully delegates to the game's own harvest logic, so modded crops, quality overrides, and extra harvest chances all work correctly.[/*]
+[*][b]Crop harvesting[/b]: Harvests ground crops and indoor pot crops (including potted tea bushes) within a configurable range and shape (diamond or square). Fully delegates to the game's own harvest logic, so modded crops, quality overrides, and extra harvest chances all work correctly.[/*]
 [*][b]Fruit trees[/b]: Picks fruit from mature fruit trees, including quality based on tree age.[/*]
 [*][b]Berry bushes[/b]: Collects berries from salmonberry and blackberry bushes.[/*]
 [*][b]Seed trees[/b]: Shakes trees for seeds, hazelnuts, coconuts, and other drops. Uses the game's own shake logic, so modded trees work too.[/*]
@@ -110,7 +110,7 @@ If you have [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod C
 [color=#e69138][b]Crop Harvesting[/b][/color]
 [spoiler][list]
 [*][b]Harvest Crops[/b] (default: Off). Harvest crops near auto-grabbers[/*]
-[*][b]Harvest Crops Inside Pots[/b] (default: On). Also harvest crops in indoor pots (requires Harvest Crops)[/*]
+[*][b]Harvest Crops Inside Pots[/b] (default: On). Also harvest crops and tea bushes in indoor pots (requires Harvest Crops)[/*]
 [*][b]Harvest Flowers[/b] (default: Smart). Three modes: 'Off' skips all flowers, 'All' harvests all flowers, 'Smart' harvests flowers except those within range of a Bee House so your honey stays flavored.[/*]
 [*][b]Bee House Flower Range[/b] (default: 5). The tile range Smart mode uses to detect nearby Bee Houses. Matches the vanilla range of 5. Increase if you use mods that extend Bee House range.[/*]
 [*][b]Harvest Range[/b] (default: -1). Tile range for crop harvesting. Set to -1 for unlimited range.[/*]

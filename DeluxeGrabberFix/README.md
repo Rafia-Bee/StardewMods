@@ -4,7 +4,7 @@ Adopted the existing [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/starde
 
 ## Features
 
-- **Crop harvesting**: Harvests ground crops and indoor pot crops within a configurable range and shape (diamond or square). Fully delegates to the game's own harvest logic, so modded crops, quality overrides, and extra harvest chances all work correctly.
+- **Crop harvesting**: Harvests ground crops and indoor pot crops (including potted tea bushes) within a configurable range and shape (diamond or square). Fully delegates to the game's own harvest logic, so modded crops, quality overrides, and extra harvest chances all work correctly.
 - **Fruit trees**: Picks fruit from mature fruit trees, including quality based on tree age.
 - **Berry bushes**: Collects berries from salmonberry and blackberry bushes.
 - **Seed trees**: Shakes trees for seeds, hazelnuts, coconuts, and other drops. Uses the game's own shake logic, so modded trees work too.
@@ -51,7 +51,7 @@ All options are configurable through [Generic Mod Config Menu](https://www.nexus
 | Setting | Default | Description |
 |---|---|---|
 | Harvest Crops | Off | Harvest crops near auto-grabbers |
-| Harvest Crops Inside Pots | On | Also harvest crops in indoor pots |
+| Harvest Crops Inside Pots | On | Also harvest crops and tea bushes in indoor pots |
 | Harvest Flowers | Smart | Off/All/Smart. Smart skips flowers near Bee Houses |
 | Bee House Flower Range | 5 | Tile range Smart mode uses to detect nearby Bee Houses |
 | Harvest Range | -1 | Tile range for crop harvesting (-1 = unlimited) |

@@ -19,7 +19,16 @@ internal class IndoorPotGrabber : ObjectsMapGrabber
         if (!Config.Features.harvestCrops || !Config.Features.harvestCropsIndoorPots)
             return false;
 
-        if (obj is not IndoorPot pot || pot.hoeDirt.Value?.crop == null)
+        if (obj is not IndoorPot pot)
+            return false;
+
+        // Tea (and other ready bushes) planted in a garden pot. The crop path
+        // below only covers seeded crops like coffee, so a potted tea bush would
+        // otherwise never get collected (issue #115).
+        if (pot.bush.Value != null)
+            return TryGrabPotBush(tile, pot.bush.Value);
+
+        if (pot.hoeDirt.Value?.crop == null)
             return false;
 
         HoeDirt dirt = pot.hoeDirt.Value;
@@ -90,6 +99,29 @@ internal class IndoorPotGrabber : ObjectsMapGrabber
             // short-circuits firing in the right order.
             Mod.GrabbedTiles?.Add(tile);
 
+            return true;
+        }
+        return false;
+    }
+
+    private bool TryGrabPotBush(Vector2 tile, Bush bush)
+    {
+        if (!BushHarvest.TryGetHarvest(Mod, bush, tile, Location, out var items, out int exp))
+            return false;
+
+        var nearbyGrabbers = GetGrabbersInRangeOfTile(tile, Config.Features.harvestCropsRange, Config.Features.harvestCropsRangeMode).ToList();
+
+        // No grabber in range, or every chest in range is full: leave the tea on
+        // the bush for the next pass rather than shaking it off onto the floor.
+        if (nearbyGrabbers.Count == 0 || !AnyGrabberHasSpace(nearbyGrabbers))
+            return false;
+
+        if (TryAddItems(items, nearbyGrabbers))
+        {
+            bush.tileSheetOffset.Value = 0;
+            bush.setUpSourceRect();
+            GainExperience(2, exp);
+            Mod.GrabbedTiles?.Add(tile);
             return true;
         }
         return false;
