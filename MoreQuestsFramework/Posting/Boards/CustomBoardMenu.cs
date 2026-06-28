@@ -121,16 +121,18 @@ internal sealed class CustomBoardMenu : IClickableMenu
 
         var categories = new List<string>(slots.Count);
         var types = new List<string>(slots.Count);
+        var scales = new List<float>(slots.Count);
         foreach (var s in slots)
         {
             categories.Add(s.Category);
             types.Add(s.Kind == SlotKind.Notice ? "Notice" : "Quest");
+            scales.Add(s.ScaleValue);
         }
 
         int daySeed = Game1.Date.TotalDays + (_board.Name?.GetHashCode() ?? 0);
         var rng = new Random(Game1.Date.TotalDays * 7919 + slots.Count + (_board.Name?.GetHashCode() ?? 0));
         var placements = BoardLayout.ComputeLayout(
-            _board, categories, xPositionOnScreen, yPositionOnScreen, daySeed, rng, types);
+            _board, categories, xPositionOnScreen, yPositionOnScreen, daySeed, rng, types, scales);
         var texCache = new Dictionary<string, Texture2D>();
 
         for (int i = 0; i < slots.Count; i++)
@@ -155,6 +157,15 @@ internal sealed class CustomBoardMenu : IClickableMenu
                 downNeighborID = SnapAutomatic
             };
 
+            // A picture notice with no explicit Icon shows its image centered on the pad, not a
+            // corner icon. Everything else (quests, plain notices, notices with an Icon) uses the
+            // shared corner-icon resolution.
+            var notice = slot.Kind == SlotKind.Notice ? slot.Notice : null;
+            BoardNoteRenderer.NoteIcon? icon =
+                notice != null && !string.IsNullOrWhiteSpace(notice.Image) && string.IsNullOrWhiteSpace(notice.Icon)
+                    ? BoardNoteRenderer.ResolvePhotoIcon(notice.Image, notice.ImageSource, texCache)
+                    : BoardNoteRenderer.ResolveIcon(slot.IconValue, slot.Category, slot.GiverName, texCache);
+
             var note = new Note
             {
                 Cc = cc,
@@ -163,7 +174,7 @@ internal sealed class CustomBoardMenu : IClickableMenu
                 PinColor = pinColor,
                 PadTexture = BoardNoteRenderer.ResolvePad(slot.Category, _padTexture, texCache),
                 PinTexture = BoardNoteRenderer.ResolvePin(slot.Category, _pinTexture, texCache),
-                Icon = BoardNoteRenderer.ResolveIcon(slot.IconValue, slot.Category, slot.GiverName, texCache),
+                Icon = icon,
                 Tilt = placement.Tilt
             };
             _notes.Add(note);

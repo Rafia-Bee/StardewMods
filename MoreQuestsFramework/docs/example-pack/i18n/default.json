@@ -98,5 +98,13 @@
     "example.notice.pinned.body": "Robin here. The path by the square is torn up while I patch it, so mind your step. [daysRemaining]",
 
     "example.notice.weekly.title": "EXAMPLE NOTICE: This week in town",
-    "example.notice.weekly.body": "Lewis here. Here is what is on around town this week. [daysRemaining]"
+    "example.notice.weekly.body": "Lewis here. Here is what is on around town this week. [daysRemaining]",
+
+    "example.category.featured": "EXAMPLE: Featured story",
+
+    "example.notice.featured.title": "EXAMPLE NOTICE: Featured story",
+    "example.notice.featured.body": "Lewis here, with the big story for the board. This note rides a category that makes it bigger than the rest and gives it its own paper color, font, and text color, so an author can make one pin really stand out. Nothing about the default notices changes, this look is opt-in.",
+
+    "example.notice.photo.title": "EXAMPLE PHOTO: A look at the valley",
+    "example.notice.photo.body": "Lewis here. Someone pinned up a map of the whole valley. Click any picture pin to see the full image with its caption underneath."
 }

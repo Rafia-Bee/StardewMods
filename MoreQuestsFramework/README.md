@@ -563,6 +563,17 @@ A notice takes these fields:
 - `Lifetime` a named pin window instead of a day count. `"Week"` pins the notice until the end of the current week, so one entry holds for the rest of that week without re-rolling. Takes precedence over `PinDays`.
 - In a pinned notice's `Body`, the token `[daysRemaining]` is swapped at the start of each day for a short line about how long the pin has left ("Pinned for 2 more days", "Pinned for 1 more day", "Last day for this notice"), so the text counts down on its own. It uses square brackets, not `{{ }}`, so it doesn't clash with Content Patcher's own tokens. The wording is in `i18n` (the `notice.daysRemaining.*` keys), so it translates. On a notice that isn't pinned the token is just dropped.
 - `Giver` an NPC whose portrait fills the corner icon when the category icon is the default portrait. `Icon` an optional per-notice icon override (same values as a category's `Icon`).
+- `Scale` make this notice's note bigger (or smaller) than the auto-sized rest. `1.0` is the normal size, `1.6` is just over half again as big. It overrides the category's `NoteScale` (below). The note is still kept inside the board, so it can't grow off the edge. Sizing works best on a `Scatter` board (the default); on a tight grid a big note overlaps its neighbors. Quests are not affected, only notices.
+- `Image` turn the notice into a picture pin. Set it to a texture asset and the pin previews the image in its corner, and clicking opens the picture full-size with `Body` as its caption. `ImageSource` (`[x, y, w, h]`) shows just part of a sheet in the popup. Leave `Image` out for a plain text notice.
+
+Two notices can also look completely different by riding two different categories, since the category is the notice's "type". On top of the pad/pin color, art, and icon a category already sets, these category fields style the notice (all opt-in, all leave the default look alone):
+
+- `NoteScale` makes every notice in the category bigger, the per-category version of `Scale`.
+- `Font` the popup body font: `Dialogue` (default), `Small`, `Tiny`, or your own SpriteFont asset name.
+- `PopupBackground` swaps the parchment skin behind the popup (an asset, laid out like the board background). Missing reuses the board's own background.
+- `TextColor` the popup text color (`#RRGGBB`, `#RRGGBBAA`, or `R,G,B`). Missing keeps the game default.
+
+These three popup-styling fields apply to the notice popup. (The quest accept popup is unchanged.) So "plain announcement" and "featured story" are just two categories.
 
 How many notices a board shows is set by `NoticePoolSize` on the board (with `NoticePoolSizeMin` / `NoticePoolSizeMax` for the player's GMCM slider, under "Custom boards"). It's a separate budget from `PoolSize`, so quests and notices never compete for slots: a board can show, say, 3 quests plus 2 notices. Set `NoticePoolSize` to 0 (or the player drags the slider to 0) to hide notices.
 

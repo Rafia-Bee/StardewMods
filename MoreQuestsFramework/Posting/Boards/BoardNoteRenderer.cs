@@ -94,6 +94,30 @@ internal static class BoardNoteRenderer
         };
     }
 
+    // A centered, larger note icon for a picture notice: the image sits in the middle of the
+    // pad like a photo instead of in a corner. Fit to a box so any aspect ratio stays on the
+    // pad (DrawNote scales the icon by its width, so a tall image gets a smaller scale here so
+    // its height fits too). Returns null when the asset can't load.
+    public static NoteIcon? ResolvePhotoIcon(string imageAsset, Rectangle? imageSource, Dictionary<string, Texture2D> cache)
+    {
+        var texture = TryLoad(imageAsset, cache);
+        if (texture == null)
+            return null;
+        Rectangle source = imageSource ?? new Rectangle(0, 0, texture.Width, texture.Height);
+        if (source.Width <= 0 || source.Height <= 0)
+            source = new Rectangle(0, 0, texture.Width, texture.Height);
+
+        const float box = 0.58f;
+        float scale = source.Width >= source.Height ? box : box * source.Width / source.Height;
+        return new NoteIcon
+        {
+            Texture = texture,
+            Source = source,
+            Scale = scale,
+            Anchor = "Center",
+        };
+    }
+
     private static Texture2D? TryLoad(string assetName, Dictionary<string, Texture2D> cache)
     {
         if (cache.TryGetValue(assetName, out var cached))

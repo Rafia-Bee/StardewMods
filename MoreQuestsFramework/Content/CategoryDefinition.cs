@@ -39,4 +39,25 @@ public sealed class CategoryDefinition
     // set they override IconAnchor; the icon is centered on this point.
     public float? IconX { get; set; }
     public float? IconY { get; set; }
+
+    // Notice styling, only used by notices (not quests). A notice picks up these from its
+    // Category, so two categories act like two notice "types" (a plain announcement vs a
+    // featured story). All optional, all default to today's look.
+
+    // Size of a notice's note relative to the auto-fit size every other note gets. 1.0 (default)
+    // is no change. 1.5 makes the note half again as big so it stands out. The note is still
+    // clamped to the board so it can't grow past it. A per-notice Scale overrides this.
+    public float? NoteScale { get; set; }
+
+    // Font for the notice popup's body text. "Dialogue" (default), "Small", or "Tiny", or an
+    // asset name to load your own SpriteFont. Missing/unknown keeps the default dialogue font.
+    public string? Font { get; set; }
+
+    // Parchment skin behind the notice popup. An asset name, sheet laid out like the board
+    // background. Missing reuses the board's own background, the current look.
+    public string? PopupBackground { get; set; }
+
+    // Color of the notice popup's text. Same formats as PadColor (#RRGGBB, #RRGGBBAA, R,G,B).
+    // Missing keeps the game's default text color.
+    public string? TextColor { get; set; }
 }

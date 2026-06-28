@@ -63,11 +63,13 @@ internal static class BoardLayout
     // null for a note a zoned board dropped because it matched no zone and there's no catch-all.
     // board == null means the daily board: a full-area tilted grid. `types` is an optional
     // per-slot pin type ("Quest" / "Notice"), aligned to `categories`, used only by Zoned
-    // boards that route by Type; pass null when type routing isn't needed.
+    // boards that route by Type; pass null when type routing isn't needed. `scales` is an
+    // optional per-slot size multiplier (1.0 = the normal auto-fit size); pass null when every
+    // note is the same size, which keeps the layout byte-identical to before.
     public static List<NotePlacement?> ComputeLayout(
         BoardDefinition? board, IReadOnlyList<string> categories,
         int xPositionOnScreen, int yPositionOnScreen, int daySeed, Random rng,
-        IReadOnlyList<string>? types = null)
+        IReadOnlyList<string>? types = null, IReadOnlyList<float>? scales = null)
     {
         int count = categories.Count;
         var result = new List<NotePlacement?>(count);
@@ -83,7 +85,7 @@ internal static class BoardLayout
         LayoutMode mode = ParseMode(board?.Layout);
         if (mode == LayoutMode.Zoned && board?.Zones is { Count: > 0 })
         {
-            LayoutZoned(board, categories, types, fullArea, daySeed, rng, result);
+            LayoutZoned(board, categories, types, fullArea, daySeed, rng, result, scales);
             return result;
         }
 
@@ -91,13 +93,14 @@ internal static class BoardLayout
         for (int i = 0; i < count; i++)
             all.Add(i);
         LayoutZoneInArea(mode == LayoutMode.Scatter ? ZoneStyle.Scatter : ZoneStyle.TiltedGrid,
-            all, fullArea, daySeed, rng, result);
+            all, fullArea, daySeed, rng, result, scales);
         return result;
     }
 
     private static void LayoutZoned(
         BoardDefinition board, IReadOnlyList<string> categories, IReadOnlyList<string>? types,
-        Rectangle fullArea, int daySeed, Random rng, List<NotePlacement?> result)
+        Rectangle fullArea, int daySeed, Random rng, List<NotePlacement?> result,
+        IReadOnlyList<float>? scales)
     {
         var zones = board.Zones!;
         var buckets = new List<int>[zones.Count];
@@ -135,7 +138,7 @@ internal static class BoardLayout
             if (buckets[z].Count == 0)
                 continue;
             Rectangle area = ZoneArea(zones[z], fullArea);
-            LayoutZoneInArea(ParseZoneStyle(zones[z].Style), buckets[z], area, daySeed, rng, result);
+            LayoutZoneInArea(ParseZoneStyle(zones[z].Style), buckets[z], area, daySeed, rng, result, scales);
         }
     }
 
@@ -181,37 +184,49 @@ internal static class BoardLayout
 
     private static void LayoutZoneInArea(
         ZoneStyle style, List<int> slotIndices, Rectangle area,
-        int daySeed, Random rng, List<NotePlacement?> result)
+        int daySeed, Random rng, List<NotePlacement?> result, IReadOnlyList<float>? scales)
     {
         if (slotIndices.Count == 0)
             return;
         if (style == ZoneStyle.Scatter)
-            LayoutScatter(slotIndices, area, rng, result);
+            LayoutScatter(slotIndices, area, rng, result, scales);
         else
-            LayoutGrid(slotIndices, area, daySeed, rng, result);
+            LayoutGrid(slotIndices, area, daySeed, rng, result, scales);
     }
 
     private static void LayoutGrid(
-        List<int> slotIndices, Rectangle area, int daySeed, Random rng, List<NotePlacement?> result)
+        List<int> slotIndices, Rectangle area, int daySeed, Random rng,
+        List<NotePlacement?> result, IReadOnlyList<float>? scales)
     {
         var bounds = ComputeGridInArea(area, slotIndices.Count, rng);
         for (int k = 0; k < slotIndices.Count; k++)
         {
             int orig = slotIndices[k];
-            result[orig] = new NotePlacement { PaperBounds = bounds[k], Tilt = TiltFor(daySeed, orig) };
+            Rectangle b = bounds[k];
+            float s = ScaleAt(scales, orig);
+            // The grid cell stays uniform; a scaled note grows about its cell center (and is
+            // clamped to the area), so it can pop out over its neighbors. s == 1 keeps the cell.
+            if (s != 1f)
+            {
+                int w = ClampSpan((int)Math.Round(b.Width * s), area.Width);
+                int h = ClampSpan((int)Math.Round(b.Height * s), area.Height);
+                b = ResizeAboutCenterInArea(b, w, h, area);
+            }
+            result[orig] = new NotePlacement { PaperBounds = b, Tilt = TiltFor(daySeed, orig) };
         }
     }
 
     private static void LayoutScatter(
-        List<int> slotIndices, Rectangle area, Random rng, List<NotePlacement?> result)
+        List<int> slotIndices, Rectangle area, Random rng,
+        List<NotePlacement?> result, IReadOnlyList<float>? scales)
     {
         int n = slotIndices.Count;
         int scaleSprite = (int)(PadSpriteSize * ChooseScale(n));
         var (_, _, gridFit) = ChooseGridInArea(area, n);
         int noteSprite = Math.Clamp(Math.Min(scaleSprite, gridFit), PadSpriteSize, MaxNoteSize);
         float scale = noteSprite / (float)PadSpriteSize;
-        int paperW = (int)Math.Round(PadPaperWidth * scale);
-        int paperH = (int)Math.Round(PadPaperHeight * scale);
+        int basePaperW = (int)Math.Round(PadPaperWidth * scale);
+        int basePaperH = (int)Math.Round(PadPaperHeight * scale);
 
         // Grid positions for the same notes, used when a note can't find a non-overlapping
         // scatter spot so it still lands inside the area rather than vanishing.
@@ -219,10 +234,42 @@ internal static class BoardLayout
         var placed = new List<Rectangle>(n);
         for (int k = 0; k < n; k++)
         {
-            Rectangle b = ScatterInArea(area, paperW, paperH, placed, rng) ?? fallback[k];
+            int orig = slotIndices[k];
+            float s = ScaleAt(scales, orig);
+            Rectangle b;
+            if (s == 1f)
+            {
+                b = ScatterInArea(area, basePaperW, basePaperH, placed, rng) ?? fallback[k];
+            }
+            else
+            {
+                int paperW = ClampSpan((int)Math.Round(basePaperW * s), area.Width);
+                int paperH = ClampSpan((int)Math.Round(basePaperH * s), area.Height);
+                b = ScatterInArea(area, paperW, paperH, placed, rng)
+                    ?? ResizeAboutCenterInArea(fallback[k], paperW, paperH, area);
+            }
             placed.Add(b);
-            result[slotIndices[k]] = new NotePlacement { PaperBounds = b, Tilt = 0f };
+            result[orig] = new NotePlacement { PaperBounds = b, Tilt = 0f };
         }
+    }
+
+    private static float ScaleAt(IReadOnlyList<float>? scales, int index)
+        => scales != null && index < scales.Count && scales[index] > 0 ? scales[index] : 1f;
+
+    // Clamps a paper span to at least 1px and below the area span, so a scaled note never
+    // grows wider/taller than the board or zone it sits in.
+    private static int ClampSpan(int span, int areaSpan)
+        => Math.Clamp(span, 1, Math.Max(1, areaSpan - 1));
+
+    // Resizes a rect to (w, h) keeping its center, then nudges it back inside `area` if the
+    // new size pushed an edge out. Used to grow a scaled note in place.
+    private static Rectangle ResizeAboutCenterInArea(Rectangle r, int w, int h, Rectangle area)
+    {
+        int x = r.Center.X - w / 2;
+        int y = r.Center.Y - h / 2;
+        x = Math.Clamp(x, area.X, Math.Max(area.X, area.Right - w));
+        y = Math.Clamp(y, area.Y, Math.Max(area.Y, area.Bottom - h));
+        return new Rectangle(x, y, w, h);
     }
 
     // Picks the column/row split that makes the notes as large as possible while still

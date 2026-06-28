@@ -84,6 +84,21 @@ public sealed class NoticeDef
     // come from the category.
     public string? Icon { get; set; }
 
+    // Size of this notice's note relative to the auto-fit size every other note gets. 1.0 is
+    // no change, 1.5 makes it half again as big so it stands out. Overrides the category's
+    // NoteScale. The note is still clamped to the board so it can't grow past it. Unset/0 falls
+    // back to the category's NoteScale (then 1.0).
+    public float? Scale { get; set; }
+
+    // Optional picture. When set, the popup shows this image with the Body text as its caption
+    // (a "photograph" pin), and the board pin previews the image in its corner unless Icon is
+    // set. An asset name, loaded as game content so Content Patcher can serve it. Missing = a
+    // plain text notice.
+    public string? Image { get; set; }
+
+    // Source rectangle [x, y, w, h] inside the Image texture. Absent uses the whole texture.
+    public int[]? ImageSource { get; set; }
+
     // Set by the registry to the owning mod's UniqueID. Mirrors BoardDefinition.OwnerUniqueId.
     public string OwnerUniqueId { get; set; } = "";
 }

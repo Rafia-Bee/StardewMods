@@ -58,6 +58,20 @@ internal static class CustomBoardSlots
         public string GiverName => Kind == SlotKind.Quest
             ? (Posting?.QuestGiver ?? "")
             : (Notice?.Giver ?? "");
+
+        // Note-size multiplier. Quests stay auto-sized (1.0). A notice uses its own Scale, else
+        // its category's NoteScale, else 1.0. The layout clamps this to the board.
+        public float ScaleValue
+        {
+            get
+            {
+                if (Kind != SlotKind.Notice)
+                    return 1f;
+                if (Notice is { Scale: > 0 })
+                    return Notice.Scale;
+                return ModEntry.Categories.NoteScaleFor(Notice?.Category);
+            }
+        }
     }
 
     public static Slot? Selected { get; set; }

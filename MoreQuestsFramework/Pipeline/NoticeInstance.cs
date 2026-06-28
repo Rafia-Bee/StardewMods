@@ -1,3 +1,4 @@
+using Microsoft.Xna.Framework;
 using MoreQuestsFramework.Api;
 
 namespace MoreQuestsFramework.Pipeline;
@@ -14,6 +15,15 @@ internal sealed class NoticeInstance
     public string Body { get; init; } = "";
     public string Giver { get; init; } = "";
     public string Icon { get; init; } = "";
+
+    // Per-notice size multiplier override, or 0 when the category's NoteScale should win.
+    public float Scale { get; init; }
+
+    // Photo notice: the picture shown in the popup (Body is its caption), or "" for plain text.
+    public string Image { get; init; } = "";
+
+    // Sub-rect of Image, or null for the whole texture.
+    public Rectangle? ImageSource { get; init; }
 }
 
 // One built notice and the board it shows on. Mirrors CustomBoardDraw, but a Phase 1 notice

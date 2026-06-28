@@ -22,6 +22,10 @@ internal sealed class CategoryRegistry
     private Dictionary<string, string> _padTextures = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, string> _pinTextures = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, CategoryIconSpec> _icons = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, float> _noteScales = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, string> _fonts = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, string> _popupBackgrounds = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, Color> _textColors = new(StringComparer.OrdinalIgnoreCase);
 
     public CategoryRegistry(IMonitor monitor)
     {
@@ -61,6 +65,10 @@ internal sealed class CategoryRegistry
         var padTextures = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var pinTextures = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var icons = new Dictionary<string, CategoryIconSpec>(StringComparer.OrdinalIgnoreCase);
+        var noteScales = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase);
+        var fonts = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var popupBackgrounds = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var textColors = new Dictionary<string, Color>(StringComparer.OrdinalIgnoreCase);
         if (asset != null)
         {
             foreach (var pair in asset)
@@ -78,6 +86,15 @@ internal sealed class CategoryRegistry
                 var icon = BuildIconSpec(pair.Value);
                 if (icon != null)
                     icons[pair.Key] = icon;
+                if (pair.Value.NoteScale is > 0)
+                    noteScales[pair.Key] = pair.Value.NoteScale.Value;
+                if (!string.IsNullOrWhiteSpace(pair.Value.Font))
+                    fonts[pair.Key] = pair.Value.Font.Trim();
+                if (!string.IsNullOrWhiteSpace(pair.Value.PopupBackground))
+                    popupBackgrounds[pair.Key] = pair.Value.PopupBackground.Trim();
+                Color? textColor = ParseColor(pair.Value.TextColor, pair.Key, "TextColor");
+                if (textColor.HasValue)
+                    textColors[pair.Key] = textColor.Value;
             }
         }
         _colors = colors;
@@ -85,6 +102,10 @@ internal sealed class CategoryRegistry
         _padTextures = padTextures;
         _pinTextures = pinTextures;
         _icons = icons;
+        _noteScales = noteScales;
+        _fonts = fonts;
+        _popupBackgrounds = popupBackgrounds;
+        _textColors = textColors;
     }
 
     public (Color pad, Color pin) ColorsFor(string? category)
@@ -103,6 +124,22 @@ internal sealed class CategoryRegistry
     // Category icon spec, or the default (giver portrait, bottom-left, 0.28 scale).
     public CategoryIconSpec IconFor(string? category)
         => !string.IsNullOrEmpty(category) && _icons.TryGetValue(category, out var s) ? s : CategoryIconSpec.Default;
+
+    // Note-size multiplier for a notice in this category, or 1.0 (no change).
+    public float NoteScaleFor(string? category)
+        => !string.IsNullOrEmpty(category) && _noteScales.TryGetValue(category, out var s) ? s : 1f;
+
+    // Notice popup body font name ("Dialogue"/"Small"/"Tiny" or an asset), or null for the default.
+    public string? FontFor(string? category)
+        => !string.IsNullOrEmpty(category) && _fonts.TryGetValue(category, out var f) ? f : null;
+
+    // Notice popup parchment skin asset, or null to reuse the board background.
+    public string? PopupBackgroundFor(string? category)
+        => !string.IsNullOrEmpty(category) && _popupBackgrounds.TryGetValue(category, out var t) ? t : null;
+
+    // Notice popup text color, or null for the game default.
+    public Color? TextColorFor(string? category)
+        => !string.IsNullOrEmpty(category) && _textColors.TryGetValue(category, out var c) ? c : null;
 
     // Returns null when the entry sets nothing icon-related, so the default spec is shared.
     private static CategoryIconSpec? BuildIconSpec(CategoryDefinition def)

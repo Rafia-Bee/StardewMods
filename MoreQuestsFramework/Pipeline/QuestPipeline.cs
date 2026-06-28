@@ -473,6 +473,11 @@ internal sealed class QuestPipeline
         Body = ExpandNoticeBody(def.Body ?? "", expiresAfterDay),
         Giver = def.Giver ?? "",
         Icon = def.Icon ?? "",
+        Scale = def.Scale is > 0 ? def.Scale.Value : 0f,
+        Image = def.Image ?? "",
+        ImageSource = def.ImageSource is { Length: >= 4 }
+            ? new Microsoft.Xna.Framework.Rectangle(def.ImageSource[0], def.ImageSource[1], def.ImageSource[2], def.ImageSource[3])
+            : null,
     };
 
     // Replaces the [daysRemaining] token in a pinned notice's body with a short line about how

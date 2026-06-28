@@ -9,7 +9,7 @@ For the C# patterns, see [`../example-csharp-generators/`](../example-csharp-gen
 ## What it ships
 
 - `manifest.json`. Declares the pack as `ContentPackFor: Pathoschild.ContentPatcher` and lists `RafiaBee.MoreQuestsFramework` as a required dependency.
-- `content.json`. An `EditData` block targeting `Mods/RafiaBee.MoreQuestsFramework/Quests` (one entry per example quest), plus smaller blocks adding an example notice board and a few notices. Pick the one closest to what you want and crib from it.
+- `content.json`. An `EditData` block targeting `Mods/RafiaBee.MoreQuestsFramework/Quests` (one entry per example quest), plus smaller blocks adding an example notice board, a few notices, and a featured category. Pick the one closest to what you want and crib from it.
 - `i18n/default.json`. The translation strings the quests reference via `{{i18n:key}}` tokens. Content Patcher resolves these against this pack's own `i18n/` folder before MQF sees the data.
 
 ## How it loads
@@ -166,3 +166,11 @@ This pack also ships a small bulletin board (`{{ModId}}_NoticeBoard` in `Town`) 
 A notice names its board with `CustomBoardId` (same rules as a quest), and `NoticePoolSize` on the board sets how many notices show at once, separate from the quest count. The two pinned ones put `[daysRemaining]` in their body text, which the framework swaps each day for a line like "Pinned for 2 more days" or "Last day for this notice", so the note counts itself down. (Square brackets, not `{{ }}`, so Content Patcher leaves it alone.)
 
 The board here sits at `Town` tile `[45, 56]` with no in-world art, so walk to that tile and click to open it. Set `Location`, `Tile`, and a `Texture` to put your own board where you want it.
+
+### Bigger notes, pictures, and per-type styling
+
+The pack also ships two notices and one extra category that show the opt-in extras. None of them change how a plain notice looks, you only get the new look if you ask for it.
+
+- **Bigger notes.** Set `Scale` on a notice (`{{ModId}}_Notice_Photo` uses `1.3`) to make its note bigger than the auto-sized rest, or set `NoteScale` on a category so every notice in that category is bigger. `1.0` is the normal size, `1.6` is just over half again as big. The note is still kept inside the board, so it can't grow off the edge. Sizing works best on a `Scatter` board (the default); on a tight grid a big note overlaps its neighbors.
+- **Picture / photo notices.** Set `Image` to a texture asset (`{{ModId}}_Notice_Photo` points at the vanilla valley map). The pin previews the picture in its corner, and clicking it opens the picture full-size with the `Body` text as its caption. Add `ImageSource: [x, y, w, h]` to show just part of a sheet in the popup.
+- **Per-type styling (a category is the "type").** A notice's `Category` already sets its paper and pin color and art. This pack adds a `{{ModId}}_Featured` category in a fourth `EditData` block (targeting the Categories asset) that also sets `NoteScale`, a `Font` (`Dialogue`, `Small`, `Tiny`, or your own font asset), and a `TextColor` for the popup. You can also set `PopupBackground` to swap the parchment skin behind the popup. So "plain announcement" and "featured story" are just two categories. `{{ModId}}_Notice_Featured` uses the featured one.

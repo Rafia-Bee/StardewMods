@@ -8,6 +8,9 @@ To be released
 - For mod authors: a category can now have its own note paper and pin art, not just colors, and the corner picture is yours to set: keep the giver's face, use your own image, or hide it for an anonymous note. A single quest can override just its corner picture.
 - For mod authors: when more quests qualify than a board has room for, you can nudge which ones win by category or by who posted them, instead of leaving it all to the weighted random pick.
 - For mod authors: custom boards can now show notices, not just quests. A notice is a pin that opens a bit of text (news, an announcement, a hint) instead of a job to take on, set up in the new Notices asset from a Content Patcher pack or with RegisterNotice. It can rotate on a cooldown, show only once, or stay pinned up for a set number of days or for the rest of the week.
+- For mod authors: a notice can now be made bigger than the rest so it stands out, either one specific notice or every notice in a category. A big note is still kept inside the board.
+- For mod authors: a notice can now be a picture instead of text. The pin shows the image, and clicking it opens the picture full-size with a caption underneath.
+- For mod authors: notices can be made to look different from each other by category, with their own popup font, text color, and parchment background, so a plain announcement and a featured story can read as different "types". The default look is unchanged unless you set these.
 
 2.7.0
 - The help-wanted board now shows your prize ticket stars as soon as you open it, instead of only after you click a quest note. Hovering the stars tells you how many more quests you need before your next prize ticket.

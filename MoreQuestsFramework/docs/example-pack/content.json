@@ -721,9 +721,24 @@
           "Location": "Town",
           "Tile": [ 45, 56 ],
           "Title": "{{i18n:example.board.title}}",
-          "NoticePoolSize": 3,
+          "NoticePoolSize": 6,
           "NoticePoolSizeMin": 0,
-          "NoticePoolSizeMax": 5
+          "NoticePoolSizeMax": 8
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Mods/RafiaBee.MoreQuestsFramework/Categories",
+      "Entries": {
+        "{{ModId}}_Featured": {
+          "DisplayName": "{{i18n:example.category.featured}}",
+          "PadColor": "#F5E4B0",
+          "PinColor": "#7A1F2B",
+          "Skill": "None",
+          "NoteScale": 1.6,
+          "Font": "Small",
+          "TextColor": "#5B3A1E"
         }
       }
     },
@@ -764,6 +779,24 @@
           "Lifetime": "Week",
           "Title": "{{i18n:example.notice.weekly.title}}",
           "Body": "{{i18n:example.notice.weekly.body}}"
+        },
+        "{{ModId}}_Notice_Featured": {
+          "CustomBoardId": "{{ModId}}_NoticeBoard",
+          "Category": "{{ModId}}_Featured",
+          "Giver": "Lewis",
+          "Weight": 30,
+          "Title": "{{i18n:example.notice.featured.title}}",
+          "Body": "{{i18n:example.notice.featured.body}}"
+        },
+        "{{ModId}}_Notice_Photo": {
+          "CustomBoardId": "{{ModId}}_NoticeBoard",
+          "Category": "Seasonal",
+          "Giver": "Lewis",
+          "Weight": 30,
+          "Scale": 1.3,
+          "Image": "LooseSprites\\map",
+          "Title": "{{i18n:example.notice.photo.title}}",
+          "Body": "{{i18n:example.notice.photo.body}}"
         }
       }
     }
