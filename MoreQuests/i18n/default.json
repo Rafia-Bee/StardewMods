@@ -82,6 +82,12 @@
     "config.QuestCooldownLongDays": "Long cooldown (days)",
     "config.QuestCooldownLongDays.tooltip": "In-game days a quest in the 'long' cooldown bucket waits before re-rolling.",
 
+    "config.section.itemExclusions": "Item exclusion list",
+    "config.RewardExclusionItemIds": "Never-reward items",
+    "config.RewardExclusionItemIds.tooltip": "Comma-separated item ids that quests will never hand you as a reward. Use the qualified id, like (O)74 for a Prismatic Shard. The default keeps a few very valuable items out of reward pools. This always applies.",
+    "config.ExcludeListAppliesToRequests": "Also skip these in delivery and shipping",
+    "config.ExcludeListAppliesToRequests.tooltip": "When on, the items above are also left out of item delivery and shipping quests, so you won't be asked to bring or ship them. Off by default.",
+
     "config.section.advanced": "Advanced",
     "config.debugLogging": "Debug logging",
     "config.debugLogging.tooltip": "Writes detailed diagnostic lines to the SMAPI log file. Off by default. Turn this on if you're chasing a bug and want to share a log; otherwise it just adds noise.",

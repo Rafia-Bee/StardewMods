@@ -56,6 +56,11 @@ public sealed class ModEntry : Mod
         // flower, and gem objective pool the framework hands out. See QuestItemBlacklist.
         MoreQuestsFramework.ItemResolver.QuestPoolExclusion = QuestItemBlacklist.IsExcluded;
 
+        // Items the player never wants as a reward (always), and, when they opt in, never
+        // wants to be asked for in delivery / shipping quests. See RewardExclusionList.
+        MoreQuestsFramework.Rewards.RewardApplier.ObjectRewardExclusion = RewardExclusionList.IsExcludedReward;
+        MoreQuestsFramework.ItemResolver.RequestItemExclusion = RewardExclusionList.IsExcludedRequest;
+
         ScanLeahPaintingAssets();
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;

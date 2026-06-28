@@ -25,6 +25,18 @@ public static class RewardApplier
     // RewardSpec record having to know about it.
     internal static CustomRewardRegistry? CustomRewards { get; set; }
 
+    // Set by the content mod so excluded items never reach the player as a reward, no
+    // matter which quest or generator picked them. Checked when rewards are encoded onto
+    // a quest, when the reward summary is written, and again when a reward is actually
+    // granted, so it covers framework quests and special-order payouts alike. Null = off.
+    public static System.Func<string, bool>? ObjectRewardExclusion { get; set; }
+
+    private static bool IsExcludedObjectReward(string itemId)
+    {
+        var filter = ObjectRewardExclusion;
+        return filter != null && !string.IsNullOrEmpty(itemId) && filter(itemId);
+    }
+
     public static void ApplyEncoded(IEnumerable<string> encoded)
     {
         foreach (var line in encoded)
@@ -59,6 +71,8 @@ public static class RewardApplier
         foreach (var r in rewards)
         {
             if (r is MoneyReward)
+                continue;
+            if (r is ObjectReward o && IsExcludedObjectReward(o.ItemId))
                 continue;
             target.Add(RewardCodec.Encode(r));
         }
@@ -117,6 +131,8 @@ public static class RewardApplier
         foreach (var r in rewards.OfType<ObjectReward>())
         {
             if (string.IsNullOrEmpty(r.ItemId) || r.Count <= 0)
+                continue;
+            if (IsExcludedObjectReward(r.ItemId))
                 continue;
             var item = ItemRegistry.Create(r.ItemId, r.Count);
             string name = item?.DisplayName ?? r.ItemId;
@@ -222,6 +238,8 @@ public static class RewardApplier
 
             case ObjectReward o:
                 if (string.IsNullOrEmpty(o.ItemId) || o.Count <= 0)
+                    return;
+                if (IsExcludedObjectReward(o.ItemId))
                     return;
                 var reward = ItemRegistry.Create(o.ItemId, o.Count);
                 if (reward != null && !Game1.player.addItemToInventoryBool(reward))

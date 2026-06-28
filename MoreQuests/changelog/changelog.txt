@@ -1,5 +1,6 @@
 To be released
 - New setting for the Know your waters fishing quest: you can cap how many different fish it asks for at one spot. Off by default, handy if fish mods give a spot too many kinds to catch.
+- New "never reward" item list in the settings. Anything you put on it will never be handed to you as a quest reward. It starts with the Prismatic Shard and the two Qi crops, and you can change it. There's also an optional switch to keep those items out of delivery and shipping quests too, off by default.
 
 2.5.0
 - Needs More Quests Framework 2.7.0 or newer.

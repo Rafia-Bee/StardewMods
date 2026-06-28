@@ -254,6 +254,20 @@ public sealed class ModConfig
     /// How many reward items the giver hands over (loved first, then liked).
     public int RedecorateRewardItemCount { get; set; } = 5;
 
+    // ----- Item exclusion list -----
+
+    /// Items that should never be handed to the player as a quest reward. Comma-separated
+    /// qualified ids (e.g. "(O)74, (O)889"). Whatever you list here is dropped from every
+    /// quest reward, including quests written specifically to give that item. The default
+    /// keeps the Prismatic Shard and the two Qi crops out of reward pools so a quest can't
+    /// randomly gift something that valuable. Always active.
+    public string RewardExclusionItemIds { get; set; } = "(O)74, (O)889, (O)890";
+
+    /// When on, the items in RewardExclusionItemIds are also kept out of item-delivery and
+    /// shipping requests, so you won't be asked to bring or ship them. Off by default: the
+    /// reward block is always active, but blocking requests is opt-in.
+    public bool ExcludeListAppliesToRequests { get; set; } = false;
+
     /// When on, internal diagnostic logs are written at Trace level. Off in release builds
     /// by default so the SMAPI log stays quiet; flip on if you're chasing a bug.
     public bool DebugLogging { get; set; } = false;

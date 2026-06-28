@@ -77,7 +77,9 @@ internal static partial class Generators
             if (int.TryParse(id, out int n) && n < 0)
                 continue;
             var resolved = ctx.Items.TryResolveItem(id);
-            if (resolved != null)
+            // Skip never-reward items here too so the quest picks a different loved item
+            // instead of losing its item reward when the framework later drops it.
+            if (resolved != null && !RewardExclusionList.IsExcludedReward(resolved.QualifiedItemId))
                 return resolved;
         }
         return null;

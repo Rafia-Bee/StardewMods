@@ -78,6 +78,16 @@ internal sealed class QuestPoster
 
     public void Post(QuestPosting posting)
     {
+        // Item-delivery / shipping quests whose requested item is on the player's
+        // exclusion list are dropped outright, so they're never asked for it. Other
+        // quest types and the reward side are untouched. Opt-in, off unless the content
+        // mod arms ItemResolver.RequestItemExclusion.
+        if (IsRequestedItemExcluded(posting))
+        {
+            ModEntry.LogDebug($"Dropped {posting.DefinitionId}: requested item '{posting.ObjectiveItemId}' is on the exclusion list.");
+            return;
+        }
+
         // Excluded givers can't go on the daily board or special-orders board. The
         // heuristic side of IsBoardEligible (Age=Child, !CanSocialize, !PerfectionScore)
         // catches non-human NPCs like East Scarp's Duck2NPC, LexiMonster, etc. The
@@ -142,6 +152,24 @@ internal sealed class QuestPoster
                 PostViaDialogue(posting);
                 break;
         }
+    }
+
+    // Item-delivery and shipping quests only. True when the content mod's request
+    // exclusion is armed and the requested item is on the list. Alternatives are left
+    // alone: they're items the player MAY substitute, not what the quest asks for.
+    private static bool IsRequestedItemExcluded(QuestPosting posting)
+    {
+        var filter = ItemResolver.RequestItemExclusion;
+        if (filter == null)
+            return false;
+        if (posting.QuestType is not (BoardQuestType.ItemDelivery
+            or BoardQuestType.ResourceCollection
+            or BoardQuestType.Ship))
+            return false;
+        if (string.IsNullOrEmpty(posting.ObjectiveItemId))
+            return false;
+        string qualified = ItemRegistry.QualifyItemId(posting.ObjectiveItemId) ?? posting.ObjectiveItemId;
+        return filter(qualified);
     }
 
     public void PostBatch(IReadOnlyList<QuestPosting> postings)

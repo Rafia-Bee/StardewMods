@@ -70,6 +70,16 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "QuestCooldownMediumDays", () => ModEntry.Config.QuestCooldownMediumDays, v => ModEntry.Config.QuestCooldownMediumDays = v, 1, 28);
         AddInt(api, manifest, t, "QuestCooldownLongDays", () => ModEntry.Config.QuestCooldownLongDays, v => ModEntry.Config.QuestCooldownLongDays = v, 1, 28);
 
+        api.AddSectionTitle(manifest, () => t.Get("config.section.itemExclusions"));
+        AddText(api, manifest, t, "RewardExclusionItemIds",
+            () => ModEntry.Config.RewardExclusionItemIds,
+            v => ModEntry.Config.RewardExclusionItemIds = v);
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.ExcludeListAppliesToRequests,
+            v => ModEntry.Config.ExcludeListAppliesToRequests = v,
+            () => t.Get("config.ExcludeListAppliesToRequests"),
+            () => t.Get("config.ExcludeListAppliesToRequests.tooltip"));
+
         api.AddSectionTitle(manifest, () => t.Get("config.section.advanced"));
         api.AddBoolOption(manifest,
             () => ModEntry.Config.DebugLogging,

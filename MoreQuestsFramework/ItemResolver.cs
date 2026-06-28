@@ -56,6 +56,14 @@ public sealed class ItemResolver
     // endgame items (Qi crops, Prismatic Shard, etc.) out of "go fetch me X" requests.
     public static Func<ResolvedItem, bool>? QuestPoolExclusion { get; set; }
 
+    // Optional content-supplied exclusion for item-delivery / shipping REQUESTS, keyed by
+    // qualified item id. When set and it flags a delivery/ship quest's requested item,
+    // QuestPoster drops that posting so the player is never asked to hand the item over.
+    // Separate from QuestPoolExclusion (objective pools) and from the always-on reward
+    // exclusion (RewardApplier.ObjectRewardExclusion); the content mod leaves this null
+    // unless the player opts in. Null = off.
+    public static Func<string, bool>? RequestItemExclusion { get; set; }
+
     private static bool IsExcludedFromQuestPool(ResolvedItem item)
     {
         var filter = QuestPoolExclusion;

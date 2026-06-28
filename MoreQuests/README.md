@@ -23,7 +23,7 @@ A SMAPI content mod for Stardew Valley that adds a big batch of new daily-board,
 
 ## Configuration
 
-`Mods/MoreQuests/config.json` holds the per-quest content settings: animal and festival toggles, the Adventurer's Guild board on/off switch, shop discount sizes, fish haul quantities, Skull Cavern max floor, secret-gift hint toggle, Leah painting frame style, and so on. Engine-level stuff (how many quests per day, weights, deadlines, reward sizes) lives in the [framework's config](../MoreQuestsFramework/README.md#configuration). Both pages show up in GMCM.
+`Mods/MoreQuests/config.json` holds the per-quest content settings: animal and festival toggles, the Adventurer's Guild board on/off switch, shop discount sizes, fish haul quantities, Skull Cavern max floor, secret-gift hint toggle, Leah painting frame style, a never-reward item list, and so on. Engine-level stuff (how many quests per day, weights, deadlines, reward sizes) lives in the [framework's config](../MoreQuestsFramework/README.md#configuration). Both pages show up in GMCM.
 
 There's an **Advanced > Debug logging** toggle at the bottom of each page. Leave it off for normal play. Flip it on if you hit a bug and want to share a SMAPI log; otherwise it just adds noise.
 
