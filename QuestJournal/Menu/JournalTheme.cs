@@ -13,16 +13,19 @@ public static class JournalTheme
     public const string KeyHoverTint = "HoverTint";
     public const string KeyDividerColor = "DividerColor";
     public const string KeyHeaderColor = "HeaderColor";
+    public const string KeyCompletedColor = "CompletedColor";
 
     private const string DefaultSelectedTint = "#00000066";
     private const string DefaultHoverTint = "#00000033";
     private const string DefaultDividerColor = "#0000004D";
     private const string DefaultHeaderColor = "#113366FF";
+    private const string DefaultCompletedColor = "#2E7D32FF";
 
     public static Color SelectedTint { get; private set; } = Parse(DefaultSelectedTint);
     public static Color HoverTint { get; private set; } = Parse(DefaultHoverTint);
     public static Color DividerColor { get; private set; } = Parse(DefaultDividerColor);
     public static Color HeaderColor { get; private set; } = Parse(DefaultHeaderColor);
+    public static Color CompletedColor { get; private set; } = Parse(DefaultCompletedColor);
 
     public static string AssetName(string uniqueId) => $"Mods/{uniqueId}/Theme";
 
@@ -32,6 +35,7 @@ public static class JournalTheme
         [KeyHoverTint] = DefaultHoverTint,
         [KeyDividerColor] = DefaultDividerColor,
         [KeyHeaderColor] = DefaultHeaderColor,
+        [KeyCompletedColor] = DefaultCompletedColor,
     };
 
     public static void Reload(IModHelper helper, string uniqueId)
@@ -44,6 +48,7 @@ public static class JournalTheme
         HoverTint = Pick(data, KeyHoverTint, DefaultHoverTint);
         DividerColor = Pick(data, KeyDividerColor, DefaultDividerColor);
         HeaderColor = Pick(data, KeyHeaderColor, DefaultHeaderColor);
+        CompletedColor = Pick(data, KeyCompletedColor, DefaultCompletedColor);
     }
 
     private static Color Pick(IReadOnlyDictionary<string, string>? data, string key, string fallback)

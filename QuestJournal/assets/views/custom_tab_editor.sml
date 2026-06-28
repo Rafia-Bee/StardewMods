@@ -25,7 +25,7 @@
             </frame>
         </lane>
         <textinput layout="stretch 64px"
-                   max-length="40"
+                   max-length="200"
                    background={@Mods/StardewUI/Sprites/TextBox}
                    text={<>TitleFilter} />
 
@@ -41,7 +41,7 @@
             </frame>
         </lane>
         <textinput layout="stretch 64px"
-                   max-length="40"
+                   max-length="200"
                    background={@Mods/StardewUI/Sprites/TextBox}
                    text={<>SourceFilter} />
 
@@ -57,7 +57,7 @@
             </frame>
         </lane>
         <textinput layout="stretch 64px"
-                   max-length="40"
+                   max-length="200"
                    background={@Mods/StardewUI/Sprites/TextBox}
                    text={<>CategoryFilter} />
 
@@ -73,7 +73,7 @@
             </frame>
         </lane>
         <textinput layout="stretch 64px"
-                   max-length="40"
+                   max-length="200"
                    background={@Mods/StardewUI/Sprites/TextBox}
                    text={<>KindFilter} />
 

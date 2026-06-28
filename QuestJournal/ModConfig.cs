@@ -26,6 +26,7 @@ public sealed class ModConfig
     public bool PinnedFirst { get; set; } = true;
     public bool ShowCompletedTab { get; set; } = true;
     public bool ShowAllTab { get; set; } = true;
+    public bool HideCompletedInOtherTabs { get; set; }
 
     public bool HudHoverObjectiveTooltip { get; set; } = true;
     public bool AllowItemCheats { get; set; }

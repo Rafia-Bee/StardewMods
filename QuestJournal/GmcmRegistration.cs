@@ -63,6 +63,11 @@ internal static class GmcmRegistration
             () => t.Get("config.showAllTab"),
             () => t.Get("config.showAllTab.tooltip"));
         api.AddBoolOption(manifest,
+            () => ModEntry.Config.HideCompletedInOtherTabs,
+            v => ModEntry.Config.HideCompletedInOtherTabs = v,
+            () => t.Get("config.hideCompletedOtherTabs"),
+            () => t.Get("config.hideCompletedOtherTabs.tooltip"));
+        api.AddBoolOption(manifest,
             () => ModEntry.Config.ShowHudPin,
             v => ModEntry.Config.ShowHudPin = v,
             () => t.Get("config.hudPin"),

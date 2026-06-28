@@ -992,7 +992,8 @@ public sealed class JournalContext : INotifyPropertyChanged
             AddMatching(claimable, _claimableOrderRows, def);
             AddMatching(collected, _activeRows, def);
             AddMatching(collected, _specialOrderRows, def);
-            AddMatching(collected, _historyRows, def);
+            if (!ModEntry.Config.HideCompletedInOtherTabs)
+                AddMatching(collected, _historyRows, def);
             AddMatching(collected, _externalRows, def);
         }
         else if (activeTab?.PlacementGroup is string grp)
@@ -1020,7 +1021,8 @@ public sealed class JournalContext : INotifyPropertyChanged
                 foreach (var r in _claimableOrderRows) AddRow(claimable, r);
                 foreach (var r in _activeRows) AddRow(collected, r);
                 foreach (var r in _specialOrderRows) AddRow(collected, r);
-                foreach (var r in _historyRows) AddRow(collected, r);
+                if (!ModEntry.Config.HideCompletedInOtherTabs)
+                    foreach (var r in _historyRows) AddRow(collected, r);
                 foreach (var r in _externalRows) AddRow(collected, r);
                 break;
         }
@@ -1987,6 +1989,9 @@ public sealed class QuestRow : INotifyPropertyChanged
 
     public Color RowTint => _isSelected ? JournalTheme.SelectedTint : (_isHovered ? JournalTheme.HoverTint : Color.Transparent);
     public Color DividerTint => JournalTheme.DividerColor;
+    // Completed rows get a distinct colour so they stand out from active ones at a glance.
+    // It's a text colour, separate from the background hover/selected tint, so the two don't look alike.
+    public Color TitleColor => IsCompleted ? JournalTheme.CompletedColor : Game1.textColor;
 
     public void HoverEnter()
     {
@@ -2010,6 +2015,7 @@ public sealed class QuestRow : INotifyPropertyChanged
     {
         Raise(nameof(RowTint));
         Raise(nameof(DividerTint));
+        Raise(nameof(TitleColor));
     }
 
     private void Raise(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

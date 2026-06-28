@@ -1,4 +1,7 @@
 To be released
+- New: finished quests now show their name in green, so they're easy to tell apart from the ones you're still working on when a tab shows both.
+- New: a setting to keep finished quests in the Completed tab only, so they stop cluttering up your custom tabs and the All tab. It's off to start.
+- New: the filter boxes for custom tabs hold a lot more text now, so you can list out more names without running out of room.
 - Fixed: secret notes that quietly add a hidden quest (like the one where you fish up Caroline's necklace and give it back) no longer show up as blank entries in the journal. The game keeps these hidden, and now the journal does too.
 - Fixed: updated to work with the latest More Quests, which changed how quest categories work. Categories show correctly again.
 

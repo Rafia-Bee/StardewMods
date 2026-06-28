@@ -130,6 +130,8 @@
     "config.showCompletedTab.tooltip": "Shows the Completed tab in the journal, which lists quests you've already finished. Turn it off to hide it. Reopen the journal for a change to apply.",
     "config.showAllTab": "Show the All tab",
     "config.showAllTab.tooltip": "Shows the All tab in the journal, which lists every quest at once. Turn it off to hide it. Reopen the journal for a change to apply.",
+    "config.hideCompletedOtherTabs": "Completed quests in the Completed tab only",
+    "config.hideCompletedOtherTabs.tooltip": "Keeps finished quests out of your custom tabs and the All tab, so they only show in the Completed tab. Makes the quests you're still working on easier to scan. Reopen the journal for a change to apply.",
     "config.hudPin": "Show pinned quests on the HUD",
     "config.hudPin.tooltip": "Draws your pinned quests in the top-right corner while you're playing.",
     "config.pinnedFirst": "Pinned quests at the top",
