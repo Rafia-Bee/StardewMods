@@ -1,4 +1,5 @@
 To be released
+- Fixed: secret notes that quietly add a hidden quest (like the one where you fish up Caroline's necklace and give it back) no longer show up as blank entries in the journal. The game keeps these hidden, and now the journal does too.
 - Fixed: updated to work with the latest More Quests, which changed how quest categories work. Categories show correctly again.
 
 1.6.0

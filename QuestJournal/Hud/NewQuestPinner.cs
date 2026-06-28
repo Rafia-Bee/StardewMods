@@ -72,7 +72,7 @@ internal sealed class NewQuestPinner
         for (int i = 0; i < log.Count; i++)
         {
             var q = log[i];
-            if (q == null || q.completed.Value) continue;
+            if (q == null || q.completed.Value || q.IsHidden()) continue;
             string key = PinnedObjectivesStore.KeyFor(q);
             if (string.IsNullOrEmpty(key)) continue;
             current.Add(key);

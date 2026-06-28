@@ -58,6 +58,9 @@ public sealed class CompletionWatcher
         foreach (var q in farmer.questLog)
         {
             if (q == null) continue;
+            // Secret quests (e.g. the necklace secret note's hidden quests) never show in the
+            // journal, so don't record them to history when they complete or drop off either.
+            if (q.IsHidden()) continue;
             current.Add(q);
 
             if (!_tracked.TryGetValue(q, out var snap))

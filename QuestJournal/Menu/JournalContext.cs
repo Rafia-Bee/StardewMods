@@ -335,6 +335,9 @@ public sealed class JournalContext : INotifyPropertyChanged
         {
             var q = log[i];
             if (q == null) continue;
+            // Vanilla never shows secret quests (the necklace secret note adds a hidden
+            // SecretLostItemQuest per NPC). Skip them so they don't appear as blank rows.
+            if (q.IsHidden()) continue;
             if (q.completed.Value)
             {
                 if (q.HasReward())
@@ -352,6 +355,7 @@ public sealed class JournalContext : INotifyPropertyChanged
             foreach (var so in orders)
             {
                 if (so == null) continue;
+                if (so.IsHidden()) continue;
                 if (so.questState.Value == SpecialOrderStatus.InProgress)
                     _specialOrderRows.Add(BuildSpecialOrderRow(so));
                 else if (so.HasMoneyReward())
