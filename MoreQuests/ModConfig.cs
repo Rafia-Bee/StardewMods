@@ -168,8 +168,6 @@ public sealed class ModConfig
     /// Gold paid out if the cow-offer credit expires before the player redeems it at Marnie's
     /// shop. 1500g matches the vanilla Cow price.
     public int MarnieCowOfferRebate { get; set; } = 1500;
-    /// Hay qty Marnie's Cow Offer asks for. Hay sells for 50g, so 50 hay is meaningful but not punishing.
-    public int MarnieCowOfferHayQty { get; set; } = 50;
 
     /// In-game days the chicken / cow purchase credit stays redeemable before it falls back
     /// to the gold rebate.

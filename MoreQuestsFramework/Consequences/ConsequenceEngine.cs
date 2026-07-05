@@ -53,7 +53,7 @@ internal sealed class ConsequenceEngine
     public void SweepExpired()
     {
         int today = StardewValley.Game1.Date?.TotalDays ?? 0;
-        int grace = _config.ConsequenceGraceDays > 0 ? _config.ConsequenceGraceDays : 7;
+        int grace = Math.Max(1, _config.ConsequenceGraceDays);
         var queue = _state.PendingConsequenceLines;
         int dropped = 0;
         for (int i = queue.Count - 1; i >= 0; i--)

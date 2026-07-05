@@ -41,6 +41,9 @@ public static class QuestCategory
 
 public static class Difficulty
 {
+    // Not called yet. Reserved for the difficulty-scaling rework, which will use this to turn
+    // a skill level into a tier instead of the inline per-quest math. Kept until then (pairs
+    // with GoldBase below).
     public static DifficultyTier TierForSkill(int skillLevel) =>
         skillLevel switch
         {
@@ -76,6 +79,8 @@ public static class Difficulty
         }
     }
 
+    // Not called yet. Pairs with TierForSkill for the difficulty-scaling rework: maps a tier
+    // to its gold base from config. Kept until that lands.
     public static int GoldBase(DifficultyTier tier, MoreQuestsFrameworkConfig cfg) =>
         tier switch
         {
