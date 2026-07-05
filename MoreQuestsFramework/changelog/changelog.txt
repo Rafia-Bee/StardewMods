@@ -1,4 +1,5 @@
 To be released
+- Fixed the "!" over Pierre's town board not showing when there are quests to pick up. It now pops up like it does on custom boards.
 - Every quest can now be cancelled from the journal, including the ones that arrive by mail or from talking to someone.
 - For mod authors: new optional CanBeCancelled field on a quest (defaults to true). Set it false to stop the player dropping a particular quest.
 - Custom boards no longer disappear when you open the pause menu. They stay drawn like the rest of the world.

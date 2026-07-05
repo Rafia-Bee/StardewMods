@@ -132,11 +132,16 @@ internal static class BillboardPatches
         return Game1.questOfTheDay;
     }
 
+    // Accepted slots are dropped from BillboardSlots.Slots, so a non-empty list always means
+    // there's a quest still waiting to be picked up. Answer for the whole board, not just the
+    // selected note, so the town "!" over Pierre's board shows before the player opens it. The
+    // accept button only lives on the inner Billboard, which exists after a note is clicked, so
+    // this doesn't affect it.
     public static bool CanAccept_Prefix(ref bool __result)
     {
         if (BillboardSlots.Slots.Count > 0)
         {
-            __result = BillboardSlots.Selected != null && !BillboardSlots.Selected.Accepted;
+            __result = true;
             return false;
         }
         return true;
