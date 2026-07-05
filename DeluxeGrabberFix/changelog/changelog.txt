@@ -1,3 +1,6 @@
+To be released
+- Improved config logging in the SMAPI log. When you save your settings, the log now shows just what changed instead of the whole config, which makes bug reports easier to sort out.
+
 v1.22.1
 - Fixed crops piling up on the ground in big greenhouses when the auto-grabber chest was full. Once the chest fills up, the leftover grown crops now stay in the ground and get picked up later instead of being dumped on the floor.
 - Fixed tea bushes planted in pots not being collected. The grabber now harvests potted tea along with potted crops like coffee.
