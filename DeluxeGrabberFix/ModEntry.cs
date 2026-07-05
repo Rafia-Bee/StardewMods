@@ -73,6 +73,12 @@ public class ModEntry : Mod
     private ProgressionTracker _progression;
     internal PerSaveConfigManager ConfigManager { get; private set; }
 
+    // The config as it was at the last swap (save load, return to title, reset) or the
+    // last GMCM save. Compared against the live config on save so the log shows only
+    // what changed. Kept as a JObject because that's a deep copy: GMCM edits the live
+    // config in place, and anything shallower would change along with it.
+    private Newtonsoft.Json.Linq.JObject _configSnapshot;
+
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private readonly HashSet<GameLocation> _machineReadyLocations = new();
     private bool _isGrabbingField;
@@ -115,6 +121,7 @@ public class ModEntry : Mod
         }
 
         ConfigManager.SetGlobalConfig(Config);
+        _configSnapshot = Newtonsoft.Json.Linq.JObject.FromObject(Config);
 
         _specializedAssets = new SpecializedGrabberAssets(helper, () => Config);
         _specializedAssets.Register();
@@ -138,6 +145,7 @@ public class ModEntry : Mod
         // than chase the swap call sites (PerSaveConfigManager, GMCM reset, etc).
         ActiveConfigChanged += RefreshRenderedWorldHook;
         ActiveConfigChanged += () => Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
+        ActiveConfigChanged += () => _configSnapshot = Newtonsoft.Json.Linq.JObject.FromObject(Config);
 
         RefreshRenderedWorldHook();
     }
@@ -712,6 +720,90 @@ public class ModEntry : Mod
         };
         var json = Newtonsoft.Json.JsonConvert.SerializeObject(Config, settings);
         Monitor.Log("Config:\n" + json, LogLevel.Trace);
+    }
+
+    // Logs just the config fields that changed since the last snapshot. The full dump
+    // only runs on save load, so before this an in-game config change left nothing in
+    // the log. Called from the GMCM save handler.
+    internal void LogConfigChanges()
+    {
+        var after = Newtonsoft.Json.Linq.JObject.FromObject(Config);
+        if (_configSnapshot == null)
+        {
+            _configSnapshot = after;
+            return;
+        }
+
+        var changes = new List<string>();
+        DiffConfigTokens(_configSnapshot, after, "", changes);
+        _configSnapshot = after;
+
+        if (changes.Count == 0)
+        {
+            Monitor.Log("Config saved, no values changed.", LogLevel.Trace);
+            return;
+        }
+        Monitor.Log("Config changed:\n" + string.Join("\n", changes), LogLevel.Trace);
+    }
+
+    private static void DiffConfigTokens(Newtonsoft.Json.Linq.JToken before, Newtonsoft.Json.Linq.JToken after, string path, List<string> changes)
+    {
+        if (before is Newtonsoft.Json.Linq.JObject bo && after is Newtonsoft.Json.Linq.JObject ao)
+        {
+            var names = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var p in bo.Properties())
+                names.Add(p.Name);
+            foreach (var p in ao.Properties())
+                names.Add(p.Name);
+
+            foreach (var name in names)
+            {
+                var childPath = path.Length == 0 ? name : $"{path}.{name}";
+                DiffConfigTokens(bo[name], ao[name], childPath, changes);
+            }
+            return;
+        }
+
+        // The list fields (SkippedLocations, excludedItems) show a short added/removed
+        // summary instead of both full lists, which can run to hundreds of entries.
+        if (before is Newtonsoft.Json.Linq.JArray ba && after is Newtonsoft.Json.Linq.JArray aa)
+        {
+            if (!Newtonsoft.Json.Linq.JToken.DeepEquals(ba, aa))
+                changes.Add(FormatArrayDelta(path, ba, aa));
+            return;
+        }
+
+        if (!Newtonsoft.Json.Linq.JToken.DeepEquals(before, after))
+            changes.Add($"  {path}: {FormatConfigToken(before)} -> {FormatConfigToken(after)}");
+    }
+
+    private static string FormatArrayDelta(string path, Newtonsoft.Json.Linq.JArray before, Newtonsoft.Json.Linq.JArray after)
+    {
+        const int cap = 10;
+        var beforeSet = new HashSet<string>(before.Select(t => t.ToString()));
+        var afterSet = new HashSet<string>(after.Select(t => t.ToString()));
+        var added = afterSet.Where(x => !beforeSet.Contains(x)).ToList();
+        var removed = beforeSet.Where(x => !afterSet.Contains(x)).ToList();
+
+        string Summarize(List<string> items) => items.Count <= cap
+            ? string.Join(", ", items)
+            : string.Join(", ", items.Take(cap)) + $" (+{items.Count - cap} more)";
+
+        var sb = new StringBuilder($"  {path}: {before.Count} -> {after.Count} entries (+{added.Count}, -{removed.Count})");
+        if (added.Count > 0)
+            sb.Append($"\n    added: {Summarize(added)}");
+        if (removed.Count > 0)
+            sb.Append($"\n    removed: {Summarize(removed)}");
+        return sb.ToString();
+    }
+
+    private static string FormatConfigToken(Newtonsoft.Json.Linq.JToken token)
+    {
+        if (token == null || token.Type == Newtonsoft.Json.Linq.JTokenType.Null)
+            return "(none)";
+        if (token is Newtonsoft.Json.Linq.JArray arr)
+            return $"[{arr.Count} entries]";
+        return token.ToString();
     }
 
     private void RepairStuckMachines()

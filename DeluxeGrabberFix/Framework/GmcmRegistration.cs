@@ -189,6 +189,7 @@ internal class GmcmRegistration
                 // a Specialized -> Classic reset would leave the recipe asset stale
                 // until the next manual save or save-load.
                 _mod.SwapActiveConfig(new ModConfig());
+                _mod.Monitor.Log("Config reset to defaults.", LogLevel.Trace);
                 if (_locations.SaveData != null)
                 {
                     _locations.SaveData.ManuallyManagedLocations.Clear();
@@ -212,6 +213,7 @@ internal class GmcmRegistration
                     _lastInvalidatedGrabberMode = _getConfig().grabberMode;
                 }
                 _mod.Monitor.Log($"GMCM saved. selectVisitedOnly={_getConfig().Locations.selectVisitedOnly}, IsWorldReady={Context.IsWorldReady}, saveData={((_locations.SaveData != null) ? "loaded" : "null")}", LogLevel.Info);
+                _mod.LogConfigChanges();
                 if (_getConfig().Locations.selectVisitedOnly && Context.IsWorldReady && _locations.SaveData != null)
                 {
                     _locations.DiscoverLocations();
