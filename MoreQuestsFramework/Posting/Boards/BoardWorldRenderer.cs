@@ -39,16 +39,14 @@ internal sealed class BoardWorldRenderer
         _helper.Events.Input.ButtonPressed += OnButtonPressed;
     }
 
-    // Sprite bottom sits this many tiles above the anchor so the player's standing
-    // sprite doesn't fully overlap the board.
-    private const int WallGapTiles = 2;
+    // The anchor tile is the board's bottom-left tile. The sprite grows up and to the right
+    // from there. PixelOffset nudges the whole rect for fine alignment.
     public static Rectangle GetSpriteRect(BoardDefinition board)
     {
         int widthPx = board.BoardWidth * TilePixels;
         int heightPx = board.BoardHeight * TilePixels;
-        int anchorCenterX = board.TileX * TilePixels + TilePixels / 2;
-        int x = anchorCenterX - widthPx / 2;
-        int y = (board.TileY - WallGapTiles) * TilePixels - heightPx;
+        int x = board.TileX * TilePixels + board.PixelOffsetX;
+        int y = (board.TileY + 1) * TilePixels - heightPx + board.PixelOffsetY;
         return new Rectangle(x, y, widthPx, heightPx);
     }
 
@@ -56,7 +54,9 @@ internal sealed class BoardWorldRenderer
     {
         if (e.Step != RenderSteps.World_Sorted)
             return;
-        if (!Context.IsWorldReady || Game1.currentLocation == null || Game1.eventUp || Game1.activeClickableMenu != null)
+        // No activeClickableMenu check: the world still draws behind the pause/escape menu,
+        // so the board should stay drawn too, like any other world object.
+        if (!Context.IsWorldReady || Game1.currentLocation == null || Game1.eventUp)
             return;
 
         string locationName = Game1.currentLocation.Name;

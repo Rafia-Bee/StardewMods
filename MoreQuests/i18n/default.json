@@ -60,10 +60,14 @@
     "config.enableAdventurersGuildBoard.tooltip": "When on, a custom quest board appears near the mine entrance and hosts the mining and monster quests (deep dives, slime clearing, monster eradication). When off, the guild board is hidden entirely and those quests appear on the regular help-wanted board. Per-quest weights still let you disable individual quests on top of this.",
 
     "config.section.adventureBoardPlacement": "Adventurer's Guild board placement",
-    "config.AdventureBoardTileX": "Anchor tile X",
-    "config.AdventureBoardTileX.tooltip": "Tile X coordinate where the player walks to interact with the board. The board sprite renders directly above this tile. The board lives in the Mine entrance map. Default (20, 4) puts the player on the right wall, near the ladder down.",
-    "config.AdventureBoardTileY": "Anchor tile Y",
-    "config.AdventureBoardTileY.tooltip": "Tile Y coordinate of the floor the player stands on to interact. See Anchor tile X for default placement.",
+    "config.AdventureBoardTileX": "Board tile X",
+    "config.AdventureBoardTileX.tooltip": "Tile X of the board's bottom-left corner. The board grows up and to the right from here. The board lives in the Mine entrance map, on the right wall near the mine shaft. For small nudges, use the Offset sliders below instead of changing whole tiles.",
+    "config.AdventureBoardTileY": "Board tile Y",
+    "config.AdventureBoardTileY.tooltip": "Tile Y of the board's bottom-left corner. See Board tile X.",
+    "config.AdventureBoardOffsetX": "Board offset X (pixels)",
+    "config.AdventureBoardOffsetX.tooltip": "Fine left/right nudge in pixels, on top of the tile placement. Positive moves the board right, negative moves it left. One tile is 64 pixels.",
+    "config.AdventureBoardOffsetY": "Board offset Y (pixels)",
+    "config.AdventureBoardOffsetY.tooltip": "Fine up/down nudge in pixels, on top of the tile placement. Positive moves the board down, negative moves it up. One tile is 64 pixels.",
 
     "config.ShopDiscountPercent": "Festival shop discount %",
     "config.ShopDiscountPercent.tooltip": "Discount applied to a shop after a fishing festival quest.",

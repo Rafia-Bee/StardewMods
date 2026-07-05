@@ -139,7 +139,7 @@ A second `EditData` block targeting `Mods/RafiaBee.MoreQuestsFramework/Boards` a
 }
 ```
 
-`Tile` is the floor tile the player stands on to interact (always walkable). The sprite renders directly above that tile, centered horizontally, scaled to `BoardSize` tiles wide and tall. Collision matches the sprite rect exactly, so the player blocks against the visible board. `BoardSize` defaults to `[1, 1]` if omitted. `PoolSize` caps how many notes the board shows per day (default 3).
+`Tile` is the board sprite's bottom-left tile. The sprite grows up and to the right from there, sized `BoardSize` tiles wide and tall, and the player walks up to an adjacent tile to click it. Collision matches the sprite rect exactly, so the player blocks against the visible board. `BoardSize` defaults to `[1, 1]` if omitted. Add an optional `PixelOffset: [dx, dy]` to nudge the sprite a few pixels for fine alignment against wall art (positive `dy` moves it down; one tile is 64 pixels). `PoolSize` caps how many notes the board shows per day (default 3).
 
 A quest lands on a board by naming it: set `Trigger.Source: "CustomBoard"` and point `Trigger.CustomBoardId` at the board's id. Use a bare name (`{{ModId}}_HuntingBoard`) for your own board, or `OwnerId/Name` to target another mod's board. If you leave `CustomBoardId` out and your pack defines exactly one board, the quest falls back to that board.
 
@@ -165,7 +165,7 @@ This pack also ships a small bulletin board (`{{ModId}}_NoticeBoard` in `Town`) 
 
 A notice names its board with `CustomBoardId` (same rules as a quest), and `NoticePoolSize` on the board sets how many notices show at once, separate from the quest count. The two pinned ones put `[daysRemaining]` in their body text, which the framework swaps each day for a line like "Pinned for 2 more days" or "Last day for this notice", so the note counts itself down. (Square brackets, not `{{ }}`, so Content Patcher leaves it alone.)
 
-The board here sits at `Town` tile `[45, 56]` with no in-world art, so walk to that tile and click to open it. Set `Location`, `Tile`, and a `Texture` to put your own board where you want it.
+The board here sits at `Town` tile `[45, 56]` (its bottom-left corner) with no in-world art, so walk up to that tile and click to open it. Set `Location`, `Tile`, and a `Texture` to put your own board where you want it.
 
 ### Bigger notes, pictures, and per-type styling
 

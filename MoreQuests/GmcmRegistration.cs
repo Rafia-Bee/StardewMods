@@ -222,6 +222,8 @@ internal static class GmcmRegistration
         api.AddSectionTitle(manifest, () => t.Get("config.section.adventureBoardPlacement"));
         AddInt(api, manifest, t, "AdventureBoardTileX", () => ModEntry.Config.AdventureBoardTileX, v => ModEntry.Config.AdventureBoardTileX = v, 0, 200);
         AddInt(api, manifest, t, "AdventureBoardTileY", () => ModEntry.Config.AdventureBoardTileY, v => ModEntry.Config.AdventureBoardTileY = v, 0, 200);
+        AddInt(api, manifest, t, "AdventureBoardOffsetX", () => ModEntry.Config.AdventureBoardOffsetX, v => ModEntry.Config.AdventureBoardOffsetX = v, -64, 64);
+        AddInt(api, manifest, t, "AdventureBoardOffsetY", () => ModEntry.Config.AdventureBoardOffsetY, v => ModEntry.Config.AdventureBoardOffsetY = v, -64, 64);
 
         // Per-quest weight overrides live on the framework's GMCM page (it owns the registry view).
     }

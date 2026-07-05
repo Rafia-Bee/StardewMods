@@ -10,9 +10,10 @@ namespace MoreQuestsFramework.Api;
 // the texture asset; an omitted Texture renders nothing in the world but still leaves
 // the anchor tile clickable.
 //
-// Placement model: the anchor `Tile` is the floor tile the player stands on to interact.
-// The sprite renders directly above that tile, horizontally centered on it, scaled to
-// `BoardSize` tiles. The same pixel rect drives collision and click hit-testing.
+// Placement model: the anchor `Tile` is the board sprite's bottom-left tile. The sprite
+// grows up and to the right from there, sized `BoardSize` tiles. An optional `PixelOffset`
+// nudges the whole thing a few pixels for fine alignment. The same pixel rect drives
+// collision and click hit-testing.
 public sealed class BoardDefinition
 {
     public string Name { get; set; } = "";
@@ -20,7 +21,7 @@ public sealed class BoardDefinition
     // GameLocation.Name, case-sensitive.
     public string Location { get; set; } = "";
 
-    // [x, y] floor tile the player stands on to interact. Always walkable.
+    // [x, y] bottom-left tile of the board sprite. The player interacts from an adjacent tile.
     public int[] Tile { get; set; } = Array.Empty<int>();
 
     // In-world sprite (wall painting / sign). Not the menu skin (that's Background).
@@ -29,13 +30,20 @@ public sealed class BoardDefinition
     // Menu skin, sheet layout matches vanilla LooseSprites/Billboard (top 338x198 at 4x).
     public string? Background { get; set; }
 
-    // [width, height] of the rendered board in tiles. Sprite renders this many tiles up
-    // from the anchor and is centered horizontally on it. Drives collision and click
-    // hit-testing. Defaults to 1x1.
+    // [width, height] of the rendered board in tiles. The sprite grows up and to the right
+    // from the anchor tile (its bottom-left corner). Drives collision and click hit-testing.
+    // Defaults to 1x1.
     public int[] BoardSize { get; set; } = Array.Empty<int>();
 
     public int BoardWidth => BoardSize.Length >= 1 && BoardSize[0] > 0 ? BoardSize[0] : 1;
     public int BoardHeight => BoardSize.Length >= 2 && BoardSize[1] > 0 ? BoardSize[1] : 1;
+
+    // Optional [dx, dy] pixel nudge applied to the sprite and its collision/click rect, for
+    // fine alignment against wall art. Positive dy moves the board down. Defaults to no nudge.
+    public int[] PixelOffset { get; set; } = Array.Empty<int>();
+
+    public int PixelOffsetX => PixelOffset.Length >= 1 ? PixelOffset[0] : 0;
+    public int PixelOffsetY => PixelOffset.Length >= 2 ? PixelOffset[1] : 0;
 
     public string? Title { get; set; }
 

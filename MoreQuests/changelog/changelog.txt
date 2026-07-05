@@ -1,4 +1,6 @@
 To be released
+- Fixed the Adventurer's Guild board disappearing while the pause menu was open. It stays put now.
+- The Adventurer's Guild board now lands right where its placement setting points, and there are two new sliders to nudge it a few pixels left, right, up, or down.
 - New setting for the Know your waters fishing quest: you can cap how many different fish it asks for at one spot. Off by default, handy if fish mods give a spot too many kinds to catch.
 - New "never reward" item list in the settings. Anything you put on it will never be handed to you as a quest reward. It starts with the Prismatic Shard and the two Qi crops, and you can change it. There's also an optional switch to keep those items out of delivery and shipping quests too, off by default.
 

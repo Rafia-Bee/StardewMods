@@ -4,7 +4,8 @@
         {
             "Name": "AdventurersGuild",
             "Location": "Mine",
-            "Tile": [ 20, 6 ],
+            "Tile": [ 19, 3 ],
+            "PixelOffset": [ 32, 0 ],
             "Texture": "Mods/RafiaBee.MoreQuests/AdventureBoard",
             "Background": "Mods/RafiaBee.MoreQuests/AdventureBoardBackground",
             "BoardSize": [ 2, 2 ],

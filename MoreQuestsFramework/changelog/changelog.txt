@@ -1,3 +1,7 @@
+To be released
+- Custom boards no longer disappear when you open the pause menu. They stay drawn like the rest of the world.
+- For mod authors: a board's tile is now its bottom-left corner, and the board grows up and to the right from there. This changed from before, so any board you placed will sit lower and needs its tile adjusted. There's also a new optional PixelOffset field to nudge a board a few pixels for lining it up with wall art.
+
 2.8.0-beta.2
 - Players can now set how many quests a custom board shows at once, when the board's author allows it. Look under "Custom boards" in the mod settings.
 - For mod authors: custom boards can now arrange their notes three ways: the loose scattered look (still the default), a tidy tilted grid like the help-wanted board, or "zoned", where you split the board into regions and send different quest categories to each, with its own look per region.
