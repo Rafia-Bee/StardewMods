@@ -81,6 +81,7 @@ public class ModEntry : Mod
 
     private readonly HashSet<GameLocation> _dirtyLocations = new();
     private readonly HashSet<GameLocation> _machineReadyLocations = new();
+    private readonly HashSet<GameLocation> _placementGrabLocations = new();
     private bool _isGrabbingField;
     internal bool IsGrabbing
     {
@@ -202,6 +203,7 @@ public class ModEntry : Mod
     {
         _dirtyLocations.Clear();
         _machineReadyLocations.Clear();
+        _placementGrabLocations.Clear();
     }
 
     internal static void FlagMachineReadyLocation(GameLocation location)
@@ -884,6 +886,7 @@ public class ModEntry : Mod
     private void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
     {
         // Convert newly placed custom grabbers to (BC)165 + modData
+        bool grabberPlaced = false;
         foreach (var pair in e.Added)
         {
             if (pair.Value == null)
@@ -891,11 +894,15 @@ public class ModEntry : Mod
 
             // Skip (BC)165 objects (vanilla or already-converted specialized)
             if (pair.Value.QualifiedItemId == BigCraftableIds.AutoGrabber)
+            {
+                grabberPlaced = true;
                 continue;
+            }
 
             // Convert custom specialized grabber → (BC)165 + modData + Chest
             if (GrabberTypeHelper.IsSpecializedGrabberItem(pair.Value.QualifiedItemId))
             {
+                grabberPlaced = true;
                 var tile = pair.Key;
                 var grabberType = GrabberTypeHelper.GetGrabberType(pair.Value.QualifiedItemId);
                 string originalId = pair.Value.QualifiedItemId;
@@ -929,6 +936,13 @@ public class ModEntry : Mod
 
         if (IsGrabbing)
             return;
+
+        // A just-placed grabber does one grab right away when Grab on Placement is on.
+        // Instant mode already re-grabs the location below, so this only matters for
+        // Hourly and Daily, where placement otherwise waits for the next sweep.
+        if (grabberPlaced && Config.grabOnPlacement
+            && Config.grabFrequency != ModConfig.GrabFrequency.Instant)
+            _placementGrabLocations.Add(e.Location);
 
         // _dirtyLocations is purely an Instant-mode signal for OnUpdateTicked. Hourly and
         // Daily run their full sweeps from OnHourlyUpdate / day-start instead, so queueing
@@ -993,6 +1007,24 @@ public class ModEntry : Mod
             using (var session = new GrabSession(this, GrabSessionKind.ManualGlobalFire))
             {
                 _grabbers.FireGlobalGrab();
+            }
+            _grabbers.ShowGrabCycleResults(showSummary: true);
+            return;
+        }
+
+        // Placement grab: a grabber the player just set down does one grab right away,
+        // regardless of grab frequency. Only populated in Hourly/Daily (Instant already
+        // handles placement through _dirtyLocations below).
+        if (_placementGrabLocations.Count > 0)
+        {
+            var placed = _placementGrabLocations.ToList();
+            _placementGrabLocations.Clear();
+
+            _grabbers.ResetGrabCycleTracking();
+            using (var session = new GrabSession(this, GrabSessionKind.AutoSweep))
+            {
+                foreach (var location in placed)
+                    _grabbers.GrabAtLocation(location);
             }
             _grabbers.ShowGrabCycleResults(showSummary: true);
             return;

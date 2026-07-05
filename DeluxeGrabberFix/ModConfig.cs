@@ -59,6 +59,7 @@ internal class ModConfig
     public GrabberMode grabberMode = GrabberMode.Classic;
     public GlobalGrabberMode globalGrabber = GlobalGrabberMode.Off;
     public GrabFrequency grabFrequency = GrabFrequency.Instant;
+    public bool grabOnPlacement;
 
     public bool reportYield = true;
     public bool debugLogging;

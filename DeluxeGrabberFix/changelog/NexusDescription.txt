@@ -195,6 +195,7 @@ All machine types also support [url=https://www.nexusmods.com/stardewvalley/mods
 [*][b]Exclude Quest Items[/b] (default: On). Prevents the grabber from picking up items flagged as quest items (like the Lucky Purple Shorts). Uses both the instance quest flag and the item's data type for reliable detection.[/*]
 [*][b]Skip Festival Locations[/b] (default: On). Prevents collection in festival/event areas[/*]
 [*][b]Grab Frequency[/b] (default: Instant). Controls how often the grabber scans for items. 'Instant' grabs items the moment they appear (every game tick). 'Hourly' batches all pickups into the hourly sweep, better for long sessions with many mods. 'Daily' only collects at the start and end of each day. Ore panning always runs hourly regardless.[/*]
+[*][b]Grab on Placement[/b] (default: Off). When you place an auto-grabber, it grabs once right away instead of waiting for the next hourly or daily sweep. No extra effect when Grab Frequency is set to Instant.[/*]
 [*][b]Global Grabber Mode[/b] (default: Off). Off / All / Hover[/*]
 [*][b]Auto-Fire Global Grabber[/b] (default: Off). Automatically fires the designated global grabber at the start of each day. Great for mobile players.[/*]
 [*][b]Fire Global Grabber[/b] (default: B). Hotkey to trigger global collection[/*]

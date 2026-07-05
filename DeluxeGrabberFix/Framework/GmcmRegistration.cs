@@ -457,6 +457,8 @@ internal class GmcmRegistration
              },
              ModConfig.GrabFrequencyDict, ModConfig.GrabFrequencyReverseDict, ModConfig.GrabFrequencyStrings,
              dropdownLabelPrefix: "")
+         .Bool("config.grab-on-placement",
+             () => _getConfig().grabOnPlacement, v => _getConfig().grabOnPlacement = v)
          .Bool("config.exclude-quest-items",
              () => _getConfig().Compatibility.excludeQuestItems, v => _getConfig().Compatibility.excludeQuestItems = v)
          .Bool("config.skip-festival-locations",

@@ -95,6 +95,7 @@ Individual toggles (all default On when machines enabled): Crab Pots, Fish Ponds
 | Debug Logging | Off | Detailed trace logging for troubleshooting |
 | Gain Experience | On | Award XP for auto-grabbed items |
 | Grab Frequency | Instant | Instant (every tick), Hourly (batched), or Daily |
+| Grab on Placement | Off | A just-placed grabber grabs once right away, even on Hourly or Daily |
 | Exclude Quest Items | On | Skip items flagged as quest items |
 | Skip Festival Locations | On | Prevents collection in festival/event areas |
 | Excluded Items | (empty) | Comma-separated qualified item IDs to never collect |

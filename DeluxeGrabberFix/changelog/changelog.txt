@@ -1,4 +1,5 @@
 To be released
+- Added a "Grab on Placement" option. When it's on, a grabber you just placed collects nearby items right away instead of waiting for the next sweep, so you can keep the mod on Hourly or Daily without switching to Instant. Off by default.
 - Improved config logging in the SMAPI log. When you save your settings, the log now shows just what changed instead of the whole config, which makes bug reports easier to sort out.
 
 v1.22.1

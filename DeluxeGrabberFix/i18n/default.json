@@ -170,6 +170,8 @@
     "config.skip-festival-locations.tooltip": "Prevents auto-grabbers from collecting items in festival and temporary event locations, including during active festivals",
     "config.grab-frequency": "Grab Frequency",
     "config.grab-frequency.tooltip": "'Instant': items are grabbed the moment they appear (every game tick). Best for completeness, but uses more CPU. 'Hourly': all grabs are batched into the hourly sweep, better for long sessions with many mods. 'Daily': items are only collected at the start and end of each day. Ore panning always runs hourly regardless.",
+    "config.grab-on-placement": "Grab on Placement",
+    "config.grab-on-placement.tooltip": "When you place an auto-grabber, it grabs once right away instead of waiting for the next hourly or daily sweep. Has no extra effect when Grab Frequency is set to Instant.",
     "dropdown.instant": "Instant",
     "dropdown.hourly": "Hourly",
     "dropdown.daily": "Daily",
