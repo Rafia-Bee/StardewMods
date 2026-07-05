@@ -1071,7 +1071,7 @@ internal static partial class Generators
     private static QuestPosting? EggFestivalDecor(QuestContext ctx)
     {
         const string giver = "Lewis";
-        const int hayBaleCount = 5;
+        int hayBaleCount = Math.Max(1, ModEntry.Config.EggFestivalHayBaleQty);
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -1449,9 +1449,9 @@ internal static partial class Generators
         if (!MoreQuestsFramework.ModCompat.HasEs(ctx.Helper.ModRegistry))
             return null;
         const string giver = "Rosa";
-        const int purpleCount = 5;
-        const int slimeCount = 10;
-        const int stoneCount = 20;
+        int purpleCount = Math.Max(1, ModEntry.Config.EastScarpDecorPurpleQty);
+        int slimeCount = Math.Max(1, ModEntry.Config.EastScarpDecorSlimeQty);
+        int stoneCount = Math.Max(1, ModEntry.Config.EastScarpDecorStoneQty);
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]

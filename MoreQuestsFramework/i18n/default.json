@@ -144,6 +144,13 @@
     "config.skipFriendshipQuestsAtMaxHeart": "Skip friendship quests at max hearts",
     "config.skipFriendshipQuestsAtMaxHeart.tooltip": "When on (default), quests that reward friendship to a specific villager are hidden once you've maxed out their hearts.",
 
+    "config.section.antiRepetition": "Repeat prevention",
+    "config.section.antiRepetition.tooltip": "How hard the board tries to avoid asking for the same item or the same villager two postings in a row.",
+    "config.AntiRepetitionItemHistory": "Recent items blocked",
+    "config.AntiRepetitionItemHistory.tooltip": "How many recently-requested items are held back from showing up again on a new quest. Higher means more variety, but on a slow day there may be fewer things left to ask for. 0 turns it off. Default 6.",
+    "config.AntiRepetitionNpcHistory": "Recent givers blocked",
+    "config.AntiRepetitionNpcHistory.tooltip": "How many villagers who just gave a quest are held back from giving another one right away. Higher spreads quests across more people. 0 turns it off. Default 3.",
+
     "config.section.exclusions": "Excluded quest givers",
     "config.section.exclusions.tooltip": "NPCs listed here will never post quests on the help-wanted board or the special orders board. Useful for friendable monsters or pets that ship as if they were real villagers, or just for any NPC you'd rather not get quests from.",
     "config.ineligibleGivers": "Excluded NPCs",

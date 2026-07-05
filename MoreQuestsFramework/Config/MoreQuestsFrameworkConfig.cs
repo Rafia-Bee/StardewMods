@@ -44,6 +44,12 @@ public sealed class MoreQuestsFrameworkConfig
     // trigger condition matches). 0 disables the quest entirely.
     public Dictionary<string, int> MailQuestChancePercent { get; set; } = new();
 
+    // How many recently-posted item ids / givers are blocked from repeating on a new
+    // posting. Higher means more variety but a smaller pool to draw from on a given day.
+    // 0 turns the block off for that dimension.
+    public int AntiRepetitionItemHistory { get; set; } = 6;
+    public int AntiRepetitionNpcHistory { get; set; } = 3;
+
     public bool DifficultyScaling { get; set; } = false;
 
     // When false (default), the candidate pool is filtered to locations the player

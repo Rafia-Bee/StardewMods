@@ -99,6 +99,11 @@ internal static class GmcmRegistration
             () => t.Get("config.skipFriendshipQuestsAtMaxHeart"),
             () => t.Get("config.skipFriendshipQuestsAtMaxHeart.tooltip"));
 
+        api.AddSectionTitle(manifest, () => t.Get("config.section.antiRepetition"),
+            () => t.Get("config.section.antiRepetition.tooltip"));
+        AddInt(api, manifest, t, "AntiRepetitionItemHistory", () => ModEntry.Config.AntiRepetitionItemHistory, v => ModEntry.Config.AntiRepetitionItemHistory = v, 0, 20);
+        AddInt(api, manifest, t, "AntiRepetitionNpcHistory", () => ModEntry.Config.AntiRepetitionNpcHistory, v => ModEntry.Config.AntiRepetitionNpcHistory = v, 0, 20);
+
         api.AddSectionTitle(manifest, () => t.Get("config.section.exclusions"),
             () => t.Get("config.section.exclusions.tooltip"));
         api.AddTextOption(manifest,

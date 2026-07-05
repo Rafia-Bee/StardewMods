@@ -6,9 +6,6 @@ namespace MoreQuestsFramework;
 
 internal sealed class AntiRepetition
 {
-    private const int MaxItemHistory = 6;
-    private const int MaxNpcHistory = 3;
-
     private readonly Queue<string> _recentItems = new();
     private readonly Queue<string> _recentNpcs = new();
     private Dictionary<string, int> _lastPostedDay = new();
@@ -54,9 +51,9 @@ internal sealed class AntiRepetition
     public void RecordRecency(QuestPosting posting)
     {
         if (!string.IsNullOrEmpty(posting.ObjectiveItemId))
-            Push(_recentItems, posting.ObjectiveItemId, MaxItemHistory);
+            Push(_recentItems, posting.ObjectiveItemId, System.Math.Max(0, ModEntry.Config.AntiRepetitionItemHistory));
         if (!string.IsNullOrEmpty(posting.QuestGiver))
-            Push(_recentNpcs, posting.QuestGiver, MaxNpcHistory);
+            Push(_recentNpcs, posting.QuestGiver, System.Math.Max(0, ModEntry.Config.AntiRepetitionNpcHistory));
     }
 
     // Starts the definition-level cooldown clock. For board postings this fires when

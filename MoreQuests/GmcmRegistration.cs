@@ -112,8 +112,11 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "CheckOnFriendsCount", () => ModEntry.Config.CheckOnFriendsCount, v => ModEntry.Config.CheckOnFriendsCount = v, 1, 10);
         api.AddSectionTitle(manifest, () => t.Get("config.section.emilyHousewarming"));
         AddInt(api, manifest, t, "EmilyHousewarmingCount", () => ModEntry.Config.EmilyHousewarmingCount, v => ModEntry.Config.EmilyHousewarmingCount = v, 3, 20);
-        api.AddSectionTitle(manifest, () => t.Get("config.section.morrisQualityControl"));
+        api.AddSectionTitle(manifest, () => t.Get("config.section.jojaArc"));
+        AddInt(api, manifest, t, "MorrisManOfMeansGoldTarget", () => ModEntry.Config.MorrisManOfMeansGoldTarget, v => ModEntry.Config.MorrisManOfMeansGoldTarget = v, 1000, 50000);
         AddInt(api, manifest, t, "MorrisQualityControlMaxCropPrice", () => ModEntry.Config.MorrisQualityControlMaxCropPrice, v => ModEntry.Config.MorrisQualityControlMaxCropPrice = v, 1, 1000);
+        AddInt(api, manifest, t, "MorrisQualityControlSellCount", () => ModEntry.Config.MorrisQualityControlSellCount, v => ModEntry.Config.MorrisQualityControlSellCount = v, 1, 100);
+        AddInt(api, manifest, t, "PierreStockPickleCount", () => ModEntry.Config.PierreStockPickleCount, v => ModEntry.Config.PierreStockPickleCount = v, 1, 50);
 
         // Seasonal has no per-quest settings of its own yet (its only knob was the category
         // toggle, now on the framework page), so there's no Seasonal subpage for now. It
@@ -121,6 +124,8 @@ internal static class GmcmRegistration
 
         // ----- Animal -----
         api.AddPage(manifest, PageAnimal, () => t.Get("config.page.animal"));
+        api.AddSectionTitle(manifest, () => t.Get("config.section.alexProtein"));
+        AddInt(api, manifest, t, "AlexProteinShakesMaxQty", () => ModEntry.Config.AlexProteinShakesMaxQty, v => ModEntry.Config.AlexProteinShakesMaxQty = v, 1, 100);
         api.AddSectionTitle(manifest, () => t.Get("config.section.leahPainting"));
         api.AddTextOption(manifest,
             getValue: () => ModEntry.Config.LeahPaintingFrame,
@@ -151,6 +156,12 @@ internal static class GmcmRegistration
             tooltip: () => t.Get("config.FairFestivalRewardKind.tooltip"),
             allowedValues: new[] { "GrangeScoreBonus", "StarTokens" });
         AddInt(api, manifest, t, "FairStarTokensAmount", () => ModEntry.Config.FairStarTokensAmount, v => ModEntry.Config.FairStarTokensAmount = v, 0, 1000);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.esvSpiritsEve"));
+        AddInt(api, manifest, t, "EastScarpDecorPurpleQty", () => ModEntry.Config.EastScarpDecorPurpleQty, v => ModEntry.Config.EastScarpDecorPurpleQty = v, 1, 50);
+        AddInt(api, manifest, t, "EastScarpDecorSlimeQty", () => ModEntry.Config.EastScarpDecorSlimeQty, v => ModEntry.Config.EastScarpDecorSlimeQty = v, 1, 100);
+        AddInt(api, manifest, t, "EastScarpDecorStoneQty", () => ModEntry.Config.EastScarpDecorStoneQty, v => ModEntry.Config.EastScarpDecorStoneQty = v, 1, 100);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.eggFestivalDecor"));
+        AddInt(api, manifest, t, "EggFestivalHayBaleQty", () => ModEntry.Config.EggFestivalHayBaleQty, v => ModEntry.Config.EggFestivalHayBaleQty = v, 1, 50);
 
         // ----- Adventurer's Guild board -----
         api.AddPage(manifest, PageAdventureBoard, () => t.Get("config.page.adventureBoard"));

@@ -43,9 +43,12 @@ internal sealed class Tier2Handler : IConsequenceHandler
 // FriendshipOverride/ChainDays, else -FriendshipLarge/ChainDays.
 internal sealed class Tier3Handler : IConsequenceHandler
 {
+    // Used when a spec doesn't set its own ChainDays: spread the loss over three days.
+    private const int DefaultChainDays = 3;
+
     public void Apply(ConsequenceContext ctx)
     {
-        int chainDays = ctx.Spec.ChainDays > 0 ? ctx.Spec.ChainDays : 3;
+        int chainDays = ctx.Spec.ChainDays > 0 ? ctx.Spec.ChainDays : DefaultChainDays;
         int perDay;
         if (ctx.Spec.FriendshipPerDay != 0)
         {

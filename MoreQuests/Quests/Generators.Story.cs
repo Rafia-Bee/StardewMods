@@ -15,22 +15,21 @@ internal static partial class Generators
     // Step 1, "A man of means". Morris mails you once you've shown some ambition (the
     // OneShot "FirstMoneyEarned >= 15000" trigger gates the letter, and the quest is only
     // offered while the Community Center isn't finished, since Morris leaves town after
-    // that). No task, just a threshold: earn another 10,000g from when the letter lands.
-    private const int MorrisManOfMeansGoldTarget = 10000;
-
+    // that). No task, just a threshold: earn the configured extra gold from when the letter lands.
     private static QuestPosting? MorrisManOfMeans(QuestContext ctx)
     {
+        int goldTarget = System.Math.Max(1, ModEntry.Config.MorrisManOfMeansGoldTarget);
         var posting = new QuestPosting
         {
             Category = QuestCategory.Social,
             Tier = DifficultyTier.Intermediate,
             QuestType = BoardQuestType.EarnMoney,
             QuestGiver = "Morris",
-            ObjectiveQuantity = MorrisManOfMeansGoldTarget,
+            ObjectiveQuantity = goldTarget,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.None, ctx.Config),
             Title = ModEntry.I18n.Get("quest.story.morrisManOfMeans.title"),
             Description = ModEntry.I18n.Get("quest.story.morrisManOfMeans.description",
-                new { gold = MorrisManOfMeansGoldTarget }),
+                new { gold = goldTarget }),
             CurrentObjective = ModEntry.I18n.Get("quest.story.morrisManOfMeans.objective")
         };
 
@@ -45,11 +44,10 @@ internal static partial class Generators
     // junk produce onto his shelves. Sell a batch of dirt-cheap, base-quality crops into
     // Pierre's shop (SeedShop). The framework's Sell objective counts them as they cross
     // the counter. Mailed to you once you've read the Step 1 follow-up letter.
-    private const int MorrisQualityControlSellCount = 15;
-
     private static QuestPosting? MorrisQualityControl(QuestContext ctx)
     {
         int maxPrice = System.Math.Max(1, ModEntry.Config.MorrisQualityControlMaxCropPrice);
+        int sellCount = System.Math.Max(1, ModEntry.Config.MorrisQualityControlSellCount);
         var posting = new QuestPosting
         {
             Category = QuestCategory.Social,
@@ -59,11 +57,11 @@ internal static partial class Generators
             SellShopId = "SeedShop",
             SellMaxValue = maxPrice,
             SellMaxQuality = 0,
-            ObjectiveQuantity = MorrisQualityControlSellCount,
+            ObjectiveQuantity = sellCount,
             DeadlineDays = Difficulty.Deadline(DeadlineKind.None, ctx.Config),
             Title = ModEntry.I18n.Get("quest.story.morrisQualityControl.title"),
             Description = ModEntry.I18n.Get("quest.story.morrisQualityControl.description",
-                new { count = MorrisQualityControlSellCount, value = maxPrice }),
+                new { count = sellCount, value = maxPrice }),
             CurrentObjective = ModEntry.I18n.Get("quest.story.morrisQualityControl.objective")
         };
 
@@ -84,11 +82,10 @@ internal static partial class Generators
     // polls (see ModEntry.Pierre* handlers): the break-in opens the locked Joja door between
     // 12am and 2am, the shelves become deposit boxes for cheap pickles, the sign watches for
     // a stamped pickle sign placed outside Joja, and the lay-low finish resolves overnight.
-    internal const int PierreStockPickleCount = 12;
-
     private static QuestPosting? PierreDontGetCaught(QuestContext ctx)
     {
         const string giver = "Pierre";
+        int pickleCount = System.Math.Max(1, ModEntry.Config.PierreStockPickleCount);
 
         var steps = new List<AdventureStepState>
         {
@@ -105,10 +102,10 @@ internal static partial class Generators
                 Name = "Stock",
                 Kind = AdventureStepKind.Custom,
                 Targets = new List<string> { ModEntry.PierreStockHandler },
-                Count = PierreStockPickleCount,
+                Count = pickleCount,
                 Requires = new List<string> { "BreakIn" },
                 Description = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.step.stock",
-                    new { count = PierreStockPickleCount })
+                    new { count = pickleCount })
             },
             new()
             {
@@ -159,7 +156,7 @@ internal static partial class Generators
             },
             Title = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.title"),
             Description = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.description",
-                new { count = PierreStockPickleCount }),
+                new { count = pickleCount }),
             PreBuiltQuest = quest
         };
     }

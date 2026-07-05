@@ -7,6 +7,10 @@ namespace MoreQuests.Quests;
 // multiplier, rounded to the nearest 100.
 internal static class BudgetSizer
 {
+    // Reference price for a furniture category that isn't one of the four configured ones.
+    // Shouldn't happen in practice, but keeps the budget sane if a new category slips in.
+    private const int UncategorizedReferencePrice = 1000;
+
     public static int Compute(IEnumerable<(string category, int count)> objectives, ModConfig config)
     {
         double raw = 0;
@@ -24,6 +28,6 @@ internal static class BudgetSizer
         FurnitureCategory.Rug => config.RedecorateReferenceRugPrice,
         FurnitureCategory.Chair => config.RedecorateReferenceChairPrice,
         FurnitureCategory.Table => config.RedecorateReferenceTablePrice,
-        _ => 1000
+        _ => UncategorizedReferencePrice
     };
 }

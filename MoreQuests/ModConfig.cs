@@ -49,10 +49,22 @@ public sealed class ModConfig
     /// Negatives are treated the same as 0.
     public int KnowYourWatersMaxFish { get; set; } = 0;
 
+    /// Joja arc Step 1 "A man of means": how much extra gold Morris asks you to earn from
+    /// when his letter lands. Clamped to at least 1 at read time.
+    public int MorrisManOfMeansGoldTarget { get; set; } = 10000;
+
     /// Joja "Quality control" quest (Morris arc Step 2): a crop only counts as cheap junk
     /// if its base sell price is under this. Raise it if other mods bump crop values so
     /// there are still crops cheap enough to qualify. Clamped to at least 1 at read time.
     public int MorrisQualityControlMaxCropPrice { get; set; } = 30;
+
+    /// Joja arc Step 2: how many cheap junk crops you have to sell into Pierre's shop.
+    /// Clamped to at least 1 at read time.
+    public int MorrisQualityControlSellCount { get; set; } = 15;
+
+    /// Joja arc Step 3 "Don't get caught": how many cheap pickles you stock onto Joja's
+    /// shelves. Clamped to at least 1 at read time.
+    public int PierreStockPickleCount { get; set; } = 12;
 
     /// How many distinct item variations a "mixed bag" quest asks for (e.g. Pierre's
     /// seasonal-crop spread). Clamped to [2, 5] at read time.
@@ -91,6 +103,16 @@ public sealed class ModConfig
     public int FairStarTokensAmount { get; set; } = 100;
 
     // ----- Festival decor-supply quests -----
+    /// East Scarp Spirit's Eve decor quest: how many purple-dye items, slime, and stone Rosa
+    /// asks you to ship. Each clamped to at least 1 at read time.
+    public int EastScarpDecorPurpleQty { get; set; } = 5;
+    public int EastScarpDecorSlimeQty { get; set; } = 10;
+    public int EastScarpDecorStoneQty { get; set; } = 20;
+
+    /// Egg Festival decor quest: how many Hay Bales Lewis asks you to ship. Clamped to at
+    /// least 1 at read time.
+    public int EggFestivalHayBaleQty { get; set; } = 5;
+
     /// East Scarp NPCs (comma-separated) that get a FriendshipMultiHeart bump on completing
     /// the East Scarp Spirit's Eve quest. Missing NPCs silently no-op so over-listing is safe.
     public string EastScarpFestivalNpcs { get; set; } = "Sonny, Rosa, Eli, Andy, Bonnie, Lily";
@@ -154,10 +176,12 @@ public sealed class ModConfig
 
     // ----- One-shot triggered animal/farm quests -----
 
-    /// Alex's Protein Shakes: final qty = Base + chickens * PerChicken, clamped to [Base, 30].
+    /// Alex's Protein Shakes: final qty = Base + chickens * PerChicken, clamped to [Base, MaxQty].
     /// Set PerChicken to 0 to always ask for exactly Base eggs.
     public int AlexProteinShakesBaseQty { get; set; } = 5;
     public int AlexProteinShakesPerChicken { get; set; } = 1;
+    /// Ceiling on how many eggs Alex asks for, no matter how many chickens you have.
+    public int AlexProteinShakesMaxQty { get; set; } = 30;
 
     /// Gold paid out if the chicken-offer credit expires before the player redeems it at
     /// Marnie's shop. 800g matches the vanilla White Chicken price.

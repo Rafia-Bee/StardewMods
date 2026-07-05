@@ -16,23 +16,33 @@ namespace MoreQuests.Quests;
 
 internal static partial class Generators
 {
+    // Hay Supply Run tuning. Quest only posts once the farm has at least this many animals,
+    // and never asks for fewer than HayMinQty hay.
+    private const int HayMinAnimals = 4;
+    private const int HayMinQty = 5;
+    // Scaling-on formula: farming level and herd size each add hay.
+    private const int HayPerFarmingLevel = 3;
+    private const int HayPerAnimalScaled = 2;
+    // Scaling-off formula: random up to roughly this much per animal.
+    private const int HayPerAnimalFlat = 5;
+
     private static QuestPosting? HaySupplyRun(QuestContext ctx)
     {
         int animals = CountAnimals();
-        if (animals < 4)
+        if (animals < HayMinAnimals)
             return null;
 
         int qty;
         if (ctx.Config.DifficultyScaling)
         {
-            qty = Game1.player.FarmingLevel * 3 + animals * 2;
+            qty = Game1.player.FarmingLevel * HayPerFarmingLevel + animals * HayPerAnimalScaled;
         }
         else
         {
-            int upper = Math.Max(6, animals * 5 + 1);
-            qty = Game1.random.Next(5, upper);
+            int upper = Math.Max(HayMinQty + 1, animals * HayPerAnimalFlat + 1);
+            qty = Game1.random.Next(HayMinQty, upper);
         }
-        qty = Math.Max(5, qty);
+        qty = Math.Max(HayMinQty, qty);
 
         var posting = new QuestPosting
         {
@@ -118,10 +128,12 @@ internal static partial class Generators
         if (chickens <= 0)
             return null;
 
+        int floor = Math.Max(1, ModEntry.Config.AlexProteinShakesBaseQty);
+        int cap = Math.Max(floor, ModEntry.Config.AlexProteinShakesMaxQty);
         int qty = Math.Clamp(
             ModEntry.Config.AlexProteinShakesBaseQty + chickens * Math.Max(0, ModEntry.Config.AlexProteinShakesPerChicken),
-            Math.Max(1, ModEntry.Config.AlexProteinShakesBaseQty),
-            30);
+            floor,
+            cap);
 
         var rewardItem = ctx.Items.TryResolveItem(AlexProteinRewardPool[Game1.random.Next(AlexProteinRewardPool.Length)]);
         var rewards = new List<RewardSpec>
