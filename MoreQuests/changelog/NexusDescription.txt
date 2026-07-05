@@ -767,8 +767,8 @@ The Mining-category quests above (everything except Bar Delivery and Archaeology
 [size=4][b]Configuration[/b][/size]
 If you have [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url] installed, two settings pages show up in-game. Otherwise edit the [font=Courier New]config.json[/font] files in each mod's folder.
 [list]
-[*][b]MoreQuests config[/b] - Adventurer's Guild board on/off, shop discount sizes, fish haul quantities, Skull Cavern max floor, secret-gift hint on/off, and per-quest knobs.[/*]
-[*][b]MoreQuestsFramework config[/b] - engine-level stuff: how many quests show up per day, which quest types are on or off, quest consequences on/off, deadline lengths, gold tiers, friendship reward sizes, consequence grace window, per-quest weights.[/*]
+[*][b]MoreQuests config[/b] - the settings for the quests this mod adds, grouped onto category pages: the Adventurer's Guild board (on/off, how many quests it shows, and where it sits), shop discount sizes, item quantities, Skull Cavern max floor, the secret-gift hint, a never-reward item list, plus its own pages for the Redecorate quest and for the mod-compatibility ids.[/*]
+[*][b]MoreQuestsFramework config[/b] - the engine-level stuff shared by any mod built on it: how many quests show up per day, which quest types are on or off, quest consequences on/off, deadline and cooldown lengths, gold tiers, friendship reward sizes, consequence grace window, per-quest weights.[/*]
 [/list]
 Both pages also have an [b]Advanced > Debug logging[/b] toggle at the bottom. Leave it off for normal play, flip it on if you hit a bug and need to share a SMAPI log.
 

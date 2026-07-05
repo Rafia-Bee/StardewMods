@@ -729,22 +729,126 @@ The framework follows semver from 1.0 onward.
 
 ## Configuration
 
-`Mods/MoreQuestsFramework/config.json`. Shows up in GMCM when installed:
+`Mods/MoreQuestsFramework/config.json`. With [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098) installed, everything below shows up on the framework's in-game settings page, grouped into the sections named here. Nothing is hidden: if it's in the file, it's in the menu. These are the engine-level knobs shared by every mod built on the framework, so they live here rather than in a content mod like More Quests.
 
-- **Quest board:** `QuestsPerDay`, `SpecialOrdersBoardPages`, `AllowDuplicateGiverPerDay`, `SkipFriendshipQuestsAtMaxHeart`, `BoardNoteSpacing`, `BoardMaxNoteSize` (the last two set how far apart the help-wanted notes sit and how big a single note gets when only a few are posted).
-- **Master toggles:** `DifficultyScaling`, `FishingIgnoresVisitedLocations`, `ForagingIgnoresVisitedLocations`.
-- **Quest categories:** one on/off toggle per registered category (auto-generated). Turning a category off stops every new quest of that type from posting, the vanilla wrappers included; quests already accepted keep going.
-- **Per-quest weights:** one entry per registered `IQuestDefinition` (built at runtime, so consumer mods' quests show up too).
-- **Mail quest chances:** per-`IQuestDefinition` `MailQuestChancePercent` sliders for mail-delivered quests (0 to 100; default 100). Applies to anything whose effective `Kind` is `PostingKind.Mail` *except* `BuildingBuilt` and `MailReceived` defs, since those triggers are diff-based and a failed roll would lose the quest forever. The slider rolls in `QuestPipeline.GenerateTriggered` before `ShouldFireToday`, so a failed roll doesn't burn the trigger's cooldown / yearly date / OneShot flag.
-- **Vanilla wrappers:** toggle and tune the four bundled vanilla quest types.
-- **Friendship reward sizes:** `FriendshipBasic`, `FriendshipMid`, `FriendshipIntermediate`, `FriendshipLarge`, `FriendshipMultiSmall`, `FriendshipMultiHeart`.
-- **Gold reward bases:** beginner / basic / intermediate / advanced / expert tiers.
-- **Reward multipliers:** `RewardMultiplierBelowSell`, `RewardMultiplierAboveSell`, `RewardMultiplierFishPremium`.
-- **Deadlines:** short / medium / long / extended / none (in-game days).
-- **Consequences:** `ConsequencesEnabled` (master on/off for the follow-up NPC reactions, on by default) and `ConsequenceGraceDays` (days past a queued reaction's fire day before it silently expires, default 7). The grace window controls how long an NPC keeps a queued reaction alive when the player avoids them (i.e. how long Demetrious keeps a grudge when you catch too many fish).
-- **Advanced:** `DebugLogging` (off by default). Flip on to write detailed diagnostic lines to the SMAPI log when you're chasing a bug; otherwise leave off so the log stays quiet.
+The tables list the name you'd see in `config.json`. In the menu each has a plain-language label and a tooltip.
 
-GMCM registration is deferred until the first `UpdateTicking` so consumer-mod quests that register during their own `GameLaunched` show up in the per-quest weight list.
+### Quest board
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `QuestsPerDay` | How many quests the help-wanted board posts each day. | 3 |
+| `SpecialOrdersBoardPages` | Pages of special orders shown. 1 is vanilla (two orders). 2 to 5 adds prev/next arrows so you can browse every eligible order, two per page. | 1 |
+| `BoardNoteSpacing` | Gap in pixels between the note papers on the board. 0 is touching, a negative number overlaps them. | 14 |
+| `BoardMaxNoteSize` | Cap on how big a single note gets when only a few are posted. | 256 |
+
+**Custom boards** (this section only appears when a custom board's author lets players set its counts): one slider per board for how many quests it pins up (`CustomBoardPoolSize`) and, if it uses them, how many bulletin notices it shows (`CustomBoardNoticePoolSize`). Each starts at whatever the board's author set.
+
+### Master toggles
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `DifficultyScaling` | On makes quest quantities grow with your skill levels. Off keeps them at flat ranges. | off |
+| `FishingIgnoresVisitedLocations` | Off keeps fishing quests to spots you've actually visited. On lets them pick anywhere. | off |
+| `ForagingIgnoresVisitedLocations` | Same idea for foraging quests. | off |
+| `AllowDuplicateGiverPerDay` | On lets the same villager hand out more than one quest in a day. | off |
+| `SkipFriendshipQuestsAtMaxHeart` | On skips a quest that would reward friendship with someone you're already maxed with (unless the reward goes to a different villager). | on |
+
+### Repeat prevention
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `AntiRepetitionItemHistory` | How many recently-asked-for items the board holds back before it will ask for one again. 0 turns this off. | 6 |
+| `AntiRepetitionNpcHistory` | How many recent quest givers the board holds back before it reuses one. 0 turns this off. | 3 |
+
+### Giver exclusions
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `IneligibleGivers` | Villagers who should never be picked to hand out a board quest, comma-separated. | Krobus, Leximonster, SenS, Torts, Dwarf |
+| `MailFallbackForExcludedGivers` | When a quest is tied to an excluded giver, on redirects it to your mailbox so you still get it, off drops it. | on |
+
+### Quest categories
+
+One on/off switch per quest type (Farming, Fishing, and so on), built from whatever categories are registered, so a content mod's own categories get a switch too. Turn one off and no new quests of that type post, the four bundled vanilla ones included. Quests you've already accepted keep going. All on by default. Stored as `CategoryEnabled`.
+
+### Per-quest weights
+
+Their own pages, one per category. Each registered quest gets a slider, so any mod's quests show up here too. Higher means it comes up more often, 0 disables it. Each starts at the quest's own default weight. Stored as `QuestWeights`.
+
+There's also a **Mail quest chances** page: a 0-to-100 slider per mail-delivered quest (`MailQuestChancePercent`, default 100 = always fires when its trigger matches). Diff-based mail triggers (built after a building, or after specific mail arrives) are left off this page, since a failed roll there would lose the quest for good.
+
+### Friendship reward sizes
+
+Raw friendship points, where 250 is one full heart.
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `FriendshipBasic` | Small friendship reward. | 30 |
+| `FriendshipMid` | Medium friendship reward. | 80 |
+| `FriendshipIntermediate` | Between medium and half a heart. | 125 |
+| `FriendshipLarge` | The big single-villager reward, one full heart. | 250 |
+| `FriendshipMultiSmall` | A small amount handed to several villagers at once. | 30 |
+| `FriendshipMultiHeart` | A full heart handed to several villagers at once (the festival quests use this). | 250 |
+
+### Gold reward bases
+
+Fixed gold payouts by tier, low to high.
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `GoldBeginnerBase` | Beginner tier payout. | 100 |
+| `GoldBasicBase` | Basic tier payout. | 300 |
+| `GoldIntermediateBase` | Intermediate tier payout. | 500 |
+| `GoldAdvancedBase` | Advanced tier payout. | 1000 |
+| `GoldExpertBase` | Expert tier payout. | 3000 |
+
+### Reward multipliers
+
+For quests that pay based on what you turn in (item sell price times how many you bring, times one of these).
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `RewardMultiplierBelowSell` | A bit under what you'd get selling the items yourself. | 0.8 |
+| `RewardMultiplierAboveSell` | A bit over sell price. | 1.05 |
+| `RewardMultiplierFishPremium` | The best rate, used for big fish hauls. | 1.15 |
+
+### Deadlines
+
+Days you get to finish a quest, by tier (in-game days).
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `DeadlineShort` | Short deadline. | 2 |
+| `DeadlineMedium` | Medium deadline. | 5 |
+| `DeadlineLong` | Long deadline. | 7 |
+| `DeadlineExtended` | Extended deadline. | 14 |
+| `DeadlineNone` | A stand-in for "this shouldn't really run out". You'll almost never need to touch it. | 999 |
+
+### Cooldown buckets
+
+Days a quest waits before it can come back onto the board (in-game days). A quest just says "Short", "Medium", or "Long".
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `CooldownShortDays` | Short cooldown. | 2 |
+| `CooldownMediumDays` | Medium cooldown. | 7 |
+| `CooldownLongDays` | Long cooldown. | 14 |
+
+### Consequences
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `ConsequencesEnabled` | Master switch for the follow-up villager reactions some quests set up (like a grumble after you over-fish a spot). | on |
+| `ConsequenceGraceDays` | How many days a queued reaction sticks around waiting for you before it's dropped, in case you avoid that villager for a while. | 7 |
+
+### Advanced
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `DebugLogging` | Leave off for normal play. Flip on if you hit a bug and want to share a SMAPI log, otherwise it just adds noise. | off |
+
+The menu is built a moment after the game loads so that quests registered by other mods show up in the per-quest weight list.
 
 ## See also
 

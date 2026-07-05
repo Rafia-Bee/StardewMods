@@ -23,11 +23,173 @@ A SMAPI content mod for Stardew Valley that adds a big batch of new daily-board,
 
 ## Configuration
 
-`Mods/MoreQuests/config.json` holds the per-quest content settings: the Adventurer's Guild board on/off switch, shop discount sizes, fish haul quantities, Skull Cavern max floor, secret-gift hint toggle, Leah painting frame style, a never-reward item list, and so on. The switches that turn a whole quest type on or off (Farming, Fishing, and so on), the quest consequences switch, and the rest of the engine-level stuff (how many quests per day, weights, deadlines, reward sizes) live in the [framework's config](../MoreQuestsFramework/README.md#configuration). Both pages show up in GMCM.
+`Mods/MoreQuests/config.json` holds the settings tied to the quests this mod adds: item quantities, shop discount sizes, the Adventurer's Guild board, a never-reward item list, and so on. The engine-level stuff (how many quests per day, per-quest weights, deadlines, cooldowns, reward sizes, the whole-category on/off switches, and the quest consequences switch) lives in the [framework's config](../MoreQuestsFramework/README.md#configuration) instead. Both pages show up in GMCM, and every setting in the file is in the menu too.
 
-There's an **Advanced > Debug logging** toggle at the bottom of each page. Leave it off for normal play. Flip it on if you hit a bug and want to share a SMAPI log; otherwise it just adds noise.
+The tables below list the name you'd see in `config.json`. In the menu each one has a plain-language label and a tooltip, and the settings are grouped onto category pages so the list stays easy to skim. The **Adventurer's Guild board**, **Redecorate quest**, and **Mod compatibility** settings each get their own page.
 
-The **Adventurer's Guild board** toggle (on by default) decides whether the mining and monster quests get their own board at the mine entrance, or fold back into the regular help-wanted board. When it's on, the help-wanted board only shows Bar Delivery from the mining category, and the deep dives, slime clearing, monster hunts, monster parts, and rare material requests land on the guild board instead. When it's off, every guild-tagged quest goes onto the help-wanted board so you can still reach the content. Per-quest weights still let you disable individual quests on top of this.
+### Root page
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `RewardExclusionItemIds` | Items that should never be handed to you as a quest reward, comma-separated. Starts with the Prismatic Shard and the two Qi crops so a quest can't randomly gift something that valuable. | (O)74, (O)889, (O)890 |
+| `ExcludeListAppliesToRequests` | On also keeps those items out of "bring me" and "ship me" quests, so you won't be asked for them either. | off |
+| `DebugLogging` | Leave off for normal play. Flip on if you hit a bug and want to share a SMAPI log, otherwise it just adds noise. | off |
+
+### Adventurer's Guild board
+
+The board (on by default) decides whether the mining and monster quests get their own board at the mine entrance, or fold back into the regular help-wanted board. When it's on, the help-wanted board only shows Bar Delivery from the mining category, and the deep dives, slime clearing, monster hunts, monster parts, and rare material requests land on the guild board instead. When it's off, every guild-tagged quest goes onto the help-wanted board so you can still reach the content. Per-quest weights still let you disable individual quests on top of this.
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `EnableAdventurersGuildBoard` | Turns the guild board on or off (see above). | on |
+| `AdventureBoardPoolSize` | How many quests the guild board shows at once. | 3 |
+| `AdventureBoardTileX` | Board's left-edge tile, counting across. | 19 |
+| `AdventureBoardTileY` | Board's bottom-edge tile, counting down. | 3 |
+| `AdventureBoardOffsetX` | Nudge the board a few pixels left or right to line it up with the wall. | 32 |
+| `AdventureBoardOffsetY` | Nudge the board a few pixels up or down. | 0 |
+
+### Farming page
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `CropMassiveQty` | How many crops the big harvest-shipping quest asks for. | 50 |
+| `RequestVariationCount` | How many different items a "mixed bag" quest (like Pierre's seasonal-crop spread) asks for. | 3 |
+| `SeedShopDiscountPercent` | Size of the seed-shop discount some farming quests reward. | 20 |
+| `SeedShopDiscountDurationDays` | How many days that seed-shop discount lasts. | 3 |
+| `CropCycleMinFarmingLevel` | Farming level you need before the Crop Cycle quest starts showing up. | 4 |
+
+### Fishing page
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `FishHaulMediumQty` | Fish count for a medium haul quest. | 15 |
+| `FishHaulLargeQty` | Fish count for a large haul quest. | 30 |
+| `KnowYourWatersMaxFish` | Caps how many different fish the "Know your waters" quest asks for at one spot. 0 means no limit (catch them all). Handy if fish mods give a spot too many kinds. | 0 |
+
+### Mining page
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `SkullCavernMaxLevel` | Deepest Skull Cavern floor the deep-dive quest will send you to. | 100 |
+| `MagicianDropRadius` | Size of the ritual circle for the Unseen Offering quest, in tiles. Bigger is easier to find a spot inside. | 4 |
+
+### Foraging page
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `FeedWildCrittersPerPetCredit` | How many Feed Wild Critters quests you finish before Marnie gives you a pet-adoption discount. | 3 |
+| `MarniePetDiscountPercent` | Size of that pet-adoption discount. | 25 |
+| `MarniePetCreditExpiryDays` | How many days the pet discount stays good before it expires. | 14 |
+
+### Cooking page
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `WeeklySpecialComplexMinIngredients` | How many ingredients a recipe needs before it counts as a "complex" dish for the Weekly Special quest. | 4 |
+
+### Social page
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `CheckOnFriendsCount` | How many villagers you talk to for the Check on Friends quest. | 3 |
+| `EmilyHousewarmingCount` | How many furniture pieces you place for Emily's Housewarming (on top of the rug, light, and wall decoration). | 8 |
+| `MorrisManOfMeansGoldTarget` | Joja questline: how much extra gold Morris asks you to earn. | 10000 |
+| `MorrisQualityControlMaxCropPrice` | Joja questline: a crop only counts as cheap junk if it sells for under this. Raise it if crop mods bump values. | 30 |
+| `MorrisQualityControlSellCount` | Joja questline: how many cheap junk crops you sell into Pierre's shop. | 15 |
+| `PierreStockPickleCount` | Joja questline: how many cheap pickles you stock onto Joja's shelves. | 12 |
+
+### Seasonal page
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `SpringCleaningCount` | How many weeds you clear for the Spring Cleaning quest. | 8 |
+
+### Animal page
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `AlexProteinShakesBaseQty` | Base eggs Alex asks for. | 5 |
+| `AlexProteinShakesPerChicken` | Extra eggs added per chicken you own. Set to 0 to always ask for exactly the base. | 1 |
+| `AlexProteinShakesMaxQty` | Ceiling on how many eggs Alex asks for, no matter how many chickens you have. | 30 |
+| `MarnieChickenOfferRebate` | Gold you get if the chicken-offer credit expires before you spend it at Marnie's. Matches a White Chicken's price. | 800 |
+| `MarnieChickenOfferSeedQty` | Seed count you deliver for the chicken-offer quest. | 15 |
+| `MarnieCowOfferRebate` | Gold you get if the cow-offer credit expires before you spend it. Matches a Cow's price. | 1500 |
+| `MarnieCreditExpiryDays` | How many days the chicken / cow purchase credit stays good before it falls back to the gold rebate. | 14 |
+| `MarnieEggRequestQty` | Eggs for Marnie's Egg Request (rewards the Mayonnaise Machine recipe). | 10 |
+| `MarnieMilkRequestQty` | Milk for Marnie's Milk Request (rewards the Cheese Press recipe). | 10 |
+| `RobinSiloOfferStoneQty` | Stone Robin asks for in her silo offer. | 100 |
+| `RobinSiloOfferClayQty` | Clay you can give instead of stone. | 10 |
+| `RobinSiloOfferCopperBarQty` | Copper bars you can give instead of stone. | 5 |
+| `LeahPaintingFrame` | Frame style on Leah's painting reward. Wood, Burgundy, or Night. The animal in it is always random. | Wood |
+
+### Festival page
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `SecretGiftHintEnabled` | Turns the Feast of the Winter Star secret-gift hint quest on or off. | on |
+| `ShopDiscountPercent` | Size of the shop discount some festival quests reward. | 50 |
+| `ShopDiscountDurationDays` | How many days that shop discount lasts. | 2 |
+| `GusFestivalFeastIngredientCount` | How many different ingredients Gus's Fall and Summer feast quests ask for. | 2 |
+| `FestivalBiasLuauMagnitude` | How much the governor likes your Luau soup pot after the quest. Higher is a better reaction. | 1 |
+| `FestivalBiasFairMagnitude` | Flat bonus added to your Fair grange score. Used only when the Fair reward is the grange bonus. | 15 |
+| `FairFestivalRewardKind` | How the Fair decor quest pays out: GrangeScoreBonus (a better grange score) or StarTokens (extra star tokens). | GrangeScoreBonus |
+| `FairStarTokensAmount` | Bonus star tokens the Fair quest gives when the reward is set to StarTokens. | 100 |
+| `EastScarpDecorPurpleQty` | East Scarp Spirit's Eve quest: purple-dye items to ship. | 5 |
+| `EastScarpDecorSlimeQty` | East Scarp Spirit's Eve quest: slime to ship. | 10 |
+| `EastScarpDecorStoneQty` | East Scarp Spirit's Eve quest: stone to ship. | 20 |
+| `EggFestivalHayBaleQty` | Egg Festival decor quest: Hay Bales Lewis asks you to ship. | 5 |
+
+### Redecorate quest page
+
+Needs Build Placement Unlocker installed for the quest to post at all. How often it posts is set by its weight slider on the framework's Social weights page, so it isn't repeated here.
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `RedecorateDeadlineDays` | Days you get to finish once you accept. | 7 |
+| `RedecorateCooldownDays` | Days before the same villager can ask again. | 14 |
+| `RedecorateMinObjectives` | Fewest kinds of furniture a quest asks for. | 2 |
+| `RedecorateMaxObjectives` | Most kinds of furniture a quest asks for. | 3 |
+| `RedecorateMinPerObjective` | Fewest pieces of each kind. | 1 |
+| `RedecorateMaxPerObjective` | Most pieces of each kind. | 2 |
+| `RedecorateBudgetGenerosity` | Multiplier on the furniture budget. Above 1.0 leaves you a little slack so staying under budget is doable. | 1.3 |
+| `RedecorateReferenceLampPrice` | Reference price used to size the budget for lamps. | 1000 |
+| `RedecorateReferenceRugPrice` | Reference price used to size the budget for rugs. | 1000 |
+| `RedecorateReferenceChairPrice` | Reference price used to size the budget for chairs. | 1000 |
+| `RedecorateReferenceTablePrice` | Reference price used to size the budget for tables. | 1500 |
+| `RedecorateRewardItemCount` | How many reward items the villager hands over (loved items first, then liked). | 5 |
+
+### Mod compatibility page
+
+These only matter when the matching crossover mod is installed. They're the item ids, shop ids, and villager lists this mod uses to hook into those mods' content. An empty box turns that piece off.
+
+The Trout Derby and SquidFest quests give a recipe (and, if you set a shop and dish, a shop discount on that dish) per giver.
+
+Trout Derby:
+
+| Giver | Recipe (`TroutDerbyRecipe*`) | Shop id (`TroutDerbyShop*`) | Dish id (`TroutDerbyDish*`) |
+| --- | --- | --- | --- |
+| Gus | Trout Soup | Saloon | (O)219 |
+| Pika | Highland Ice Cream | RSVPikaShop | (O)Rafseazz.RSVCP_Highland_Ice_Cream |
+| Rosa | Trout Soup | Lemurkat.EastScarp_InnShop | (O)219 |
+| Celestine | Toast and Trout | Saloon | (O)Lumisteria.MtVapius_Cooking_TroutAndToast |
+
+SquidFest:
+
+| Giver | Recipe (`SquidFestRecipe*`) | Shop id (`SquidFestShop*`) | Dish id (`SquidFestDish*`) |
+| --- | --- | --- | --- |
+| Gus | Fried Calamari | Saloon | (O)227 |
+| Pika | Ridgeside Shaketini | RSVPikaShop | (O)Rafseazz.RSVCP_Ridgeside_Shaketini |
+| Rosa | Fried Calamari | Lemurkat.EastScarp_InnShop | (O)228 |
+| Celestine | Squid Ink Ravioli | Saloon | (empty) |
+
+Festival villager lists and RSV:
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| `EastScarpFestivalNpcs` | East Scarp villagers who get a friendship bump from the East Scarp Spirit's Eve quest, comma-separated. | Sonny, Rosa, Eli, Andy, Bonnie, Lily |
+| `RidgesideFestivalNpcs` | Ridgeside villagers who get a friendship bump from the Ridgeside Gathering quest. | Pika, Lenny, Mr. Aguar, Pam, Blair, Kimpoi, Hugo |
+| `RsvTubOFlowersId` | Item id for the Tub o' Flowers the RSV Gathering quest asks you to ship. | (BC)108 |
+| `RsvTubOFlowersRecipeName` | Crafting recipe granted on quest-accept if you don't already know it. | Tub o' Flowers |
 
 ## Quests
 
