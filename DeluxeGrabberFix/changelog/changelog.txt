@@ -1,6 +1,7 @@
-To be released
+v1.23.0
 - Added a "Grab on Placement" option. When it's on, a grabber you just placed collects nearby items right away instead of waiting for the next sweep, so you can keep the mod on Hourly or Daily without switching to Instant. Off by default.
 - Improved config logging in the SMAPI log. When you save your settings, the log now shows just what changed instead of the whole config, which makes bug reports easier to sort out.
+- Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/DeluxeGrabberFix-v1.22.1...DeluxeGrabberFix-v1.23.0]i18n changes here[/url] (look at DeluxeGrabberFix/i18n/default.json).
 
 v1.22.1
 - Fixed crops piling up on the ground in big greenhouses when the auto-grabber chest was full. Once the chest fills up, the leftover grown crops now stay in the ground and get picked up later instead of being dumped on the floor.
