@@ -9,6 +9,7 @@ To be released
 - New slider for the Adventurer's Guild board: pick how many quests it shows at once, right on the board's own settings page. If you'd set this over in More Quests Framework's settings before, it'll reset, so set it again here.
 - A few quests handed out a set amount of friendship or gold no matter what your reward settings said. They follow the settings in More Quests Framework now. Three of them (the Fish Smoker request, the preserves/keg/dehydrator shipping request, and Pierre's sabotage quest) used to give two hearts of friendship and now give one, to match.
 - New settings for a handful of quests: a cap on how many eggs Alex's protein shake quest can ask for, the three numbers behind the Joja questline (gold to earn, junk crops to sell, pickles to stock), and how many items the East Scarp and Egg Festival decor quests ask you to ship.
+- Lots of quest settings that you could only change by hand-editing the config file now show up in the in-game settings menu. That covers the Redecorate quest, Marnie's animal offers, Robin's silo, Alex's protein shakes, spring cleaning, the crop cycle quest, and a new Mod compatibility page for the festival crossover mods.
 
 2.5.0
 - Needs More Quests Framework 2.7.0 or newer.

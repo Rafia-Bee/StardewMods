@@ -14,9 +14,12 @@ internal static class GmcmRegistration
     private const string PageForaging = "foraging";
     private const string PageCooking = "cooking";
     private const string PageSocial = "social";
+    private const string PageSeasonal = "seasonal";
     private const string PageAnimal = "animal";
     private const string PageFestival = "festival";
     private const string PageAdventureBoard = "adventureBoard";
+    private const string PageRedecorate = "redecorate";
+    private const string PageCompat = "compat";
 
     public static void Register(IModHelper helper, IManifest manifest)
     {
@@ -50,9 +53,14 @@ internal static class GmcmRegistration
         api.AddPageLink(manifest, PageForaging, () => t.Get("config.page.foraging"), () => t.Get("config.page.foraging.tooltip"));
         api.AddPageLink(manifest, PageCooking, () => t.Get("config.page.cooking"), () => t.Get("config.page.cooking.tooltip"));
         api.AddPageLink(manifest, PageSocial, () => t.Get("config.page.social"), () => t.Get("config.page.social.tooltip"));
+        api.AddPageLink(manifest, PageSeasonal, () => t.Get("config.page.seasonal"), () => t.Get("config.page.seasonal.tooltip"));
         api.AddPageLink(manifest, PageAnimal, () => t.Get("config.page.animal"), () => t.Get("config.page.animal.tooltip"));
         api.AddPageLink(manifest, PageFestival, () => t.Get("config.page.festival"), () => t.Get("config.page.festival.tooltip"));
+
+        api.AddSectionTitle(manifest, () => t.Get("config.section.otherPages"));
         api.AddPageLink(manifest, PageAdventureBoard, () => t.Get("config.page.adventureBoard"), () => t.Get("config.page.adventureBoard.tooltip"));
+        api.AddPageLink(manifest, PageRedecorate, () => t.Get("config.page.redecorate"), () => t.Get("config.page.redecorate.tooltip"));
+        api.AddPageLink(manifest, PageCompat, () => t.Get("config.page.compat"), () => t.Get("config.page.compat.tooltip"));
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.itemExclusions"));
         AddText(api, manifest, t, "RewardExclusionItemIds",
@@ -79,6 +87,8 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "RequestVariationCount", () => ModEntry.Config.RequestVariationCount, v => ModEntry.Config.RequestVariationCount = v, 2, 5);
         AddInt(api, manifest, t, "SeedShopDiscountPercent", () => ModEntry.Config.SeedShopDiscountPercent, v => ModEntry.Config.SeedShopDiscountPercent = v, 0, 100);
         AddInt(api, manifest, t, "SeedShopDiscountDurationDays", () => ModEntry.Config.SeedShopDiscountDurationDays, v => ModEntry.Config.SeedShopDiscountDurationDays = v, 1, 14);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.cropCycle"));
+        AddInt(api, manifest, t, "CropCycleMinFarmingLevel", () => ModEntry.Config.CropCycleMinFarmingLevel, v => ModEntry.Config.CropCycleMinFarmingLevel = v, 0, 10);
 
         // ----- Fishing -----
         api.AddPage(manifest, PageFishing, () => t.Get("config.page.fishing"));
@@ -118,14 +128,28 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "MorrisQualityControlSellCount", () => ModEntry.Config.MorrisQualityControlSellCount, v => ModEntry.Config.MorrisQualityControlSellCount = v, 1, 100);
         AddInt(api, manifest, t, "PierreStockPickleCount", () => ModEntry.Config.PierreStockPickleCount, v => ModEntry.Config.PierreStockPickleCount = v, 1, 50);
 
-        // Seasonal has no per-quest settings of its own yet (its only knob was the category
-        // toggle, now on the framework page), so there's no Seasonal subpage for now. It
-        // comes back once it has real settings to show, like the spring cleaning count.
+        // ----- Seasonal -----
+        api.AddPage(manifest, PageSeasonal, () => t.Get("config.page.seasonal"));
+        api.AddSectionTitle(manifest, () => t.Get("config.section.springCleaning"));
+        AddInt(api, manifest, t, "SpringCleaningCount", () => ModEntry.Config.SpringCleaningCount, v => ModEntry.Config.SpringCleaningCount = v, 1, 30);
 
         // ----- Animal -----
         api.AddPage(manifest, PageAnimal, () => t.Get("config.page.animal"));
         api.AddSectionTitle(manifest, () => t.Get("config.section.alexProtein"));
+        AddInt(api, manifest, t, "AlexProteinShakesBaseQty", () => ModEntry.Config.AlexProteinShakesBaseQty, v => ModEntry.Config.AlexProteinShakesBaseQty = v, 1, 50);
+        AddInt(api, manifest, t, "AlexProteinShakesPerChicken", () => ModEntry.Config.AlexProteinShakesPerChicken, v => ModEntry.Config.AlexProteinShakesPerChicken = v, 0, 10);
         AddInt(api, manifest, t, "AlexProteinShakesMaxQty", () => ModEntry.Config.AlexProteinShakesMaxQty, v => ModEntry.Config.AlexProteinShakesMaxQty = v, 1, 100);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.marnieOffers"));
+        AddInt(api, manifest, t, "MarnieChickenOfferRebate", () => ModEntry.Config.MarnieChickenOfferRebate, v => ModEntry.Config.MarnieChickenOfferRebate = v, 0, 5000);
+        AddInt(api, manifest, t, "MarnieChickenOfferSeedQty", () => ModEntry.Config.MarnieChickenOfferSeedQty, v => ModEntry.Config.MarnieChickenOfferSeedQty = v, 1, 100);
+        AddInt(api, manifest, t, "MarnieCowOfferRebate", () => ModEntry.Config.MarnieCowOfferRebate, v => ModEntry.Config.MarnieCowOfferRebate = v, 0, 10000);
+        AddInt(api, manifest, t, "MarnieCreditExpiryDays", () => ModEntry.Config.MarnieCreditExpiryDays, v => ModEntry.Config.MarnieCreditExpiryDays = v, 1, 56);
+        AddInt(api, manifest, t, "MarnieEggRequestQty", () => ModEntry.Config.MarnieEggRequestQty, v => ModEntry.Config.MarnieEggRequestQty = v, 1, 50);
+        AddInt(api, manifest, t, "MarnieMilkRequestQty", () => ModEntry.Config.MarnieMilkRequestQty, v => ModEntry.Config.MarnieMilkRequestQty = v, 1, 50);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.robinSilo"));
+        AddInt(api, manifest, t, "RobinSiloOfferStoneQty", () => ModEntry.Config.RobinSiloOfferStoneQty, v => ModEntry.Config.RobinSiloOfferStoneQty = v, 1, 500);
+        AddInt(api, manifest, t, "RobinSiloOfferClayQty", () => ModEntry.Config.RobinSiloOfferClayQty, v => ModEntry.Config.RobinSiloOfferClayQty = v, 1, 100);
+        AddInt(api, manifest, t, "RobinSiloOfferCopperBarQty", () => ModEntry.Config.RobinSiloOfferCopperBarQty, v => ModEntry.Config.RobinSiloOfferCopperBarQty = v, 1, 50);
         api.AddSectionTitle(manifest, () => t.Get("config.section.leahPainting"));
         api.AddTextOption(manifest,
             getValue: () => ModEntry.Config.LeahPaintingFrame,
@@ -177,6 +201,67 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "AdventureBoardOffsetX", () => ModEntry.Config.AdventureBoardOffsetX, v => ModEntry.Config.AdventureBoardOffsetX = v, -64, 64);
         AddInt(api, manifest, t, "AdventureBoardOffsetY", () => ModEntry.Config.AdventureBoardOffsetY, v => ModEntry.Config.AdventureBoardOffsetY = v, -64, 64);
 
+        // ----- Redecorate quest -----
+        // How often the quest posts lives on the framework's Social weights page (it's a
+        // Social daily-board quest, so the framework already draws a weight slider for it).
+        // Adding a second weight slider here would be two knobs fighting over the same value,
+        // so this page carries everything else about the quest instead.
+        api.AddPage(manifest, PageRedecorate, () => t.Get("config.page.redecorate"));
+        api.AddSectionTitle(manifest, () => t.Get("config.section.redecoratePosting"));
+        AddInt(api, manifest, t, "RedecorateDeadlineDays", () => ModEntry.Config.RedecorateDeadlineDays, v => ModEntry.Config.RedecorateDeadlineDays = v, 1, 28);
+        AddInt(api, manifest, t, "RedecorateCooldownDays", () => ModEntry.Config.RedecorateCooldownDays, v => ModEntry.Config.RedecorateCooldownDays = v, 1, 56);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.redecorateObjectives"));
+        AddInt(api, manifest, t, "RedecorateMinObjectives", () => ModEntry.Config.RedecorateMinObjectives, v => ModEntry.Config.RedecorateMinObjectives = v, 1, 5);
+        AddInt(api, manifest, t, "RedecorateMaxObjectives", () => ModEntry.Config.RedecorateMaxObjectives, v => ModEntry.Config.RedecorateMaxObjectives = v, 1, 5);
+        AddInt(api, manifest, t, "RedecorateMinPerObjective", () => ModEntry.Config.RedecorateMinPerObjective, v => ModEntry.Config.RedecorateMinPerObjective = v, 1, 5);
+        AddInt(api, manifest, t, "RedecorateMaxPerObjective", () => ModEntry.Config.RedecorateMaxPerObjective, v => ModEntry.Config.RedecorateMaxPerObjective = v, 1, 5);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.redecorateBudget"));
+        AddDouble(api, manifest, t, "RedecorateBudgetGenerosity", () => ModEntry.Config.RedecorateBudgetGenerosity, v => ModEntry.Config.RedecorateBudgetGenerosity = v, 0.5f, 3f);
+        AddInt(api, manifest, t, "RedecorateReferenceLampPrice", () => ModEntry.Config.RedecorateReferenceLampPrice, v => ModEntry.Config.RedecorateReferenceLampPrice = v, 100, 5000);
+        AddInt(api, manifest, t, "RedecorateReferenceRugPrice", () => ModEntry.Config.RedecorateReferenceRugPrice, v => ModEntry.Config.RedecorateReferenceRugPrice = v, 100, 5000);
+        AddInt(api, manifest, t, "RedecorateReferenceChairPrice", () => ModEntry.Config.RedecorateReferenceChairPrice, v => ModEntry.Config.RedecorateReferenceChairPrice = v, 100, 5000);
+        AddInt(api, manifest, t, "RedecorateReferenceTablePrice", () => ModEntry.Config.RedecorateReferenceTablePrice, v => ModEntry.Config.RedecorateReferenceTablePrice = v, 100, 5000);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.redecorateReward"));
+        AddInt(api, manifest, t, "RedecorateRewardItemCount", () => ModEntry.Config.RedecorateRewardItemCount, v => ModEntry.Config.RedecorateRewardItemCount = v, 1, 10);
+
+        // ----- Mod compatibility -----
+        // Text ids and NPC lists for the optional content mods this can work with. Only matter
+        // when the matching mod is installed. Kept off the Festival / Fishing pages so those
+        // stay short.
+        api.AddPage(manifest, PageCompat, () => t.Get("config.page.compat"));
+        api.AddSectionTitle(manifest, () => t.Get("config.section.troutDerby"));
+        AddText(api, manifest, t, "TroutDerbyRecipeGus", () => ModEntry.Config.TroutDerbyRecipeGus, v => ModEntry.Config.TroutDerbyRecipeGus = v);
+        AddText(api, manifest, t, "TroutDerbyRecipePika", () => ModEntry.Config.TroutDerbyRecipePika, v => ModEntry.Config.TroutDerbyRecipePika = v);
+        AddText(api, manifest, t, "TroutDerbyRecipeCelestine", () => ModEntry.Config.TroutDerbyRecipeCelestine, v => ModEntry.Config.TroutDerbyRecipeCelestine = v);
+        AddText(api, manifest, t, "TroutDerbyRecipeRosa", () => ModEntry.Config.TroutDerbyRecipeRosa, v => ModEntry.Config.TroutDerbyRecipeRosa = v);
+        AddText(api, manifest, t, "TroutDerbyShopGus", () => ModEntry.Config.TroutDerbyShopGus, v => ModEntry.Config.TroutDerbyShopGus = v);
+        AddText(api, manifest, t, "TroutDerbyShopPika", () => ModEntry.Config.TroutDerbyShopPika, v => ModEntry.Config.TroutDerbyShopPika = v);
+        AddText(api, manifest, t, "TroutDerbyShopRosa", () => ModEntry.Config.TroutDerbyShopRosa, v => ModEntry.Config.TroutDerbyShopRosa = v);
+        AddText(api, manifest, t, "TroutDerbyShopCelestine", () => ModEntry.Config.TroutDerbyShopCelestine, v => ModEntry.Config.TroutDerbyShopCelestine = v);
+        AddText(api, manifest, t, "TroutDerbyDishGus", () => ModEntry.Config.TroutDerbyDishGus, v => ModEntry.Config.TroutDerbyDishGus = v);
+        AddText(api, manifest, t, "TroutDerbyDishPika", () => ModEntry.Config.TroutDerbyDishPika, v => ModEntry.Config.TroutDerbyDishPika = v);
+        AddText(api, manifest, t, "TroutDerbyDishRosa", () => ModEntry.Config.TroutDerbyDishRosa, v => ModEntry.Config.TroutDerbyDishRosa = v);
+        AddText(api, manifest, t, "TroutDerbyDishCelestine", () => ModEntry.Config.TroutDerbyDishCelestine, v => ModEntry.Config.TroutDerbyDishCelestine = v);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.squidFest"));
+        AddText(api, manifest, t, "SquidFestRecipeGus", () => ModEntry.Config.SquidFestRecipeGus, v => ModEntry.Config.SquidFestRecipeGus = v);
+        AddText(api, manifest, t, "SquidFestRecipePika", () => ModEntry.Config.SquidFestRecipePika, v => ModEntry.Config.SquidFestRecipePika = v);
+        AddText(api, manifest, t, "SquidFestRecipeCelestine", () => ModEntry.Config.SquidFestRecipeCelestine, v => ModEntry.Config.SquidFestRecipeCelestine = v);
+        AddText(api, manifest, t, "SquidFestRecipeRosa", () => ModEntry.Config.SquidFestRecipeRosa, v => ModEntry.Config.SquidFestRecipeRosa = v);
+        AddText(api, manifest, t, "SquidFestShopGus", () => ModEntry.Config.SquidFestShopGus, v => ModEntry.Config.SquidFestShopGus = v);
+        AddText(api, manifest, t, "SquidFestShopPika", () => ModEntry.Config.SquidFestShopPika, v => ModEntry.Config.SquidFestShopPika = v);
+        AddText(api, manifest, t, "SquidFestShopRosa", () => ModEntry.Config.SquidFestShopRosa, v => ModEntry.Config.SquidFestShopRosa = v);
+        AddText(api, manifest, t, "SquidFestShopCelestine", () => ModEntry.Config.SquidFestShopCelestine, v => ModEntry.Config.SquidFestShopCelestine = v);
+        AddText(api, manifest, t, "SquidFestDishGus", () => ModEntry.Config.SquidFestDishGus, v => ModEntry.Config.SquidFestDishGus = v);
+        AddText(api, manifest, t, "SquidFestDishPika", () => ModEntry.Config.SquidFestDishPika, v => ModEntry.Config.SquidFestDishPika = v);
+        AddText(api, manifest, t, "SquidFestDishRosa", () => ModEntry.Config.SquidFestDishRosa, v => ModEntry.Config.SquidFestDishRosa = v);
+        AddText(api, manifest, t, "SquidFestDishCelestine", () => ModEntry.Config.SquidFestDishCelestine, v => ModEntry.Config.SquidFestDishCelestine = v);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.festivalNpcLists"));
+        AddText(api, manifest, t, "EastScarpFestivalNpcs", () => ModEntry.Config.EastScarpFestivalNpcs, v => ModEntry.Config.EastScarpFestivalNpcs = v);
+        AddText(api, manifest, t, "RidgesideFestivalNpcs", () => ModEntry.Config.RidgesideFestivalNpcs, v => ModEntry.Config.RidgesideFestivalNpcs = v);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.rsvTubOFlowers"));
+        AddText(api, manifest, t, "RsvTubOFlowersId", () => ModEntry.Config.RsvTubOFlowersId, v => ModEntry.Config.RsvTubOFlowersId = v);
+        AddText(api, manifest, t, "RsvTubOFlowersRecipeName", () => ModEntry.Config.RsvTubOFlowersRecipeName, v => ModEntry.Config.RsvTubOFlowersRecipeName = v);
+
         // Per-quest weight overrides live on the framework's GMCM page (it owns the registry view).
     }
 
@@ -195,5 +280,16 @@ internal static class GmcmRegistration
             () => t.Get($"config.{key}"),
             () => t.Get($"config.{key}.tooltip"),
             min: min, max: max);
+    }
+
+    // GMCM's number option only takes int or float, so this runs a double config value
+    // through a float slider.
+    private static void AddDouble(IGenericModConfigMenuApi api, IManifest manifest, ITranslationHelper t,
+        string key, System.Func<double> get, System.Action<double> set, float min, float max, float interval = 0.05f)
+    {
+        api.AddNumberOption(manifest, () => (float)get(), v => set(v),
+            () => t.Get($"config.{key}"),
+            () => t.Get($"config.{key}.tooltip"),
+            min: min, max: max, interval: interval);
     }
 }

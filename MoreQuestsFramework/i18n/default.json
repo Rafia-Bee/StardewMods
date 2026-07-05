@@ -201,6 +201,8 @@
     "config.DeadlineLong.tooltip": "Extended deadline for advanced or multi-step quests.",
     "config.DeadlineExtended": "Extended deadline",
     "config.DeadlineExtended.tooltip": "Long deadline for rare-trigger quests where the item is hard to obtain.",
+    "config.DeadlineNone": "No deadline (sentinel)",
+    "config.DeadlineNone.tooltip": "Used by quests that shouldn't really expire. It's just a very large day count that stands in for 'no deadline', so you'll almost never want to change it. Default 999.",
 
     "config.section.cooldowns": "Cooldown buckets (in-game days)",
     "config.CooldownShortDays": "Short cooldown",
