@@ -435,7 +435,10 @@ public sealed class ModEntry : Mod
         _notices.Freeze();
         CustomBoardRouting.ValidateRouting(_registry, _boards, Monitor);
 
-        GmcmRegistration.Register(Helper, ModManifest, Config, _registry, _boards, onReset: () => Config = new MoreQuestsFrameworkConfig());
+        // Reset mutates the existing Config in place instead of swapping the static. QuestContext
+        // and ConsequenceEngine capture this same object at save load, so replacing it would leave
+        // them on the old values until the next save load.
+        GmcmRegistration.Register(Helper, ModManifest, Config, _registry, _boards, onReset: () => Config.ResetToDefaults());
     }
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)

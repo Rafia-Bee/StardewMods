@@ -58,13 +58,13 @@ internal static class GmcmRegistration
             v => ModEntry.Config.QuestsPerDay = v,
             () => t.Get("config.questsPerDay"),
             () => t.Get("config.questsPerDay.tooltip"),
-            min: 1, max: 20);
+            min: MoreQuestsFrameworkConfig.QuestsPerDayMin, max: MoreQuestsFrameworkConfig.QuestsPerDayMax);
         api.AddNumberOption(manifest,
-            () => System.Math.Clamp(ModEntry.Config.SpecialOrdersBoardPages, 1, 5),
-            v => ModEntry.Config.SpecialOrdersBoardPages = System.Math.Clamp(v, 1, 5),
+            () => System.Math.Clamp(ModEntry.Config.SpecialOrdersBoardPages, MoreQuestsFrameworkConfig.SpecialOrdersBoardPagesMin, MoreQuestsFrameworkConfig.SpecialOrdersBoardPagesMax),
+            v => ModEntry.Config.SpecialOrdersBoardPages = System.Math.Clamp(v, MoreQuestsFrameworkConfig.SpecialOrdersBoardPagesMin, MoreQuestsFrameworkConfig.SpecialOrdersBoardPagesMax),
             () => t.Get("config.specialOrdersBoardPages"),
             () => t.Get("config.specialOrdersBoardPages.tooltip"),
-            min: 1, max: 5);
+            min: MoreQuestsFrameworkConfig.SpecialOrdersBoardPagesMin, max: MoreQuestsFrameworkConfig.SpecialOrdersBoardPagesMax);
         AddInt(api, manifest, t, "BoardNoteSpacing",
             () => ModEntry.Config.BoardNoteSpacing, v => ModEntry.Config.BoardNoteSpacing = v, -20, 60);
         AddInt(api, manifest, t, "BoardMaxNoteSize",

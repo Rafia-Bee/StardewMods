@@ -1,9 +1,23 @@
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace MoreQuestsFramework.Config;
 
+// Framework-owned config. Everything here is generic enough that a second mod building on the
+// framework would want it too: quests per day, board layout, giver eligibility, the gold and
+// friendship reward tiers, reward multipliers, deadline and cooldown tiers, difficulty scaling,
+// per-category toggles, per-quest weights, the consequence engine knobs, and the anti-repetition
+// windows. Anything tied to one specific quest or board that a mod adds lives in that mod's own
+// config instead (see MoreQuests/ModConfig.cs). Every prop here is exposed in GMCM.
 public sealed class MoreQuestsFrameworkConfig
 {
+    // Shared min/max bounds so the pipeline clamp, the patch clamp, and the GMCM slider all read
+    // the same range from one place instead of repeating the literals.
+    public const int QuestsPerDayMin = 1;
+    public const int QuestsPerDayMax = 20;
+    public const int SpecialOrdersBoardPagesMin = 1;
+    public const int SpecialOrdersBoardPagesMax = 5;
+
     public int QuestsPerDay { get; set; } = 3;
 
     // 1 = vanilla (two random orders). 2-5 paginates every eligible order in
@@ -133,4 +147,19 @@ public sealed class MoreQuestsFrameworkConfig
     // When on, internal diagnostic logs are written at Trace level. Off in release builds
     // by default so the SMAPI log stays quiet; flip on if you're chasing a bug.
     public bool DebugLogging { get; set; } = false;
+
+    // Copies every default value back onto this instance in place, rather than the caller
+    // swapping in a brand new object. ModEntry hands this one Config object to QuestContext and
+    // ConsequenceEngine at save load and they hold onto it, so a GMCM reset has to mutate it or
+    // those two keep showing the pre-reset values until the next save load. Reflection means a
+    // newly added prop can't be silently left out of the reset.
+    internal void ResetToDefaults()
+    {
+        var defaults = new MoreQuestsFrameworkConfig();
+        foreach (PropertyInfo prop in typeof(MoreQuestsFrameworkConfig).GetProperties())
+        {
+            if (prop.CanRead && prop.CanWrite)
+                prop.SetValue(this, prop.GetValue(defaults));
+        }
+    }
 }

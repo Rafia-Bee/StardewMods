@@ -10,6 +10,7 @@ To be released
 - The simple built-in board quests (deliver, fish, collect, slay) had a fixed two-day deadline. They follow the short-deadline setting now, so if you change it, they change with it.
 - New "Repeat prevention" settings: choose how many recently-used items and quest givers the board holds back before it will use them again.
 - The "no deadline" value now shows in the Deadlines settings. It's just a stand-in for quests that shouldn't run out, so you'll almost never need to touch it.
+- Fixed resetting the settings to default sometimes not taking hold until you reloaded your save. It applies right away now.
 
 2.8.0-beta.2
 - Players can now set how many quests a custom board shows at once, when the board's author allows it. Look under "Custom boards" in the mod settings.

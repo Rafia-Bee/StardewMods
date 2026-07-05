@@ -1,7 +1,11 @@
 namespace MoreQuests;
 
-/// Per-quest content settings. Engine-wide tunables (questsPerDay, friendship/gold bases,
-/// deadlines, reward multipliers, vanilla weights) live in the framework's own config.
+// MoreQuests-owned config. Everything here is tied to a specific quest or board this mod adds:
+// item quantities, item ids, NPC lists, mod-compat strings, and the Adventurer's Guild board's
+// placement and pin count. Generic knobs a second mod building on the framework would also want
+// (quests per day, reward tiers, deadlines, cooldowns, reward multipliers, per-category toggles,
+// per-quest weights, difficulty scaling) live on the framework instead
+// (see MoreQuestsFramework/Config/MoreQuestsFrameworkConfig.cs). Every prop here is exposed in GMCM.
 public sealed class ModConfig
 {
     // ----- Master toggles -----

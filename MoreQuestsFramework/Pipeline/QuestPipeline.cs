@@ -54,7 +54,7 @@ internal sealed class QuestPipeline
         var sw = Stopwatch.StartNew();
         _activePostings.Clear();
 
-        int target = System.Math.Clamp(_ctx.Config.QuestsPerDay, 1, 20);
+        int target = System.Math.Clamp(_ctx.Config.QuestsPerDay, MoreQuestsFrameworkConfig.QuestsPerDayMin, MoreQuestsFrameworkConfig.QuestsPerDayMax);
         var weights = _ctx.Config.QuestWeights;
 
         var pool = new List<(IQuestDefinition Def, int Weight)>();

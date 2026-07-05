@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MoreQuestsFramework.Config;
 using MoreQuestsFramework.Pipeline;
 using StardewModdingAPI;
 using StardewValley;
@@ -72,7 +73,7 @@ internal static class SpecialOrdersBoardPatches
     {
         try
         {
-            int maxPages = Math.Clamp(ModEntry.Config.SpecialOrdersBoardPages, 1, 5);
+            int maxPages = Math.Clamp(ModEntry.Config.SpecialOrdersBoardPages, MoreQuestsFrameworkConfig.SpecialOrdersBoardPagesMin, MoreQuestsFrameworkConfig.SpecialOrdersBoardPagesMax);
             if (maxPages <= 1)
                 return;
 
