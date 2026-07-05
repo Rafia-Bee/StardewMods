@@ -9,7 +9,7 @@ internal sealed class VanillaFishing : IQuestDefinition
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 10;
     public int MaxPerDay => 1;
-    public int CooldownDays => 2;
+    public int CooldownDays => ModEntry.Config.CooldownShortDays;
 
     public bool IsAvailable(QuestContext ctx) => true;
 

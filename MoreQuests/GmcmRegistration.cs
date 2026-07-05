@@ -38,10 +38,6 @@ internal static class GmcmRegistration
             {
                 helper.WriteConfig(ModEntry.Config);
                 ModEntry.ApplyAdventureBoardConfig();
-                // Force the framework's CooldownTiers asset to re-run our IAssetRequested.Edit,
-                // which pulls the latest Short/Medium/Long values straight from ModConfig.
-                // Without this, mid-session tier edits won't apply until a save reload.
-                helper.GameContent.InvalidateCache("Mods/RafiaBee.MoreQuestsFramework/CooldownTiers");
             }
         );
 
@@ -64,11 +60,6 @@ internal static class GmcmRegistration
         api.AddPageLink(manifest, PageAnimal, () => t.Get("config.page.animal"), () => t.Get("config.page.animal.tooltip"));
         api.AddPageLink(manifest, PageFestival, () => t.Get("config.page.festival"), () => t.Get("config.page.festival.tooltip"));
         api.AddPageLink(manifest, PageAdventureBoard, () => t.Get("config.page.adventureBoard"), () => t.Get("config.page.adventureBoard.tooltip"));
-
-        api.AddSectionTitle(manifest, () => t.Get("config.section.cooldowns"));
-        AddInt(api, manifest, t, "QuestCooldownShortDays", () => ModEntry.Config.QuestCooldownShortDays, v => ModEntry.Config.QuestCooldownShortDays = v, 1, 28);
-        AddInt(api, manifest, t, "QuestCooldownMediumDays", () => ModEntry.Config.QuestCooldownMediumDays, v => ModEntry.Config.QuestCooldownMediumDays = v, 1, 28);
-        AddInt(api, manifest, t, "QuestCooldownLongDays", () => ModEntry.Config.QuestCooldownLongDays, v => ModEntry.Config.QuestCooldownLongDays = v, 1, 28);
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.itemExclusions"));
         AddText(api, manifest, t, "RewardExclusionItemIds",

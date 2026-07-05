@@ -39,16 +39,6 @@ public sealed class ModConfig
     public int SeedShopDiscountPercent { get; set; } = 20;
     public int SeedShopDiscountDurationDays { get; set; } = 3;
 
-    // ----- Shared cooldown buckets -----
-    /// Days a "short" bucket quest waits before re-rolling. Quests opt in via
-    /// `Trigger.CooldownTier: "Short"` in quests.json. One-shot / building / mail-periodic
-    /// triggers don't use the bucket system and keep their per-quest CooldownDays.
-    public int QuestCooldownShortDays { get; set; } = 2;
-    /// Days a "medium" bucket quest waits before re-rolling.
-    public int QuestCooldownMediumDays { get; set; } = 7;
-    /// Days a "long" bucket quest waits before re-rolling.
-    public int QuestCooldownLongDays { get; set; } = 14;
-
     // ----- Quantity tunables -----
     public int FishHaulMediumQty { get; set; } = 15;
     public int FishHaulLargeQty { get; set; } = 30;

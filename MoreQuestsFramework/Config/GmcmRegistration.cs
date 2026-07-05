@@ -25,7 +25,13 @@ internal static class GmcmRegistration
         api.Register(
             mod: manifest,
             reset: () => { onReset(); },
-            save: () => helper.WriteConfig(ModEntry.Config)
+            save: () =>
+            {
+                helper.WriteConfig(ModEntry.Config);
+                // Re-seed the CooldownTiers asset from the saved values so mid-session tier
+                // edits apply on the next cooldown read (the lookup re-reads the asset live).
+                helper.GameContent.InvalidateCache(ModEntry.CooldownTiersAssetName);
+            }
         );
 
         // Group by the ID prefix before the first '.'.
@@ -160,6 +166,11 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "DeadlineMedium", () => ModEntry.Config.DeadlineMedium, v => ModEntry.Config.DeadlineMedium = v, 1, 28);
         AddInt(api, manifest, t, "DeadlineLong", () => ModEntry.Config.DeadlineLong, v => ModEntry.Config.DeadlineLong = v, 1, 28);
         AddInt(api, manifest, t, "DeadlineExtended", () => ModEntry.Config.DeadlineExtended, v => ModEntry.Config.DeadlineExtended = v, 1, 56);
+
+        api.AddSectionTitle(manifest, () => t.Get("config.section.cooldowns"));
+        AddInt(api, manifest, t, "CooldownShortDays", () => ModEntry.Config.CooldownShortDays, v => ModEntry.Config.CooldownShortDays = v, 1, 28);
+        AddInt(api, manifest, t, "CooldownMediumDays", () => ModEntry.Config.CooldownMediumDays, v => ModEntry.Config.CooldownMediumDays = v, 1, 28);
+        AddInt(api, manifest, t, "CooldownLongDays", () => ModEntry.Config.CooldownLongDays, v => ModEntry.Config.CooldownLongDays = v, 1, 28);
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.consequences"));
         AddInt(api, manifest, t, "ConsequenceGraceDays", () => ModEntry.Config.ConsequenceGraceDays, v => ModEntry.Config.ConsequenceGraceDays = v, 1, 60);

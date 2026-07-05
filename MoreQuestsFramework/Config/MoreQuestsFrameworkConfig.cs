@@ -104,6 +104,14 @@ public sealed class MoreQuestsFrameworkConfig
     public int DeadlineExtended { get; set; } = 14;
     public int DeadlineNone { get; set; } = 999;
 
+    // Shared cooldown buckets, in in-game days. A quest opts into a bucket with
+    // Trigger.CooldownTier ("Short" / "Medium" / "Long") in quests.json and waits that many
+    // days before it can re-roll onto the board. These seed the CooldownTiers asset, which CP
+    // packs can still edit to add their own tier names on top.
+    public int CooldownShortDays { get; set; } = 2;
+    public int CooldownMediumDays { get; set; } = 7;
+    public int CooldownLongDays { get; set; } = 14;
+
     // When on, internal diagnostic logs are written at Trace level. Off in release builds
     // by default so the SMAPI log stays quiet; flip on if you're chasing a bug.
     public bool DebugLogging { get; set; } = false;

@@ -363,7 +363,15 @@ public sealed class ModEntry : Mod
 
         if (e.NameWithoutLocale.IsEquivalentTo(CooldownTiersAssetName))
         {
-            e.LoadFrom(() => new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase), AssetLoadPriority.Low);
+            // Seed the built-in tiers from config. Stays editable so CP packs can add their
+            // own tier names on top. Reads the static Config so a GMCM reset picks up the new
+            // instance on the next invalidate.
+            e.LoadFrom(() => new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Short"] = Config.CooldownShortDays,
+                ["Medium"] = Config.CooldownMediumDays,
+                ["Long"] = Config.CooldownLongDays,
+            }, AssetLoadPriority.Low);
             return;
         }
 

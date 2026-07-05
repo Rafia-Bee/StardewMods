@@ -190,6 +190,14 @@
     "config.DeadlineExtended": "Extended deadline",
     "config.DeadlineExtended.tooltip": "Long deadline for rare-trigger quests where the item is hard to obtain.",
 
+    "config.section.cooldowns": "Cooldown buckets (in-game days)",
+    "config.CooldownShortDays": "Short cooldown",
+    "config.CooldownShortDays.tooltip": "Days a quest in the 'short' bucket waits before it can show up again. Quests opt into a bucket in their setup; this is the timer for the short one.",
+    "config.CooldownMediumDays": "Medium cooldown",
+    "config.CooldownMediumDays.tooltip": "Days a quest in the 'medium' bucket waits before it can show up again.",
+    "config.CooldownLongDays": "Long cooldown",
+    "config.CooldownLongDays.tooltip": "Days a quest in the 'long' bucket waits before it can show up again.",
+
     "config.section.consequences": "Consequences",
     "config.ConsequenceGraceDays": "Consequence grace days",
     "config.ConsequenceGraceDays.tooltip": "How many days past a queued reaction's fire day before it silently expires. Lower = NPCs forget faster; higher = grudges last longer. Default 7.",

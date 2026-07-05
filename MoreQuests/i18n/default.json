@@ -78,14 +78,6 @@
     "config.SeedShopDiscountDurationDays": "Seed shop discount days",
     "config.SeedShopDiscountDurationDays.tooltip": "How many days the seed shop discount stays active.",
 
-    "config.section.cooldowns": "Quest cooldown buckets",
-    "config.QuestCooldownShortDays": "Short cooldown (days)",
-    "config.QuestCooldownShortDays.tooltip": "In-game days a quest in the 'short' cooldown bucket waits before re-rolling. Used by recurring board / weather / special-order quests that opt into the bucket.",
-    "config.QuestCooldownMediumDays": "Medium cooldown (days)",
-    "config.QuestCooldownMediumDays.tooltip": "In-game days a quest in the 'medium' cooldown bucket waits before re-rolling.",
-    "config.QuestCooldownLongDays": "Long cooldown (days)",
-    "config.QuestCooldownLongDays.tooltip": "In-game days a quest in the 'long' cooldown bucket waits before re-rolling.",
-
     "config.section.itemExclusions": "Item exclusion list",
     "config.RewardExclusionItemIds": "Never-reward items",
     "config.RewardExclusionItemIds.tooltip": "Comma-separated item ids that quests will never hand you as a reward. Use the qualified id, like (O)74 for a Prismatic Shard. The default keeps a few very valuable items out of reward pools. This always applies.",

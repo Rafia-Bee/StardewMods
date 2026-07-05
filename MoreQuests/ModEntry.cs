@@ -86,7 +86,6 @@ public sealed class ModEntry : Mod
 
     private const string MqfQuestsAsset = "Mods/RafiaBee.MoreQuestsFramework/Quests";
     private const string MqfBoardsAsset = "Mods/RafiaBee.MoreQuestsFramework/Boards";
-    private const string MqfCooldownTiersAsset = "Mods/RafiaBee.MoreQuestsFramework/CooldownTiers";
 
     private QuestPackDocument? _cachedQuests;
     private BoardPackDocument? _cachedBoards;
@@ -322,18 +321,6 @@ public sealed class ModEntry : Mod
                     def.OwnerUniqueId = ModManifest.UniqueID;
                     dict[def.Name] = def;
                 }
-            }, AssetEditPriority.Early);
-            return;
-        }
-
-        if (e.NameWithoutLocale.IsEquivalentTo(MqfCooldownTiersAsset))
-        {
-            e.Edit(asset =>
-            {
-                var dict = asset.AsDictionary<string, int>().Data;
-                dict["Short"] = Config.QuestCooldownShortDays;
-                dict["Medium"] = Config.QuestCooldownMediumDays;
-                dict["Long"] = Config.QuestCooldownLongDays;
             }, AssetEditPriority.Early);
             return;
         }

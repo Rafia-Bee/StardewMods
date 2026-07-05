@@ -10,7 +10,7 @@ internal sealed class VanillaSlayMonster : IQuestDefinition
     public PostingKind Kind => PostingKind.DailyBoard;
     public int DefaultWeight => 12;
     public int MaxPerDay => 1;
-    public int CooldownDays => 2;
+    public int CooldownDays => ModEntry.Config.CooldownShortDays;
 
     public bool IsAvailable(QuestContext ctx) =>
         ConditionEvaluator.MineShaftReached(1) && ConditionEvaluator.MinDaysPlayed(5);
