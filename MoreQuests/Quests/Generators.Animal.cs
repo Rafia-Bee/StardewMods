@@ -32,16 +32,13 @@ internal static partial class Generators
         if (animals < HayMinAnimals)
             return null;
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            qty = Game1.player.FarmingLevel * HayPerFarmingLevel + animals * HayPerAnimalScaled;
-        }
-        else
-        {
-            int upper = Math.Max(HayMinQty + 1, animals * HayPerAnimalFlat + 1);
-            qty = Game1.random.Next(HayMinQty, upper);
-        }
+        int qty = Difficulty.Scaled(ctx,
+            () => Game1.player.FarmingLevel * HayPerFarmingLevel + animals * HayPerAnimalScaled,
+            () =>
+            {
+                int upper = Math.Max(HayMinQty + 1, animals * HayPerAnimalFlat + 1);
+                return Game1.random.Next(HayMinQty, upper);
+            });
         qty = Math.Max(HayMinQty, qty);
 
         var posting = new QuestPosting

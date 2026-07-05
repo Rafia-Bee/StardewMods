@@ -79,17 +79,14 @@ internal static partial class Generators
             return null;
         string giver = candidates[Game1.random.Next(candidates.Count)];
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int farming = Game1.player.FarmingLevel;
-            int upper = Math.Max(5, farming * 3);
-            qty = Game1.random.Next(5, upper + 1);
-        }
-        else
-        {
-            qty = Game1.random.Next(2, 11);
-        }
+        int qty = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int farming = Game1.player.FarmingLevel;
+                int upper = Math.Max(5, farming * 3);
+                return Game1.random.Next(5, upper + 1);
+            },
+            () => Game1.random.Next(2, 11));
 
         var posting = new QuestPosting
         {
@@ -123,11 +120,10 @@ internal static partial class Generators
             return null;
 
         var crop = crops[Game1.random.Next(crops.Count)];
-        int skill = Difficulty.GetSkillLevel(QuestCategory.Farming);
 
-        int qty = ctx.Config.DifficultyScaling
-            ? skill + Game1.random.Next(2, 5)
-            : 10;
+        int qty = Difficulty.Scaled(ctx, QuestCategory.Farming,
+            skill => skill + Game1.random.Next(2, 5),
+            () => 10);
 
         int gold = (int)(crop.SellPrice * qty * ctx.Config.RewardMultiplierBelowSell);
 
@@ -174,9 +170,9 @@ internal static partial class Generators
             pool.RemoveAt(idx);
         }
 
-        int qtyPer = ctx.Config.DifficultyScaling
-            ? Math.Max(6, 4 + 2 * Game1.player.FarmingLevel)
-            : 12;
+        int qtyPer = Difficulty.Scaled(ctx,
+            () => Math.Max(6, 4 + 2 * Game1.player.FarmingLevel),
+            () => 12);
 
         const string giver = "Pierre";
 
@@ -356,10 +352,9 @@ internal static partial class Generators
             return null;
         var crop = crops[Game1.random.Next(crops.Count)];
 
-        int farmingLevel = Difficulty.GetSkillLevel(QuestCategory.Farming);
-        int qty = ctx.Config.DifficultyScaling
-            ? farmingLevel * 3 + Game1.random.Next(1, 11)
-            : 10 + Game1.random.Next(1, 11);
+        int qty = Difficulty.Scaled(ctx, QuestCategory.Farming,
+            farmingLevel => farmingLevel * 3 + Game1.random.Next(1, 11),
+            () => 10 + Game1.random.Next(1, 11));
         int gold = ctx.Config.GoldAdvancedBase;
 
         var rewards = new List<RewardSpec> { new MoneyReward(gold) };
@@ -450,10 +445,9 @@ internal static partial class Generators
 
         var pick = pool[Game1.random.Next(pool.Count)];
 
-        int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
-        int qty = ctx.Config.DifficultyScaling
-            ? Math.Max(1, (int)(foragingLevel * 1.5))
-            : 5;
+        int qty = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foragingLevel => Math.Max(1, (int)(foragingLevel * 1.5)),
+            () => 5);
         int teaCount = qty * 2;
 
         return new QuestPosting
@@ -524,17 +518,14 @@ internal static partial class Generators
         if (seed == null)
             return null;
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int farming = Game1.player.FarmingLevel;
-            int upper = Math.Max(4, farming * 2);
-            qty = 5 + Game1.random.Next(3, upper + 1);
-        }
-        else
-        {
-            qty = Game1.random.Next(1, 11);
-        }
+        int qty = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int farming = Game1.player.FarmingLevel;
+                int upper = Math.Max(4, farming * 2);
+                return 5 + Game1.random.Next(3, upper + 1);
+            },
+            () => Game1.random.Next(1, 11));
 
         int basePrice = Math.Max(crop.SellPrice, 20);
         int gold = (int)(basePrice * qty * ctx.Config.RewardMultiplierBelowSell);

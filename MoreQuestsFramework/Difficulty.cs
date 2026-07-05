@@ -45,18 +45,6 @@ public static class Difficulty
     // and max-heart math don't each inline the magic number.
     public const int FriendshipPointsPerHeart = 250;
 
-    // Not called yet. Reserved for the difficulty-scaling rework, which will use this to turn
-    // a skill level into a tier instead of the inline per-quest math. Kept until then (pairs
-    // with GoldBase below).
-    public static DifficultyTier TierForSkill(int skillLevel) =>
-        skillLevel switch
-        {
-            >= 10 => DifficultyTier.Expert,
-            >= 7 => DifficultyTier.Advanced,
-            >= 4 => DifficultyTier.Intermediate,
-            _ => DifficultyTier.Beginner
-        };
-
     // Reads the skill a category scales against from its registered definition, then
     // resolves that to a level. Unknown category or unresolved skill scales 0.
     public static int GetSkillLevel(string category)
@@ -83,17 +71,16 @@ public static class Difficulty
         }
     }
 
-    // Not called yet. Pairs with TierForSkill for the difficulty-scaling rework: maps a tier
-    // to its gold base from config. Kept until that lands.
-    public static int GoldBase(DifficultyTier tier, MoreQuestsFrameworkConfig cfg) =>
-        tier switch
-        {
-            DifficultyTier.Beginner => cfg.GoldBeginnerBase,
-            DifficultyTier.Intermediate => cfg.GoldIntermediateBase,
-            DifficultyTier.Advanced => cfg.GoldAdvancedBase,
-            DifficultyTier.Expert => cfg.GoldExpertBase,
-            _ => cfg.GoldBasicBase
-        };
+    // One place decides whether a quantity scales with skill or stays a flat value. Callers pass
+    // both branches: 'scaled' runs when difficulty scaling is on, 'flat' when it's off. The
+    // per-quest numbers stay in the lambdas, only the on/off switch lives here.
+    public static int Scaled(QuestContext ctx, Func<int> scaled, Func<int> flat)
+        => ctx.Config.DifficultyScaling ? scaled() : flat();
+
+    // Same switch, but hands the scaled branch the skill level the category scales against, so
+    // the common "scale by this category's skill" case doesn't repeat the GetSkillLevel call.
+    public static int Scaled(QuestContext ctx, string category, Func<int, int> scaled, Func<int> flat)
+        => ctx.Config.DifficultyScaling ? scaled(GetSkillLevel(category)) : flat();
 
     public static int Deadline(DeadlineKind kind, MoreQuestsFrameworkConfig cfg) =>
         kind switch

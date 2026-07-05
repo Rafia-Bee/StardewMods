@@ -25,16 +25,13 @@ internal static partial class Generators
     /// so no `TargetMessage` is set.
     private static QuestPosting? SubmarineFuel(QuestContext ctx)
     {
-        int batteryQty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int upper = Math.Max(1, Game1.player.MiningLevel / 2);
-            batteryQty = 1 + Game1.random.Next(1, upper + 1);
-        }
-        else
-        {
-            batteryQty = 2;
-        }
+        int batteryQty = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int upper = Math.Max(1, Game1.player.MiningLevel / 2);
+                return 1 + Game1.random.Next(1, upper + 1);
+            },
+            () => 2);
         int coalQty = 5 * batteryQty;
 
         var quest = new AdventureQuest();
@@ -81,9 +78,9 @@ internal static partial class Generators
     /// deadline hardcoded to Fall 28 (5 active days), auto-fails Winter 1 morning.
     private static QuestPosting? WizardsRitualMaterials(QuestContext ctx)
     {
-        int countPer = ctx.Config.DifficultyScaling
-            ? Math.Max(1, 2 * Game1.player.CombatLevel)
-            : 3;
+        int countPer = Difficulty.Scaled(ctx,
+            () => Math.Max(1, 2 * Game1.player.CombatLevel),
+            () => 3);
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -137,9 +134,9 @@ internal static partial class Generators
     /// count. Dinosaur Egg is excluded (Edibility = -300).
     private static QuestPosting? HolidayCookies(QuestContext ctx)
     {
-        int countPer = ctx.Config.DifficultyScaling
-            ? Math.Max(3, 6 * Game1.player.FarmingLevel)
-            : 3;
+        int countPer = Difficulty.Scaled(ctx,
+            () => Math.Max(3, 6 * Game1.player.FarmingLevel),
+            () => 3);
 
         var eggIds = new List<string> { "$edible-egg" };
 
@@ -217,20 +214,20 @@ internal static partial class Generators
         if (sampleDish == null)
             return null;
 
-        int cropQty;
-        int forageQty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int cropUpper = Math.Max(3, 2 * Game1.player.FarmingLevel);
-            cropQty = Game1.random.Next(3, cropUpper + 1);
-            int forageUpper = Math.Max(2, 2 * Game1.player.ForagingLevel);
-            forageQty = Game1.random.Next(2, forageUpper + 1);
-        }
-        else
-        {
-            cropQty = 5;
-            forageQty = 5;
-        }
+        int cropQty = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int cropUpper = Math.Max(3, 2 * Game1.player.FarmingLevel);
+                return Game1.random.Next(3, cropUpper + 1);
+            },
+            () => 5);
+        int forageQty = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int forageUpper = Math.Max(2, 2 * Game1.player.ForagingLevel);
+                return Game1.random.Next(2, forageUpper + 1);
+            },
+            () => 5);
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -300,9 +297,9 @@ internal static partial class Generators
             pool.RemoveAt(idx);
         }
 
-        int qty = ctx.Config.DifficultyScaling
-            ? Math.Max(3, 2 * Game1.player.FarmingLevel)
-            : 5;
+        int qty = Difficulty.Scaled(ctx,
+            () => Math.Max(3, 2 * Game1.player.FarmingLevel),
+            () => 5);
 
         var steps = new List<AdventureStepState>(picks.Count);
         for (int i = 0; i < picks.Count; i++)
@@ -475,25 +472,21 @@ internal static partial class Generators
         if (sampleDish == null)
             return null;
 
-        bool scaling = ctx.Config.DifficultyScaling;
         var qtyByIndex = new int[picks.Count];
         var steps = new List<AdventureStepState>(picks.Count);
         for (int i = 0; i < picks.Count; i++)
         {
             bool isCrop = cropQualifiedIds.Contains(picks[i].QualifiedItemId);
-            int qty;
-            if (scaling)
-            {
-                int upper = isCrop
-                    ? Math.Max(3, 2 * Game1.player.FarmingLevel)
-                    : Math.Max(2, 2 * Game1.player.ForagingLevel);
-                int lower = isCrop ? 3 : 2;
-                qty = Game1.random.Next(lower, upper + 1);
-            }
-            else
-            {
-                qty = 5;
-            }
+            int qty = Difficulty.Scaled(ctx,
+                () =>
+                {
+                    int upper = isCrop
+                        ? Math.Max(3, 2 * Game1.player.FarmingLevel)
+                        : Math.Max(2, 2 * Game1.player.ForagingLevel);
+                    int lower = isCrop ? 3 : 2;
+                    return Game1.random.Next(lower, upper + 1);
+                },
+                () => 5);
             qtyByIndex[i] = qty;
             steps.Add(new AdventureStepState
             {
@@ -607,25 +600,21 @@ internal static partial class Generators
         if (sampleDish == null)
             return null;
 
-        bool scaling = ctx.Config.DifficultyScaling;
         var qtyByIndex = new int[picks.Count];
         var steps = new List<AdventureStepState>(picks.Count);
         for (int i = 0; i < picks.Count; i++)
         {
             bool isCrop = cropQualifiedIds.Contains(picks[i].QualifiedItemId);
-            int qty;
-            if (scaling)
-            {
-                int upper = isCrop
-                    ? Math.Max(3, 2 * Game1.player.FarmingLevel)
-                    : Math.Max(2, 2 * Game1.player.ForagingLevel);
-                int lower = isCrop ? 3 : 2;
-                qty = Game1.random.Next(lower, upper + 1);
-            }
-            else
-            {
-                qty = 5;
-            }
+            int qty = Difficulty.Scaled(ctx,
+                () =>
+                {
+                    int upper = isCrop
+                        ? Math.Max(3, 2 * Game1.player.FarmingLevel)
+                        : Math.Max(2, 2 * Game1.player.ForagingLevel);
+                    int lower = isCrop ? 3 : 2;
+                    return Game1.random.Next(lower, upper + 1);
+                },
+                () => 5);
             qtyByIndex[i] = qty;
             steps.Add(new AdventureStepState
             {
@@ -733,21 +722,12 @@ internal static partial class Generators
         if (seeds.Count == 0)
             return null;
 
-        int varietyCount;
-        int qtyPer;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int farming = Difficulty.GetSkillLevel(QuestCategory.Farming);
-            int varietyUpper = Math.Max(1, farming / 2);
-            varietyCount = Game1.random.Next(1, varietyUpper + 1);
-            int qtyUpper = Math.Max(3, farming * 4);
-            qtyPer = Game1.random.Next(3, qtyUpper + 1);
-        }
-        else
-        {
-            varietyCount = Game1.random.Next(1, 4);
-            qtyPer = Game1.random.Next(3, 12);
-        }
+        int varietyCount = Difficulty.Scaled(ctx, QuestCategory.Farming,
+            farming => Game1.random.Next(1, Math.Max(1, farming / 2) + 1),
+            () => Game1.random.Next(1, 4));
+        int qtyPer = Difficulty.Scaled(ctx, QuestCategory.Farming,
+            farming => Game1.random.Next(3, Math.Max(3, farming * 4) + 1),
+            () => Game1.random.Next(3, 12));
 
         varietyCount = Math.Min(varietyCount, seeds.Count);
         var picked = seeds.OrderBy(_ => Game1.random.Next()).Take(varietyCount).ToList();
@@ -877,16 +857,13 @@ internal static partial class Generators
 
         const string giver = "Lewis";
 
-        int qtyPerItem;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int upper = Math.Max(1, (int)(Game1.player.FarmingLevel * 1.5));
-            qtyPerItem = 2 + Game1.random.Next(upper);
-        }
-        else
-        {
-            qtyPerItem = Game1.random.Next(2, 6);
-        }
+        int qtyPerItem = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int upper = Math.Max(1, (int)(Game1.player.FarmingLevel * 1.5));
+                return 2 + Game1.random.Next(upper);
+            },
+            () => Game1.random.Next(2, 6));
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -1008,19 +985,12 @@ internal static partial class Generators
     private static QuestPosting? MoonlightJelliesFestivalDecor(QuestContext ctx)
     {
         const string giver = "Lewis";
-        int torchCount;
-        int woodCount;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int foraging = Difficulty.GetSkillLevel(QuestCategory.Foraging);
-            torchCount = Game1.random.Next(5, Math.Max(5, (int)(foraging * 1.5)) + 1);
-            woodCount = Game1.random.Next(10, Math.Max(10, foraging * 5) + 1);
-        }
-        else
-        {
-            torchCount = 5;
-            woodCount = 10;
-        }
+        int torchCount = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foraging => Game1.random.Next(5, Math.Max(5, (int)(foraging * 1.5)) + 1),
+            () => 5);
+        int woodCount = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foraging => Game1.random.Next(10, Math.Max(10, foraging * 5) + 1),
+            () => 10);
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -1178,23 +1148,15 @@ internal static partial class Generators
     {
         const string giver = "Lewis";
 
-        int woodCount;
-        int signCount;
-        int flowerCount;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int farming = Difficulty.GetSkillLevel(QuestCategory.Farming);
-            int foraging = Difficulty.GetSkillLevel(QuestCategory.Foraging);
-            flowerCount = Game1.random.Next(5, Math.Max(5, (int)(farming * 1.5)) + 1);
-            woodCount = Game1.random.Next(10, Math.Max(10, foraging * 3) + 1);
-            signCount = Game1.random.Next(3, 11);
-        }
-        else
-        {
-            woodCount = 10;
-            signCount = 3;
-            flowerCount = 5;
-        }
+        int flowerCount = Difficulty.Scaled(ctx, QuestCategory.Farming,
+            farming => Game1.random.Next(5, Math.Max(5, (int)(farming * 1.5)) + 1),
+            () => 5);
+        int woodCount = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foraging => Game1.random.Next(10, Math.Max(10, foraging * 3) + 1),
+            () => 10);
+        int signCount = Difficulty.Scaled(ctx,
+            () => Game1.random.Next(3, 11),
+            () => 3);
 
         var flowerItems = GetFallFlowerItemIds(ctx);
 
@@ -1289,22 +1251,15 @@ internal static partial class Generators
     {
         const string giver = "Lewis";
 
-        int fiberCount;
-        int hardwoodCount;
-        int lampCount;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int foraging = Difficulty.GetSkillLevel(QuestCategory.Foraging);
-            fiberCount = Game1.random.Next(10, Math.Max(10, foraging * 5) + 1);
-            hardwoodCount = Game1.random.Next(3, Math.Max(3, (int)(foraging * 1.5)) + 1);
-            lampCount = Game1.random.Next(3, 16);
-        }
-        else
-        {
-            fiberCount = 10;
-            hardwoodCount = 5;
-            lampCount = 4;
-        }
+        int fiberCount = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foraging => Game1.random.Next(10, Math.Max(10, foraging * 5) + 1),
+            () => 10);
+        int hardwoodCount = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foraging => Game1.random.Next(3, Math.Max(3, (int)(foraging * 1.5)) + 1),
+            () => 5);
+        int lampCount = Difficulty.Scaled(ctx,
+            () => Game1.random.Next(3, 16),
+            () => 4);
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -1372,22 +1327,15 @@ internal static partial class Generators
     {
         const string giver = "Wizard";
 
-        int pumpkinSeedCount;
-        int clothCount;
-        int torchCount;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int farming = Difficulty.GetSkillLevel(QuestCategory.Farming);
-            pumpkinSeedCount = Game1.random.Next(5, Math.Max(5, (int)(farming * 1.5)) + 1);
-            clothCount = Game1.random.Next(3, 11);
-            torchCount = Game1.random.Next(5, 21);
-        }
-        else
-        {
-            pumpkinSeedCount = 5;
-            clothCount = 3;
-            torchCount = 5;
-        }
+        int pumpkinSeedCount = Difficulty.Scaled(ctx, QuestCategory.Farming,
+            farming => Game1.random.Next(5, Math.Max(5, (int)(farming * 1.5)) + 1),
+            () => 5);
+        int clothCount = Difficulty.Scaled(ctx,
+            () => Game1.random.Next(3, 11),
+            () => 3);
+        int torchCount = Difficulty.Scaled(ctx,
+            () => Game1.random.Next(5, 21),
+            () => 5);
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -1516,23 +1464,15 @@ internal static partial class Generators
             return null;
         const string giver = "Lenny";
 
-        int tubCount;
-        int woodCount;
-        int tableCount;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int farming = Difficulty.GetSkillLevel(QuestCategory.Farming);
-            int foraging = Difficulty.GetSkillLevel(QuestCategory.Foraging);
-            tubCount = 2 + Game1.random.Next(1, Math.Max(1, farming / 2) + 1);
-            woodCount = Game1.random.Next(20, Math.Max(20, foraging * 5) + 1);
-            tableCount = 1 + Game1.random.Next(1, 6);
-        }
-        else
-        {
-            tubCount = 2;
-            woodCount = 20;
-            tableCount = 2;
-        }
+        int tubCount = Difficulty.Scaled(ctx, QuestCategory.Farming,
+            farming => 2 + Game1.random.Next(1, Math.Max(1, farming / 2) + 1),
+            () => 2);
+        int woodCount = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foraging => Game1.random.Next(20, Math.Max(20, foraging * 5) + 1),
+            () => 20);
+        int tableCount = Difficulty.Scaled(ctx,
+            () => 1 + Game1.random.Next(1, 6),
+            () => 2);
 
         string tubId = string.IsNullOrWhiteSpace(ModEntry.Config.RsvTubOFlowersId)
             ? "(BC)108"
@@ -1606,11 +1546,9 @@ internal static partial class Generators
 
         const string rainbowTroutId = "(O)138";
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-            qty = Math.Max(1, 2 + Game1.player.FishingLevel / 2);
-        else
-            qty = Game1.random.Next(1, 5);
+        int qty = Difficulty.Scaled(ctx,
+            () => Math.Max(1, 2 + Game1.player.FishingLevel / 2),
+            () => Game1.random.Next(1, 5));
 
         string recipeName = ResolveTroutDerbyRecipe(giver);
         var rewards = new List<RewardSpec>
@@ -1668,11 +1606,9 @@ internal static partial class Generators
 
         const string squidId = "(O)151";
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-            qty = Math.Max(1, 2 + Game1.player.FishingLevel / 2);
-        else
-            qty = Game1.random.Next(1, 5);
+        int qty = Difficulty.Scaled(ctx,
+            () => Math.Max(1, 2 + Game1.player.FishingLevel / 2),
+            () => Game1.random.Next(1, 5));
 
         string recipeName = ResolveSquidFestRecipe(giver);
         var rewards = new List<RewardSpec>
@@ -1747,17 +1683,13 @@ internal static partial class Generators
         int colorCount = Math.Min(Game1.random.Next(2, 6), palette.Length);
         var pickedColors = palette.OrderBy(_ => Game1.random.Next()).Take(colorCount).ToList();
 
-        int countPer;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int farming = Difficulty.GetSkillLevel(QuestCategory.Farming);
-            int upper = Math.Max(3, farming * 2);
-            countPer = Game1.random.Next(3, upper + 1);
-        }
-        else
-        {
-            countPer = 3;
-        }
+        int countPer = Difficulty.Scaled(ctx, QuestCategory.Farming,
+            farming =>
+            {
+                int upper = Math.Max(3, farming * 2);
+                return Game1.random.Next(3, upper + 1);
+            },
+            () => 3);
 
         var steps = new List<AdventureStepState>();
         foreach (var color in pickedColors)

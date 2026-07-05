@@ -28,17 +28,14 @@ internal static partial class Generators
             return null;
         string giver = candidates[Game1.random.Next(candidates.Count)];
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int fishing = Game1.player.FishingLevel;
-            int upper = Math.Max(5, fishing * 2);
-            qty = Game1.random.Next(5, upper + 1);
-        }
-        else
-        {
-            qty = Game1.random.Next(2, 7);
-        }
+        int qty = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int fishing = Game1.player.FishingLevel;
+                int upper = Math.Max(5, fishing * 2);
+                return Game1.random.Next(5, upper + 1);
+            },
+            () => Game1.random.Next(2, 7));
 
         return new QuestPosting
         {
@@ -119,10 +116,9 @@ internal static partial class Generators
         if (target == null || targetLocation == null)
             return null;
 
-        int qtyMax = scaling
-            ? Math.Max(2, (int)Math.Floor(Game1.player.FishingLevel * 1.5))
-            : 5;
-        int qty = Game1.random.Next(2, qtyMax + 1);
+        int qty = Difficulty.Scaled(ctx,
+            () => Game1.random.Next(2, Math.Max(2, (int)Math.Floor(Game1.player.FishingLevel * 1.5)) + 1),
+            () => Game1.random.Next(2, 5 + 1));
         string giver = givers[Game1.random.Next(givers.Count)];
         int gold = (int)(target.SellPrice * qty * ctx.Config.RewardMultiplierAboveSell);
 
@@ -321,9 +317,9 @@ internal static partial class Generators
             return null;
         var target = fish[Game1.random.Next(fish.Count)];
 
-        int qty = ctx.Config.DifficultyScaling
-            ? Math.Max(1, Game1.player.FishingLevel) * Game1.random.Next(1, 5)
-            : Game1.random.Next(2, 8);
+        int qty = Difficulty.Scaled(ctx,
+            () => Math.Max(1, Game1.player.FishingLevel) * Game1.random.Next(1, 5),
+            () => Game1.random.Next(2, 8));
         qty = Math.Max(1, qty);
 
         int gold = (int)(target.SellPrice * qty * ctx.Config.RewardMultiplierBelowSell);
@@ -657,9 +653,9 @@ internal static partial class Generators
 
         var target = fish[Game1.random.Next(fish.Count)];
 
-        int qty = ctx.Config.DifficultyScaling
-            ? Math.Max(1, Game1.player.FishingLevel + Game1.random.Next(1, 5))
-            : Game1.random.Next(1, 5);
+        int qty = Difficulty.Scaled(ctx,
+            () => Math.Max(1, Game1.player.FishingLevel + Game1.random.Next(1, 5)),
+            () => Game1.random.Next(1, 5));
         int gold = (int)(target.SellPrice * qty * ctx.Config.RewardMultiplierBelowSell);
 
         var rewards = new List<RewardSpec> { new MoneyReward(gold) };

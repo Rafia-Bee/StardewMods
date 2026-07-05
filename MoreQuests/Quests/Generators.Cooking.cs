@@ -368,17 +368,18 @@ internal static partial class Generators
     /// Ingredient count rules. Off: 1..4. On + Cooking Skill mod: 2..max(2, cookingLevel/2).
     /// On + no Cooking Skill: 2..5.
     private static int ResolveWeeklySpecialCommonIngredientCount(QuestContext ctx)
-    {
-        if (!ctx.Config.DifficultyScaling)
-            return Game1.random.Next(1, 5);
-        if (ModCompat.HasCookingSkill(ctx.Helper.ModRegistry))
-        {
-            int level = ModCompat.GetCookingLevel(ctx.Helper.ModRegistry);
-            int upper = Math.Max(2, level / 2);
-            return Game1.random.Next(2, upper + 1);
-        }
-        return Game1.random.Next(2, 6);
-    }
+        => Difficulty.Scaled(ctx,
+            () =>
+            {
+                if (ModCompat.HasCookingSkill(ctx.Helper.ModRegistry))
+                {
+                    int level = ModCompat.GetCookingLevel(ctx.Helper.ModRegistry);
+                    int upper = Math.Max(2, level / 2);
+                    return Game1.random.Next(2, upper + 1);
+                }
+                return Game1.random.Next(2, 6);
+            },
+            () => Game1.random.Next(1, 5));
 
     /// Scores recipes by ingredient overlap with the picks. Highest score wins, random tiebreak.
     /// Returns null when no recipe scores 1+, so the caller can drop the dish flavour text.
@@ -652,16 +653,17 @@ internal static partial class Generators
     /// Recipe count. Scaling on + Cooking Skill: cookingLevel*3/2. Scaling on without
     /// Cooking Skill: 3..14. Scaling off: 2..6. Floored to 1 for brand-new saves.
     private static int ResolveGrandFeastRecipeCount(QuestContext ctx)
-    {
-        if (!ctx.Config.DifficultyScaling)
-            return Game1.random.Next(2, 7);
-        if (ModCompat.HasCookingSkill(ctx.Helper.ModRegistry))
-        {
-            int level = ModCompat.GetCookingLevel(ctx.Helper.ModRegistry);
-            return Math.Max(1, level * 3 / 2);
-        }
-        return Game1.random.Next(3, 15);
-    }
+        => Difficulty.Scaled(ctx,
+            () =>
+            {
+                if (ModCompat.HasCookingSkill(ctx.Helper.ModRegistry))
+                {
+                    int level = ModCompat.GetCookingLevel(ctx.Helper.ModRegistry);
+                    return Math.Max(1, level * 3 / 2);
+                }
+                return Game1.random.Next(3, 15);
+            },
+            () => Game1.random.Next(2, 7));
 
     private static List<RewardSpec> DedupeFriendshipRewards(List<RewardSpec> rewards)
     {
@@ -802,12 +804,13 @@ internal static partial class Generators
     /// Dish count. Scaling on: 2 + cookingLevel/2 (Cooking Skill) or 2 + farmingLevel/2.
     /// Scaling off: 1..3.
     private static int ResolveDinnerPartyDishCount(QuestContext ctx, bool cookingSkillLoaded, int cookingLevel)
-    {
-        if (!ctx.Config.DifficultyScaling)
-            return Game1.random.Next(1, 4);
-        int level = cookingSkillLoaded ? cookingLevel : Game1.player.FarmingLevel;
-        return Math.Max(1, 2 + level / 2);
-    }
+        => Difficulty.Scaled(ctx,
+            () =>
+            {
+                int level = cookingSkillLoaded ? cookingLevel : Game1.player.FarmingLevel;
+                return Math.Max(1, 2 + level / 2);
+            },
+            () => Game1.random.Next(1, 4));
 
     /// Per-dish count. With Cooking Skill: cookingLevel/2 (min 1). Otherwise random 1..3.
     private static int ResolveDinnerPartyPerDishCount(bool cookingSkillLoaded, int cookingLevel)

@@ -22,16 +22,13 @@ internal static partial class Generators
         if (giver == null)
             return null;
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int upper = Math.Max(6, Game1.player.CombatLevel * 3 + 1);
-            qty = Game1.random.Next(5, upper);
-        }
-        else
-        {
-            qty = Game1.random.Next(3, 13);
-        }
+        int qty = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int upper = Math.Max(6, Game1.player.CombatLevel * 3 + 1);
+                return Game1.random.Next(5, upper);
+            },
+            () => Game1.random.Next(3, 13));
         int gold = ctx.Config.GoldBeginnerBase * Math.Max(1, qty / 2);
 
         var quest = new AnySlimeQuest
@@ -111,16 +108,13 @@ internal static partial class Generators
         if (pick == null)
             return null;
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int upper = Math.Max(3, (int)Math.Floor(Game1.player.MiningLevel * 1.5));
-            qty = Game1.random.Next(2, upper + 1);
-        }
-        else
-        {
-            qty = Game1.random.Next(2, 7);
-        }
+        int qty = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int upper = Math.Max(3, (int)Math.Floor(Game1.player.MiningLevel * 1.5));
+                return Game1.random.Next(2, upper + 1);
+            },
+            () => Game1.random.Next(2, 7));
 
         int gold = ctx.Config.GoldIntermediateBase;
         string geodeId = BarDeliveryGeodeRewards[Game1.random.Next(BarDeliveryGeodeRewards.Length)];
@@ -178,16 +172,13 @@ internal static partial class Generators
         int maxFloor = Math.Max(11, ModEntry.Config.SkullCavernMaxLevel + 1);
         int targetFloor = Game1.random.Next(10, maxFloor);
 
-        int haul;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int upper = Math.Max(16, Game1.player.MiningLevel * 5 + 1);
-            haul = Game1.random.Next(15, upper);
-        }
-        else
-        {
-            haul = Game1.random.Next(5, 26);
-        }
+        int haul = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int upper = Math.Max(16, Game1.player.MiningLevel * 5 + 1);
+                return Game1.random.Next(15, upper);
+            },
+            () => Game1.random.Next(5, 26));
 
         int bars = Math.Max(2, haul / 5);
 
@@ -249,22 +240,19 @@ internal static partial class Generators
         if (deepest < 5)
             return null;
 
-        int maxLevel = ctx.Config.DifficultyScaling
-            ? 120
-            : deepest;
+        int maxLevel = Difficulty.Scaled(ctx,
+            () => 120,
+            () => deepest);
         int low = Math.Min(10, maxLevel);
         int targetFloor = Game1.random.Next(low, maxLevel + 1);
 
-        int haul;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int upper = 5 + Game1.player.MiningLevel * 3 + 1;
-            haul = Game1.random.Next(5, Math.Max(upper, 6));
-        }
-        else
-        {
-            haul = Game1.random.Next(5, 17);
-        }
+        int haul = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int upper = 5 + Game1.player.MiningLevel * 3 + 1;
+                return Game1.random.Next(5, Math.Max(upper, 6));
+            },
+            () => Game1.random.Next(5, 17));
 
         (string barId, int barCount) = targetFloor switch
         {
@@ -351,16 +339,13 @@ internal static partial class Generators
         if (resolved == null)
             return null;
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int upper = Math.Max(6, Game1.player.CombatLevel * 2 + 1);
-            qty = Game1.random.Next(5, upper);
-        }
-        else
-        {
-            qty = Game1.random.Next(3, 12);
-        }
+        int qty = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int upper = Math.Max(6, Game1.player.CombatLevel * 2 + 1);
+                return Game1.random.Next(5, upper);
+            },
+            () => Game1.random.Next(3, 12));
 
         var rewardOpt = PickGemOrArtifactReward(ctx);
         if (rewardOpt == null)
@@ -486,13 +471,15 @@ internal static partial class Generators
         if (giver == null)
             return null;
 
-        int qty = ctx.Config.DifficultyScaling
-            ? Math.Max(8, 6 + 2 * Game1.player.CombatLevel)
-            : Game1.random.Next(3, 13);
+        int qty = Difficulty.Scaled(ctx,
+            () => Math.Max(8, 6 + 2 * Game1.player.CombatLevel),
+            () => Game1.random.Next(3, 13));
 
         int gold = ctx.Config.GoldIntermediateBase;
 
-        int targetMagnitude = ctx.Config.DifficultyScaling ? Game1.random.Next(1, 4) : 1;
+        int targetMagnitude = Difficulty.Scaled(ctx,
+            () => Game1.random.Next(1, 4),
+            () => 1);
 
         var fw = ModEntry.Framework;
         var pool = fw?.GetCombatFoodPool() ?? Array.Empty<string>();
@@ -574,16 +561,13 @@ internal static partial class Generators
         if (gem == null)
             return null;
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int upper = 2 + Game1.player.MiningLevel / 2;
-            qty = Game1.random.Next(1, upper + 1);
-        }
-        else
-        {
-            qty = Game1.random.Next(1, 5);
-        }
+        int qty = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int upper = 2 + Game1.player.MiningLevel / 2;
+                return Game1.random.Next(1, upper + 1);
+            },
+            () => Game1.random.Next(1, 5));
 
         int gold = ctx.Config.GoldAdvancedBase;
         var rewards = new List<RewardSpec>
@@ -670,19 +654,16 @@ internal static partial class Generators
 
         bool modLoaded = ctx.Helper.ModRegistry.IsLoaded(ModCompat.ArchaeologySkill);
 
-        int x;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int skill = modLoaded
-                ? ModCompat.GetArchaeologyLevel(ctx.Helper.ModRegistry)
-                : Game1.player.MiningLevel;
-            int upper = Math.Max(1, skill / 2);
-            x = 1 + Game1.random.Next(1, upper + 1);
-        }
-        else
-        {
-            x = Game1.random.Next(1, 4);
-        }
+        int x = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int skill = modLoaded
+                    ? ModCompat.GetArchaeologyLevel(ctx.Helper.ModRegistry)
+                    : Game1.player.MiningLevel;
+                int upper = Math.Max(1, skill / 2);
+                return 1 + Game1.random.Next(1, upper + 1);
+            },
+            () => Game1.random.Next(1, 4));
 
         int y = 2 * x;
 

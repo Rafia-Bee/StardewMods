@@ -25,17 +25,13 @@ internal static partial class Generators
             return null;
 
         var pick = pool[Game1.random.Next(pool.Count)];
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
-            int upper = Math.Max(3, (int)(foragingLevel * 1.5));
-            qty = Game1.random.Next(3, upper + 1);
-        }
-        else
-        {
-            qty = Game1.random.Next(2, 8);
-        }
+        int qty = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foragingLevel =>
+            {
+                int upper = Math.Max(3, (int)(foragingLevel * 1.5));
+                return Game1.random.Next(3, upper + 1);
+            },
+            () => Game1.random.Next(2, 8));
         int gold = ctx.Config.GoldBeginnerBase;
 
         var npcs = MetAdultHumanGiftReceivers();
@@ -68,17 +64,13 @@ internal static partial class Generators
         if (Game1.getCharacterFromName("Linus") == null)
             return null;
 
-        int recipientCount;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
-            int upper = Math.Max(3, foragingLevel);
-            recipientCount = Game1.random.Next(3, upper + 1);
-        }
-        else
-        {
-            recipientCount = Game1.random.Next(2, 7);
-        }
+        int recipientCount = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foragingLevel =>
+            {
+                int upper = Math.Max(3, foragingLevel);
+                return Game1.random.Next(3, upper + 1);
+            },
+            () => Game1.random.Next(2, 7));
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -132,16 +124,9 @@ internal static partial class Generators
             return null;
         var pick = pool[Game1.random.Next(pool.Count)];
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
-            qty = 2 + (foragingLevel / 2);
-        }
-        else
-        {
-            qty = Game1.random.Next(1, 5);
-        }
+        int qty = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foragingLevel => 2 + (foragingLevel / 2),
+            () => Game1.random.Next(1, 5));
         int gold = ctx.Config.GoldIntermediateBase;
 
         var rewards = new List<RewardSpec> { new MoneyReward(gold) };
@@ -311,17 +296,13 @@ internal static partial class Generators
         if (giver == null)
             return null;
 
-        int count;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
-            int upper = Math.Max(3, foragingLevel);
-            count = Game1.random.Next(3, upper + 1);
-        }
-        else
-        {
-            count = Game1.random.Next(2, 7);
-        }
+        int count = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foragingLevel =>
+            {
+                int upper = Math.Max(3, foragingLevel);
+                return Game1.random.Next(3, upper + 1);
+            },
+            () => Game1.random.Next(2, 7));
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]

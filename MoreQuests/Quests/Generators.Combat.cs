@@ -75,9 +75,9 @@ internal static partial class Generators
             locationLabel = ModEntry.I18n.Get("quest.combat.clearFloor.loc.mines");
         }
 
-        int qty = ctx.Config.DifficultyScaling
-            ? Math.Clamp(Game1.random.Next(2, Math.Max(3, 2 * Game1.player.CombatLevel)), 2, 20)
-            : Game1.random.Next(2, 6);
+        int qty = Difficulty.Scaled(ctx,
+            () => Math.Clamp(Game1.random.Next(2, Math.Max(3, 2 * Game1.player.CombatLevel)), 2, 20),
+            () => Game1.random.Next(2, 6));
 
         var quest = new AdventureQuest();
         quest.Initialize(new[]
@@ -157,9 +157,9 @@ internal static partial class Generators
         if (!OfferingPoolHasItems(ctx))
             return null;
 
-        int qty = ctx.Config.DifficultyScaling
-            ? 2 + Game1.random.Next(2, Math.Max(2, (int)(Game1.player.CombatLevel * 1.5)) + 1)
-            : Game1.random.Next(1, 7);
+        int qty = Difficulty.Scaled(ctx,
+            () => 2 + Game1.random.Next(2, Math.Max(2, (int)(Game1.player.CombatLevel * 1.5)) + 1),
+            () => Game1.random.Next(1, 7));
 
         string? foodId = PickCombatFood(ctx, preferredMagnitude: 2);
         if (foodId == null)

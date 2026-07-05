@@ -23,17 +23,13 @@ internal static partial class Generators
             return null;
         var pick = pool[Game1.random.Next(pool.Count)];
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
-            int upper = Math.Max(2, (int)(foragingLevel * 1.5));
-            qty = Game1.random.Next(2, upper + 1);
-        }
-        else
-        {
-            qty = Game1.random.Next(2, 7);
-        }
+        int qty = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foragingLevel =>
+            {
+                int upper = Math.Max(2, (int)(foragingLevel * 1.5));
+                return Game1.random.Next(2, upper + 1);
+            },
+            () => Game1.random.Next(2, 7));
 
         string? giver = ctx.Dispatch.Pick(DispatchRoles.BeachCleanup);
         if (giver == null)
@@ -106,17 +102,14 @@ internal static partial class Generators
         if (chosenGiver == null || pick == null)
             return null;
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int farming = Game1.player.FarmingLevel;
-            int upper = Math.Max(2, (int)(farming * 1.5));
-            qty = Game1.random.Next(2, upper + 1);
-        }
-        else
-        {
-            qty = Game1.random.Next(1, 6);
-        }
+        int qty = Difficulty.Scaled(ctx,
+            () =>
+            {
+                int farming = Game1.player.FarmingLevel;
+                int upper = Math.Max(2, (int)(farming * 1.5));
+                return Game1.random.Next(2, upper + 1);
+            },
+            () => Game1.random.Next(1, 6));
 
         return new QuestPosting
         {
@@ -221,15 +214,9 @@ internal static partial class Generators
             return null;
         var pick = coldItems[Game1.random.Next(coldItems.Count)];
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            qty = Game1.random.Next(3, 11);
-        }
-        else
-        {
-            qty = Game1.random.Next(1, 6);
-        }
+        int qty = Difficulty.Scaled(ctx,
+            () => Game1.random.Next(3, 11),
+            () => Game1.random.Next(1, 6));
 
         var rewards = new List<RewardSpec>
         {
@@ -275,16 +262,9 @@ internal static partial class Generators
             return null;
         var pick = pool[Game1.random.Next(pool.Count)];
 
-        int qty;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int foragingLevel = Difficulty.GetSkillLevel(QuestCategory.Foraging);
-            qty = 2 + (foragingLevel / 2);
-        }
-        else
-        {
-            qty = Game1.random.Next(1, 5);
-        }
+        int qty = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foragingLevel => 2 + (foragingLevel / 2),
+            () => Game1.random.Next(1, 5));
 
         var rewards = new List<RewardSpec>
         {
@@ -332,16 +312,9 @@ internal static partial class Generators
         if (giver == null)
             return null;
 
-        int count;
-        if (ctx.Config.DifficultyScaling)
-        {
-            int foraging = Difficulty.GetSkillLevel(QuestCategory.Foraging);
-            count = Game1.random.Next(2, Math.Max(1, foraging / 2));
-        }
-        else
-        {
-            count = Game1.random.Next(1, 4);
-        }
+        int count = Difficulty.Scaled(ctx, QuestCategory.Foraging,
+            foraging => Game1.random.Next(2, Math.Max(1, foraging / 2)),
+            () => Game1.random.Next(1, 4));
 
         var step = new AdventureStepState
         {
