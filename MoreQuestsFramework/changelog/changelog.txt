@@ -7,6 +7,7 @@ To be released
 - The quest cooldown lengths (short, medium, long) are now set here, moved over from More Quests. Look under "Cooldown buckets" in the settings.
 - The switches for turning a whole quest type on or off (Farming quests, Fishing quests, and so on) are now here too, moved over from More Quests. Look for the new "Quest categories" section in the settings. The quest consequences switch moved here as well, next to the other consequence settings. Turning a type off now stops every quest of that type, including the simple catch, collect, and slay jobs.
 - For mod authors: new optional OwnerManagesPoolConfig field on a board. Turn it on when your mod sets the board's pin and notice counts through its own settings, and the framework will stop showing its own sliders for that board.
+- The simple built-in board quests (deliver, fish, collect, slay) had a fixed two-day deadline. They follow the short-deadline setting now, so if you change it, they change with it.
 
 2.8.0-beta.2
 - Players can now set how many quests a custom board shows at once, when the board's author allows it. Look under "Custom boards" in the mod settings.

@@ -385,8 +385,9 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
             ObjectiveQuantity = 1,
-            // Flat 14 days (not a preset): a missed one-shot never comes back.
-            DeadlineDays = 14,
+            // Extended tier (14 days by default): a missed one-shot never comes back, so
+            // give a generous window.
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Extended, ctx.Config),
             Rewards =
             {
                 new ObjectReward(dresser.QualifiedItemId, 1),

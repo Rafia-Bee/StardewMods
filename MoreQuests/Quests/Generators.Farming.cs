@@ -21,7 +21,7 @@ internal static partial class Generators
     /// One-time mail from a random adult villager the day after the player learns the Preserves
     /// Jar recipe. Asks for jams or pickles (OR-alternatives) to the shipping bin. Qty scales
     /// with Farming when scaling is on. No deadline (matches "Meet the Townsfolk"). Reward:
-    /// 500 friendship pts (2 hearts). TODO: revisit reward once the broader recipe-unlock economy lands.
+    /// FriendshipLarge to the giver.
     private static QuestPosting? PreservesJarRequest(QuestContext ctx)
     {
         return BuildFarmingShipRequest(
@@ -102,7 +102,7 @@ internal static partial class Generators
             ObjectiveQuantity = qty,
             ObjectiveItemWeight = 1,
             DeadlineDays = 0,
-            Rewards = { new FriendshipReward(giver, 500) },
+            Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipLarge) },
             Title = ModEntry.I18n.Get(titleKey),
             Description = ModEntry.I18n.Get(descriptionKey, new { qty }),
             CurrentObjective = ModEntry.I18n.Get(objectiveKey, new { qty }),
@@ -506,9 +506,11 @@ internal static partial class Generators
         if (giver == null)
             return null;
 
-        const int questDeadline = 28;
-        int daysLeftInSeason = 28 - Game1.dayOfMonth + 1;
-        int harvestWindow = Math.Min(questDeadline, daysLeftInSeason);
+        // A full season. Doubles as the harvest window and the quest deadline (this is the
+        // longest-running daily-board quest, so it runs right to the end of the season).
+        const int seasonLength = 28;
+        int daysLeftInSeason = seasonLength - Game1.dayOfMonth + 1;
+        int harvestWindow = Math.Min(seasonLength, daysLeftInSeason);
 
         var viable = FilterCropsByGrowthWindow(ctx, harvestWindow);
         if (viable.Count == 0)
@@ -591,7 +593,7 @@ internal static partial class Generators
             QuestType = BoardQuestType.Adventure,
             QuestGiver = giver,
             ObjectiveQuantity = 1,
-            DeadlineDays = questDeadline,
+            DeadlineDays = seasonLength,
             Rewards =
             {
                 new MoneyReward(gold),

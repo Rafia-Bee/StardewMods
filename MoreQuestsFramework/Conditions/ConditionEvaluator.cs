@@ -305,7 +305,7 @@ internal static class ConditionEvaluator
         return actual >= min;
     }
 
-    // "Abigail 2" = 2 hearts (250 points per heart).
+    // "Abigail 2" = 2 hearts.
     private static bool MatchesFriendshipLevel(string value)
     {
         var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -313,7 +313,7 @@ internal static class ConditionEvaluator
             return false;
         if (!Game1.player.friendshipData.TryGetValue(parts[0], out var f))
             return false;
-        return f.Points >= hearts * 250;
+        return f.Points >= hearts * Difficulty.FriendshipPointsPerHeart;
     }
 
     // "Abigail dating|married|engaged|roommate|divorced".

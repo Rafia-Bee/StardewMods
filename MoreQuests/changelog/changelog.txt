@@ -7,6 +7,7 @@ To be released
 - The quest cooldown settings moved over to More Quests Framework's settings, under "Cooldown buckets". If you'd changed them here, they'll reset to the defaults and you can set them again there.
 - The switches that turn a whole quest type on or off (Farming quests, Fishing quests, and so on) also moved to More Quests Framework's settings, in a new "Quest categories" section. The quest consequences switch moved there too. If you'd turned any of these off, they'll switch back on, so pop over and set them the way you like.
 - New slider for the Adventurer's Guild board: pick how many quests it shows at once, right on the board's own settings page. If you'd set this over in More Quests Framework's settings before, it'll reset, so set it again here.
+- A few quests handed out a set amount of friendship or gold no matter what your reward settings said. They follow the settings in More Quests Framework now. Three of them (the Fish Smoker request, the preserves/keg/dehydrator shipping request, and Pierre's sabotage quest) used to give two hearts of friendship and now give one, to match.
 
 2.5.0
 - Needs More Quests Framework 2.7.0 or newer.

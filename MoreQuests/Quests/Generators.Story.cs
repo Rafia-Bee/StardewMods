@@ -37,7 +37,7 @@ internal static partial class Generators
         // Morris isn't a social-tab NPC, so a friendship reward would be invisible. A
         // straight payout reads as him cutting you in. The handoff to Step 2 happens when
         // this quest completes (ModEntry.UnlockMorrisQualityControl), not through a letter.
-        posting.Rewards.Add(new MoneyReward(2000));
+        posting.Rewards.Add(new MoneyReward(2 * ctx.Config.GoldAdvancedBase));
         return posting;
     }
 
@@ -73,7 +73,7 @@ internal static partial class Generators
         posting.SellCategories.Add(Object.FruitsCategory);
         posting.SellCategories.Add(Object.flowersCategory);
 
-        posting.Rewards.Add(new MoneyReward(3000));
+        posting.Rewards.Add(new MoneyReward(ctx.Config.GoldExpertBase));
         return posting;
     }
 
@@ -154,8 +154,8 @@ internal static partial class Generators
             DeadlineDays = Difficulty.Deadline(DeadlineKind.None, ctx.Config),
             Rewards =
             {
-                new MoneyReward(3000),
-                new FriendshipReward("Pierre", 500)
+                new MoneyReward(ctx.Config.GoldExpertBase),
+                new FriendshipReward("Pierre", ctx.Config.FriendshipLarge)
             },
             Title = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.title"),
             Description = ModEntry.I18n.Get("quest.story.pierreDontGetCaught.description",

@@ -1250,7 +1250,7 @@ public sealed class ModEntry : Mod
         }
         else
         {
-            const int penalty = -30;
+            int penalty = -MoreQuestsFramework.ModEntry.Config.FriendshipMultiSmall;
             foreach (var kid in MetChildHumanGivers(player))
             {
                 if (!MoreQuestsFramework.NpcDisplay.IsBoardEligible(kid, allowChild: true))

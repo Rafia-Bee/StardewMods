@@ -41,6 +41,10 @@ public static class QuestCategory
 
 public static class Difficulty
 {
+    // 1 heart of friendship = 250 points in the vanilla ladder. Shared so heart-gate checks
+    // and max-heart math don't each inline the magic number.
+    public const int FriendshipPointsPerHeart = 250;
+
     // Not called yet. Reserved for the difficulty-scaling rework, which will use this to turn
     // a skill level into a tier instead of the inline per-quest math. Kept until then (pairs
     // with GoldBase below).

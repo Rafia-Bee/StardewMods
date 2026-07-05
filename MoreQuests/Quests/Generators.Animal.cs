@@ -240,7 +240,7 @@ internal static partial class Generators
             return null;
         if (Game1.getCharacterFromName("Leah") == null)
             return null;
-        if (!Game1.player.friendshipData.TryGetValue("Leah", out var leahFriendship) || leahFriendship.Points < 2 * 250)
+        if (!Game1.player.friendshipData.TryGetValue("Leah", out var leahFriendship) || leahFriendship.Points < 2 * Difficulty.FriendshipPointsPerHeart)
             return null;
 
         string frame = ModEntry.NormalizeLeahPaintingFrame(ModEntry.Config.LeahPaintingFrame);

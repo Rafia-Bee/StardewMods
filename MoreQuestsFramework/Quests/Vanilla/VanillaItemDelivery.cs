@@ -39,7 +39,7 @@ internal sealed class VanillaItemDelivery : IQuestDefinition
             Title = string.IsNullOrEmpty(quest.questTitle) ? "Delivery request" : quest.questTitle,
             Description = quest.questDescription ?? "",
             CurrentObjective = quest.currentObjective ?? "",
-            DeadlineDays = 2,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ModEntry.Config),
             PreBuiltQuest = quest
         };
     }

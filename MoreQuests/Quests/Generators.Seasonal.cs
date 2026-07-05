@@ -303,6 +303,8 @@ internal static partial class Generators
             ObjectiveItemId = pick.QualifiedItemId,
             ObjectiveItemName = pick.DisplayName,
             ObjectiveQuantity = qty,
+            // Date-driven, not a tier: posts Summer 21 and must land the day before Moonlight
+            // Jellies (Summer 28), so the window is fixed at 6 days.
             DeadlineDays = 6,
             Rewards = rewards,
             Title = ModEntry.I18n.Get("quest.seasonal.jellyfishWatch.title"),

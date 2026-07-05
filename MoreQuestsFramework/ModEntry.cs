@@ -29,7 +29,10 @@ namespace MoreQuestsFramework;
 public sealed class ModEntry : Mod
 {
     internal static ModEntry Instance { get; private set; } = null!;
-    internal static MoreQuestsFrameworkConfig Config { get; set; } = new();
+    // Getter is public so consumer mods (MoreQuests) can read the framework's reward /
+    // friendship tiers from event handlers that don't carry a QuestContext. Same object
+    // QuestContext.Config already exposes; writes stay in-framework.
+    public static MoreQuestsFrameworkConfig Config { get; internal set; } = new();
     internal static ITranslationHelper? Translation { get; private set; }
 
     internal const string PadAssetRoot = "Mods/RafiaBee.MoreQuestsFramework/Pad";

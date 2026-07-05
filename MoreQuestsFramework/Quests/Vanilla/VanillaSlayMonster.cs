@@ -39,7 +39,7 @@ internal sealed class VanillaSlayMonster : IQuestDefinition
             Title = string.IsNullOrEmpty(quest.questTitle) ? "Monster eradication" : quest.questTitle,
             Description = quest.questDescription ?? "",
             CurrentObjective = quest.currentObjective ?? "",
-            DeadlineDays = 2,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Short, ModEntry.Config),
             PreBuiltQuest = quest
         };
     }

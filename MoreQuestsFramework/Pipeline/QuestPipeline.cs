@@ -811,7 +811,7 @@ internal sealed class QuestPipeline
             return false;
 
         int maxHearts = Utility.GetMaximumHeartsForCharacter(npc);
-        return friendship.Points >= maxHearts * 250;
+        return friendship.Points >= maxHearts * Difficulty.FriendshipPointsPerHeart;
     }
 
     private static (IQuestDefinition? Def, int Weight) WeightedDraw(

@@ -326,10 +326,6 @@ internal static partial class Generators
     internal static string BuildDeepDiveRewardLetterKey(string barId, int count)
         => $"RafiaBee.MoreQuests.DeepDiveReward.{barId}.{count}";
 
-    /// 1 heart of friendship = 250 points. Threshold for whether an "underground" NPC reacts
-    /// to the monster-parts trade. At zero hearts a freshly-met villager feels too distant.
-    private const int FriendshipPointsPerHeart = 250;
-
     /// Item delivery from a CombatNpcs-pool giver for a Combat-scaled qty of one rare
     /// monster drop. Reward: one random gem/artifact from Data/Objects, stack sized so the
     /// headline value clears GoldIntermediateBase. Tier 1 negative consequence on Krobus /
@@ -468,7 +464,9 @@ internal static partial class Generators
                 continue;
             if (!Game1.player.friendshipData.TryGetValue(npc, out var friendship))
                 continue;
-            if (friendship == null || friendship.Points < FriendshipPointsPerHeart)
+            // Needs at least 1 heart to react to the monster-parts trade; a freshly-met
+            // villager feels too distant.
+            if (friendship == null || friendship.Points < Difficulty.FriendshipPointsPerHeart)
                 continue;
             targets.Add(npc);
         }

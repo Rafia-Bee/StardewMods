@@ -51,7 +51,7 @@ internal static partial class Generators
             ObjectiveQuantity = qty,
             ObjectiveItemWeight = 1,
             DeadlineDays = 0,
-            Rewards = { new FriendshipReward(giver, 500) },
+            Rewards = { new FriendshipReward(giver, ctx.Config.FriendshipLarge) },
             Title = ModEntry.I18n.Get("quest.fishing.fishSmokerRequest.title"),
             Description = ModEntry.I18n.Get("quest.fishing.fishSmokerRequest.description", new { qty }),
             CurrentObjective = ModEntry.I18n.Get("quest.fishing.fishSmokerRequest.objective", new { qty }),

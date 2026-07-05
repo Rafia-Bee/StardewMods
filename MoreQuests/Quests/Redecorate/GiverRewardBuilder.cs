@@ -43,8 +43,9 @@ internal static class GiverRewardBuilder
         return rewards;
     }
 
+    // Only hit when the giver has no loved or liked items to give.
     private static List<RewardSpec> Fallback()
-        => new() { new MoneyReward(1500) };
+        => new() { new MoneyReward(MoreQuestsFramework.ModEntry.Config.GoldAdvancedBase) };
 
     // Returns the giver's loved and liked concrete object ids (qualified), in order,
     // skipping category tags / negative ids and anything that doesn't resolve.
