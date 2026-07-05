@@ -26,9 +26,13 @@ internal static class BoardPoolConfig
     }
 
     // The pin count actually drawn: the player's override (if any) clamped into the board's
-    // bounds, else the authored default.
+    // bounds, else the authored default. Owner-managed boards skip the override dict entirely
+    // and draw their authored PoolSize (which their own mod rewrites live), floored at 1.
     public static int Effective(BoardDefinition board, MoreQuestsFrameworkConfig config)
     {
+        if (board.OwnerManagesPoolConfig)
+            return Math.Max(1, board.PoolSize);
+
         var (min, max, def) = Bounds(board);
         int value = config.CustomBoardPoolSize.TryGetValue(KeyOf(board), out int stored) ? stored : def;
         return Math.Clamp(value, Math.Max(1, min), Math.Max(1, max));

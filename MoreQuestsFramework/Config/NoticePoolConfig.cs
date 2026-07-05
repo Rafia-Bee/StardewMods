@@ -24,6 +24,9 @@ internal static class NoticePoolConfig
 
     public static int Effective(BoardDefinition board, MoreQuestsFrameworkConfig config)
     {
+        if (board.OwnerManagesPoolConfig)
+            return Math.Max(0, board.NoticePoolSize);
+
         var (min, max, def) = Bounds(board);
         int value = config.CustomBoardNoticePoolSize.TryGetValue(KeyOf(board), out int stored) ? stored : def;
         return Math.Clamp(value, min, max);

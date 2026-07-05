@@ -6,6 +6,7 @@ To be released
 - New "never reward" item list in the settings. Anything you put on it will never be handed to you as a quest reward. It starts with the Prismatic Shard and the two Qi crops, and you can change it. There's also an optional switch to keep those items out of delivery and shipping quests too, off by default.
 - The quest cooldown settings moved over to More Quests Framework's settings, under "Cooldown buckets". If you'd changed them here, they'll reset to the defaults and you can set them again there.
 - The switches that turn a whole quest type on or off (Farming quests, Fishing quests, and so on) also moved to More Quests Framework's settings, in a new "Quest categories" section. The quest consequences switch moved there too. If you'd turned any of these off, they'll switch back on, so pop over and set them the way you like.
+- New slider for the Adventurer's Guild board: pick how many quests it shows at once, right on the board's own settings page. If you'd set this over in More Quests Framework's settings before, it'll reset, so set it again here.
 
 2.5.0
 - Needs More Quests Framework 2.7.0 or newer.

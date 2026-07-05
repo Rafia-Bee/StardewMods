@@ -59,6 +59,13 @@ public sealed class BoardDefinition
 
     public int PoolSize { get; set; } = 3;
 
+    // When true, the owning mod manages this board's pin/notice counts itself (its own config
+    // + GMCM page), so the framework stops auto-generating pool sliders for it and stops
+    // reading the player-override dicts. Effective pin/notice counts come straight from the
+    // authored PoolSize / NoticePoolSize (which the owner can rewrite live). Default false,
+    // so CP boards and anyone who doesn't opt in behave exactly as before.
+    public bool OwnerManagesPoolConfig { get; set; } = false;
+
     // Player-config bounds for PoolSize. The GMCM slider for this board runs PoolSizeMin to
     // PoolSizeMax and defaults to PoolSize; the player's chosen value is clamped into that
     // range. PoolSizeMin doubles as the floor, so a board never draws fewer than this even

@@ -35,6 +35,8 @@
     "config.secretGiftHint.tooltip": "Adds a quest that hints at your Winter Star recipient's preferences. Disable if you'd rather not be spoiled.",
     "config.enableAdventurersGuildBoard": "Adventurer's Guild board",
     "config.enableAdventurersGuildBoard.tooltip": "When on, a custom quest board appears near the mine entrance and hosts the mining and monster quests (deep dives, slime clearing, monster eradication). When off, the guild board is hidden entirely and those quests appear on the regular help-wanted board. Per-quest weights still let you disable individual quests on top of this.",
+    "config.AdventureBoardPoolSize": "Quests shown on the board",
+    "config.AdventureBoardPoolSize.tooltip": "How many quests the Adventurer's Guild board shows at once (1 to 5). The change takes effect the next time the board is drawn.",
 
     "config.section.adventureBoardPlacement": "Adventurer's Guild board placement",
     "config.AdventureBoardTileX": "Board tile X",

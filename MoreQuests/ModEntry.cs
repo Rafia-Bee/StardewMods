@@ -1591,8 +1591,9 @@ public sealed class ModEntry : Mod
         }
     }
 
-    /// Applies the current ModConfig tile/offset to the AdventurersGuild board.
-    /// Called after board registration and on every GMCM save.
+    /// Applies the current ModConfig tile/offset/pool size to the AdventurersGuild board.
+    /// Called after board registration and on every GMCM save. The board opts out of the
+    /// framework's pool sliders, so its pin count is whatever we write here.
     internal static void ApplyAdventureBoardConfig()
     {
         var board = ModScope?.FindBoard("AdventurersGuild");
@@ -1600,5 +1601,6 @@ public sealed class ModEntry : Mod
             return;
         board.Tile = new[] { Config.AdventureBoardTileX, Config.AdventureBoardTileY };
         board.PixelOffset = new[] { Config.AdventureBoardOffsetX, Config.AdventureBoardOffsetY };
+        board.PoolSize = Config.AdventureBoardPoolSize;
     }
 }

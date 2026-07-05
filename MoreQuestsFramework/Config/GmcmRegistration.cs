@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using MoreQuestsFramework.Registry;
 using MoreQuestsFramework.Triggers;
 using StardewModdingAPI;
@@ -241,16 +242,22 @@ internal static class GmcmRegistration
     }
 
     // One pin-count slider per registered custom board. The slider runs the board's authored
-    // PoolSizeMin..Max and stores into the per-board config dict. No boards = no section.
+    // PoolSizeMin..Max and stores into the per-board config dict. Owner-managed boards expose
+    // their own sliders on the owning mod's page, so they're skipped here. No sliders = no
+    // section (an all-owner-managed setup shows no "Custom boards" header at all).
     private static void AddCustomBoardPoolSizes(IGenericModConfigMenuApi api, IManifest manifest, ITranslationHelper t, BoardRegistry boards)
     {
         if (boards == null || boards.All.Count == 0)
             return;
 
+        var shown = boards.All.Where(b => !b.OwnerManagesPoolConfig).ToList();
+        if (shown.Count == 0)
+            return;
+
         api.AddSectionTitle(manifest, () => t.Get("config.section.customBoards"),
             () => t.Get("config.section.customBoards.tooltip"));
 
-        foreach (var board in boards.All)
+        foreach (var board in shown)
         {
             var (min, max, def) = BoardPoolConfig.Bounds(board);
             string label = !string.IsNullOrWhiteSpace(board.Title) ? board.Title! : board.Name;

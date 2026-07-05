@@ -159,6 +159,7 @@ internal static class GmcmRegistration
             v => ModEntry.Config.EnableAdventurersGuildBoard = v,
             () => t.Get("config.enableAdventurersGuildBoard"),
             () => t.Get("config.enableAdventurersGuildBoard.tooltip"));
+        AddInt(api, manifest, t, "AdventureBoardPoolSize", () => ModEntry.Config.AdventureBoardPoolSize, v => ModEntry.Config.AdventureBoardPoolSize = v, 1, 5);
         api.AddSectionTitle(manifest, () => t.Get("config.section.adventureBoardPlacement"));
         AddInt(api, manifest, t, "AdventureBoardTileX", () => ModEntry.Config.AdventureBoardTileX, v => ModEntry.Config.AdventureBoardTileX = v, 0, 200);
         AddInt(api, manifest, t, "AdventureBoardTileY", () => ModEntry.Config.AdventureBoardTileY, v => ModEntry.Config.AdventureBoardTileY = v, 0, 200);

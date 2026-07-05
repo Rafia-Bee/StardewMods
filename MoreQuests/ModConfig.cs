@@ -26,6 +26,11 @@ public sealed class ModConfig
     public int AdventureBoardOffsetX { get; set; } = 32;
     public int AdventureBoardOffsetY { get; set; } = 0;
 
+    /// How many quests the guild board shows at once. Applied to the board's pool size on
+    /// startup and every GMCM save. The framework used to expose this on its own config page,
+    /// it lives here now so all guild board settings sit together.
+    public int AdventureBoardPoolSize { get; set; } = 3;
+
     // ----- Shop discounts -----
     public int ShopDiscountPercent { get; set; } = 50;
     public int ShopDiscountDurationDays { get; set; } = 2;
