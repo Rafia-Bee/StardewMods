@@ -264,7 +264,7 @@ internal static partial class Generators
         int basePrice = Math.Max(crop.SellPrice, 30);
         int gold = (int)(basePrice * qty * ctx.Config.RewardMultiplierBelowSell);
 
-        var consequence = ModEntry.Config.ConsequencesEnabled
+        var consequence = ctx.Config.ConsequencesEnabled
             ? new ConsequenceSpec
             {
                 Tier = ConsequenceTier.Tier1,

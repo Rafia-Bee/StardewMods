@@ -29,6 +29,11 @@
     "notice.daysRemaining.one": "Pinned for 1 more day",
     "notice.daysRemaining.last": "Last day for this notice",
 
+    "config.section.categories": "Quest categories",
+    "config.section.categories.tooltip": "Turn a whole category of quests on or off. When a category is off, no new quests of that type post anywhere (board, mail, special orders). Quests you've already taken on still finish.",
+    "config.categoryToggle": "{{category}} quests",
+    "config.categoryToggle.tooltip": "Turn off to stop new {{category}} quests from showing up. Anything you've already accepted still finishes.",
+
     "config.section.weights": "Quest type weights",
     "config.section.weights.tooltip": "Each daily-board quest type has a relative weight. Higher = more likely to appear. 0 disables that type. Browse by category below.",
     "config.weight.tooltip": "Selection weight for {{id}} (0 disables, higher = more likely).",
@@ -199,6 +204,8 @@
     "config.CooldownLongDays.tooltip": "Days a quest in the 'long' bucket waits before it can show up again.",
 
     "config.section.consequences": "Consequences",
+    "config.consequencesEnabled": "Quest consequences",
+    "config.consequencesEnabled.tooltip": "When on, some quests have a follow-up: over-fish a spot or sell junk crops and a villager may bring it up later, for better or worse. Turn off to skip all of that.",
     "config.ConsequenceGraceDays": "Consequence grace days",
     "config.ConsequenceGraceDays.tooltip": "How many days past a queued reaction's fire day before it silently expires. Lower = NPCs forget faster; higher = grudges last longer. Default 7.",
 

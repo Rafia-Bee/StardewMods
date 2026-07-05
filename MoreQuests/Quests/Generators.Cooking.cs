@@ -234,7 +234,7 @@ internal static partial class Generators
             AddSaloonCrowdFriendship(ctx, dish.QualifiedItemId, rewards, saloonCrowdMagnitude);
 
         ConsequenceSpec? consequence = null;
-        if (dish != null && ModEntry.Config.ConsequencesEnabled)
+        if (dish != null && ctx.Config.ConsequencesEnabled)
         {
             consequence = new ConsequenceSpec
             {
@@ -549,7 +549,7 @@ internal static partial class Generators
         frameworkRewards = DedupeFriendshipRewards(frameworkRewards);
 
         var consequences = new List<ConsequenceSpec>();
-        if (ModEntry.Config.ConsequencesEnabled)
+        if (ctx.Config.ConsequencesEnabled)
         {
             foreach (var dish in picked)
             {

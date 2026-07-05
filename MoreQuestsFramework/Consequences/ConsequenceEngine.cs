@@ -70,6 +70,8 @@ internal sealed class ConsequenceEngine
 
     public void Apply(ConsequenceSpec? spec)
     {
+        if (!_config.ConsequencesEnabled)
+            return;
         if (spec == null || spec.Tier == ConsequenceTier.Tier0)
             return;
         if (!_handlers.TryGetValue(spec.Tier, out var handler))

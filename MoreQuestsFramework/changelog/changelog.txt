@@ -5,6 +5,7 @@ To be released
 - Custom boards no longer disappear when you open the pause menu. They stay drawn like the rest of the world.
 - For mod authors: a board's tile is now its bottom-left corner, and the board grows up and to the right from there. This changed from before, so any board you placed will sit lower and needs its tile adjusted. There's also a new optional PixelOffset field to nudge a board a few pixels for lining it up with wall art.
 - The quest cooldown lengths (short, medium, long) are now set here, moved over from More Quests. Look under "Cooldown buckets" in the settings.
+- The switches for turning a whole quest type on or off (Farming quests, Fishing quests, and so on) are now here too, moved over from More Quests. Look for the new "Quest categories" section in the settings. The quest consequences switch moved here as well, next to the other consequence settings. Turning a type off now stops every quest of that type, including the simple catch, collect, and slay jobs.
 
 2.8.0-beta.2
 - Players can now set how many quests a custom board shows at once, when the board's author allows it. Look under "Custom boards" in the mod settings.

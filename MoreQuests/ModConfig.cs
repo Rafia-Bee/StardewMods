@@ -5,16 +5,9 @@ namespace MoreQuests;
 public sealed class ModConfig
 {
     // ----- Master toggles -----
-    public bool ConsequencesEnabled { get; set; } = true;
-    public bool FestivalQuestsEnabled { get; set; } = true;
-    public bool AnimalQuestsEnabled { get; set; } = true;
-    public bool FarmingQuestsEnabled { get; set; } = true;
-    public bool FishingQuestsEnabled { get; set; } = true;
-    public bool MiningQuestsEnabled { get; set; } = true;
-    public bool ForagingQuestsEnabled { get; set; } = true;
-    public bool CookingQuestsEnabled { get; set; } = true;
-    public bool SocialQuestsEnabled { get; set; } = true;
-    public bool SeasonalQuestsEnabled { get; set; } = true;
+    // Per-category enable switches and the consequence master switch moved to the framework
+    // config (MoreQuestsFramework). The framework gates postings by category and honors the
+    // consequence toggle, so both apply to any quest pack, not just this mod.
     public bool SecretGiftHintEnabled { get; set; } = true;
 
     /// When on, an Adventurer's Guild board renders at the Mine entrance and hosts the

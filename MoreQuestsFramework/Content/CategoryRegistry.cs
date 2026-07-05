@@ -19,6 +19,7 @@ internal sealed class CategoryRegistry
     private readonly IMonitor _monitor;
     private Dictionary<string, (Color pad, Color pin)> _colors = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, string> _skills = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, string> _displayNames = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, string> _padTextures = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, string> _pinTextures = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, CategoryIconSpec> _icons = new(StringComparer.OrdinalIgnoreCase);
@@ -62,6 +63,7 @@ internal sealed class CategoryRegistry
     {
         var colors = new Dictionary<string, (Color, Color)>(StringComparer.OrdinalIgnoreCase);
         var skills = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var displayNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var padTextures = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var pinTextures = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var icons = new Dictionary<string, CategoryIconSpec>(StringComparer.OrdinalIgnoreCase);
@@ -79,6 +81,8 @@ internal sealed class CategoryRegistry
                 Color pin = ParseColor(pair.Value.PinColor, pair.Key, "PinColor") ?? DefaultPin;
                 colors[pair.Key] = (pad, pin);
                 skills[pair.Key] = string.IsNullOrWhiteSpace(pair.Value.Skill) ? "None" : pair.Value.Skill;
+                if (!string.IsNullOrWhiteSpace(pair.Value.DisplayName))
+                    displayNames[pair.Key] = pair.Value.DisplayName.Trim();
                 if (!string.IsNullOrWhiteSpace(pair.Value.PadTexture))
                     padTextures[pair.Key] = pair.Value.PadTexture.Trim();
                 if (!string.IsNullOrWhiteSpace(pair.Value.PinTexture))
@@ -99,6 +103,7 @@ internal sealed class CategoryRegistry
         }
         _colors = colors;
         _skills = skills;
+        _displayNames = displayNames;
         _padTextures = padTextures;
         _pinTextures = pinTextures;
         _icons = icons;
@@ -113,6 +118,15 @@ internal sealed class CategoryRegistry
 
     public string SkillFor(string? category)
         => !string.IsNullOrEmpty(category) && _skills.TryGetValue(category, out var s) ? s : "None";
+
+    // Every category id the registry knows (the built-in nine plus any a CP pack added to
+    // the Categories asset). Snapshot, so the caller can register GMCM toggles off it.
+    public IReadOnlyList<string> KnownCategories() => new List<string>(_colors.Keys);
+
+    // Authored display name for a category, or null when the asset didn't set one (the
+    // caller falls back to the category id or a translation).
+    public string? DisplayNameFor(string? category)
+        => !string.IsNullOrEmpty(category) && _displayNames.TryGetValue(category, out var n) ? n : null;
 
     // Category pad/pin texture override, or null to use the board / framework default.
     public string? PadTextureFor(string? category)

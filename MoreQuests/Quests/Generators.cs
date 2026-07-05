@@ -25,110 +25,110 @@ internal static partial class Generators
         // in their category and in order, otherwise this file just grows by accretion.
 
         // Animal
-        Reg(fw, "AlexProteinShakes", AlexProteinShakes);
-        Reg(fw, "GuntherDinosaurStudy", GuntherDinosaurStudy);
-        Reg(fw, "HaySupplyRun", HaySupplyRun);
-        Reg(fw, "KrobusVoidNote", KrobusVoidNote);
-        Reg(fw, "LeahFarmPainting", LeahFarmPainting);
-        Reg(fw, "MarnieChickenOffer", MarnieChickenOffer);
-        Reg(fw, "MarnieCowOffer", MarnieCowOffer);
-        Reg(fw, "MarnieEggRequest", MarnieEggRequest);
-        Reg(fw, "MarnieLivestockShow", MarnieLivestockShow);
-        Reg(fw, "MarnieMilkRequest", MarnieMilkRequest);
-        Reg(fw, "RobinSiloOffer", RobinSiloOffer);
+        fw.RegisterGenerator("AlexProteinShakes", AlexProteinShakes);
+        fw.RegisterGenerator("GuntherDinosaurStudy", GuntherDinosaurStudy);
+        fw.RegisterGenerator("HaySupplyRun", HaySupplyRun);
+        fw.RegisterGenerator("KrobusVoidNote", KrobusVoidNote);
+        fw.RegisterGenerator("LeahFarmPainting", LeahFarmPainting);
+        fw.RegisterGenerator("MarnieChickenOffer", MarnieChickenOffer);
+        fw.RegisterGenerator("MarnieCowOffer", MarnieCowOffer);
+        fw.RegisterGenerator("MarnieEggRequest", MarnieEggRequest);
+        fw.RegisterGenerator("MarnieLivestockShow", MarnieLivestockShow);
+        fw.RegisterGenerator("MarnieMilkRequest", MarnieMilkRequest);
+        fw.RegisterGenerator("RobinSiloOffer", RobinSiloOffer);
 
         // Cooking
-        Reg(fw, "CravingDish", CravingDishGenerator);
-        Reg(fw, "DinnerParty", DinnerParty);
-        Reg(fw, "GrandFeast", GrandFeast);
-        Reg(fw, "WeeklySpecialCommon", WeeklySpecialCommon);
-        Reg(fw, "WeeklySpecialComplex", WeeklySpecialComplex);
+        fw.RegisterGenerator("CravingDish", CravingDishGenerator);
+        fw.RegisterGenerator("DinnerParty", DinnerParty);
+        fw.RegisterGenerator("GrandFeast", GrandFeast);
+        fw.RegisterGenerator("WeeklySpecialCommon", WeeklySpecialCommon);
+        fw.RegisterGenerator("WeeklySpecialComplex", WeeklySpecialComplex);
 
         // Farming
-        Reg(fw, "BasicCropDelivery", BasicCropDelivery);
-        Reg(fw, "CarolineTeaGarden", CarolineTeaGarden);
-        Reg(fw, "CropCycleQuest", CropCycleQuest);
-        Reg(fw, "DehydratorRequest", DehydratorRequest);
-        Reg(fw, "KegRequest", KegRequest);
-        Reg(fw, "MassiveHarvestRequest", MassiveHarvestRequest);
-        Reg(fw, "PierresStockUp", PierresStockUp);
-        Reg(fw, "PremiumCropOrder", PremiumCropOrder);
-        Reg(fw, "PreservesJarRequest", PreservesJarRequest);
-        Reg(fw, "QualityCropDelivery", QualityCropDelivery);
+        fw.RegisterGenerator("BasicCropDelivery", BasicCropDelivery);
+        fw.RegisterGenerator("CarolineTeaGarden", CarolineTeaGarden);
+        fw.RegisterGenerator("CropCycleQuest", CropCycleQuest);
+        fw.RegisterGenerator("DehydratorRequest", DehydratorRequest);
+        fw.RegisterGenerator("KegRequest", KegRequest);
+        fw.RegisterGenerator("MassiveHarvestRequest", MassiveHarvestRequest);
+        fw.RegisterGenerator("PierresStockUp", PierresStockUp);
+        fw.RegisterGenerator("PremiumCropOrder", PremiumCropOrder);
+        fw.RegisterGenerator("PreservesJarRequest", PreservesJarRequest);
+        fw.RegisterGenerator("QualityCropDelivery", QualityCropDelivery);
 
         // Festival
-        Reg(fw, "DyeForEggs", DyeForEggs);
-        Reg(fw, "EastScarpSpiritsEveDecor", EastScarpSpiritsEveDecor);
-        Reg(fw, "EggFestivalDecor", EggFestivalDecor);
-        Reg(fw, "EggHuntSabotage", EggHuntSabotage);
-        Reg(fw, "FairFestivalDecor", FairFestivalDecor);
-        Reg(fw, "GusFestivalFeastFall", GusFestivalFeastFall);
-        Reg(fw, "GusFestivalFeastSpring", GusFestivalFeastSpring);
-        Reg(fw, "GusFestivalFeastSummer", GusFestivalFeastSummer);
-        Reg(fw, "GusFestivalFeastWinter", GusFestivalFeastWinter);
-        Reg(fw, "JellyfishWatchPrep", JellyfishWatchPrep);
-        Reg(fw, "LuauFestivalDecor", LuauFestivalDecor);
-        Reg(fw, "MerchantUnpacking", MerchantUnpacking);
-        Reg(fw, "MoonlightJelliesFestivalDecor", MoonlightJelliesFestivalDecor);
-        Reg(fw, "RainbowPlatter", RainbowPlatter);
-        Reg(fw, "RidgesideGatheringDecor", RidgesideGatheringDecor);
-        Reg(fw, "SecretGiftHint", SecretGiftHint);
-        Reg(fw, "SpiritsEveDecor", SpiritsEveDecor);
-        Reg(fw, "SquidFestShowcase", SquidFestShowcase);
-        Reg(fw, "WrappingPaper", WrappingPaper);
+        fw.RegisterGenerator("DyeForEggs", DyeForEggs);
+        fw.RegisterGenerator("EastScarpSpiritsEveDecor", EastScarpSpiritsEveDecor);
+        fw.RegisterGenerator("EggFestivalDecor", EggFestivalDecor);
+        fw.RegisterGenerator("EggHuntSabotage", EggHuntSabotage);
+        fw.RegisterGenerator("FairFestivalDecor", FairFestivalDecor);
+        fw.RegisterGenerator("GusFestivalFeastFall", GusFestivalFeastFall);
+        fw.RegisterGenerator("GusFestivalFeastSpring", GusFestivalFeastSpring);
+        fw.RegisterGenerator("GusFestivalFeastSummer", GusFestivalFeastSummer);
+        fw.RegisterGenerator("GusFestivalFeastWinter", GusFestivalFeastWinter);
+        fw.RegisterGenerator("JellyfishWatchPrep", JellyfishWatchPrep);
+        fw.RegisterGenerator("LuauFestivalDecor", LuauFestivalDecor);
+        fw.RegisterGenerator("MerchantUnpacking", MerchantUnpacking);
+        fw.RegisterGenerator("MoonlightJelliesFestivalDecor", MoonlightJelliesFestivalDecor);
+        fw.RegisterGenerator("RainbowPlatter", RainbowPlatter);
+        fw.RegisterGenerator("RidgesideGatheringDecor", RidgesideGatheringDecor);
+        fw.RegisterGenerator("SecretGiftHint", SecretGiftHint);
+        fw.RegisterGenerator("SpiritsEveDecor", SpiritsEveDecor);
+        fw.RegisterGenerator("SquidFestShowcase", SquidFestShowcase);
+        fw.RegisterGenerator("WrappingPaper", WrappingPaper);
 
         // Fishing
-        Reg(fw, "FishSmokerRequest", FishSmokerRequest);
-        Reg(fw, "KnowYourWaters", KnowYourWaters);
-        Reg(fw, "LegendaryFishQuest", LegendaryFishQuest);
-        Reg(fw, "LocationFishOverpopulation", LocationFishOverpopulation);
-        Reg(fw, "MediumFishingHaul", MediumFishingHaul);
-        Reg(fw, "QualityFishDelivery", QualityFishDelivery);
-        Reg(fw, "RainyDayCatch", RainyDayCatch);
-        Reg(fw, "SeafoodNight", SeafoodNight);
-        Reg(fw, "SimpleFishingRequest", SimpleFishingRequest);
-        Reg(fw, "SizeFishOverpopulation", SizeFishOverpopulation);
+        fw.RegisterGenerator("FishSmokerRequest", FishSmokerRequest);
+        fw.RegisterGenerator("KnowYourWaters", KnowYourWaters);
+        fw.RegisterGenerator("LegendaryFishQuest", LegendaryFishQuest);
+        fw.RegisterGenerator("LocationFishOverpopulation", LocationFishOverpopulation);
+        fw.RegisterGenerator("MediumFishingHaul", MediumFishingHaul);
+        fw.RegisterGenerator("QualityFishDelivery", QualityFishDelivery);
+        fw.RegisterGenerator("RainyDayCatch", RainyDayCatch);
+        fw.RegisterGenerator("SeafoodNight", SeafoodNight);
+        fw.RegisterGenerator("SimpleFishingRequest", SimpleFishingRequest);
+        fw.RegisterGenerator("SizeFishOverpopulation", SizeFishOverpopulation);
 
         // Foraging
-        Reg(fw, "ClearDebris", ClearDebris);
-        Reg(fw, "FeedWildCritters", FeedWildCritters);
-        Reg(fw, "ForageWithLinus", ForageWithLinus);
-        Reg(fw, "PlantTrees", PlantTrees);
-        Reg(fw, "RareForageHunt", RareForageHunt);
-        Reg(fw, "SeasonalForaging", SeasonalForaging);
+        fw.RegisterGenerator("ClearDebris", ClearDebris);
+        fw.RegisterGenerator("FeedWildCritters", FeedWildCritters);
+        fw.RegisterGenerator("ForageWithLinus", ForageWithLinus);
+        fw.RegisterGenerator("PlantTrees", PlantTrees);
+        fw.RegisterGenerator("RareForageHunt", RareForageHunt);
+        fw.RegisterGenerator("SeasonalForaging", SeasonalForaging);
 
         // Mining
-        Reg(fw, "ArchaeologyDig", ArchaeologyDig);
-        Reg(fw, "BarDelivery", BarDelivery);
-        Reg(fw, "BasicSlimeClearing", BasicSlimeClearing);
-        Reg(fw, "ClearTheFloor", ClearTheFloor);
-        Reg(fw, "MinesDeepDive", MinesDeepDive);
-        Reg(fw, "MonsterHunt", MonsterHunt);
-        Reg(fw, "MonsterParts", MonsterParts);
-        Reg(fw, "RareMaterialRequest", RareMaterialRequest);
-        Reg(fw, "SkullCavernDeepDive", SkullCavernDeepDive);
-        Reg(fw, "UnseenOffering", UnseenOffering);
+        fw.RegisterGenerator("ArchaeologyDig", ArchaeologyDig);
+        fw.RegisterGenerator("BarDelivery", BarDelivery);
+        fw.RegisterGenerator("BasicSlimeClearing", BasicSlimeClearing);
+        fw.RegisterGenerator("ClearTheFloor", ClearTheFloor);
+        fw.RegisterGenerator("MinesDeepDive", MinesDeepDive);
+        fw.RegisterGenerator("MonsterHunt", MonsterHunt);
+        fw.RegisterGenerator("MonsterParts", MonsterParts);
+        fw.RegisterGenerator("RareMaterialRequest", RareMaterialRequest);
+        fw.RegisterGenerator("SkullCavernDeepDive", SkullCavernDeepDive);
+        fw.RegisterGenerator("UnseenOffering", UnseenOffering);
 
         // Seasonal
-        Reg(fw, "BattenDownTheHatches", BattenDownTheHatches);
-        Reg(fw, "BeachCleanup", BeachCleanup);
-        Reg(fw, "FloralTea", FloralTea);
-        Reg(fw, "HeatWaveRelief", HeatWaveRelief);
-        Reg(fw, "HolidayCookies", HolidayCookies);
-        Reg(fw, "SpringCleaning", SpringCleaning);
-        Reg(fw, "SubmarineFuel", SubmarineFuel);
-        Reg(fw, "WizardsRitualMaterials", WizardsRitualMaterials);
+        fw.RegisterGenerator("BattenDownTheHatches", BattenDownTheHatches);
+        fw.RegisterGenerator("BeachCleanup", BeachCleanup);
+        fw.RegisterGenerator("FloralTea", FloralTea);
+        fw.RegisterGenerator("HeatWaveRelief", HeatWaveRelief);
+        fw.RegisterGenerator("HolidayCookies", HolidayCookies);
+        fw.RegisterGenerator("SpringCleaning", SpringCleaning);
+        fw.RegisterGenerator("SubmarineFuel", SubmarineFuel);
+        fw.RegisterGenerator("WizardsRitualMaterials", WizardsRitualMaterials);
 
         // Social
-        Reg(fw, "CheckOnFriends", CheckOnFriends);
-        Reg(fw, "CheckOnGeorge", CheckOnGeorge);
-        Reg(fw, "ElliottPoemInspiration", ElliottPoemInspiration);
-        Reg(fw, "EmilyHousewarming", EmilyHousewarming);
-        Reg(fw, "GiftDelivery", GiftDelivery);
-        Reg(fw, "GuntherMuseumDonation", GuntherMuseumDonation);
+        fw.RegisterGenerator("CheckOnFriends", CheckOnFriends);
+        fw.RegisterGenerator("CheckOnGeorge", CheckOnGeorge);
+        fw.RegisterGenerator("ElliottPoemInspiration", ElliottPoemInspiration);
+        fw.RegisterGenerator("EmilyHousewarming", EmilyHousewarming);
+        fw.RegisterGenerator("GiftDelivery", GiftDelivery);
+        fw.RegisterGenerator("GuntherMuseumDonation", GuntherMuseumDonation);
 
-        // Story arcs. Registered directly (not through Reg) so they're never silenced by a
-        // category master-toggle, since they're hand-authored storylines, not board filler.
+        // Story arcs. The Social category toggle gates these like any other quest now, so
+        // turning Social off stops the Morris and Pierre lines from starting.
         fw.RegisterGenerator("MorrisManOfMeans", MorrisManOfMeans);
         fw.RegisterGenerator("MorrisQualityControl", MorrisQualityControl);
         fw.RegisterGenerator("PierreDontGetCaught", PierreDontGetCaught);
@@ -136,29 +136,4 @@ internal static partial class Generators
         // Report-back prompts (talk-to-giver question dialogues that branch the reward).
         RegisterKnowYourWatersReportBack(fw);
     }
-
-    /// Wraps fw.RegisterGenerator with a category master-toggle check. Drops the posting
-    /// when the matching ModConfig.&lt;Category&gt;QuestsEnabled is off.
-    private static void Reg(IMoreQuestsModApi fw, string name, Func<QuestContext, QuestPosting?> gen)
-    {
-        fw.RegisterGenerator(name, ctx =>
-        {
-            var posting = gen(ctx);
-            return posting != null && IsCategoryEnabled(posting.Category) ? posting : null;
-        });
-    }
-
-    private static bool IsCategoryEnabled(string cat) => cat switch
-    {
-        QuestCategory.Animal => ModEntry.Config.AnimalQuestsEnabled,
-        QuestCategory.Cooking => ModEntry.Config.CookingQuestsEnabled,
-        QuestCategory.Farming => ModEntry.Config.FarmingQuestsEnabled,
-        QuestCategory.Festival => ModEntry.Config.FestivalQuestsEnabled,
-        QuestCategory.Fishing => ModEntry.Config.FishingQuestsEnabled,
-        QuestCategory.Foraging => ModEntry.Config.ForagingQuestsEnabled,
-        QuestCategory.Mining => ModEntry.Config.MiningQuestsEnabled,
-        QuestCategory.Seasonal => ModEntry.Config.SeasonalQuestsEnabled,
-        QuestCategory.Social => ModEntry.Config.SocialQuestsEnabled,
-        _ => true
-    };
 }

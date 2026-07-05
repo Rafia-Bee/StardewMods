@@ -733,6 +733,7 @@ The framework follows semver from 1.0 onward.
 
 - **Quest board:** `QuestsPerDay`, `SpecialOrdersBoardPages`, `AllowDuplicateGiverPerDay`, `SkipFriendshipQuestsAtMaxHeart`, `BoardNoteSpacing`, `BoardMaxNoteSize` (the last two set how far apart the help-wanted notes sit and how big a single note gets when only a few are posted).
 - **Master toggles:** `DifficultyScaling`, `FishingIgnoresVisitedLocations`, `ForagingIgnoresVisitedLocations`.
+- **Quest categories:** one on/off toggle per registered category (auto-generated). Turning a category off stops every new quest of that type from posting, the vanilla wrappers included; quests already accepted keep going.
 - **Per-quest weights:** one entry per registered `IQuestDefinition` (built at runtime, so consumer mods' quests show up too).
 - **Mail quest chances:** per-`IQuestDefinition` `MailQuestChancePercent` sliders for mail-delivered quests (0 to 100; default 100). Applies to anything whose effective `Kind` is `PostingKind.Mail` *except* `BuildingBuilt` and `MailReceived` defs, since those triggers are diff-based and a failed roll would lose the quest forever. The slider rolls in `QuestPipeline.GenerateTriggered` before `ShouldFireToday`, so a failed roll doesn't burn the trigger's cooldown / yearly date / OneShot flag.
 - **Vanilla wrappers:** toggle and tune the four bundled vanilla quest types.
@@ -740,7 +741,7 @@ The framework follows semver from 1.0 onward.
 - **Gold reward bases:** beginner / basic / intermediate / advanced / expert tiers.
 - **Reward multipliers:** `RewardMultiplierBelowSell`, `RewardMultiplierAboveSell`, `RewardMultiplierFishPremium`.
 - **Deadlines:** short / medium / long / extended / none (in-game days).
-- **Consequences:** `ConsequenceGraceDays` (days past a queued reaction's fire day before it silently expires, default 7). Controls how long an NPC keeps a queued reaction alive when the player avoids them (i.e. how long Demetrious keeps a grudge when you catch too many fish).
+- **Consequences:** `ConsequencesEnabled` (master on/off for the follow-up NPC reactions, on by default) and `ConsequenceGraceDays` (days past a queued reaction's fire day before it silently expires, default 7). The grace window controls how long an NPC keeps a queued reaction alive when the player avoids them (i.e. how long Demetrious keeps a grudge when you catch too many fish).
 - **Advanced:** `DebugLogging` (off by default). Flip on to write detailed diagnostic lines to the SMAPI log when you're chasing a bug; otherwise leave off so the log stays quiet.
 
 GMCM registration is deferred until the first `UpdateTicking` so consumer-mod quests that register during their own `GameLaunched` show up in the per-quest weight list.

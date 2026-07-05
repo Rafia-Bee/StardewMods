@@ -31,6 +31,12 @@ public sealed class MoreQuestsFrameworkConfig
     // Keys are definition IDs. 0 disables. Missing keys use DefaultWeight.
     public Dictionary<string, int> QuestWeights { get; set; } = new();
 
+    // Per-category master switch, keyed by category id (Farming, Fishing, ...). A missing
+    // key means enabled, so a fresh config leaves every category on. Set an entry false to
+    // stop new postings of that category everywhere (daily board, mail, special orders,
+    // custom boards, notices). Already-accepted quests keep running, same as a weight of 0.
+    public Dictionary<string, bool> CategoryEnabled { get; set; } = new();
+
     // Per-mail-quest probability gate (0-100). Used by Mail-kind quest definitions
     // that want an extra chance roll on top of their trigger (e.g. Rainy Day Catch,
     // which only fires when tomorrow is forecast rain, gated further by this value).
@@ -75,6 +81,12 @@ public sealed class MoreQuestsFrameworkConfig
     // drops it entirely. Either path also logs a WARN line so mod authors notice.
     // Special-order postings always drop because vanilla owns that UI.
     public bool MailFallbackForExcludedGivers { get; set; } = true;
+
+    // Master switch for the consequence system (the delayed gift-taste and friendship
+    // reactions some quests attach when you over-fish a spot, sell junk crops, and so on).
+    // On by default. Off stops quests from attaching new consequences and stops the engine
+    // from applying any that are already queued.
+    public bool ConsequencesEnabled { get; set; } = true;
 
     // After this many days, a queued consequence dialogue line is dropped on DayStarted.
     public int ConsequenceGraceDays { get; set; } = 7;

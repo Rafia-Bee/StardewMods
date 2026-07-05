@@ -372,7 +372,7 @@ internal static partial class Generators
         var reward = rewardOpt.Value;
 
         ConsequenceSpec? consequence = null;
-        if (ModEntry.Config.ConsequencesEnabled)
+        if (ctx.Config.ConsequencesEnabled)
         {
             consequence = new ConsequenceSpec
             {

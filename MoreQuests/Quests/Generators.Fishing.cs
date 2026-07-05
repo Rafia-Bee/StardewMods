@@ -168,7 +168,7 @@ internal static partial class Generators
         int gold = (int)(target.SellPrice * qty * ctx.Config.RewardMultiplierBelowSell);
 
         ConsequenceSpec? consequence = null;
-        if (ModEntry.Config.ConsequencesEnabled)
+        if (ctx.Config.ConsequencesEnabled)
         {
             var ecology = ResolveEcologyTargets(ctx, includeLinus: false, exclude: giver);
             if (ecology.Count > 0)
@@ -227,7 +227,7 @@ internal static partial class Generators
         int gold = (int)(target.SellPrice * qty * ctx.Config.RewardMultiplierFishPremium);
 
         ConsequenceSpec? consequence = null;
-        if (ModEntry.Config.ConsequencesEnabled)
+        if (ctx.Config.ConsequencesEnabled)
         {
             var ecology = ResolveEcologyTargets(ctx, includeLinus: true, exclude: giver);
             if (ecology.Count > 0)

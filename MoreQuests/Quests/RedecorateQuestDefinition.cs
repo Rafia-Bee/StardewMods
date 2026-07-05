@@ -27,8 +27,7 @@ public sealed class RedecorateQuestDefinition : IQuestDefinition, IEligibleGiver
 
     public bool IsAvailable(QuestContext ctx)
     {
-        if (!ModEntry.Config.SocialQuestsEnabled)
-            return false;
+        // The framework gates this by its Social category, so no toggle check here.
         if (!ModEntry.Instance.Helper.ModRegistry.IsLoaded(BuildPlacementUnlockerId))
             return false;
         return GiverHomeResolver.EligibleGivers().Count > 0;

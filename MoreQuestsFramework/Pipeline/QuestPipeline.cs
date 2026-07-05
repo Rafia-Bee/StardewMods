@@ -36,6 +36,19 @@ internal sealed class QuestPipeline
     public void WireSkipCallback(Action<string, string, TriggerSource, QuestSkipReason>? onSkipped)
         => _onSkipped = onSkipped;
 
+    // A category with no CategoryEnabled entry, or a true one, is on. Only an explicit false
+    // switches it off. An empty category reads as on (quests always carry one). A disabled
+    // category is a deliberate off switch like a weight of 0, so it skips silently rather
+    // than firing the QuestSkippedToday event.
+    private bool IsCategoryEnabled(string? category)
+        => string.IsNullOrEmpty(category)
+           || !_ctx.Config.CategoryEnabled.TryGetValue(category, out bool enabled)
+           || enabled;
+
+    // A notice with no Category rides Social, same default the notice builder uses.
+    private static string NoticeCategory(NoticeDef def)
+        => string.IsNullOrWhiteSpace(def.Category) ? QuestCategory.Social : def.Category!;
+
     public List<QuestPosting> GenerateDailyPostings()
     {
         var sw = Stopwatch.StartNew();
@@ -49,6 +62,11 @@ internal sealed class QuestPipeline
         {
             if (_registry.EffectiveSource(def) != TriggerSource.DailyBoard || def.Kind != PostingKind.DailyBoard)
                 continue;
+            if (!IsCategoryEnabled(def.Category))
+            {
+                ModEntry.LogDebug($"DailyBoard pool: '{def.Id}' category '{def.Category}' is disabled, skipping.");
+                continue;
+            }
             if (!def.IsAvailable(_ctx))
             {
                 ModEntry.LogDebug($"DailyBoard pool: '{def.Id}' unavailable today, skipping.");
@@ -132,6 +150,8 @@ internal sealed class QuestPipeline
                 || src == TriggerSource.SpecialOrder
                 || src == TriggerSource.CustomBoard)
                 continue;
+            if (!IsCategoryEnabled(def.Category))
+                continue;
             if (!def.IsAvailable(_ctx))
             {
                 _onSkipped?.Invoke(def.Id, def.OwnerUniqueId, src, QuestSkipReason.ConditionsNotMet);
@@ -185,6 +205,8 @@ internal sealed class QuestPipeline
             var src = _registry.EffectiveSource(def);
             if (src != TriggerSource.SpecialOrder)
                 continue;
+            if (!IsCategoryEnabled(def.Category))
+                continue;
             if (!def.IsAvailable(_ctx))
             {
                 _onSkipped?.Invoke(def.Id, def.OwnerUniqueId, src, QuestSkipReason.ConditionsNotMet);
@@ -232,6 +254,8 @@ internal sealed class QuestPipeline
         foreach (var def in _registry.All)
         {
             if (_registry.EffectiveSource(def) != TriggerSource.CustomBoard)
+                continue;
+            if (!IsCategoryEnabled(def.Category))
                 continue;
             int w = weights.TryGetValue(def.Id, out int configured) ? configured : def.DefaultWeight;
             switch (CustomBoardRouting.ResolveHome(def, _registry.EffectiveBoard(def), boardsByKey, boardsByOwner, out string homeKey))
@@ -350,6 +374,8 @@ internal sealed class QuestPipeline
         {
             if (!defById.TryGetValue(pinned.DefinitionId, out var def))
                 continue;
+            if (!IsCategoryEnabled(NoticeCategory(def)))
+                continue;
             if (CustomBoardRouting.ResolveHome(def.OwnerUniqueId ?? "", def.CustomBoardId, byKey, byOwner, out string homeKey)
                 != CustomBoardRouting.HomeResolution.Home)
                 continue;
@@ -364,6 +390,8 @@ internal sealed class QuestPipeline
         {
             string id = NoticeRegistry.KeyOf(def);
             if (carriedIds.Contains(id))
+                continue;
+            if (!IsCategoryEnabled(NoticeCategory(def)))
                 continue;
             if (store.IsSeen(id))
                 continue;
@@ -754,6 +782,8 @@ internal sealed class QuestPipeline
         foreach (var def in _registry.All)
         {
             if (_registry.EffectiveSource(def) != TriggerSource.NpcDialogue)
+                continue;
+            if (!IsCategoryEnabled(def.Category))
                 continue;
             if (string.IsNullOrEmpty(def.Trigger.Npc))
                 continue;

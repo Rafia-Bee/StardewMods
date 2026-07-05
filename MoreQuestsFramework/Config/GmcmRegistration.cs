@@ -125,6 +125,20 @@ internal static class GmcmRegistration
             mailDefs.Add(def);
         }
 
+        api.AddSectionTitle(manifest, () => t.Get("config.section.categories"),
+            () => t.Get("config.section.categories.tooltip"));
+        foreach (var category in OrderedCategories(ModEntry.Categories.KnownCategories()))
+        {
+            string cat = category;
+            string display = t.Get($"category.{cat.ToLowerInvariant()}")
+                .Default(ModEntry.Categories.DisplayNameFor(cat) ?? cat).ToString();
+            api.AddBoolOption(manifest,
+                () => !ModEntry.Config.CategoryEnabled.TryGetValue(cat, out bool on) || on,
+                v => ModEntry.Config.CategoryEnabled[cat] = v,
+                () => t.Get("config.categoryToggle", new { category = display }),
+                () => t.Get("config.categoryToggle.tooltip", new { category = display }));
+        }
+
         api.AddSectionTitle(manifest, () => t.Get("config.section.weights"),
             () => t.Get("config.section.weights.tooltip"));
         foreach (var category in OrderedCategories(byCategory.Keys))
@@ -173,6 +187,11 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "CooldownLongDays", () => ModEntry.Config.CooldownLongDays, v => ModEntry.Config.CooldownLongDays = v, 1, 28);
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.consequences"));
+        api.AddBoolOption(manifest,
+            () => ModEntry.Config.ConsequencesEnabled,
+            v => ModEntry.Config.ConsequencesEnabled = v,
+            () => t.Get("config.consequencesEnabled"),
+            () => t.Get("config.consequencesEnabled.tooltip"));
         AddInt(api, manifest, t, "ConsequenceGraceDays", () => ModEntry.Config.ConsequenceGraceDays, v => ModEntry.Config.ConsequenceGraceDays = v, 1, 60);
 
         api.AddSectionTitle(manifest, () => t.Get("config.section.advanced"));
