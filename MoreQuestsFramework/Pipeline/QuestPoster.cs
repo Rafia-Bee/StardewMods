@@ -350,7 +350,8 @@ internal sealed class QuestPoster
             Title = posting.Title,
             Description = posting.Description,
             CurrentObjective = posting.CurrentObjective,
-            TargetMessage = posting.TargetMessage
+            TargetMessage = posting.TargetMessage,
+            CanBeCancelled = posting.CanBeCancelled
         };
         foreach (var alt in posting.AlternativeObjectiveItemIds)
             stash.AlternativeObjectiveItemIds.Add(alt);
@@ -390,7 +391,8 @@ internal sealed class QuestPoster
             Title = stash.Title,
             Description = stash.Description,
             CurrentObjective = stash.CurrentObjective,
-            TargetMessage = stash.TargetMessage
+            TargetMessage = stash.TargetMessage,
+            CanBeCancelled = stash.CanBeCancelled
         };
         foreach (var line in stash.EncodedRewards)
         {
@@ -448,6 +450,10 @@ internal sealed class QuestPoster
     {
         quest.dailyQuest.Value = dailyQuestDefault;
         quest.daysLeft.Value = daysLeft;
+        quest.canBeCancelled.Value = posting.CanBeCancelled;
+        // Marker survives save/reload so the backfill can leave an opt-out quest alone.
+        if (quest.modData != null)
+            quest.modData[Api.MoreQuestsApi.ModDataCancellableKey] = posting.CanBeCancelled ? "true" : "false";
         if (!dailyQuestDefault)
             quest.accepted.Value = false;
         if (!string.IsNullOrEmpty(posting.Title))

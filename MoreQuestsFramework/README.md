@@ -377,6 +377,7 @@ If you set neither item ids nor categories, anything that clears the price and q
 | `MailBody` | string | Overrides the auto-generated letter body when the quest is delivered via mail. On Adventure quests it lives at the same `QuestDef` level. Null/empty = use the default body. Supports CP `{{i18n:key}}` or pre-resolved strings. |
 | `DeliveryTarget` | string | For `Deliver` quests where the requester (`Giver`) isn't the NPC who accepts the hand-off (anonymous gift orders). Empty = use `Giver`. |
 | `AllowDecorShipping` | bool | Single-step `Ship` quests only. Lifts vanilla's furniture/decor shipping ban while the quest is active. For Adventure quests, set this on the individual `Ship` step instead. |
+| `CanBeCancelled` | bool | Whether the journal shows the "Cancel Quest" button for this quest. Applies to any quest (single-step or Adventure) on any delivery path. Defaults to `true`, so leave it out unless you want to stop the player abandoning a quest, then set it `false`. |
 
 #### Optional fishing fields (`Objective.Kind` = `Fish` / `Catch`)
 

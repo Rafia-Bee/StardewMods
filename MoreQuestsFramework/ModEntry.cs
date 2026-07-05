@@ -516,6 +516,35 @@ public sealed class ModEntry : Mod
         Patches.DecorShippingPatches.ActiveCount = 0;
 
         DedupeQuestSerializedRewards();
+        BackfillCancellable();
+    }
+
+    // Quests accepted before the CanBeCancelled field existed kept vanilla's non-cancellable
+    // default, so the mail- and dialogue-delivered ones had no cancel button in the journal.
+    // On load, bring any managed quest that predates the field (no marker) up to the new
+    // cancellable default, once, and stamp the marker. A quest posted after the field exists
+    // already carries the marker, so an author's deliberate opt-out (marker "false") is left
+    // untouched here.
+    private void BackfillCancellable()
+    {
+        if (Game1.player == null) return;
+        var log = Game1.player.questLog;
+        int fixedCount = 0;
+        for (int i = 0; i < log.Count; i++)
+        {
+            var q = log[i];
+            if (q == null) continue;
+            if (q.modData != null && q.modData.ContainsKey(MoreQuestsApi.ModDataCancellableKey))
+                continue;
+            if (!_api.TryGetManaged(q, out _))
+                continue;
+            q.canBeCancelled.Value = true;
+            if (q.modData != null)
+                q.modData[MoreQuestsApi.ModDataCancellableKey] = "true";
+            fixedCount++;
+        }
+        if (fixedCount > 0)
+            ModEntry.LogDebug($"Made {fixedCount} existing quest(s) cancellable (backfill).");
     }
 
     // Saves written before the SerializedRewards XmlIgnore fix (commit added 2026-05-24)

@@ -145,6 +145,11 @@ public sealed class QuestPosting
 
     public int DeadlineDays { get; set; } = 5;
 
+    // Shows the "Cancel Quest" button in the journal (vanilla Quest.canBeCancelled).
+    // True by default so every framework quest can be dropped; a mod author sets it
+    // false on a specific quest they don't want the player to abandon.
+    public bool CanBeCancelled { get; set; } = true;
+
     // Bypass vanilla's decor/furniture shipping ban while the quest is active. Used by
     // festival-supply quests that ask for Hay Bales, Wood Lamp-posts, Tubs of Flowers, etc.
     public bool AllowDecorShipping { get; set; }

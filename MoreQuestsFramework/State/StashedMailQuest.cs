@@ -34,6 +34,10 @@ internal sealed class StashedMailQuest
     public string CurrentObjective { get; set; } = "";
     public string TargetMessage { get; set; } = "";
 
+    // Older saves don't have this field. It stays true when the saved data leaves it out,
+    // so a mail quest from before this change is still cancellable after updating.
+    public bool CanBeCancelled { get; set; } = true;
+
     // RewardCodec.Encode keeps this text-only (no polymorphic serializer).
     public List<string> EncodedRewards { get; set; } = new();
 

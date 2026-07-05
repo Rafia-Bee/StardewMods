@@ -58,6 +58,11 @@ public sealed class QuestDef
     // individual Ship step instead.)
     public bool AllowDecorShipping { get; set; }
 
+    // Whether the journal shows the "Cancel Quest" button for this quest. True by
+    // default, so leave it out unless you want to stop the player from abandoning a
+    // quest (a forced questline step, say); set it false for that.
+    public bool CanBeCancelled { get; set; } = true;
+
     public List<RewardDef> Rewards { get; set; } = new();
 
     public ConsequenceDef? Consequence { get; set; }

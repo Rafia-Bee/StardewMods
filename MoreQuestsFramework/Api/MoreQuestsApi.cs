@@ -499,6 +499,10 @@ public sealed class MoreQuestsApi : IMoreQuestsApi
     // does not, since the deserialized Quest is a fresh instance).
     internal const string ModDataOwnerKey = "RafiaBee.MoreQuestsFramework/Owner";
     internal const string ModDataDefinitionKey = "RafiaBee.MoreQuestsFramework/Definition";
+    // Records the CanBeCancelled intent on the quest so the save-load backfill can tell a
+    // quest that predates the field (no marker, bring up to the cancellable default) apart
+    // from one an author deliberately opted out of cancelling (marker "false", leave alone).
+    internal const string ModDataCancellableKey = "RafiaBee.MoreQuestsFramework/Cancellable";
 
     internal void TrackPosted(Quest quest, string ownerUniqueId, string definitionId)
     {

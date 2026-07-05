@@ -109,7 +109,7 @@ internal sealed class CustomBoardQuestMenu : IClickableMenu
             Quest quest = _slot.Quest!;
             quest.dayQuestAccepted.Value = Game1.Date.TotalDays;
             quest.accepted.Value = true;
-            quest.canBeCancelled.Value = true;
+            quest.canBeCancelled.Value = _slot.Posting!.CanBeCancelled;
             quest.daysLeft.Value = deadline;
             // dailyQuest=false: CustomBoard quests shouldn't trigger billboard milestone
             // mail or prize tickets.

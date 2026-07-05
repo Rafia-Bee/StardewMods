@@ -177,6 +177,7 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             TargetMessage = Resolve(_def.TargetMessage),
             MailBody = string.IsNullOrEmpty(_def.MailBody) ? null : Resolve(_def.MailBody),
             DialogueText = string.IsNullOrEmpty(_def.Trigger?.DialogueText) ? string.Empty : Resolve(_def.Trigger.DialogueText),
+            CanBeCancelled = _def.CanBeCancelled,
             PreBuiltQuest = quest
         };
         BuildRewards(posting.Rewards, _def.Rewards);
@@ -272,7 +273,8 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
             TargetMessage = Resolve(_def.TargetMessage),
             MailBody = string.IsNullOrEmpty(_def.MailBody) ? null : Resolve(_def.MailBody),
             DialogueText = string.IsNullOrEmpty(_def.Trigger?.DialogueText) ? string.Empty : Resolve(_def.Trigger.DialogueText),
-            AllowDecorShipping = _def.AllowDecorShipping
+            AllowDecorShipping = _def.AllowDecorShipping,
+            CanBeCancelled = _def.CanBeCancelled
         };
         for (int i = 1; i < obj.Item.Count; i++)
             posting.AlternativeObjectiveItemIds.Add(obj.Item[i]);

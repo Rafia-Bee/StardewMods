@@ -1,4 +1,5 @@
 To be released
+- Every quest can now be cancelled from the journal, including the ones that come in the mail or from talking to a villager. You'll need the latest More Quests Framework for this.
 - Fixed the Adventurer's Guild board disappearing while the pause menu was open. It stays put now.
 - The Adventurer's Guild board now lands right where its placement setting points, and there are two new sliders to nudge it a few pixels left, right, up, or down.
 - New setting for the Know your waters fishing quest: you can cap how many different fish it asks for at one spot. Off by default, handy if fish mods give a spot too many kinds to catch.

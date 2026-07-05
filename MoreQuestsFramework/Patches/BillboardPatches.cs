@@ -190,7 +190,14 @@ internal static class BillboardPatches
                 // dailyQuest.Value=true (set by vanilla) is preserved so completion side
                 // effects fire: stats increment, prize ticket every 3rd quest, milestone mail.
                 if (accepted != null)
+                {
                     accepted.daysLeft.Value = deadline;
+                    // Vanilla's accept hardcodes canBeCancelled=true on the quest. Re-apply
+                    // the posting's setting so an author who opted a board quest out of
+                    // cancelling is honored.
+                    if (sel != null)
+                        accepted.canBeCancelled.Value = sel.Posting.CanBeCancelled;
+                }
                 MoreQuestsBillboard.InnerBillboard = null;
                 Game1.activeClickableMenu = new MoreQuestsBillboard();
                 return;
