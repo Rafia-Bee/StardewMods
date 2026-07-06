@@ -63,18 +63,13 @@ internal sealed class JsonQuestDefinition : IQuestDefinition
         get
         {
             string? tier = _def.Trigger?.CooldownTier;
-            if (!string.IsNullOrEmpty(tier) && _cooldownTierLookup != null)
-            {
-                int? resolved = _cooldownTierLookup(tier);
-                if (resolved.HasValue)
-                    return resolved.Value;
-                // Typo in a tier name silently falls through to CooldownDays, which can
-                // mask intent (a "Mediuum" cooldown bypasses the tier system entirely).
-                // One Warn per (definition, tier) pair, so live GMCM edits don't spam.
-                if (_warnedUnknownTiers.Add(tier))
-                    _monitor.Log($"Quest '{Id}': CooldownTier '{tier}' is not in the CooldownTiers asset. Falling back to CooldownDays={_cooldownDaysFallback}.", LogLevel.Warn);
-            }
-            return _cooldownDaysFallback;
+            int days = CooldownResolver.Resolve(tier, _cooldownTierLookup, _cooldownDaysFallback, out bool unknownTier);
+            // Typo in a tier name silently falls through to CooldownDays, which can mask intent
+            // (a "Mediuum" cooldown bypasses the tier system entirely). One Warn per
+            // (definition, tier) pair, so live GMCM edits don't spam.
+            if (unknownTier && _warnedUnknownTiers.Add(tier!))
+                _monitor.Log($"Quest '{Id}': CooldownTier '{tier}' is not in the CooldownTiers asset. Falling back to CooldownDays={_cooldownDaysFallback}.", LogLevel.Warn);
+            return days;
         }
     }
     public string OwnerUniqueId => _ownerUniqueId;

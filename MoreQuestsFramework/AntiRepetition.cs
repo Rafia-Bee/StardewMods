@@ -51,9 +51,9 @@ internal sealed class AntiRepetition
     public void RecordRecency(QuestPosting posting)
     {
         if (!string.IsNullOrEmpty(posting.ObjectiveItemId))
-            Push(_recentItems, posting.ObjectiveItemId, System.Math.Max(0, ModEntry.Config.AntiRepetitionItemHistory));
+            RecencyWindow.Push(_recentItems, posting.ObjectiveItemId, System.Math.Max(0, ModEntry.Config.AntiRepetitionItemHistory));
         if (!string.IsNullOrEmpty(posting.QuestGiver))
-            Push(_recentNpcs, posting.QuestGiver, System.Math.Max(0, ModEntry.Config.AntiRepetitionNpcHistory));
+            RecencyWindow.Push(_recentNpcs, posting.QuestGiver, System.Math.Max(0, ModEntry.Config.AntiRepetitionNpcHistory));
     }
 
     // Starts the definition-level cooldown clock. For board postings this fires when
@@ -65,12 +65,5 @@ internal sealed class AntiRepetition
         if (string.IsNullOrEmpty(definitionId))
             return;
         _lastPostedDay[definitionId] = Game1.Date.TotalDays;
-    }
-
-    private static void Push(Queue<string> q, string v, int max)
-    {
-        q.Enqueue(v);
-        while (q.Count > max)
-            q.Dequeue();
     }
 }

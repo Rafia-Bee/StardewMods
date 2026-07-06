@@ -41,9 +41,7 @@ internal sealed class QuestPipeline
     // category is a deliberate off switch like a weight of 0, so it skips silently rather
     // than firing the QuestSkippedToday event.
     private bool IsCategoryEnabled(string? category)
-        => string.IsNullOrEmpty(category)
-           || !_ctx.Config.CategoryEnabled.TryGetValue(category, out bool enabled)
-           || enabled;
+        => CategoryGate.IsEnabled(_ctx.Config.CategoryEnabled, category);
 
     // A notice with no Category rides Social, same default the notice builder uses.
     private static string NoticeCategory(NoticeDef def)

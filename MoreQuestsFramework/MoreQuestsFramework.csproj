@@ -25,4 +25,8 @@
       <Private>false</Private>
     </Reference>
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MoreQuestsFramework.Tests" />
+  </ItemGroup>
 </Project>
