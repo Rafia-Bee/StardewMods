@@ -1,5 +1,6 @@
-To be released
-- Every quest can now be cancelled from the journal, including the ones that come in the mail or from talking to a villager. You'll need the latest More Quests Framework for this.
+2.6.0
+- Needs More Quests Framework 2.8.0 or newer.
+- Every quest can now be cancelled from the journal, including the ones that come in the mail or from talking to a villager.
 - Fixed the Adventurer's Guild board disappearing while the pause menu was open. It stays put now.
 - The Adventurer's Guild board now lands right where its placement setting points, and there are two new sliders to nudge it a few pixels left, right, up, or down.
 - New setting for the Know your waters fishing quest: you can cap how many different fish it asks for at one spot. Off by default, handy if fish mods give a spot too many kinds to catch.
@@ -10,6 +11,7 @@ To be released
 - A few quests handed out a set amount of friendship or gold no matter what your reward settings said. They follow the settings in More Quests Framework now. Three of them (the Fish Smoker request, the preserves/keg/dehydrator shipping request, and Pierre's sabotage quest) used to give two hearts of friendship and now give one, to match.
 - New settings for a handful of quests: a cap on how many eggs Alex's protein shake quest can ask for, the three numbers behind the Joja questline (gold to earn, junk crops to sell, pickles to stock), and how many items the East Scarp and Egg Festival decor quests ask you to ship.
 - Lots of quest settings that you could only change by hand-editing the config file now show up in the in-game settings menu. That covers the Redecorate quest, Marnie's animal offers, Robin's silo, Alex's protein shakes, spring cleaning, the crop cycle quest, and a new Mod compatibility page for the festival crossover mods.
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuests-v2.5.0...MoreQuests-v2.6.0]i18n changes here[/url] (look at MoreQuests/i18n/default.json).
 
 2.5.0
 - Needs More Quests Framework 2.7.0 or newer.

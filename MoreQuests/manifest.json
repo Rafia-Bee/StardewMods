@@ -1,7 +1,7 @@
 {
     "Name": "More Quests",
     "Author": "Rafia-Bee",
-    "Version": "2.5.0",
+    "Version": "2.6.0",
     "MinimumApiVersion": "4.1.0",
     "UniqueID": "RafiaBee.MoreQuests",
     "Description": "Adds 70+ quests of different types, built on More Quests Framework.",
@@ -10,7 +10,7 @@
     "Dependencies": [
         {
             "UniqueID": "RafiaBee.MoreQuestsFramework",
-            "MinimumVersion": "2.7.0",
+            "MinimumVersion": "2.8.0",
             "IsRequired": true
         },
         {
