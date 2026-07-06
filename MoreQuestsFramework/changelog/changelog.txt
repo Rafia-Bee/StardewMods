@@ -1,4 +1,4 @@
-To be released
+2.8.0
 - Fixed the "!" over Pierre's town board not showing when there are quests to pick up. It now pops up like it does on custom boards.
 - Every quest can now be cancelled from the journal, including the ones that arrive by mail or from talking to someone.
 - For mod authors: new optional CanBeCancelled field on a quest (defaults to true). Set it false to stop the player dropping a particular quest.
@@ -11,6 +11,7 @@ To be released
 - New "Repeat prevention" settings: choose how many recently-used items and quest givers the board holds back before it will use them again.
 - The "no deadline" value now shows in the Deadlines settings. It's just a stand-in for quests that shouldn't run out, so you'll almost never need to touch it.
 - Fixed resetting the settings to default sometimes not taking hold until you reloaded your save. It applies right away now.
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuestsFramework-v2.7.0...MoreQuestsFramework-v2.8.0]i18n changes here[/url] (look at MoreQuestsFramework/i18n/default.json).
 
 2.8.0-beta.2
 - Players can now set how many quests a custom board shows at once, when the board's author allows it. Look under "Custom boards" in the mod settings.
