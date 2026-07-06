@@ -26,6 +26,9 @@ release/
 *.zip
 rafia-stardew-mods.sln
 
+# Test projects
+*.Tests/
+
 # Internal docs
 hiddenDocs/
 .github
