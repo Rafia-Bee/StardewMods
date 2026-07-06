@@ -1,10 +1,11 @@
-To be released
+1.7.0
 - Fixed: the journal now always opens centered on the screen instead of sometimes sitting off to the side or drifting. You can still drag it around while it's open.
 - New: finished quests now show their name in green, so they're easy to tell apart from the ones you're still working on when a tab shows both.
 - New: a setting to keep finished quests in the Completed tab only, so they stop cluttering up your custom tabs and the All tab. It's off to start.
 - New: the filter boxes for custom tabs hold a lot more text now, so you can list out more names without running out of room.
 - Fixed: secret notes that quietly add a hidden quest (like the one where you fish up Caroline's necklace and give it back) no longer show up as blank entries in the journal. The game keeps these hidden, and now the journal does too.
 - Fixed: updated to work with the latest More Quests, which changed how quest categories work. Categories show correctly again.
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/QuestJournal-v1.6.0...QuestJournal-v1.7.0]i18n changes here[/url] (look at QuestJournal/i18n/default.json).
 
 1.6.0
 - New: you can now cancel a special order. The game normally won't let you back out of a special order once you take it, so if you grab one you can't finish, you're stuck with it. Now in-progress orders have a Cancel button, same as regular quests. Anything you already donated to the order comes back to you in the lost and found box at the special orders desk.
