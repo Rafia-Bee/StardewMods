@@ -1,12 +1,12 @@
 [size=4][b]What does this mod do?[/b][/size]
 
-If you use the [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/stardewvalley/mods/20799?tab=description) mod, you probably faced the issue of the auto-grabber overflowing and having to press the global grabber button multiple times to gather all the items. This mod expands the auto-grabber's internal chest beyond the vanilla 36-slot limit, so the deluxe grabber can grab everything in one go.
+If you use the [url=https://www.nexusmods.com/stardewvalley/mods/43136]Deluxe Grabber Reduxe Fixes[/url] mod, you probably faced the issue of the auto-grabber overflowing and having to press the global grabber button multiple times to gather all the items. This mod expands the auto-grabber's internal chest beyond the vanilla 36-slot limit, so the deluxe grabber can grab everything in one go.
 
 [b][u][color=#a64d79][size=4]Update on v2.0.0: Now this mod also lets you make your storage bigger too![/size][/color][/u][/b]
 
 You can set a different size for each kind of storage:
 [list]
-[*][b]Auto-grabbers[/b]: pairs great with mods like [url=https://www.nexusmods.com/stardewvalley/mods/20799]Deluxe Grabber Redux[/url] that dump a lot of items at once[/*]
+[*][b]Auto-grabbers[/b]: pairs great with mods like [url=https://www.nexusmods.com/stardewvalley/mods/20799][/url][url=https://www.nexusmods.com/stardewvalley/mods/43136]Deluxe Grabber Reduxe Fixes[/url] that dump a lot of items at once[/*]
 [*][b]Chests[/b]: regular, big, stone, junimo and modded chests[/*]
 [*][b]Fridges[/b]: the kitchen fridge and mini-fridges[/*]
 [/list]
