@@ -2,7 +2,7 @@
 
 If you use the [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/stardewvalley/mods/20799?tab=description) mod, you probably faced the issue of the auto-grabber overflowing and having to press the global grabber button multiple times to gather all the items. This mod expands the auto-grabber's internal chest beyond the vanilla 36-slot limit, so the deluxe grabber can grab everything in one go.
 
-Update on v2.0.0: Now this mod also lets you make your storage bigger too!
+[b][u][color=#a64d79][size=4]Update on v2.0.0: Now this mod also lets you make your storage bigger too![/size][/color][/u][/b]
 
 You can set a different size for each kind of storage:
 [list]
