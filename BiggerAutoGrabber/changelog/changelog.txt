@@ -1,3 +1,10 @@
+v2.0.0
+- Renamed to Bigger Storage (was Bigger Auto-Grabber). Same mod, same page, just does a lot more than grabbers now.
+- Bigger storage now works for chests, big and stone chests, junimo chests, the kitchen fridge, and mini-fridges, not just auto-grabbers.
+- New config menu: set one default size for all storage, or give any kind its own size. Modded chests get their own row automatically.
+- Stopped supporting Custom Chest Size. Both mods resize storage and clash, so pick one.
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/BiggerAutoGrabber-v1.2.2...BiggerAutoGrabber-v2.0.0]i18n changes here[/url] (look at BiggerAutoGrabber/i18n/default.json).
+
 v1.2.2
 - Fixed the chest grid going invisible on Android/mobile when capacity was increased. The mobile UI now keeps the vanilla grid layout and lets you scroll through the full enlarged inventory with the up/down arrows.
 

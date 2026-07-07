@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using BiggerAutoGrabber.Framework;
 using HarmonyLib;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Objects;
 
@@ -14,14 +16,10 @@ public class ModEntry : Mod
 {
     internal static ModConfig Config;
 
+    private IGenericModConfigMenuApi _gmcm;
+
     public override void Entry(IModHelper helper)
     {
-        if (helper.ModRegistry.IsLoaded("Kree.CustomChestSize"))
-        {
-            Monitor.Log("Custom Chest Size is loaded; yielding to it. Bigger Auto-Grabber will not apply any patches this session.", LogLevel.Info);
-            return;
-        }
-
         try
         {
             Config = helper.ReadConfig<ModConfig>();
@@ -31,41 +29,114 @@ public class ModEntry : Mod
             Config = new ModConfig();
         }
 
-        if (Config.Capacity < 36)
-            Config.Capacity = 36;
+        Config.CapacityByType ??= new Dictionary<string, int>();
+        Config.KnownTypes ??= new List<string>();
+
+        bool changed = MigrateLegacyConfig();
+        changed |= SeedSpecialTypes();
+        ClampConfig();
+        if (changed)
+            helper.WriteConfig(Config);
 
         var harmony = new Harmony(ModManifest.UniqueID);
         ChestPatches.Apply(harmony);
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
-        helper.Events.GameLoop.SaveLoaded += (_, _) => StampAllAutoGrabbers();
-        helper.Events.GameLoop.DayStarted += (_, _) => StampAllAutoGrabbers();
+        helper.Events.GameLoop.SaveLoaded += (_, _) => StampAllStorage();
+        helper.Events.GameLoop.DayStarted += (_, _) => StampAllStorage();
         helper.Events.World.ObjectListChanged += OnObjectListChanged;
         helper.Events.Display.MenuChanged += OnMenuChanged;
     }
 
+    // ── Config menu ─────────────────────────────────────────────────
+
     private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
     {
-        var api = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
-        if (api == null)
+        _gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        if (_gmcm == null)
             return;
 
-        api.Register(ModManifest,
-            () => Config = new ModConfig(),
-            () =>
+        BuildMenu();
+    }
+
+    private void BuildMenu()
+    {
+        _gmcm.Register(ModManifest,
+            reset: () =>
             {
+                var known = Config.KnownTypes;
+                Config = new ModConfig { KnownTypes = known };
+                SeedSpecialTypes();
+            },
+            save: () =>
+            {
+                ClampConfig();
                 Helper.WriteConfig(Config);
                 if (Context.IsWorldReady)
-                    StampAllAutoGrabbers();
+                    StampAllStorage();
             });
 
-        api.AddNumberOption(ModManifest,
-            () => Config.Capacity,
-            v => Config.Capacity = v,
-            () => "Auto-Grabber Capacity",
-            () => "Number of item slots in each auto-grabber. Vanilla default is 36.",
+        _gmcm.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.section.title"));
+        _gmcm.AddParagraph(ModManifest, () => Helper.Translation.Get("config.section.note"));
+
+        _gmcm.AddNumberOption(ModManifest,
+            () => Config.DefaultCapacity,
+            v => Config.DefaultCapacity = v,
+            () => Helper.Translation.Get("config.default.name"),
+            () => Helper.Translation.Get("config.default.tooltip"),
+            36, 516, 12);
+
+        foreach (string key in OrderedTypes())
+            AddTypeOption(key);
+    }
+
+    private void RebuildMenu()
+    {
+        if (_gmcm == null)
+            return;
+
+        _gmcm.Unregister(ModManifest);
+        BuildMenu();
+    }
+
+    private void AddTypeOption(string key)
+    {
+        _gmcm.AddNumberOption(ModManifest,
+            () => StorageRules.ResolveCapacity(key, Config),
+            v =>
+            {
+                // Storing only real overrides means the default slider keeps
+                // applying to any type the player hasn't deliberately changed.
+                if (v == Config.DefaultCapacity)
+                    Config.CapacityByType.Remove(key);
+                else
+                    Config.CapacityByType[key] = v;
+            },
+            () => DisplayNameForKey(key),
+            null,
             36, 516, 12);
     }
+
+    private IEnumerable<string> OrderedTypes()
+    {
+        var specials = new[] { StorageRules.AutoGrabberKey, StorageRules.FridgeKey };
+        var rest = Config.KnownTypes
+            .Where(k => k != StorageRules.AutoGrabberKey && k != StorageRules.FridgeKey)
+            .OrderBy(DisplayNameForKey, StringComparer.OrdinalIgnoreCase);
+        return specials.Concat(rest);
+    }
+
+    private string DisplayNameForKey(string key)
+    {
+        if (key == StorageRules.AutoGrabberKey)
+            return Helper.Translation.Get("config.autograbber.name");
+        if (key == StorageRules.FridgeKey)
+            return Helper.Translation.Get("config.fridge.name");
+
+        return ItemRegistry.GetData(key)?.DisplayName ?? key;
+    }
+
+    // ── Menu resize hook ────────────────────────────────────────────
 
     private void OnMenuChanged(object sender, MenuChangedEventArgs e)
     {
@@ -74,7 +145,7 @@ public class ModEntry : Mod
         if (e.NewMenu is not ItemGrabMenu menu)
             return;
 
-        var chest = ChestPatches.FindAutoGrabberChest(menu);
+        var chest = ChestPatches.FindStorageChest(menu);
         if (chest == null)
             return;
 
@@ -85,39 +156,152 @@ public class ModEntry : Mod
         ChestPatches.ResizeMenu(menu, cap);
     }
 
+    // ── Stamping ────────────────────────────────────────────────────
+
     private void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
     {
+        bool discovered = false;
         foreach (var pair in e.Added)
-        {
-            StampIfAutoGrabber(pair.Value);
-        }
+            discovered |= StampStorage(pair.Value);
+
+        if (discovered)
+            PersistAndRebuildMenu();
     }
 
-    private void StampAllAutoGrabbers()
+    private void StampAllStorage()
     {
-        var allLocations = Game1.locations
-            .Concat(Game1.getFarm().buildings.Select(b => b.indoors.Value))
-            .Where(loc => loc != null);
+        bool discovered = false;
 
-        foreach (var location in allLocations)
+        Utility.ForEachLocation(location =>
         {
             foreach (var obj in location.Objects.Values)
+                discovered |= StampStorage(obj);
+
+            discovered |= StampLocationFridge(location);
+            return true;
+        });
+
+        if (discovered)
+            PersistAndRebuildMenu();
+
+        Monitor.Log(
+            $"Stamped all storage. {Config.KnownTypes.Count} known types, default {Config.DefaultCapacity}.",
+            LogLevel.Trace);
+    }
+
+    /// <summary>Stamps one world object. Returns true if it was a storage type we hadn't seen before.</summary>
+    private bool StampStorage(StardewValley.Object obj)
+    {
+        var kind = StorageRules.Classify(obj);
+        if (kind == StorageKind.None)
+            return false;
+
+        string key = StorageRules.TypeKeyFor(kind, obj.QualifiedItemId);
+        bool discovered = EnsureKnownType(key);
+        ApplyStamp(StorageRules.GetBackingChest(obj, kind), key);
+        return discovered;
+    }
+
+    /// <summary>Stamps a location's built-in fridge, which lives outside its object list.</summary>
+    private bool StampLocationFridge(GameLocation location)
+    {
+        Chest fridge = location switch
+        {
+            FarmHouse farmHouse => farmHouse.fridge.Value,
+            IslandFarmHouse islandHouse => islandHouse.fridge.Value,
+            _ => null
+        };
+
+        if (fridge == null)
+            return false;
+
+        bool discovered = EnsureKnownType(StorageRules.FridgeKey);
+        ApplyStamp(fridge, StorageRules.FridgeKey);
+        return discovered;
+    }
+
+    private void ApplyStamp(Chest chest, string key)
+    {
+        if (chest == null || key == null)
+            return;
+
+        int? cap = StorageRules.ResolveStampCapacity(key, Config);
+        if (cap.HasValue)
+            chest.modData[ChestPatches.CapacityKey] = cap.Value.ToString();
+        else
+            chest.modData.Remove(ChestPatches.CapacityKey);
+    }
+
+    private bool EnsureKnownType(string key)
+    {
+        if (key == null || Config.KnownTypes.Contains(key))
+            return false;
+
+        Config.KnownTypes.Add(key);
+        return true;
+    }
+
+    private void PersistAndRebuildMenu()
+    {
+        Helper.WriteConfig(Config);
+        RebuildMenu();
+    }
+
+    // ── Config housekeeping ─────────────────────────────────────────
+
+    private bool MigrateLegacyConfig()
+    {
+        bool changed = false;
+
+        if (Config.Capacity.HasValue)
+        {
+            Config.CapacityByType[StorageRules.AutoGrabberKey] = Config.Capacity.Value;
+            Config.Capacity = null;
+            changed = true;
+        }
+
+        if (Config.FridgeCapacity.HasValue)
+        {
+            Config.CapacityByType[StorageRules.FridgeKey] = Config.FridgeCapacity.Value;
+            Config.FridgeCapacity = null;
+            changed = true;
+        }
+
+        if (Config.ChestCapacity.HasValue)
+        {
+            Config.DefaultCapacity = Config.ChestCapacity.Value;
+            Config.ChestCapacity = null;
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private bool SeedSpecialTypes()
+    {
+        bool changed = false;
+
+        foreach (string key in new[] { StorageRules.AutoGrabberKey, StorageRules.FridgeKey })
+        {
+            if (!Config.KnownTypes.Contains(key))
             {
-                StampIfAutoGrabber(obj);
+                Config.KnownTypes.Add(key);
+                changed = true;
             }
         }
 
-        Monitor.Log($"Stamped all auto-grabbers with capacity {Config.Capacity}.", LogLevel.Trace);
+        return changed;
     }
 
-    private void StampIfAutoGrabber(StardewValley.Object obj)
+    private void ClampConfig()
     {
-        if (obj != null
-            && obj.bigCraftable.Value
-            && obj.ParentSheetIndex == 165
-            && obj.heldObject.Value is Chest chest)
+        if (Config.DefaultCapacity < 36)
+            Config.DefaultCapacity = 36;
+
+        foreach (string key in Config.CapacityByType.Keys.ToList())
         {
-            chest.modData[ChestPatches.CapacityKey] = Config.Capacity.ToString();
+            if (Config.CapacityByType[key] < 36)
+                Config.CapacityByType[key] = 36;
         }
     }
 }

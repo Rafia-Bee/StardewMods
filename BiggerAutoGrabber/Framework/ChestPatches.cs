@@ -110,7 +110,7 @@ internal static class ChestPatches
             return null;
 
         // The constructor completed with a vanilla layout. Now resize.
-        var chest = FindAutoGrabberChest(__instance);
+        var chest = FindStorageChest(__instance);
         if (chest == null && sourceItem is Chest src
             && src.modData.ContainsKey(CapacityKey))
         {
@@ -140,7 +140,7 @@ internal static class ChestPatches
         if (Game1.activeClickableMenu is not ItemGrabMenu igm)
             return true;
 
-        var foundChest = FindAutoGrabberChest(igm);
+        var foundChest = FindStorageChest(igm);
         bool hasKey = __instance.modData.ContainsKey(CapacityKey);
         bool refMatch = foundChest == __instance;
 
@@ -167,7 +167,7 @@ internal static class ChestPatches
         if (Game1.activeClickableMenu is not ItemGrabMenu igm)
             return true;
 
-        var foundChest = FindAutoGrabberChest(igm);
+        var foundChest = FindStorageChest(igm);
         bool hasKey = __instance.modData.ContainsKey(CapacityKey);
         bool refMatch = foundChest == __instance;
 
@@ -238,12 +238,18 @@ internal static class ChestPatches
 
     private static void GetActualCapacity_Postfix(Chest __instance, ref int __result)
     {
-        // During ItemGrabMenu construction, return the vanilla value so the
-        // constructor uses its standard 36-slot layout path.  This avoids
-        // the SetupBorderNeighbors crash for capacities whose column count
-        // exceeds the player inventory size.
+        // During ItemGrabMenu construction, force the value to exactly 36 so the
+        // constructor takes its standard 12-column layout branch. Special chests
+        // (BigChest = 70, JunimoChest = 9) report a non-36 capacity and would
+        // otherwise hit the alternate branch that centers the grid for a
+        // different column count, leaving our resized 12-column grid off-center.
+        // It also avoids the SetupBorderNeighbors crash for wide layouts. The
+        // real capacity is applied in the constructor finalizer via ResizeMenu.
         if (_suppressCapacity)
+        {
+            __result = 36;
             return;
+        }
 
         if (__instance.modData.TryGetValue(CapacityKey, out string val)
             && int.TryParse(val, out int cap)
@@ -255,8 +261,8 @@ internal static class ChestPatches
 
     // ── Auto-grabber chest detection ────────────────────────────────
 
-    /// <summary>Finds the auto-grabber chest backing the given menu, if any.</summary>
-    public static Chest FindAutoGrabberChest(ItemGrabMenu menu)
+    /// <summary>Finds the stamped storage chest backing the given menu, if any.</summary>
+    public static Chest FindStorageChest(ItemGrabMenu menu)
     {
         if (menu.sourceItem is Chest srcChest
             && srcChest.modData.ContainsKey(CapacityKey))
@@ -409,6 +415,9 @@ internal static class ChestPatches
             .GetMethod("SetupBorderNeighbors", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             ?.Invoke(menu, null);
 
+        // Lift the recolor picker so its box clears the taller grid frame.
+        LiftColorPicker(menu);
+
         // Set up scroll state if the inventory needs scrolling.
         if (needsScrolling && slice != null)
         {
@@ -429,6 +438,37 @@ internal static class ChestPatches
         else
         {
             ClearScrollState();
+        }
+    }
+
+    /// <summary>
+    /// Moves the chest recolor picker (and its click targets) up so its box
+    /// sits above the enlarged grid frame. Vanilla positions the picker for a
+    /// standard 3-row chest, so once we add rows the box overlaps the frame's
+    /// top border. Only lifts, never lowers, and does nothing for storage
+    /// without a color picker (auto-grabbers, most fridges).
+    /// </summary>
+    private static void LiftColorPicker(ItemGrabMenu menu)
+    {
+        var picker = menu.chestColorPicker;
+        if (picker == null)
+            return;
+
+        int frameTop = menu.ItemsToGrabMenu.yPositionOnScreen
+            - IClickableMenu.borderWidth
+            - IClickableMenu.spaceToClearTopBorder
+            + menu.storageSpaceTopBorderOffset;
+
+        int newY = frameTop - picker.height;
+        int delta = newY - picker.yPositionOnScreen;
+        if (delta >= 0)
+            return;
+
+        picker.yPositionOnScreen = newY;
+        if (menu.discreteColorPickerCC != null)
+        {
+            foreach (var cc in menu.discreteColorPickerCC)
+                cc.bounds.Y += delta;
         }
     }
 

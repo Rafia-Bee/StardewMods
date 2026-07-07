@@ -1,10 +1,10 @@
 {
-    "Name": "Bigger Auto-Grabber",
+    "Name": "Bigger Storage",
     "Author": "Rafia-Bee",
-    "Version": "1.2.2",
+    "Version": "2.0.0",
     "MinimumApiVersion": "4.1.0",
     "UniqueID": "RafiaBee.BiggerAutoGrabber",
-    "Description": "Expands the auto-grabber's internal chest beyond the vanilla 36-slot limit.",
+    "Description": "Expands auto-grabbers, chests, and fridges beyond the vanilla 36-slot limit.",
     "EntryDll": "BiggerAutoGrabber.dll",
     "Dependencies": [
         {

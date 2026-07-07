@@ -1,1 +1,8 @@
-{}
+{
+    "config.section.title": "Storage sizes",
+    "config.section.note": "Set how many slots each kind of storage holds. 36 is the normal game size, so leaving a row at 36 keeps that storage untouched. New storage types (including modded chests) show up here once you load a save that has them.",
+    "config.default.name": "Default size (everything else)",
+    "config.default.tooltip": "Used for any storage that doesn't have its own row below, including modded chests you haven't used yet. Change a row below to give that one type its own size.",
+    "config.autograbber.name": "Auto-Grabber",
+    "config.fridge.name": "Fridge (kitchen)"
+}

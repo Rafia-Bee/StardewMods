@@ -1,20 +1,30 @@
-# Bigger Auto-Grabber
+# Bigger Storage
 
-If you use the [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/stardewvalley/mods/20799?tab=description) mod, you probably faced the issue of the auto-grabber overflowing and having to press the global grabber button multiple times to gather all the items. This mod expands the auto-grabber's internal chest beyond the vanilla 36-slot limit, so the deluxe grabber can grab everything in one go.
+If you use the [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/stardewvalley/mods/20799?tab=description) mod, you've probably run into the auto-grabber overflowing its 36-slot chest and having to hit the grab button over and over. This mod expands the auto-grabber's chest past the vanilla 36-slot limit so it grabs everything in one go.
+
+Update in v2.0.0: now it makes your other storage bigger too!
+
+You can set a different size for each kind of storage:
+
+- Auto-grabbers (great with mods like Deluxe Grabber Redux that dump a lot of items at once)
+- Chests: regular, big, stone, junimo, and modded chests
+- The kitchen fridge and mini-fridges
 
 ## Features
 
-- Configurable auto-grabber capacity (default: 36, vanilla)
-- Scrollable inventory when capacity exceeds 72 slots (mouse wheel or arrow buttons)
-- Works with any mod that uses auto-grabbers (e.g., Deluxe Grabber Redux)
-- Capacity changes are applied to all existing and newly placed auto-grabbers
-- Compatible with Generic Mod Config Menu for in-game configuration
+- One default plus per-type sizes: set a single default for everything, or give any specific kind its own size, from 36 (vanilla) up to 516
+- Modded chests too: chests added by other mods get their own row automatically
+- Leave anything at 36 to keep that storage normal
+- Safe to install and uninstall: no items are ever deleted. Removing the mod puts everything back to 36 slots, and items in the extra slots stay in your save and come back if you reinstall
 
 ## Configuration
 
-| Setting | Default | Description |
-|---|---|---|
-| Capacity | 36 | Number of item slots in each auto-grabber. Vanilla is 36. Range: 36–288 in the config menu (edit `config.json` for custom values). |
+Open the config menu (needs Generic Mod Config Menu) and you'll see:
+
+- **Default size (everything else)** sets the size for anything that doesn't have its own row, including modded chests you haven't set yourself.
+- **A row per storage type** you own: auto-grabber, the kitchen fridge, mini-fridge, regular chest, stone chest, big chest, junimo chest, and any modded chests. Set a row to give just that type its own size. Leave it matching the default and it keeps following the default.
+
+New storage types appear as rows once you load a save that has them. Every value runs from 36 up to 516 in the menu (36 is normal, so a row left at 36 changes nothing), or type any number by editing `config.json`.
 
 ## Install
 
@@ -22,11 +32,8 @@ If you use the [Deluxe Grabber Redux 1.6](https://www.nexusmods.com/stardewvalle
 2. Drop the `BiggerAutoGrabber` folder into your `Mods` directory
 3. Run the game
 
-## How It Works
-
-The mod uses a Harmony postfix on `Chest.GetActualCapacity()` to override the capacity of chests inside auto-grabbers. It stamps each auto-grabber's chest with a `modData` key on save load, day start, and whenever a new auto-grabber is placed.
-
 ## Notes
 
-- If you reduce the capacity below the number of occupied slots, items in excess slots remain in the save but won't be visible in the UI until capacity is increased again. No items are ever deleted.
-- If you uninstall the mod, auto-grabbers revert to 36 slots. Items in extra slots persist in the save and become accessible again if the mod is reinstalled.
+- The storage window shows up to 72 slots (6 rows) at a time. If you set a size higher, you can scroll through the rest with the mouse wheel or the up/down arrows on the right side of the grid.
+- If you set a size below what's already stored, those extra items stay safe in your save. They just hide until you make it bigger again.
+- **Will clash with any mod that expands vanilla chest capacity.**
