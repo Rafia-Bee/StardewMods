@@ -107,7 +107,7 @@ If you want a quest to survive exclusions without the redirect-warning, set [fon
 [list]
 [*][b]Multiplayer:[/b] untested. Tested on single-player only.[/*]
 [*][b]Not compatible with any other Help Wanted mod, or any mod that directly modifies the Help Wanted board. [/b][/*]
-[*][b][url=https://www.nexusmods.com/stardewvalley/mods/7842]Mail Services Mod[/url]:[/b] in-person delivery quests work as expected. Mailing items through MSM bypasses vanilla's OnItemOfferedToNpc hook, so multi-step Gift / GiftUniqueNpcs steps don't tick when items are mailed. Mod authors can call [font=Courier New]quest.OnItemOfferedToNpc[/font] directly to forward delivery events.[/*]
+[*][b][url=https://www.nexusmods.com/stardewvalley/mods/7842]Mail Services Mod[/url]:[/b] supported. The framework handles mailbox hand-ins for its own quests, so the quest's own rewards are the only payout, and item quality, alternative items, and partial deliveries work like an in-person hand-in (MSM's delivery fee still applies). Multi-step deliver steps can be handed in by mail too, and gifts sent through MSM's gift service count toward gift steps. Mod authors whose mods deliver items for the player can still call [font=Courier New]quest.OnItemOfferedToNpc[/font] to forward delivery events.[/*]
 [*][b]Friendship-decay / friendship-clamp mods (CJB Cheats Menu's "No friendship decay", [url=https://www.nexusmods.com/stardewvalley/mods/22922]No Friendship Decay - Reborn[/url] etc.):[/b] intercept vanilla's friendship change calls. The negative side of consequence reactions don't negate friendship while those interceptors are on; the positive side still works.[/*]
 [/list]
 

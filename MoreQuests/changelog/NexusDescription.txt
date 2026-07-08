@@ -805,7 +805,7 @@ You can install or remove quests mid-playthrough. Save data only stores currentl
 [list]
 [*][b]Multiplayer:[/b] untested. Tested on single-player only.[/*]
 [*][b]Not compatible with any other Help Wanted mod, or any mod that directly modifies the Help Wanted board.[/b][/*]
-[*][b]Mail Services Mod:[/b] in-person delivery quests work as expected. Mailing items through MSM gives the recipient an extra full heart on top of the quest reward (MSM mirrors vanilla's flat 250-friendship-point delivery bonus regardless of the quest's actual reward). The Forage with Linus quest also doesn't tick when items are mailed because MSM skips vanilla's gift hook. Hand-deliver for the right behaviour.[/*]
+[*][b]Mail Services Mod:[/b] works. Mailing a quest item through the mailbox pays exactly the quest's reward, multi-step deliver quests can be handed in by mail too, and mailed gifts count toward gift quests like Forage of the Valley.[/*]
 [*][b]Friendship-decay / friendship-clamp mods (CJB Cheats Menu's "No friendship decay", [url=https://www.nexusmods.com/stardewvalley/mods/22922]No Friendship Decay - Reborn[/url] etc.):[/b] block the negative side of consequence reactions on Massive Harvest, Weekly Specials, Medium Fishing Haul, Seafood Night, and Monster Parts. The positive friendship side still works. Turn that option off if you want the full consequence aspect of the quests.[/*]
 [/list]
 

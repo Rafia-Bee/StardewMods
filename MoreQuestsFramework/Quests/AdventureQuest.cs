@@ -53,6 +53,10 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     [XmlIgnore] private Dictionary<int, int>? _craftBaselines;
     [XmlIgnore] private Dictionary<int, (int Known, HashSet<string> Recipes)>? _craftMatch;
 
+    // Set while a mailbox turn-in (Mail Services Mod shim) runs with the NPC dialogue
+    // disabled, since the NPC isn't actually there. Transient by design.
+    [XmlIgnore] private bool _suppressTurnInDialogue;
+
     // Transient cache for a deferred (mine) DropItemsInRadius zone, keyed by the live floor
     // instance so a new visit (new instance) re-picks. Not netfields, so it never syncs or saves.
     [XmlIgnore] private GameLocation? _zoneLoc;
@@ -312,6 +316,94 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
                 return true;
         }
         return false;
+    }
+
+    // Finds the NPC an active deliver step would accept this item for, so the Mail
+    // Services shim can route a mailbox hand-in without an in-person interaction.
+    internal bool TryResolveMailDeliveryTarget(Item item, out NPC? npc)
+    {
+        npc = null;
+        if (completed.Value || item == null)
+            return false;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            if (step.Kind != AdventureStepKind.Deliver) continue;
+            foreach (string name in CandidateTargets(step))
+            {
+                NPC? candidate = Game1.getCharacterFromName(name);
+                if (candidate == null)
+                    continue;
+                if (TryAdvanceDeliver(i, step, candidate, item, probe: true))
+                {
+                    npc = candidate;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    internal bool TryAcceptByMail(NPC npc, Item item, bool showNpcDialogue)
+    {
+        _suppressTurnInDialogue = !showNpcDialogue;
+        try
+        {
+            return OnItemOfferedToNpc(npc, item, probe: false);
+        }
+        finally
+        {
+            _suppressTurnInDialogue = false;
+        }
+    }
+
+    private IEnumerable<string> CandidateTargets(AdventureStepState step)
+    {
+        if (step.Targets.Count == 0)
+        {
+            if (!string.IsNullOrEmpty(giverNpc.Value))
+                yield return giverNpc.Value;
+            yield break;
+        }
+        foreach (var t in step.Targets)
+            yield return t;
+    }
+
+    // Called from the receiveGift postfix so gifts that skip the in-person quest hook
+    // (Mail Services Mod's gift service) still tick gift-kind steps. Deliver steps are
+    // skipped on purpose: they consume items, and the gift already consumed one. Safe
+    // to run alongside the in-person path too, gift steps check Done and CreditedKeys,
+    // so nothing counts twice.
+    internal void ObserveGiftGiven(NPC npc, Item item)
+    {
+        if (completed.Value || npc == null || item == null)
+            return;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            if (completed.Value)
+                return;
+            var step = steps[i];
+            if (step.Done || !RequiresMet(steps, step)) continue;
+            bool wasDone = step.Done;
+            int wasProgress = step.Progress;
+            switch (step.Kind)
+            {
+                case AdventureStepKind.Gift:
+                    TryAdvanceGift(i, step, npc, item, probe: false);
+                    break;
+                case AdventureStepKind.GiftUniqueNpcs:
+                    TryAdvanceGiftUniqueNpcs(i, step, npc, item, probe: false);
+                    break;
+                default:
+                    continue;
+            }
+            if (step.Done != wasDone || step.Progress != wasProgress)
+                ModEntry.LogDebug(() => $"Gift step advanced on '{questTitle}': {item.QualifiedItemId} to {npc.Name}, "
+                    + $"progress {step.Progress}/{step.Count}, step done: {step.Done}, quest completed: {completed.Value}.");
+        }
     }
 
     public override bool OnNpcSocialized(NPC npc, bool probe = false)
@@ -1101,7 +1193,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         if (step.Progress >= step.Count)
         {
             bool willComplete = MarkStepDoneInternal(idx, step);
-            if (willComplete && !string.IsNullOrEmpty(completionMessage.Value))
+            if (willComplete && !string.IsNullOrEmpty(completionMessage.Value) && !_suppressTurnInDialogue)
             {
                 npc.CurrentDialogue.Push(new Dialogue(npc, null, completionMessage.Value));
                 Game1.drawDialogue(npc);
@@ -1121,8 +1213,15 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             string partial = TryGetPartialDialogue(step.Count - step.Progress);
             if (!string.IsNullOrEmpty(partial))
             {
-                npc.CurrentDialogue.Push(new Dialogue(npc, null, partial));
-                Game1.drawDialogue(npc);
+                if (_suppressTurnInDialogue)
+                {
+                    Game1.drawObjectDialogue(partial);
+                }
+                else
+                {
+                    npc.CurrentDialogue.Push(new Dialogue(npc, null, partial));
+                    Game1.drawDialogue(npc);
+                }
             }
         }
         return true;

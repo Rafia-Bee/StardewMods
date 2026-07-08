@@ -59,6 +59,11 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
     // Adds partial-stack accumulation: 4 of 7 eggs counts as progress instead of
     // falling through to the gift flow.
     public override bool OnItemOfferedToNpc(NPC npc, Item item, bool probe = false)
+        => TryAccept(npc, item, probe, showNpcDialogue: true);
+
+    // Mail Services Mod's mailbox flow goes through here too, with showNpcDialogue
+    // driven by its ShowDialogOnItemDelivery setting (the NPC isn't actually present).
+    internal bool TryAccept(NPC npc, Item item, bool probe, bool showNpcDialogue)
     {
         if (completed.Value)
             return false;
@@ -113,8 +118,11 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
 
         if (delivered.Value >= requiredTotal)
         {
-            npc.CurrentDialogue.Push(new Dialogue(npc, null, targetMessage));
-            Game1.drawDialogue(npc);
+            if (showNpcDialogue)
+            {
+                npc.CurrentDialogue.Push(new Dialogue(npc, null, targetMessage));
+                Game1.drawDialogue(npc);
+            }
             questComplete();
         }
         else
@@ -123,8 +131,15 @@ public sealed class MoreQuestsItemDeliveryQuest : ItemDeliveryQuest, IRewardedQu
             string partial = TryGetPartialDialogue(requiredTotal - delivered.Value);
             if (!string.IsNullOrEmpty(partial))
             {
-                npc.CurrentDialogue.Push(new Dialogue(npc, null, partial));
-                Game1.drawDialogue(npc);
+                if (showNpcDialogue)
+                {
+                    npc.CurrentDialogue.Push(new Dialogue(npc, null, partial));
+                    Game1.drawDialogue(npc);
+                }
+                else
+                {
+                    Game1.drawObjectDialogue(partial);
+                }
             }
         }
         return true;

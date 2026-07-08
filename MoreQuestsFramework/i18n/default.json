@@ -286,6 +286,8 @@
     "tooltip.category.item": "item",
 
     "quest.itemDelivery.partial.thanks": "Thanks! Bring me {{remaining}} more when you can.",
+    "quest.itemDelivery.mail.noMoney": "You can't afford the delivery fee.",
+    "quest.itemDelivery.mail.rejected": "The package came back. It isn't quite what they asked for.",
 
     "quest.fishing.deliverAfterCatch": "Deliver {{qty}} {{item}} to {{npc}}.",
 

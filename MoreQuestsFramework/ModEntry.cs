@@ -174,7 +174,8 @@ public sealed class ModEntry : Mod
         ConsequenceDialoguePatches.Apply(harmony, Monitor);
         FestivalBiasPatches.Apply(harmony, Monitor);
         DecorShippingPatches.Apply(harmony, Monitor);
-        WinterStarGiftPatch.Apply(harmony);
+        ReceiveGiftPatches.Apply(harmony);
+        MailServicesPatches.Apply(harmony, helper.ModRegistry, Monitor);
         DropItemsPatches.Subscribe(helper);
         MoreQuestsFramework.Rendering.DropZoneOverlay.Register(helper);
 

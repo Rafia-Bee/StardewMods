@@ -225,7 +225,10 @@ public static class RewardApplier
                 // Covers the case where a generator calls Apply directly outside a Quest
                 // completion path; otherwise vanilla pays via Quest.moneyReward.
                 if (m.Amount > 0)
+                {
                     Game1.player.Money += m.Amount;
+                    ModEntry.LogDebug($"Money reward applied: +{m.Amount}g (now {Game1.player.Money}g).");
+                }
                 break;
 
             case FriendshipReward f:
@@ -233,7 +236,10 @@ public static class RewardApplier
                     return;
                 var rewardNpc = Game1.getCharacterFromName(f.Npc);
                 if (rewardNpc != null)
+                {
                     Game1.player.changeFriendship(f.Points, rewardNpc);
+                    ModEntry.LogDebug(() => $"Friendship reward applied: {f.Npc} {(f.Points > 0 ? "+" : "")}{f.Points}, now {Game1.player.tryGetFriendshipLevelForNPC(f.Npc) ?? 0} points.");
+                }
                 break;
 
             case ObjectReward o:

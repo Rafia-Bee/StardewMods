@@ -1,3 +1,8 @@
+To be released
+- Fixed Mail Services Mod paying a full extra heart of friendship when a delivery quest item is handed in at the mailbox. Mailbox hand-ins now pay exactly what the quest says, and respect item quality, alternative items, and partial deliveries.
+- Multi-step quests with deliver steps can now be handed in at the mailbox when Mail Services Mod is installed.
+- Gifts sent through Mail Services Mod's gift service now count toward quests that track gifts.
+
 2.8.0
 - Fixed the "!" over Pierre's town board not showing when there are quests to pick up. It now pops up like it does on custom boards.
 - Every quest can now be cancelled from the journal, including the ones that arrive by mail or from talking to someone.
