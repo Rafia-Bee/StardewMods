@@ -1,6 +1,8 @@
-To be released
+2.7.0
+- Needs More Quests Framework 2.9.0 or newer.
 - New quest: A time-sensitive delivery. A villager hands you a sealed package and you race the in-game clock to get it to another villager. Make it in time for friendship with both plus the Way of the Wind pt. 1 book; show up late (or give up after taking the package) and you lose friendship with both instead.
 - New settings for the timed delivery: the shortest and longest timer it can roll, and the latest hour the sender will still hand the package over.
+Translators: see [url=https://github.com/Rafia-Bee/StardewMods/compare/MoreQuests-v2.6.0...MoreQuests-v2.7.0]i18n changes here[/url] (look at MoreQuests/i18n/default.json).
 
 2.6.0
 - Needs More Quests Framework 2.8.0 or newer.
