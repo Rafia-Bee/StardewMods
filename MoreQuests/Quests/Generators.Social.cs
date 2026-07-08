@@ -215,6 +215,91 @@ internal static partial class Generators
         };
     }
 
+    /// Timed package delivery: talk to the giver, they hand over a sealed package and
+    /// an in-game countdown starts (rolled between the config min and max minutes).
+    /// Deliver it to a random reachable NPC before time runs out. The target is rolled
+    /// at handoff by the framework, not here, so it can check where everyone actually
+    /// is. Reward: FriendshipMid with giver and target plus Way of the Wind pt. 1.
+    /// Failing (timer out, sleeping on it, or cancelling after the handoff) costs
+    /// FriendshipMid with both instead; the description warns about that on purpose.
+    private static QuestPosting? TimedPackageDelivery(QuestContext ctx)
+    {
+        var metNpcs = MetAdultHumanGiftReceivers();
+        if (metNpcs.Count < 2)
+            return null;
+
+        string giver = metNpcs[Game1.random.Next(metNpcs.Count)];
+        string giverDisplay = Game1.getCharacterFromName(giver)?.displayName ?? giver;
+
+        // The pickup cutoff is baked into the description and the talk objective so
+        // players learn about it before tripping over the giver's refusal. Cutoff 0
+        // (manual config edit) disables the gate, so the mention is skipped too.
+        int cutoffTime = ModEntry.Config.TimedDeliveryLatestHandoffTime;
+        string talkObjective = cutoffTime > 0
+            ? ModEntry.I18n.Get("quest.social.timedDelivery.step.talk.cutoff",
+                new { npc = giverDisplay, time = Game1.getTimeOfDayString(cutoffTime) }).ToString()
+            : ModEntry.I18n.Get("quest.social.timedDelivery.step.talk", new { npc = giverDisplay }).ToString();
+        string description = ModEntry.I18n.Get("quest.social.timedDelivery.description").ToString();
+        if (cutoffTime > 0)
+        {
+            description += " " + ModEntry.I18n.Get("quest.social.timedDelivery.description.cutoff",
+                new { time = Game1.getTimeOfDayString(cutoffTime) });
+        }
+
+        var quest = new AdventureQuest();
+        quest.Initialize(new[]
+        {
+            new AdventureStepState
+            {
+                Name = "TalkGiver",
+                Kind = AdventureStepKind.Talk,
+                Targets = new List<string> { giver },
+                Count = 1,
+                Description = talkObjective
+            },
+            new AdventureStepState
+            {
+                Name = "DeliverPackage",
+                Kind = AdventureStepKind.Deliver,
+                Requires = new List<string> { "TalkGiver" },
+                Items = new List<string> { ModEntry.DeliveryPackageQualifiedId },
+                Count = 1,
+                Description = ModEntry.I18n.Get("quest.social.timedDelivery.step.deliver")
+            }
+        }, giver: giver, completionDialogue: ModEntry.I18n.Get("quest.social.timedDelivery.targetMessage"));
+
+        quest.ConfigureTimedDelivery(
+            stepName: "DeliverPackage",
+            packageItemId: ModEntry.DeliveryPackageQualifiedId,
+            minMinutes: ModEntry.Config.TimedDeliveryMinMinutes,
+            maxMinutes: ModEntry.Config.TimedDeliveryMaxMinutes,
+            latestStartTime: ModEntry.Config.TimedDeliveryLatestHandoffTime,
+            friendshipStakes: ctx.Config.FriendshipMid,
+            handoffDialogue: ModEntry.I18n.Get("quest.social.timedDelivery.handoff"),
+            deliverDescription: ModEntry.I18n.Get("quest.social.timedDelivery.step.deliver.resolved"));
+
+        return new QuestPosting
+        {
+            Category = QuestCategory.Social,
+            Tier = DifficultyTier.Intermediate,
+            QuestType = BoardQuestType.Adventure,
+            QuestGiver = giver,
+            ObjectiveQuantity = 1,
+            DeadlineDays = Difficulty.Deadline(DeadlineKind.Medium, ctx.Config),
+            Rewards =
+            {
+                new FriendshipReward(giver, ctx.Config.FriendshipMid),
+                new ObjectReward("(O)Book_Speed", 1)
+            },
+            FriendshipSummaryOverride = ModEntry.I18n.Get("quest.social.timedDelivery.friendshipSummary"),
+            Title = ModEntry.I18n.Get("quest.social.timedDelivery.title"),
+            Description = description,
+            CurrentObjective = talkObjective,
+            TargetMessage = ModEntry.I18n.Get("quest.social.timedDelivery.targetMessage"),
+            PreBuiltQuest = quest
+        };
+    }
+
     /// Dialogue-triggered Adventure quest from SVE's friendable Gunther (GuntherSilvian).
     /// Vanilla Gunther isn't a normal NPC (right-click opens the museum donation menu, not
     /// dialogue), so the framework's NpcDialogue trigger can never fire on him. SVE swaps

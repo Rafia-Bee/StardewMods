@@ -730,6 +730,14 @@ The Mining-category quests above (everything except Bar Delivery and Archaeology
 [*][b]Reward:[/b] Gold: the gift's sell price times 0.8 (below sell), at least 50g + Friendship with both NPCs[/*]
 [*][b]Notes:[/b] Cooldown Long[/*]
 [/list]
+[b]A Time-Sensitive Delivery[/b]
+[list]
+[*][b]When:[/b] Daily board[/*]
+[*][b]Giver:[/b] Any met villager[/*]
+[*][b]Objective:[/b] Talk to the giver to pick up a sealed package (before 6pm by default, they won't start a delivery late in the day), then race it to a randomly picked villager before an in-game timer runs out (2 to 4 hours by default, shown live in the journal and the Quest Journal pinned HUD)[/*]
+[*][b]Reward:[/b] Friendship with both NPCs + the Way of the Wind pt. 1 book[/*]
+[*][b]Notes:[/b] Cooldown Long. Careful: if the package is late, or you sleep on it, or you cancel after taking it, you LOSE friendship with both NPCs. The quest text warns you up front. Horse, totems, and minecarts are all fair game[/*]
+[/list]
 [b]Redecorate a Home[/b]
 [list]
 [*][b]When:[/b] Daily board[/*]
@@ -819,6 +827,7 @@ This mod supports translations! Please feel free to translate the mod to your la
 [*][b]spacechase0[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/1348]SpaceCore[/url] and [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod Config Menu[/url][/*]
 [*][b]aedenthorn[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/14640]Help Wanted[/url], the inspiration for the framework's vanilla quest tuning, and the source the billboard pad / pin sprites were retextured from[/*]
 [*][b]SiTheGreat1[/b] for [url=https://www.nexusmods.com/stardewvalley/mods/25467]Si's Extra Crafting Materials[/url][/*]
+[*][b]Husky[/b] ([url=https://www.nexusmods.com/profile/Huskyn1nja?gameId=1303]Huskyn1nja[/url]) for the package sprite, which I personalized in my style[/*]
 [/list]
 
 Also thanks to the following creators, their modded NPCs added so much variety to the quest-giver pools:

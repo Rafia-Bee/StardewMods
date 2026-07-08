@@ -26,6 +26,34 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
     // gift-reaction line takes priority.
     public readonly NetString completionMessage = new();
 
+    // Timed-delivery support, opt-in via ConfigureTimedDelivery. All defaults are off
+    // so every existing quest (and old save) behaves exactly as before. The named step
+    // becomes "timed": when it activates, the giver hands the player the package item,
+    // a limit in in-game minutes is rolled in [timerMinMinutes, timerMaxMinutes], and
+    // timerDeadline gets the absolute HHMM time the countdown runs out. deadline > 0
+    // means the clock is running. timerFriendshipStakes is the friendship the target
+    // NPC gains on success and BOTH giver and target lose on failure.
+    public readonly NetString timedStepName = new();
+    public readonly NetString timedPackageItemId = new();
+    public readonly NetString timedHandoffDialogue = new();
+    public readonly NetString timedDeliverDescription = new();
+    public readonly NetInt timerMinMinutes = new();
+    public readonly NetInt timerMaxMinutes = new();
+    public readonly NetInt timerLatestStart = new();
+    public readonly NetInt timerLimitMinutes = new();
+    public readonly NetInt timerDeadline = new();
+    public readonly NetInt timerFriendshipStakes = new();
+
+    // Set when the timer failed this session so the framework's removal diff reports
+    // Expired instead of Cancelled. Transient by design (a failed quest never saves).
+    internal bool TimedFailed;
+
+    // Refusal-dialogue throttle: the giver explains why they won't hand the package
+    // over ONCE per day (or when the reason changes), then goes back to their normal
+    // dialogue so the quest doesn't hold their conversation hostage. Transient.
+    private int _timedRefusalDay = -1;
+    private TimedStartRefusal _timedRefusalReason = TimedStartRefusal.None;
+
     // [XmlIgnore] prevents XmlSerializer from emitting a second <SerializedRewards>
     // element that aliases the same NetStringList as <serializedRewards>. Without it,
     // every save/load round-trip doubles serializedRewards: XmlSerializer would write
@@ -100,7 +128,17 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             .AddField(stepStates, "stepStates")
             .AddField(serializedRewards, "serializedRewards")
             .AddField(giverNpc, "giverNpc")
-            .AddField(completionMessage, "completionMessage");
+            .AddField(completionMessage, "completionMessage")
+            .AddField(timedStepName, "timedStepName")
+            .AddField(timedPackageItemId, "timedPackageItemId")
+            .AddField(timedHandoffDialogue, "timedHandoffDialogue")
+            .AddField(timedDeliverDescription, "timedDeliverDescription")
+            .AddField(timerMinMinutes, "timerMinMinutes")
+            .AddField(timerMaxMinutes, "timerMaxMinutes")
+            .AddField(timerLatestStart, "timerLatestStart")
+            .AddField(timerLimitMinutes, "timerLimitMinutes")
+            .AddField(timerDeadline, "timerDeadline")
+            .AddField(timerFriendshipStakes, "timerFriendshipStakes");
     }
 
     public void Initialize(IEnumerable<AdventureStepState> steps, string giver, string? completionDialogue = null)
@@ -111,6 +149,285 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
         giverNpc.Value = giver ?? string.Empty;
         completionMessage.Value = completionDialogue ?? string.Empty;
         _decoded = null;
+    }
+
+    // Marks one step as a timed package delivery. The step should be a Deliver step
+    // gated behind a Talk step (the talk is the handoff). deliverDescription is the
+    // post-handoff objective text; "[target]" in it and in handoffDialogue is replaced
+    // with the rolled NPC's display name, "[time]" with the rolled limit.
+    public void ConfigureTimedDelivery(
+        string stepName,
+        string packageItemId,
+        int minMinutes,
+        int maxMinutes,
+        int latestStartTime,
+        int friendshipStakes,
+        string handoffDialogue,
+        string deliverDescription)
+    {
+        timedStepName.Value = stepName ?? string.Empty;
+        timedPackageItemId.Value = packageItemId ?? string.Empty;
+        timerMinMinutes.Value = Math.Max(10, minMinutes);
+        timerMaxMinutes.Value = Math.Max(timerMinMinutes.Value, maxMinutes);
+        timerLatestStart.Value = latestStartTime;
+        timerFriendshipStakes.Value = Math.Max(0, friendshipStakes);
+        timedHandoffDialogue.Value = handoffDialogue ?? string.Empty;
+        timedDeliverDescription.Value = deliverDescription ?? string.Empty;
+    }
+
+    public bool HasTimedStep => !string.IsNullOrEmpty(timedStepName.Value);
+
+    public bool TimerActive => timerDeadline.Value > 0 && !completed.Value;
+
+    private int TimedStepIndex()
+    {
+        if (!HasTimedStep)
+            return -1;
+        var steps = Steps;
+        for (int i = 0; i < steps.Count; i++)
+        {
+            if (string.Equals(steps[i].Name, timedStepName.Value, StringComparison.OrdinalIgnoreCase))
+                return i;
+        }
+        return -1;
+    }
+
+    private string TimedTargetName()
+    {
+        int idx = TimedStepIndex();
+        if (idx < 0)
+            return string.Empty;
+        var step = Steps[idx];
+        return step.Targets.Count > 0 ? step.Targets[0] : string.Empty;
+    }
+
+    // True when finishing the given step would make the timed step active (every
+    // other Requires entry is already done).
+    private bool WouldActivateTimedStep(int completedIdx)
+    {
+        int timedIdx = TimedStepIndex();
+        if (timedIdx < 0)
+            return false;
+        var steps = Steps;
+        var timed = steps[timedIdx];
+        if (timed.Done)
+            return false;
+        foreach (var req in timed.Requires)
+        {
+            if (string.Equals(req, steps[completedIdx].Name, StringComparison.OrdinalIgnoreCase))
+                continue;
+            bool found = false;
+            foreach (var s in steps)
+            {
+                if (string.Equals(s.Name, req, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!s.Done)
+                        return false;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                return false;
+        }
+        return true;
+    }
+
+    // The handoff. Rolls the timer and the target, hands the package over, and starts
+    // the countdown. Returns false when a gate says no (festival day, too late, full
+    // bags, nobody reachable); the talk step stays uncredited so the player can try
+    // again another time. refusalSpoken reports whether the giver actually said the
+    // refusal line this time; it's throttled to once per day per reason so repeat
+    // chats (and gifting) get the NPC's normal dialogue instead.
+    private bool TryBeginTimedDelivery(NPC giver, out bool refusalSpoken)
+    {
+        refusalSpoken = false;
+        string packageId = timedPackageItemId.Value ?? string.Empty;
+        Item? package = packageId.Length == 0
+            ? null
+            : ItemRegistry.Create(packageId, 1, 0, allowNull: true);
+        bool hasRoom = package != null && Game1.player.couldInventoryAcceptThisItem(package);
+
+        string giverLocation = giver?.currentLocation?.Name
+            ?? Game1.currentLocation?.Name
+            ?? string.Empty;
+        string? target = TimedDeliveryTargets.PickTarget(giverNpc.Value ?? string.Empty, giverLocation);
+
+        var refusal = TimedQuestClock.CheckHandoffGate(
+            Game1.timeOfDay,
+            timerMaxMinutes.Value,
+            timerLatestStart.Value,
+            Utility.isFestivalDay(),
+            hasRoom,
+            target != null);
+        if (refusal != TimedStartRefusal.None)
+        {
+            int today = Game1.Date.TotalDays;
+            if (_timedRefusalDay != today || _timedRefusalReason != refusal)
+            {
+                _timedRefusalDay = today;
+                _timedRefusalReason = refusal;
+                PushTimedDialogue(giver, RefusalText(refusal));
+                refusalSpoken = true;
+            }
+            return false;
+        }
+
+        int limit = TimedQuestClock.RollLimitMinutes(timerMinMinutes.Value, timerMaxMinutes.Value, Game1.random.Next);
+        timerLimitMinutes.Value = limit;
+        timerDeadline.Value = TimedQuestClock.AddMinutes(Game1.timeOfDay, limit);
+
+        string targetDisplay = NpcDisplay.Resolve(target!);
+        int timedIdx = TimedStepIndex();
+        var timedStep = Steps[timedIdx];
+        timedStep.Targets = new List<string> { target! };
+        if (!string.IsNullOrEmpty(timedDeliverDescription.Value))
+            timedStep.Description = timedDeliverDescription.Value.Replace("[target]", targetDisplay);
+        Persist(timedIdx, timedStep);
+
+        if (package is StardewValley.Object packageObj)
+            packageObj.questItem.Value = true;
+        if (!Game1.player.addItemToInventoryBool(package))
+            Game1.createItemDebris(package, Game1.player.getStandingPosition(), 2);
+        Game1.playSound("coin");
+
+        // The target's completion reward can't be known at posting time, so it joins
+        // the encoded list now.
+        if (timerFriendshipStakes.Value > 0)
+            serializedRewards.Add(RewardCodec.Encode(new FriendshipReward(target!, timerFriendshipStakes.Value)));
+
+        string dialogue = timedHandoffDialogue.Value ?? string.Empty;
+        if (dialogue.Length > 0)
+        {
+            dialogue = dialogue
+                .Replace("[target]", targetDisplay)
+                .Replace("[time]", FormatMinutes(limit));
+            PushTimedDialogue(giver, dialogue);
+        }
+
+        ModEntry.LogDebug(() => $"Timed delivery started on '{questTitle}': target {target}, "
+            + $"limit {limit} min, deadline {timerDeadline.Value}.");
+        reloadObjective();
+        return true;
+    }
+
+    // Called once a second for the local player. True when the timer ran out and the
+    // quest failed (and removed itself from the log).
+    internal bool CheckTimedExpiry()
+    {
+        if (!TimerActive)
+            return false;
+        if (Game1.timeOfDay < timerDeadline.Value)
+            return false;
+        FailTimedDelivery(expired: true, removeFromLog: true);
+        return true;
+    }
+
+    // Shared failure path for expiry, day-end with the package in hand, and cancelling
+    // after the handoff. Pulls the package back, docks friendship with both NPCs, and
+    // tells the player what just happened.
+    internal void FailTimedDelivery(bool expired, bool removeFromLog)
+    {
+        if (completed.Value || timerDeadline.Value <= 0)
+            return;
+        TimedFailed = true;
+        timerDeadline.Value = 0;
+        RemovePackageFromInventory();
+
+        string giver = giverNpc.Value ?? string.Empty;
+        string target = TimedTargetName();
+        int stakes = timerFriendshipStakes.Value;
+        if (stakes > 0)
+        {
+            var penalties = new List<Rewards.RewardSpec>(2);
+            if (!string.IsNullOrEmpty(giver))
+                penalties.Add(new FriendshipReward(giver, -stakes));
+            if (!string.IsNullOrEmpty(target))
+                penalties.Add(new FriendshipReward(target, -stakes));
+            RewardApplier.Apply(penalties);
+        }
+
+        string key = expired ? "timedQuest.failed.expired" : "timedQuest.failed.cancelled";
+        string text = ModEntry.Translation
+            ?.Get(key, new { giver = NpcDisplay.Resolve(giver), target = NpcDisplay.Resolve(target) })
+            .ToString()
+            ?? "The delivery fell through.";
+        Game1.addHUDMessage(new HUDMessage(text, HUDMessage.error_type));
+        Game1.playSound("cancel");
+        ModEntry.LogDebug(() => $"Timed delivery failed on '{questTitle}' ({(expired ? "expired" : "cancelled")}): "
+            + $"giver {giver}, target {target}, stakes {stakes}.");
+
+        if (removeFromLog)
+            Game1.player.questLog.Remove(this);
+    }
+
+    private void RemovePackageFromInventory()
+    {
+        string id = timedPackageItemId.Value ?? string.Empty;
+        if (id.Length == 0)
+            return;
+        string qualified = ItemRegistry.QualifyItemId(id) ?? id;
+        var items = Game1.player.Items;
+        for (int i = 0; i < items.Count; i++)
+        {
+            var item = items[i];
+            if (item != null && string.Equals(item.QualifiedItemId, qualified, StringComparison.OrdinalIgnoreCase))
+                items[i] = null;
+        }
+    }
+
+    private static void PushTimedDialogue(NPC? npc, string text)
+    {
+        if (npc == null || string.IsNullOrEmpty(text))
+            return;
+        npc.CurrentDialogue.Push(new Dialogue(npc, null, text));
+        Game1.drawDialogue(npc);
+    }
+
+    private static string RefusalText(TimedStartRefusal refusal)
+    {
+        string key = refusal switch
+        {
+            TimedStartRefusal.Festival => "timedQuest.refuse.festival",
+            TimedStartRefusal.TooLate => "timedQuest.refuse.tooLate",
+            TimedStartRefusal.InventoryFull => "timedQuest.refuse.inventoryFull",
+            _ => "timedQuest.refuse.noTarget"
+        };
+        return ModEntry.Translation?.Get(key).ToString() ?? "Come back another time.";
+    }
+
+    internal static string FormatMinutes(int minutes)
+    {
+        minutes = Math.Max(0, minutes);
+        int h = minutes / 60;
+        int m = minutes % 60;
+        var t = ModEntry.Translation;
+        if (h > 0 && m > 0)
+            return t?.Get("timedQuest.time.hoursMinutes", new { hours = h, minutes = m }).Default($"{h}h {m}m").ToString() ?? $"{h}h {m}m";
+        if (h > 0)
+            return t?.Get("timedQuest.time.hours", new { hours = h }).Default($"{h}h").ToString() ?? $"{h}h";
+        return t?.Get("timedQuest.time.minutes", new { minutes = m }).Default($"{m}m").ToString() ?? $"{m}m";
+    }
+
+    // Appends the live countdown to the timed step's objective line. Everything that
+    // shows objectives (vanilla journal, QuestJournal HUD and detail page) rebuilds
+    // its text through here, so the countdown shows up everywhere without those UIs
+    // knowing timers exist. The minute interpolation makes the HUD (which re-reads
+    // every frame) tick down smoothly between clock jumps.
+    private string AppendTimerSuffix(int stepIndex, string line)
+    {
+        if (!TimerActive || stepIndex != TimedStepIndex())
+            return line;
+        int remaining = TimedQuestClock.RemainingMinutes(
+            Game1.timeOfDay,
+            timerDeadline.Value,
+            Game1.gameTimeInterval,
+            Game1.realMilliSecondsPerGameTenMinutes);
+        string time = FormatMinutes(remaining);
+        string suffix = ModEntry.Translation
+            ?.Get("timedQuest.timeLeft", new { time }).Default($"{time} left").ToString()
+            ?? $"{time} left";
+        return $"{line} ({suffix})";
     }
 
     private List<AdventureStepState> Steps
@@ -230,7 +547,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
                 s.Count,
                 s.Done,
                 i == active,
-                s.Description,
+                s.Done ? s.Description : AppendTimerSuffix(i, s.Description),
                 new List<string>(s.Requires),
                 new List<string>(s.Targets),
                 new List<string>(s.Items),
@@ -284,7 +601,7 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
             string line = step.Description;
             if (step.Count > 1)
                 line = $"{line} ({step.Progress}/{step.Count})";
-            lines.Add(line);
+            lines.Add(AppendTimerSuffix(i, line));
         }
         if (lines.Count == 0)
             lines.Add(string.Empty);
@@ -1409,6 +1726,27 @@ public sealed class AdventureQuest : Quest, IRewardedQuest
 
         if (probe)
             return true;
+
+        // Timed-delivery handoff: when this talk would put the timed step in play,
+        // the package changes hands right here (or the giver refuses and the step
+        // stays uncredited so the player can come back).
+        if (timerDeadline.Value == 0
+            && step.Progress + 1 >= step.Count
+            && WouldActivateTimedStep(idx))
+        {
+            // Vanilla fires OnNpcSocialized before the gift path in NPC.checkAction,
+            // so a click while holding an item reaches here first. That's a gift
+            // attempt, not a chat: stay silent and unhandled so the gift (or normal
+            // dialogue) proceeds, and don't start the handoff mid-gift either.
+            if (Game1.player.ActiveObject != null)
+                return false;
+            if (!TryBeginTimedDelivery(npc, out bool refusalSpoken))
+            {
+                // Spoken refusal consumes the interaction; a silent one (already
+                // explained today) falls through to the giver's normal dialogue.
+                return refusalSpoken;
+            }
+        }
 
         step.CreditedKeys.Add(npc.Name);
         step.Progress++;

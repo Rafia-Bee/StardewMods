@@ -126,6 +126,7 @@ internal static partial class Generators
         fw.RegisterGenerator("EmilyHousewarming", EmilyHousewarming);
         fw.RegisterGenerator("GiftDelivery", GiftDelivery);
         fw.RegisterGenerator("GuntherMuseumDonation", GuntherMuseumDonation);
+        fw.RegisterGenerator("TimedPackageDelivery", TimedPackageDelivery);
 
         // Story arcs. The Social category toggle gates these like any other quest now, so
         // turning Social off stops the Morris and Pierre lines from starting.

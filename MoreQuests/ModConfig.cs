@@ -244,6 +244,19 @@ public sealed class ModConfig
     /// quest is active (on top of needing a rug, a light source, and a wall decoration).
     public int EmilyHousewarmingCount { get; set; } = 8;
 
+    // ----- Timed package delivery -----
+
+    /// Shortest and longest timer the delivery can roll, in in-game minutes. One in-game
+    /// hour is about 43 real seconds at normal game speed, so the defaults (2 to 4 hours)
+    /// give roughly 1.5 to 3 real minutes of running. Rolls snap to 10-minute steps.
+    public int TimedDeliveryMinMinutes { get; set; } = 120;
+    public int TimedDeliveryMaxMinutes { get; set; } = 240;
+
+    /// Latest game-clock time the giver will still hand the package over (1800 = 6pm).
+    /// Past this they ask you to come back earlier tomorrow. A handoff is also refused
+    /// whenever even the longest possible roll wouldn't fit before 2am.
+    public int TimedDeliveryLatestHandoffTime { get; set; } = 1800;
+
     // ----- Redecorate quest (needs Build Placement Unlocker installed to post) -----
     // A villager hands over a budget, you buy furniture and place it in their home, and
     // whatever you don't spend goes back to them. Defaults are tuned so a careful shopper

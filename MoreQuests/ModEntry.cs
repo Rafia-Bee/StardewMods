@@ -171,6 +171,13 @@ public sealed class ModEntry : Mod
     internal const string EggBasketPinkTexture = "Mods/RafiaBee.MoreQuests/EggBasketPink";
     internal const string EggBasketRusticTexture = "Mods/RafiaBee.MoreQuests/EggBasketRustic";
 
+    /// The sealed package the player carries for the timed delivery quest. Data flags
+    /// (CanBeGivenAsGift/CanBeTrashed false) plus the questItem flag on the granted
+    /// instance keep it out of gifting, trashing, and selling.
+    internal const string DeliveryPackageId = "RafiaBee.MoreQuests.DeliveryPackage";
+    internal const string DeliveryPackageQualifiedId = "(O)RafiaBee.MoreQuests.DeliveryPackage";
+    internal const string DeliveryPackageTexture = "Mods/RafiaBee.MoreQuests/DeliveryPackage";
+
     /// Mail key prefix for deep-dive reward letters. Bar id + count are embedded in the key
     /// (e.g. `...DeepDiveReward.337.4` for 4 Iridium Bars) so the asset edit can build the
     /// body and attachment without needing per-quest persistence.
@@ -355,6 +362,12 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        if (e.NameWithoutLocale.IsEquivalentTo(DeliveryPackageTexture))
+        {
+            e.LoadFromModFile<Texture2D>("assets/DeliveryPackage.png", AssetLoadPriority.Low);
+            return;
+        }
+
         if (e.NameWithoutLocale.IsEquivalentTo(LeahPaintingsDataAsset))
         {
             e.LoadFrom(() =>
@@ -470,6 +483,22 @@ public sealed class ModEntry : Mod
                     I18n.Get("item.eggBasket.rustic.name").ToString(),
                     I18n.Get("item.eggBasket.rustic.description").ToString(),
                     EggBasketRusticTexture);
+                data[DeliveryPackageId] = new StardewValley.GameData.Objects.ObjectData
+                {
+                    Name = I18n.Get("item.deliveryPackage.name").ToString(),
+                    DisplayName = I18n.Get("item.deliveryPackage.name").ToString(),
+                    Description = I18n.Get("item.deliveryPackage.description").ToString(),
+                    Type = "Quest",
+                    Category = 0,
+                    Price = 0,
+                    Texture = DeliveryPackageTexture,
+                    SpriteIndex = 0,
+                    Edibility = -300,
+                    CanBeGivenAsGift = false,
+                    CanBeTrashed = false,
+                    ExcludeFromRandomSale = true,
+                    ExcludeFromShippingCollection = true
+                };
             }, AssetEditPriority.Default);
             return;
         }

@@ -534,6 +534,28 @@
     "quest.social.giftDelivery.objective": "Deliver a {{item}} to {{recipient}}.",
     "quest.social.giftDelivery.targetMessage": "Oh! Thank you. That's so thoughtful.",
 
+    "quest.social.timedDelivery.title": "A time-sensitive delivery",
+    "quest.social.timedDelivery.description": "I have a delivery job for someone with fast legs. The package is time-sensitive, so please only apply if you're physically capable of running swiftly. Fair warning: if it shows up late, both me and the recipient are going to take it personally.",
+    "quest.social.timedDelivery.description.cutoff": "Come see me before {{time}}. Any later and the delivery will have to wait for the next day.",
+    "quest.social.timedDelivery.step.talk": "Speak to {{npc}} about the delivery job.",
+    "quest.social.timedDelivery.step.talk.cutoff": "Speak to {{npc}} about the delivery job (before {{time}}).",
+    "quest.social.timedDelivery.step.deliver": "Deliver the package before the timer runs out.",
+    "quest.social.timedDelivery.step.deliver.resolved": "Deliver the package to [target] before the timer runs out.",
+    "quest.social.timedDelivery.handoff": "Here it is. Get this to [target] within [time]. The clock's already ticking, so run!",
+    "quest.social.timedDelivery.targetMessage": "Right on time! Thank you. I'll make sure word gets back that you're reliable.",
+    "quest.social.timedDelivery.friendshipSummary": "Both the sender and the recipient will think more of you",
+
+    "item.deliveryPackage.name": "Sealed Package",
+    "item.deliveryPackage.description": "Somebody's time-sensitive delivery. Best not to shake it.",
+
+    "config.section.timedDelivery": "Timed package delivery",
+    "config.TimedDeliveryMinMinutes": "Shortest timer (game minutes)",
+    "config.TimedDeliveryMinMinutes.tooltip": "The shortest time limit the delivery can roll, in in-game minutes. One in-game hour is about 43 real seconds at normal speed, so the default 120 gives roughly a minute and a half of real time.",
+    "config.TimedDeliveryMaxMinutes": "Longest timer (game minutes)",
+    "config.TimedDeliveryMaxMinutes.tooltip": "The longest time limit the delivery can roll, in in-game minutes. Default 240 (4 in-game hours, roughly 3 real minutes).",
+    "config.TimedDeliveryLatestHandoffTime": "Latest pickup time",
+    "config.TimedDeliveryLatestHandoffTime.tooltip": "Latest game-clock time the giver will still hand the package over. 1800 means 6pm, 2000 means 8pm. Past this they ask you to come back earlier tomorrow. Handoffs are also refused if even the longest roll wouldn't fit before 2am.",
+
     "quest.social.guntherMuseum.title": "A piece for the museum",
     "quest.social.guntherMuseum.description": "I've been short on new finds lately. If you could spare just one item the museum doesn't already have, I'd be happy to give you one of our spare display pieces as a thank you. Come find me once you've made the donation.",
     "quest.social.guntherMuseum.step.donate": "Donate any item to the museum.",

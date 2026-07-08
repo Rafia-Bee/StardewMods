@@ -597,8 +597,34 @@ public sealed class ModEntry : Mod
 
     private void OnDayEnding(object? sender, DayEndingEventArgs e)
     {
+        FailTimedQuestsAtDayEnd();
         ObserveShippingBin();
         _stateStore?.Save();
+    }
+
+    // A timed delivery can't span days: going to bed (or passing out) with the
+    // package still in hand fails the quest.
+    private void FailTimedQuestsAtDayEnd()
+    {
+        if (!Context.IsWorldReady || Game1.player == null)
+            return;
+        var log = Game1.player.questLog;
+        for (int i = log.Count - 1; i >= 0; i--)
+        {
+            if (log[i] is AdventureQuest { TimerActive: true } quest)
+                quest.FailTimedDelivery(expired: true, removeFromLog: true);
+        }
+    }
+
+    // Per-second expiry sweep for running timed deliveries, local player only.
+    private void CheckTimedQuestExpiry()
+    {
+        var log = Game1.player.questLog;
+        for (int i = log.Count - 1; i >= 0; i--)
+        {
+            if (log[i] is AdventureQuest quest)
+                quest.CheckTimedExpiry();
+        }
     }
 
     // Observes only; items still get sold to the player at full price.
@@ -1349,6 +1375,12 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || Game1.player == null)
             return;
+
+        // Timed-delivery countdowns run against the LOCAL player's quest log on every
+        // client, not just the host: quest logs are per-player and the fail effects
+        // (friendship loss, package removal, HUD message) are per-player operations.
+        CheckTimedQuestExpiry();
+
         if (!Game1.IsMasterGame)
             return;
 
@@ -1417,10 +1449,16 @@ public sealed class ModEntry : Mod
                 QuestRemovalReason reason;
                 if (wasCompleted)
                     reason = QuestRemovalReason.Completed;
+                else if (q is AdventureQuest { TimedFailed: true })
+                    reason = QuestRemovalReason.Expired;
                 else if (wasTimed && q.daysLeft.Value <= 0)
                     reason = QuestRemovalReason.Expired;
                 else
                     reason = QuestRemovalReason.Cancelled;
+                // Cancelling a timed delivery after taking the package still counts as
+                // a failed delivery: the same friendship penalty applies.
+                if (reason == QuestRemovalReason.Cancelled && q is AdventureQuest { TimerActive: true } cancelled)
+                    cancelled.FailTimedDelivery(expired: false, removeFromLog: false);
                 _api.FireQuestRemoved(q, info, reason);
             }
         }

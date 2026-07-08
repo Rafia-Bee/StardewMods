@@ -122,6 +122,10 @@ internal static class GmcmRegistration
         AddInt(api, manifest, t, "CheckOnFriendsCount", () => ModEntry.Config.CheckOnFriendsCount, v => ModEntry.Config.CheckOnFriendsCount = v, 1, 10);
         api.AddSectionTitle(manifest, () => t.Get("config.section.emilyHousewarming"));
         AddInt(api, manifest, t, "EmilyHousewarmingCount", () => ModEntry.Config.EmilyHousewarmingCount, v => ModEntry.Config.EmilyHousewarmingCount = v, 3, 20);
+        api.AddSectionTitle(manifest, () => t.Get("config.section.timedDelivery"));
+        AddInt(api, manifest, t, "TimedDeliveryMinMinutes", () => ModEntry.Config.TimedDeliveryMinMinutes, v => ModEntry.Config.TimedDeliveryMinMinutes = v, 30, 600);
+        AddInt(api, manifest, t, "TimedDeliveryMaxMinutes", () => ModEntry.Config.TimedDeliveryMaxMinutes, v => ModEntry.Config.TimedDeliveryMaxMinutes = v, 30, 600);
+        AddInt(api, manifest, t, "TimedDeliveryLatestHandoffTime", () => ModEntry.Config.TimedDeliveryLatestHandoffTime, v => ModEntry.Config.TimedDeliveryLatestHandoffTime = v, 900, 2400);
         api.AddSectionTitle(manifest, () => t.Get("config.section.jojaArc"));
         AddInt(api, manifest, t, "MorrisManOfMeansGoldTarget", () => ModEntry.Config.MorrisManOfMeansGoldTarget, v => ModEntry.Config.MorrisManOfMeansGoldTarget = v, 1000, 50000);
         AddInt(api, manifest, t, "MorrisQualityControlMaxCropPrice", () => ModEntry.Config.MorrisQualityControlMaxCropPrice, v => ModEntry.Config.MorrisQualityControlMaxCropPrice = v, 1, 1000);

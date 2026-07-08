@@ -93,6 +93,9 @@ The board (on by default) decides whether the mining and monster quests get thei
 | --- | --- | --- |
 | `CheckOnFriendsCount` | How many villagers you talk to for the Check on Friends quest. | 3 |
 | `EmilyHousewarmingCount` | How many furniture pieces you place for Emily's Housewarming (on top of the rug, light, and wall decoration). | 8 |
+| `TimedDeliveryMinMinutes` | Timed package delivery: the shortest timer it can roll, in in-game minutes. An in-game hour passes in about 43 real seconds. | 120 |
+| `TimedDeliveryMaxMinutes` | Timed package delivery: the longest timer it can roll, in in-game minutes. | 240 |
+| `TimedDeliveryLatestHandoffTime` | Timed package delivery: the latest game-clock time the giver still hands the package over (1800 is 6pm). After that they ask you to come back earlier tomorrow. | 1800 |
 | `MorrisManOfMeansGoldTarget` | Joja questline: how much extra gold Morris asks you to earn. | 10000 |
 | `MorrisQualityControlMaxCropPrice` | Joja questline: a crop only counts as cheap junk if it sells for under this. Raise it if crop mods bump values. | 30 |
 | `MorrisQualityControlSellCount` | Joja questline: how many cheap junk crops you sell into Pierre's shop. | 15 |
@@ -349,6 +352,7 @@ A quest's reward line below names the tier (for flat rewards) or the formula (fo
 | Elliott's Poem Inspiration | Daily board | Elliott | Bring Elliott one flower or gem | Friendship (big bump) | Cooldown Long, needs Elliott met |
 | Emily's Housewarming Challenge | Mail, once at 5 hearts with Emily | Emily | Decorate the farmhouse: place a rug, a light source, a wall decoration, and more furniture (only pieces placed while the quest is active count), then talk to Emily | A random dresser from Robin + Friendship with Emily | One time, 14-day deadline, count set in config |
 | Gift Delivery | Daily board | Any met villager | Drop off a loved or liked gift to one of the giver's friends | Gold: the gift's sell price times 0.8 (below sell), at least 50g + Friendship with both NPCs | Cooldown Long |
+| A Time-Sensitive Delivery | Daily board | Any met villager | Talk to the giver to pick up a sealed package (before 6pm by default, they won't start a delivery late in the day), then race it to a randomly picked villager before an in-game timer runs out (2 to 4 hours by default, shown live in the journal and the Quest Journal pinned HUD) | Friendship with both NPCs + the Way of the Wind pt. 1 book | Cooldown Long. Careful: if the package is late, or you sleep on it, or you cancel after taking it, you LOSE friendship with both NPCs. The quest text warns you up front. Horse, totems, and minecarts are all fair game |
 | Redecorate a Home | Daily board | Any met adult villager with a home you can walk into | They hand you a budget up front. Buy furniture (lamps, rugs, chairs, tables) and place it inside their home, then go ask them what they think to finish. Whatever you don't spend goes back to them, so you only ever pay any overspend out of pocket | A handful of the giver's favorite gifts (loved first, then liked) | Cooldown 14 days. **Only shows up if you have [Build Placement Unlocker](https://www.nexusmods.com/stardewvalley/mods/47064) installed**, since that's what lets you place furniture inside someone else's house at all |
 | A Person of Means | By mail, once you've earned 15,000g, and only while the Community Center isn't finished | Morris | Earn another 10,000g from the day the letter lands | 2,000g | One-time |
 | Quality Control | By mail, a day or two after you finish A Person of Means | Morris | Sell 15 cheap, base-quality crops (worth under 30g each, the price is configurable) to Pierre's shop | 3,000g | One-time, second part of the Joja questline. After you finish, the town grumbles about Pierre's sad produce for a few days (Caroline, Gus, and Evelyn, or Susan if you have SVE). Nobody ever finds out it was you |
@@ -430,3 +434,7 @@ A couple of things to keep in mind:
 - Framework engine code (registry, pipeline, billboard, condition evaluator, reward applier, item resolver, NPC dispatch, vanilla wrappers) lives in the [framework mod](../MoreQuestsFramework/README.md). This repo is content only. It's still a C# SMAPI mod, not a Content Patcher pack, but starting in 2.0.0 it ships its quests by editing the framework's quest asset (`Data/RafiaBee.MoreQuestsFramework/Quests`) through SMAPI's standard asset pipeline. Content Patcher packs can edit that same asset to add or tweak quests without needing a framework API.
 - Mail prefix for in-world quest letters is `RafiaBee.MoreQuests.` (the framework names mail keys after the owning consumer mod, so trackers like Mail Services Mod attribute these quests to MoreQuests rather than to the framework).
 - Run `mq_refresh` in the SMAPI console to re-roll the daily board without reloading the save.
+
+## Credits
+
+Thanks to [Husky](https://www.nexusmods.com/profile/Huskyn1nja?gameId=1303) for the package sprite, which I personalized in my style.

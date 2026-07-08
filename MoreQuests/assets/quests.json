@@ -489,6 +489,17 @@
             "Generator": "GuntherMuseumDonation"
         },
         {
+            "Name": "Social.TimedPackageDelivery",
+            "Category": "Social",
+            "Trigger": {
+                "Source": "DailyBoard",
+                "Weight": 15,
+                "MaxPerDay": 1,
+                "CooldownTier": "Long"
+            },
+            "Generator": "TimedPackageDelivery"
+        },
+        {
             "Name": "Seasonal.HeatWaveRelief",
             "Category": "Seasonal",
             "Trigger": {

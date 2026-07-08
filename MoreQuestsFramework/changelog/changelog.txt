@@ -1,4 +1,6 @@
 To be released
+- Quests can now run on a countdown measured in in-game minutes, not just days. The time left shows in the quest log and ticks down live in Quest Journal's pinned tracker. Used by the new timed delivery quest in More Quests.
+- For mod authors: multi-step quests can mark a deliver step as a timed package delivery (ConfigureTimedDelivery). The framework hands the player the package, picks a villager who's actually reachable right now, runs the countdown, and applies a friendship penalty if the delivery fails or gets abandoned.
 - Fixed Mail Services Mod paying a full extra heart of friendship when a delivery quest item is handed in at the mailbox. Mailbox hand-ins now pay exactly what the quest says, and respect item quality, alternative items, and partial deliveries.
 - Multi-step quests with deliver steps can now be handed in at the mailbox when Mail Services Mod is installed.
 - Gifts sent through Mail Services Mod's gift service now count toward quests that track gifts.

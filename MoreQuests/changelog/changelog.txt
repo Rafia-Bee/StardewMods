@@ -1,3 +1,7 @@
+To be released
+- New quest: A time-sensitive delivery. A villager hands you a sealed package and you race the in-game clock to get it to another villager. Make it in time for friendship with both plus the Way of the Wind pt. 1 book; show up late (or give up after taking the package) and you lose friendship with both instead.
+- New settings for the timed delivery: the shortest and longest timer it can roll, and the latest hour the sender will still hand the package over.
+
 2.6.0
 - Needs More Quests Framework 2.8.0 or newer.
 - Every quest can now be cancelled from the journal, including the ones that come in the mail or from talking to a villager.
