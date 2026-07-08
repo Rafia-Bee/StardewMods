@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using StardewValley.Objects;
 
 namespace BiggerAutoGrabber.Framework;
@@ -85,6 +87,29 @@ internal static class StorageRules
     /// <summary>The config key for a live game object, or null if not resizable.</summary>
     public static string GetTypeKey(StardewValley.Object obj)
         => TypeKeyFor(Classify(obj), obj?.QualifiedItemId);
+
+    /// <summary>True for the special non-item keys that never come from a mod's item data.</summary>
+    public static bool IsSpecialKey(string key)
+        => key == AutoGrabberKey || key == FridgeKey;
+
+    /// <summary>
+    /// Of the given type keys, the ones whose item no longer exists in the game,
+    /// meaning the mod that added that chest is gone. Special keys (AutoGrabber,
+    /// Fridge) are never item ids so they're always kept. <paramref name="typeExists"/>
+    /// answers whether an item-id key still resolves in the game's item data.
+    /// </summary>
+    public static List<string> RemovedTypeKeys(IEnumerable<string> keys, Func<string, bool> typeExists)
+    {
+        var removed = new List<string>();
+        foreach (string key in keys)
+        {
+            if (string.IsNullOrEmpty(key) || IsSpecialKey(key))
+                continue;
+            if (!typeExists(key))
+                removed.Add(key);
+        }
+        return removed;
+    }
 
     /// <summary>The configured capacity for a type key, falling back to the default.</summary>
     public static int ResolveCapacity(string key, ModConfig config)

@@ -42,7 +42,7 @@ public class ModEntry : Mod
         ChestPatches.Apply(harmony);
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
-        helper.Events.GameLoop.SaveLoaded += (_, _) => StampAllStorage();
+        helper.Events.GameLoop.SaveLoaded += (_, _) => OnSaveLoaded();
         helper.Events.GameLoop.DayStarted += (_, _) => StampAllStorage();
         helper.Events.World.ObjectListChanged += OnObjectListChanged;
         helper.Events.Display.MenuChanged += OnMenuChanged;
@@ -157,6 +157,38 @@ public class ModEntry : Mod
     }
 
     // ── Stamping ────────────────────────────────────────────────────
+
+    private void OnSaveLoaded()
+    {
+        if (PruneRemovedTypes())
+            PersistAndRebuildMenu();
+
+        StampAllStorage();
+    }
+
+    /// <summary>
+    /// Drops config entries for storage whose mod is no longer installed. Each modded
+    /// chest keeps its own item-id key in KnownTypes and CapacityByType, so once that
+    /// mod is uninstalled the id stops resolving and the old rows just clutter
+    /// config.json and the config menu. This clears those out. Returns true if anything
+    /// was removed. Runs on save load, when the game's item data is fully registered.
+    /// </summary>
+    private bool PruneRemovedTypes()
+    {
+        var keys = Config.KnownTypes.Concat(Config.CapacityByType.Keys).Distinct();
+        var removed = StorageRules.RemovedTypeKeys(keys, key => ItemRegistry.GetData(key) != null);
+        if (removed.Count == 0)
+            return false;
+
+        foreach (string key in removed)
+        {
+            Config.KnownTypes.Remove(key);
+            Config.CapacityByType.Remove(key);
+            Monitor.Log($"Dropped storage type '{key}' from config; its mod is no longer installed.", LogLevel.Info);
+        }
+
+        return true;
+    }
 
     private void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
     {

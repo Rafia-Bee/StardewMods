@@ -24,7 +24,7 @@ Open the config menu (needs Generic Mod Config Menu) and you'll see:
 - **Default size (everything else)** sets the size for anything that doesn't have its own row, including modded chests you haven't set yourself.
 - **A row per storage type** you own: auto-grabber, the kitchen fridge, mini-fridge, regular chest, stone chest, big chest, junimo chest, and any modded chests. Set a row to give just that type its own size. Leave it matching the default and it keeps following the default.
 
-New storage types appear as rows once you load a save that has them. Every value runs from 36 up to 516 in the menu (36 is normal, so a row left at 36 changes nothing), or type any number by editing `config.json`.
+New storage types appear as rows once you load a save that has them. If you uninstall a mod that added a chest, its row clears itself out next time you load. Every value runs from 36 up to 516 in the menu (36 is normal, so a row left at 36 changes nothing), or type any number by editing `config.json`.
 
 ## Install
 

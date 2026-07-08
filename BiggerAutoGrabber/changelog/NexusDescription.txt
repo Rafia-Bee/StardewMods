@@ -25,7 +25,7 @@ If you have [url=https://www.nexusmods.com/stardewvalley/mods/5098]Generic Mod C
 [*][b]Default size (everything else)[/b] (default: 36). Used for any storage that doesn't have its own row, including modded chests you haven't set.[/*]
 [*][b]A row per storage type you own[/b]: auto-grabber, fridge, mini-fridge, regular chest, stone chest, big chest, junimo chest, and any modded chests. Set a row to give just that type its own size; leave it on the default and it follows the default.[/*]
 [/list]
-New storage types show up as rows once you load a save that has them. Everything runs from 36 to 516 in steps of 12, or type any value by editing [font=Courier New]config.json[/font] directly.
+New storage types show up as rows once you load a save that has them. If you uninstall a mod that added a chest, its row clears itself out next time you load. Everything runs from 36 to 516 in steps of 12, or type any value by editing [font=Courier New]config.json[/font] directly.
 
 [size=4][b]Good to know[/b][/size]
 [list]

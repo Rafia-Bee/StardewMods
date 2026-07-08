@@ -1,3 +1,6 @@
+To be released
+- Storage sizes from a chest mod you've uninstalled now clear out on their own, instead of hanging around as a dead entry in the settings menu.
+
 v2.0.0
 - Renamed to Bigger Storage (was Bigger Auto-Grabber). Same mod, same page, just does a lot more than grabbers now.
 - Bigger storage now works for chests, big and stone chests, junimo chests, the kitchen fridge, and mini-fridges, not just auto-grabbers.
