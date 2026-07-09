@@ -86,6 +86,18 @@ internal static class ChestPatches
             original: AccessTools.Method(typeof(ItemGrabMenu), nameof(ItemGrabMenu.receiveLeftClick)),
             prefix: new HarmonyMethod(typeof(ChestPatches), nameof(ReceiveLeftClick_Prefix))
         );
+
+        // Gamepad scrolling at the grid's top/bottom edge. Guarded lookup
+        // because mobile builds may lack this method.
+        var applyMovementKey = AccessTools.Method(
+            typeof(IClickableMenu), nameof(IClickableMenu.applyMovementKey), new[] { typeof(int) });
+        if (applyMovementKey != null)
+        {
+            harmony.Patch(
+                original: applyMovementKey,
+                prefix: new HarmonyMethod(typeof(ChestPatches), nameof(ApplyMovementKey_Prefix))
+            );
+        }
     }
 
     // ── ItemGrabMenu constructor prefix / finalizer ─────────────────
@@ -418,6 +430,19 @@ internal static class ChestPatches
         // Lift the recolor picker so its box clears the taller grid frame.
         LiftColorPicker(menu);
 
+        // The vanilla constructor snapshotted allClickableComponents while
+        // the 36-slot grid was still in place, so getComponentWithID (which
+        // all gamepad snapping goes through) can't see the slots we just
+        // built. Rebuild the snapshot and put the cursor back.
+        int snappedId = menu.currentlySnappedComponent?.myID ?? -1;
+        menu.populateClickableComponentList();
+        if (Game1.options.SnappyMenus && snappedId != -1)
+        {
+            menu.currentlySnappedComponent = menu.getComponentWithID(snappedId)
+                ?? menu.getComponentWithID(53910);
+            menu.snapCursorToCurrentSnappedComponent();
+        }
+
         // Set up scroll state if the inventory needs scrolling.
         if (needsScrolling && slice != null)
         {
@@ -558,6 +583,43 @@ internal static class ChestPatches
 
         // Redraw mouse on top of arrows.
         __instance.drawMouse(b);
+    }
+
+    /// <summary>
+    /// Scrolls the slice when the gamepad cursor tries to move past the top
+    /// or bottom row of a scrollable grid. Without this, hidden rows would
+    /// only be reachable with the mouse wheel.
+    /// </summary>
+    private static bool ApplyMovementKey_Prefix(IClickableMenu __instance, int direction)
+    {
+        if (_activeSlice == null || __instance != _scrollMenu)
+            return true;
+
+        if (__instance is not ItemGrabMenu igm || igm.ItemsToGrabMenu == null)
+            return true;
+
+        var grid = igm.ItemsToGrabMenu;
+        int slot = (igm.currentlySnappedComponent?.myID ?? -1) - 53910;
+        if (slot < 0 || slot >= grid.inventory.Count)
+            return true;
+
+        int cols = grid.capacity / grid.rows;
+
+        if (direction == 2 && slot >= grid.capacity - cols && _activeSlice.CanScrollDown)
+        {
+            _activeSlice.ScrollRow++;
+            Game1.playSound("shiny4");
+            return false;
+        }
+
+        if (direction == 0 && slot < cols && _activeSlice.CanScrollUp)
+        {
+            _activeSlice.ScrollRow--;
+            Game1.playSound("shiny4");
+            return false;
+        }
+
+        return true;
     }
 
     private static bool ReceiveLeftClick_Prefix(ItemGrabMenu __instance, int x, int y)
