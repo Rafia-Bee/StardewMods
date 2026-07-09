@@ -1,7 +1,7 @@
 {
     "Name": "Bigger Storage",
     "Author": "Rafia-Bee",
-    "Version": "2.0.1",
+    "Version": "2.0.2",
     "MinimumApiVersion": "4.1.0",
     "UniqueID": "RafiaBee.BiggerAutoGrabber",
     "Description": "Expands auto-grabbers, chests, and fridges beyond the vanilla 36-slot limit.",

@@ -1,4 +1,4 @@
-To be released
+v2.0.2
 - Fixed controllers (and Steam Deck) not being able to select storage slots past the first few rows. Scrolling works on controller too now, just push past the top or bottom row.
 
 v2.0.1
