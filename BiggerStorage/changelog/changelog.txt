@@ -1,3 +1,6 @@
+To be released
+- Fixed controllers (and Steam Deck) not being able to select storage slots past the first few rows. Scrolling works on controller too now, just push past the top or bottom row.
+
 v2.0.1
 - Storage sizes from a chest mod you've uninstalled now clear out on their own, instead of hanging around as a dead entry in the settings menu.
 

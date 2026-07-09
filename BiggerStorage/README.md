@@ -34,6 +34,6 @@ New storage types appear as rows once you load a save that has them. If you unin
 
 ## Notes
 
-- The storage window shows up to 72 slots (6 rows) at a time. If you set a size higher, you can scroll through the rest with the mouse wheel or the up/down arrows on the right side of the grid.
+- The storage window shows up to 72 slots (6 rows) at a time. If you set a size higher, you can scroll through the rest with the mouse wheel or the up/down arrows on the right side of the grid. On a controller, just push past the top or bottom row and the grid scrolls.
 - If you set a size below what's already stored, those extra items stay safe in your save. They just hide until you make it bigger again.
 - **Will clash with any mod that expands vanilla chest capacity.**
