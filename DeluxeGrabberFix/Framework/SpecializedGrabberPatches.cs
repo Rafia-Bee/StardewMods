@@ -91,6 +91,12 @@ internal static class SpecializedGrabberPatches
             return false;
         }
 
+        // Tools that can't break machines (weapons, scythes, watering can) leave the
+        // object placed, so don't prep it for a break that never happens. Doing so
+        // left a broken grabber behind: black rectangle, stopped grabbing (issue #125).
+        if (t != null && (t is MeleeWeapon || !t.isHeavyHitter()))
+            return true;
+
         // Empty or no chest: allow breaking, drop the custom grabber item
         __instance.heldObject.Value = null;
         __instance.ItemId = originalId.Replace("(BC)", "");
