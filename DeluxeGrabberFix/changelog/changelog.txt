@@ -1,4 +1,4 @@
-To be released
+v1.23.1
 - Fixed specialized grabbers turning into a black rectangle and quietly shutting off when hit with a sword or scythe. Grabbers already broken this way get repaired on their own the next time you load your save.
 
 v1.23.0
